@@ -1,0 +1,22 @@
+# ======================
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# ======================
+# .NET
+bin/
+obj/
+appsettings.Production.json
+
+# ======================
+# Angular
+node_modules/
+dist/
+.angular/
+
+# ======================
+# Environment & secrets
+.env
+firebase-config.json
