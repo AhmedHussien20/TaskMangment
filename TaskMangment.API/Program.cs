@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.DependencyInjection;
+using AutoMapper;
 
 namespace TaskMangment.API
 {
@@ -21,6 +23,7 @@ namespace TaskMangment.API
             options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
             builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+
             builder.Services.AddDI();
 
             // Add services to the container.

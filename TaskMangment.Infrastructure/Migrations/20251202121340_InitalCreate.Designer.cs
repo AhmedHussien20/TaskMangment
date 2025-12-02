@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TaskMangment.Infrastructure.DataContext;
 
@@ -11,9 +12,11 @@ using TaskMangment.Infrastructure.DataContext;
 namespace TaskMangment.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251202121340_InitalCreate")]
+    partial class InitalCreate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -355,9 +358,6 @@ namespace TaskMangment.Infrastructure.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<int>("ManagerID")
-                        .HasColumnType("int");
-
                     b.Property<string>("Mobile")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -379,18 +379,11 @@ namespace TaskMangment.Infrastructure.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<int>("ResponsibleID")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.HasIndex("AreaId");
 
                     b.HasIndex("CompanyId");
-
-                    b.HasIndex("ManagerID");
-
-                    b.HasIndex("ResponsibleID");
 
                     b.ToTable("Branches");
                 });
@@ -2065,25 +2058,9 @@ namespace TaskMangment.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("TaskMangment.Domain.Entities.Employee", "Manager")
-                        .WithMany()
-                        .HasForeignKey("ManagerID")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("TaskMangment.Domain.Entities.Employee", "Responsible")
-                        .WithMany()
-                        .HasForeignKey("ResponsibleID")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.Navigation("Area");
 
                     b.Navigation("Company");
-
-                    b.Navigation("Manager");
-
-                    b.Navigation("Responsible");
                 });
 
             modelBuilder.Entity("TaskMangment.Domain.Entities.CalendarEvent", b =>
@@ -2196,8 +2173,7 @@ namespace TaskMangment.Infrastructure.Migrations
                 {
                     b.HasOne("TaskMangment.Domain.Entities.Branch", "Branch")
                         .WithMany("Employees")
-                        .HasForeignKey("BranchId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .HasForeignKey("BranchId");
 
                     b.HasOne("TaskMangment.Domain.Entities.Company", "Company")
                         .WithMany()
