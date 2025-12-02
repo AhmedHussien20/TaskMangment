@@ -5,7 +5,7 @@ namespace TaskMangment.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class AuthController : BaseController
+    public class AuthController :BaseController
     {
     }
 }
