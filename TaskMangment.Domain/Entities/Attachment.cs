@@ -22,6 +22,9 @@ namespace TaskMangment.Domain.Entities
 
         [ForeignKey(nameof(TaskId))] public Task Task { get; set; }
         [ForeignKey(nameof(CommentId))] public TaskComment Comment { get; set; }
+
+        [ForeignKey(nameof(VoucherId))] public PaymentVoucher Voucher { get; set; } 
+
         [ForeignKey(nameof(UploadedBy))] public Employee UploadedByEmployee { get; set; }
     }
 }

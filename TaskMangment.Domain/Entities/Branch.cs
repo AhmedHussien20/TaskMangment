@@ -18,12 +18,17 @@ namespace TaskMangment.Domain.Entities
         [MaxLength(50)] public string Phone { get; set; }
         [MaxLength(50)] public string Mobile { get; set; }
         [MaxLength(50)] public string Fax { get; set; }
+        public int ManagerID { get; set; }        
+        public int ResponsibleID { get; set; }
         public bool IsActive { get; set; } = true;
 
         // Navigation
         [ForeignKey(nameof(CompanyId))] public Company Company { get; set; }
         [ForeignKey(nameof(AreaId))] public Area Area { get; set; }
+        [ForeignKey(nameof(ManagerID))] public Employee Manager { get; set; }
+        [ForeignKey(nameof(ResponsibleID))] public Employee Responsible { get; set; }
         public ICollection<Department> Departments { get; set; }
         public ICollection<Employee> Employees { get; set; }
+
     }
 }
