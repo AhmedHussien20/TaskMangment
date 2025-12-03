@@ -37,4 +37,8 @@
     <ProjectReference Include="..\TaskMangment.Utilities\TaskMangment.Utilities.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Hubs\" />
+  </ItemGroup>
+
 </Project>

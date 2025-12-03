@@ -14,6 +14,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Infrastructure.Caching;
+using TaskMangment.Infrastructure.SignalR;
 
 namespace TaskMangment.API
 {
@@ -42,8 +43,12 @@ namespace TaskMangment.API
 
             builder.Services.AddScoped<IPermissionService, PermissionService>();
             builder.Services.AddScoped<IRoleService, RoleService>();
+            builder.Services.AddSignalR();
+            builder.Services.AddScoped<IWhatsAppService, WhatsAppService>();
+            builder.Services.AddScoped<INotificationService, NotificationService>();
+            
 
-             
+
             builder.Services.AddControllers();
 
             builder.Services.AddAuthentication(options =>
@@ -69,6 +74,16 @@ namespace TaskMangment.API
 
 
 
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAll", policy =>
+                {
+                    policy.SetIsOriginAllowed(origin => true) 
+                          .AllowAnyHeader()
+                          .AllowAnyMethod()
+                          .AllowCredentials();
+                });
+            });
 
 
 
@@ -87,11 +102,16 @@ namespace TaskMangment.API
             
             app.UseMiddleware<ExceptionLogMiddleware>();
 
-            app.UseHttpsRedirection();
-             
-            app.UseAuthentication();
 
-              
+            app.UseHttpsRedirection();
+            app.UseCors("AllowAll");
+
+            app.UseAuthentication();
+            app.UseAuthorization();
+
+            app.MapHub<NotificationHub>("/notifications");
+
+
             app.UseAuthorization();
 
             app.MapControllers();
