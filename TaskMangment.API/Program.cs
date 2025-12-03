@@ -89,7 +89,7 @@ namespace TaskMangment.API
             app.UseAuthentication();
 
              
-            app.UseMiddleware<PermissionMiddleware>();
+            app.UseMiddleware<PermissionAuthorizeAttribute>();
  
             app.UseAuthorization();
 
