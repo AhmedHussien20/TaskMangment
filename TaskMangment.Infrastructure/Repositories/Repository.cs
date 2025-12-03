@@ -25,7 +25,13 @@ namespace TaskMangment.Infrastructure.Repositories
 
         public IQueryable<TEntity> GetAll(Expression<Func<TEntity, bool>> expression = null)
         {
-            return expression == null ? _dbSet.AsQueryable() : _dbSet.Where(expression);
+            // return expression == null ? _dbSet.AsQueryable() : _dbSet.Where(expression);
+            var query = _dbSet.Where(e => !e.IsDeleted); 
+
+            if (expression != null)
+                query = query.Where(expression); 
+
+            return query.AsQueryable();
         }
 
         public async Task<TEntity> GetByIDAsync(int id)
@@ -52,10 +58,26 @@ namespace TaskMangment.Infrastructure.Repositories
             }
         }
 
-        public void Delete(TEntity entity)
+
+        public void SoftDelete(TEntity entity)
+        {
+            if (entity is BaseEntity baseEntity)
+            {
+                baseEntity.IsDeleted = true;
+                baseEntity.DeletedDate = DateTime.UtcNow;
+                _dbSet.Update(entity);  
+            }
+            else
+            {
+                _dbSet.Remove(entity); 
+            }
+        }
+        public void HardDelete(TEntity entity)
         {
             _dbSet.Remove(entity);
         }
+
+
 
         public void DeleteRange(IEnumerable<TEntity> entities)
         {
