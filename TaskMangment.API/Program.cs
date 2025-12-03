@@ -37,11 +37,11 @@ namespace TaskMangment.API
 
 
             //builder.Services.AddCaching(builder.Configuration);
-            builder.Services.AddSingleton<ICachingService, NoCacheService>();
+            //builder.Services.AddSingleton<ICachingService, NoCacheService>();
 
              
-            builder.Services.AddScoped<IPermissionService, PermissionService>();
-            builder.Services.AddScoped<IRoleService, RoleService>();
+            //builder.Services.AddScoped<IPermissionService, PermissionService>();
+            //builder.Services.AddScoped<IRoleService, RoleService>();
 
              
             builder.Services.AddControllers();

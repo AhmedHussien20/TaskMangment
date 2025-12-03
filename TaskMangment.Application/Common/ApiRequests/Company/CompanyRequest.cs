@@ -5,12 +5,12 @@ using System.Text;
 using System.Threading.Tasks;
 using TaskMangment.Application.ApiRequests;
 
-namespace TaskMangment.Application.Common.ApiRequests.Employee
+namespace TaskMangment.Application.Common.ApiRequests.Company
 {
-    public class EmployeeRequest : BaseApiRequest
+    public class CompanyRequest: BaseApiRequest
     {
         public string? Name { get; set; }
-        public int? CompanyId { get; set; }
-        public int? BranchId { get; set; }
+        public bool? IsActive { get; set; }
+
     }
 }
