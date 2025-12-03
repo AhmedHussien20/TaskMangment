@@ -13,6 +13,6 @@ namespace TaskMangment.Domain.Entities
         [Required, MaxLength(200)] public string Name { get; set; }
         [MaxLength(500)] public string Description { get; set; }
 
-        public ICollection<RolePermission> RolePermissions { get; set; }
+        public ICollection<RolePermission> RolePermissions { get; set; }=new  List<RolePermission>();
     }
 }

@@ -21,8 +21,8 @@ namespace TaskMangment.Domain.Entities
         [ForeignKey(nameof(TaskId))] public Task Task { get; set; }
         [ForeignKey(nameof(EmployeeId))] public Employee Employee { get; set; }
 
-        public ICollection<Warning> Warnings { get; set; }
-        public ICollection<TaskExtensionRequest> ExtensionRequests { get; set; }
-        public ICollection<TaskCloseRequest> CloseRequests { get; set; }
+        public ICollection<Warning> Warnings { get; set; } = new List<Warning>();
+        public ICollection<TaskExtensionRequest> ExtensionRequests { get; set; }= new List<TaskExtensionRequest>();
+        public ICollection<TaskCloseRequest> CloseRequests { get; set; } = new List<TaskCloseRequest>();
     }
 }

@@ -11,10 +11,11 @@ namespace TaskMangment.Domain.Entities
 {
     public class EmployeeRole : BaseEntity
     {
-        [Required] public int EmployeeId { get; set; }
-        [Required] public int RoleId { get; set; }
+        public int EmployeeId { get; set; }
+        public int RoleId { get; set; }
 
-        [ForeignKey(nameof(EmployeeId))] public Employee Employee { get; set; }
-        [ForeignKey(nameof(RoleId))] public Role Role { get; set; }
+        public Employee Employee { get; set; }
+        public Role Role { get; set; }
     }
+
 }

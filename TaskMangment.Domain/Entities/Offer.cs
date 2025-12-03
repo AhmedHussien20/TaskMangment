@@ -20,6 +20,6 @@ namespace TaskMangment.Domain.Entities
 
         [ForeignKey(nameof(CourseId))] public Course Course { get; set; }
         [ForeignKey(nameof(SubjectId))] public CourseSubject Subject { get; set; }
-        public ICollection<OfferAssignment> Assignments { get; set; }
+        public ICollection<OfferAssignment> Assignments { get; set; } = new List<OfferAssignment>();
     }
 }

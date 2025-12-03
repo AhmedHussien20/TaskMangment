@@ -7,9 +7,9 @@ namespace TaskMangment.API.Controllers
 {
     
     [Route("api/[controller]")]
-    public class BranchController : BaseController<BranchGetDto, BranchAddEditDto>
+    public class BranchController  
     {
-        public BranchController(IBranchService service) : base(service)
+        public BranchController(IBranchService service)  
         {
         }
     }

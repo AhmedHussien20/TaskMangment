@@ -10,7 +10,7 @@ using TaskMangment.Domain.Entities;
 
 namespace TaskMangment.Infrastructure.DataContext
 {
-    public class AppDbContext : IdentityDbContext<SystemUser, SystemRole, string>
+    public class AppDbContext : DbContext
     {
         public AppDbContext(DbContextOptions<AppDbContext> options)
            : base(options)
@@ -51,23 +51,17 @@ namespace TaskMangment.Infrastructure.DataContext
         {
             base.OnModelCreating(builder);
 
-            builder.Entity<SystemUser>(b =>
-            {
-                b.Property(u => u.FullName).HasMaxLength(100);
-            });
             builder.Entity<Branch>()
-                 .HasMany(b => b.Employees)
-                 .WithOne(e => e.Branch)
-                 .HasForeignKey(e => e.BranchId)
-                 .OnDelete(DeleteBehavior.Restrict);
-
+                    .HasMany(b => b.Employees)
+                    .WithOne(e => e.Branch)
+                    .HasForeignKey(e => e.BranchId)
+                    .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<Branch>()
-                .HasOne(b => b.Manager)
-                .WithMany()
-                .HasForeignKey(b => b.ManagerID)
-                .OnDelete(DeleteBehavior.Restrict);
-
+    .HasOne(b => b.Manager)
+    .WithMany()
+    .HasForeignKey(b => b.ManagerID)
+    .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<Branch>()
                 .HasOne(b => b.Responsible)
@@ -75,98 +69,92 @@ namespace TaskMangment.Infrastructure.DataContext
                 .HasForeignKey(b => b.ResponsibleID)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.Entity<Company>()
-                  .HasOne(c => c.FinancialManager)
-                  .WithMany()
-                  .HasForeignKey(c => c.FinancialManagerId)
-                  .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<Company>()
-                .HasOne(c => c.TechnicalManager)
-                .WithMany()
-                .HasForeignKey(c => c.TechnicalManagerId)
-                .OnDelete(DeleteBehavior.Restrict);
+                   .HasOne(c => c.FinancialManager)
+                   .WithMany()
+                   .HasForeignKey(c => c.FinancialManagerId)
+                   .OnDelete(DeleteBehavior.Restrict);
 
-           
-            builder.Entity<TaskMangment.Domain.Entities.Task>()
-                .HasOne(t => t.AssignedBy)
-                .WithMany()
-                .HasForeignKey(t => t.AssignedByEmployeeId)
-                .OnDelete(DeleteBehavior.Restrict);
+            builder.Entity<Company>()
+                 .HasOne(c => c.TechnicalManager)
+                 .WithMany()
+                 .HasForeignKey(c => c.TechnicalManagerId)
+                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<TaskMangment.Domain.Entities.Task>()
-                .HasOne(t => t.CreatedBy)
-                .WithMany()
-                .HasForeignKey(t => t.CreatedByEmployeeId)
-                .OnDelete(DeleteBehavior.Restrict);
+                 .HasOne(t => t.AssignedBy)
+                 .WithMany()
+                 .HasForeignKey(t => t.AssignedByEmployeeId)
+                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<TaskMangment.Domain.Entities.Task>()
+                 .HasOne(t => t.CreatedBy)
+                 .WithMany()
+                 .HasForeignKey(t => t.CreatedByEmployeeId)
+                 .OnDelete(DeleteBehavior.Restrict);
+             
+            builder.Entity<TaskAssignment>()
+                 .HasOne(a => a.Employee)
+                 .WithMany()
+                 .HasForeignKey(a => a.EmployeeId)
+                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<TaskAssignment>()
-                .HasOne(a => a.Employee)
-                .WithMany()
-                .HasForeignKey(a => a.EmployeeId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            builder.Entity<TaskAssignment>()
-                .HasOne(a => a.Task)
-                .WithMany(t => t.Assignments)
-                .HasForeignKey(a => a.TaskId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-          
+                 .HasOne(a => a.Task)
+                 .WithMany(t => t.Assignments)
+                 .HasForeignKey(a => a.TaskId)
+                 .OnDelete(DeleteBehavior.Cascade);
+             
             builder.Entity<Attachment>()
-       .HasOne(a => a.Task)
-       .WithMany(t => t.Attachments)
-       .HasForeignKey(a => a.TaskId)
-       .OnDelete(DeleteBehavior.Restrict);
-
+                 .HasOne(a => a.Task)
+                 .WithMany(t => t.Attachments)
+                 .HasForeignKey(a => a.TaskId)
+                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<Attachment>()
-                .HasOne(a => a.Comment)
-                .WithMany(c => c.Attachments)
-                .HasForeignKey(a => a.CommentId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-
-            builder.Entity<Attachment>()
-                .HasOne(a => a.Voucher)
-                .WithMany(v => v.Attachments)
-                .HasForeignKey(a => a.VoucherId)
-                .OnDelete(DeleteBehavior.Restrict);
-
+                 .HasOne(a => a.Comment)
+                 .WithMany(c => c.Attachments)
+                 .HasForeignKey(a => a.CommentId)
+                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<Attachment>()
-                .HasOne(a => a.UploadedByEmployee)
-                .WithMany()
-                .HasForeignKey(a => a.UploadedBy)
-                .OnDelete(DeleteBehavior.Restrict);
+                 .HasOne(a => a.Voucher)
+                 .WithMany(v => v.Attachments)
+                 .HasForeignKey(a => a.VoucherId)
+                 .OnDelete(DeleteBehavior.Restrict);
 
-           
+            builder.Entity<Attachment>()
+                 .HasOne(a => a.UploadedByEmployee)
+                 .WithMany()
+                 .HasForeignKey(a => a.UploadedBy)
+                 .OnDelete(DeleteBehavior.Restrict);
+
+            
             builder.Entity<TaskExtensionRequest>()
-                .HasOne(r => r.TaskAssignment)
-                .WithMany(a => a.ExtensionRequests)
-                .HasForeignKey(r => r.TaskAssignmentId)
-                .OnDelete(DeleteBehavior.Cascade);
+                 .HasOne(r => r.TaskAssignment)
+                 .WithMany(a => a.ExtensionRequests)
+                 .HasForeignKey(r => r.TaskAssignmentId)
+                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.Entity<TaskCloseRequest>()
-                .HasOne(r => r.TaskAssignment)
-                .WithMany(a => a.CloseRequests)
-                .HasForeignKey(r => r.TaskAssignmentId)
-                .OnDelete(DeleteBehavior.Cascade);
+                 .HasOne(r => r.TaskAssignment)
+                 .WithMany(a => a.CloseRequests)
+                 .HasForeignKey(r => r.TaskAssignmentId)
+                 .OnDelete(DeleteBehavior.Cascade);
 
-           
             builder.Entity<Warning>()
-                .HasOne(w => w.TaskAssignment)
-                .WithMany(a => a.Warnings)
-                .HasForeignKey(w => w.TaskAssignmentId)
-                .OnDelete(DeleteBehavior.Cascade);
+                 .HasOne(w => w.TaskAssignment)
+                 .WithMany(a => a.Warnings)
+                 .HasForeignKey(w => w.TaskAssignmentId)
+                 .OnDelete(DeleteBehavior.Cascade);
 
-          
             builder.Entity<PaymentVoucher>()
-                .HasMany(v => v.Attachments)
-                .WithOne(a => a.Voucher)
-                .HasForeignKey(a => a.VoucherId)
-                .OnDelete(DeleteBehavior.Cascade);
-
+                 .HasMany(v => v.Attachments)
+                 .WithOne(a => a.Voucher)
+                 .HasForeignKey(a => a.VoucherId)
+                 .OnDelete(DeleteBehavior.Cascade);
         }
+
     }
 }

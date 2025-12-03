@@ -11,7 +11,7 @@ namespace TaskMangment.Domain.Entities
     {
         [MaxLength(250)] public string Title { get; set; }
         [MaxLength(1000)] public string Description { get; set; }
-        public ICollection<CourseSubject> Subjects { get; set; }
-        public ICollection<Offer> Offers { get; set; }
+        public ICollection<CourseSubject> Subjects { get; set; } = new List<CourseSubject>();
+        public ICollection<Offer> Offers { get; set; } = new List<Offer>();
     }
 }

@@ -11,11 +11,15 @@ namespace TaskMangment.Domain.Entities
     public class Role : BaseEntity
     {
         public int? CompanyId { get; set; }
-        [Required, MaxLength(100)] public string Name { get; set; }
-        [MaxLength(500)] public string Description { get; set; }
+        [Required, MaxLength(100)]
+        public string Name { get; set; }
+        [MaxLength(500)]
+        public string Description { get; set; }
 
-        [ForeignKey(nameof(CompanyId))] public Company Company { get; set; }
-        public ICollection<RolePermission> RolePermissions { get; set; }
-        public ICollection<EmployeeRole> EmployeeRoles { get; set; }
+        public Company Company { get; set; }
+        public ICollection<RolePermission> RolePermissions { get; set; } = new List<RolePermission>();
+        public ICollection<EmployeeRole> EmployeeRoles { get; set; } = new List<EmployeeRole>();
+
     }
+
 }

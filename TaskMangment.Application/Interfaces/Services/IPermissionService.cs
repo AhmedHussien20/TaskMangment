@@ -1,5 +1,4 @@
-﻿using TaskMangment.Domain.Entities;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace TaskMangment.Application.Interfaces.Services
 {
-    public interface IJWTTokenGenerator
+    public interface IPermissionService
     {
-        Task<string> GenerateToken(SystemUser user);
-
+        Task<bool> UserHasPermissionAsync(int userId, string permissionCode);
     }
+
 }

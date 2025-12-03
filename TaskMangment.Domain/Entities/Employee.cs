@@ -43,13 +43,17 @@ namespace TaskMangment.Domain.Entities
         [MaxLength(500)]
         public string PasswordHash { get; set; }
 
-        public bool IsActive { get; set; } = true;
+        public bool IsActive { get; set; } = true; 
+
 
         // Navigation
         public Company Company { get; set; }
         public Branch Branch { get; set; }
         public Department Department { get; set; }
         public Job Job { get; set; }
+
+        public ICollection<EmployeeRole> EmployeeRoles { get; set; } = new List<EmployeeRole>();
+
     }
 
 }

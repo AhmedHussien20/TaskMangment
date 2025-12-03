@@ -32,10 +32,10 @@ namespace TaskMangment.Domain.Entities
         public Employee CreatedBy { get; set; }
         public Employee AssignedBy { get; set; }
 
-        public ICollection<TaskAssignment> Assignments { get; set; }
-        public ICollection<TaskComment> Comments { get; set; }
-        public ICollection<Attachment> Attachments { get; set; }
-        public ICollection<TaskCloseRequest> CloseRequests { get; set; }
-        public ICollection<TaskExtensionRequest> ExtensionRequests { get; set; }
+        public ICollection<TaskAssignment> Assignments { get; set; } = new List<TaskAssignment>();
+        public ICollection<TaskComment> Comments { get; set; } = new List<TaskComment>();
+        public ICollection<Attachment> Attachments { get; set; }= new List<Attachment>();
+        public ICollection<TaskCloseRequest> CloseRequests { get; set; } = new List<TaskCloseRequest>();
+        public ICollection<TaskExtensionRequest> ExtensionRequests { get; set; }= new List<TaskExtensionRequest>();
     }
 }

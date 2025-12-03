@@ -6,9 +6,9 @@ using TaskMangment.Application.Interfaces.Services;
 namespace TaskMangment.API.Controllers
 {
     [Route("api/[controller]")]
-    public class CompanyController : BaseController<CompanyGetDto, CompanyAddEditDto>
+    public class CompanyController 
     {
-        public CompanyController(ICompanyService service) : base(service)
+        public CompanyController(ICompanyService service)  
         {
         }
     }
