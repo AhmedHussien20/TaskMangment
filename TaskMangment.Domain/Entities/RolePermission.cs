@@ -12,10 +12,11 @@ namespace TaskMangment.Domain.Entities
 {
     public class RolePermission : BaseEntity
     {
-        [Required] public int RoleId { get; set; }
-        [Required] public int PermissionId { get; set; }
+        public int RoleId { get; set; }
+        public int PermissionId { get; set; }
 
-        [ForeignKey(nameof(RoleId))] public Role Role { get; set; }
-        [ForeignKey(nameof(PermissionId))] public Permission Permission { get; set; }
+        public Role Role { get; set; }
+        public Permission Permission { get; set; }
     }
+
 }

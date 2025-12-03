@@ -15,6 +15,6 @@ namespace TaskMangment.Domain.Entities
         [MaxLength(250)] public string Title { get; set; }
 
         [ForeignKey(nameof(CourseId))] public Course Course { get; set; }
-        public ICollection<Offer> Offers { get; set; }
+        public ICollection<Offer> Offers { get; set; } = new List<Offer>();
     }
 }

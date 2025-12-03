@@ -21,6 +21,6 @@ namespace TaskMangment.Domain.Entities
         [ForeignKey(nameof(CompanyId))] public Company Company { get; set; }
         [ForeignKey(nameof(BranchId))] public Branch Branch { get; set; }
         [ForeignKey(nameof(CreatedByEmployeeId))] public Employee CreatedBy { get; set; }
-        public ICollection<Attachment> Attachments { get; set; }
+        public ICollection<Attachment> Attachments { get; set; } = new List<Attachment>();
     }
 }

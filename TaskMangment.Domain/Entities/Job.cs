@@ -15,6 +15,6 @@ namespace TaskMangment.Domain.Entities
         [MaxLength(1000)] public string Description { get; set; }
 
         [ForeignKey(nameof(DepartmentId))] public Department Department { get; set; }
-        public ICollection<Employee> Employees { get; set; }
+        public ICollection<Employee> Employees { get; set; } = new List<Employee>();
     }
 }

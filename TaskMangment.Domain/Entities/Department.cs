@@ -17,6 +17,7 @@ namespace TaskMangment.Domain.Entities
         // Navigation
         [ForeignKey(nameof(BranchId))] public Branch Branch { get; set; }
         [ForeignKey(nameof(ManagerEmployeeId))] public Employee Manager { get; set; }
-        public ICollection<Job> Jobs { get; set; }
+        public ICollection<Job> Jobs { get; set; } = new List<Job>();
+
     }
 }
