@@ -1,0 +1,50 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using TaskMangment.Domain.Entities;
+using TaskStatus = TaskMangment.Domain.Entities.TaskStatus;
+
+namespace TaskMangment.Application.DTOs
+{
+    public class TaskAddEditDto
+    {
+        [Required]
+        public int CompanyId { get; set; }
+        public List<int> AssignedEmployeeIds { get; set; } = new();
+
+        [Required, MaxLength(300)]
+        public string Title { get; set; }
+
+        public string Description { get; set; }
+
+        public int? CommentAllowPeriodDays { get; set; }
+
+        public int MaxWarnings { get; set; } = 3;
+
+        public decimal PenaltyAtMaxWarnings { get; set; } = 0;
+
+        public decimal PenaltyOnAutoClose { get; set; } = 0;
+
+        public bool IsShared { get; set; } = false;
+
+        public TaskPriority Priority { get; set; } = TaskPriority.Low;
+
+        public DateTime? DueDate { get; set; }
+    }
+    public class TaskGetDto
+    {
+        public int Id { get; set; }               
+        public string Title { get; set; }         
+        public bool IsShared { get; set; }        
+        public DateTime CreatedAt { get; set; }     
+        public string AssignedByName { get; set; }  
+        public List<string> EmployeeNames { get; set; } = new(); 
+        public TaskPriority Priority { get; set; }   
+        public TaskStatus Status { get; set; }    
+        public DateTime? DueDate { get; set; }     
+    }
+
+}

@@ -50,7 +50,7 @@ namespace TaskMangment.Infrastructure.Services
                     return ApiResponse<PagedResponse<AreaGetDto>>.Ok(cached);
             }
 
-            
+
             var query = _areaRepository.GetAll()
                 .Include(a => a.Manager)
                 .AsQueryable();
@@ -147,7 +147,7 @@ namespace TaskMangment.Infrastructure.Services
             if (area == null)
                 return ApiResponse<bool>.Fail("Area not found", StatusCode.NotFound);
 
-            _areaRepository.Delete(area);
+            _areaRepository.SoftDelete(area);
             await _areaRepository.SaveChangesAsync();
 
             // TODO: Invalidate cache later
