@@ -12,6 +12,8 @@ using Microsoft.AspNetCore.Identity;
 using TaskMangment.Application.Interfaces;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using TaskMangment.Application.Common.Interfaces;
+using TaskMangment.Infrastructure.Caching;
 
 namespace TaskMangment.API
 {
@@ -33,12 +35,13 @@ namespace TaskMangment.API
             
             builder.Services.AddDI();
 
-            
-          // builder.Services.AddCaching(builder.Configuration);
+
+            //builder.Services.AddCaching(builder.Configuration);
+            builder.Services.AddSingleton<ICachingService, NoCacheService>();
 
              
-            //builder.Services.AddScoped<IPermissionService, PermissionService>();
-            //builder.Services.AddScoped<IRoleService, RoleService>();
+            builder.Services.AddScoped<IPermissionService, PermissionService>();
+            builder.Services.AddScoped<IRoleService, RoleService>();
 
              
             builder.Services.AddControllers();
@@ -88,9 +91,7 @@ namespace TaskMangment.API
              
             app.UseAuthentication();
 
-             
-            app.UseMiddleware<PermissionMiddleware>();
- 
+              
             app.UseAuthorization();
 
             app.MapControllers();

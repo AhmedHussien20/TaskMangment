@@ -58,10 +58,10 @@ namespace TaskMangment.Infrastructure.DataContext
                     .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<Branch>()
-    .HasOne(b => b.Manager)
-    .WithMany()
-    .HasForeignKey(b => b.ManagerID)
-    .OnDelete(DeleteBehavior.Restrict);
+                    .HasOne(b => b.Manager)
+                    .WithMany()
+                    .HasForeignKey(b => b.ManagerID)
+                    .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<Branch>()
                 .HasOne(b => b.Responsible)
