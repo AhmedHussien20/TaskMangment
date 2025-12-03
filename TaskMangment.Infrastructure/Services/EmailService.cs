@@ -34,6 +34,22 @@ namespace TaskMangment.Infrastructure.Services
 
             await client.SendMailAsync(mail);
         }
+
+        public async Task SendEmailAsync(string to, string subject, string body)
+        {
+            using var client = new SmtpClient(_settings.Host, _settings.Port)
+            {
+                EnableSsl = _settings.EnableSSL,
+                Credentials = new NetworkCredential(_settings.From, _settings.Password)
+            };
+
+            var mail = new MailMessage(_settings.From, to, subject, body)
+            {
+                IsBodyHtml = true
+            };
+
+            await client.SendMailAsync(mail);
+        }
     }
 
     }
