@@ -19,7 +19,9 @@ namespace TaskMangment.Application.Interfaces.IRepository
 
         void SaveInclude(TEntity entity, params string[] properties);
 
-        void Delete(TEntity entity);
+        void SoftDelete(TEntity entity);
+        void HardDelete(TEntity entity);
+
         void DeleteRange(IEnumerable<TEntity> entities);
         Task DeleteAsync(TEntity entity);
 

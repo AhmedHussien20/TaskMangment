@@ -89,7 +89,7 @@ namespace TaskMangment.Infrastructure.Services
             if (company == null)
                 return ApiResponse<bool>.Fail("Company not found", StatusCode.NotFound);
 
-            _companyRepository.Delete(company);
+            _companyRepository.SoftDelete(company);
             await _companyRepository.SaveChangesAsync();
             return ApiResponse<bool>.Ok(true, "Company deleted successfully");
         }

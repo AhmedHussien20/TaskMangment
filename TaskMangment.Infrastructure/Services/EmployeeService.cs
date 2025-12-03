@@ -80,7 +80,7 @@ namespace TaskMangment.Infrastructure.Services
             if (employee == null)
                 return ApiResponse<bool>.Fail("Employee not found", StatusCode.NotFound);
 
-            _employeeRepository.Delete(employee);
+            _employeeRepository.SoftDelete(employee);
             await _employeeRepository.SaveChangesAsync();
 
             return ApiResponse<bool>.Ok(true, "Employee deleted successfully");

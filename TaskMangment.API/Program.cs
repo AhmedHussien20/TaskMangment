@@ -34,11 +34,11 @@ namespace TaskMangment.API
             builder.Services.AddDI();
 
             
-            builder.Services.AddCaching(builder.Configuration);
+          // builder.Services.AddCaching(builder.Configuration);
 
              
-            builder.Services.AddScoped<IPermissionService, PermissionService>();
-            builder.Services.AddScoped<IRoleService, RoleService>();
+            //builder.Services.AddScoped<IPermissionService, PermissionService>();
+            //builder.Services.AddScoped<IRoleService, RoleService>();
 
              
             builder.Services.AddControllers();

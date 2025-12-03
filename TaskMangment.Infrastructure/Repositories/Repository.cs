@@ -52,10 +52,26 @@ namespace TaskMangment.Infrastructure.Repositories
             }
         }
 
-        public void Delete(TEntity entity)
+
+        public void SoftDelete(TEntity entity)
+        {
+            if (entity is BaseEntity baseEntity)
+            {
+                baseEntity.IsDeleted = true;
+                baseEntity.DeletedDate = DateTime.UtcNow;
+                _dbSet.Update(entity);  
+            }
+            else
+            {
+                _dbSet.Remove(entity); 
+            }
+        }
+        public void HardDelete(TEntity entity)
         {
             _dbSet.Remove(entity);
         }
+
+
 
         public void DeleteRange(IEnumerable<TEntity> entities)
         {

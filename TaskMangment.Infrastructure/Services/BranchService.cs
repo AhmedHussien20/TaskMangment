@@ -131,7 +131,7 @@ namespace TaskMangment.Infrastructure.Services
             if (branch == null)
                 return ApiResponse<bool>.Fail("Branch not found", StatusCode.NotFound);
 
-            _branchRepository.Delete(branch);
+            _branchRepository.SoftDelete(branch);
             await _branchRepository.SaveChangesAsync();
 
             return ApiResponse<bool>.Ok(true, "Branch deleted successfully");
