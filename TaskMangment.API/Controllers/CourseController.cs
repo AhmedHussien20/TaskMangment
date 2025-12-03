@@ -1,30 +1,29 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using TaskMangment.Application.Common.ApiRequests.Employee;
+using TaskMangment.Application.Common.ApiRequests.Course;
 using TaskMangment.Application.DTOs;
 using TaskMangment.Application.Interfaces.Services;
 
 namespace TaskMangment.API.Controllers
 {
     [Route("api/[controller]")]
-    public class EmployeeController : BaseController
+    public class CourseController : BaseController
     {
-        private readonly IEmployeeService _service;
+        private readonly ICourseService _service;
 
-        public EmployeeController(IEmployeeService service)
+        public CourseController(ICourseService service)
         {
             _service = service;
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll([FromQuery] EmployeeRequest request)
+        public async Task<IActionResult> GetAll([FromQuery] CourseRequest request)
         {
             var result = await _service.GetAllAsync(request);
 
             if (!result.Success)
                 return Fail(result.Message!);
 
-            // Optional: Cache header
             SetCacheHeader(600);
 
             return Success(result.Data);
@@ -42,25 +41,25 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Add([FromBody] EmployeeAddEditDto dto)
+        public async Task<IActionResult> Add([FromBody] CourseAddEditDto dto)
         {
             var result = await _service.AddAsync(dto);
 
             if (!result.Success)
                 return Fail(result.Message);
 
-            return Success(true, "Employee added successfully");
+            return Success(true, "Course added successfully");
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] EmployeeAddEditDto dto)
+        public async Task<IActionResult> Update(int id, [FromBody] CourseAddEditDto dto)
         {
             var result = await _service.UpdateAsync(id, dto);
 
             if (!result.Success)
                 return Fail(result.Message, 404);
 
-            return Success(true, "Employee updated successfully");
+            return Success(true, "Course updated successfully");
         }
 
         [HttpDelete("{id}")]
@@ -71,7 +70,7 @@ namespace TaskMangment.API.Controllers
             if (!result.Success)
                 return Fail(result.Message, 404);
 
-            return Success(true, "Employee deleted successfully");
+            return Success(true, "Course deleted successfully");
         }
     }
 }

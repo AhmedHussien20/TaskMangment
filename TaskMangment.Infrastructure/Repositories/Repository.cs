@@ -25,7 +25,13 @@ namespace TaskMangment.Infrastructure.Repositories
 
         public IQueryable<TEntity> GetAll(Expression<Func<TEntity, bool>> expression = null)
         {
-            return expression == null ? _dbSet.AsQueryable() : _dbSet.Where(expression);
+            // return expression == null ? _dbSet.AsQueryable() : _dbSet.Where(expression);
+            var query = _dbSet.Where(e => !e.IsDeleted); 
+
+            if (expression != null)
+                query = query.Where(expression); 
+
+            return query.AsQueryable();
         }
 
         public async Task<TEntity> GetByIDAsync(int id)
