@@ -4,8 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
-using TaskMangment.Domain.Entities;
-using Task = System.Threading.Tasks.Task;
+using TaskMangment.Domain.Entities; 
 
 namespace TaskMangment.Application.Interfaces.IRepository
 {

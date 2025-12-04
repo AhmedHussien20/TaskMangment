@@ -10,16 +10,21 @@ namespace TaskMangment.Domain.Entities
 {
     public class Branch : BaseEntity
     {
-        [Required] public int CompanyId { get; set; }
+        [Required] 
+        public int CompanyId { get; set; }
         public int? AreaId { get; set; }
 
         [Required, MaxLength(200)]
         public string Name { get; set; }
 
-        [MaxLength(500)] public string Address { get; set; }
-        [MaxLength(50)] public string Phone { get; set; }
-        [MaxLength(50)] public string Mobile { get; set; }
-        [MaxLength(50)] public string Fax { get; set; }
+        [MaxLength(500)] 
+        public string Address { get; set; }
+        [MaxLength(50)] 
+        public string Phone { get; set; }
+        [MaxLength(50)] 
+        public string Mobile { get; set; }
+        [MaxLength(50)] 
+        public string Fax { get; set; }
 
         public int ManagerID { get; set; }
         public int ResponsibleID { get; set; }
