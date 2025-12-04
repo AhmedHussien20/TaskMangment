@@ -40,7 +40,7 @@ namespace TaskMangment.Infrastructure.DataContext
         public DbSet<Permission> Permissions { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<Student> Students { get; set; }
-        public DbSet<TaskMangment.Domain.Entities.Task> Tasks { get; set; }
+        public DbSet<WorkTask> Tasks { get; set; }
         public DbSet<TaskAssignment> TaskAssignments { get; set; }
         public DbSet<TaskCloseRequest> TaskCloseRequests { get; set; }
         public DbSet<TaskComment> TaskComments { get; set; }
@@ -82,13 +82,13 @@ namespace TaskMangment.Infrastructure.DataContext
                  .HasForeignKey(c => c.TechnicalManagerId)
                  .OnDelete(DeleteBehavior.Restrict);
 
-            builder.Entity<TaskMangment.Domain.Entities.Task>()
+            builder.Entity<WorkTask>()
                  .HasOne(t => t.AssignedBy)
                  .WithMany()
                  .HasForeignKey(t => t.AssignedByEmployeeId)
                  .OnDelete(DeleteBehavior.Restrict);
 
-            builder.Entity<TaskMangment.Domain.Entities.Task>()
+            builder.Entity<WorkTask>()
                  .HasOne(t => t.CreatedBy)
                  .WithMany()
                  .HasForeignKey(t => t.CreatedByEmployeeId)

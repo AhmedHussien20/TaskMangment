@@ -1,10 +1,5 @@
 ﻿using AutoMapper;
-using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore; 
 using TaskMangment.Application.Common.ApiRequests.Company;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Responses;
@@ -13,8 +8,7 @@ using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
-using TaskMangment.Infrastructure.Persistence.Extensions;
-using Task = System.Threading.Tasks.Task;
+using TaskMangment.Infrastructure.Persistence.Extensions; 
 
 namespace TaskMangment.Infrastructure.Services
 {

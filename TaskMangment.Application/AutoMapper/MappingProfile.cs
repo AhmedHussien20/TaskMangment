@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿ 
 using TaskMangment.Application.DTOs;
 using TaskMangment.Domain.Entities;
-using AutoMapper;
-using Task = TaskMangment.Domain.Entities.Task;
+using AutoMapper; 
 
 namespace TaskMangment.Application.AutoMapper
 {

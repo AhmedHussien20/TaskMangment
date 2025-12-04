@@ -14,20 +14,19 @@ using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
 using TaskMangment.Infrastructure.Persistence.Extensions;
-using Task = TaskMangment.Domain.Entities.Task;
 
 namespace TaskMangment.Infrastructure.Services
 {
     public class TaskService: ITaskService
     {
-        private readonly IRepository<Task> _taskRepo;
+        private readonly IRepository<WorkTask> _taskRepo;
         private readonly IRepository<Employee> _employeeRepo;
         private readonly IRepository<TaskAssignment> _assignmentRepo;
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
 
         public TaskService(
-            IRepository<Task> taskRepo,
+             IRepository<WorkTask> taskRepo,
             IRepository<Employee> employeeRepo,
             IRepository<TaskAssignment> assignmentRepo,
             IMapper mapper,
@@ -111,7 +110,7 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<bool>> AddAsync(TaskAddEditDto dto)
         {
-            var task = _mapper.Map<Task>(dto);
+            var task = _mapper.Map<WorkTask>(dto);
 
             await _taskRepo.AddAsync(task);
 

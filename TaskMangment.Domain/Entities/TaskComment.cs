@@ -10,13 +10,17 @@ namespace TaskMangment.Domain.Entities
 {
     public class TaskComment : BaseEntity
     {
-        [Required] public int TaskId { get; set; }
+        [Required] 
+        public int TaskId { get; set; }
         public int? EmployeeId { get; set; }
-        [Required] public string CommentText { get; set; }
+        [Required] 
+        public string CommentText { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        [ForeignKey(nameof(TaskId))] public Task Task { get; set; }
-        [ForeignKey(nameof(EmployeeId))] public Employee Employee { get; set; }
+        [ForeignKey(nameof(TaskId))] 
+        public WorkTask Task { get; set; }
+        [ForeignKey(nameof(EmployeeId))] 
+        public Employee Employee { get; set; }
         public ICollection<Attachment> Attachments { get; set; } = new List<Attachment>();
     }
 }
