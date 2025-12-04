@@ -14,8 +14,6 @@ using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
 using TaskMangment.Infrastructure.Persistence.Extensions;
-using Task = System.Threading.Tasks.Task;
-
 namespace TaskMangment.Infrastructure.Services
 {
     public class CompanyService : ICompanyService
