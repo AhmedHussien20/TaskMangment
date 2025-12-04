@@ -10,11 +10,13 @@ namespace TaskMangment.Domain.Entities
 {
     public class CourseSubject : BaseEntity
     {
-        public int SubjectId { get; set; }
-        [Required] public int CourseId { get; set; }
-        [MaxLength(250)] public string Title { get; set; }
+        [Required] 
+        public int CourseId { get; set; }
+        [MaxLength(250)] 
+        public string Title { get; set; }
 
-        [ForeignKey(nameof(CourseId))] public Course Course { get; set; }
+        [ForeignKey(nameof(CourseId))] 
+        public Course Course { get; set; }
         public ICollection<Offer> Offers { get; set; } = new List<Offer>();
     }
 }

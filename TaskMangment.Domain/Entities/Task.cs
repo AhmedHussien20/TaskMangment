@@ -9,7 +9,7 @@ using TaskMangment.Domain.Entities;
 
 namespace TaskMangment.Domain.Entities
 {
-    public class Task : BaseEntity
+    public class WorkTask : BaseEntity
     {
         [Required] public int CompanyId { get; set; }
         public int? CreatedByEmployeeId { get; set; }

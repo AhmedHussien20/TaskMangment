@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿ 
 using TaskMangment.Application.DTOs;
 using TaskMangment.Domain.Entities;
-using AutoMapper;
-using Task = TaskMangment.Domain.Entities.Task;
+using AutoMapper; 
 
 namespace TaskMangment.Application.AutoMapper
 {
@@ -81,6 +76,16 @@ namespace TaskMangment.Application.AutoMapper
                     opt.MapFrom(src => src.Department.Name))
                 .ForMember(dest => dest.BranchName, opt =>
                     opt.MapFrom(src => src.Department.Branch.Name));
+
+
+            CreateMap<TaskAssignment, TaskAssignmentGetDto>()
+    .ForMember(dest => dest.EmployeeName,
+               opt => opt.MapFrom(src => src.Employee.FullName))
+    .ForMember(dest => dest.TaskTitle,
+               opt => opt.MapFrom(src => src.Task.Title));
+
+            CreateMap<TaskAssignmentAddEditDto, TaskAssignment>();
+
 
         }
     }

@@ -6,9 +6,8 @@ using System.Threading.Tasks;
 
 namespace TaskMangment.Application.Interfaces.Services
 {
-    public interface IEmailService
+    public interface IWhatsAppService
     {
-        Task SendEmailAsync(string subject, string body);
-        Task SendEmailAsync(string to, string subject, string body);
+        Task SendMessageAsync(string phoneNumber, string message);
     }
 }

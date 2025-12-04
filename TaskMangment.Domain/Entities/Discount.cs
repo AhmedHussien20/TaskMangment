@@ -19,7 +19,7 @@ namespace TaskMangment.Domain.Entities
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         [ForeignKey(nameof(EmployeeId))] public Employee Employee { get; set; }
-        [ForeignKey(nameof(TaskId))] public Task Task { get; set; }
+        [ForeignKey(nameof(TaskId))] public WorkTask Task { get; set; }
         [ForeignKey(nameof(CreatedByEmployeeId))] public Employee CreatedBy { get; set; }
     }
 }
