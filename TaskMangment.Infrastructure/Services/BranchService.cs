@@ -111,18 +111,15 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<bool>> AddAsync(BranchAddEditDto dto)
         {
-            // تحقق من الـ Manager و Responsible
             if (dto.ManagerId.HasValue && !await _employeeRepository.IsExistAsync(dto.ManagerId.Value))
                 return ApiResponse<bool>.Fail("Manager not found", StatusCode.NotFound);
 
             if (dto.ResponsibleId.HasValue && !await _employeeRepository.IsExistAsync(dto.ResponsibleId.Value))
                 return ApiResponse<bool>.Fail("Responsible employee not found", StatusCode.NotFound);
 
-            // تحقق من الـ Area
             if (dto.AreaId.HasValue && !await _areaRepository.IsExistAsync(dto.AreaId.Value))
                 return ApiResponse<bool>.Fail("Area not found", StatusCode.NotFound);
 
-            // تحقق من الـ Company
             if (!await _companyRepository.IsExistAsync(dto.CompanyId))
                 return ApiResponse<bool>.Fail("Company not found", StatusCode.NotFound);
 

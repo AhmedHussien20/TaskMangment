@@ -1,19 +1,20 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using TaskMangment.API.Extensions;
+using TaskMangment.API.Filters;
 using TaskMangment.API.Middlewares;
+using TaskMangment.Application.Common.Interfaces;
+using TaskMangment.Application.Interfaces;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Domain.Entities;
 using TaskMangment.Infrastructure;
+using TaskMangment.Infrastructure.Caching;
 using TaskMangment.Infrastructure.DataContext;
 using TaskMangment.Infrastructure.Services;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using TaskMangment.API.Extensions;
-using Microsoft.AspNetCore.Identity;
-using TaskMangment.Application.Interfaces;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using TaskMangment.Application.Common.Interfaces;
-using TaskMangment.Infrastructure.Caching;
 using TaskMangment.Infrastructure.SignalR;
 
 namespace TaskMangment.API
@@ -46,14 +47,16 @@ namespace TaskMangment.API
             builder.Services.AddSignalR();
             builder.Services.AddScoped<IWhatsAppService, WhatsAppService>();
             builder.Services.AddScoped<INotificationService, NotificationService>();
-            
+
+            builder.Services.AddScoped<AuditLogAttribute>();
+            builder.Services.AddHttpContextAccessor();
 
 
-             
+
             //builder.Services.AddScoped<IPermissionService, PermissionService>();
             //builder.Services.AddScoped<IRoleService, RoleService>();
 
-             
+
             builder.Services.AddControllers();
 
             builder.Services.AddAuthentication(options =>

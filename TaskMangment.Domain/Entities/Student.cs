@@ -12,7 +12,7 @@ namespace TaskMangment.Domain.Entities
         [MaxLength(250)] public string FullName { get; set; }
         [MaxLength(200)] public string Email { get; set; }
         [MaxLength(50)] public string Mobile { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+       // public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public ICollection<OfferAssignment> OfferAssignments { get; set; }= new List<OfferAssignment>();
     }
 }

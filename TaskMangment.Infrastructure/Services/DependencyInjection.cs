@@ -37,8 +37,16 @@ namespace TaskMangment.Infrastructure.Services
 
             services.AddScoped<IDepartmentService, DepartmentService>();
             services.AddScoped<ICourseService, CourseService>();
-            //services.AddScoped<IStudentService, StudentService>();
+            services.AddScoped<IStudentService, StudentService>();
             services.AddScoped<IJobService, JobService>();
+            services.AddScoped<IOfferService, OfferService>();
+            services.AddScoped<IAttachmentService, AttachmentService>();
+            services.AddScoped<IPaymentVoucherService, PaymentVoucherService>();
+            services.AddScoped<ITaskCommentService, TaskCommentService>();
+            services.AddScoped<ITaskExtensionRequestsService, TaskExtensionRequestService>();
+            services.AddScoped<ITaskCloseRequestService, TaskCloseRequestService>();
+            services.AddScoped<ICurrentUserService, CurrentUserService>();
+            services.AddScoped<IAuditLogService, AuditLogService>();
 
 
 

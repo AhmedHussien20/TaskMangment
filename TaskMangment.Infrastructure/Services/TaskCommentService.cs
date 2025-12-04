@@ -1,0 +1,142 @@
+﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using TaskMangment.Application.Common.ApiRequests.Task;
+using TaskMangment.Application.Common.Interfaces;
+using TaskMangment.Application.Common.Responses;
+using TaskMangment.Application.DTOs.TaskDTOs;
+using TaskMangment.Application.Interfaces.IRepository;
+using TaskMangment.Application.Interfaces.Services;
+using TaskMangment.Application.Responses;
+using TaskMangment.Domain.Entities;
+using TaskMangment.Infrastructure.Persistence.Extensions;
+
+namespace TaskMangment.Infrastructure.Services
+{
+    public class TaskCommentService : ITaskCommentService
+    {
+        private readonly IRepository<TaskComment> _commentRepo;
+        private readonly IRepository<Attachment> _attachmentRepo;
+        private readonly IMapper _mapper;
+        private readonly ICachingService _cache;
+
+        public TaskCommentService(
+            IRepository<TaskComment> commentRepo,
+            IRepository<Attachment> attachmentRepo,
+            IMapper mapper,
+            ICachingService cache)
+        {
+            _commentRepo = commentRepo;
+            _attachmentRepo = attachmentRepo;
+            _mapper = mapper;
+            _cache = cache;
+        }
+
+        public async Task<ApiResponse<PagedResponse<TaskCommentGetDto>>> GetAllAsync(TaskCommentRequest request)
+        {
+            string safeTaskId = request.TaskId?.ToString() ?? "null";
+
+            string cacheKey = $"taskComments-{request.PageIndex}-{request.PageSize}-{request.SortColumn}-{request.SortDirection}-{safeTaskId}";
+
+            if (!request.BypassCache)
+            {
+                var cached = await _cache.GetAsync<PagedResponse<TaskCommentGetDto>>(cacheKey);
+                if (cached != null)
+                    return ApiResponse<PagedResponse<TaskCommentGetDto>>.Ok(cached);
+            }
+
+            var query = _commentRepo.GetAll()
+                .Include(c => c.Employee)
+                .Include(c => c.Task)
+                .AsQueryable();
+
+            if (request.TaskId.HasValue)
+                query = query.Where(c => c.TaskId == request.TaskId.Value);
+
+            var totalCount = await query.CountAsync();
+
+            query = query.OrderByDynamicSafe(request.SortColumn, request.SortDirection);
+
+            var list = await query
+                .Skip((request.PageIndex - 1) * request.PageSize)
+                .Take(request.PageSize)
+                .ToListAsync();
+
+            var dtos = _mapper.Map<ICollection<TaskCommentGetDto>>(list);
+
+            foreach (var dto in dtos)
+            {
+                var comment = list.First(c => c.Id == dto.Id);
+                dto.AttachmentCount = await _attachmentRepo.CountAsync(a => a.CommentId == comment.Id);
+            }
+
+            var response = new PagedResponse<TaskCommentGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
+
+            await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(8));
+
+            return ApiResponse<PagedResponse<TaskCommentGetDto>>.Ok(response);
+        }
+
+        public async Task<ApiResponse<TaskCommentGetDto>> GetByIdAsync(int id)
+        {
+            var comment = await _commentRepo.GetAll(c => c.Id == id)
+                .Include(c => c.Employee)
+                .AsNoTracking()
+                .FirstOrDefaultAsync();
+
+            if (comment == null)
+                return ApiResponse<TaskCommentGetDto>.Fail("Comment not found");
+
+            var dto = _mapper.Map<TaskCommentGetDto>(comment);
+
+            dto.AttachmentCount = await _attachmentRepo.CountAsync(a => a.CommentId == id);
+
+            return ApiResponse<TaskCommentGetDto>.Ok(dto);
+        }
+
+        public async Task<ApiResponse<bool>> AddAsync(int taskId, int employeeId, TaskCommentAddEditDto dto)
+        {
+
+            var comment = new TaskComment
+            {
+                TaskId = taskId,
+                EmployeeId = employeeId,
+                CommentText = dto.CommentText
+            };
+
+            await _commentRepo.AddAsync(comment);
+            await _commentRepo.SaveChangesAsync();
+
+            return ApiResponse<bool>.Ok(true, "Comment added successfully");
+        }
+
+        public async Task<ApiResponse<bool>> UpdateAsync(int id, TaskCommentAddEditDto dto)
+        {
+            var comment = await _commentRepo.GetByIDAsync(id);
+            if (comment == null)
+                return ApiResponse<bool>.Fail("Comment not found");
+
+            comment.CommentText = dto.CommentText;
+
+            await _commentRepo.SaveChangesAsync();
+
+            return ApiResponse<bool>.Ok(true, "Comment updated");
+        }
+
+        public async Task<ApiResponse<bool>> DeleteAsync(int id)
+        {
+            var comment = await _commentRepo.GetByIDAsync(id);
+            if (comment == null)
+                return ApiResponse<bool>.Fail("Comment not found");
+
+            _commentRepo.SoftDelete(comment);
+            await _commentRepo.SaveChangesAsync();
+
+            return ApiResponse<bool>.Ok(true, "Comment deleted");
+        }
+    }
+}

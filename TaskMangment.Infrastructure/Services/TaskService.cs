@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using TaskMangment.Application.Common.ApiRequests.Task;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Responses;
-using TaskMangment.Application.DTOs;
+using TaskMangment.Application.DTOs.TaskDTOs;
 using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Application.Responses;
@@ -22,6 +22,8 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<WorkTask> _taskRepo;
         private readonly IRepository<Employee> _employeeRepo;
         private readonly IRepository<TaskAssignment> _assignmentRepo;
+        private readonly IRepository<AuditLog> _audit;
+
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
 
@@ -29,12 +31,14 @@ namespace TaskMangment.Infrastructure.Services
              IRepository<WorkTask> taskRepo,
             IRepository<Employee> employeeRepo,
             IRepository<TaskAssignment> assignmentRepo,
+            IRepository<AuditLog> audit,
             IMapper mapper,
             ICachingService cache)
         {
             _taskRepo = taskRepo;
             _employeeRepo = employeeRepo;
             _assignmentRepo = assignmentRepo;
+            _audit = audit;
             _mapper = mapper;
             _cache = cache;
         }
@@ -122,7 +126,8 @@ namespace TaskMangment.Infrastructure.Services
                 var assignment = new TaskAssignment
                 {
                     TaskId = task.Id,
-                    EmployeeId = empId
+                    EmployeeId = empId,
+                    IsActive = true
                 };
                 await _assignmentRepo.AddAsync(assignment);
             }
@@ -140,17 +145,41 @@ namespace TaskMangment.Infrastructure.Services
 
             _mapper.Map(dto, task);
 
-            var existingAssignments = await _assignmentRepo.GetAll(a => a.TaskId == id).ToListAsync();
-            _assignmentRepo.DeleteRange(existingAssignments);
-            foreach (var empId in dto.AssignedEmployeeIds)
+            var existingAssignments = await _assignmentRepo
+                .GetAll(a => a.TaskId == id)
+                .ToListAsync();
+
+            var newEmployeeIds = dto.AssignedEmployeeIds ?? new List<int>();
+
+            foreach (var oldAssignment in existingAssignments)
             {
-                var assignment = new TaskAssignment
+                if (!newEmployeeIds.Contains(oldAssignment.EmployeeId))
                 {
-                    TaskId = id,
-                    EmployeeId = empId
-                };
-                await _assignmentRepo.AddAsync(assignment);
+                    oldAssignment.IsActive = false;
+                }
             }
+
+            foreach (var empId in newEmployeeIds)
+            {
+                var assignment = existingAssignments
+                    .FirstOrDefault(a => a.EmployeeId == empId);
+
+                if (assignment != null)
+                {
+                    assignment.IsActive = true;
+                }
+                else
+                {
+                    await _assignmentRepo.AddAsync(new TaskAssignment
+                    {
+                        TaskId = id,
+                        EmployeeId = empId,
+                        IsActive = true
+                    });
+                }
+            }
+
+
             await _assignmentRepo.SaveChangesAsync();
 
             return ApiResponse<bool>.Ok(true, "Task updated successfully");

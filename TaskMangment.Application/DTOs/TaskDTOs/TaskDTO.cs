@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using TaskMangment.Domain.Entities;
 using TaskStatus = TaskMangment.Domain.Entities.TaskStatus;
 
-namespace TaskMangment.Application.DTOs
+namespace TaskMangment.Application.DTOs.TaskDTOs
 {
     public class TaskAddEditDto
     {

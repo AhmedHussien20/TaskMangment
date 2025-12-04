@@ -69,12 +69,12 @@ namespace TaskMangment.Infrastructure.Services
             var dtos = _mapper.Map<ICollection<CourseGetDto>>(list);
 
             // Fill subjects as List<string>
-            foreach (var dto in dtos)
-            {
-                var course = list.First(c => c.Id == dto.Id);
-                dto.Subjects = course.Subjects.Select(s => s.Title).ToList();
-                dto.OfferCount = course.Offers.Count;
-            }
+            //foreach (var dto in dtos)
+            //{
+            //    var course = list.First(c => c.Id == dto.Id);
+            //    dto.Subjects = course.Subjects.Select(s => s.Title).ToList();
+            //    dto.OfferCount = course.Offers.Count;
+            //}
 
             var response = new PagedResponse<CourseGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
 
@@ -95,8 +95,8 @@ namespace TaskMangment.Infrastructure.Services
                 return ApiResponse<CourseGetDto>.Fail("Course not found", StatusCode.NotFound);
 
             var dto = _mapper.Map<CourseGetDto>(course);
-            dto.Subjects = course.Subjects.Select(s => s.Title).ToList();
-            dto.OfferCount = course.Offers.Count;
+            //dto.Subjects = course.Subjects.Select(s => s.Title).ToList();
+            //dto.OfferCount = course.Offers.Count;
 
             return ApiResponse<CourseGetDto>.Ok(dto);
         }

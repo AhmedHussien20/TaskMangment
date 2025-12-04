@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using TaskMangment.API.Filters;
 using TaskMangment.Application.Common.ApiRequests.Department;
 using TaskMangment.Application.DTOs;
 using TaskMangment.Application.Interfaces.Services;
@@ -7,6 +8,8 @@ using TaskMangment.Application.Interfaces.Services;
 namespace TaskMangment.API.Controllers
 {
     [Route("api/[controller]")]
+    [ServiceFilter(typeof(AuditLogAttribute))] // هنا تضيف الفلتر
+
     public class DepartmentController : BaseController
     {
         private readonly IDepartmentService _service;
