@@ -65,6 +65,7 @@ namespace TaskMangment.Infrastructure.Repositories
             {
                 baseEntity.IsDeleted = true;
                 baseEntity.DeletedDate = DateTime.UtcNow;
+                baseEntity.DeletedBy = entity.DeletedBy;
                 _dbSet.Update(entity);  
             }
             else
