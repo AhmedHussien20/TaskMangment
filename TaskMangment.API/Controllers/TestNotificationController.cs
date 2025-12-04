@@ -23,7 +23,7 @@ namespace TaskMangment.API.Controllers
         {
             int testUserId = 1;
 
-            await _hub.Clients.All.SendAsync("ReceiveLog", "🔥 Hello from backend!");
+            await _hub.Clients.All.SendAsync("ReceiveLog", " Hello from Task Mangment!");
 
             await _notification.SendAsync(
                 userId: testUserId,

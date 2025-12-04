@@ -114,7 +114,6 @@ namespace TaskMangment.Infrastructure.Services
             var task = _mapper.Map<Task>(dto);
 
             await _taskRepo.AddAsync(task);
-            await _taskRepo.SaveChangesAsync();
 
             foreach (var empId in dto.AssignedEmployeeIds)
             {
@@ -141,7 +140,6 @@ namespace TaskMangment.Infrastructure.Services
                 return ApiResponse<bool>.Fail("Task not found", StatusCode.NotFound);
 
             _mapper.Map(dto, task);
-            await _taskRepo.SaveChangesAsync();
 
             var existingAssignments = await _assignmentRepo.GetAll(a => a.TaskId == id).ToListAsync();
             _assignmentRepo.DeleteRange(existingAssignments);

@@ -82,6 +82,16 @@ namespace TaskMangment.Application.AutoMapper
                 .ForMember(dest => dest.BranchName, opt =>
                     opt.MapFrom(src => src.Department.Branch.Name));
 
+
+            CreateMap<TaskAssignment, TaskAssignmentGetDto>()
+    .ForMember(dest => dest.EmployeeName,
+               opt => opt.MapFrom(src => src.Employee.FullName))
+    .ForMember(dest => dest.TaskTitle,
+               opt => opt.MapFrom(src => src.Task.Title));
+
+            CreateMap<TaskAssignmentAddEditDto, TaskAssignment>();
+
+
         }
     }
 }
