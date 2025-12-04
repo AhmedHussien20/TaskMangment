@@ -1,7 +1,8 @@
-﻿ 
+﻿
 using TaskMangment.Application.DTOs;
 using TaskMangment.Domain.Entities;
-using AutoMapper; 
+using AutoMapper;
+using TaskMangment.Application.DTOs.TaskDTOs;
 
 namespace TaskMangment.Application.AutoMapper
 {
@@ -34,11 +35,14 @@ namespace TaskMangment.Application.AutoMapper
 
             CreateMap<Permission, PermissionGetDto>();
             CreateMap<PermissionAddDto, Permission>();
-            CreateMap<Task, TaskGetDto>();
-            CreateMap<TaskAddEditDto, Task>();
+            CreateMap<WorkTask, TaskGetDto>();
+            CreateMap<TaskAddEditDto, WorkTask>()
+                //remember for discussion Ignore null values during mapping for not have to send the whole object
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
             CreateMap<EmployeeRole, EmployeeRoleGetDto>()
                 .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.Role.Name));
+
 
             CreateMap<Department, DepartmentGetDto>()
               .ForMember(dest => dest.BranchName, opt => opt.MapFrom(src => src.Branch.Name))
@@ -47,16 +51,16 @@ namespace TaskMangment.Application.AutoMapper
               .ForMember(dest => dest.EmployeeCount, opt => opt.Ignore());
 
             CreateMap<DepartmentAddEditDto, Department>()
-                .ForMember(dest => dest.Id, opt => opt.Ignore()) 
-                .ForMember(dest => dest.Jobs, opt => opt.Ignore()); 
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForMember(dest => dest.Jobs, opt => opt.Ignore());
 
             CreateMap<Department, DepartmentAddEditDto>()
                 .ForMember(dest => dest.ManagerEmployeeId, opt => opt.MapFrom(src => src.ManagerEmployeeId))
                 .ForMember(dest => dest.BranchId, opt => opt.MapFrom(src => src.BranchId));
 
             CreateMap<Course, CourseGetDto>()
-           .ForMember(dest => dest.Title,
-                      opt => opt.MapFrom(src => src.Subjects.Select(s => s.Title).ToList()));
+    .ForMember(dest => dest.Subjects, opt => opt.MapFrom(src => src.Subjects.Select(s => s.Title).ToList()))
+    .ForMember(dest => dest.OfferCount, opt => opt.MapFrom(src => src.Offers.Count));
 
             CreateMap<CourseAddEditDto, Course>()
                 .ForMember(dest => dest.Subjects,
@@ -64,8 +68,8 @@ namespace TaskMangment.Application.AutoMapper
 
 
             CreateMap<JobAddEditDto, Job>()
-            .ForMember(dest => dest.Id, opt => opt.Ignore())      
-            .ForMember(dest => dest.Employees, opt => opt.Ignore())  
+            .ForMember(dest => dest.Id, opt => opt.Ignore())
+            .ForMember(dest => dest.Employees, opt => opt.Ignore())
             .ForMember(dest => dest.Department, opt => opt.Ignore());
 
             // Map Job entity to Get DTO
@@ -79,14 +83,69 @@ namespace TaskMangment.Application.AutoMapper
 
 
             CreateMap<TaskAssignment, TaskAssignmentGetDto>()
-    .ForMember(dest => dest.EmployeeName,
-               opt => opt.MapFrom(src => src.Employee.FullName))
-    .ForMember(dest => dest.TaskTitle,
-               opt => opt.MapFrom(src => src.Task.Title));
-
+                .ForMember(dest => dest.EmployeeName, opt => opt.MapFrom(src => src.Employee.FullName))
+                .ForMember(dest => dest.TaskTitle, opt => opt.MapFrom(src => src.Task.Title));
             CreateMap<TaskAssignmentAddEditDto, TaskAssignment>();
 
 
-        }
+            CreateMap<Student, StudentGetDto>();
+            CreateMap<StudentAddEditDto, Student>();
+
+            CreateMap<OfferAddEditDto, Offer>()
+               .ForMember(dest => dest.Assignments, opt => opt.Ignore());
+
+            CreateMap<Offer, OfferGetDto>()
+                .ForMember(dest => dest.CourseTitle, opt => opt.MapFrom(src => src.Course != null ? src.Course.Title : string.Empty))
+                .ForMember(dest => dest.SubjectTitle, opt => opt.MapFrom(src => src.Subject != null ? src.Subject.Title : string.Empty))
+                .ForMember(dest => dest.AssignedStudents, opt => opt.MapFrom(src => src.Assignments.Select(a => a.Student.FullName)));
+
+            CreateMap<AttachmentAddDto, Attachment>()
+           .ForMember(dest => dest.FileName, opt => opt.MapFrom(src => src.File.FileName))
+           .ForMember(dest => dest.FilePath, opt => opt.MapFrom(src => "/uploads/" + src.File.FileName))
+           .ForMember(dest => dest.ContentType, opt => opt.MapFrom(src => src.File.ContentType))
+           .ForMember(dest => dest.Size, opt => opt.MapFrom(src => src.File.Length));
+            CreateMap<Attachment, AttachmentGetDto>();
+
+            CreateMap<PaymentVoucher, PaymentVoucherGetDto>()
+    .ForMember(d => d.CompanyName, o => o.MapFrom(s => s.Company.Name))
+    .ForMember(d => d.BranchName, o => o.MapFrom(s => s.Branch.Name))
+    .ForMember(d => d.CreatedByName, o => o.MapFrom(s => s.CreatedBy.FullName));
+
+            CreateMap<PaymentVoucherAddEditDto, PaymentVoucher>();
+
+            CreateMap<TaskComment, TaskCommentGetDto>()
+    .ForMember(d => d.EmployeeName, o => o.MapFrom(s => s.Employee.FullName));
+
+            CreateMap<TaskExtensionRequest, TaskExtensionRequestListDto>()
+              .ForMember(dest => dest.RequestedByName, opt => opt.MapFrom(src => src.RequestedBy.FullName));
+
+            CreateMap<TaskExtensionRequest, TaskExtensionRequestDetailsDto>()
+                .ForMember(dest => dest.RequestedByName, opt => opt.MapFrom(src => src.RequestedBy.FullName))
+                .ForMember(dest => dest.ReviewedByName, opt => opt.MapFrom(src => src.ReviewedBy.FullName));
+
+            CreateMap<TaskExtensionRequestAddDto, TaskExtensionRequest>()
+                .ForMember(dest => dest.Status, opt => opt.Ignore())
+                .ForMember(dest => dest.RequestedAt, opt => opt.Ignore());
+
+
+
+            CreateMap<TaskCloseRequest, TaskCloseRequestListDto>()
+           .ForMember(dest => dest.RequestedByName, opt => opt.MapFrom(src => src.RequestedBy.FullName));
+
+            CreateMap<TaskCloseRequest, TaskCloseRequestDetailsDto>()
+                .ForMember(dest => dest.RequestedByName, opt => opt.MapFrom(src => src.RequestedBy.FullName))
+                .ForMember(dest => dest.ReviewedByName, opt => opt.MapFrom(src => src.ReviewedBy.FullName));
+
+            CreateMap<TaskCloseRequestAddDto, TaskCloseRequest>()
+                .ForMember(dest => dest.Status, opt => opt.Ignore())
+                .ForMember(dest => dest.RequestedAt, opt => opt.Ignore());
+
+            
+            CreateMap<AuditLog, AuditLogListDto>();
+            CreateMap<AuditLog, AuditLogDetailsDto>();
+            CreateMap<AuditLogAddDto, AuditLog>();
+        
+
+    }
     }
 }

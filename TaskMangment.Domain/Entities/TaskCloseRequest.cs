@@ -16,10 +16,14 @@ namespace TaskMangment.Domain.Entities
         public string Message { get; set; }
         public DateTime RequestedAt { get; set; } = DateTime.UtcNow;
         public CloseRequestStatus Status { get; set; } = CloseRequestStatus.Pending;
+
         public int? ReviewedByEmployeeId { get; set; }
+        public int? RequestedByEmployeeId { get; set; }
+
         public DateTime? ReviewedAt { get; set; }
 
         [ForeignKey(nameof(TaskAssignmentId))] public TaskAssignment TaskAssignment { get; set; }
+        [ForeignKey(nameof(RequestedByEmployeeId))] public Employee RequestedBy { get; set; }
         [ForeignKey(nameof(ReviewedByEmployeeId))] public Employee ReviewedBy { get; set; }
     }
 

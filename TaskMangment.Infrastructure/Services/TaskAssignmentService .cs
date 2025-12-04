@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 namespace TaskMangment.Infrastructure.Services
 {
     using AutoMapper;
-    using Microsoft.EntityFrameworkCore; 
+    using Microsoft.EntityFrameworkCore;
     using TaskMangment.Application.Common.ApiRequests.Task;
     using TaskMangment.Application.Common.Responses;
-    using TaskMangment.Application.DTOs;
+    using TaskMangment.Application.DTOs.TaskDTOs;
     using TaskMangment.Application.Interfaces.IRepository;
     using TaskMangment.Application.Interfaces.Services;
     using TaskMangment.Application.Responses;

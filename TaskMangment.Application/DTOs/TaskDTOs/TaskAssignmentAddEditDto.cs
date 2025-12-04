@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TaskMangment.Application.DTOs
+namespace TaskMangment.Application.DTOs.TaskDTOs
 {
     public class TaskAssignmentAddEditDto
     {

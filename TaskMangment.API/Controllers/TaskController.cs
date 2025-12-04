@@ -1,7 +1,7 @@
-﻿ 
+﻿
 using Microsoft.AspNetCore.Mvc;
 using TaskMangment.Application.Common.ApiRequests.Task;
-using TaskMangment.Application.DTOs;
+using TaskMangment.Application.DTOs.TaskDTOs;
 using TaskMangment.Application.Interfaces.Services;
 
 namespace TaskMangment.API.Controllers

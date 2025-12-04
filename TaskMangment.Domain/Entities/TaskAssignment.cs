@@ -20,6 +20,7 @@ namespace TaskMangment.Domain.Entities
         public decimal ProgressPercent { get; set; } = 0;
         public int WarningsCount { get; set; } = 0;
         public bool IsClosed { get; set; } = false;
+        public bool IsActive { get; set; } = true;
 
         [ForeignKey(nameof(TaskId))] 
         public WorkTask Task { get; set; }

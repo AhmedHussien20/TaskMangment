@@ -520,9 +520,6 @@ namespace TaskMangment.Infrastructure.Migrations
                     b.Property<DateTime?>("ModifiedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("SubjectId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(250)
@@ -1329,9 +1326,6 @@ namespace TaskMangment.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
                     b.Property<int?>("CreatedBy")
                         .HasColumnType("int");
 
@@ -1373,88 +1367,6 @@ namespace TaskMangment.Infrastructure.Migrations
                     b.ToTable("Students");
                 });
 
-            modelBuilder.Entity("TaskMangment.Domain.Entities.Task", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("AssignedByEmployeeId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("CommentAllowPeriodDays")
-                        .HasColumnType("int");
-
-                    b.Property<int>("CompanyId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("CreatedByEmployeeId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("DeletedBy")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("DeletedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("DueDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsShared")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("MaxWarnings")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("ModifiedBy")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("ModifiedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<decimal>("PenaltyAtMaxWarnings")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("PenaltyOnAutoClose")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<byte>("Priority")
-                        .HasColumnType("tinyint");
-
-                    b.Property<byte>("Status")
-                        .HasColumnType("tinyint");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(300)
-                        .HasColumnType("nvarchar(300)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AssignedByEmployeeId");
-
-                    b.HasIndex("CompanyId");
-
-                    b.HasIndex("CreatedByEmployeeId");
-
-                    b.ToTable("Tasks");
-                });
-
             modelBuilder.Entity("TaskMangment.Domain.Entities.TaskAssignment", b =>
                 {
                     b.Property<int>("Id")
@@ -1480,6 +1392,9 @@ namespace TaskMangment.Infrastructure.Migrations
 
                     b.Property<int>("EmployeeId")
                         .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("IsClosed")
                         .HasColumnType("bit");
@@ -1551,6 +1466,9 @@ namespace TaskMangment.Infrastructure.Migrations
                     b.Property<DateTime>("RequestedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<int?>("RequestedByEmployeeId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime?>("ReviewedAt")
                         .HasColumnType("datetime2");
 
@@ -1563,16 +1481,18 @@ namespace TaskMangment.Infrastructure.Migrations
                     b.Property<int>("TaskAssignmentId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("TaskId")
+                    b.Property<int?>("WorkTaskId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("RequestedByEmployeeId");
 
                     b.HasIndex("ReviewedByEmployeeId");
 
                     b.HasIndex("TaskAssignmentId");
 
-                    b.HasIndex("TaskId");
+                    b.HasIndex("WorkTaskId");
 
                     b.ToTable("TaskCloseRequests");
                 });
@@ -1683,7 +1603,7 @@ namespace TaskMangment.Infrastructure.Migrations
                     b.Property<int>("TaskAssignmentId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("TaskId")
+                    b.Property<int?>("WorkTaskId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -1694,7 +1614,7 @@ namespace TaskMangment.Infrastructure.Migrations
 
                     b.HasIndex("TaskAssignmentId");
 
-                    b.HasIndex("TaskId");
+                    b.HasIndex("WorkTaskId");
 
                     b.ToTable("TaskExtensionRequests");
                 });
@@ -1751,6 +1671,88 @@ namespace TaskMangment.Infrastructure.Migrations
                     b.ToTable("Warnings");
                 });
 
+            modelBuilder.Entity("TaskMangment.Domain.Entities.WorkTask", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("AssignedByEmployeeId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("CommentAllowPeriodDays")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("CreatedByEmployeeId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("DeletedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DueDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsShared")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("MaxWarnings")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ModifiedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("PenaltyAtMaxWarnings")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("PenaltyOnAutoClose")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<byte>("Priority")
+                        .HasColumnType("tinyint");
+
+                    b.Property<byte>("Status")
+                        .HasColumnType("tinyint");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssignedByEmployeeId");
+
+                    b.HasIndex("CompanyId");
+
+                    b.HasIndex("CreatedByEmployeeId");
+
+                    b.ToTable("Tasks");
+                });
+
             modelBuilder.Entity("TaskMangment.Domain.Entities.Area", b =>
                 {
                     b.HasOne("TaskMangment.Domain.Entities.Company", "Company")
@@ -1775,7 +1777,7 @@ namespace TaskMangment.Infrastructure.Migrations
                         .HasForeignKey("CommentId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("TaskMangment.Domain.Entities.Task", "Task")
+                    b.HasOne("TaskMangment.Domain.Entities.WorkTask", "Task")
                         .WithMany("Attachments")
                         .HasForeignKey("TaskId")
                         .OnDelete(DeleteBehavior.Restrict);
@@ -1842,7 +1844,7 @@ namespace TaskMangment.Infrastructure.Migrations
                         .WithMany()
                         .HasForeignKey("CreatedByEmployeeId");
 
-                    b.HasOne("TaskMangment.Domain.Entities.Task", "RelatedTask")
+                    b.HasOne("TaskMangment.Domain.Entities.WorkTask", "RelatedTask")
                         .WithMany()
                         .HasForeignKey("RelatedTaskId");
 
@@ -1927,7 +1929,7 @@ namespace TaskMangment.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("TaskMangment.Domain.Entities.Task", "Task")
+                    b.HasOne("TaskMangment.Domain.Entities.WorkTask", "Task")
                         .WithMany()
                         .HasForeignKey("TaskId");
 
@@ -2094,31 +2096,6 @@ namespace TaskMangment.Infrastructure.Migrations
                     b.Navigation("Role");
                 });
 
-            modelBuilder.Entity("TaskMangment.Domain.Entities.Task", b =>
-                {
-                    b.HasOne("TaskMangment.Domain.Entities.Employee", "AssignedBy")
-                        .WithMany()
-                        .HasForeignKey("AssignedByEmployeeId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("TaskMangment.Domain.Entities.Company", "Company")
-                        .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("TaskMangment.Domain.Entities.Employee", "CreatedBy")
-                        .WithMany()
-                        .HasForeignKey("CreatedByEmployeeId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("AssignedBy");
-
-                    b.Navigation("Company");
-
-                    b.Navigation("CreatedBy");
-                });
-
             modelBuilder.Entity("TaskMangment.Domain.Entities.TaskAssignment", b =>
                 {
                     b.HasOne("TaskMangment.Domain.Entities.Employee", "Employee")
@@ -2127,7 +2104,7 @@ namespace TaskMangment.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("TaskMangment.Domain.Entities.Task", "Task")
+                    b.HasOne("TaskMangment.Domain.Entities.WorkTask", "Task")
                         .WithMany("Assignments")
                         .HasForeignKey("TaskId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -2140,6 +2117,10 @@ namespace TaskMangment.Infrastructure.Migrations
 
             modelBuilder.Entity("TaskMangment.Domain.Entities.TaskCloseRequest", b =>
                 {
+                    b.HasOne("TaskMangment.Domain.Entities.Employee", "RequestedBy")
+                        .WithMany()
+                        .HasForeignKey("RequestedByEmployeeId");
+
                     b.HasOne("TaskMangment.Domain.Entities.Employee", "ReviewedBy")
                         .WithMany()
                         .HasForeignKey("ReviewedByEmployeeId");
@@ -2150,9 +2131,11 @@ namespace TaskMangment.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("TaskMangment.Domain.Entities.Task", null)
+                    b.HasOne("TaskMangment.Domain.Entities.WorkTask", null)
                         .WithMany("CloseRequests")
-                        .HasForeignKey("TaskId");
+                        .HasForeignKey("WorkTaskId");
+
+                    b.Navigation("RequestedBy");
 
                     b.Navigation("ReviewedBy");
 
@@ -2165,7 +2148,7 @@ namespace TaskMangment.Infrastructure.Migrations
                         .WithMany()
                         .HasForeignKey("EmployeeId");
 
-                    b.HasOne("TaskMangment.Domain.Entities.Task", "Task")
+                    b.HasOne("TaskMangment.Domain.Entities.WorkTask", "Task")
                         .WithMany("Comments")
                         .HasForeignKey("TaskId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -2192,9 +2175,9 @@ namespace TaskMangment.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("TaskMangment.Domain.Entities.Task", null)
+                    b.HasOne("TaskMangment.Domain.Entities.WorkTask", null)
                         .WithMany("ExtensionRequests")
-                        .HasForeignKey("TaskId");
+                        .HasForeignKey("WorkTaskId");
 
                     b.Navigation("RequestedBy");
 
@@ -2218,6 +2201,31 @@ namespace TaskMangment.Infrastructure.Migrations
                     b.Navigation("IssuedBy");
 
                     b.Navigation("TaskAssignment");
+                });
+
+            modelBuilder.Entity("TaskMangment.Domain.Entities.WorkTask", b =>
+                {
+                    b.HasOne("TaskMangment.Domain.Entities.Employee", "AssignedBy")
+                        .WithMany()
+                        .HasForeignKey("AssignedByEmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("TaskMangment.Domain.Entities.Company", "Company")
+                        .WithMany()
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TaskMangment.Domain.Entities.Employee", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedByEmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("AssignedBy");
+
+                    b.Navigation("Company");
+
+                    b.Navigation("CreatedBy");
                 });
 
             modelBuilder.Entity("TaskMangment.Domain.Entities.Branch", b =>
@@ -2284,19 +2292,6 @@ namespace TaskMangment.Infrastructure.Migrations
                     b.Navigation("OfferAssignments");
                 });
 
-            modelBuilder.Entity("TaskMangment.Domain.Entities.Task", b =>
-                {
-                    b.Navigation("Assignments");
-
-                    b.Navigation("Attachments");
-
-                    b.Navigation("CloseRequests");
-
-                    b.Navigation("Comments");
-
-                    b.Navigation("ExtensionRequests");
-                });
-
             modelBuilder.Entity("TaskMangment.Domain.Entities.TaskAssignment", b =>
                 {
                     b.Navigation("CloseRequests");
@@ -2309,6 +2304,19 @@ namespace TaskMangment.Infrastructure.Migrations
             modelBuilder.Entity("TaskMangment.Domain.Entities.TaskComment", b =>
                 {
                     b.Navigation("Attachments");
+                });
+
+            modelBuilder.Entity("TaskMangment.Domain.Entities.WorkTask", b =>
+                {
+                    b.Navigation("Assignments");
+
+                    b.Navigation("Attachments");
+
+                    b.Navigation("CloseRequests");
+
+                    b.Navigation("Comments");
+
+                    b.Navigation("ExtensionRequests");
                 });
 #pragma warning restore 612, 618
         }
