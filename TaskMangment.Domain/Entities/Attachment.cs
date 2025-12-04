@@ -24,7 +24,7 @@ namespace TaskMangment.Domain.Entities
         public DateTime UploadedAt { get; set; } = DateTime.UtcNow;
 
         [ForeignKey(nameof(TaskId))] 
-        public Task Task { get; set; }
+        public WorkTask Task { get; set; }
         [ForeignKey(nameof(CommentId))] 
         public TaskComment Comment { get; set; }
 

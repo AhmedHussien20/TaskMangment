@@ -1,14 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Microsoft.EntityFrameworkCore; 
+using System.Linq.Expressions; 
 using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Domain.Entities;
 using TaskMangment.Infrastructure.DataContext;
-using Task = System.Threading.Tasks.Task;
 
 namespace TaskMangment.Infrastructure.Repositories
 {
@@ -25,18 +19,19 @@ namespace TaskMangment.Infrastructure.Repositories
 
         public IQueryable<TEntity> GetAll(Expression<Func<TEntity, bool>> expression = null)
         {
-            // return expression == null ? _dbSet.AsQueryable() : _dbSet.Where(expression);
-            var query = _dbSet.Where(e => !e.IsDeleted); 
+            var query = _dbSet.Where(x => !x.IsDeleted);
 
             if (expression != null)
-                query = query.Where(expression); 
+                query = query.Where(expression);
 
             return query.AsQueryable();
         }
 
         public async Task<TEntity> GetByIDAsync(int id)
         {
-            return await _dbSet.FindAsync(id);
+            return await _dbSet
+                .Where(x => x.Id == id && !x.IsDeleted)
+                .FirstOrDefaultAsync();
         }
 
         public async Task AddAsync(TEntity entity)
@@ -53,46 +48,46 @@ namespace TaskMangment.Infrastructure.Repositories
         {
             _dbSet.Attach(entity);
             foreach (var prop in properties)
-            {
                 _context.Entry(entity).Property(prop).IsModified = true;
-            }
         }
-
 
         public void SoftDelete(TEntity entity)
         {
-            if (entity is BaseEntity baseEntity)
+            entity.IsDeleted = true;
+            entity.DeletedDate = DateTime.UtcNow;
+
+            _dbSet.Update(entity);
+        }
+
+        public void SoftDeleteRange(IEnumerable<TEntity> entities)
+        {
+            foreach (var e in entities)
             {
-                baseEntity.IsDeleted = true;
-                baseEntity.DeletedDate = DateTime.UtcNow;
-                _dbSet.Update(entity);  
-            }
-            else
-            {
-                _dbSet.Remove(entity); 
+                e.IsDeleted = true;
+                e.DeletedDate = DateTime.UtcNow;
+                _dbSet.Update(e);
             }
         }
+
         public void HardDelete(TEntity entity)
         {
             _dbSet.Remove(entity);
         }
 
-
+        public async Task DeleteAsync(TEntity entity)
+        {
+            SoftDelete(entity);
+            await SaveChangesAsync();
+        }
 
         public void DeleteRange(IEnumerable<TEntity> entities)
         {
-            _dbSet.RemoveRange(entities);
-        }
-
-        public async Task DeleteAsync(TEntity entity)
-        {
-            _dbSet.Remove(entity);
-            await SaveChangesAsync();
+            SoftDeleteRange(entities);
         }
 
         public async Task<bool> IsExistAsync(int id)
         {
-            return await _dbSet.AnyAsync(e => e.Id == id);
+            return await _dbSet.AnyAsync(x => x.Id == id && !x.IsDeleted);
         }
 
         public async Task SaveChangesAsync()
@@ -102,7 +97,10 @@ namespace TaskMangment.Infrastructure.Repositories
 
         public async Task<int> CountAsync(Expression<Func<TEntity, bool>> predicate)
         {
-            return await _dbSet.CountAsync(predicate);
+            return await _dbSet
+                .Where(x => !x.IsDeleted)
+                .Where(predicate)
+                .CountAsync();
         }
     }
 }

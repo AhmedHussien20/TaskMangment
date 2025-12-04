@@ -10,8 +10,10 @@ namespace TaskMangment.Domain.Entities
 {
     public class TaskCloseRequest : BaseEntity
     {
-        [Required] public int TaskAssignmentId { get; set; }
-        [MaxLength(1000)] public string Message { get; set; }
+        [Required] 
+        public int TaskAssignmentId { get; set; }
+        [MaxLength(1000)] 
+        public string Message { get; set; }
         public DateTime RequestedAt { get; set; } = DateTime.UtcNow;
         public CloseRequestStatus Status { get; set; } = CloseRequestStatus.Pending;
         public int? ReviewedByEmployeeId { get; set; }
