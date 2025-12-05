@@ -34,11 +34,11 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Add([FromBody] PaymentVoucherAddEditDto dto)
+        public async Task<IActionResult> Add([FromBody] PaymentVoucherAddEditDto dto, int companyId, int createdby)
         {
-            var result = await _service.AddAsync(dto);
+            var result = await _service.AddAsync(dto, companyId, createdby);
             if (!result.Success) return Fail(result.Message);
-            return Success(true, "Voucher added successfully");
+            return Success(result.Data, "Voucher added successfully");
         }
 
         [HttpPut("{id}")]
@@ -46,7 +46,7 @@ namespace TaskMangment.API.Controllers
         {
             var result = await _service.UpdateAsync(id, dto);
             if (!result.Success) return Fail(result.Message, 404);
-            return Success(true, "Voucher updated successfully");
+            return Success(result.Data, "Voucher updated successfully");
         }
 
         [HttpDelete("{id}")]

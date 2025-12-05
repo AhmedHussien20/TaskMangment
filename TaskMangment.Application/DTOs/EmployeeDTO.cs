@@ -9,7 +9,6 @@ namespace TaskMangment.Application.DTOs
 {
     public class EmployeeAddEditDto
     {
-        public int CompanyId { get; set; }
         public int? BranchId { get; set; }
 
         [MaxLength(50)]

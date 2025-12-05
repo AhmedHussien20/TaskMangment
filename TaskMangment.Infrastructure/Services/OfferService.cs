@@ -21,15 +21,25 @@ namespace TaskMangment.Infrastructure.Services
     {
         private readonly IRepository<Offer> _offerRepo;
         private readonly IRepository<Student> _studentRepo;
+        private readonly IRepository<Course> _courseRepo;
+        private readonly IRepository<CourseSubject> _subjectRepo;
+
+
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
 
-        public OfferService(IRepository<Offer> offerRepo, IRepository<Student> studentRepo, IMapper mapper, ICachingService cache)
+        public OfferService(IRepository<Offer> offerRepo, IRepository<Student> studentRepo,
+            IMapper mapper,
+            ICachingService cache,
+            IRepository<CourseSubject> subjectRepo,
+            IRepository<Course> courseRepo)
         {
             _offerRepo = offerRepo;
             _studentRepo = studentRepo;
             _mapper = mapper;
             _cache = cache;
+            _subjectRepo = subjectRepo;
+            _courseRepo = courseRepo;
         }
 
         public async Task<ApiResponse<PagedResponse<OfferGetDto>>> GetAllAsync(OfferRequest request)
@@ -106,8 +116,10 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<OfferGetDto>.Ok(dto);
         }
 
-        public async Task<ApiResponse<bool>> AddAsync(OfferAddEditDto dto)
+        public async Task<ApiResponse<OfferGetDto>> AddAsync(OfferAddEditDto dto)
         {
+        
+
             var offer = _mapper.Map<Offer>(dto);
 
             // Assign students
@@ -125,14 +137,25 @@ namespace TaskMangment.Infrastructure.Services
             await _offerRepo.AddAsync(offer);
             await _offerRepo.SaveChangesAsync();
 
-            return ApiResponse<bool>.Ok(true, "Offer added successfully");
+            var fullOffer = await _offerRepo.GetAll(o => o.Id == offer.Id)
+      .Include(o => o.Course)
+      .Include(o => o.Subject)
+      .Include(o => o.Assignments)
+      .ThenInclude(a => a.Student) 
+      .FirstOrDefaultAsync();
+
+            var offerDto = _mapper.Map<OfferGetDto>(fullOffer);
+
+            return ApiResponse<OfferGetDto>.Ok(offerDto, "Offer added successfully");
         }
 
-        public async Task<ApiResponse<bool>> UpdateAsync(int id, OfferAddEditDto dto)
+        public async Task<ApiResponse<OfferGetDto>> UpdateAsync(int id, OfferAddEditDto dto)
         {
+         
+
             var offer = await _offerRepo.GetByIDAsync(id);
             if (offer == null)
-                return ApiResponse<bool>.Fail("Offer not found", StatusCode.NotFound);
+                return ApiResponse<OfferGetDto>.Fail("Offer not found", StatusCode.NotFound);
 
             _mapper.Map(dto, offer);
 
@@ -141,14 +164,12 @@ namespace TaskMangment.Infrastructure.Services
                 .SelectMany(o => o.Assignments)
                 .ToListAsync();
 
-            // Deactivate old assignments
             foreach (var assignment in existingAssignments)
             {
                 if (!dto.AssignedStudentIds.Contains(assignment.StudentId))
-                    assignment.IsAccepted = false; // Or any flag you want
+                    assignment.IsAccepted = false; 
             }
 
-            // Add new assignments
             foreach (var studentId in dto.AssignedStudentIds)
             {
                 var exists = existingAssignments.Any(a => a.StudentId == studentId);
@@ -159,8 +180,16 @@ namespace TaskMangment.Infrastructure.Services
             }
 
             await _offerRepo.SaveChangesAsync();
+            var fullOffer = await _offerRepo.GetAll(o => o.Id == offer.Id)
+      .Include(o => o.Course)
+      .Include(o => o.Subject)
+      .Include(o => o.Assignments)
+      .ThenInclude(a => a.Student) 
+      .FirstOrDefaultAsync();
 
-            return ApiResponse<bool>.Ok(true, "Offer updated successfully");
+            var offerDto = _mapper.Map<OfferGetDto>(fullOffer);
+
+            return ApiResponse<OfferGetDto>.Ok(offerDto, "Offer updated successfully");
         }
 
         public async Task<ApiResponse<bool>> DeleteAsync(int id)

@@ -15,7 +15,7 @@ namespace TaskMangment.Domain.Entities
         public int? EmployeeId { get; set; }
         [Required] 
         public string CommentText { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        //public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         [ForeignKey(nameof(TaskId))] 
         public WorkTask Task { get; set; }

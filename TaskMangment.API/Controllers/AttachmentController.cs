@@ -37,7 +37,7 @@ namespace TaskMangment.API.Controllers
         {
             var result = await _service.AddAsync(dto);
             if (!result.Success) return Fail(result.Message!);
-            return Success(true, "Attachment added successfully");
+            return Success(result.Data, "Attachment added successfully");
         }
 
         [HttpDelete("{id}")]

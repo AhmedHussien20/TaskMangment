@@ -103,13 +103,13 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<JobGetDto>.Ok(dto);
         }
 
-        public async Task<ApiResponse<bool>> AddAsync(JobAddEditDto dto)
+        public async Task<ApiResponse<JobGetDto>> AddAsync(JobAddEditDto dto)
         {
             if (!await _employeeRepository.IsExistAsync(dto.EmployeeId))
-                return ApiResponse<bool>.Fail("Employee not found", StatusCode.NotFound);
+                return ApiResponse<JobGetDto>.Fail("Employee not found", StatusCode.NotFound);
 
             if (!await _departmentRepository.IsExistAsync(dto.DepartmentId))
-                return ApiResponse<bool>.Fail("Department not found", StatusCode.NotFound);
+                return ApiResponse<JobGetDto>.Fail("Department not found", StatusCode.NotFound);
 
             var job = _mapper.Map<Job>(dto);
 
@@ -119,23 +119,31 @@ namespace TaskMangment.Infrastructure.Services
             await _jobRepository.AddAsync(job);
             await _jobRepository.SaveChangesAsync();
 
-            return ApiResponse<bool>.Ok(true, "Job added successfully");
+            var fullJob = await _jobRepository.GetAll(j => j.Id == job.Id)
+                                     .Include(j => j.Department)
+                                     .Include(j => j.Employees)
+                                     .Include(j => j.Department.Branch)
+                                     .FirstOrDefaultAsync();
+
+            var jobDto = _mapper.Map<JobGetDto>(fullJob);
+
+            return ApiResponse<JobGetDto>.Ok(jobDto, "Job added successfully");
         }
 
-        public async Task<ApiResponse<bool>> UpdateAsync(int id, JobAddEditDto dto)
+        public async Task<ApiResponse<JobGetDto>> UpdateAsync(int id, JobAddEditDto dto)
         {
             var job = await _jobRepository.GetAll(j => j.Id == id)
                 .Include(j => j.Employees)
                 .FirstOrDefaultAsync();
 
             if (job == null)
-                return ApiResponse<bool>.Fail("Job not found", StatusCode.NotFound);
+                return ApiResponse<JobGetDto>.Fail("Job not found", StatusCode.NotFound);
 
             if (!await _employeeRepository.IsExistAsync(dto.EmployeeId))
-                return ApiResponse<bool>.Fail("Employee not found", StatusCode.NotFound);
+                return ApiResponse<JobGetDto>.Fail("Employee not found", StatusCode.NotFound);
 
             if (!await _departmentRepository.IsExistAsync(dto.DepartmentId))
-                return ApiResponse<bool>.Fail("Department not found", StatusCode.NotFound);
+                return ApiResponse<JobGetDto>.Fail("Department not found", StatusCode.NotFound);
 
             _mapper.Map(dto, job);
 
@@ -145,8 +153,15 @@ namespace TaskMangment.Infrastructure.Services
             job.Employees.Add(employee);
 
             await _jobRepository.SaveChangesAsync();
+            var fullJob = await _jobRepository.GetAll(j => j.Id == job.Id)
+                                     .Include(j => j.Department)
+                                     .Include(j => j.Employees)
+                                     .Include(j => j.Department.Branch)
+                                     .FirstOrDefaultAsync();
 
-            return ApiResponse<bool>.Ok(true, "Job updated successfully");
+            var jobDto = _mapper.Map<JobGetDto>(fullJob);
+
+            return ApiResponse<JobGetDto>.Ok(jobDto, "Job updated successfully");
         }
 
         public async Task<ApiResponse<bool>> DeleteAsync(int id)

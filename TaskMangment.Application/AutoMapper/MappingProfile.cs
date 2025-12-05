@@ -35,10 +35,17 @@ namespace TaskMangment.Application.AutoMapper
 
             CreateMap<Permission, PermissionGetDto>();
             CreateMap<PermissionAddDto, Permission>();
-            CreateMap<WorkTask, TaskGetDto>();
+
+            CreateMap<WorkTask, TaskGetDto>()
+           .ForMember(dest => dest.AssignedByName, opt => opt.MapFrom(src => src.AssignedBy != null ? src.AssignedBy.FullName : string.Empty))
+           .ForMember(dest => dest.EmployeeNames, opt => opt.MapFrom(src => src.Assignments != null
+                                                                     ? src.Assignments.Select(a => a.Employee.FullName).ToList()
+                                                                     : new List<string>()));
+
             CreateMap<TaskAddEditDto, WorkTask>()
-                //remember for discussion Ignore null values during mapping for not have to send the whole object
-                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+                .ForMember(dest => dest.Assignments, opt => opt.Ignore()); 
+            //remember for discussion Ignore null values during mapping for not have to send the whole object
+            //.ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
             CreateMap<EmployeeRole, EmployeeRoleGetDto>()
                 .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.Role.Name));
@@ -140,12 +147,24 @@ namespace TaskMangment.Application.AutoMapper
                 .ForMember(dest => dest.Status, opt => opt.Ignore())
                 .ForMember(dest => dest.RequestedAt, opt => opt.Ignore());
 
-            
-            CreateMap<AuditLog, AuditLogListDto>();
-            CreateMap<AuditLog, AuditLogDetailsDto>();
-            CreateMap<AuditLogAddDto, AuditLog>();
-        
 
-    }
+            CreateMap<CalendarEventAddEditDto, CalendarEvent>();
+            CreateMap<CalendarEvent, CalendarEventGetDto>()
+                .ForMember(d => d.RelatedTaskTitle,
+                    opt => opt.MapFrom(s => s.RelatedTask != null ? s.RelatedTask.Title : null));
+
+            CreateMap<DiscountAddEditDto, Discount>();
+            CreateMap<Discount, DiscountListDto>()
+                .ForMember(dest => dest.EmployeeName, opt => opt.MapFrom(src => src.Employee.FullName))
+                .ForMember(dest => dest.TaskTitle, opt => opt.MapFrom(src => src.Task != null ? src.Task.Title : null));
+
+            CreateMap<Discount, DiscountDetailsDto>()
+                .ForMember(dest => dest.EmployeeName, opt => opt.MapFrom(src => src.Employee.FullName))
+                .ForMember(dest => dest.TaskTitle, opt => opt.MapFrom(src => src.Task != null ? src.Task.Title : null));
+
+            CreateMap<AuditLog,AuditLogDTO>()
+                .ForMember(dest => dest.ChangedBy, opt => opt.MapFrom(src => src.ChangedBy != null ? src.ChangedBy : "System"));
+
+        }
     }
 }

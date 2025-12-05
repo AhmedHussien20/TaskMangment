@@ -89,39 +89,40 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<CompanyGetDto>.Ok(dto);
         }
 
-        public async Task<ApiResponse<bool>> AddAsync(CompanyAddEditDto dto)
+        public async Task<ApiResponse<CompanyGetDto>> AddAsync(CompanyAddEditDto dto)
         {
             if (dto.TechnicalManagerId.HasValue && !await _employeeRepository.IsExistAsync(dto.TechnicalManagerId.Value))
-                return ApiResponse<bool>.Fail("Technical Manager not found", StatusCode.NotFound);
+                return ApiResponse<CompanyGetDto>.Fail("Technical Manager not found", StatusCode.NotFound);
 
             if (dto.FinancialManagerId.HasValue && !await _employeeRepository.IsExistAsync(dto.FinancialManagerId.Value))
-                return ApiResponse<bool>.Fail("Financial Manager not found", StatusCode.NotFound);
+                return ApiResponse<CompanyGetDto>.Fail("Financial Manager not found", StatusCode.NotFound);
 
             var company = _mapper.Map<Company>(dto);
 
             await _companyRepository.AddAsync(company);
             await _companyRepository.SaveChangesAsync();
+            var campanydto = _mapper.Map<CompanyGetDto>(company);
 
-            return ApiResponse<bool>.Ok(true, "Company added successfully");
+            return ApiResponse<CompanyGetDto>.Ok(campanydto, "Company added successfully");
         }
 
-        public async Task<ApiResponse<bool>> UpdateAsync(int id, CompanyAddEditDto dto)
+        public async Task<ApiResponse<CompanyGetDto>> UpdateAsync(int id, CompanyAddEditDto dto)
         {
             var company = await _companyRepository.GetByIDAsync(id);
             if (company == null)
-                return ApiResponse<bool>.Fail("Company not found", StatusCode.NotFound);
+                return ApiResponse<CompanyGetDto>.Fail("Company not found", StatusCode.NotFound);
 
             if (dto.TechnicalManagerId.HasValue && !await _employeeRepository.IsExistAsync(dto.TechnicalManagerId.Value))
-                return ApiResponse<bool>.Fail("Technical Manager not found", StatusCode.NotFound);
+                return ApiResponse<CompanyGetDto>.Fail("Technical Manager not found", StatusCode.NotFound);
 
             if (dto.FinancialManagerId.HasValue && !await _employeeRepository.IsExistAsync(dto.FinancialManagerId.Value))
-                return ApiResponse<bool>.Fail("Financial Manager not found", StatusCode.NotFound);
+                return ApiResponse<CompanyGetDto>.Fail("Financial Manager not found", StatusCode.NotFound);
 
             _mapper.Map(dto, company);
 
             await _companyRepository.SaveChangesAsync();
-
-            return ApiResponse<bool>.Ok(true, "Company updated successfully");
+            var campanydto = _mapper.Map<CompanyGetDto>(company);
+            return ApiResponse<CompanyGetDto>.Ok(campanydto, "Company updated successfully");
         }
 
         public async Task<ApiResponse<bool>> DeleteAsync(int id)

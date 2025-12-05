@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using Pipelines.Sockets.Unofficial.Arenas;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -82,7 +83,7 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<AttachmentGetDto>.Ok(dto);
         }
 
-        public async Task<ApiResponse<bool>> AddAsync(AttachmentAddDto dto)
+        public async Task<ApiResponse<AttachmentGetDto>> AddAsync(AttachmentAddDto dto)
         {
             var attachment = _mapper.Map<Attachment>(dto);
 
@@ -90,8 +91,9 @@ namespace TaskMangment.Infrastructure.Services
             await _attachmentRepo.SaveChangesAsync();
 
             // Optionally, invalidate attachments cache
+            var AttachmentDto = _mapper.Map<AttachmentGetDto>(attachment);
 
-            return ApiResponse<bool>.Ok(true, "Attachment added successfully");
+            return ApiResponse<AttachmentGetDto>.Ok(AttachmentDto, "Attachment added successfully");
         }
 
         public async Task<ApiResponse<bool>> DeleteAsync(int id)

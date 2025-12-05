@@ -101,7 +101,7 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<CourseGetDto>.Ok(dto);
         }
 
-        public async Task<ApiResponse<bool>> AddAsync(CourseAddEditDto dto)
+        public async Task<ApiResponse<CourseGetDto>> AddAsync(CourseAddEditDto dto)
         {
             var course = _mapper.Map<Course>(dto);
 
@@ -115,18 +115,19 @@ namespace TaskMangment.Infrastructure.Services
 
             await _courseRepository.AddAsync(course);
             await _courseRepository.SaveChangesAsync();
+            var coursedto = _mapper.Map<CourseGetDto>(course);
 
-            return ApiResponse<bool>.Ok(true, "Course added successfully");
+            return ApiResponse<CourseGetDto>.Ok(coursedto, "Course added successfully");
         }
 
-        public async Task<ApiResponse<bool>> UpdateAsync(int id, CourseAddEditDto dto)
+        public async Task<ApiResponse<CourseGetDto>> UpdateAsync(int id, CourseAddEditDto dto)
         {
             var course = await _courseRepository.GetAll(c => c.Id == id)
                 .Include(c => c.Subjects)
                 .FirstOrDefaultAsync();
 
             if (course == null)
-                return ApiResponse<bool>.Fail("Course not found", StatusCode.NotFound);
+                return ApiResponse<CourseGetDto>.Fail("Course not found", StatusCode.NotFound);
 
             // Update main properties
             _mapper.Map(dto, course);
@@ -148,8 +149,9 @@ namespace TaskMangment.Infrastructure.Services
             }
 
             await _courseRepository.SaveChangesAsync();
+            var coursedto = _mapper.Map<CourseGetDto>(course);
 
-            return ApiResponse<bool>.Ok(true, "Course updated successfully");
+            return ApiResponse<CourseGetDto>.Ok(coursedto, "Course updated successfully");
         }
 
         public async Task<ApiResponse<bool>> DeleteAsync(int id)

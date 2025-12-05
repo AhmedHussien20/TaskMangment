@@ -14,7 +14,7 @@ namespace TaskMangment.Application.Interfaces.Services
     {
         Task<ApiResponse<PagedResponse<AttachmentGetDto>>> GetAllAsync(AttachmentRequest request);
         Task<ApiResponse<AttachmentGetDto>> GetByIdAsync(int id);
-        Task<ApiResponse<bool>> AddAsync(AttachmentAddDto dto);
+        Task<ApiResponse<AttachmentGetDto>> AddAsync(AttachmentAddDto dto);
         Task<ApiResponse<bool>> DeleteAsync(int id);
     }
 }

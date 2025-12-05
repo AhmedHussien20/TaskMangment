@@ -109,56 +109,59 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<BranchGetDto>.Ok(dto);
         }
 
-        public async Task<ApiResponse<bool>> AddAsync(BranchAddEditDto dto)
+        public async Task<ApiResponse<BranchGetDto>> AddAsync(BranchAddEditDto dto, int CampanyId)
         {
             if (dto.ManagerId.HasValue && !await _employeeRepository.IsExistAsync(dto.ManagerId.Value))
-                return ApiResponse<bool>.Fail("Manager not found", StatusCode.NotFound);
+                return ApiResponse<BranchGetDto>.Fail("Manager not found", StatusCode.NotFound);
 
             if (dto.ResponsibleId.HasValue && !await _employeeRepository.IsExistAsync(dto.ResponsibleId.Value))
-                return ApiResponse<bool>.Fail("Responsible employee not found", StatusCode.NotFound);
+                return ApiResponse<BranchGetDto>.Fail("Responsible employee not found", StatusCode.NotFound);
 
             if (dto.AreaId.HasValue && !await _areaRepository.IsExistAsync(dto.AreaId.Value))
-                return ApiResponse<bool>.Fail("Area not found", StatusCode.NotFound);
+                return ApiResponse<BranchGetDto>.Fail("Area not found", StatusCode.NotFound);
 
-            if (!await _companyRepository.IsExistAsync(dto.CompanyId))
-                return ApiResponse<bool>.Fail("Company not found", StatusCode.NotFound);
+            if (!await _companyRepository.IsExistAsync(CampanyId))
+                return ApiResponse<BranchGetDto>.Fail("Company not found", StatusCode.NotFound);
 
             var branch = _mapper.Map<Branch>(dto);
+            branch.CompanyId = CampanyId;
 
             await _branchRepository.AddAsync(branch);
             await _branchRepository.SaveChangesAsync();
 
+            var branchdto = _mapper.Map<BranchGetDto>(branch);
+
             // TODO: Optional: Clear branch cache pattern
             // await _cache.RemoveByPatternAsync("branches-");
 
-            return ApiResponse<bool>.Ok(true, "Branch added successfully");
+            return ApiResponse<BranchGetDto>.Ok(branchdto, "Branch added successfully");
         }
 
-        public async Task<ApiResponse<bool>> UpdateAsync(int id, BranchAddEditDto dto)
+        public async Task<ApiResponse<BranchGetDto>> UpdateAsync(int id, BranchAddEditDto dto)
         {
             var branch = await _branchRepository.GetByIDAsync(id);
             if (branch == null)
-                return ApiResponse<bool>.Fail("Branch not found", StatusCode.NotFound);
+                return ApiResponse<BranchGetDto>.Fail("Branch not found", StatusCode.NotFound);
 
             if (dto.ManagerId.HasValue && !await _employeeRepository.IsExistAsync(dto.ManagerId.Value))
-                return ApiResponse<bool>.Fail("Manager not found", StatusCode.NotFound);
+                return ApiResponse<BranchGetDto>.Fail("Manager not found", StatusCode.NotFound);
 
             if (dto.ResponsibleId.HasValue && !await _employeeRepository.IsExistAsync(dto.ResponsibleId.Value))
-                return ApiResponse<bool>.Fail("Responsible employee not found", StatusCode.NotFound);
+                return ApiResponse<BranchGetDto>.Fail("Responsible employee not found", StatusCode.NotFound);
 
             if (dto.AreaId.HasValue && !await _areaRepository.IsExistAsync(dto.AreaId.Value))
-                return ApiResponse<bool>.Fail("Area not found", StatusCode.NotFound);
+                return ApiResponse<BranchGetDto>.Fail("Area not found", StatusCode.NotFound);
 
-            if (!await _companyRepository.IsExistAsync(dto.CompanyId))
-                return ApiResponse<bool>.Fail("Company not found", StatusCode.NotFound);
+         
 
             _mapper.Map(dto, branch);
 
             await _branchRepository.SaveChangesAsync();
+            var branchdto = _mapper.Map<BranchGetDto>(branch);
 
             // TODO: Optional: Invalidate cache
 
-            return ApiResponse<bool>.Ok(true, "Branch updated successfully");
+            return ApiResponse<BranchGetDto>.Ok(branchdto, "Branch updated successfully");
         }
 
         public async Task<ApiResponse<bool>> DeleteAsync(int id)

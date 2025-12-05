@@ -16,7 +16,7 @@ namespace TaskMangment.Domain.Entities
         [Column(TypeName = "decimal(18,2)")] public decimal Amount { get; set; }
         [MaxLength(1000)] public string Description { get; set; }
         public int? CreatedByEmployeeId { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        //public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         [ForeignKey(nameof(CompanyId))] public Company Company { get; set; }
         [ForeignKey(nameof(BranchId))] public Branch Branch { get; set; }
