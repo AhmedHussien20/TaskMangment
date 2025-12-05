@@ -19,7 +19,7 @@ namespace TaskMangment.Application.DTOs
         public DateTime? EndDate { get; set; }
 
         [Required]
-        public int CourseId { get; set; }
+        public int? CourseId { get; set; }
 
         public int? SubjectId { get; set; }
 

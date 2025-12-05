@@ -21,14 +21,23 @@ namespace TaskMangment.Infrastructure.Services
     {
         private readonly IRepository<AuditLog> _auditRepo;
         private readonly ICurrentUserService _currentUserService;
+        private readonly ICachingService _cache;
+        private readonly IMapper _mapper;
+
+
 
         public AuditLogService(
             IRepository<AuditLog> auditRepo,
-            ICurrentUserService currentUserService)
+            ICurrentUserService currentUserService,
+            IMapper mapper,
+            ICachingService cache)
         {
             _auditRepo = auditRepo;
             _currentUserService = currentUserService;
+            _mapper = mapper;
+            _cache = cache;
         }
+
 
         public async Task LogAsync(string entityName, int? entityId, string action, string details = null)
         {
@@ -52,6 +61,66 @@ namespace TaskMangment.Infrastructure.Services
                 Console.WriteLine($"Audit log error: {ex.Message}");
             }
         }
+
+
+        public async Task<ApiResponse<PagedResponse<AuditLogDTO>>> GetAllAsync(AuditLogRequest request)
+        {
+            string cacheKey = $"auditLogs-{request.PageIndex}-{request.PageSize}-{request.SortColumn}-{request.SortDirection}";
+
+            if (!request.BypassCache)
+            {
+                var cached = await _cache.GetAsync<PagedResponse<AuditLogDTO>>(cacheKey);
+                if (cached != null)
+                    return ApiResponse<PagedResponse<AuditLogDTO>>.Ok(cached);
+            }
+
+            var query = _auditRepo.GetAll().AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(request.EntityName))
+                query = query.Where(x => x.EntityName.Contains(request.EntityName));
+
+            var totalCount = await query.CountAsync();
+
+            query = query.OrderByDynamicSafe(request.SortColumn, request.SortDirection);
+
+            var list = await query
+                .Skip((request.PageIndex - 1) * request.PageSize)
+                .Take(request.PageSize)
+                .ToListAsync();
+
+            var dtos = _mapper.Map<ICollection<AuditLogDTO>>(list);
+
+            var response = new PagedResponse<AuditLogDTO>(dtos, totalCount, request.PageIndex, request.PageSize);
+
+            await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
+
+            return ApiResponse<PagedResponse<AuditLogDTO>>.Ok(response);
+        }
+
+
+        public async Task<ApiResponse<AuditLogDTO>> GetByIdAsync(int id)
+        {
+            var log = await _auditRepo.GetAll(x => x.Id == id).AsNoTracking().FirstOrDefaultAsync();
+
+            if (log == null)
+                return ApiResponse<AuditLogDTO>.Fail("Audit log not found");
+
+            var dto = _mapper.Map<AuditLogDTO>(log);
+
+            return ApiResponse<AuditLogDTO>.Ok(dto);
+        }
+        public async Task<ApiResponse<bool>> DeleteAsync(int id)
+        {
+            var auditLog = await _auditRepo.GetByIDAsync(id);
+            if (auditLog == null)
+                return ApiResponse<bool>.Fail("audit log not found");
+
+            _auditRepo.SoftDelete(auditLog);
+            await _auditRepo.SaveChangesAsync();
+
+            return ApiResponse<bool>.Ok(true, "audit log deleted successfully");
+        }
+
     }
 }
 

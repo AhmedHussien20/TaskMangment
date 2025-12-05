@@ -8,8 +8,6 @@ using TaskMangment.Application.Interfaces.Services;
 namespace TaskMangment.API.Controllers
 {
     [Route("api/[controller]")]
-    [ServiceFilter(typeof(AuditLogAttribute))] // هنا تضيف الفلتر
-
     public class DepartmentController : BaseController
     {
         private readonly IDepartmentService _service;
@@ -51,7 +49,7 @@ namespace TaskMangment.API.Controllers
             if (!result.Success)
                 return Fail(result.Message);
 
-            return Success(true, "Department added successfully");
+            return Success(result.Data, "Department added successfully");
         }
 
         [HttpPut("{id}")]
@@ -62,7 +60,7 @@ namespace TaskMangment.API.Controllers
             if (!result.Success)
                 return Fail(result.Message, 404);
 
-            return Success(true, "Department updated successfully");
+            return Success(result.Data, "Department updated successfully");
         }
 
         [HttpDelete("{id}")]

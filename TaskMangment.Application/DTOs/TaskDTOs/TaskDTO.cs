@@ -12,7 +12,6 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
     public class TaskAddEditDto
     {
         [Required]
-        public int CompanyId { get; set; }
         public List<int> AssignedEmployeeIds { get; set; } = new();
 
         [Required, MaxLength(300)]

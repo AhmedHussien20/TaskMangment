@@ -114,38 +114,69 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<DepartmentGetDto>.Ok(dto);
         }
 
-        public async Task<ApiResponse<bool>> AddAsync(DepartmentAddEditDto dto)
+        public async Task<ApiResponse<DepartmentGetDto>> AddAsync(DepartmentAddEditDto dto)
         {
             if (!await _branchRepository.IsExistAsync(dto.BranchId))
-                return ApiResponse<bool>.Fail("Branch not found", StatusCode.NotFound);
+                return ApiResponse<DepartmentGetDto>.Fail("Branch not found", StatusCode.NotFound);
 
             if (dto.ManagerEmployeeId.HasValue && !await _employeeRepository.IsExistAsync(dto.ManagerEmployeeId.Value))
-                return ApiResponse<bool>.Fail("Manager not found", StatusCode.NotFound);
+                return ApiResponse<DepartmentGetDto>.Fail("Manager not found", StatusCode.NotFound);
+
+            var managerAlreadyUsed = await _departmentRepository
+                .GetAll(d => d.ManagerEmployeeId == dto.ManagerEmployeeId)
+                .AnyAsync();
+
+            if (managerAlreadyUsed)
+                return ApiResponse<DepartmentGetDto>.Fail("This employee is already assigned as a manager in another department", StatusCode.AlreadyUsed);
+
 
             var department = _mapper.Map<Department>(dto);
 
             await _departmentRepository.AddAsync(department);
             await _departmentRepository.SaveChangesAsync();
+            var fullDepartment = await _departmentRepository
+      .GetAll(d => d.Id == department.Id)
+      .Include(d => d.Branch)
+          .ThenInclude(b => b.Area)
+      .Include(d => d.Manager)
+      .Include(d => d.Jobs)
+      .FirstOrDefaultAsync();
+            var departmentdto = _mapper.Map<DepartmentGetDto>(fullDepartment);
 
-            return ApiResponse<bool>.Ok(true, "Department added successfully");
+            return ApiResponse<DepartmentGetDto>.Ok(departmentdto, "Department added successfully");
         }
 
-        public async Task<ApiResponse<bool>> UpdateAsync(int id, DepartmentAddEditDto dto)
+        public async Task<ApiResponse<DepartmentGetDto>> UpdateAsync(int id, DepartmentAddEditDto dto)
         {
             var department = await _departmentRepository.GetByIDAsync(id);
             if (department == null)
-                return ApiResponse<bool>.Fail("Department not found", StatusCode.NotFound);
+                return ApiResponse<DepartmentGetDto>.Fail("Department not found", StatusCode.NotFound);
 
             if (!await _branchRepository.IsExistAsync(dto.BranchId))
-                return ApiResponse<bool>.Fail("Branch not found", StatusCode.NotFound);
+                return ApiResponse<DepartmentGetDto>.Fail("Branch not found", StatusCode.NotFound);
 
             if (dto.ManagerEmployeeId.HasValue && !await _employeeRepository.IsExistAsync(dto.ManagerEmployeeId.Value))
-                return ApiResponse<bool>.Fail("Manager not found", StatusCode.NotFound);
+                return ApiResponse<DepartmentGetDto>.Fail("Manager not found", StatusCode.NotFound);
+
+
+            var managerAlreadyUsed = await _departmentRepository
+                .GetAll(d => d.ManagerEmployeeId == dto.ManagerEmployeeId)
+                .AnyAsync();
+
+            if (managerAlreadyUsed)
+                return ApiResponse<DepartmentGetDto>.Fail("This employee is already assigned as a manager in another department", StatusCode.AlreadyUsed);
 
             _mapper.Map(dto, department);
             await _departmentRepository.SaveChangesAsync();
-
-            return ApiResponse<bool>.Ok(true, "Department updated successfully");
+            var fullDepartment = await _departmentRepository
+                 .GetAll(d => d.Id == department.Id)
+                 .Include(d => d.Branch)
+                     .ThenInclude(b => b.Area)
+                 .Include(d => d.Manager)
+                 .Include(d => d.Jobs)
+                 .FirstOrDefaultAsync();
+            var departmentdto = _mapper.Map<DepartmentGetDto>(fullDepartment);
+            return ApiResponse<DepartmentGetDto>.Ok(departmentdto, "Department updated successfully");
         }
 
         public async Task<ApiResponse<bool>> DeleteAsync(int id)
@@ -155,6 +186,8 @@ namespace TaskMangment.Infrastructure.Services
                 return ApiResponse<bool>.Fail("Department not found", StatusCode.NotFound);
 
             _departmentRepository.SoftDelete(department);
+            department.ManagerEmployeeId = null;
+
             await _departmentRepository.SaveChangesAsync();
 
             return ApiResponse<bool>.Ok(true, "Department deleted successfully");

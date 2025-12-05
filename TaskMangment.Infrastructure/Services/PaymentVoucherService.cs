@@ -21,19 +21,30 @@ namespace TaskMangment.Infrastructure.Services
     {
         private readonly IRepository<PaymentVoucher> _voucherRepo;
         private readonly IRepository<Attachment> _attachmentRepo;
+        private readonly IRepository<Company> _companyRepo;
+        private readonly IRepository<Employee> _employeeRepository;
+        private readonly IRepository<Branch> _branchRepository;
+
         private readonly IMapper _mapper;
+
         private readonly ICachingService _cache;
 
         public PaymentVoucherService(
             IRepository<PaymentVoucher> voucherRepo,
             IRepository<Attachment> attachmentRepo,
             IMapper mapper,
-            ICachingService cache)
+            ICachingService cache,
+            IRepository<Company> companyRepo,
+            IRepository<Employee> employeeRepository,
+            IRepository<Branch> branchRepository)
         {
             _voucherRepo = voucherRepo;
             _attachmentRepo = attachmentRepo;
             _mapper = mapper;
             _cache = cache;
+            _companyRepo = companyRepo;
+            _employeeRepository = employeeRepository;
+            _branchRepository = branchRepository;
         }
 
         public async Task<ApiResponse<PagedResponse<PaymentVoucherGetDto>>> GetAllAsync(PaymentVoucherRequest request)
@@ -104,32 +115,62 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<PaymentVoucherGetDto>.Ok(dto);
         }
 
-        public async Task<ApiResponse<bool>> AddAsync(PaymentVoucherAddEditDto dto)
+        public async Task<ApiResponse<PaymentVoucherGetDto>> AddAsync(PaymentVoucherAddEditDto dto, int CompanyId, int CreatedBy)
         {
+            if (dto.BranchId.HasValue && !await _branchRepository.IsExistAsync(dto.BranchId.Value))
+                return ApiResponse<PaymentVoucherGetDto>.Fail("Branch not found", StatusCode.NotFound);
+
+            if (!await _employeeRepository.IsExistAsync(CreatedBy))
+                return ApiResponse<PaymentVoucherGetDto>.Fail("Employee not found", StatusCode.NotFound);
+
+            if (!await _companyRepo.IsExistAsync(CompanyId))
+                return ApiResponse<PaymentVoucherGetDto>.Fail("Company not found", StatusCode.NotFound);
             var voucher = _mapper.Map<PaymentVoucher>(dto);
+            voucher.CompanyId = CompanyId;
+            voucher.CreatedByEmployeeId = CreatedBy;
+            voucher.CreatedDate= DateTime.UtcNow;
+
 
             await _voucherRepo.AddAsync(voucher);
             await _voucherRepo.SaveChangesAsync();
 
             // Optional: clear cache pattern
             // await _cache.RemoveByPatternAsync("vouchers-");
+            var fullVoucher = await _voucherRepo.GetAll(v => v.Id == voucher.Id)
+                       .Include(v => v.Company)
+       .Include(v => v.Branch)
+       .Include(v => v.CreatedBy)
+       .Include(v => v.Attachments)
+       .FirstOrDefaultAsync();
 
-            return ApiResponse<bool>.Ok(true, "Voucher added successfully");
+            var voucherDto = _mapper.Map<PaymentVoucherGetDto>(fullVoucher);
+
+            return ApiResponse<PaymentVoucherGetDto>.Ok(voucherDto, "Voucher added successfully");
         }
 
-        public async Task<ApiResponse<bool>> UpdateAsync(int id, PaymentVoucherAddEditDto dto)
+        public async Task<ApiResponse<PaymentVoucherGetDto>> UpdateAsync(int id, PaymentVoucherAddEditDto dto)
         {
             var voucher = await _voucherRepo.GetByIDAsync(id);
             if (voucher == null)
-                return ApiResponse<bool>.Fail("Voucher not found");
+                return ApiResponse<PaymentVoucherGetDto>.Fail("Voucher not found");
+
 
             _mapper.Map(dto, voucher);
+            voucher.ModifiedDate = DateTime.UtcNow;
+
             await _voucherRepo.SaveChangesAsync();
 
             // Optional: clear cache pattern
             // await _cache.RemoveByPatternAsync("vouchers-");
+            var fullVoucher = await _voucherRepo.GetAll(v => v.Id == voucher.Id)
+       .Include(v => v.Company)
+       .Include(v => v.Branch)
+       .Include(v => v.CreatedBy)
+       .Include(v => v.Attachments)
+       .FirstOrDefaultAsync();
 
-            return ApiResponse<bool>.Ok(true, "Voucher updated successfully");
+            var voucherDto = _mapper.Map<PaymentVoucherGetDto>(fullVoucher);
+            return ApiResponse<PaymentVoucherGetDto>.Ok(voucherDto, "Voucher updated successfully");
         }
 
         public async Task<ApiResponse<bool>> DeleteAsync(int id)

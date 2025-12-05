@@ -14,8 +14,8 @@ namespace TaskMangment.Application.Interfaces.Services
     {
         Task<ApiResponse<PagedResponse<AreaGetDto>>> GetAllAsync(AreaRequest request);
         Task<ApiResponse<AreaGetDto>> GetByIdAsync(int id);
-        Task<ApiResponse<bool>> AddAsync(AreaAddEditDto dto);
-        Task<ApiResponse<bool>> UpdateAsync(int id, AreaAddEditDto dto);
+        Task<ApiResponse<AreaGetDto>> AddAsync(AreaAddEditDto dto, int CompanyId);
+        Task<ApiResponse<AreaGetDto>> UpdateAsync(int id, AreaAddEditDto dto);
         Task<ApiResponse<bool>> DeleteAsync(int id);
     }
 }

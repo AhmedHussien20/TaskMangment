@@ -47,6 +47,8 @@ namespace TaskMangment.Infrastructure.Services
             services.AddScoped<ITaskCloseRequestService, TaskCloseRequestService>();
             services.AddScoped<ICurrentUserService, CurrentUserService>();
             services.AddScoped<IAuditLogService, AuditLogService>();
+            services.AddScoped<ICalenderEventsService, CalendarEventService>();
+            services.AddScoped<IDiscountService, DiscountService>();
 
 
 

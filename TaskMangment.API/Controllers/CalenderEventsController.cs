@@ -1,29 +1,33 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using TaskMangment.Application.Common.ApiRequests.Offer;
+using TaskMangment.Application.Common.ApiRequests.CalenderEvents;
+using TaskMangment.Application.Common.ApiRequests.Student;
 using TaskMangment.Application.DTOs;
 using TaskMangment.Application.Interfaces.Services;
 
 namespace TaskMangment.API.Controllers
 {
+   
     [Route("api/[controller]")]
-    public class OfferController : BaseController
+    public class CalenderEventsController : BaseController
     {
-        private readonly IOfferService _service;
+        private readonly ICalenderEventsService _service;
 
-        public OfferController(IOfferService service)
+        public CalenderEventsController(ICalenderEventsService service)
         {
             _service = service;
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll([FromQuery] OfferRequest request)
+        public async Task<IActionResult> GetAll([FromQuery] CalendarEventRequest request)
         {
             var result = await _service.GetAllAsync(request);
+
             if (!result.Success)
                 return Fail(result.Message!);
 
             SetCacheHeader(600);
+
             return Success(result.Data);
         }
 
@@ -31,40 +35,45 @@ namespace TaskMangment.API.Controllers
         public async Task<IActionResult> GetById(int id)
         {
             var result = await _service.GetByIdAsync(id);
-            if (!result.Success) 
+
+            if (!result.Success)
                 return Fail(result.Message!, 404);
 
             return Success(result.Data);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Add([FromBody] OfferAddEditDto dto)
+        public async Task<IActionResult> Add([FromBody] CalendarEventAddEditDto dto, int createdByEmployeeId, int? companyId)
         {
-            var result = await _service.AddAsync(dto);
-            if (!result.Success) 
+            var result = await _service.AddAsync(dto, createdByEmployeeId, companyId);
+
+            if (!result.Success)
                 return Fail(result.Message);
 
-            return Success(result.Data, "Offer added successfully");
+            return Success(result.Data, "Calender Event added successfully");
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] OfferAddEditDto dto)
+        public async Task<IActionResult> Update(int id, [FromBody] CalendarEventAddEditDto dto)
         {
             var result = await _service.UpdateAsync(id, dto);
-            if (!result.Success) 
+
+            if (!result.Success)
                 return Fail(result.Message, 404);
 
-            return Success(result.Data, "Offer updated successfully");
+            return Success(result.Data, "Calender Event updated successfully");
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
             var result = await _service.DeleteAsync(id);
-            if (!result.Success) 
+
+            if (!result.Success)
                 return Fail(result.Message, 404);
 
-            return Success(true, "Offer deleted successfully");
+            return Success(true, "Calender Event deleted successfully");
         }
     }
+
 }

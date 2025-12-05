@@ -10,6 +10,7 @@ namespace TaskMangment.Application.Responses
     {
         Success = 1,
         Updated = 2,
+        AlreadyUsed = 3,
 
 
         // 2xx Success

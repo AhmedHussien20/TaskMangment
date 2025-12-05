@@ -26,10 +26,14 @@ namespace TaskMangment.Domain.Entities
         public DateTime? DueDate { get; set; }
         public int? AssignedByEmployeeId { get; set; }
         public TaskStatus Status { get; set; } = TaskStatus.New;
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        //public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         [ForeignKey(nameof(CompanyId))] public Company Company { get; set; }
+
+        [ForeignKey(nameof(CreatedByEmployeeId))]
         public Employee CreatedBy { get; set; }
+
+        [ForeignKey(nameof(AssignedByEmployeeId))]
         public Employee AssignedBy { get; set; }
 
         public ICollection<TaskAssignment> Assignments { get; set; } = new List<TaskAssignment>();
