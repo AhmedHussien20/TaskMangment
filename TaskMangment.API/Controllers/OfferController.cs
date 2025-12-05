@@ -44,7 +44,7 @@ namespace TaskMangment.API.Controllers
             if (!result.Success) 
                 return Fail(result.Message);
 
-            return Success(true, "Offer added successfully");
+            return Success(result.Data, "Offer added successfully");
         }
 
         [HttpPut("{id}")]
@@ -54,7 +54,7 @@ namespace TaskMangment.API.Controllers
             if (!result.Success) 
                 return Fail(result.Message, 404);
 
-            return Success(true, "Offer updated successfully");
+            return Success(result.Data, "Offer updated successfully");
         }
 
         [HttpDelete("{id}")]

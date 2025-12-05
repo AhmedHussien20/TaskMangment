@@ -16,6 +16,7 @@ namespace TaskMangment.Application.DTOs
         public string Address { get; set; }
 
         public int ManagerID { get; set; }
+
     }
 
     public class AreaGetDto

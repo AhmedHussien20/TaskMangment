@@ -48,7 +48,7 @@ namespace TaskMangment.API.Controllers
             if (!result.Success)
                 return Fail(result.Message);
 
-            return Success(true, "Job added successfully");
+            return Success(result.Data, "Job added successfully");
         }
 
         [HttpPut("{id}")]
@@ -59,7 +59,7 @@ namespace TaskMangment.API.Controllers
             if (!result.Success)
                 return Fail(result.Message, 404);
 
-            return Success(true, "Job updated successfully");
+            return Success(result.Data, "Job updated successfully");
         }
 
         [HttpDelete("{id}")]

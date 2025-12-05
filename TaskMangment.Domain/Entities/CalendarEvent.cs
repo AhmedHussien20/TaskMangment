@@ -18,7 +18,7 @@ namespace TaskMangment.Domain.Entities
         public bool AllDay { get; set; } = false;
         public int? RelatedTaskId { get; set; }
         public int? CreatedByEmployeeId { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        //public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         [ForeignKey(nameof(CompanyId))] public Company Company { get; set; }
         [ForeignKey(nameof(RelatedTaskId))] public WorkTask RelatedTask { get; set; }

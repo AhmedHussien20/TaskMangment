@@ -10,7 +10,6 @@ namespace TaskMangment.Application.DTOs
 {
     public class PaymentVoucherAddEditDto
     {
-        [Required] public int CompanyId { get; set; }
         public int? BranchId { get; set; }
 
         [Required, Column(TypeName = "decimal(18,2)")]
@@ -19,7 +18,6 @@ namespace TaskMangment.Application.DTOs
         [MaxLength(1000)]
         public string Description { get; set; }
 
-        public int? CreatedByEmployeeId { get; set; }
     }
 
     public class PaymentVoucherGetDto

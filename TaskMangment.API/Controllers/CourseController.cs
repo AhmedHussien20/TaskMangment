@@ -51,7 +51,7 @@ namespace TaskMangment.API.Controllers
             if (!result.Success)
                 return Fail(result.Message);
 
-            return Success(true, "Course added successfully");
+            return Success(result.Data, "Course added successfully");
         }
 
         [HttpPut("{id}")]
@@ -62,7 +62,7 @@ namespace TaskMangment.API.Controllers
             if (!result.Success)
                 return Fail(result.Message, 404);
 
-            return Success(true, "Course updated successfully");
+            return Success(result.Data, "Course updated successfully");
         }
 
         [HttpDelete("{id}")]

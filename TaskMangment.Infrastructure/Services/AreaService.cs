@@ -18,6 +18,7 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<Area> _areaRepository;
         private readonly IRepository<Employee> _employeeRepository;
         private readonly IRepository<Branch> _branchRepository;
+        private readonly IRepository<Company> _companyRepo;
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
 
@@ -25,12 +26,14 @@ namespace TaskMangment.Infrastructure.Services
             IRepository<Area> areaRepository,
             IRepository<Employee> employeeRepository,
             IRepository<Branch> branchRepository,
+            IRepository<Company> companyRepo,
             IMapper mapper,
             ICachingService cache)
         {
             _areaRepository = areaRepository;
             _employeeRepository = employeeRepository;
             _branchRepository = branchRepository;
+            _companyRepo = companyRepo;
             _mapper = mapper;
             _cache = cache;
         }
@@ -107,38 +110,45 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<AreaGetDto>.Ok(dto);
         }
 
-        public async Task<ApiResponse<bool>> AddAsync(AreaAddEditDto dto)
+        public async Task<ApiResponse<AreaGetDto>> AddAsync(AreaAddEditDto dto, int CompanyId)
         {
             if (!await _employeeRepository.IsExistAsync(dto.ManagerID))
-                return ApiResponse<bool>.Fail("Manager not found", StatusCode.NotFound);
+                return ApiResponse<AreaGetDto>.Fail("Manager not found", StatusCode.NotFound);
+
+            if (!await _companyRepo.IsExistAsync(CompanyId))
+                return ApiResponse<AreaGetDto>.Fail("Company not found", StatusCode.NotFound);
 
             var area = _mapper.Map<Area>(dto);
+            area.CompanyId = CompanyId;
 
             await _areaRepository.AddAsync(area);
             await _areaRepository.SaveChangesAsync();
+            var areaDto = _mapper.Map<AreaGetDto>(area);
+
 
             // TODO: Optional: Clear area cache pattern
             // await _cache.RemoveByPatternAsync("areas-");
 
-            return ApiResponse<bool>.Ok(true, "Area added successfully");
+            return ApiResponse<AreaGetDto>.Ok(areaDto, "Area added successfully");
         }
 
-        public async Task<ApiResponse<bool>> UpdateAsync(int id, AreaAddEditDto dto)
+        public async Task<ApiResponse<AreaGetDto>> UpdateAsync(int id, AreaAddEditDto dto)
         {
             var area = await _areaRepository.GetByIDAsync(id);
             if (area == null)
-                return ApiResponse<bool>.Fail("Area not found", StatusCode.NotFound);
+                return ApiResponse<AreaGetDto>.Fail("Area not found", StatusCode.NotFound);
 
             if (!await _employeeRepository.IsExistAsync(dto.ManagerID))
-                return ApiResponse<bool>.Fail("Manager not found", StatusCode.NotFound);
+                return ApiResponse<AreaGetDto>.Fail("Manager not found", StatusCode.NotFound);
 
             _mapper.Map(dto, area);
 
             await _areaRepository.SaveChangesAsync();
+            var areaDto = _mapper.Map<AreaGetDto>(area);
 
             //  TODO: Invalidate cache later
 
-            return ApiResponse<bool>.Ok(true, "Area updated successfully");
+            return ApiResponse<AreaGetDto>.Ok(areaDto, "Area updated successfully");
         }
 
         public async Task<ApiResponse<bool>> DeleteAsync(int id)

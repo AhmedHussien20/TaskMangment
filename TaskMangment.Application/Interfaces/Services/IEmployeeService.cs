@@ -14,8 +14,8 @@ namespace TaskMangment.Application.Interfaces.Services
     {
         Task<ApiResponse<PagedResponse<EmployeeGetDto>>> GetAllAsync(EmployeeRequest request);
         Task<ApiResponse<EmployeeGetDto>> GetByIdAsync(int id);
-        Task<ApiResponse<bool>> AddAsync(EmployeeAddEditDto dto);
-        Task<ApiResponse<bool>> UpdateAsync(int id, EmployeeAddEditDto dto);
+        Task<ApiResponse<EmployeeGetDto>> AddAsync(EmployeeAddEditDto dto, int CampanyId);
+        Task<ApiResponse<EmployeeGetDto>> UpdateAsync(int id, EmployeeAddEditDto dto);
         Task<ApiResponse<bool>> DeleteAsync(int id); // soft delete
     }
 }

@@ -42,14 +42,14 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Add([FromBody] AreaAddEditDto dto)
+        public async Task<IActionResult> Add([FromBody] AreaAddEditDto dto, int CompanyId)
         {
-            var result = await _service.AddAsync(dto);
+            var result = await _service.AddAsync(dto, CompanyId);
 
             if (!result.Success)
                 return Fail(result.Message);
 
-            return Success(true, "Area added successfully");
+            return Success(result.Data, "Area added successfully");
         }
 
         [HttpPut("{id}")]
@@ -60,7 +60,7 @@ namespace TaskMangment.API.Controllers
             if (!result.Success)
                 return Fail(result.Message, 404);
 
-            return Success(true, "Area updated successfully");
+            return Success(result.Data, "Area updated successfully");
         }
 
         [HttpDelete("{id}")]

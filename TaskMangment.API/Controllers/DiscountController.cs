@@ -1,31 +1,24 @@
-﻿
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
-using TaskMangment.Application.Common.ApiRequests.Task;
-using TaskMangment.Application.DTOs.TaskDTOs;
+using TaskMangment.Application.Common.ApiRequests.CalenderEvents;
+using TaskMangment.Application.Common.ApiRequests.Discount;
+using TaskMangment.Application.DTOs;
 using TaskMangment.Application.Interfaces.Services;
-using TaskMangment.Domain.Entities;
-using TaskMangment.Infrastructure.SignalR;
 
 namespace TaskMangment.API.Controllers
 {
     [Route("api/[controller]")]
-    [ApiController]
-    public class TaskController : BaseController
+    public class DiscountController : BaseController
     {
-        private readonly ITaskService _service;
-        private readonly INotificationService _notificationService;
-        private readonly IHubContext<NotificationHub> _hub;
+        private readonly IDiscountService _service;
 
-        public TaskController(ITaskService service, IHubContext<NotificationHub> hub, INotificationService notificationService)
+        public DiscountController(IDiscountService service)
         {
             _service = service;
-            _hub = hub;
-            _notificationService= notificationService;
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll([FromQuery] TaskRequest request)
+        public async Task<IActionResult> GetAll([FromQuery] DiscountRequest request)
         {
             var result = await _service.GetAllAsync(request);
 
@@ -49,25 +42,25 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Add([FromBody] TaskAddEditDto dto, int CampanyId, int Createdby)
+        public async Task<IActionResult> Add(int createdByEmployeeId, int TaskId, [FromBody] DiscountAddEditDto dto)
         {
-            var result = await _service.AddAsync(dto);
+            var result = await _service.AddAsync(createdByEmployeeId, TaskId, dto);
 
             if (!result.Success)
                 return Fail(result.Message);
 
-            return Success(result.Data, "Task added successfully");
+            return Success(result.Data, "Discount added successfully");
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] TaskAddEditDto dto)
+        public async Task<IActionResult> Update(int id,int TaskId, [FromBody] DiscountAddEditDto dto, int ModifiedByEmployeeId)
         {
-            var result = await _service.UpdateAsync(id, dto);
+            var result = await _service.UpdateAsync(id,TaskId, dto,ModifiedByEmployeeId);
 
             if (!result.Success)
                 return Fail(result.Message, 404);
 
-            return Success(result.Data, "Task updated successfully");
+            return Success(result.Data, "Discount updated successfully");
         }
 
         [HttpDelete("{id}")]
@@ -78,7 +71,8 @@ namespace TaskMangment.API.Controllers
             if (!result.Success)
                 return Fail(result.Message, 404);
 
-            return Success(true, "Task deleted successfully");
+            return Success(true, "Discount deleted successfully");
         }
     }
+
 }

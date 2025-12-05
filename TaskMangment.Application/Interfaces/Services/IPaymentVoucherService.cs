@@ -14,8 +14,8 @@ namespace TaskMangment.Application.Interfaces.Services
     {
         Task<ApiResponse<PagedResponse<PaymentVoucherGetDto>>> GetAllAsync(PaymentVoucherRequest request);
         Task<ApiResponse<PaymentVoucherGetDto>> GetByIdAsync(int id);
-        Task<ApiResponse<bool>> AddAsync(PaymentVoucherAddEditDto dto);
-        Task<ApiResponse<bool>> UpdateAsync(int id, PaymentVoucherAddEditDto dto);
+        Task<ApiResponse<PaymentVoucherGetDto>> AddAsync(PaymentVoucherAddEditDto dto, int CompanyId, int CreatedBy);
+        Task<ApiResponse<PaymentVoucherGetDto>> UpdateAsync(int id, PaymentVoucherAddEditDto dto);
         Task<ApiResponse<bool>> DeleteAsync(int id);
     }
 }

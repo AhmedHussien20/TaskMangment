@@ -16,7 +16,7 @@ namespace TaskMangment.Domain.Entities
         public DateTime? EndDate { get; set; }
         public int? CourseId { get; set; }
         public int? SubjectId { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        //public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         [ForeignKey(nameof(CourseId))] public Course Course { get; set; }
         [ForeignKey(nameof(SubjectId))] public CourseSubject Subject { get; set; }

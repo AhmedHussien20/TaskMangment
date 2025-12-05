@@ -23,6 +23,8 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<Employee> _employeeRepo;
         private readonly IRepository<Role> _roleRepo;
         private readonly IRepository<EmployeeRole> _employeeRoleRepo;
+        private readonly IRepository<Branch> _branchRepo;
+        private readonly IRepository<Company> _companyRepository;
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
 
@@ -30,12 +32,17 @@ namespace TaskMangment.Infrastructure.Services
             IRepository<Employee> employeeRepo,
             IRepository<Role> roleRepo,
             IRepository<EmployeeRole> employeeRoleRepo,
+            IRepository<Branch> branchRepo,
+            IRepository<Company> companyRepository,
             IMapper mapper,
             ICachingService cache)
         {
             _employeeRepo = employeeRepo;
             _roleRepo = roleRepo;
             _employeeRoleRepo = employeeRoleRepo;
+            _branchRepo = branchRepo;
+            _companyRepository = companyRepository;
+
             _mapper = mapper;
             _cache = cache;
         }
@@ -110,12 +117,20 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<EmployeeGetDto>.Ok(dto);
         }
 
-        public async Task<ApiResponse<bool>> AddAsync(EmployeeAddEditDto dto)
+        public async Task<ApiResponse<EmployeeGetDto>> AddAsync(EmployeeAddEditDto dto, int CampanyId)
         {
-            var employee = _mapper.Map<Employee>(dto);
+            if (dto.BranchId.HasValue && !await _branchRepo.IsExistAsync(dto.BranchId.Value))
+                return ApiResponse<EmployeeGetDto>.Fail("Branch not found", StatusCode.NotFound);
 
-           
-            // TODO: check for branch , company or remove
+
+            if (!await _companyRepository.IsExistAsync(CampanyId))
+                return ApiResponse<EmployeeGetDto>.Fail("Company not found", StatusCode.NotFound);
+
+
+            var employee = _mapper.Map<Employee>(dto);
+            employee.CompanyId = CampanyId;
+            employee.CreatedDate = DateTime.UtcNow;
+
 
             var hasher = new PasswordHasher<Employee>();
             employee.PasswordHash = hasher.HashPassword(employee, dto.Password);
@@ -127,7 +142,7 @@ namespace TaskMangment.Infrastructure.Services
             foreach (var roleId in dto.RoleIds)
             {
                 if (!await _roleRepo.IsExistAsync(roleId))
-                    return ApiResponse<bool>.Fail($"Role with ID {roleId} not found");
+                    return ApiResponse<EmployeeGetDto>.Fail($"Role with ID {roleId} not found");
 
                 await _employeeRoleRepo.AddAsync(new EmployeeRole
                 {
@@ -137,17 +152,25 @@ namespace TaskMangment.Infrastructure.Services
             }
 
             await _employeeRoleRepo.SaveChangesAsync();
+            var fullEmployee = await _employeeRepo.GetAll(e => e.Id == employee.Id)
+                                                  .Include(e => e.Branch)
+                                                  .Include(e => e.EmployeeRoles)
+                                                      .ThenInclude(er => er.Role)
+                                                  .FirstOrDefaultAsync();
 
-            return ApiResponse<bool>.Ok(true, "Employee added successfully");
+            var employeeDto = _mapper.Map<EmployeeGetDto>(fullEmployee);
+
+            return ApiResponse<EmployeeGetDto>.Ok(employeeDto, "Employee added successfully");
         }
 
-        public async Task<ApiResponse<bool>> UpdateAsync(int id, EmployeeAddEditDto dto)
+        public async Task<ApiResponse<EmployeeGetDto>> UpdateAsync(int id, EmployeeAddEditDto dto)
         {
             var employee = await _employeeRepo.GetByIDAsync(id);
             if (employee == null)
-                return ApiResponse<bool>.Fail("Employee not found");
+                return ApiResponse<EmployeeGetDto>.Fail("Employee not found");
 
             _mapper.Map(dto, employee);
+            employee.ModifiedDate = DateTime.UtcNow;
 
             // TODO: Hash password if provided
             // if(!string.IsNullOrWhiteSpace(dto.Password))
@@ -160,7 +183,7 @@ namespace TaskMangment.Infrastructure.Services
             foreach (var roleId in dto.RoleIds)
             {
                 if (!await _roleRepo.IsExistAsync(roleId))
-                    return ApiResponse<bool>.Fail($"Role with ID {roleId} not found");
+                    return ApiResponse<EmployeeGetDto>.Fail($"Role with ID {roleId} not found");
 
                 await _employeeRoleRepo.AddAsync(new EmployeeRole
                 {
@@ -171,8 +194,14 @@ namespace TaskMangment.Infrastructure.Services
 
             await _employeeRepo.SaveChangesAsync();
             await _employeeRoleRepo.SaveChangesAsync();
+            var fullEmployee = await _employeeRepo.GetAll(e => e.Id == employee.Id)
+                                                             .Include(e => e.Branch)
+                                                             .Include(e => e.EmployeeRoles)
+                                                                 .ThenInclude(er => er.Role)
+                                                             .FirstOrDefaultAsync();
 
-            return ApiResponse<bool>.Ok(true, "Employee updated successfully");
+            var employeeDto = _mapper.Map<EmployeeGetDto>(fullEmployee);
+            return ApiResponse<EmployeeGetDto>.Ok(employeeDto, "Employee updated successfully");
         }
 
         public async Task<ApiResponse<bool>> DeleteAsync(int id)
