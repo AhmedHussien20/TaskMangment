@@ -42,14 +42,14 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Add([FromBody] BranchAddEditDto dto)
+        public async Task<IActionResult> Add([FromBody] BranchAddEditDto dto, int CampanyId)
         {
-            var result = await _service.AddAsync(dto);
+            var result = await _service.AddAsync(dto, CampanyId);
 
             if (!result.Success)
                 return Fail(result.Message);
 
-            return Success(true, "Branch added successfully");
+            return Success(result.Data, "Branch added successfully");
         }
 
         [HttpPut("{id}")]
@@ -60,7 +60,7 @@ namespace TaskMangment.API.Controllers
             if (!result.Success)
                 return Fail(result.Message, 404);
 
-            return Success(true, "Branch updated successfully");
+            return Success(result.Data, "Branch updated successfully");
         }
 
         [HttpDelete("{id}")]

@@ -23,25 +23,18 @@ namespace TaskMangment.API.Filters
             ActionExecutingContext context,
             ActionExecutionDelegate next)
         {
-            // 1. تحديد اسم الكونترولر
             var controllerName = context.Controller.GetType().Name.Replace("Controller", "");
 
-            // 2. تحديد اسم الـ Action
             var actionName = context.ActionDescriptor.DisplayName;
 
-            // 3. تحديد HTTP Method
             var httpMethod = context.HttpContext.Request.Method;
 
-            // 4. استخراج الـ ID
             int? entityId = ExtractEntityId(context);
 
-            // 5. تنفيذ الـ Action
             var result = await next();
 
-            // 6. تحديد إذا نجح أم لا
             var isSuccess = result.Exception == null;
 
-            // 7. بناء التفاصيل
             var details = new
             {
                 Controller = controllerName,
@@ -55,10 +48,8 @@ namespace TaskMangment.API.Filters
                 Error = result.Exception?.Message
             };
 
-            // 8. تحديد نوع الـ Action
             string actionType = GetActionType(httpMethod, actionName);
 
-            // 9. التسجيل
             await _auditLogger.LogAsync(
                 entityName: controllerName,
                 entityId: entityId,
@@ -69,7 +60,6 @@ namespace TaskMangment.API.Filters
 
         private int? ExtractEntityId(ActionExecutingContext context)
         {
-            // من الـ Route
             if (context.RouteData.Values.TryGetValue("id", out var idValue))
             {
                 if (int.TryParse(idValue?.ToString(), out int id))

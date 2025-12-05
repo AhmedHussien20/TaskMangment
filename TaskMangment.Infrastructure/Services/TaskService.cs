@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -14,6 +15,7 @@ using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
 using TaskMangment.Infrastructure.Persistence.Extensions;
+using TaskMangment.Infrastructure.SignalR;
 
 namespace TaskMangment.Infrastructure.Services
 {
@@ -23,6 +25,7 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<Employee> _employeeRepo;
         private readonly IRepository<TaskAssignment> _assignmentRepo;
         private readonly IRepository<AuditLog> _audit;
+        private readonly IHubContext<NotificationHub> _hub;
 
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
@@ -33,6 +36,8 @@ namespace TaskMangment.Infrastructure.Services
             IRepository<TaskAssignment> assignmentRepo,
             IRepository<AuditLog> audit,
             IMapper mapper,
+            IHubContext<NotificationHub> hub,
+
             ICachingService cache)
         {
             _taskRepo = taskRepo;
@@ -41,6 +46,7 @@ namespace TaskMangment.Infrastructure.Services
             _audit = audit;
             _mapper = mapper;
             _cache = cache;
+            _hub = hub;
         }
 
         public async Task<ApiResponse<PagedResponse<TaskGetDto>>> GetAllAsync(TaskRequest request)
@@ -112,16 +118,19 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<TaskGetDto>.Ok(dto);
         }
 
-        public async Task<ApiResponse<bool>> AddAsync(TaskAddEditDto dto)
+        public async Task<ApiResponse<TaskGetDto>> AddAsync(TaskAddEditDto dto, int companyId, int createdBy)
         {
             var task = _mapper.Map<WorkTask>(dto);
+            task.CompanyId = companyId;
+            task.CreatedByEmployeeId = createdBy;
 
             await _taskRepo.AddAsync(task);
+            await _taskRepo.SaveChangesAsync();
 
             foreach (var empId in dto.AssignedEmployeeIds)
             {
                 if (!await _employeeRepo.IsExistAsync(empId))
-                    return ApiResponse<bool>.Fail($"Employee with ID {empId} not found");
+                    return ApiResponse<TaskGetDto>.Fail($"Employee with ID {empId} not found");
 
                 var assignment = new TaskAssignment
                 {
@@ -131,17 +140,24 @@ namespace TaskMangment.Infrastructure.Services
                 };
                 await _assignmentRepo.AddAsync(assignment);
             }
-
             await _assignmentRepo.SaveChangesAsync();
 
-            return ApiResponse<bool>.Ok(true, "Task added successfully");
-        }
+            var fullTask = await _taskRepo.GetAll(t => t.Id == task.Id)
+     .Include(t => t.CreatedBy)
+     .Include(t => t.AssignedBy)
+     .Include(t => t.Assignments).ThenInclude(a => a.Employee)
+     .AsNoTracking()
+     .FirstOrDefaultAsync();
 
-        public async Task<ApiResponse<bool>> UpdateAsync(int id, TaskAddEditDto dto)
+            var taskDto = _mapper.Map<TaskGetDto>(fullTask); ;
+
+            return ApiResponse<TaskGetDto>.Ok(taskDto, "Task added successfully");
+        }
+        public async Task<ApiResponse<TaskGetDto>> UpdateAsync(int id, TaskAddEditDto dto)
         {
             var task = await _taskRepo.GetByIDAsync(id);
             if (task == null)
-                return ApiResponse<bool>.Fail("Task not found", StatusCode.NotFound);
+                return ApiResponse<TaskGetDto>.Fail("Task not found", StatusCode.NotFound);
 
             _mapper.Map(dto, task);
 
@@ -181,8 +197,20 @@ namespace TaskMangment.Infrastructure.Services
 
 
             await _assignmentRepo.SaveChangesAsync();
+            var fullTask = await _taskRepo.GetAll(t => t.Id == task.Id)
+      .Include(t => t.Company)
+      .Include(t => t.CreatedBy)
+      .Include(t => t.AssignedBy)
+      .Include(t => t.Assignments)
+          .ThenInclude(a => a.Employee)
+      .Include(t => t.Comments)
+      .Include(t => t.Attachments)
+      .Include(t => t.CloseRequests)
+      .Include(t => t.ExtensionRequests)
+      .FirstOrDefaultAsync();
+            var taskDto = _mapper.Map<TaskGetDto>(fullTask);
 
-            return ApiResponse<bool>.Ok(true, "Task updated successfully");
+            return ApiResponse<TaskGetDto>.Ok(taskDto, "Task updated successfully");
         }
 
         public async Task<ApiResponse<bool>> DeleteAsync(int id)

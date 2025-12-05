@@ -1,23 +1,23 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using TaskMangment.Application.Common.ApiRequests.AuditLogs;
 using TaskMangment.Application.Common.ApiRequests.Employee;
-using TaskMangment.Application.DTOs;
 using TaskMangment.Application.Interfaces.Services;
 
 namespace TaskMangment.API.Controllers
 {
     [Route("api/[controller]")]
-    public class EmployeeController : BaseController
+    public class AuditLogController : BaseController
     {
-        private readonly IEmployeeService _service;
+        private readonly IAuditLogService _service;
 
-        public EmployeeController(IEmployeeService service)
+        public AuditLogController(IAuditLogService service)
         {
             _service = service;
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll([FromQuery] EmployeeRequest request)
+        public async Task<IActionResult> GetAll([FromQuery] AuditLogRequest request)
         {
             var result = await _service.GetAllAsync(request);
 
@@ -41,28 +41,6 @@ namespace TaskMangment.API.Controllers
             return Success(result.Data);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Add([FromBody] EmployeeAddEditDto dto, int CampanyId)
-        {
-            var result = await _service.AddAsync(dto, CampanyId);
-
-            if (!result.Success)
-                return Fail(result.Message);
-
-            return Success(result.Data, "Employee added successfully");
-        }
-
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] EmployeeAddEditDto dto)
-        {
-            var result = await _service.UpdateAsync(id, dto);
-
-            if (!result.Success)
-                return Fail(result.Message, 404);
-
-            return Success(result.Data, "Employee updated successfully");
-        }
-
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
@@ -73,5 +51,6 @@ namespace TaskMangment.API.Controllers
 
             return Success(true, "Employee deleted successfully");
         }
+
     }
 }

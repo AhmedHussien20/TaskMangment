@@ -1,11 +1,13 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using TaskMangment.API.Filters;
 using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Responses;
 
 namespace TaskMangment.API.Controllers
 {
+    [ServiceFilter(typeof(AuditLogAttribute))] 
     [ApiController]
     [Route("api/[controller]")]
     public abstract class BaseController : ControllerBase

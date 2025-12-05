@@ -29,8 +29,7 @@ namespace TaskMangment.Application.DTOs
 
       
 
-        [Required]
-        public int CompanyId { get; set; }
+      
 
         public int? AreaId { get; set; }
 
