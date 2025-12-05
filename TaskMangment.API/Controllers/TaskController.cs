@@ -1,8 +1,11 @@
 ﻿
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using TaskMangment.Application.Common.ApiRequests.Task;
 using TaskMangment.Application.DTOs.TaskDTOs;
 using TaskMangment.Application.Interfaces.Services;
+using TaskMangment.Domain.Entities;
+using TaskMangment.Infrastructure.SignalR;
 
 namespace TaskMangment.API.Controllers
 {
@@ -11,10 +14,14 @@ namespace TaskMangment.API.Controllers
     public class TaskController : BaseController
     {
         private readonly ITaskService _service;
+        private readonly INotificationService _notificationService;
+        private readonly IHubContext<NotificationHub> _hub;
 
-        public TaskController(ITaskService service)
+        public TaskController(ITaskService service, IHubContext<NotificationHub> hub, INotificationService notificationService)
         {
             _service = service;
+            _hub = hub;
+            _notificationService= notificationService;
         }
 
         [HttpGet]
@@ -45,7 +52,23 @@ namespace TaskMangment.API.Controllers
         public async Task<IActionResult> Add([FromBody] TaskAddEditDto dto)
         {
             var result = await _service.AddAsync(dto);
-
+            foreach(int empId in dto.AssignedEmployeeIds)
+            {
+                bool isOnline = NotificationHub.IsUserOnline(empId);
+                if (isOnline)
+                {
+                    await _hub.Clients.Group($"user-{empId}").SendAsync("ReciveTask", dto.Description);
+                }
+                var notfi = new Notification
+                {
+                    UserId = empId,
+                    Message = dto.Description,
+                    Type = "Web",
+                    IsRead = false
+                };
+                
+            }
+            
             if (!result.Success)
                 return Fail(result.Message);
 
