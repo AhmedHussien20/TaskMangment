@@ -118,11 +118,11 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<TaskGetDto>.Ok(dto);
         }
 
-        public async Task<ApiResponse<TaskGetDto>> AddAsync(TaskAddEditDto dto, int companyId, int createdBy)
+        public async Task<ApiResponse<TaskGetDto>> AddAsync(TaskAddEditDto dto)
         {
             var task = _mapper.Map<WorkTask>(dto);
-            task.CompanyId = companyId;
-            task.CreatedByEmployeeId = createdBy;
+            //task.CompanyId = companyId;
+            //task.CreatedByEmployeeId = createdBy;
 
             await _taskRepo.AddAsync(task);
             await _taskRepo.SaveChangesAsync();

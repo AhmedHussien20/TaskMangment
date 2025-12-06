@@ -1,7 +1,6 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using TaskMangment.API.Extensions;
@@ -10,7 +9,6 @@ using TaskMangment.API.Middlewares;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Interfaces;
 using TaskMangment.Application.Interfaces.Services;
-using TaskMangment.Domain.Entities;
 using TaskMangment.Infrastructure;
 using TaskMangment.Infrastructure.Caching;
 using TaskMangment.Infrastructure.DataContext;
@@ -25,40 +23,52 @@ namespace TaskMangment.API
         {
             var builder = WebApplication.CreateBuilder(args);
 
-             
+            // ------------------------------
+            // DATABASE
+            // ------------------------------
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-           
             builder.Services.Configure<EmailSettings>(
                 builder.Configuration.GetSection("EmailSettings")
             );
 
-            
             builder.Services.AddDI();
 
-
-            //builder.Services.AddCaching(builder.Configuration);
-            //builder.Services.AddSingleton<ICachingService, NoCacheService>();
-
-
+            // ------------------------------
+            // SERVICES
+            // ------------------------------
             builder.Services.AddScoped<IPermissionService, PermissionService>();
             builder.Services.AddScoped<IRoleService, RoleService>();
-            builder.Services.AddSignalR();
             builder.Services.AddScoped<IWhatsAppService, WhatsAppService>();
             builder.Services.AddScoped<INotificationService, NotificationService>();
+            builder.Services.AddScoped<IAuthService, AuthService>();
+            builder.Services.AddScoped<IJwtService, JwtService>(); 
 
             builder.Services.AddScoped<AuditLogAttribute>();
             builder.Services.AddHttpContextAccessor();
 
+            // SignalR
+            builder.Services.AddSignalR();
 
+            // ------------------------------
+            // CORS
+            // ------------------------------
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAll", policy =>
+                {
+                    policy
+                        .AllowAnyHeader()
+                        .AllowAnyMethod()
+                        .SetIsOriginAllowed(origin => true)
+                        .AllowCredentials();
+                });
+            });
 
-            //builder.Services.AddScoped<IPermissionService, PermissionService>();
-            //builder.Services.AddScoped<IRoleService, RoleService>();
-
-
-            builder.Services.AddControllers();
-
+            // ------------------------------
+            // JWT AUTH
+            // ------------------------------
             builder.Services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -74,54 +84,110 @@ namespace TaskMangment.API
                     ValidateIssuerSigningKey = true,
                     ValidIssuer = builder.Configuration["JWT:Issuer"],
                     ValidAudience = builder.Configuration["JWT:Audience"],
-                    IssuerSigningKey =
-                        new SymmetricSecurityKey(
-                            Encoding.UTF8.GetBytes(builder.Configuration["JWT:Key"]))
+                    IssuerSigningKey = new SymmetricSecurityKey(
+                        Encoding.UTF8.GetBytes(builder.Configuration["JWT:Key"]))
+                };
+
+                // Required for SignalR
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+
+                        var path = context.HttpContext.Request.Path;
+                        if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/notifications"))
+                        {
+                            context.Token = accessToken;
+                        }
+
+                        return Task.CompletedTask;
+                    }
                 };
             });
 
-
-
-            builder.Services.AddCors(options =>
+            // ------------------------------
+            // CONTROLLERS
+            // ------------------------------
+            builder.Services.AddControllers(options =>
             {
-                options.AddPolicy("AllowAll", policy =>
+                options.Filters.Add(new Microsoft.AspNetCore.Mvc.Authorization.AuthorizeFilter());
+            });
+
+            builder.Services.AddEndpointsApiExplorer();
+            builder.Services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
                 {
-                    policy.SetIsOriginAllowed(origin => true) 
-                          .AllowAnyHeader()
-                          .AllowAnyMethod()
-                          .AllowCredentials();
+                    Title = "Task Management API",
+                    Version = "v1"
                 });
+
+                c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+                {
+                    Name = "Authorization",
+                    Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
+                    Scheme = "Bearer",
+                    BearerFormat = "JWT",
+                    In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+                    Description = "Enter your JWT token like: Bearer eyJhbGciOiJIUzI1NiIsInR..."
+                });
+
+                c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    {
+        {
+            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            {
+                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                {
+                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
             });
 
 
-
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
-
             var app = builder.Build();
 
-             
+            // ------------------------------
+            // PIPELINE
+            // ------------------------------
+
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
 
-            
+            // Global Exception Middleware (catch unhandled exceptions)
             app.UseMiddleware<ExceptionLogMiddleware>();
 
-
             app.UseHttpsRedirection();
+
             app.UseCors("AllowAll");
+
+            // 401 Handler BEFORE authorization
+            app.Use(async (context, next) =>
+            {
+                await next();
+
+                if (context.Response.StatusCode == 401 && !context.Response.HasStarted)
+                {
+                    context.Response.ContentType = "application/json";
+                    await context.Response.WriteAsync("{\"error\": true, \"message\": \"Unauthorized - Token missing or invalid.\"}");
+                }
+            });
 
             app.UseAuthentication();
             app.UseAuthorization();
 
+            // SignalR Hub
             app.MapHub<NotificationHub>("/notifications");
 
-
-            app.UseAuthorization();
-
+            // API Controllers
             app.MapControllers();
 
             app.Run();

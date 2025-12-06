@@ -43,7 +43,10 @@ namespace TaskMangment.Domain.Entities
         [MaxLength(500)]
         public string PasswordHash { get; set; }
 
-        public bool IsActive { get; set; } = true; 
+        public bool IsActive { get; set; } = true;
+
+        public string ResetPasswordToken { get; set; }
+        public DateTime? ResetPasswordExpiry { get; set; }
 
 
         // Navigation
