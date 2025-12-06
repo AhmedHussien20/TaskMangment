@@ -49,7 +49,7 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Add([FromBody] TaskAddEditDto dto, int CampanyId, int Createdby)
+        public async Task<IActionResult> Add([FromBody] TaskAddEditDto dto)
         {
             var result = await _service.AddAsync(dto);
 

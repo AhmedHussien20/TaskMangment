@@ -1,43 +1,78 @@
-﻿using BCrypt.Net;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using TaskMangment.Application.Common.ApiRequests.Area; 
-using TaskMangment.Application.Interfaces.IRepository;
-using TaskMangment.Application.Interfaces.Services;
+﻿using Microsoft.EntityFrameworkCore;
+using TaskMangment.Application.Interfaces.Services;  
+using TaskMangment.Infrastructure.DataContext;
+using TaskMangment.Application.Common.ApiRequests.Auth;
 using TaskMangment.Application.Responses;
-using TaskMangment.Domain.Entities;
-using TaskMangment.Infrastructure.Authentication;
 
 public class AuthService : IAuthService
 {
-    private readonly IRepository<Employee> _employeeRepo;
-    private readonly IConfiguration _config;
+    private readonly AppDbContext _db;
+    private readonly IJwtService _jwt;
+    private readonly IEmailService _email;
 
-    public AuthService(IRepository<Employee> employeeRepo, IConfiguration config)
+    public AuthService(AppDbContext db, IJwtService jwt, IEmailService email)
     {
-        _employeeRepo = employeeRepo;
-        _config = config;
+        _db = db;
+        _jwt = jwt;
+        _email = email;
     }
-
-    public async Task<ApiResponse<string>> LoginAsync(LoginRequest request)
+     
+    public async Task<ApiResponse<LoginResponse>> LoginAsync(LoginRequest request)
     {
-        var user = await _employeeRepo
-            .GetAll(u => u.Email == request.Email)
-            .FirstOrDefaultAsync();
+        var user = await _db.Employees.FirstOrDefaultAsync(u => u.Email == request.Email);
 
         if (user == null)
-            return ApiResponse<string>.Fail("Invalid credentials");
+            return ApiResponse<LoginResponse>.Fail("Invalid email or password");
 
         if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
-            return ApiResponse<string>.Fail("Invalid credentials");
+            return ApiResponse<LoginResponse>.Fail("Invalid email or password");
 
-        string token = JwtHelper.GenerateToken(
-            user,
-            _config["JWT:Key"],
-            _config["JWT:Issuer"],
-            _config["JWT:Audience"]
-        );
+        var token = _jwt.GenerateToken(user);
 
-        return ApiResponse<string>.Ok(token, "Login success");
+        return ApiResponse<LoginResponse>.Ok(new LoginResponse
+        {
+            UserId = user.Id,
+            FullName = user.FullName,
+            Token = token
+        });
+    } 
+
+    public async Task<ApiResponse<bool>> ForgotPasswordAsync(string email)
+    {
+        var user = await _db.Employees.FirstOrDefaultAsync(u => u.Email == email);
+
+        if (user == null)
+            return ApiResponse<bool>.Fail("User not found");
+
+        string resetToken = Guid.NewGuid().ToString();
+
+        user.ResetPasswordToken = resetToken;
+        user.ResetPasswordExpiry = DateTime.UtcNow.AddMinutes(30);
+
+        await _db.SaveChangesAsync();
+
+        await _email.SendEmailAsync(email, "Password Reset Code", $"Your reset code: {resetToken}");
+
+        return ApiResponse<bool>.Ok(true, "Reset code sent to email");
+    }
+     
+    public async Task<ApiResponse<bool>> ResetPasswordAsync(ResetPasswordRequest request)
+    {
+        var user = await _db.Employees
+            .FirstOrDefaultAsync(u =>
+                u.Email == request.Email &&
+                u.ResetPasswordToken == request.Token &&
+                u.ResetPasswordExpiry > DateTime.UtcNow);
+
+        if (user == null)
+            return ApiResponse<bool>.Fail("Invalid or expired token");
+
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+        user.ResetPasswordToken = null;
+        user.ResetPasswordExpiry = null;
+
+        await _db.SaveChangesAsync();
+
+        return ApiResponse<bool>.Ok(true, "Password reset successfully");
     }
 }
