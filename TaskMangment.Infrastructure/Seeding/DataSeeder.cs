@@ -386,42 +386,42 @@ namespace TaskMangment.Infrastructure.Seeding
                      new Role
                     {
                         Name = "Manager",
-                        CompanyId = 1,
+                        CompanyId = 16,
                         Description = "Manager company responsible for whole things",
                         CreatedDate = DateTime.UtcNow
                     },
                     new Role
                     {
                         Name = "Technical Support",
-                        CompanyId = 1, 
+                        CompanyId = 16, 
                         Description = "Handles technical issues and support requests",
                         CreatedDate = DateTime.UtcNow
                     },
                     new Role
                     {
                         Name = "CEO",
-                        CompanyId = 1,
+                        CompanyId = 16,
                         Description = "Chief Executive Officer with all permissions",
                         CreatedDate = DateTime.UtcNow
                     },
                     new Role
                     {
                         Name = "Branch Manager",
-                        CompanyId = 1,
+                        CompanyId = 16,
                         Description = "Manages branch operations and employees",
                         CreatedDate = DateTime.UtcNow
                     },
                     new Role
                     {
                         Name = "Group 10",
-                        CompanyId = 1,
+                        CompanyId = 16,
                         Description = "Special group with specific permissions",
                         CreatedDate = DateTime.UtcNow
                     },
                     new Role
                     {
                         Name = "UV",
-                        CompanyId = 1,
+                        CompanyId = 16,
                         Description = "UV group role",
                         CreatedDate = DateTime.UtcNow
                     }
