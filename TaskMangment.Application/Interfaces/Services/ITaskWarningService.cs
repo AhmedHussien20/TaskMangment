@@ -10,12 +10,12 @@ using TaskMangment.Application.Responses;
 
 namespace TaskMangment.Application.Interfaces.Services
 {
-    public interface ITaskCommentService
+    public interface ITaskWarningService
     {
-        Task<ApiResponse<PagedResponse<TaskCommentGetDto>>> GetAllAsync(TaskCommentRequest request);
-        Task<ApiResponse<TaskCommentGetDto>> GetByIdAsync(int id);
-        Task<ApiResponse<TaskCommentGetDto>> AddAsync(int taskId, int employeeId, TaskCommentAddEditDto dto);
-        Task<ApiResponse<TaskCommentGetDto>> UpdateAsync(int id, TaskCommentAddEditDto dto);
+        Task<ApiResponse<PagedResponse<WarningListDto>>> GetAllAsync(WarningRequest request);
+        Task<ApiResponse<WarningGetDto>> GetByIdAsync(int id);
+        Task<ApiResponse<WarningGetDto>> AddAsync(WarningAddEditDto dto, int taskId);
+        Task<ApiResponse<WarningGetDto>> UpdateAsync(int id, WarningAddEditDto dto);
         Task<ApiResponse<bool>> DeleteAsync(int id);
     }
 }

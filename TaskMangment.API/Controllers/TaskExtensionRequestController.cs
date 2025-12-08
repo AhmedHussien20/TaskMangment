@@ -41,25 +41,25 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Add([FromBody] TaskExtensionRequestAddDto dto, int taskAssignmentId, int employeeId)
+        public async Task<IActionResult> Add([FromBody] TaskExtensionRequestAddDto dto, int taskId)
         {
-            var result = await _service.AddAsync(dto, taskAssignmentId, employeeId);
+            var result = await _service.AddAsync(dto, taskId, this.CurrentUserId);
 
             if (!result.Success)
                 return Fail(result.Message);
 
-            return Success(true, "Extension request added successfully");
+            return Success(result.Data, "Extension request added successfully");
         }
 
         [HttpPut("{id}/review")]
-        public async Task<IActionResult> Review(int id, [FromQuery] bool approved, [FromQuery] int reviewerId)
+        public async Task<IActionResult> Review(int id, [FromQuery] bool approved)
         {
-            var result = await _service.ReviewAsync(id, approved, reviewerId);
+            var result = await _service.ReviewAsync(id, approved, this.CurrentUserId);
 
             if (!result.Success)
                 return Fail(result.Message);
 
-            return Success(true, "Extension request reviewed successfully");
+            return Success(result.Data, "Extension request reviewed successfully");
         }
     }
 }

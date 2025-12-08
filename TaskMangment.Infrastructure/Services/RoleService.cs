@@ -1,14 +1,19 @@
-﻿using System;
+﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using TaskMangment.Application.Interfaces.IRepository;
+using TaskMangment.Application.Common.ApiRequests.Role;
+using TaskMangment.Application.Common.Interfaces;
+using TaskMangment.Application.Common.Responses;
+using TaskMangment.Application.DTOs;
 using TaskMangment.Application.Interfaces;
+using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
-using TaskMangment.Application.DTOs;
-using Microsoft.EntityFrameworkCore;
+using TaskMangment.Infrastructure.Persistence.Extensions;
 
 namespace TaskMangment.Infrastructure.Services
 {
@@ -18,17 +23,23 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<Permission> _permissionRepo;
         private readonly IRepository<RolePermission> _rolePermRepo;
         private readonly IRepository<EmployeeRole> _employeeRoleRepo;
+        private readonly IMapper _mapper;
+        private readonly ICachingService _cache;
 
         public RoleService(
             IRepository<Role> roleRepo,
             IRepository<Permission> permissionRepo,
             IRepository<RolePermission> rolePermRepo,
-            IRepository<EmployeeRole> employeeRoleRepo)
+            IRepository<EmployeeRole> employeeRoleRepo,
+            IMapper mapper,
+            ICachingService cache)
         {
             _roleRepo = roleRepo;
             _permissionRepo = permissionRepo;
             _rolePermRepo = rolePermRepo;
             _employeeRoleRepo = employeeRoleRepo;
+            _mapper = mapper;
+            _cache = cache;
         }
 
         public async Task<ApiResponse<int>> CreateRoleAsync(RoleAddDto dto)

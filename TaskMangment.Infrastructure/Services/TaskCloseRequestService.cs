@@ -22,6 +22,7 @@ namespace TaskMangment.Infrastructure.Services
     {
         private readonly IRepository<TaskCloseRequest> _requestRepo;
         private readonly IRepository<TaskAssignment> _taskAssignmentRepo;
+        private readonly IRepository<WorkTask> _taskRepo;
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
 
@@ -29,12 +30,14 @@ namespace TaskMangment.Infrastructure.Services
             IRepository<TaskCloseRequest> requestRepo,
             IRepository<TaskAssignment> taskAssignmentRepo,
             IMapper mapper,
-            ICachingService cache)
+            ICachingService cache,
+            IRepository<WorkTask> taskRepo)
         {
             _requestRepo = requestRepo;
             _taskAssignmentRepo = taskAssignmentRepo;
             _mapper = mapper;
             _cache = cache;
+            _taskRepo = taskRepo;
         }
 
         public async Task<ApiResponse<PagedResponse<TaskCloseRequestListDto>>> GetAllAsync(TaskCloseRequestRequest request)
@@ -89,15 +92,20 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<TaskCloseRequestDetailsDto>.Ok(dto);
         }
 
-        public async Task<ApiResponse<bool>> AddAsync(TaskCloseRequestAddDto dto, int taskAssignmentId, int employeeId)
+        public async Task<ApiResponse<TaskCloseRequestDetailsDto>> AddAsync(TaskCloseRequestAddDto dto, int taskId, int employeeId)
         {
-            var assignment = await _taskAssignmentRepo.GetByIDAsync(taskAssignmentId);
+            var task = await _taskRepo.GetByIDAsync(taskId);
+            if (task == null)
+                return ApiResponse<TaskCloseRequestDetailsDto>.Fail("Task not found", StatusCode.NotFound);
+
+            var assignment = await _taskAssignmentRepo.GetAll(a => a.TaskId == taskId && a.EmployeeId == employeeId)
+                                                      .FirstOrDefaultAsync();
             if (assignment == null)
-                return ApiResponse<bool>.Fail("Task assignment not found");
+                return ApiResponse<TaskCloseRequestDetailsDto>.Fail("Employee is not assigned to this task", StatusCode.BadRequest);
 
             var request = _mapper.Map<TaskCloseRequest>(dto);
 
-            request.TaskAssignmentId = taskAssignmentId;
+            request.TaskAssignmentId = assignment.Id; 
             request.RequestedAt = DateTime.UtcNow;
             request.Status = CloseRequestStatus.Pending;
             request.ReviewedByEmployeeId = null;
@@ -105,17 +113,24 @@ namespace TaskMangment.Infrastructure.Services
             await _requestRepo.AddAsync(request);
             await _requestRepo.SaveChangesAsync();
 
-            // Optional: clear cache pattern
-            // await _cache.RemoveByPatternAsync("taskCloseRequests-");
+            var savedRequest = await _requestRepo.GetAll(r => r.Id == request.Id)
+                                                 .Include(r => r.RequestedBy)
+                                                .Include(r => r.TaskAssignment)
+                                                .ThenInclude(a => a.Employee)
+                                                .AsNoTracking()
+                                                .FirstOrDefaultAsync();
 
-            return ApiResponse<bool>.Ok(true, "Close request added successfully");
+            var resultDto = _mapper.Map<TaskCloseRequestDetailsDto>(savedRequest);
+
+            return ApiResponse<TaskCloseRequestDetailsDto>.Ok(resultDto, "Close request added successfully");
         }
 
-        public async Task<ApiResponse<bool>> ReviewAsync(int id, bool approved, int reviewerId)
+
+        public async Task<ApiResponse<TaskCloseRequestDetailsDto>> ReviewAsync(int id, bool approved, int reviewerId)
         {
             var request = await _requestRepo.GetByIDAsync(id);
             if (request == null)
-                return ApiResponse<bool>.Fail("Request not found");
+                return ApiResponse<TaskCloseRequestDetailsDto>.Fail("Request not found");
 
             request.Status = approved
                 ? CloseRequestStatus.Approved
@@ -126,11 +141,19 @@ namespace TaskMangment.Infrastructure.Services
 
             await _requestRepo.SaveChangesAsync();
 
-            // Optional: clear cache pattern
-            // await _cache.RemoveByPatternAsync("taskCloseRequests-");
+            var updatedRequest = await _requestRepo.GetAll(r => r.Id == id)
+                                                    .Include(r => r.RequestedBy)
+                                                     .Include(r => r.ReviewedBy)
+                                                    .Include(r => r.TaskAssignment)
+                                                    .ThenInclude(a => a.Employee)
+                                                    .AsNoTracking()
+                                                    .FirstOrDefaultAsync();
 
-            return ApiResponse<bool>.Ok(true, "Request reviewed successfully");
+            var resultDto = _mapper.Map<TaskCloseRequestDetailsDto>(updatedRequest);
+
+            return ApiResponse<TaskCloseRequestDetailsDto>.Ok(resultDto, "Request reviewed successfully");
         }
+
     }
 
 }
