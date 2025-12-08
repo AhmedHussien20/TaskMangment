@@ -15,7 +15,7 @@ namespace TaskMangment.Application.DTOs
         [MaxLength(500)]
         public string Address { get; set; }
 
-        public int ManagerID { get; set; }
+        public int ManagerEmployeeId { get; set; }
 
     }
 
@@ -23,7 +23,7 @@ namespace TaskMangment.Application.DTOs
     {
         public int Id { get; set; }
         public string Name { get; set; }
-        public int ManagerID { get; set; }
+        public int ManagerEmployeeId { get; set; }
         public int BranchCount { get; set; }
     }
 }

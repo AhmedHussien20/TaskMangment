@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using TaskMangment.Application.Common.ApiRequests.Employee;
 using TaskMangment.Application.DTOs;
@@ -42,9 +43,9 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Add([FromBody] EmployeeAddEditDto dto, int CampanyId)
+        public async Task<IActionResult> Add([FromBody] EmployeeAddEditDto dto)
         {
-            var result = await _service.AddAsync(dto, CampanyId);
+            var result = await _service.AddAsync(dto, this.CompanyId);
 
             if (!result.Success)
                 return Fail(result.Message);

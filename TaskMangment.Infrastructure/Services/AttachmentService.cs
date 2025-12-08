@@ -83,9 +83,10 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<AttachmentGetDto>.Ok(dto);
         }
 
-        public async Task<ApiResponse<AttachmentGetDto>> AddAsync(AttachmentAddDto dto)
+        public async Task<ApiResponse<AttachmentGetDto>> AddAsync(AttachmentAddDto dto, int uploadedby)
         {
             var attachment = _mapper.Map<Attachment>(dto);
+            attachment.UploadedBy = uploadedby;
 
             await _attachmentRepo.AddAsync(attachment);
             await _attachmentRepo.SaveChangesAsync();

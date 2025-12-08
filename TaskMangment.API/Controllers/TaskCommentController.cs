@@ -34,11 +34,11 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpPost("{taskId}")]
-        public async Task<IActionResult> Add(int taskId, [FromQuery] int employeeId, [FromBody] TaskCommentAddEditDto dto)
+        public async Task<IActionResult> Add(int taskId, [FromBody] TaskCommentAddEditDto dto)
         {
-            var result = await _service.AddAsync(taskId, employeeId, dto);
+            var result = await _service.AddAsync(taskId, this.CurrentUserId, dto);
             if (!result.Success) return Fail(result.Message);
-            return Success(true, "Comment added");
+            return Success(result.Data, "Comment added");
         }
 
         [HttpPut("{id}")]
@@ -46,7 +46,7 @@ namespace TaskMangment.API.Controllers
         {
             var result = await _service.UpdateAsync(id, dto);
             if (!result.Success) return Fail(result.Message);
-            return Success(true);
+            return Success(result.Data, "Comment updated");
         }
 
         [HttpDelete("{id}")]

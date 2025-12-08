@@ -45,7 +45,7 @@ namespace TaskMangment.API.Controllers
         public async Task<IActionResult> Add([FromBody] AreaAddEditDto dto )
         {
 
-            var result = await _service.AddAsync(dto, this.CompanyId);
+            var result = await _service.AddAsync(dto, this.CompanyId, this.CurrentUserId);
 
             if (!result.Success)
                 return Fail(result.Message);

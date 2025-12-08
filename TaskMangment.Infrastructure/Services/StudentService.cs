@@ -94,27 +94,34 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<StudentGetDto>.Ok(dto);
         }
 
-        public async Task<ApiResponse<bool>> AddAsync(StudentAddEditDto dto)
+        public async Task<ApiResponse<StudentGetDto>> AddAsync(StudentAddEditDto dto)
         {
             var student = _mapper.Map<Student>(dto);
 
             await _studentRepository.AddAsync(student);
             await _studentRepository.SaveChangesAsync();
 
-            return ApiResponse<bool>.Ok(true, "Student added successfully");
+            var studentDto = _mapper.Map<StudentGetDto>(student);
+            studentDto.OfferCount = student.OfferAssignments?.Count ?? 0;
+
+            return ApiResponse<StudentGetDto>.Ok(studentDto, "Student added successfully");
         }
 
-        public async Task<ApiResponse<bool>> UpdateAsync(int id, StudentAddEditDto dto)
+        public async Task<ApiResponse<StudentGetDto>> UpdateAsync(int id, StudentAddEditDto dto)
         {
             var student = await _studentRepository.GetByIDAsync(id);
             if (student == null)
-                return ApiResponse<bool>.Fail("Student not found", StatusCode.NotFound);
+                return ApiResponse<StudentGetDto>.Fail("Student not found", StatusCode.NotFound);
 
             _mapper.Map(dto, student);
             await _studentRepository.SaveChangesAsync();
 
-            return ApiResponse<bool>.Ok(true, "Student updated successfully");
+            var studentDto = _mapper.Map<StudentGetDto>(student);
+            studentDto.OfferCount = student.OfferAssignments?.Count ?? 0;
+
+            return ApiResponse<StudentGetDto>.Ok(studentDto, "Student updated successfully");
         }
+
 
         public async Task<ApiResponse<bool>> DeleteAsync(int id)
         {

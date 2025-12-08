@@ -15,6 +15,7 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
     }
     public class TaskCloseRequestListDto
     {
+        public int Id { get; set; }
         public string Message { get; set; }
         public CloseRequestStatus Status { get; set; }
         public DateTime RequestedAt { get; set; }
@@ -23,6 +24,8 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
     }
     public class TaskCloseRequestDetailsDto
     {
+
+        public int Id { get; set; }
         public string Message { get; set; }
         public CloseRequestStatus Status { get; set; }
         public DateTime RequestedAt { get; set; }

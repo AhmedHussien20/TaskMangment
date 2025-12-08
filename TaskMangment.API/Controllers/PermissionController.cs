@@ -1,23 +1,23 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using TaskMangment.Application.Common.ApiRequests.Student;
+using TaskMangment.Application.Common.ApiRequests.Role;
 using TaskMangment.Application.DTOs;
 using TaskMangment.Application.Interfaces.Services;
 
 namespace TaskMangment.API.Controllers
 {
     [Route("api/[controller]")]
-    public class StudentController : BaseController
+    public class PermissionController : BaseController
     {
-        private readonly IStudentService _service;
+        private readonly IPermissionService _service;
 
-        public StudentController(IStudentService service)
+        public PermissionController(IPermissionService service)
         {
             _service = service;
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll([FromQuery] StudentRequest request)
+        public async Task<IActionResult> GetAll([FromQuery] PermissionRequest request)
         {
             var result = await _service.GetAllAsync(request);
 
@@ -30,37 +30,27 @@ namespace TaskMangment.API.Controllers
             return Success(result.Data);
         }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
-        {
-            var result = await _service.GetByIdAsync(id);
-
-            if (!result.Success)
-                return Fail(result.Message!, 404);
-
-            return Success(result.Data);
-        }
-
+      
         [HttpPost]
-        public async Task<IActionResult> Add([FromBody] StudentAddEditDto dto)
+        public async Task<IActionResult> Add([FromBody] PermissionAddDto dto)
         {
-            var result = await _service.AddAsync(dto);
+            var result = await _service.CreateAsync(dto);
 
             if (!result.Success)
                 return Fail(result.Message);
 
-            return Success(result.Data, "Student added successfully");
+
+            return Success(result.Data, "Permission added successfully");
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] StudentAddEditDto dto)
+        public async Task<IActionResult> Update(int id, [FromBody] PermissionAddDto dto)
         {
             var result = await _service.UpdateAsync(id, dto);
 
             if (!result.Success)
                 return Fail(result.Message, 404);
-
-            return Success(result.Data, "Student updated successfully");
+            return Success(result.Data, "Permission updated successfully");
         }
 
         [HttpDelete("{id}")]
@@ -70,8 +60,7 @@ namespace TaskMangment.API.Controllers
 
             if (!result.Success)
                 return Fail(result.Message, 404);
-
-            return Success(true, "Student deleted successfully");
+            return Success(true, "Permission deleted successfully");
         }
     }
 }

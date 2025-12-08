@@ -41,20 +41,20 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Add([FromBody] TaskCloseRequestAddDto dto, int taskAssignmentId, int employeeId)
+        public async Task<IActionResult> Add([FromBody] TaskCloseRequestAddDto dto, int taskId)
         {
-            var result = await _service.AddAsync(dto, taskAssignmentId, employeeId);
+            var result = await _service.AddAsync(dto, taskId, this.CurrentUserId);
 
             if (!result.Success)
                 return Fail(result.Message);
 
-            return Success(true, "Close request added successfully");
+            return Success(result.Data, "Close request added successfully");
         }
 
         [HttpPut("{id}/review")]
-        public async Task<IActionResult> Review(int id, [FromQuery] bool approved, [FromQuery] int reviewerId)
+        public async Task<IActionResult> Review(int id, [FromQuery] bool approved)
         {
-            var result = await _service.ReviewAsync(id, approved, reviewerId);
+            var result = await _service.ReviewAsync(id, approved, this.CurrentUserId);
 
             if (!result.Success)
                 return Fail(result.Message);

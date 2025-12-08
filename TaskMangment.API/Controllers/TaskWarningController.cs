@@ -1,28 +1,26 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using TaskMangment.Application.Common.ApiRequests.CalenderEvents;
-using TaskMangment.Application.Common.ApiRequests.Student;
-using TaskMangment.Application.DTOs;
+using TaskMangment.Application.Common.ApiRequests.Task;
+using TaskMangment.Application.DTOs.TaskDTOs;
 using TaskMangment.Application.Interfaces.Services;
 
 namespace TaskMangment.API.Controllers
 {
-   
     [Route("api/[controller]")]
-    public class CalenderEventsController : BaseController
+    [ApiController]
+    public class TaskWarningController : BaseController
     {
-        private readonly ICalenderEventsService _service;
+        private readonly ITaskWarningService _service;
 
-        public CalenderEventsController(ICalenderEventsService service)
+        public TaskWarningController(ITaskWarningService service)
         {
             _service = service;
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll([FromQuery] CalendarEventRequest request)
+        public async Task<IActionResult> GetAll([FromQuery] WarningRequest request)
         {
             var result = await _service.GetAllAsync(request);
-
             if (!result.Success)
                 return Fail(result.Message!);
 
@@ -35,7 +33,6 @@ namespace TaskMangment.API.Controllers
         public async Task<IActionResult> GetById(int id)
         {
             var result = await _service.GetByIdAsync(id);
-
             if (!result.Success)
                 return Fail(result.Message!, 404);
 
@@ -43,37 +40,34 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Add([FromBody] CalendarEventAddEditDto dto)
+        public async Task<IActionResult> Add(int tasktId, [FromBody] WarningAddEditDto dto)
         {
-            var result = await _service.AddAsync(dto, this.CurrentUserId, this.CompanyId);
-
+            var result = await _service.AddAsync(dto, tasktId);
             if (!result.Success)
                 return Fail(result.Message);
 
-            return Success(result.Data, "Calender Event added successfully");
+            return Success(result.Data, "Warning added successfully");
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] CalendarEventAddEditDto dto)
+        public async Task<IActionResult> Update(int id, [FromBody] WarningAddEditDto dto)
         {
             var result = await _service.UpdateAsync(id, dto);
-
             if (!result.Success)
                 return Fail(result.Message, 404);
 
-            return Success(result.Data, "Calender Event updated successfully");
+            return Success(result.Data, "Warning updated successfully");
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
             var result = await _service.DeleteAsync(id);
-
             if (!result.Success)
                 return Fail(result.Message, 404);
 
-            return Success(true, "Calender Event deleted successfully");
+            return Success(true, "Warning deleted successfully");
         }
     }
-
 }
+
