@@ -22,6 +22,8 @@ namespace TaskMangment.API.Controllers
         protected string CurrentUserFullName =>
             User.FindFirstValue("FullName");
 
+        protected int CompanyId =>
+           int.Parse(User.FindFirstValue("CompanyId"));
         protected bool IsAuthenticated => User.Identity.IsAuthenticated;
         protected IActionResult Success<T>(T data, string? message = null)
         {
