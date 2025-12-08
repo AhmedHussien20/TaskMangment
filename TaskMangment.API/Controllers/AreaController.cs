@@ -42,9 +42,10 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Add([FromBody] AreaAddEditDto dto, int CompanyId)
+        public async Task<IActionResult> Add([FromBody] AreaAddEditDto dto )
         {
-            var result = await _service.AddAsync(dto, CompanyId);
+
+            var result = await _service.AddAsync(dto, this.CompanyId);
 
             if (!result.Success)
                 return Fail(result.Message);
