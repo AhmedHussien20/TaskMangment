@@ -17,8 +17,32 @@ namespace TaskMangment.Application.Common.ApiRequests.Auth
     {
         public int UserId { get; set; }
         public string FullName { get; set; }
+        public string Email { get; set; }
+
+        public int? CompanyId { get; set; }
+        public int? BranchId { get; set; }
+        public int? DepartmentId { get; set; }
+        public int? JobId { get; set; }
+
+        public string Title { get; set; }
+        public string Nationality { get; set; }
+        public string IdentityNumber { get; set; }
+        public string Mobile { get; set; }
+        public string Address { get; set; }
+        public string Qualification { get; set; }
+
+        public bool IsActive { get; set; }
+
+        // Roles
+        public List<string> Roles { get; set; } = new();
+
+        // Permissions
+        public List<string> Permissions { get; set; } = new();
+
+        // JWT Token
         public string Token { get; set; }
     }
+
 
     public class ForgotPasswordRequest
     {
