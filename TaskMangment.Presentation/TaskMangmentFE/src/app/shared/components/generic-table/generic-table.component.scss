@@ -1,0 +1,48 @@
+table {
+    width: 100%;
+    border-collapse: collapse;
+  
+    th {
+      background: #f4f4f4;
+      cursor: pointer;
+      padding: 10px;
+    }
+  
+    td {
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+    }
+  
+    tr:hover {
+      background: #f1f1f1;
+    }
+  }
+  
+  .pagination {
+    margin-top: 10px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+  }
+  
+  button {
+    padding: 5px 10px;
+    cursor: pointer;
+  }
+
+  .table-filter {
+    .form-control,
+    .form-select {
+      width: 200px;
+      margin-bottom: 10px;
+    }
+  
+    label {
+      display: block;
+      margin-bottom: 5px;
+    }
+  
+    .d-flex {
+      align-items: flex-start;
+    }
+  }

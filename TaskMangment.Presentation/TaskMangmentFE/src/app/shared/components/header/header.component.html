@@ -1,0 +1,467 @@
+  <!-- app-header -->
+  <header class="app-header">
+
+    <!-- Start::main-header-container -->
+    <div class="main-header-container container-fluid">
+
+        <!-- Start::header-content-left -->
+        <div class="header-content-left">
+
+            <!-- Start::header-element -->
+            <div class="header-element">
+                <div class="horizontal-logo">
+                    <a routerLink="/dashboard" class="header-logo">
+                        <img src="./assets/images/brand-logos/desktop-logo.png" alt="logo" class="desktop-logo">
+                        <img src="./assets/images/brand-logos/toggle-logo.png" alt="logo" class="toggle-logo">
+                        <img src="./assets/images/brand-logos/desktop-dark.png" alt="logo" class="desktop-dark">
+                        <img src="./assets/images/brand-logos/toggle-dark.png" alt="logo" class="toggle-dark">
+                        <img src="./assets/images/brand-logos/desktop-white.png" alt="logo" class="desktop-white">
+                        <img src="./assets/images/brand-logos/toggle-white.png" alt="logo" class="toggle-white">
+                    </a>
+                </div>
+            </div>
+            <!-- End::header-element -->
+
+            <!-- Start::header-element -->
+            <div class="header-element">
+                <!-- Start::header-link -->
+                <a aria-label="Hide Sidebar" (click)="togglesidebar()" class="sidemenu-toggle header-link animated-arrow hor-toggle horizontal-navtoggle" data-bs-toggle="sidebar" href="javascript:void(0);"><span></span></a>
+                <!-- End::header-link -->
+            </div>
+            <!-- End::header-element -->
+
+            <!-- Start::header-element -->
+            <div class="main-header-center d-none d-lg-block  header-link">
+                <div class="input-group">
+                    <!-- <div class="input-group-btn search-panel"> -->
+                        <!-- <spk-ng-select 
+                        [options]="Selection"
+                        [selectClass]="'js-example-basic-single search-panel'"
+                        [clearable]="true"
+                        [searchable]="true"
+                        [hideSelected]="true"
+                        [placeholder]="'Choose one'"
+                        [additionalProperties]="{}">
+                        </spk-ng-select> -->
+                      
+                    <!-- </div> -->
+                    <!-- <input type="text" class="form-control" id="typehead" placeholder="Search for results..."
+                    autocomplete="off" (click)="SearchHeader()" [(ngModel)]="text" 
+                    (keyup)="Search(text)"> -->
+                <!-- <button class="btn btn-primary" (click)="SearchHeader()"><i class="fe fe-search" aria-hidden="true"></i></button> -->
+                </div>
+                 
+            </div>
+             <!-- End::header-element -->
+
+        </div>
+        <!-- End::header-content-left -->
+
+        <!-- Start::header-content-right -->
+        <div class="header-content-right">
+
+            <!-- Start::header-element -->
+            <div class="header-element header-theme-mode">
+                <!-- Start::header-link|layout-setting -->
+                <a href="javascript:void(0);" class="header-link layout-setting">
+                    <span class="light-layout"   (click)="updateTheme('dark')">
+                        <!-- Start::header-link-icon -->
+                    <i class="fe fe-moon header-link-icon lh-2"></i>
+                        <!-- End::header-link-icon -->
+                    </span>
+                    <span class="dark-layout"  (click)="updateTheme('light')">
+                        <!-- Start::header-link-icon -->
+                    <i class="fe fe-sun header-link-icon lh-2"></i>
+                        <!-- End::header-link-icon -->
+                    </span>
+                </a>
+                <!-- End::header-link|layout-setting -->
+            </div>
+            <!-- End::header-element -->
+
+            <!-- Start::header-element -->
+            <div class="header-element country-selector" ngbDropdown [autoClose]="'outside'">
+                <!-- Start::header-link|dropdown-toggle -->
+                <a href="javascript:void(0);" class="header-link dropdown-toggle country-Flag" data-bs-auto-close="outside" data-bs-toggle="dropdown" ngbDropdownToggle >
+                    <span>
+                        <app-country-flag [countryCode]="countryFlag" />
+                    </span>
+                </a>
+                <!-- End::header-link|dropdown-toggle -->
+                <ul class="main-header-dropdown dropdown-menu dropdown-menu-end" data-popper-placement="none" ngbDropdownMenu>
+                    <li>
+                        <a ngbDropdownItem class="dropdown-item d-flex align-items-center" href="javascript:void(0);" (click)="changeLanguage('en')">
+                            <span class="avatar avatar-xs lh-1 me-2">
+                                <app-country-flag countryCode="gb" />
+                            </span>
+                            English
+                        </a>
+                    </li>
+                    <li>
+                        <a ngbDropdownItem class="dropdown-item d-flex align-items-center" href="javascript:void(0);" (click)="changeLanguage('ar')">
+                            <span class="avatar avatar-xs lh-1 me-2">
+                                <app-country-flag countryCode="sa" />
+                            </span>
+                            Arabic
+                        </a>
+                    </li>
+                    <!-- <li>
+                        <a ngbDropdownItem class="dropdown-item d-flex align-items-center" href="javascript:void(0);">
+                            <span class="avatar avatar-xs lh-1 me-2">
+                                <app-country-flag countryCode="es" />
+                            </span>
+                            Spanish
+                        </a>
+                    </li>
+                    <li>
+                        <a  ngbDropdownItem class="dropdown-item d-flex align-items-center" href="javascript:void(0);">
+                            <span class="avatar avatar-xs lh-1 me-2">
+                                <img src="./assets/images/flags/1.jpg" alt="img" >
+                            </span>
+                            French
+                        </a>
+                    </li>
+                    <li>
+                        <a ngbDropdownItem class="dropdown-item d-flex align-items-center" href="javascript:void(0);">
+                            <span class="avatar avatar-xs lh-1 me-2">
+                                <img src="./assets/images/flags/2.jpg" alt="img" >
+                            </span>
+                            German
+                        </a>
+                    </li>
+                    <li>
+                        <a ngbDropdownItem class="dropdown-item d-flex align-items-center" href="javascript:void(0);">
+                            <span class="avatar avatar-xs lh-1 me-2">
+                                <img src="./assets/images/flags/3.jpg" alt="img" >
+                            </span>
+                            Italian
+                        </a>
+                    </li>
+                    <li>
+                        <a ngbDropdownItem class="dropdown-item d-flex align-items-center" href="javascript:void(0);">
+                            <span class="avatar avatar-xs lh-1 me-2">
+                                <img src="./assets/images/flags/4.jpg" alt="img" >
+                            </span>
+                            Russian
+                        </a>
+                    </li> -->
+                </ul>
+            </div>
+            <!-- End::header-element -->
+
+            <!-- Start::header-element -->
+            <div class="header-element header-fullscreen  d-xl-flex d-none">
+                <!-- Start::header-link -->
+                <a  href="javascript:void(0);" class="header-link" (click)="toggleFullscreen()">
+                    <i class="fe fe-maximize full-screen-open header-link-icon" [ngClass]="{ 'd-none': isFullscreen }"></i>
+                    <i class="fe fe-minimize full-screen-close header-link-icon"  [ngClass]="{ 'd-none': !isFullscreen }"></i>
+                </a>
+                <!-- End::header-link -->
+            </div>
+            <!-- End::header-element -->
+
+            <!-- Start::header-element --> 
+          
+            <!-- End::header-element -->
+
+            <!-- Start::header-element -->
+            <div class="header-element notifications-dropdown" ngbDropdown [autoClose]="'outside'">
+                <!-- Start::header-link|dropdown-toggle -->
+                <a href="javascript:void(0);" class="header-link dropdown-toggle" data-bs-toggle="dropdown" ngbDropdownToggle data-bs-auto-close="outside" id="messageDropdown" aria-expanded="false">
+                    <i class="fe fe-bell header-link-icon"></i>
+                    <span class="badge bg-secondary header-icon-badge pulse pulse-secondary" id="notification-icon-badge">{{ notificationCount }}</span>
+                </a>
+                <!-- End::header-link|dropdown-toggle -->
+                <!-- Start::main-header-dropdown -->
+                <div class="main-header-dropdown dropdown-menu dropdown-menu-end" ngbDropdownMenu data-popper-placement="none">
+                    <div class="p-3">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <p class="mb-0 fs-17 fw-semibold">Notifications</p>
+                            <span class="badge bg-secondary rounded-pill" id="notifiation-data">{{ notificationCount }} Unread</span>
+                        </div>
+                    </div>
+                    <div class="dropdown-divider"></div>
+                    <ul class="list-unstyled mb-0 overflow-scroll" id="header-notification-scroll" (click)="handleCardClick($event)">
+                      
+
+                       
+                        <li class="dropdown-item" id="not1" ngbDropdownItem> 
+                            <div class="d-flex align-items-start">
+                                 <div class="pe-2">
+                                     <span class="avatar avatar-md online bg-primary-transparent br-5"><img alt="avatar" src="./assets/images/faces/5.jpg"></span>
+                                 </div>
+                                 <div class="flex-grow-1 d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <p class="mb-0"><a routerLink="/pages/notifications-list" class="text-dark">Congratulate <strong>Olivia James</strong> for New template start</a></p>
+                                        <span class="text-muted fw-normal fs-12 header-notification-text">Oct 15 12:32pm</span>
+                                    </div>
+                                    <div>
+                                        <a href="javascript:void(0);" class="min-w-fit-content text-muted me-1 dropdown-item-close1" (click)="removeNotify('not1')"><i class="ti ti-x fs-16"></i></a>
+                                    </div>
+                                 </div>
+                            </div>
+                        </li>
+                        <li class="dropdown-item" id="not2" ngbDropdownItem>
+                            <div class="d-flex align-items-start">
+                                 <div class="pe-2">
+                                     <span class="avatar avatar-md offline bg-secondary-transparent br-5"><img alt="avatar" src="./assets/images/faces/2.jpg"></span>
+                                 </div>
+                                 <div class="flex-grow-1 d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <p class="mb-0"><a routerLink="/pages/notifications-list" class="text-dark"><strong>Joshua Gray</strong> New Message Received</a></p>
+                                        <span class="text-muted fw-normal fs-12 header-notification-text">Oct 13 02:56am</span>
+                                    </div>
+                                    <div>
+                                        <a href="javascript:void(0);" class="min-w-fit-content text-muted me-1 dropdown-item-close1" (click)="removeNotify('not2')"><i class="ti ti-x fs-16"></i></a>
+                                    </div>
+                                 </div>
+                            </div>
+                        </li>
+                        <li class="dropdown-item" id="not3" ngbDropdownItem>
+                            <div class="d-flex align-items-start">
+                                 <div class="pe-2">
+                                     <span class="avatar avatar-md online bg-pink-transparent br-5"><img alt="avatar" src="./assets/images/faces/3.jpg"></span>
+                                 </div>
+                                 <div class="flex-grow-1 d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <p class="mb-0"><a routerLink="/pages/notifications-list" class="text-dark"><strong>Elizabeth Lewis</strong> added new schedule realease</a></p>
+                                        <span class="text-muted fw-normal fs-12 header-notification-text">Oct 12 10:40pm</span>
+                                    </div>
+                                    <div>
+                                        <a href="javascript:void(0);" class="min-w-fit-content text-muted me-1 dropdown-item-close1" (click)="removeNotify('not3')"><i class="ti ti-x fs-16"></i></a>
+                                    </div>
+                                 </div>
+                            </div>
+                        </li>
+                        <li class="dropdown-item" id="not4" ngbDropdownItem>
+                            <div class="d-flex align-items-start">
+                                 <div class="pe-2">
+                                     <span class="avatar avatar-md online bg-warning-transparent br-5"><img alt="avatar" src="./assets/images/faces/5.jpg"></span>
+                                 </div>
+                                 <div class="flex-grow-1 d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <p class="mb-0 fw-normal"><a routerLink="/pages/notifications-list" class="text-dark">Delivered Successful to <strong>Micky</strong> </a></p>
+                                        <span class="text-muted fw-normal fs-12 header-notification-text">Order <span class="text-warning">ID: #005428</span> had been placed</span>
+                                    </div>
+                                    <div>
+                                        <a href="javascript:void(0);" class="min-w-fit-content text-muted me-1 dropdown-item-close1" (click)="removeNotify('not4')"><i class="ti ti-x fs-16"></i></a>
+                                    </div>
+                                 </div>
+                            </div>
+                        </li>
+                        <li class="dropdown-item" id="not5" ngbDropdownItem>
+                            <div class="d-flex align-items-start">
+                                 <div class="pe-2">
+                                     <span class="avatar avatar-md offline bg-success-transparent br-5"><img alt="avatar" src="./assets/images/faces/1.jpg"></span>
+                                 </div>
+                                 <div class="flex-grow-1 d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <p class="mb-0 fw-normal"><a routerLink="/pages/notifications-list" class="text-dark">You got 22 requests form <strong>Facebook</strong></a></p>
+                                        <span class="text-muted fw-normal fs-12 header-notification-text">Today at 08:08pm</span>
+                                    </div>
+                                    <div>
+                                        <a href="javascript:void(0);" class="min-w-fit-content text-muted me-1 dropdown-item-close1" (click)="removeNotify('not5')"><i class="ti ti-x fs-16"></i></a>
+                                    </div>
+                                 </div>
+                            </div>
+                        </li>
+                  
+                    </ul>
+                    @if(!isNotifyEmpty){
+
+                        <div class="p-3 empty-header-item1 border-top">
+                            <div class="d-grid">
+                                <a routerLink="/pages/notifications-list" class="btn btn-primary">View All</a>
+                            </div>
+                        </div>
+                    }
+                    <div class="p-5 empty-item1 d-none" [class.d-none]="!isNotifyEmpty">
+                        <div class="text-center">
+                            <span class="avatar avatar-xl avatar-rounded bg-secondary-transparent">
+                                <i class="ri-notification-off-line fs-2"></i>
+                            </span>
+                            <h6 class="fw-semibold mt-3">No New Notifications</h6>
+                        </div>
+                    </div>
+                </div>
+                <!-- End::main-header-dropdown -->
+            </div>
+            <!-- End::header-element -->
+
+            <!-- Start::header-element -->
+            <div class="header-element header-shortcuts-dropdown d-xl-flex d-none" ngbDropdown>
+                <!-- Start::header-link|dropdown-toggle -->
+                <a href="javascript:void(0);" ngbDropdownToggle class="header-link dropdown-toggle" data-bs-toggle="dropdown" data-bs-auto-close="outside" id="notificationDropdown" aria-expanded="false">
+                    <i class="fe fe-grid header-link-icon"></i>
+                </a>
+                <!-- End::header-link|dropdown-toggle -->
+                <!-- Start::main-header-dropdown -->
+                <div class="main-header-dropdown header-shortcuts-dropdown dropdown-menu pb-0 dropdown-menu-end" aria-labelledby="notificationDropdown" ngbDropdownMenu>
+                    <div class="p-3">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <p class="mb-0 fs-17 fw-semibold">Related Apps</p>
+                        </div>
+                    </div>
+                    <div class="dropdown-divider mb-0"></div>
+                    <div class="main-header-shortcuts p-2" id="header-shortcut-scroll">
+                       <div class="row g-2" >
+                           <div class="col-4">
+                               <a href="javascript:void(0);" class="text-dark">
+                                    <div class="text-center p-3 related-app">
+                                        <span class="avatar avatar-sm rounded-2 p-1 bg-primary-transparent">
+                                            <img src="./assets/images/apps/figma.png" alt="">
+                                        </span>
+                                        <span class="d-block fs-12">Figma</span>
+                                    </div>
+                                </a>
+                           </div>
+                           <div class="col-4">
+                                <a href="javascript:void(0);" class="text-dark">
+                                    <div class="text-center p-3 related-app">
+                                        <span class="avatar avatar-sm rounded-2 p-1 bg-primary-transparent">
+                                            <img src="./assets/images/apps/microsoft-powerpoint.png" alt="">
+                                        </span>
+                                        <span class="d-block fs-12">Power Point</span>
+                                    </div>
+                                </a>
+                           </div>
+                           <div class="col-4">
+                                <a href="javascript:void(0);" class="text-dark">
+                                    <div class="text-center p-3 related-app">
+                                        <span class="avatar avatar-sm rounded-2 p-1 bg-primary-transparent">
+                                            <img src="./assets/images/apps/microsoft-word.png" alt="">
+                                        </span>
+                                        <span class="d-block fs-12">MS Word</span>
+                                    </div>
+                                </a>
+                           </div>
+                           <div class="col-4">
+                                <a href="javascript:void(0);" class="text-dark">
+                                    <div class="text-center p-3 related-app">
+                                        <span class="avatar avatar-sm rounded-2 p-1 bg-primary-transparent">
+                                            <img src="./assets/images/apps/calender.png" alt="">
+                                        </span>
+                                        <span class="d-block fs-12">Calendar</span>
+                                    </div>
+                                </a>
+                           </div>
+                           <div class="col-4">
+                                <a href="javascript:void(0);" class="text-dark">
+                                    <div class="text-center p-3 related-app">
+                                        <span class="avatar avatar-sm rounded-2 p-1 bg-primary-transparent">
+                                            <img src="./assets/images/apps/sketch.png" alt="">
+                                        </span>
+                                        <span class="d-block fs-12">Sketch</span>
+                                    </div>
+                                </a>
+                           </div>
+                           <div class="col-4">
+                                <a href="javascript:void(0);" class="text-dark">
+                                    <div class="text-center p-3 related-app">
+                                        <span class="avatar avatar-sm rounded-2 p-1 bg-primary-transparent">
+                                            <img src="./assets/images/apps/google-docs.png" alt="">
+                                        </span>
+                                        <span class="d-block fs-12">Docs</span>
+                                    </div>
+                                </a>
+                           </div>
+                           <div class="col-4">
+                                <a href="javascript:void(0);" class="text-dark">
+                                    <div class="text-center p-3 related-app">
+                                        <span class="avatar avatar-sm rounded-2 p-1 bg-primary-transparent">
+                                            <img src="./assets/images/apps/google.png" alt="">
+                                        </span>
+                                        <span class="d-block fs-12">Google</span>
+                                    </div>
+                                </a>
+                           </div>
+                           <div class="col-4">
+                                <a href="javascript:void(0);" class="text-dark">
+                                    <div class="text-center p-3 related-app">
+                                        <span class="avatar avatar-sm rounded-2 p-1 bg-primary-transparent">
+                                            <img src="./assets/images/apps/translate.png" alt="">
+                                        </span>
+                                        <span class="d-block fs-12">Translate</span>
+                                    </div>
+                                </a>
+                           </div>
+                           <div class="col-4">
+                                <a href="javascript:void(0);" class="text-dark">
+                                    <div class="text-center p-3 related-app">
+                                        <span class="avatar avatar-sm rounded-2 p-1 bg-primary-transparent">
+                                            <img src="./assets/images/apps/google-sheets.png" alt="">
+                                        </span>
+                                        <span class="d-block fs-12">Sheets</span>
+                                    </div>
+                                </a>
+                           </div>
+                       </div>
+                    </div>
+                    <div class="p-3 border-top">
+                        <div class="d-grid">
+                            <a href="javascript:void(0);" class="btn btn-primary">View All</a>
+                        </div>
+                    </div>
+                </div>
+                <!-- End::main-header-dropdown -->
+            </div>
+            <!-- End::header-element -->
+
+            <!-- Start::header-element -->
+            <div class="header-element" ngbDropdown>
+                <!-- Start::header-link|dropdown-toggle -->
+                <a href="javascript:void(0);" ngbDropdownToggle class="header-link dropdown-toggle" id="mainHeaderProfile" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                    <div class="d-flex align-items-center">
+                        <div class="header-link-icon">
+                            <img src="./assets/images/faces/1.jpg" alt="img" width="32" height="32" class="rounded-circle">
+                        </div>
+                        <div class="d-none">
+                            <p class="fw-semibold mb-0">Angelica</p>
+                            <span class="op-7 fw-normal d-block fs-11">Web Designer</span>
+                        </div>
+                    </div>
+                </a>
+                <!-- End::header-link|dropdown-toggle -->
+                <ul class="main-header-dropdown dropdown-menu pt-0 overflow-hidden header-profile-dropdown dropdown-menu-end" aria-labelledby="mainHeaderProfile" ngbDropdownMenu>
+                    <Li>
+                        <div class="header-navheading border-bottom">
+                            <h6 class="main-notification-title">Sonia Taylor</h6>
+                            <p class="main-notification-text mb-0">Web Designer</p>
+                        </div>
+                    </Li>
+                    <li><a ngbDropdownItem class="dropdown-item d-flex border-bottom" routerLink="/pages/profile"><i class="fe fe-user fs-16 align-middle me-2"></i>Profile</a></li>
+                    <li><a ngbDropdownItem class="dropdown-item d-flex border-bottom" routerLink="/apps/mail/mail-inbox"><i class="fe fe-inbox fs-16 align-middle me-2"></i>Inbox <span class="badge bg-success ms-auto">25</span></a></li>
+                    <li><a ngbDropdownItem class="dropdown-item d-flex border-bottom border-block-end" routerLink="/pages/notifications-list"><i class="fe fe-compass fs-16 align-middle me-2"></i>Activity</a></li>
+                    <li><a ngbDropdownItem class="dropdown-item d-flex border-bottom" routerLink="/pages/settings"><i class="fe fe-settings fs-16 align-middle me-2"></i>Settings</a></li>
+                    <li><a ngbDropdownItem class="dropdown-item d-flex border-bottom" routerLink="/advancedui/chat"><i class="fe fe-headphones fs-16 align-middle me-2"></i>Support</a></li>
+                    <li><a ngbDropdownItem class="dropdown-item d-flex" routerLink="/auth/login" (click)="Logout()"><i class="fe fe-power fs-16 align-middle me-2"></i>Log Out</a></li>
+                </ul>
+            </div>  
+            <!-- End::header-element -->    
+
+            <!-- Start::header-element -->
+            <div class="header-element right-sidebar d-xl-flex d-none">
+                <a href="javascript:void(0);" class="header-link right-sidebar"  data-bs-toggle="offcanvas" data-bs-target="#right-sidebar-canvas" (click)="rightsidebar()">
+                    <i class="fe fe-align-right header-icons header-link-icon"></i>
+                </a>
+            </div>
+            <!-- End::header-element -->
+
+            <!-- Start::header-element -->
+            <div class="header-element">
+                <!-- Start::header-link|switcher-icon -->
+                <a href="javascript:void(0);" class="header-link switcher-icon" data-bs-toggle="offcanvas" data-bs-target="#switcher-canvas"  (click)="open()">
+                    <i class="fe fe-settings header-link-icon"></i>
+                </a>
+                <!-- End::header-link|switcher-icon -->
+            </div>
+            <!-- End::header-element -->
+
+        </div>
+        <!-- End::header-content-right -->
+
+    </div>
+    <!-- End::main-header-container -->
+
+</header>
+<!-- /app-header -->
