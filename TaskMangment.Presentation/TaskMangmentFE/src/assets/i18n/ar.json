@@ -1,0 +1,120 @@
+{
+  "common": {
+    "welcome": "مرحباً",
+    "login": "تسجيل الدخول",
+    "logout": "تسجيل الخروج",
+    "register": "تسجيل جديد",
+    "dashboard": "لوحة التحكم"
+  },
+  "validation": {
+    "required": "هذا الحقل مطلوب",
+    "email": "يرجى إدخال بريد إلكتروني صحيح",
+    "password": "يجب أن تتكون كلمة المرور من 6 أحرف على الأقل"
+  },
+  "nav": {
+    "dashboard": {
+      "header": "لوحة التحكم",
+      "title": "لوحة التحكم"
+    },
+    "applications": {
+      "header": "التطبيقات"
+    },
+    "apps": {
+      "title": "التطبيقات",
+      "orders": {
+        "title": "الطلبات",
+        "list": "قائمة الطلبات",
+        "tracking": "تتبع الطلبات"
+      },
+      "expiry": {
+        "title": "الصلاحية",
+        "list": "قائمة المنتهية",
+        "tracking": "تتبع الصلاحية"
+      },
+      "customers": {
+        "title": "العملاء",
+        "notifications": "إشعارات العملاء",
+        "customers": "العملاء"
+      },
+      "users": {
+        "title": "المستخدمون",
+        "users": "المستخدمون",
+        "list": "قائمة المستخدمون"
+      },
+      "group": {
+        "title": "المجاميع",
+        "list": "قائمة المجاميع"
+      },
+      "configurations": {
+        "title": "الإعدادات",
+        "onlineOrders": "الطلبات عبر الإنترنت",
+        "expiry": "الصلاحية",
+        "externalIntegration": "التكامل الخارجي",
+        "moduleAvailability": "توفر الوحدة",
+        "modules": "الوحدات",
+        "branches": "الفروع",
+        "campaigns": "الحملات",
+        "ads": "الإعلانات",
+        "notifications": "الإشعارات"
+      }
+    },
+    "components": {
+      "header": "المكونات",
+      "submenus": {
+        "title": "القوائم الفرعية",
+        "level1": "المستوى 1",
+        "level2": {
+          "title": "المستوى 2",
+          "level2_0": "المستوى 2.0",
+          "level2_1": "المستوى 2.1",
+          "level2_2": {
+            "title": "المستوى 2.2",
+            "level2_2_1": "المستوى 2.2.1",
+            "level2_2_2": "المستوى 2.2.2"
+          }
+        },
+        "level3": "المستوى 3"
+      }
+    },
+    "products": "المنتجات",
+    "product-list": "قائمة المنتجات",
+    "product-categories": "التصنيفات"
+  },
+  "LOGIN": {
+    "TITLE": "تسجيل الدخول",
+    "USERNAME": "اسم المستخدم",
+    "USERNAME_PLACEHOLDER": "أدخل اسم المستخدم",
+    "PASSWORD": "كلمة المرور",
+    "PASSWORD_PLACEHOLDER": "أدخل كلمة المرور",
+    "SUBMIT": "إرسال",
+    "FORGOT_PASSWORD": "نسيت كلمة السر؟",
+    "DONT_HAVE_ACCOUNT": "ليس لديك حساب؟",
+    "REGISTER_HERE": "سجل هنا",
+    "SUBTITLE": "الرجاء تسجيل الدخول للمتابعة"
+  },
+  "form": {
+    "transactionNumber": "رقم المعاملة",
+    "customerCode": "رمز العميل",
+    "branchCode": "رمز الفرع",
+    "phone": "الهاتف",
+    "pharmacyName": "اسم الصيدلية",
+    "status": "الحالة",
+    "totalAmount": "المبلغ الإجمالي",
+    "createdOn": "تاريخ الإنشاء",
+    "createdByUsername": "اسم المستخدم الذي أنشأ",
+    "transactionCode": "رمز المعاملة",
+    "transactionDate": "تاريخ المعاملة",
+    "itemCount": "عدد العناصر",
+    "creditNoteStatus": "حالة إشعار الائتمان",
+    "creditNoteDate": "تاريخ إشعار الائتمان",
+    "dateOfReview": "تاريخ المراجعة",
+    "expiryCollection": "جمع انتهاء الصلاحية",
+    "expiryReview": "مراجعة انتهاء الصلاحية",
+    "dateOfCollection": "تاريخ الجمع",
+    "customerSegment": "قطاع العملاء",
+    "serialNumber": "الرقم التسلسلي",
+    "createdOnFrom": "تاريخ الإنشاء (من)",
+    "createdOnTo": "تاريخ الإنشاء (إلى)",
+    "phoneNumber": "رقم الهاتف"
+  }
+}

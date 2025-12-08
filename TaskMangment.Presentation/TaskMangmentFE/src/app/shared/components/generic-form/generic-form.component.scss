@@ -1,0 +1,7 @@
+.generic-form input[ng-reflect-is-disabled="true"],
+.generic-form select[ng-reflect-is-disabled="true"],
+.generic-form textarea[ng-reflect-is-disabled="true"] {
+  background-color: #e9ecef;
+  cursor: not-allowed;
+  opacity: 0.65;
+}

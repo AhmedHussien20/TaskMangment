@@ -1,0 +1,17 @@
+ 
+
+<app-generic-table
+  [title]="title"
+  [breadcrumbs]="breadcrumbs"
+  [activeitem]="activeitem"
+  [columns]="columns"
+  [data]="employees"
+  [entries]="10"
+  [showFilters]="true"
+  [showPagination]="true"
+  [formUrl]="'/employee-form'"
+  (editRow)="onEdit($event)"
+  (deleteRow)="onDelete($event)">
+</app-generic-table>
+
+
