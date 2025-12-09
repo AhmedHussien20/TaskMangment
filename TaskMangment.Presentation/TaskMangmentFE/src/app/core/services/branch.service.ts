@@ -1,41 +1,49 @@
 import { Injectable } from '@angular/core';
-import { BranchRepository } from '../repositories/branch.repository';
-import { SearchCriteria } from '../models/search-criteria.model';
-import { map, Observable } from 'rxjs';
-import { HttpParams } from '@angular/common/http';
-import { BranchModel } from '../models/branch/branch-model';
+import { HttpClient } from '@angular/common/http';
+import { ApiService } from 'app/core/services/api.service';
+import { BranchPagedResponse, BranchRequest } from '../models/branch/branch';
 
 @Injectable({
   providedIn: 'root'
 })
 export class BranchService {
-
-  constructor(private branchRepository: BranchRepository) { }
-
-  fetchBranchs(searchCriteria: SearchCriteria, entries: number): Observable<any> {
-    // Create a copy of the searchCriteria object to avoid modifying the original
-    const { filterTypes, ...filter } = searchCriteria;
-    const criteria = { ...filter, pageCount: entries };
-    let params = new HttpParams();
-    Object.keys(filter).forEach(key => {
-      if (filter[key] !== null && filter[key] !== undefined && filter[key] !== '' && filter[key] !== 'filterTypes') {
-        params = params.append(key, filter[key]);
-      }
-    });
-    return this.branchRepository.getAll(params).pipe(
-      map(response => {
-        // Process the response if needed
-        return {
-          data: response.data as BranchModel[],
-          totalItems: response.totalItems,
-          targetPage: response.targetPage,
-          itemCount: response.itemCount
-        };
-      })
-    );
+  constructor(private http: HttpClient, private api: ApiService) {
+    this.api.serviceName = 'Branch';
   }
 
+  getAll(request: any) {
+    const query = this.buildQuery(request);
+    return this.api.get<BranchPagedResponse>(`?${query}`);
+  }
 
+  getById(id: number) {
+    return this.api.get(`/${id}`);
+  }
 
+  create(model: any) {
+    return this.api.post('', model);
+  }
+
+  update(id: number, model: any) {
+    return this.api.put(`/${id}`, model);
+  }
+
+  delete(id: number) {
+    return this.api.delete(`/${id}`);
+  }
+
+  private buildQuery(req: BranchRequest): string {
+    const params: string[] = [];
+
+    if (req.name) params.push(`Name=${encodeURIComponent(req.name)}`);
+    if (req.companyId) params.push(`CompanyId=${req.companyId}`);
+    if (req.areaId) params.push(`AreaId=${req.areaId}`);
+
+    params.push(`PageIndex=${req.pageIndex}`);
+    params.push(`PageSize=${req.pageSize}`);
+    params.push(`SortColumn=${req.sortColumn}`);
+    params.push(`SortDirection=${req.sortDirection}`);
+
+    return params.join('&');
+  }
 }
-

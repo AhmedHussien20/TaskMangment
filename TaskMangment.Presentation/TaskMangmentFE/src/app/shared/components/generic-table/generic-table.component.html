@@ -3,24 +3,24 @@
         <div class="card custom-card">
             <div class="card-body pt-2">
                 <div *ngIf="title" class="d-flex justify-content-between align-items-center mb-3">
-                    <label class="main-content-label my-auto pt-2">{{ title }}</label>
+                    <label class="main-content-label my-auto pt-2">{{ 'TABLE.TITLE' | translate}}</label>
                 </div>
                 <div *ngIf="loading" class="text-center my-3">
                     <div class="spinner-border" role="status">
-                        <span class="visually-hidden">Loading...</span>
+                        <span class="visually-hidden">{{ 'TABLE.LOADING' | translate }}</span>
                     </div>
                 </div>
                 <div *ngIf="!loading">
                     <div class="row table-filter" *ngIf="showFilters">
                         <div class="col-lg-12 d-lg-flex justify-content-start align-items-center mb-3 mt-2">
                             <div class="d-flex flex-wrap w-100">
-                                <div class="me-3 mb-2" *ngFor="let key of objectKeys(searchCriteria)">
-                                    <label [for]="key">{{ getLabel(key) }}</label>
+                                <div class="me-3 mb-2" *ngFor="let key of objectKeys(searchCriteria.filterTypes)">
+                                    <label [for]="key">{{ getLabel(key) | translate}}</label>
                                     <ng-container [ngSwitch]="getInputType(key)">
-                                        <input *ngSwitchCase="'text'" type="text" class="form-control" [(ngModel)]="searchCriteria[key]" [placeholder]="key" [id]="key">
-                                        <input *ngSwitchCase="'number'" type="number" class="form-control" [(ngModel)]="searchCriteria[key]" [placeholder]="key" [id]="key">
-                                        <select *ngSwitchCase="'dropdown'" class="form-select" [(ngModel)]="searchCriteria[key]" [id]="key">
-                                            <option *ngFor="let option of getDropdownOptions(key)" [value]="option.id">{{ option.name }}</option>
+                                        <input *ngSwitchCase="'text'" type="text" class="form-control" [(ngModel)]="searchCriteria[key]" [placeholder]="getLabel(key) | translate" [id]="key">
+                                        <input *ngSwitchCase="'number'" type="number" class="form-control" [(ngModel)]="searchCriteria[key]" [placeholder]="getLabel(key) | translate" [id]="key">
+                                        <select *ngSwitchCase="'dropdown'" class="form-select" [(ngModel)]="searchCriteria[key]"  [id]="key">
+                                            <option *ngFor="let option of getDropdownOptions(key)" [value]="option.id">{{ option.name | translate }}</option>
                                         </select>
                                         <input *ngSwitchCase="'date'" type="date" class="form-control" [(ngModel)]="searchCriteria[key]" [id]="key">
                                         <!-- Add more input types as needed -->
@@ -28,10 +28,10 @@
                                 </div>
                                 <div class="ms-auto d-flex align-items-center">
                                     <button type="button" class="btn btn-primary me-2" (click)="applyFilters()">
-                                        <i class="fa fa-search"></i> Search
+                                        <i class="fa fa-search"></i> {{ 'TABLE.SEARCH' | translate }}
                                     </button>
                                     <button type="button" class="btn btn-secondary" (click)="clearFilters()">
-                                        <i class="fa fa-times"></i> Clear Filters
+                                        <i class="fa fa-times"></i> {{ 'TABLE.CLEAR_FILTERS' | translate }}
                                     </button>
                                 </div>
                             </div>
@@ -39,7 +39,8 @@
                         </div>
                         <div class="d-flex justify-content-end mb-3" *ngIf="showAddButton">
                             <button class="btn btn-primary" (click)="onAddClick && onAddClick()">
-                              <i class="fa fa-plus"></i> {{ addButtonLabel }}
+                              <i class="fa fa-plus"></i> {{ addButtonLabel | translate }}
+
                             </button>
                           </div>  
                     </div>
@@ -51,8 +52,8 @@
                                     <th *ngIf="showCheckbox">
                                         <input type="checkbox" (change)="toggleSelectAll($event)" />
                                     </th>
-                                    <th *ngFor="let col of columns">{{ col.label }}</th>
-                                    <th *ngIf="showEditButton || showDeleteButton">Actions</th>
+                                    <th *ngFor="let col of columns">{{ col.label | translate}}</th>
+                                    <th *ngIf="showEditButton || showDeleteButton">{{ 'TABLE.ACTIONS' | translate }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -98,8 +99,8 @@
                                     </td>
                                     <td *ngIf="showEditButton || showDeleteButton">
                                         <div class="button-list">
-                                            <button *ngIf="showEditButton" class="btn btn-sm btn-outline-primary" (click)="editItem(item.id)" title="Edit Item"><i class="bi bi-pencil-square"></i></button>
-                                            <button *ngIf="showDeleteButton" class="btn btn-sm btn-outline-danger" (click)="deleteItem(item.id)" title="Delete Item"><i class="bi bi-trash"></i></button>
+                                            <button *ngIf="showEditButton" class="btn btn-sm btn-outline-primary" (click)="editItem(item.id)" title="'TABLE.EDIT_ITEM' translate"><i class="bi bi-pencil-square"></i></button>
+                                            <button *ngIf="showDeleteButton" class="btn btn-sm btn-outline-danger" (click)="deleteItem(item.id)" title="'TABLE.DELETE_ITEM' | translate"><i class="bi bi-trash"></i></button>
                                         </div>
                                     </td>
                                 </tr>
@@ -110,15 +111,15 @@
                     <div class="mt-3" *ngIf="showPagination">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <span>Total Records: {{ totalItems }} </span>
-                                <span>Total Pages: {{ totalPages }}</span>
+                                <span>{{ 'TABLE.TOTAL_RECORDS' | translate }}: {{ totalItems }} </span>
+                                <span>{{'TABLE.TOTAL_PAGES' | translate }}: {{ totalPages }}</span>
                             </div>
                             <div class="d-flex align-items-center filter-group">
-                                <span>Show</span>
-                                <select class="form-control ms-2" [(ngModel)]="entries" (ngModelChange)="onEntriesChange()" title="Select number of entries to display">
+                                <span>{{'TABLE.SHOW' | translate}}</span>
+                                <select class="form-control ms-2" [(ngModel)]="entries" (ngModelChange)="onEntriesChange()" title="'TABLE.SELECT_ENTRIES' | translate">
                                     <option *ngFor="let num of [5, 10, 20, 50]" [value]="num">{{ num }}</option>
                                 </select>
-                                <span>entries</span>
+                                <span>{{'TABLE.ENTRIES' | translate}}</span>
                             </div>
                         </div>
                         <ngb-pagination
@@ -127,8 +128,8 @@
                             [(page)]="page"
                             [pageSize]="entries"
                             (pageChange)="onPageChange($event)">
-                            <ng-template ngbPaginationPrevious>Prev</ng-template>
-                            <ng-template ngbPaginationNext>Next</ng-template>
+                            <ng-template ngbPaginationPrevious>{{'TABLE.PREV' | translate}}</ng-template>
+                            <ng-template ngbPaginationNext>{{'TABLE.NEXT' | translate}}</ng-template>
                         </ngb-pagination>
                     </div>
                 </div>
