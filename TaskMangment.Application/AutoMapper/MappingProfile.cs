@@ -12,7 +12,8 @@ namespace TaskMangment.Application.AutoMapper
         {
             CreateMap<Company, CompanyGetDto>();
             CreateMap<CompanyAddEditDto, Company>();
-            CreateMap<Area, AreaGetDto>();
+            CreateMap<Area, AreaGetDto>()
+                .ForMember(dest => dest.ManagerName, opt=> opt.MapFrom(src=>src.Manager!= null ? src.Manager.FullName:null));
             CreateMap<AreaAddEditDto, Area>();
 
 

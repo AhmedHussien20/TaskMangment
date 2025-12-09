@@ -1,6 +1,7 @@
 export interface BaseResponse<T>{
     data: T;
-    successMessage: string;
-    statusCode: Number;
+    message: string;
+    status_Code: Number;
     errorList: string[];
+    success: boolean;
 }

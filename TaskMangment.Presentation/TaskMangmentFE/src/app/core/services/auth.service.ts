@@ -28,6 +28,7 @@ export class AuthService {
       map(response => {
         if (response.data !== null) {
           localStorage.setItem('authToken', response.data.token);
+          localStorage.setItem('userData', JSON.stringify(response.data));
           this.store.dispatch(loginSuccess({ token: response.data.token }));
           return response;
         } else {

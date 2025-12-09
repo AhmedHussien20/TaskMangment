@@ -635,7 +635,7 @@ export class AlertsComponent {
   private _message$ = new Subject<string>();
 
   staticAlertClosed = false;
-  successMessage = '';
+  success = '';
 
   @ViewChild('staticAlert', { static: false }) staticAlert: NgbAlert | any;
   @ViewChild('selfClosingAlert', { static: false }) selfClosingAlert:
@@ -652,7 +652,7 @@ export class AlertsComponent {
     this._message$
       .pipe(
         takeUntilDestroyed(),
-        tap((message) => (this.successMessage = message)),
+        tap((message) => (this.success = message)),
         debounceTime(5000)
       )
       .subscribe(() => this.selfClosingAlert?.close());

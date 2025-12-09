@@ -61,7 +61,7 @@ export class GenericTableComponent<T = any> {
 
   ngOnInit(): void {
     
-    this.entries = this.searchCriteria.pageCount;
+    this.entries = this.searchCriteria.pageSize;
     this.loading = false;
   }
 
@@ -121,7 +121,7 @@ export class GenericTableComponent<T = any> {
   objectKeys(obj: any): string[] {
     // Exclude hidden filters from being displayed
     return Object.keys(obj).filter(
-      key => key !== 'pageCount' && key !== 'pageNo' && key !== 'filterTypes' && !this.hiddenFilters.includes(key)
+      key => key !== 'pageSize' && key !== 'pageIndex' && key !== 'filterTypes' && !this.hiddenFilters.includes(key)
     );
   }
 
