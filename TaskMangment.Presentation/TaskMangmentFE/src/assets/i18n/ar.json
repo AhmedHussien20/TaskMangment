@@ -116,5 +116,9 @@
     "createdOnFrom": "تاريخ الإنشاء (من)",
     "createdOnTo": "تاريخ الإنشاء (إلى)",
     "phoneNumber": "رقم الهاتف"
+  },
+  "area": {
+    "addArea": "إضافة منطقة"
+     
   }
 }
