@@ -1,7 +1,7 @@
 <app-page-header
-  [title]="title"
+  [title]="title | translate"
   [title1]="breadcrumbs"
-  [activeitem]="activeitem">
+  [activeitem]="activeitem | translate">
 </app-page-header>
 
 <div class="row row-sm">
@@ -9,7 +9,7 @@
     <div class="card custom-card">
       <div class="card-header border-bottom-0">
         <div class="d-flex">
-          <label class="main-content-label my-auto pt-2">{{ title }}</label>
+          <label class="main-content-label my-auto pt-2">{{ title | translate}}</label>
         </div>
       </div>
 
@@ -18,7 +18,7 @@
         <!-- LOADING -->
         <div *ngIf="isLoading" class="text-center my-3">
           <div class="spinner-border" role="status">
-            <span class="visually-hidden">Loading...</span>
+            <span class="visually-hidden">{{ 'TABLE.LOADING' | translate }}</span>
           </div>
         </div>
 

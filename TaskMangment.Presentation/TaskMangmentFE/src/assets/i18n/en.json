@@ -113,5 +113,39 @@
     "createdOnFrom": "Created On (From)",
     "createdOnTo": "Created On (To)",
     "phoneNumber": "Phone Number"
+  },
+  "AREA": {
+  "COMPANY": "CompanyId",
+  "LIST_TITLE": "Area List",
+  "HOME": "Home",
+  "AREAS": "Areas",
+  "ID": "ID",
+  "NAME": "Area Name",
+  "ADDRESS": "Address",
+  "MANAGER": "Manager",
+  "BRANCHES": "Branches"
+},
+ "TABLE": {
+    "SEARCH": "Search",
+    "CLEAR_FILTERS": "Clear Filters",
+    "ADD_NEW": "Add New",
+    "ACTIONS": "Actions",
+    "EDIT_ITEM": "Edit Item",
+    "DELETE_ITEM": "Delete Item",
+    "TOTAL_RECORDS": "Total Records",
+    "TOTAL_PAGES": "Total Pages",
+    "SHOW": "Show",
+    "ENTRIES": "entries",
+    "PREV": "Prev",
+    "NEXT": "Next",
+    "SELECT_ENTRIES": "Select number of entries to display",
+    "LOADING": "Loading",
+    "ACTIVE": "Active",
+    "INACTIVE": "Inactive",
+    "SELECT_STATUS": "Select Status",
+    "SELECT_ASSIGNMENT": "Select Assignment",
+    "SELECT_ACTIVE_STATUS": "Select Active Status"
   }
+
+
 }
