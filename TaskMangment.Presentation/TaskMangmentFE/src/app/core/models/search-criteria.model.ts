@@ -9,7 +9,7 @@ export class SearchCriteria<T = any> {
   sortDirection: 'ASC' | 'DESC' = 'ASC';
 
   // Filter UI definition
-  filterTypes?: { [key in keyof T]?: 'text' | 'dropdown' | 'date' | 'radio' };
+  filterTypes?: { [key: string]: 'text' | 'dropdown' | 'date' | 'radio' };
 
   constructor(init?: Partial<SearchCriteria<T>>) {
     Object.assign(this, init);

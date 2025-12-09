@@ -113,5 +113,25 @@
     "createdOnFrom": "Created On (From)",
     "createdOnTo": "Created On (To)",
     "phoneNumber": "Phone Number"
-  }
+  },
+"table": {
+  "totalRecords": "Total Records",
+  "totalPages": "Total Pages",
+  "show": "Show",
+  "entries": "entries",
+  "selectEntries": "Select number of entries to display",
+  "prev": "Prev",
+  "next": "Next",
+  "actions": "Actions",
+  "noData": "No data available"
+}
+,"area": {
+  "id": "ID",
+  "name": "Area Name",
+  "address": "Address",
+  "managerName": "Manager",
+  "branchCount": "Branches"
+}
+
+
 }

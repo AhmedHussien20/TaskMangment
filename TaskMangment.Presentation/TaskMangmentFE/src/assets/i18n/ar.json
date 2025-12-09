@@ -116,5 +116,31 @@
     "createdOnFrom": "تاريخ الإنشاء (من)",
     "createdOnTo": "تاريخ الإنشاء (إلى)",
     "phoneNumber": "رقم الهاتف"
-  }
+  },
+  "area": {
+  "listTitle": "قائمة المناطق",
+  "formTitle": "Area Details",
+  "id": "رقم",
+  "name": "اسم المنطقة",
+  "address": "العنوان",
+  "managerName": "اسم المدير",
+  "branchCount": "عدد الفروع",
+  "companyId": "Company",
+  "sortColumn": "Sort Column",
+  "sortDirection": "Sort Direction"
+},
+"table": {
+  "totalRecords": "إجمالي السجلات",
+  "totalPages": "إجمالي الصفحات",
+  "show": "عرض",
+  "entries": "مدخلات",
+  "selectEntries": "اختر عدد العناصر للعرض",
+  "prev": "السابق",
+  "next": "التالي",
+  "actions": "إجراءات",
+  "search": "بحث",
+  "clearFilters": "مسح الفلاتر"
+}
+
+
 }

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
 import { Router } from '@angular/router';
 import { SearchCriteria } from 'app/core/models/search-criteria.model';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-generic-table',
@@ -85,26 +86,31 @@ export class GenericTableComponent<T = any> {
     }
   }
 
-  clearFilters() {
-    Object.keys(this.searchCriteria).forEach(key => {
-      const type = this.searchCriteria.filterTypes?.[key as keyof T]; // Get the type of the filter
-  
-      if (type === 'text') {
-        this.searchCriteria[key] = ''; // Clear text inputs
-      } else if (type === 'dropdown' || type === 'radio') {
-        if (key === 'active' || key === 'isAssigned') {
-          this.searchCriteria[key] = null; // Reset dropdowns for active and isAssigned to null
-        } else {
-          this.searchCriteria[key] = 0; // Reset other dropdowns and radio buttons to default (0)
-        }
-      } else if (type === 'date') {
-        this.searchCriteria[key] = null; // Reset date pickers to null
-      }
-    });
-  
-    console.log('Search criteria cleared:', this.searchCriteria);
-    this.applyFilters();
-  }
+clearFilters() {
+  const ignore = ['sortColumn', 'sortDirection', 'pageIndex', 'pageSize'];
+
+  Object.keys(this.searchCriteria).forEach(key => {
+
+    // Ignore system fields
+    if (ignore.includes(key)) return;
+
+    const type = this.searchCriteria.filterTypes?.[key as keyof typeof this.searchCriteria];
+
+    if (type === 'text') {
+      this.searchCriteria[key] = '';
+    } 
+    else if (type === 'dropdown' || type === 'radio') {
+      this.searchCriteria[key] = 0;
+    } 
+    else if (type === 'date') {
+      this.searchCriteria[key] = null;
+    }
+  });
+
+  this.applyFilters();
+}
+
+
   
   toggleSelectAll(event: Event): void {
     const isChecked = (event.target as HTMLInputElement).checked;
@@ -185,6 +191,7 @@ export class GenericTableComponent<T = any> {
   onEdit(item: any): void {
     this.editRow.emit(item);
   }
+  
   columnClick(col: { onClick?: (item: any) => void }, item: any): void {
     if (col.onClick) {
       col.onClick(item);

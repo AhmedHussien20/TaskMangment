@@ -26,18 +26,28 @@ import { SearchCriteria } from 'app/core/models/search-criteria.model';
 })
 export class AreaListComponent implements OnInit {
 
-  title = 'Area List';
-  breadcrumbs = ['Home', 'Areas'];
-  activeitem = 'Area List';
+title = 'area.listTitle';
+breadcrumbs = ['area.home', 'area.listTitle'];
+activeitem = 'area.listTitle';
 
   // Table Columns
   columns = [
     { key: 'id', label: 'ID' },
-    { key: 'name', label: 'Area Name' },
+    { key: 'name', label: 'area.name'},
     { key: 'address', label: 'Address' },
     { key: 'managerName', label: 'Manager' },
     { key: 'branchCount', label: 'Branches' }
   ];
+
+  labels = {
+  name: "area.name",
+  address: "area.address",
+  managerName: "area.managerName",
+  companyId: "area.companyId",
+  sortColumn: "area.sortColumn",
+  sortDirection: "area.sortDirection"
+};
+
 
   // DATA
   rows: Area[] = [];
