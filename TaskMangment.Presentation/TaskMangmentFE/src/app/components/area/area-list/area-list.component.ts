@@ -9,6 +9,8 @@ import { GenericTableComponent } from '../../../shared/components/generic-table/
 import { Area, AreaRequest } from 'app/core/models/area/area';
 import { AreaService } from 'app/core/services/area.service';
 import { SearchCriteria } from 'app/core/models/search-criteria.model';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+
  
 
 @Component({
@@ -19,26 +21,28 @@ import { SearchCriteria } from 'app/core/models/search-criteria.model';
     FormsModule,
     NgbPaginationModule,
     PageHeaderComponent,
-    GenericTableComponent
+    GenericTableComponent,
+    TranslateModule
   ],
   templateUrl: './area-list.component.html',
   styleUrls: ['./area-list.component.scss']
 })
 export class AreaListComponent implements OnInit {
 
-  title = 'Area List';
-  breadcrumbs = ['Home', 'Areas'];
-  activeitem = 'Area List';
+  title = 'AREA.LIST_TITLE';
+  breadcrumbs = ['HOME', 'AREAS'];
+  activeitem = 'AREA.LIST_TITLE';
 
   // Table Columns
   columns = [
-    { key: 'id', label: 'ID' },
-    { key: 'name', label: 'Area Name' },
-    { key: 'address', label: 'Address' },
-    { key: 'managerName', label: 'Manager' },
-    { key: 'branchCount', label: 'Branches' }
+    { key: 'id', label: 'AREA.ID' },
+    { key: 'name', label: 'AREA.NAME' },
+    { key: 'address', label: 'AREA.ADDRESS' },
+    { key: 'managerName', label: 'AREA.MANAGER' },
+    { key: 'branchCount', label: 'AREA.BRANCHES' }
   ];
 
+ 
   // DATA
   rows: Area[] = [];
   totalItems = 0;
@@ -58,7 +62,7 @@ export class AreaListComponent implements OnInit {
   sortColumn: 'Id',
   sortDirection: 'ASC',
 
-  filterTypes: {
+  filterTypes:  {
     name: 'text',
     companyId: 'dropdown'
   }

@@ -4,11 +4,13 @@ import { FormsModule } from '@angular/forms';
 import { NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
 import { Router } from '@angular/router';
 import { SearchCriteria } from 'app/core/models/search-criteria.model';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+
 
 @Component({
   selector: 'app-generic-table',
   standalone: true,
-  imports: [CommonModule, FormsModule, NgbPaginationModule],
+  imports: [CommonModule, FormsModule, NgbPaginationModule,TranslateModule],
   templateUrl: './generic-table.component.html',
   styleUrls: ['./generic-table.component.scss']
 })
@@ -55,7 +57,8 @@ export class GenericTableComponent<T = any> {
   initialSearchCriteria: SearchCriteria<T>;  
   selectedItems: any[] = [];
 
-  constructor(private router: Router) {
+  constructor(private router: Router,private translate: TranslateService
+) {
     this.initialSearchCriteria = { ...this.searchCriteria };  
   }
 
@@ -85,26 +88,31 @@ export class GenericTableComponent<T = any> {
     }
   }
 
-  clearFilters() {
-    Object.keys(this.searchCriteria).forEach(key => {
-      const type = this.searchCriteria.filterTypes?.[key as keyof T]; // Get the type of the filter
   
-      if (type === 'text') {
-        this.searchCriteria[key] = ''; // Clear text inputs
-      } else if (type === 'dropdown' || type === 'radio') {
-        if (key === 'active' || key === 'isAssigned') {
-          this.searchCriteria[key] = null; // Reset dropdowns for active and isAssigned to null
-        } else {
-          this.searchCriteria[key] = 0; // Reset other dropdowns and radio buttons to default (0)
-        }
-      } else if (type === 'date') {
-        this.searchCriteria[key] = null; // Reset date pickers to null
-      }
-    });
-  
-    console.log('Search criteria cleared:', this.searchCriteria);
-    this.applyFilters();
-  }
+
+ clearFilters() {
+  const ignore = ['sortColumn', 'sortDirection', 'pageIndex', 'pageSize'];
+
+  Object.keys(this.searchCriteria).forEach(key => {
+
+    // Ignore system fields
+    if (ignore.includes(key)) return;
+
+    const type = this.searchCriteria.filterTypes?.[key as keyof typeof this.searchCriteria];
+
+    if (type === 'text') {
+      this.searchCriteria[key] = '';
+    } 
+    else if (type === 'dropdown' || type === 'radio') {
+      this.searchCriteria[key] = 0;
+    } 
+    else if (type === 'date') {
+      this.searchCriteria[key] = null;
+    }
+  });
+
+  this.applyFilters();
+}
   
   toggleSelectAll(event: Event): void {
     const isChecked = (event.target as HTMLInputElement).checked;
@@ -143,7 +151,8 @@ export class GenericTableComponent<T = any> {
   }
 
   getLabel(key: string): string {
-    return this.labels[key] || key;
+const column = this.columns.find(c => c.key === key);
+  return column ? column.label : key;
   }
 
   getStatusClass(status: string): string {
