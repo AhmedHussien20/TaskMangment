@@ -8,7 +8,7 @@ import { SearchCriteria } from 'app/core/models/search-criteria.model';
 @Component({
   selector: 'app-generic-table',
   standalone: true,
-  imports: [CommonModule, FormsModule, NgbPaginationModule],
+  imports: [CommonModule, FormsModule, NgbPaginationModule,TranslateModule],
   templateUrl: './generic-table.component.html',
   styleUrls: ['./generic-table.component.scss']
 })
