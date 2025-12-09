@@ -9,6 +9,7 @@ import { GenericTableComponent } from '../../../shared/components/generic-table/
 import { Area, AreaRequest } from 'app/core/models/area/area';
 import { AreaService } from 'app/core/services/area.service';
 import { SearchCriteria } from 'app/core/models/search-criteria.model';
+import { TranslateModule } from '@ngx-translate/core';
  
 
 @Component({
@@ -19,7 +20,8 @@ import { SearchCriteria } from 'app/core/models/search-criteria.model';
     FormsModule,
     NgbPaginationModule,
     PageHeaderComponent,
-    GenericTableComponent
+    GenericTableComponent,
+    TranslateModule
   ],
   templateUrl: './area-list.component.html',
   styleUrls: ['./area-list.component.scss']
@@ -75,6 +77,10 @@ export class AreaListComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadData();
+  }
+
+  navigateToForm(): void {
+    this.router.navigate(['/area/create']);
   }
 
   //  Load Data from Service

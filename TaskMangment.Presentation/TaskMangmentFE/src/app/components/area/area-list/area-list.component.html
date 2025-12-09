@@ -35,6 +35,10 @@
             [entries]="entries"
             [page]="page"
             [totalItems]="totalItems"
+            
+            [showAddButton]="true"
+            [addButtonLabel]="'area.addArea' | translate"
+            [onAddClick]="navigateToForm.bind(this)"
 
             [showFilters]="true"
             [formUrl]="formUrl"
