@@ -36,6 +36,7 @@ export const content: Routes = [
       { path: '', loadChildren: () => import('../../../app/components/Forms/forms.routes').then(r => r.formsRoutingModule) },
       { path: '', loadChildren: () => import('../../../app/components/Forms/form-editor/form-editor.routes').then(r => r.formeditorRoutingModule) },
       { path: '', loadChildren: () => import('../../../app/components/employee-management/employee.routes').then(r => r.EmployeeRoutingModule) },
+      { path: '', loadChildren: () => import('../../../app/components/area/area.routes').then(r => r.AreaRoutingModule) },
       //    {
       //     path: '',
       //     loadChildren: () => import('../../../app/components/widgets/widgets.routes').then(r => r.widgetsRoutingModule)

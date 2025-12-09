@@ -9,12 +9,12 @@ import { BaseResponse } from '../../models/base.response.model';
 })
 export class AuthRepository {
   constructor(private apiService: ApiService) {
-    apiService.serviceName = 'Identity';
+    apiService.serviceName = 'Auth';
   }
   
 
-  login(userCode: string, password: string): Observable<BaseResponse<{ user?: User, token: string }>> {
-    return this.apiService.post<BaseResponse<{ user?: User, token: string }>>(`LoginMobileUser`, { userCode, password });
+  login(email: string, password: string): Observable<BaseResponse<{ user?: User, token: string }>> {
+    return this.apiService.post<BaseResponse<{ user?: User, token: string }>>(`login`, { email, password });
   }
 
   logout(): void {

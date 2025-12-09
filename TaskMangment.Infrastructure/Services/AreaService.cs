@@ -76,7 +76,7 @@ namespace TaskMangment.Infrastructure.Services
 
             // Map
             var dtos = _mapper.Map<ICollection<AreaGetDto>>(list);
-
+            
             // Branch counts
             foreach (var dto in dtos)
             {

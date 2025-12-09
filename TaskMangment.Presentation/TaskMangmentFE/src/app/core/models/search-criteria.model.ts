@@ -1,8 +1,15 @@
 export class SearchCriteria<T = any> {
+  // Dynamic filter fields
   [key: string]: any;
-  pageNo: number = 1;
-  pageCount: number = 10; 
-  filterTypes?: { [key in keyof T]?: string }; // Make filterTypes generic
+
+  // Pagination & Sorting
+  pageIndex: number = 1;
+  pageSize: number = 10;
+  sortColumn: string = 'Id';
+  sortDirection: 'ASC' | 'DESC' = 'ASC';
+
+  // Filter UI definition
+  filterTypes?: { [key in keyof T]?: 'text' | 'dropdown' | 'date' | 'radio' };
 
   constructor(init?: Partial<SearchCriteria<T>>) {
     Object.assign(this, init);

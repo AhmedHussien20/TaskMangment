@@ -1,5 +1,5 @@
 import { bootstrapApplication } from '@angular/platform-browser';
-import { provideHttpClient, HttpClient } from '@angular/common/http';
+import { provideHttpClient, HttpClient, withInterceptors } from '@angular/common/http';
 import { AppComponent } from './app/app.component';
 import { register as registerSwiperElements } from 'swiper/element';
 import { provideStore } from '@ngrx/store';
@@ -42,6 +42,7 @@ import { ApiService } from 'app/core/services/api.service';
 import { BranchRepository } from 'app/core/repositories/branch.repository';
 import { BranchAvailabilityRepository } from 'app/core/repositories/branch-availability.repository';
 import { importProvidersFrom } from '@angular/core';
+import { jwtInterceptor } from 'app/core/auth/jwt.interceptor';
 
 /* ---------------------------
    Translate Loader Factory
@@ -59,6 +60,9 @@ bootstrapApplication(AppComponent, {
   providers: [
     provideRouter(App_Route),
 
+    provideHttpClient(
+      withInterceptors([jwtInterceptor])
+    ),
     /* ---------------------------
            GLOBAL STATE
     ---------------------------- */

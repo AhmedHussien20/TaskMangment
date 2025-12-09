@@ -103,14 +103,10 @@ export class LoginComponent {
       this.authservice.login(username, password).subscribe({  // Change userCode to username
         next: (response) => {
           this.router.navigate(['/dashboard']);
-          this.toastr.success(response.successMessage, 'spruha', {
-            timeOut: 3000,
-            positionClass: 'toast-top-right',
-          });
         },
         error: (error) => {
           console.log(error);
-          this.toastr.error(error, 'spruha', {
+          this.toastr.error(error, 'error', {
             timeOut: 3000,
             positionClass: 'toast-top-right',
           });
