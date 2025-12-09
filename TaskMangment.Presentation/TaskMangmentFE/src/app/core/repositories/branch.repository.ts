@@ -1,28 +1,50 @@
 import { Injectable } from '@angular/core';
-import { HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { ApiService } from '../services/api.service';
-import { BranchModel } from '../models/branch/branch-model';
+import { HttpClient } from '@angular/common/http';
+import { ApiService } from 'app/core/services/api.service';
+import { BranchRequest } from '../models/branch/branch';
 
-@Injectable({
-    providedIn: 'root',
-})
+@Injectable({ providedIn: 'root' })
 export class BranchRepository {
-    constructor(private apiService: ApiService) { }
+  private api: ApiService;
 
-    getAll(
-        params: HttpParams
-    ): Observable<{
-        data: BranchModel[];
-        totalItems: number;
-        targetPage: number;
-        itemCount: number;
-    }> {
-        return this.apiService.get<{
-            data: BranchModel[];
-            totalItems: number;
-            targetPage: number;
-            itemCount: number;
-        }>(`v1.0/admin/Branch`, { params: params });
-    }
+  constructor(private http: HttpClient) {
+    this.api = new ApiService(http);
+    this.api.serviceName = 'Branch';
+  }
+
+  getAll(request: BranchRequest) {
+    const query = this.buildQuery(request);
+    return this.api.get(`?${query}`);
+  }
+
+  private buildQuery(req: BranchRequest): string {
+    const params = [];
+
+    if (req.name) params.push(`Name=${encodeURIComponent(req.name)}`);
+    if (req.companyId) params.push(`CompanyId=${req.companyId}`);
+    if (req.areaId) params.push(`AreaId=${req.areaId}`);
+
+    params.push(`PageIndex=${req.pageIndex}`);
+    params.push(`PageSize=${req.pageSize}`);
+    params.push(`SortColumn=${req.sortColumn}`);
+    params.push(`SortDirection=${req.sortDirection}`);
+
+    return params.join('&');
+  }
+
+  getById(id: number) {
+    return this.api.get(`/${id}`);
+  }
+
+  create(model: any) {
+    return this.api.post('', model);
+  }
+
+  update(id: number, model: any) {
+    return this.api.put(`/${id}`, model);
+  }
+
+  delete(id: number) {
+    return this.api.delete(`/${id}`);
+  }
 }

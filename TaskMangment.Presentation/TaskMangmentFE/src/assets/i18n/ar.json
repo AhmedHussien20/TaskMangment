@@ -117,8 +117,39 @@
     "createdOnTo": "تاريخ الإنشاء (إلى)",
     "phoneNumber": "رقم الهاتف"
   },
-  "area": {
-    "addArea": "إضافة منطقة"
-     
+  "AREA": {
+   "COMPANY" : "الشركة",
+  "LIST_TITLE": "قائمة المناطق",
+  "HOME": "الرئيسية",
+  "AREAS": "المناطق",
+  "ID": "الكود",
+  "NAME": "اسم المنطقة",
+  "ADDRESS": "العنوان",
+  "MANAGER": "المدير",
+  "BRANCHES": "عدد الفروع"
+},
+ "TABLE": {
+    "SEARCH": "بحث",
+    "CLEAR_FILTERS": "مسح الفلاتر",
+    "ADD_NEW": "إضافة جديد",
+    "ACTIONS": "الإجراءات",
+    "EDIT_ITEM": "تعديل العنصر",
+    "DELETE_ITEM": "حذف العنصر",
+    "TOTAL_RECORDS": "إجمالي السجلات",
+    "TOTAL_PAGES": "إجمالي الصفحات",
+    "SHOW": "عرض",
+    "ENTRIES": "سجل",
+    "PREV": "السابق",
+    "NEXT": "التالي",
+    "SELECT_ENTRIES": "اختر عدد السجلات",
+    "LOADING": "جاري التحميل",
+    "ACTIVE": "نشط",
+    "INACTIVE": "غير نشط",
+    "SELECT_STATUS": "اختر الحالة",
+    "SELECT_ASSIGNMENT": "اختر التعيين",
+    "SELECT_ACTIVE_STATUS": "اختر حالة النشاط"
   }
+
+
+
 }

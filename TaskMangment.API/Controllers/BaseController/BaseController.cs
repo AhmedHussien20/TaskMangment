@@ -8,7 +8,7 @@ using TaskMangment.Application.Responses;
 
 namespace TaskMangment.API.Controllers
 {
-    [ServiceFilter(typeof(AuditLogAttribute))] 
+    //[ServiceFilter(typeof(AuditLogAttribute))] 
     [ApiController]
     [Route("api/[controller]")]
     public abstract class BaseController : ControllerBase
