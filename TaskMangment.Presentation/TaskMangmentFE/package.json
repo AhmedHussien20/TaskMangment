@@ -44,6 +44,7 @@
     "angular-calendar": "^0.31.1",
     "angularx-flatpickr": "^8.1.0",
     "apexcharts": "^4.4.0",
+    "bootstrap": "^5.3.8",
     "circle-flags": "github:HatScripts/circle-flags",
     "date-fns": "^4.1.0",
     "inputmask": "^5.0.9",

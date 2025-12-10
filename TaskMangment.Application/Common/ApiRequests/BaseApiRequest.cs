@@ -3,7 +3,7 @@
     public class BaseApiRequest
     {
         public int? Id { get; set; }
-
+        public string? searchKey { get; set; }
         public int PageIndex { get; set; } = 1;
 
         private int _pageSize = 20;

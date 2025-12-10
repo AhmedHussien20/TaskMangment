@@ -39,8 +39,7 @@ import {
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 
 import { ApiService } from 'app/core/services/api.service';
-import { BranchRepository } from 'app/core/repositories/branch.repository';
-import { BranchAvailabilityRepository } from 'app/core/repositories/branch-availability.repository';
+import { BranchRepository } from 'app/core/repositories/branch.repository'; 
 import { importProvidersFrom } from '@angular/core';
 import { jwtInterceptor } from 'app/core/auth/jwt.interceptor';
 
@@ -85,28 +84,7 @@ bootstrapApplication(AppComponent, {
     provideAnimations(),
     CommonModule,
 
-    /* ---------------------------
-           REPOSITORIES
-    ---------------------------- */
-    {
-      provide: BranchRepository,
-      useFactory: (http: HttpClient) => {
-        const api = new ApiService(http);
-        api.serviceName = 'Identity';
-        return new BranchRepository(api);
-      },
-      deps: [HttpClient],
-    },
-    {
-      provide: BranchAvailabilityRepository,
-      useFactory: (http: HttpClient) => {
-        const api = new ApiService(http);
-        api.serviceName = 'Identity';
-        return new BranchAvailabilityRepository(api);
-      },
-      deps: [HttpClient],
-    },
-
+    
     /* ---------------------------
             TRANSLATION
     ---------------------------- */

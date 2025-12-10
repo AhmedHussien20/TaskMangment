@@ -7,7 +7,7 @@ export class SearchCriteria<T = any> {
   pageSize: number = 10;
   sortColumn: string = 'Id';
   sortDirection: 'ASC' | 'DESC' = 'ASC';
-
+  searchKey?: string;
   // Filter UI definition
   filterTypes?: { [key: string ]: 'text' | 'dropdown' | 'date' | 'radio' };
 

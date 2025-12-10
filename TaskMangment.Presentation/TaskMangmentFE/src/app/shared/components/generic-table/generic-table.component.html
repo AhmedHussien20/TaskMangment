@@ -1,139 +1,165 @@
-<div class="row row-sm">
-    <div class="col-md-12 col-lg-12">
-        <div class="card custom-card">
-            <div class="card-body pt-2">
-                <div *ngIf="title" class="d-flex justify-content-between align-items-center mb-3">
-                    <label class="main-content-label my-auto pt-2">{{ 'TABLE.TITLE' | translate}}</label>
-                </div>
-                <div *ngIf="loading" class="text-center my-3">
-                    <div class="spinner-border" role="status">
-                        <span class="visually-hidden">{{ 'TABLE.LOADING' | translate }}</span>
-                    </div>
-                </div>
-                <div *ngIf="!loading">
-                    <div class="row table-filter" *ngIf="showFilters">
-                        <div class="col-lg-12 d-lg-flex justify-content-start align-items-center mb-3 mt-2">
-                            <div class="d-flex flex-wrap w-100">
-                                <div class="me-3 mb-2" *ngFor="let key of objectKeys(searchCriteria.filterTypes)">
-                                    <label [for]="key">{{ getLabel(key) | translate}}</label>
-                                    <ng-container [ngSwitch]="getInputType(key)">
-                                        <input *ngSwitchCase="'text'" type="text" class="form-control" [(ngModel)]="searchCriteria[key]" [placeholder]="getLabel(key) | translate" [id]="key">
-                                        <input *ngSwitchCase="'number'" type="number" class="form-control" [(ngModel)]="searchCriteria[key]" [placeholder]="getLabel(key) | translate" [id]="key">
-                                        <select *ngSwitchCase="'dropdown'" class="form-select" [(ngModel)]="searchCriteria[key]"  [id]="key">
-                                            <option *ngFor="let option of getDropdownOptions(key)" [value]="option.id">{{ option.name | translate }}</option>
-                                        </select>
-                                        <input *ngSwitchCase="'date'" type="date" class="form-control" [(ngModel)]="searchCriteria[key]" [id]="key">
-                                        <!-- Add more input types as needed -->
-                                    </ng-container>
-                                </div>
-                                <div class="ms-auto d-flex align-items-center">
-                                    <button type="button" class="btn btn-primary me-2" (click)="applyFilters()">
-                                        <i class="fa fa-search"></i> {{ 'TABLE.SEARCH' | translate }}
-                                    </button>
-                                    <button type="button" class="btn btn-secondary" (click)="clearFilters()">
-                                        <i class="fa fa-times"></i> {{ 'TABLE.CLEAR_FILTERS' | translate }}
-                                    </button>
-                                </div>
-                            </div>
-                                                       
-                        </div>
-                        <div class="d-flex justify-content-end mb-3" *ngIf="showAddButton">
-                            <button class="btn btn-primary" (click)="onAddClick && onAddClick()">
-                              <i class="fa fa-plus"></i> {{ addButtonLabel | translate }}
+<div class="generic-table-container">
 
-                            </button>
-                          </div>  
-                    </div>
+    <!-- Header -->
+    <div *ngIf="title" class="d-flex justify-content-between align-items-center mb-3">
+        <h5>{{ title | translate }}</h5>
 
-                    <div class="table-responsive border border-bottom-0">
-                        <table class="table table-bordered text-nowrap text-md-nowrap">
-                            <thead>
-                                <tr>
-                                    <th *ngIf="showCheckbox">
-                                        <input type="checkbox" (change)="toggleSelectAll($event)" />
-                                    </th>
-                                    <th *ngFor="let col of columns">{{ col.label | translate}}</th>
-                                    <th *ngIf="showEditButton || showDeleteButton">{{ 'TABLE.ACTIONS' | translate }}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr *ngFor="let item of data">
-                                    <td *ngIf="showCheckbox">
-                                        <input type="checkbox" [(ngModel)]="item.selected" (change)="updateSelectedItems()" />
-                                    </td>
-                                    <td *ngFor="let col of columns">
-                                        <ng-container *ngIf="col.isButton; else nonButtonContent">
-                                            <button class="btn btn-sm btn-outline-primary me-1" 
-                                            (click)="columnClick(col, item)" title="Edit"><i [ngClass]="col.icon ?? 'bi bi-pencil-square'"></i>
-                                            </button>
-                                          </ng-container>
-                                          <ng-template #nonButtonContent>
-                                            <ng-container *ngIf="col.key === 'statusIdStr'; else defaultContent">
-                                                <span
-                                                    class="badge"
-                                                    [ngClass]="{
-                                                        'bg-success': item[col.key] === 'Saved',
-                                                        'bg-danger': item[col.key] === 'Rejected',
-                                                        'bg-secondary': item[col.key] === 'Pending',
-                                                        'bg-info': item[col.key] !== 'Saved' && item[col.key] !== 'Rejected' && item[col.key] !== 'Pending'
-                                                    }">
-                                                    {{ item[col.key] }}
-                                                </span>
-                                            </ng-container>
-                                            <ng-template #defaultContent>
-                                                <ng-container *ngIf="col.key === 'statusDisplay'; else defaultStatusContent">
-                                                    <span [ngClass]="getStatusClass(item[col.key])" class="tag mt-1 mb-1">{{ item[col.key] }}</span>
-                                                </ng-container>
-                                                <ng-template #defaultStatusContent>
-                                                    <ng-container *ngIf="col.key === 'active'; else defaultActiveContent">
-                                                        <span
-                                                            class="badge"
-                                                            [ngClass]="item[col.key] ? 'bg-success' : 'bg-danger'">
-                                                            {{ item[col.key] ? 'Active' : 'InActive' }}
-                                                        </span>
-                                                    </ng-container>
-                                                    <ng-template #defaultActiveContent>{{ item[col.key] }}</ng-template>
-                                                </ng-template>
-                                            </ng-template>
-                                        </ng-template>
-                                    </td>
-                                    <td *ngIf="showEditButton || showDeleteButton">
-                                        <div class="button-list">
-                                            <button *ngIf="showEditButton" class="btn btn-sm btn-outline-primary" (click)="editItem(item.id)" title="'TABLE.EDIT_ITEM' translate"><i class="bi bi-pencil-square"></i></button>
-                                            <button *ngIf="showDeleteButton" class="btn btn-sm btn-outline-danger" (click)="deleteItem(item.id)" title="'TABLE.DELETE_ITEM' | translate"><i class="bi bi-trash"></i></button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+        <div class="d-flex gap-2">
+            <button *ngIf="showAddButton" class="btn btn-success btn-sm" (click)="addClick.emit()">
+                <i class="fa fa-plus"></i> {{ addButtonLabel | translate }}
+            </button>
 
-                    <div class="mt-3" *ngIf="showPagination">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <span>{{ 'TABLE.TOTAL_RECORDS' | translate }}: {{ totalItems }} </span>
-                                <span>{{'TABLE.TOTAL_PAGES' | translate }}: {{ totalPages }}</span>
-                            </div>
-                            <div class="d-flex align-items-center filter-group">
-                                <span>{{'TABLE.SHOW' | translate}}</span>
-                                <select class="form-control ms-2" [(ngModel)]="entries" (ngModelChange)="onEntriesChange()" title="'TABLE.SELECT_ENTRIES' | translate">
-                                    <option *ngFor="let num of [5, 10, 20, 50]" [value]="num">{{ num }}</option>
-                                </select>
-                                <span>{{'TABLE.ENTRIES' | translate}}</span>
-                            </div>
-                        </div>
-                        <ngb-pagination
-                            class="d-flex justify-content-end"
-                            [collectionSize]="totalItems"
-                            [(page)]="page"
-                            [pageSize]="entries"
-                            (pageChange)="onPageChange($event)">
-                            <ng-template ngbPaginationPrevious>{{'TABLE.PREV' | translate}}</ng-template>
-                            <ng-template ngbPaginationNext>{{'TABLE.NEXT' | translate}}</ng-template>
-                        </ngb-pagination>
-                    </div>
-                </div>
-            </div>
+            <button class="btn btn-outline-info btn-sm btn-export" (click)="exportExcel()">
+                <i class="fa fa-file-excel"></i> {{ 'TABLE.EXPORT' | translate }}
+            </button>
         </div>
     </div>
+
+    <!-- Filter Toggle -->
+    <div *ngIf="showFilters">
+        <div class="filter-header" (click)="toggleFilters()">
+            <span>{{ 'TABLE.FILTERS' | translate }}</span>
+            <i class="fa" [ngClass]="filtersOpen ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+        </div>
+
+        <!-- Filters -->
+        <div class="filter-card" *ngIf="filtersOpen">
+            <div class="filter-grid">
+
+                <div class="filter-item" *ngFor="let key of objectKeys(searchCriteria?.filterTypes)">
+                    <label>{{ getLabel(key) | translate }}</label>
+
+                    <ng-container [ngSwitch]="getInputType(key)">
+
+                        <input *ngSwitchCase="'text'" class="form-control" [(ngModel)]="searchCriteria[key]" />
+
+                        <input *ngSwitchCase="'number'" type="number" class="form-control"
+                            [(ngModel)]="searchCriteria[key]" />
+
+                        <select *ngSwitchCase="'dropdown'" class="form-select" [(ngModel)]="searchCriteria[key]">
+                            <option *ngFor="let opt of getDropdownOptions(key)" [value]="opt.id">
+                                {{ opt.name | translate }}
+                            </option>
+                        </select>
+
+                        <input *ngSwitchCase="'date'" type="date" class="form-control"
+                            [(ngModel)]="searchCriteria[key]" />
+
+                    </ng-container>
+                </div>
+
+            </div>
+
+            <div class="filter-actions">
+                <button class="btn btn-primary btn-sm me-2" (click)="applyFilters()">
+                    <i class="fa fa-search"></i> {{ 'TABLE.SEARCH' | translate }}
+                </button>
+
+                <button class="btn btn-outline-secondary btn-sm" (click)="clearFilters()">
+                    <i class="fa fa-times"></i> {{ 'TABLE.CLEAR_FILTERS' | translate }}
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-responsive mt-3">
+        <table class="table table-bordered table-hover align-middle">
+
+            <thead class="table-light">
+                <tr>
+
+                    <th *ngIf="showCheckbox" class="text-center">
+                        <input type="checkbox" (change)="toggleSelectAll($event)" />
+                    </th>
+
+                    <th *ngFor="let col of columns" [ngStyle]="getColumnStyle(col.key)">
+                        <div class="d-flex justify-content-between align-items-center">
+
+                            <span (click)="sort(col.key)">
+                                {{ col.label | translate }}
+                                <i class="sort-icon" *ngIf="sortColumn === col.key">
+                                    {{ sortDirection === 'ASC' ? '↑' : '↓' }}
+                                </i>
+                            </span>
+
+                            <span class="col-resizer" (mousedown)="startResize($event, col.key)">
+                            </span>
+
+                        </div>
+                    </th>
+
+                    <th *ngIf="showEditButton || showDeleteButton" class="text-center">
+                        {{ 'TABLE.ACTIONS' | translate }}
+                    </th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                <tr *ngFor="let item of data">
+
+                    <td *ngIf="showCheckbox" class="text-center">
+                        <input type="checkbox" [ngModel]="isItemSelected(item)"
+                            (ngModelChange)="setItemSelected(item, $event); updateSelectedItems()" />
+                    </td>
+
+                    <td *ngFor="let col of columns">
+                        {{ getValue(item, col.key) }}
+                    </td>
+
+                    <td *ngIf="showEditButton || showDeleteButton" class="text-center">
+
+                        <button *ngIf="showEditButton" class="btn btn-outline-primary btn-sm"
+                            (click)="editItem(getItemId(item))">
+                            <i class="bi bi-pencil-square"></i>
+                        </button>
+
+                        <button *ngIf="showDeleteButton" class="btn btn-outline-danger btn-sm btn-action"
+                            (click)="deleteItem(getItemId(item))">
+                            <i class="bi bi-trash"></i>
+                        </button>
+
+
+                    </td>
+                </tr>
+
+                <tr *ngIf="!data || data.length === 0">
+                    <td [attr.colspan]="columns.length + (showCheckbox?1:0) + (showEditButton||showDeleteButton?1:0)"
+                        class="text-center text-muted py-3">
+                        {{ 'TABLE.NO_DATA' | translate }}
+                    </td>
+                </tr>
+
+            </tbody>
+
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    <div *ngIf="showPagination" class="mt-3 d-flex justify-content-between align-items-center">
+
+        <div class="text-muted small">
+            {{ 'TABLE.TOTAL_RECORDS' | translate }}: {{ totalItems }}
+            &nbsp;|&nbsp;
+            {{ 'TABLE.TOTAL_PAGES' | translate }}: {{ totalPages }}
+        </div>
+
+        <div class="d-flex align-items-center gap-2">
+            <span>{{ 'TABLE.SHOW' | translate }}</span>
+
+            <select class="form-select form-select-sm w-auto" [(ngModel)]="entries"
+                (ngModelChange)="onEntriesChangeInternal()">
+                <option *ngFor="let n of [5,10,20,50]" [value]="n">{{ n }}</option>
+            </select>
+
+            <span>{{ 'TABLE.ENTRIES' | translate }}</span>
+        </div>
+    </div>
+
+    <ngb-pagination class="d-flex justify-content-end mt-2" [collectionSize]="totalItems" [(page)]="page"
+        [pageSize]="entries" (pageChange)="onPageChangeInternal($event)">
+    </ngb-pagination>
+
 </div>

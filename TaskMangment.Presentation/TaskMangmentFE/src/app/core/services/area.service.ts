@@ -1,7 +1,9 @@
 import { Injectable } from '@angular/core';
 import { ApiService } from 'app/core/services/api.service';
 import { HttpClient } from '@angular/common/http'; 
-import { AreaPagedResponse, AreaRequest } from '../models/area/area';
+import { Area, AreaPagedResponse, AreaRequest } from '../models/area/area';
+import { SearchCriteria } from '../models/search-criteria.model';
+import { Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -19,8 +21,8 @@ getAll(request: any) {
 
 
   // GET /Area/{id}
-  getById(id: number) {
-    return this.api.get(`/${id}`);
+  getById(id: number):Observable<Area> {
+    return this.api.get<Area>(`/${id}`);
   }
 
   // POST /Area
@@ -39,12 +41,9 @@ getAll(request: any) {
   }
 
   // Build the query string from AreaRequest
-  private buildQuery(req: AreaRequest): string {
-    const params: string[] = [];
-
-    if (req.name) params.push(`Name=${encodeURIComponent(req.name)}`);
-    if (req.companyId) params.push(`CompanyId=${req.companyId}`);
-
+  private buildQuery(req: SearchCriteria): string {
+    const params: string[] = []; 
+    params.push(`searchKey=${req.searchKey}`);
     params.push(`PageIndex=${req.pageIndex}`);
     params.push(`PageSize=${req.pageSize}`);
     params.push(`SortColumn=${req.sortColumn}`);
