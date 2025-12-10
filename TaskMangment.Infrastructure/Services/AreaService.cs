@@ -38,13 +38,10 @@ namespace TaskMangment.Infrastructure.Services
             _cache = cache;
         }
 
-        public async Task<ApiResponse<PagedResponse<AreaGetDto>>> GetAllAsync(AreaRequest request)
+        public async Task<ApiResponse<PagedResponse<AreaGetDto>>> GetAllAsync(AreaRequest request, int CompanyId)
         {
-            string safeName = request.Name ?? string.Empty;
-            string safeCompanyId = request.CompanyId?.ToString() ?? "null";
-
-            string cacheKey =
-                $"areas-{request.PageIndex}-{request.PageSize}-{request.SortColumn}-{request.SortDirection}-{safeName}-{safeCompanyId}";
+           
+            string cacheKey = $"areas:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}:{CompanyId}";
 
             if (!request.BypassCache)
             {
@@ -52,45 +49,44 @@ namespace TaskMangment.Infrastructure.Services
                 if (cached != null)
                     return ApiResponse<PagedResponse<AreaGetDto>>.Ok(cached);
             }
-
-
+             
             var query = _areaRepository.GetAll()
                 .Include(a => a.Manager)
-                .AsQueryable();
-
-            if (!string.IsNullOrWhiteSpace(request.Name))
-                query = query.Where(a => a.Name.Contains(request.Name));
-
-            if (request.CompanyId.HasValue)
-                query = query.Where(a => a.CompanyId == request.CompanyId.Value);
-
+                .ApplySearch(request.searchKey);   
+              
             var totalCount = await query.CountAsync();
-
+             
             query = query.OrderByDynamicSafe(request.SortColumn, request.SortDirection);
-
-            // Pagination
-            var list = await query
+             
+            var areas = await query
                 .Skip((request.PageIndex - 1) * request.PageSize)
                 .Take(request.PageSize)
                 .ToListAsync();
+             
+            var areaIds = areas.Select(a => a.Id).ToList();
 
-            // Map
-            var dtos = _mapper.Map<ICollection<AreaGetDto>>(list);
-            
-            // Branch counts
-            foreach (var dto in dtos)
+            var branchCounts = await _branchRepository
+                .GetAll(b => areaIds.Contains(b.AreaId ?? 0))
+                .GroupBy(b => b.AreaId)
+                .Select(g => new { AreaId = g.Key, Count = g.Count() })
+                .ToListAsync();
+             
+            var dtoList = _mapper.Map<List<AreaGetDto>>(areas);
+
+            foreach (var dto in dtoList)
             {
-                dto.BranchCount = await _branchRepository.CountAsync(b => b.AreaId == dto.Id);
+                dto.BranchCount = branchCounts
+                    .FirstOrDefault(x => x.AreaId == dto.Id)?.Count ?? 0;
             }
-
+             
             var response = new PagedResponse<AreaGetDto>(
-                dtos, totalCount, request.PageIndex, request.PageSize);
-
-            // Save to cache for 10 minutes
+                dtoList, totalCount, request.PageIndex, request.PageSize);
+             
             await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
 
             return ApiResponse<PagedResponse<AreaGetDto>>.Ok(response);
         }
+
 
 
 

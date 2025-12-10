@@ -123,7 +123,9 @@
   "NAME": "Area Name",
   "ADDRESS": "Address",
   "MANAGER": "Manager",
-  "BRANCHES": "Branches"
+  "BRANCHES": "Branches",
+  "companyId": "Company",
+  "searchKey": "Search"
 },
  "TABLE": {
     "SEARCH": "Search",
@@ -144,7 +146,10 @@
     "INACTIVE": "Inactive",
     "SELECT_STATUS": "Select Status",
     "SELECT_ASSIGNMENT": "Select Assignment",
-    "SELECT_ACTIVE_STATUS": "Select Active Status"
+    "SELECT_ACTIVE_STATUS": "Select Active Status",
+    "FILTERS": "Filters",
+    "NO_DATA": "No data available"
+
   }
 
 

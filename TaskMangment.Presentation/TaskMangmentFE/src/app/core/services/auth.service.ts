@@ -8,6 +8,7 @@ import { select, Store } from '@ngrx/store';
 import { login, loginFailure, loginSuccess, logout } from 'app/store/auth/auth.actions';
 import { BaseResponse } from 'app/models/base.response.model';
 import { selectAuthLoading } from 'app/store/auth/auth.selectors';
+import { Router } from '@angular/router';
 
 @Injectable({
   providedIn: 'root',
@@ -16,7 +17,8 @@ export class AuthService {
   public showLoader:boolean=false;
   constructor(
     private authRepository: AuthRepository,
-    private store: Store<AppState>
+    private store: Store<AppState>,
+    private router: Router
   ) {
     this.store.pipe(select(selectAuthLoading)).subscribe(loading => {
       this.showLoader = loading;
@@ -47,11 +49,12 @@ export class AuthService {
     );
   }
 
-  logout(): void {
-    this.authRepository.logout();
-    console.log(localStorage.getItem('authToken'));
-    this.store.dispatch(logout());
-  }
+  logout() {
+  localStorage.removeItem('authToken');
+  localStorage.removeItem('userData');
+  this.router.navigate(['/auth/login'], { replaceUrl: true });
+}
+
 
   isAuthenticated(): boolean {
     return !!localStorage.getItem('authToken');

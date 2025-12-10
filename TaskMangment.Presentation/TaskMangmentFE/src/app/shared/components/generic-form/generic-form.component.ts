@@ -1,12 +1,12 @@
 import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { CommonModule } from '@angular/common';
-import { Location } from '@angular/common'; // Import Location
+import { FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { CommonModule, Location } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-generic-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule,TranslateModule],
   templateUrl: './generic-form.component.html',
   styleUrls: ['./generic-form.component.scss']
 })
@@ -15,50 +15,25 @@ export class GenericFormComponent implements OnInit {
   @Input() breadcrumbs: string[] = [];
   @Input() activeitem: string = '';
   @Input() formConfig: any[] = [];
-  @Output() formSubmit = new EventEmitter<any>(); // Renamed to formSubmit
-  form!: FormGroup;
-  @Input() formGroup!: FormGroup;
-  @Input() generatePassword!: () => string; // Accept the method as input
 
-  constructor(private fb: FormBuilder, private location: Location) { }
+  @Input() formGroup!: FormGroup;
+
+  // 👇 خليه اسمه submit علشان تقدر تستخدم (submit)="onSubmit($event)"
+  @Output() submit = new EventEmitter<any>();
+
+  constructor(private location: Location) { }
 
   ngOnInit() {
-    // this.buildForm();
+    // مفيش حاجة هنا دلوقتي لأن الـ form بيتبنى في الـ parent
   }
 
-  // buildForm() {
-  //   let formControls: any = {};
-
-  //   this.formConfig.forEach(field => {
-  //     const validations = [];
-  //     if (field.validations?.required) {
-  //       validations.push(Validators.required);
-  //     }
-  //     if (field.validations?.minlength) {
-  //       validations.push(Validators.minLength(field.validations.minlength));
-  //     }
-  //     if (field.validations?.maxlength) {
-  //       validations.push(Validators.maxLength(field.validations.maxlength));
-  //     }
-
-  //     // Set field.disabled to false if it is not defined
-  //     if (field.disabled === undefined) {
-  //       field.disabled = false;
-  //     }
-      
-  //     formControls[field.name] = [field.defaultValue || '', validations];
-  //   });
-
-  //   this.form = this.fb.group(formControls);
-  // }
-
   onSubmit() {
-    console.log('GenericFormComponent onSubmit triggered'); // Debugging: Log when onSubmit is called
+    console.log('GenericFormComponent onSubmit triggered');
     if (this.formGroup.valid) {
-      console.log('Form is valid, emitting formSubmit:', this.formGroup.value); // Debugging: Log form values
-      this.formSubmit.emit(this.formGroup.value); // Emit formSubmit
+      console.log('Form is valid, emitting submit:', this.formGroup.value);
+      this.submit.emit(this.formGroup.value);
     } else {
-      console.warn('Form is invalid, marking all as touched'); // Debugging: Log invalid form
+      console.warn('Form is invalid, marking all as touched');
       this.formGroup.markAllAsTouched();
     }
   }
@@ -68,12 +43,12 @@ export class GenericFormComponent implements OnInit {
     const passwordLength = 12;
     const password = Array(passwordLength)
       .fill(chars)
-      .map(x => x[Math.floor(Math.random() * x.length)])
-      .join('');
+      .map(x => x[Math.floor(Math.random() * x.length)]).join('');
+
     this.formGroup.get(fieldName)?.setValue(password);
   }
 
   goBack() {
-    this.location.back(); // Navigate to the previous page
+    this.location.back();
   }
 }

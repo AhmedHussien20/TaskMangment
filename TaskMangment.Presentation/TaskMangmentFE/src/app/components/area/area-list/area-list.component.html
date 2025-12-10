@@ -28,7 +28,7 @@
             [title]="title"
             [breadcrumbs]="breadcrumbs"
             [activeitem]="activeitem"
-
+            [labels]="labels"
             [columns]="columns"
             [data]="rows"
 
@@ -37,8 +37,8 @@
             [totalItems]="totalItems"
             
             [showAddButton]="true"
-            [addButtonLabel]="'area.addArea' | translate"
-            [onAddClick]="navigateToForm.bind(this)"
+            [addButtonLabel]="'AREA.addArea' | translate"
+            (addClick)="openAdd()"
 
             [showFilters]="true"
             [formUrl]="formUrl"
@@ -52,9 +52,30 @@
             
             >
           </app-generic-table>
-        </div>
-
+        </div> 
       </div>
+    </div>
+  </div>
+</div>
+<div class="modal effect-scale" id="areaModal">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h6 class="modal-title">
+          {{ isEdit ? ('AREA.EDIT' | translate) : ('AREA.ADD' | translate) }}
+        </h6>
+        <button type="button" class="btn-close" (click)="closeModal()"></button>
+      </div>
+
+      <div class="modal-body">
+        <app-area-create-update
+          [isEdit]="isEdit"
+          [areaId]="selectedAreaId"
+          (formSubmitted)="onFormSubmitted()">
+        </app-area-create-update>
+      </div>
+
     </div>
   </div>
 </div>

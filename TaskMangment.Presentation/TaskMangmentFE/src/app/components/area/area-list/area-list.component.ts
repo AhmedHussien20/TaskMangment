@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
+import { FormBuilder, FormsModule } from '@angular/forms';
+import { NgbModal, NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
 import { Router } from '@angular/router';
 
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
@@ -10,8 +10,10 @@ import { Area, AreaRequest } from 'app/core/models/area/area';
 import { AreaService } from 'app/core/services/area.service';
 import { SearchCriteria } from 'app/core/models/search-criteria.model';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { AreaCreateUpdateComponent } from '../area-create-update.component/area-create-update.component.component';
 
- 
+
+declare var bootstrap: any;
 
 @Component({
   selector: 'app-area-list',
@@ -22,11 +24,13 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
     NgbPaginationModule,
     PageHeaderComponent,
     GenericTableComponent,
-    TranslateModule
+    TranslateModule,
+    AreaCreateUpdateComponent
   ],
   templateUrl: './area-list.component.html',
   styleUrls: ['./area-list.component.scss']
 })
+
 export class AreaListComponent implements OnInit {
 
   title = 'AREA.LIST_TITLE';
@@ -51,37 +55,39 @@ export class AreaListComponent implements OnInit {
   entries = 10;
 
   // Filters Object SAME as expiry style
-  searchCriteria: SearchCriteria={
-  name: '',
-  companyId: 0,
+  searchCriteria: SearchCriteria = {
 
-  pageIndex: this.page, 
-  pageSize: this.entries,
+    searchKey: '',
+    pageIndex: this.page,
+    pageSize: this.entries,
 
-  sortColumn: 'Id',
-  sortDirection: 'ASC',
+    sortColumn: 'Id',
+    sortDirection: 'ASC',
 
-  filterTypes:  {
-    name: 'text',
-    companyId: 'dropdown'
-  }
-};
+    filterTypes: {
+      searchKey: 'text',
+    },
+
+  };
 
   isLoading = false;
-
+  labels = {
+    searchKey: 'AREA.searchKey',
+  }
   formUrl = '/areas/add';
 
   constructor(
     private router: Router,
-    private areaService: AreaService
-  ) {}
+    private areaService: AreaService,
+    private modalService: NgbModal, private fb: FormBuilder
+  ) { }
 
   ngOnInit(): void {
     this.loadData();
   }
 
   navigateToForm(): void {
-    this.router.navigate(['/area/create']);
+    this.router.navigate(['/area/add']);
   }
 
   //  Load Data from Service
@@ -89,7 +95,7 @@ export class AreaListComponent implements OnInit {
     this.isLoading = true;
 
     this.areaService.getAll(this.searchCriteria).subscribe({
-      next: (res:any) => {
+      next: (res: any) => {
         this.rows = res.data.data;
         this.totalItems = res.data.totalCount;
         this.page = res.data.pageIndex;
@@ -136,4 +142,41 @@ export class AreaListComponent implements OnInit {
 
     this.areaService.delete(id).subscribe(() => this.loadData());
   }
+  modal: any;
+  selectedAreaId: number | null = null;
+  isEdit = false;
+
+  openAdd() {
+  this.isEdit = false;
+  this.selectedAreaId = null;
+  this.openModal();
+}
+
+openEdit(id: number) {
+  this.isEdit = true;
+  this.selectedAreaId = id;
+  this.openModal();
+}
+
+openModal() {
+  const modalEl = document.getElementById('areaModal');
+  modalEl?.classList.add('show');
+  modalEl!.style.display = 'block';
+
+  document.body.classList.add('modal-open');
+}
+
+closeModal() {
+  const modalEl = document.getElementById('areaModal');
+  modalEl?.classList.remove('show');
+  modalEl!.style.display = 'none';
+
+  document.body.classList.remove('modal-open');
+}
+
+onFormSubmitted() {
+  this.closeModal();
+  this.loadData();
+}
+
 }
