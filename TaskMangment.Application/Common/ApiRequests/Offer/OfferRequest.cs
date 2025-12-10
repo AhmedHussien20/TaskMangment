@@ -9,8 +9,5 @@ namespace TaskMangment.Application.Common.ApiRequests.Offer
 {
     public class OfferRequest : BaseApiRequest
     {
-        public string? Title { get; set; }
-        public int? CourseId { get; set; }
-        public int? SubjectId { get; set; }
     }
 }

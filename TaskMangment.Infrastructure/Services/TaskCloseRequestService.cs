@@ -39,7 +39,7 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<PagedResponse<TaskCloseRequestListDto>>> GetAllAsync(TaskCloseRequestRequest request)
         {
-            string cacheKey = $"taskCloseRequests-{request.PageIndex}-{request.PageSize}-{request.SortColumn}-{request.SortDirection}";
+            string cacheKey = $"taskCloseRequests{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
 
             if (!request.BypassCache)
             {
@@ -51,10 +51,7 @@ namespace TaskMangment.Infrastructure.Services
             var query = _requestRepo.GetAll()
                 .Include(r => r.TaskAssignment)
                 .Include(r => r.ReviewedBy)
-                .AsQueryable();
-
-            if (request.Status.HasValue)
-                query = query.Where(r => r.Status == request.Status.Value);
+                .ApplySearch(request.searchKey);
 
             var totalCount = await query.CountAsync();
 

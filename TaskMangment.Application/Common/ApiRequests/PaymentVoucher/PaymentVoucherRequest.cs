@@ -9,7 +9,5 @@ namespace TaskMangment.Application.Common.ApiRequests.PaymentVoucher
 {
     public class PaymentVoucherRequest : BaseApiRequest
     {
-        public int? CompanyId { get; set; }
-        public int? BranchId { get; set; }
     }
 }

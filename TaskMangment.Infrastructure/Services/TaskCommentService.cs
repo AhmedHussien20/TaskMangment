@@ -38,9 +38,7 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<PagedResponse<TaskCommentGetDto>>> GetAllAsync(TaskCommentRequest request)
         {
-            string safeTaskId = request.TaskId?.ToString() ?? "null";
-
-            string cacheKey = $"taskComments-{request.PageIndex}-{request.PageSize}-{request.SortColumn}-{request.SortDirection}-{safeTaskId}";
+            string cacheKey = $"taskComments{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
 
             if (!request.BypassCache)
             {
@@ -52,10 +50,8 @@ namespace TaskMangment.Infrastructure.Services
             var query = _commentRepo.GetAll()
                 .Include(c => c.Employee)
                 .Include(c => c.Task)
-                .AsQueryable();
+                .ApplySearch(request.searchKey);
 
-            if (request.TaskId.HasValue)
-                query = query.Where(c => c.TaskId == request.TaskId.Value);
 
             var totalCount = await query.CountAsync();
 

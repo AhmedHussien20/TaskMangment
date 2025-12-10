@@ -40,7 +40,6 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<PagedResponse<AreaGetDto>>> GetAllAsync(AreaRequest request, int CompanyId)
         {
-           
             string cacheKey = $"areas:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}:{CompanyId}";
 
             if (!request.BypassCache)
@@ -119,8 +118,10 @@ namespace TaskMangment.Infrastructure.Services
 
             await _areaRepository.AddAsync(area);
             await _areaRepository.SaveChangesAsync();
-            var areaDto = _mapper.Map<AreaGetDto>(area);
-
+            var fullArea = await _areaRepository.GetAll()
+                .Include(a => a.Manager)
+                .FirstOrDefaultAsync(a => a.Id == area.Id);
+            var areaDto = _mapper.Map<AreaGetDto>(fullArea);
 
             // TODO: Optional: Clear area cache pattern
             // await _cache.RemoveByPatternAsync("areas-");
@@ -140,7 +141,11 @@ namespace TaskMangment.Infrastructure.Services
             _mapper.Map(dto, area);
 
             await _areaRepository.SaveChangesAsync();
-            var areaDto = _mapper.Map<AreaGetDto>(area);
+
+            var fullArea = await _areaRepository.GetAll()
+               .Include(a => a.Manager)
+               .FirstOrDefaultAsync(a => a.Id == area.Id);
+            var areaDto = _mapper.Map<AreaGetDto>(fullArea);
 
             //  TODO: Invalidate cache later
 

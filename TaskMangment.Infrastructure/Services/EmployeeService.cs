@@ -49,12 +49,8 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<PagedResponse<EmployeeGetDto>>> GetAllAsync(EmployeeRequest request)
         {
-            string safeName = request.Name ?? string.Empty;
-            string safeCompanyId = request.CompanyId?.ToString() ?? "null";
-            string safeBranchId = request.BranchId?.ToString() ?? "null";
-
             string cacheKey =
-                $"employees-{request.PageIndex}-{request.PageSize}-{request.SortColumn}-{request.SortDirection}-{safeName}-{safeCompanyId}-{safeBranchId}";
+                $"employees:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
 
             if (!request.BypassCache)
             {
@@ -67,16 +63,7 @@ namespace TaskMangment.Infrastructure.Services
                 .Include(e => e.Branch)
                 .Include(e => e.EmployeeRoles)
                     .ThenInclude(er => er.Role)
-                .AsQueryable();
-
-            if (!string.IsNullOrWhiteSpace(request.Name))
-                query = query.Where(e => e.FullName.Contains(request.Name));
-
-            if (request.CompanyId.HasValue)
-                query = query.Where(e => e.CompanyId == request.CompanyId.Value);
-
-            if (request.BranchId.HasValue)
-                query = query.Where(e => e.BranchId == request.BranchId.Value);
+                .ApplySearch(request.searchKey);
 
             var totalCount = await query.CountAsync();
 

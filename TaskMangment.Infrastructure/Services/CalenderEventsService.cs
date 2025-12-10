@@ -33,11 +33,8 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<PagedResponse<CalendarEventGetDto>>> GetAllAsync(CalendarEventRequest request)
         {
-            string safeTitle = request.Title ?? string.Empty;
-
-
             string cacheKey =
-                $"events-{request.PageIndex}-{request.PageSize}-{request.SortColumn}-{request.SortDirection}-{safeTitle}-{request.CompanyId}-{request.From}-{request.To}";
+                $"events:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.searchKey}";
 
             if (!request.BypassCache)
             {
@@ -48,19 +45,7 @@ namespace TaskMangment.Infrastructure.Services
 
             var query = _eventRepo.GetAll()
                 .Include(e => e.RelatedTask)
-                .AsQueryable();
-
-            if (request.CompanyId.HasValue)
-                query = query.Where(e => e.CompanyId == request.CompanyId);
-
-            if (!string.IsNullOrWhiteSpace(request.Title))
-                query = query.Where(e => e.Title.Contains(request.Title));
-
-            if (request.From.HasValue)
-                query = query.Where(e => e.StartDate >= request.From);
-
-            if (request.To.HasValue)
-                query = query.Where(e => e.EndDate <= request.To);
+                .ApplySearch(request.searchKey);
 
             var totalCount = await query.CountAsync();
 

@@ -9,8 +9,5 @@ namespace TaskMangment.Application.Common.ApiRequests.Company
 {
     public class CompanyRequest: BaseApiRequest
     {
-        public string? Name { get; set; }
-        public bool? IsActive { get; set; }
-
     }
 }
