@@ -7,7 +7,6 @@ export interface Area {
   branchCount: number;
 }
 
-
 export interface AreaRequest {
   name?: string;
   companyId?: number;

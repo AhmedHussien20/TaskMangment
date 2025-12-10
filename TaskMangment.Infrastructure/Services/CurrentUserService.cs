@@ -19,11 +19,11 @@ namespace TaskMangment.Infrastructure.Services
         }
 
         public string UserId =>
-            _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value
-            ?? "Anonymous";
+     _httpContextAccessor.HttpContext?.User?.FindFirst("UserId")?.Value
+     ?? "Anonymous";
 
         public string UserName =>
-            _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Name)?.Value
-            ?? "System";
+     _httpContextAccessor.HttpContext?.User?.FindFirst("FullName")?.Value
+     ?? "System";
     }
 }

@@ -9,10 +9,5 @@ namespace TaskMangment.Application.Common.ApiRequests.CalenderEvents
 {
     public class CalendarEventRequest : BaseApiRequest
     {
-        public int? CompanyId { get; set; }
-        public string? Title { get; set; }
-        public DateTime? From { get; set; }
-        public DateTime? To { get; set; }
-
     }
 }

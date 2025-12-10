@@ -33,11 +33,7 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<PagedResponse<AttachmentGetDto>>> GetAllAsync(AttachmentRequest request)
         {
-            string safeTaskId = request.TaskId?.ToString() ?? "null";
-            string safeCommentId = request.CommentId?.ToString() ?? "null";
-            string safeVoucherId = request.VoucherId?.ToString() ?? "null";
-
-            string cacheKey = $"attachments-{request.PageIndex}-{request.PageSize}-{request.SortColumn}-{request.SortDirection}-{safeTaskId}-{safeCommentId}-{safeVoucherId}";
+            string cacheKey = $"attachments:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
 
             if (!request.BypassCache)
             {
@@ -46,15 +42,7 @@ namespace TaskMangment.Infrastructure.Services
                     return ApiResponse<PagedResponse<AttachmentGetDto>>.Ok(cached);
             }
 
-            var query = _attachmentRepo.GetAll().AsQueryable();
-
-            if (request.TaskId.HasValue)
-                query = query.Where(a => a.TaskId == request.TaskId.Value);
-            if (request.CommentId.HasValue)
-                query = query.Where(a => a.CommentId == request.CommentId.Value);
-            if (request.VoucherId.HasValue)
-                query = query.Where(a => a.VoucherId == request.VoucherId.Value);
-
+            var query = _attachmentRepo.GetAll().ApplySearch(request.searchKey);
             var totalCount = await query.CountAsync();
 
             query = query.OrderByDynamicSafe(request.SortColumn, request.SortDirection);

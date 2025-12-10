@@ -11,6 +11,5 @@ namespace TaskMangment.Application.Common.ApiRequests.Course
 {
     public class CourseRequest : BaseApiRequest
     {
-        public string? Title { get; set; } 
     }
 }

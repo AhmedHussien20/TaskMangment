@@ -6,14 +6,14 @@
       class="row gy-2 gx-3 align-items-center generic-form"
     ><div class="d-flex justify-content-end mb-4">
       <button type="button" class="btn btn-secondary me-2" (click)="goBack()">
-        Back
+        {{ 'FORM.BACK' | translate }}      
       </button>
       <button type="submit" class="btn btn-primary">
-        Save
+        {{ 'FORM.SAVE' | translate }}      
       </button>
     </div>
       <div *ngFor="let field of formConfig; let i = index" class="col-md-4">
-        <label [for]="field.name">{{ field.label }}</label>
+        <label [for]="field.name">{{ field.label | translate}}</label>
         <div
           *ngIf="
             field.type === 'input' ||
@@ -24,14 +24,14 @@
           class="input-group"
         >
           <div *ngIf="field.prefix" class="input-group-text">
-            {{ field.prefix }}
+            {{ field.prefix  | translate}}
           </div>
           <input
             [type]="field.type === 'password' && field.showPassword ? 'text' : field.type"
             class="form-control"
             [id]="field.name"
             [formControlName]="field.name"
-            [placeholder]="field.label"
+            [placeholder]="field.placeholder ? (field.placeholder | translate) : (field.label | translate)"
             [readOnly]="field.disabled"
             [disabled]="field.disabled"
             autocomplete="new-password"
@@ -48,7 +48,7 @@
             class="btn btn-outline-secondary"
             (click)="onGeneratePassword(field.name)"
           >
-            Generate
+            {{ 'FORM.GENERATE' | translate }}
           </button>
           <button
             *ngIf="field.type === 'password'"
@@ -57,6 +57,9 @@
             (click)="field.showPassword = !field.showPassword"
           >
             <i [class]="field.showPassword ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
+             <span class="visually-hidden">
+              {{ field.showPassword ? ('FORM.HIDE_PASSWORD' | translate) : ('FORM.SHOW_PASSWORD' | translate) }}
+            </span>
           </button>
           <div
             *ngIf="
@@ -67,17 +70,17 @@
             class="invalid-feedback"
           >
             <div *ngIf="formGroup.controls[field.name].errors?.['required']">
-              {{ field.label }} is required.
+              {{ field.label | translate }} {{ 'FORM.IS_REQUIRED' | translate }}
             </div>
             <div *ngIf="formGroup.controls[field.name].errors?.['minlength']">
-              Minimum length is
+               {{ 'FORM.MINIMUM_LENGTH' | translate }}
               {{ formGroup.controls[field.name].errors?.['minlength'].requiredLength }}
-              characters.
+              {{ 'FORM.CHARACTERS' | translate }}
             </div>
             <div *ngIf="formGroup.controls[field.name].errors?.['maxlength']">
-              Maximum length is
+                {{ 'FORM.MAXIMUM_LENGTH' | translate }}
               {{ formGroup.controls[field.name].errors?.['maxlength'].requiredLength }}
-              characters.
+              {{ 'FORM.CHARACTERS' | translate }}
             </div>
             <!-- Password mismatch message -->
             <div
@@ -86,7 +89,7 @@
                 formGroup.errors?.['passwordMismatch']
               "
             >
-              Password and Confirm Password do not match.
+              {{ 'FORM.PASSWORD_MISMATCH' | translate }}
             </div>
           </div>
         </div>
@@ -106,7 +109,7 @@
             }"
           >
             <option *ngFor="let option of field.options" [value]="option.id">
-              {{ option.name }}
+              {{ option.name | translate}}
             </option>
           </select>
           <div
@@ -118,7 +121,7 @@
             class="invalid-feedback"
           >
             <div *ngIf="formGroup.controls[field.name].errors?.['required']">
-              {{ field.label }} is required.
+              {{ field.label | translate }} {{ 'FORM.IS_REQUIRED' | translate }}
             </div>
           </div>
         </div>
@@ -139,9 +142,9 @@
                   formGroup.controls[field.name].touched)
             }"
           />
-          <label class="form-check-label" [for]="field.name">{{
-            field.label
-          }}</label>
+          <label class="form-check-label" [for]="field.name">
+               {{ field.label | translate }}
+          </label>
           <div
             *ngIf="
               formGroup.controls[field.name].invalid &&
@@ -151,7 +154,7 @@
             class="invalid-feedback"
           >
             <div *ngIf="formGroup.controls[field.name].errors?.['required']">
-              {{ field.label }} is required.
+              {{ field.label | translate }} {{ 'FORM.IS_REQUIRED' | translate }}
             </div>
           </div>
         </div>
@@ -181,7 +184,7 @@
             class="invalid-feedback"
           >
             <div *ngIf="formGroup.controls[field.name].errors?.['required']">
-              {{ field.label }} is required.
+              {{ field.label | translate }} {{ 'FORM.IS_REQUIRED' | translate }}
             </div>
           </div>
         </div>

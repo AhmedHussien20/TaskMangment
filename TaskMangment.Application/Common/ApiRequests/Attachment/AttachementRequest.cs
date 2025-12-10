@@ -9,8 +9,6 @@ namespace TaskMangment.Application.Common.ApiRequests.Attachment
 {
     public class AttachmentRequest : BaseApiRequest
     {
-        public int? TaskId { get; set; }
-        public int? CommentId { get; set; }
-        public int? VoucherId { get; set; }
+       
     }
 }

@@ -44,11 +44,7 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<PagedResponse<OfferGetDto>>> GetAllAsync(OfferRequest request)
         {
-            string safeTitle = request.Title ?? string.Empty;
-            string safeCourseId = request.CourseId?.ToString() ?? "null";
-            string safeSubjectId = request.SubjectId?.ToString() ?? "null";
-
-            string cacheKey = $"offers-{request.PageIndex}-{request.PageSize}-{request.SortColumn}-{request.SortDirection}-{safeTitle}-{safeCourseId}-{safeSubjectId}";
+            string cacheKey = $"offers{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
 
             if (!request.BypassCache)
             {
@@ -61,16 +57,8 @@ namespace TaskMangment.Infrastructure.Services
                 .Include(o => o.Course)
                 .Include(o => o.Subject)
                 .Include(o => o.Assignments).ThenInclude(a => a.Student)
-                .AsQueryable();
+                .ApplySearch(request.searchKey);
 
-            if (!string.IsNullOrWhiteSpace(request.Title))
-                query = query.Where(o => o.Title.Contains(request.Title));
-
-            if (request.CourseId.HasValue)
-                query = query.Where(o => o.CourseId == request.CourseId.Value);
-
-            if (request.SubjectId.HasValue)
-                query = query.Where(o => o.SubjectId == request.SubjectId.Value);
 
             var totalCount = await query.CountAsync();
             query = query.OrderByDynamicSafe(request.SortColumn, request.SortDirection);

@@ -149,7 +149,30 @@
     "SELECT_ACTIVE_STATUS": "Select Active Status",
     "FILTERS": "Filters",
     "NO_DATA": "No data available"
-
+  },
+  "FORM": {
+    "BACK": "Back",
+    "SAVE": "Save",
+    "GENERATE": "Generate",
+    "SHOW_PASSWORD": "Show Password",
+    "HIDE_PASSWORD": "Hide Password",
+    "IS_REQUIRED": "is required",
+    "MINIMUM_LENGTH": "Minimum length is",
+    "MAXIMUM_LENGTH": "Maximum length is",
+    "CHARACTERS": "characters",
+    "PASSWORD_MISMATCH": "Password and Confirm Password do not match",
+    "SELECT_AREA": "Select Area",
+    "SELECT_COMPANY": "Select Company",
+    "SELECT_STATUS": "Select Status",
+    "SELECT_OPTION": "Select an option"
+  },
+  "VALIDATION": {
+    "REQUIRED": "This field is required",
+    "MIN_LENGTH": "Minimum length is",
+    "MAX_LENGTH": "Maximum length is",
+    "EMAIL": "Please enter a valid email",
+    "NUMBER": "Please enter a valid number",
+    "PASSWORD_MISMATCH": "Passwords do not match"
   }
 
 

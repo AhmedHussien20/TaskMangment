@@ -42,8 +42,7 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<PagedResponse<DiscountListDto>>> GetAllAsync(DiscountRequest request)
         {
-            string cacheKey =
-                $"discounts-{request.PageIndex}-{request.PageSize}-{request.SortColumn}-{request.SortDirection}-{request.EmployeeId}-{request.TaskId}";
+            string cacheKey = $"discounts:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
 
             if (!request.BypassCache)
             {
@@ -56,14 +55,8 @@ namespace TaskMangment.Infrastructure.Services
                 .Include(d => d.Employee)
                 .Include(d => d.Task)
                 .Include(d => d.CreatedBy)
-                .AsQueryable();
-
-            if (request.EmployeeId.HasValue)
-                query = query.Where(x => x.EmployeeId == request.EmployeeId.Value);
-
-            if (request.TaskId.HasValue)
-                query = query.Where(x => x.TaskId == request.TaskId.Value);
-
+                .ApplySearch(request.searchKey);
+            
             var totalCount = await query.CountAsync();
 
             query = query.OrderByDynamicSafe(request.SortColumn, request.SortDirection);

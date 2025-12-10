@@ -1,6 +1,8 @@
- 
- <app-generic-form
+<app-generic-form
+  [title]="title"
+  [breadcrumbs]="breadcrumbs"
+  [activeitem]="activeitem"
   [formGroup]="formGroup"
   [formConfig]="formConfig"
-  (formSubmit)="onSubmit($event)">
+  (submit)="onSubmit($event)"> <!-- ← غير لـ (submit) -->
 </app-generic-form>

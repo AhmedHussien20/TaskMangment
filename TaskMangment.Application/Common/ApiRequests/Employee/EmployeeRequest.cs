@@ -9,8 +9,6 @@ namespace TaskMangment.Application.Common.ApiRequests.Employee
 {
     public class EmployeeRequest : BaseApiRequest
     {
-        public string? Name { get; set; }
-        public int? CompanyId { get; set; }
-        public int? BranchId { get; set; }
+
     }
 }

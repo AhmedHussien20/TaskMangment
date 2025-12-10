@@ -129,7 +129,33 @@
     "FILTERS": "الفلاتر",
     "EXPORT": "تصدير",
     "NO_DATA": "لا توجد بيانات متاحة"
+  },
+  
+  "FORM": {
+    "BACK": "رجوع",
+    "SAVE": "حفظ",
+    "GENERATE": "توليد",
+    "SHOW_PASSWORD": "إظهار كلمة المرور",
+    "HIDE_PASSWORD": "إخفاء كلمة المرور",
+    "IS_REQUIRED": "مطلوب",
+    "MINIMUM_LENGTH": "الحد الأدنى للطول هو",
+    "MAXIMUM_LENGTH": "الحد الأقصى للطول هو",
+    "CHARACTERS": "حرف",
+    "PASSWORD_MISMATCH": "كلمة المرور وتأكيدها غير متطابقين",
+    "SELECT_AREA": "اختر المنطقة",
+    "SELECT_COMPANY": "اختر الشركة",
+    "SELECT_STATUS": "اختر الحالة",
+    "SELECT_OPTION": "اختر خيار"
+  },
+  "VALIDATION": {
+    "REQUIRED": "هذا الحقل مطلوب",
+    "MIN_LENGTH": "الحد الأدنى للطول هو",
+    "MAX_LENGTH": "الحد الأقصى للطول هو",
+    "EMAIL": "الرجاء إدخال بريد إلكتروني صحيح",
+    "NUMBER": "الرجاء إدخال رقم صحيح",
+    "PASSWORD_MISMATCH": "كلمات المرور غير متطابقة"
   }
+
 
 
 

@@ -27,7 +27,7 @@ namespace TaskMangment.API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll([FromQuery] TaskRequest request)
         {
-            var result = await _service.GetAllAsync(request);
+            var result = await _service.GetAllAsync(request, this.CompanyId);
 
             if (!result.Success)
                 return Fail(result.Message!);

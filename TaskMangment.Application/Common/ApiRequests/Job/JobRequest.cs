@@ -9,8 +9,5 @@ namespace TaskMangment.Application.Common.ApiRequests.Job
 {
     public class JobRequest : BaseApiRequest
     {
-        public int? DepartmentId { get; set; }
-        public int? EmployeeId { get; set; }
-        public string? Title { get; set; }
     }
 }

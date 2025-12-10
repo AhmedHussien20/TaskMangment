@@ -29,8 +29,6 @@ namespace TaskMangment.Application.DTOs
 
       
 
-      
-
         public int? AreaId { get; set; }
 
         public int? ManagerId { get; set; }

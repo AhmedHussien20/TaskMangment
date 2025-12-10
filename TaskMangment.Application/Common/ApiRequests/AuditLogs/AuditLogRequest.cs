@@ -9,8 +9,6 @@ namespace TaskMangment.Application.Common.ApiRequests.AuditLogs
 {
     public class AuditLogRequest : BaseApiRequest
     {
-        public string? EntityName { get; set; }
-        public string? Action { get; set; }
-        public string? ChangedBy { get; set; }
+      
     }
 }

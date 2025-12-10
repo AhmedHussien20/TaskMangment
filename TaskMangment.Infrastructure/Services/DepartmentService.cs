@@ -41,11 +41,7 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<PagedResponse<DepartmentGetDto>>> GetAllAsync(DepartmentRequest request)
         {
-            string safeName = request.Name ?? string.Empty;
-            string safeBranchId = request.BranchId?.ToString() ?? "null";
-            string safeAreaId = request.AreaId?.ToString() ?? "null";
-
-            string cacheKey = $"departments-{request.PageIndex}-{request.PageSize}-{request.SortColumn}-{request.SortDirection}-{safeName}-{safeBranchId}-{safeAreaId}";
+            string cacheKey = $"departments:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
 
             if (!request.BypassCache)
             {
@@ -59,17 +55,7 @@ namespace TaskMangment.Infrastructure.Services
                 .Include(d => d.Branch)
                     .ThenInclude(b => b.Area)
                 .Include(d => d.Jobs)
-                .AsQueryable();
-
-            if (!string.IsNullOrWhiteSpace(request.Name))
-                query = query.Where(d => d.Name.Contains(request.Name));
-
-            if (request.BranchId.HasValue)
-                query = query.Where(d => d.BranchId == request.BranchId.Value);
-
-            if (request.AreaId.HasValue)
-                query = query.Where(d => d.Branch.AreaId == request.AreaId.Value);
-
+                .ApplySearch(request.searchKey);
             var totalCount = await query.CountAsync();
 
             query = query.OrderByDynamicSafe(request.SortColumn, request.SortDirection);

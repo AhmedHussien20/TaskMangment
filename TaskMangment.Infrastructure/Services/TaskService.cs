@@ -49,13 +49,10 @@ namespace TaskMangment.Infrastructure.Services
             _hub = hub;
         }
 
-        public async Task<ApiResponse<PagedResponse<TaskGetDto>>> GetAllAsync(TaskRequest request)
+        public async Task<ApiResponse<PagedResponse<TaskGetDto>>> GetAllAsync(TaskRequest request, int CompanyId)
         {
-            string safeTitle = request.Title ?? string.Empty;
-            string safeCompanyId = request.CompanyId?.ToString() ?? "null";
-
             string cacheKey =
-                $"tasks-{request.PageIndex}-{request.PageSize}-{request.SortColumn}-{request.SortDirection}-{safeTitle}-{safeCompanyId}";
+                $"tasks{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}:{CompanyId}";
 
             if (!request.BypassCache)
             {
@@ -67,13 +64,9 @@ namespace TaskMangment.Infrastructure.Services
             var query = _taskRepo.GetAll()
                 .Include(t => t.CreatedBy)
                 .Include(t => t.Assignments).ThenInclude(a => a.Employee)
-                .AsQueryable();
+                .ApplySearch(request.searchKey);
 
-            if (!string.IsNullOrWhiteSpace(request.Title))
-                query = query.Where(t => t.Title.Contains(request.Title));
 
-            if (request.CompanyId.HasValue)
-                query = query.Where(t => t.CompanyId == request.CompanyId.Value);
 
             var totalCount = await query.CountAsync();
 
