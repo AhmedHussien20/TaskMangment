@@ -112,7 +112,7 @@ namespace TaskMangment.Infrastructure.Services
             await _cache.RemoveAsync("taskCloseRequests:");
 
 
-            return ApiResponse<TaskCloseRequestDetailsDto>.Ok(resultDto, "Close request added successfully");
+            return ApiResponse<TaskCloseRequestDetailsDto>.Ok(null, "Close request added successfully");
         }
 
 
@@ -133,7 +133,7 @@ namespace TaskMangment.Infrastructure.Services
             await _cache.RemoveAsync("taskCloseRequests:");
 
 
-            return ApiResponse<TaskCloseRequestDetailsDto>.Ok(resultDto, "Request reviewed successfully");
+            return ApiResponse<TaskCloseRequestDetailsDto>.Ok(null, "Request reviewed successfully");
         }
 
     }

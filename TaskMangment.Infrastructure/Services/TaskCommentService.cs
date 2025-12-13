@@ -142,7 +142,7 @@ namespace TaskMangment.Infrastructure.Services
             }
 
             await _cache.RemoveAsync("taskComments:");
-            return ApiResponse<bool>.Ok(true, "Comment added successfully");
+            return ApiResponse<TaskCommentGetDto>.Ok(null, "Comment added successfully");
         }
 
 
@@ -164,7 +164,7 @@ namespace TaskMangment.Infrastructure.Services
 
             await _cache.RemoveAsync("taskComments:");
 
-            return ApiResponse<bool>.Ok(true, "Comment updated");
+            return ApiResponse<TaskCommentGetDto>.Ok(null, "Comment updated");
         }
 
 
