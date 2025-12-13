@@ -10,20 +10,14 @@ import { EmployeeService } from 'app/core/services/employee.service';
 import { Employee } from 'app/core/models/employee/employee';
 import { ToastrService } from 'ngx-toastr';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { FormFieldConfig } from 'app/core/models/form-field-config';
 
 export interface SelectOption {
   label: string;
   value: number;
 }
 
-interface FormFieldConfig {
-  type: 'input' | 'select' | 'textarea';
-  label: string;
-  name: string;
-  validations?: any;
-  defaultValue?: any;
-  options?: SelectOption[];
-}
+ 
 
 @Component({
   selector: 'app-branch-create-update',
@@ -58,9 +52,9 @@ export class BranchCreateUpdateComponent implements OnInit {
     { type: 'input', label: 'BRANCH.MOBILE', name: 'mobile', validations: { maxlength: 50 }, defaultValue: '' },
     { type: 'input', label: 'BRANCH.FAX', name: 'fax', validations: { maxlength: 50 }, defaultValue: '' },
     { type: 'input', label: 'BRANCH.EMAIL', name: 'email', validations: { email: true, maxlength: 200 }, defaultValue: '' },
-    { type: 'select', label: 'BRANCH.AREA', name: 'areaId', options: [], validations: { required: true } },
-    { type: 'select', label: 'BRANCH.MANAGER', name: 'managerId', options: [], validations: { required: false } },
-    { type: 'select', label: 'BRANCH.RESPONSIBLE', name: 'responsibleId', options: [], validations: { required: false } }
+    { type: 'select', label: 'BRANCH.AREA', selectType: 'simple',name: 'areaId', options: [], validations: { required: true } },
+    { type: 'select', label: 'BRANCH.MANAGER',selectType: 'employee',name: 'managerId', options: [], validations: { required: false } },
+    { type: 'select', label: 'BRANCH.RESPONSIBLE',selectType: 'employee',name: 'responsibleId', options: [], validations: { required: false } }
   ];
 
   constructor(

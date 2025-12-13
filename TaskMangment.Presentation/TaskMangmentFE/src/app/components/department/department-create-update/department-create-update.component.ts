@@ -3,6 +3,7 @@ import { Component, EventEmitter, Input, OnInit, Output } from "@angular/core";
 import { FormBuilder, FormGroup, ReactiveFormsModule } from "@angular/forms";
 import { TranslateModule, TranslateService } from "@ngx-translate/core";
 import { Employee } from "app/core/models/employee/employee";
+import { FormFieldConfig } from "app/core/models/form-field-config";
 import { BranchService } from "app/core/services/branch.service";
 import { DepartmentService } from "app/core/services/department.service";
 import { EmployeeService } from "app/core/services/employee.service";
@@ -35,10 +36,10 @@ export class DepartmentCreateUpdateComponent implements OnInit {
   breadcrumbs = ['HOME', 'DEPARTMENT'];
   activeitem = 'DEPARTMENT.CREATE';
 
-  formConfig: any[] = [
+  formConfig: FormFieldConfig[] = [
     { type: 'select', label: 'DEPARTMENT.BRANCH', name: 'branchId', options: [], validations: { required: true }},
     { type: 'input', label: 'DEPARTMENT.NAME', name: 'name', validations: { required: true, maxlength: 200 }},
-    { type: 'select', label: 'DEPARTMENT.MANAGER', name: 'managerEmployeeId', options: []}
+    { type: 'select', label: 'DEPARTMENT.MANAGER',selectType: 'employee',name: 'managerEmployeeId', options: []}
   ];
 
   constructor(
