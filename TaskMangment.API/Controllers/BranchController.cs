@@ -25,7 +25,7 @@ namespace TaskMangment.API.Controllers
             if (!result.Success)
                 return Fail(result.Message!);
 
-            SetCacheHeader(600);
+            //SetCacheHeader(600);
 
             return Success(result.Data);
         }
@@ -42,9 +42,9 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Add([FromBody] BranchAddEditDto dto, int CampanyId)
+        public async Task<IActionResult> Add([FromBody] BranchAddEditDto dto)
         {
-            var result = await _service.AddAsync(dto, CampanyId);
+            var result = await _service.AddAsync(dto, this.CompanyId);
 
             if (!result.Success)
                 return Fail(result.Message);

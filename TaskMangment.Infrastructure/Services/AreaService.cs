@@ -48,7 +48,7 @@ namespace TaskMangment.Infrastructure.Services
                 if (cached != null)
                     return ApiResponse<PagedResponse<AreaGetDto>>.Ok(cached);
             }
-             
+
             var query = _areaRepository.GetAll()
                 .Include(a => a.Manager)
                 .ApplySearch(request.searchKey);   
@@ -113,21 +113,31 @@ namespace TaskMangment.Infrastructure.Services
             if (!await _companyRepo.IsExistAsync(CompanyId))
                 return ApiResponse<AreaGetDto>.Fail("Company not found", StatusCode.NotFound);
 
+            var isManagerUsed = await _areaRepository
+                .GetAll(a => a.ManagerEmployeeId == dto.ManagerID)
+                .AnyAsync();
+
+            if (isManagerUsed)
+                return ApiResponse<AreaGetDto>.Fail("This manager is already assigned to another area");
+
             var area = _mapper.Map<Area>(dto);
             area.CompanyId = CompanyId;
 
             await _areaRepository.AddAsync(area);
             await _areaRepository.SaveChangesAsync();
+
+            await _cache.RemoveAsync("areas:");
+
             var fullArea = await _areaRepository.GetAll()
                 .Include(a => a.Manager)
                 .FirstOrDefaultAsync(a => a.Id == area.Id);
-            var areaDto = _mapper.Map<AreaGetDto>(fullArea);
 
-            // TODO: Optional: Clear area cache pattern
-            // await _cache.RemoveByPatternAsync("areas-");
+            var areaDto = _mapper.Map<AreaGetDto>(fullArea);
 
             return ApiResponse<AreaGetDto>.Ok(areaDto, "Area added successfully");
         }
+
+
 
         public async Task<ApiResponse<AreaGetDto>> UpdateAsync(int id, AreaAddEditDto dto)
         {
@@ -138,19 +148,29 @@ namespace TaskMangment.Infrastructure.Services
             if (!await _employeeRepository.IsExistAsync(dto.ManagerID))
                 return ApiResponse<AreaGetDto>.Fail("Manager not found", StatusCode.NotFound);
 
+            var isManagerUsed = await _areaRepository
+                .GetAll(a => a.ManagerEmployeeId == dto.ManagerID && a.Id != id)
+                .AnyAsync();
+
+            if (isManagerUsed)
+                return ApiResponse<AreaGetDto>.Fail("This manager is already assigned to another area");
+
             _mapper.Map(dto, area);
 
             await _areaRepository.SaveChangesAsync();
 
-            var fullArea = await _areaRepository.GetAll()
-               .Include(a => a.Manager)
-               .FirstOrDefaultAsync(a => a.Id == area.Id);
-            var areaDto = _mapper.Map<AreaGetDto>(fullArea);
+            await _cache.RemoveAsync("areas:");
 
-            //  TODO: Invalidate cache later
+            var fullArea = await _areaRepository.GetAll()
+                .Include(a => a.Manager)
+                .FirstOrDefaultAsync(a => a.Id == area.Id);
+
+            var areaDto = _mapper.Map<AreaGetDto>(fullArea);
 
             return ApiResponse<AreaGetDto>.Ok(areaDto, "Area updated successfully");
         }
+
+
 
         public async Task<ApiResponse<bool>> DeleteAsync(int id)
         {

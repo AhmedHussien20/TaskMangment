@@ -67,7 +67,6 @@ namespace TaskMangment.Infrastructure.Services
 
             var dtos = _mapper.Map<ICollection<DepartmentGetDto>>(list);
 
-            //NO OF EMPLOYEES IN DEPARTMENT
             foreach (var dto in dtos)
             {
                 var department = list.First(d => d.Id == dto.Id);

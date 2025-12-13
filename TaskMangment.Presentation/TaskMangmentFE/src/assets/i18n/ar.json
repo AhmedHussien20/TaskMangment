@@ -21,25 +21,22 @@
     },
     "apps": {
       "title": "التطبيقات",
-      "orders": {
-        "title": "الطلبات",
-        "list": "قائمة الطلبات",
-        "tracking": "تتبع الطلبات"
+      "area": {
+        "title": "المناطق",
+        "list": "قائمة المناطق"
       },
-      "expiry": {
-        "title": "الصلاحية",
-        "list": "قائمة المنتهية",
-        "tracking": "تتبع الصلاحية"
+      "branch": {
+        "title": "الفروع",
+        "list": "قائمة الفروع"
       },
-      "customers": {
-        "title": "العملاء",
-        "notifications": "إشعارات العملاء",
+      "department": {
+        "title": "الأقسام",
+        "list": "قائمة الأقسام",
         "customers": "العملاء"
       },
-      "users": {
-        "title": "المستخدمون",
-        "users": "المستخدمون",
-        "list": "قائمة المستخدمون"
+      "task": {
+        "title": "المهام",
+        "list": "قائمة المهام"
       },
       "group": {
         "title": "المجاميع",
@@ -91,22 +88,26 @@
     "DONT_HAVE_ACCOUNT": "ليس لديك حساب؟",
     "REGISTER_HERE": "سجل هنا",
     "SUBTITLE": "الرجاء تسجيل الدخول للمتابعة"
-  },                        
+  },
   "AREA": {
-  "COMPANY" : "الشركة",
-  "LIST_TITLE": "قائمة المناطق",
-  "HOME": "الرئيسية",
-  "AREAS": "المناطق",
-  "ID": "الكود",
-  "NAME": "اسم المنطقة",
-  "ADDRESS": "العنوان",
-  "MANAGER": "المدير",
-  "BRANCHES": "عدد الفروع",
-  "addArea": "إضافة منطقة جديدة",
-  "companyId": "الشركة",
-  "searchKey":" كلمة البحث"
-},
- "TABLE": {
+    "COMPANY": "الشركة",
+    "LIST_TITLE": "قائمة المناطق",
+    "HOME": "الرئيسية",
+    "AREAS": "المناطق",
+    "ID": "الكود",
+    "NAME": "اسم المنطقة",
+    "ADDRESS": "العنوان",
+    "MANAGER": "المدير",
+    "BRANCHES": "عدد الفروع",
+    "addArea": "إضافة منطقة جديدة",
+    "companyId": "الشركة",
+    "searchKey": " كلمة البحث",
+    "ADD": "إضافة",
+    "EDIT": "تعديل",
+    "CREATE_SUCCESS": "تم إنشاء العنصر بنجاح",
+    "UPDATE_SUCCESS": "تم تحديث العنصر بنجاح"
+  },
+  "TABLE": {
     "SEARCH": "بحث",
     "CLEAR_FILTERS": "مسح الفلاتر",
     "ADD_NEW": "إضافة جديد",
@@ -130,7 +131,6 @@
     "EXPORT": "تصدير",
     "NO_DATA": "لا توجد بيانات متاحة"
   },
-  
   "FORM": {
     "BACK": "رجوع",
     "SAVE": "حفظ",
@@ -145,7 +145,10 @@
     "SELECT_AREA": "اختر المنطقة",
     "SELECT_COMPANY": "اختر الشركة",
     "SELECT_STATUS": "اختر الحالة",
-    "SELECT_OPTION": "اختر خيار"
+    "SELECT_OPTION": "اختر خيار",
+    "VALIDATION_ERROR": "هناك أخطاء في النموذج. يرجى التحقق من الحقول.",
+    "ERROR": "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
+    "SELECT": "اختر"
   },
   "VALIDATION": {
     "REQUIRED": "هذا الحقل مطلوب",
@@ -154,9 +157,87 @@
     "EMAIL": "الرجاء إدخال بريد إلكتروني صحيح",
     "NUMBER": "الرجاء إدخال رقم صحيح",
     "PASSWORD_MISMATCH": "كلمات المرور غير متطابقة"
+  },
+  "BRANCH": {
+    "TITLE": "الفروع",
+    "LIST_TITLE": "قائمة الفروع",
+    "CREATE_TITLE": "إضافة فرع",
+    "EDIT_TITLE": "تعديل فرع",
+    "ID": "رقم الفرع",
+    "NAME": "اسم الفرع",
+    "ADDRESS": "العنوان",
+    "PHONE": "الهاتف",
+    "MOBILE": "الموبايل",
+    "FAX": "الفاكس",
+    "EMAIL": "البريد الإلكتروني",
+    "AREA": "المنطقة",
+    "MANAGER": "المدير",
+    "RESPONSIBLE": "المسؤول",
+    "ADD": "إضافة",
+    "EDIT": "تعديل",
+    "searchKey": "بحث عن الفروع",
+    "ADD_BRANCH": "إضافة فرع",
+    "EDIT_BRANCH": "تعديل فرع",
+    "CREATE_SUCCESS": "تم إنشاء الفرع بنجاح",
+    "UPDATE_SUCCESS": "تم تحديث الفرع بنجاح",
+    "CREATE_FAILED": "فشل في إنشاء الفرع",
+    "UPDATE_FAILED": "فشل في تحديث الفرع",
+    "DELETE_CONFIRM": "هل أنت متأكد أنك تريد حذف هذا الفرع؟",
+    "DELETE_SUCCESS": "تم حذف الفرع بنجاح",
+    "DELETE_FAILED": "فشل في حذف الفرع",
+    "VALIDATION_ERROR": "يرجى إدخال جميع الحقول المطلوبة بشكل صحيح."
+  },
+  "AUTH": {
+    "SESSION_EXPIRED": "انتهت صلاحية الجلسة. من فضلك قم بتسجيل الدخول مرة أخرى.",
+    "UNAUTHORIZED": "غير مصرح"
+  },
+  "DEPARTMENT": {
+  "TITLE": "القسم",
+  "LIST_TITLE": "قائمة الأقسام",
+  "ADD": "إضافة قسم",
+  "EDIT": "تعديل قسم",
+  "NAME": "اسم القسم",
+  "BRANCH": "الفرع",
+  "MANAGER": "المدير",
+  "CREATE_SUCCESS": "تم إنشاء القسم بنجاح",
+  "UPDATE_SUCCESS": "تم تحديث القسم بنجاح",
+  "SEARCH": "بحث عن الأقسام",
+  "EMPLOYEE_COUNT": "عدد الموظفين",
+  "AREA": "المنطقة",
+  "ID":"الكود"
+},
+ "TASK": {
+    "LIST_TITLE": "المهام",
+    "ADD": "إضافة مهمة",
+    "EDIT": "تعديل مهمة",
+
+"TITLE": "العنوان",
+  "DESCRIPTION": "الوصف",
+  "ASSIGNED_EMPLOYEES": "الموظفون المكلفون",
+  "PRIORITY": "الأولوية",
+  "PRIORITY_LOW": "منخفضة",
+  "PRIORITY_MEDIUM": "متوسطة",
+  "PRIORITY_HIGH": "عالية",
+  "DUE_DATE": "تاريخ الانتهاء",
+  "COMMENT_ALLOW_PERIOD": "مدة السماح بالتعليق (بالأيام)",
+  "MAX_WARNINGS": "الحد الأقصى للتنبيهات",
+  "PENALTY_AT_MAX_WARNINGS": "الجزاء عند الحد الأقصى للتنبيهات",
+  "PENALTY_ON_AUTO_CLOSE": "الجزاء عند الإغلاق التلقائي",
+  "IS_SHARED": "مهمة مشتركة",
+
+    "ASSIGNED_BY": "تم الإسناد بواسطة",
+
+
+    "STATUS_OPEN": "مفتوحة",
+    "STATUS_IN_PROGRESS": "قيد التنفيذ",
+    "STATUS_COMPLETED": "مكتملة",
+    "STATUS_CLOSED": "مغلقة",
+
+    "CREATE_SUCCESS": "تم إنشاء المهمة بنجاح",
+    "UPDATE_SUCCESS": "تم تعديل المهمة بنجاح",
+    "CREATE_FAILED": "فشل إنشاء المهمة",
+    "UPDATE_FAILED": "فشل تعديل المهمة",
+    "searchKey": "بحث عن المهام"
   }
-
-
-
 
 }

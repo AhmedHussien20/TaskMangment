@@ -115,19 +115,23 @@
     "phoneNumber": "Phone Number"
   },
   "AREA": {
-  "COMPANY": "CompanyId",
-  "LIST_TITLE": "Area List",
-  "HOME": "Home",
-  "AREAS": "Areas",
-  "ID": "ID",
-  "NAME": "Area Name",
-  "ADDRESS": "Address",
-  "MANAGER": "Manager",
-  "BRANCHES": "Branches",
-  "companyId": "Company",
-  "searchKey": "Search"
-},
- "TABLE": {
+    "COMPANY": "CompanyId",
+    "LIST_TITLE": "Area List",
+    "HOME": "Home",
+    "AREAS": "Areas",
+    "ID": "ID",
+    "NAME": "Area Name",
+    "ADDRESS": "Address",
+    "MANAGER": "Manager",
+    "BRANCHES": "Branches",
+    "companyId": "Company",
+    "searchKey": "Search",
+    "CREATE_SUCCESS": "Saved successfully",
+    "UPDATE_SUCCESS": "Updated successfully",
+    "ADD": "Add",
+    "EDIT": "Update"
+  },
+  "TABLE": {
     "SEARCH": "Search",
     "CLEAR_FILTERS": "Clear Filters",
     "ADD_NEW": "Add New",
@@ -173,7 +177,62 @@
     "EMAIL": "Please enter a valid email",
     "NUMBER": "Please enter a valid number",
     "PASSWORD_MISMATCH": "Passwords do not match"
-  }
+  },
+  "BRANCH": {
+    "TITLE": "Branches",
+    "LIST_TITLE": "Branches List",
+    "CREATE_TITLE": "Add Branch",
+    "EDIT_TITLE": "Edit Branch",
+    "ID": "ID",
+    "NAME": "Branch Name",
+    "ADDRESS": "Address",
+    "PHONE": "Phone",
+    "MOBILE": "Mobile",
+    "FAX": "Fax",
+    "EMAIL": "Email",
+    "AREA": "Area",
+    "MANAGER": "Manager",
+    "RESPONSIBLE": "Responsible",
+    "SEARCH": "Search Branches",
+    "ADD_BRANCH": "Add Branch",
+    "EDIT_BRANCH": "Edit Branch",
+    "CREATE_SUCCESS": "Branch created successfully",
+    "UPDATE_SUCCESS": "Branch updated successfully",
+    "CREATE_FAILED": "Failed to create branch",
+    "UPDATE_FAILED": "Failed to update branch",
+    "DELETE_CONFIRM": "Are you sure you want to delete this branch?",
+    "DELETE_SUCCESS": "Branch deleted successfully",
+    "DELETE_FAILED": "Failed to delete branch",
+    "VALIDATION_ERROR": "Please fill in all required fields correctly."
+  },
+  "AUTH": {
+    "SESSION_EXPIRED": "Your session has expired. Please login again.",
+    "UNAUTHORIZED": "Unauthorized"
+  },
+  "DEPARTMENT": {
+  "TITLE": "Department",
+  "LIST_TITLE": "Department List",
+  "ADD": "Add Department",
+  "EDIT": "Edit Department",
+  "NAME": "Department Name",
+  "BRANCH": "Branch",
+  "MANAGER": "Manager",
+  "CREATE_SUCCESS": "Department created successfully",
+  "UPDATE_SUCCESS": "Department updated successfully",
+  "SEARCH": "Search Departments"
+},
+"TASK": {
+  "LIST_TITLE": "Tasks",
+  "ADD": "Add Task",
+  "EDIT": "Edit Task",
+  "TITLE": "Title",
+  "DESCRIPTION": "Description",
+  "PRIORITY": "Priority",
+  "STATUS": "Status",
+  "DUE_DATE": "Due Date",
+  "ASSIGNED_BY": "Assigned By",
+  "SAVED_SUCCESS": "Task saved successfully"
+}
 
 
 }

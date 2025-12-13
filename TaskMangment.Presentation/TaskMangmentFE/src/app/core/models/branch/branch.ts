@@ -1,23 +1,25 @@
-export interface Branch {
+export interface BranchGetDto {
   id: number;
   name: string;
-  areaName: string;
-  managerName: string;
-  responsibleName: string;
+  areaName?: string;
+  managerName?: string;
+  responsibleName?: string;
 }
 
-export interface BranchRequest {
-  name?: string;
-  companyId?: number;
+export interface BranchAddEditDto {
+  name: string;
+  address?: string;
+  phone?: string;
+  mobile?: string;
+  fax?: string;
+  email?: string;
   areaId?: number;
-  pageIndex: number;
-  pageSize: number;
-  sortColumn: string;
-  sortDirection: string;
+  managerId?: number;
+  responsibleId?: number;
 }
 
 export interface BranchPagedResponse {
-  data: Branch[];
+  data: BranchGetDto[];
   totalCount: number;
   pageIndex: number;
   pageSize: number;
