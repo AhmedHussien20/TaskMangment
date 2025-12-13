@@ -91,6 +91,8 @@ namespace TaskMangment.Infrastructure.Services
 
             await _companyRepository.AddAsync(company);
             await _companyRepository.SaveChangesAsync();
+            await _cache.RemoveAsync("companies:");
+
             var campanydto = _mapper.Map<CompanyGetDto>(company);
 
             return ApiResponse<CompanyGetDto>.Ok(campanydto, "Company added successfully");
@@ -111,6 +113,8 @@ namespace TaskMangment.Infrastructure.Services
             _mapper.Map(dto, company);
 
             await _companyRepository.SaveChangesAsync();
+            await _cache.RemoveAsync("companies:");
+
             var campanydto = _mapper.Map<CompanyGetDto>(company);
             return ApiResponse<CompanyGetDto>.Ok(campanydto, "Company updated successfully");
         }
@@ -123,6 +127,8 @@ namespace TaskMangment.Infrastructure.Services
 
             _companyRepository.SoftDelete(company);
             await _companyRepository.SaveChangesAsync();
+            await _cache.RemoveAsync("companies:");
+
 
             return ApiResponse<bool>.Ok(true, "Company deleted successfully");
         }

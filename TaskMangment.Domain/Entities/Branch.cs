@@ -26,6 +26,9 @@ namespace TaskMangment.Domain.Entities
         [MaxLength(50)] 
         public string Fax { get; set; }
 
+        [MaxLength(200)]
+        public string Email { get; set; }
+
         public int ManagerID { get; set; }
         public int ResponsibleID { get; set; }
 

@@ -125,6 +125,7 @@ namespace TaskMangment.Infrastructure.Services
             await _employeeRepo.AddAsync(employee);
             await _employeeRepo.SaveChangesAsync();
 
+
             // Assign roles
             foreach (var roleId in dto.RoleIds)
             {
@@ -139,6 +140,8 @@ namespace TaskMangment.Infrastructure.Services
             }
 
             await _employeeRoleRepo.SaveChangesAsync();
+            await _cache.RemoveAsync("employees:");
+
             var fullEmployee = await _employeeRepo.GetAll(e => e.Id == employee.Id)
                                                   .Include(e => e.Branch)
                                                   .Include(e => e.EmployeeRoles)
@@ -181,6 +184,8 @@ namespace TaskMangment.Infrastructure.Services
 
             await _employeeRepo.SaveChangesAsync();
             await _employeeRoleRepo.SaveChangesAsync();
+            await _cache.RemoveAsync("employees:");
+
             var fullEmployee = await _employeeRepo.GetAll(e => e.Id == employee.Id)
                                                              .Include(e => e.Branch)
                                                              .Include(e => e.EmployeeRoles)
@@ -199,6 +204,8 @@ namespace TaskMangment.Infrastructure.Services
 
             _employeeRepo.SoftDelete(employee);
             await _employeeRepo.SaveChangesAsync();
+            await _cache.RemoveAsync("employees:");
+
 
             return ApiResponse<bool>.Ok(true, "Employee deleted successfully");
         }

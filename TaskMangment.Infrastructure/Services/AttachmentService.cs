@@ -77,6 +77,7 @@ namespace TaskMangment.Infrastructure.Services
 
             await _attachmentRepo.AddAsync(attachment);
             await _attachmentRepo.SaveChangesAsync();
+            await _cache.RemoveAsync("attachments:");
 
             // Optionally, invalidate attachments cache
             var AttachmentDto = _mapper.Map<AttachmentGetDto>(attachment);
@@ -92,6 +93,8 @@ namespace TaskMangment.Infrastructure.Services
 
             _attachmentRepo.SoftDelete(attachment);
             await _attachmentRepo.SaveChangesAsync();
+            await _cache.RemoveAsync("attachments:");
+
 
             // Optionally, invalidate attachments cache
 

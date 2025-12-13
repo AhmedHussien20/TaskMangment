@@ -41,7 +41,7 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<PagedResponse<JobGetDto>>> GetAllAsync(JobRequest request)
         {
-            string cacheKey = $"jobs{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
+            string cacheKey = $"jobs:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
 
             if (!request.BypassCache)
             {
@@ -106,6 +106,8 @@ namespace TaskMangment.Infrastructure.Services
 
             await _jobRepository.AddAsync(job);
             await _jobRepository.SaveChangesAsync();
+            await _cache.RemoveAsync("jobs:");
+
 
             var fullJob = await _jobRepository.GetAll(j => j.Id == job.Id)
                                      .Include(j => j.Department)
@@ -141,6 +143,8 @@ namespace TaskMangment.Infrastructure.Services
             job.Employees.Add(employee);
 
             await _jobRepository.SaveChangesAsync();
+            await _cache.RemoveAsync("jobs:");
+
             var fullJob = await _jobRepository.GetAll(j => j.Id == job.Id)
                                      .Include(j => j.Department)
                                      .Include(j => j.Employees)
@@ -160,6 +164,7 @@ namespace TaskMangment.Infrastructure.Services
 
             _jobRepository.SoftDelete(job);
             await _jobRepository.SaveChangesAsync();
+            await _cache.RemoveAsync("jobs:");
 
             return ApiResponse<bool>.Ok(true, "Job deleted successfully");
         }

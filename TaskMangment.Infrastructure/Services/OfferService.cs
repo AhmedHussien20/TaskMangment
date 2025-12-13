@@ -44,7 +44,7 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<PagedResponse<OfferGetDto>>> GetAllAsync(OfferRequest request)
         {
-            string cacheKey = $"offers{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
+            string cacheKey = $"offers:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
 
             if (!request.BypassCache)
             {
@@ -124,6 +124,8 @@ namespace TaskMangment.Infrastructure.Services
 
             await _offerRepo.AddAsync(offer);
             await _offerRepo.SaveChangesAsync();
+            await _cache.RemoveAsync("offers:");
+
 
             var fullOffer = await _offerRepo.GetAll(o => o.Id == offer.Id)
       .Include(o => o.Course)
@@ -168,6 +170,8 @@ namespace TaskMangment.Infrastructure.Services
             }
 
             await _offerRepo.SaveChangesAsync();
+            await _cache.RemoveAsync("offers:");
+
             var fullOffer = await _offerRepo.GetAll(o => o.Id == offer.Id)
       .Include(o => o.Course)
       .Include(o => o.Subject)
@@ -188,6 +192,7 @@ namespace TaskMangment.Infrastructure.Services
 
             _offerRepo.SoftDelete(offer);
             await _offerRepo.SaveChangesAsync();
+            await _cache.RemoveAsync("offers:");
 
             return ApiResponse<bool>.Ok(true, "Offer deleted successfully");
         }
