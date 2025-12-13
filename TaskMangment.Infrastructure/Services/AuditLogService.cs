@@ -55,6 +55,8 @@ namespace TaskMangment.Infrastructure.Services
 
                 await _auditRepo.AddAsync(audit);
                 await _auditRepo.SaveChangesAsync();
+                await _cache.RemoveAsync("auditLogs:");
+
             }
             catch (Exception ex)
             {

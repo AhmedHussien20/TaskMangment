@@ -107,6 +107,8 @@ namespace TaskMangment.Infrastructure.Services
 
             await _discountRepo.AddAsync(discount);
             await _discountRepo.SaveChangesAsync();
+            await _cache.RemoveAsync("discounts:");
+
 
             var fullDiscount = await _discountRepo
       .GetAll(d => d.Id == discount.Id)
@@ -140,6 +142,8 @@ namespace TaskMangment.Infrastructure.Services
             discount.ModifiedDate = DateTime.UtcNow;
 
             await _discountRepo.SaveChangesAsync();
+            await _cache.RemoveAsync("discounts:");
+
             var fullDiscount = await _discountRepo
                 .GetAll(d => d.Id == discount.Id)
                 .Include(d => d.Employee)
@@ -158,6 +162,8 @@ namespace TaskMangment.Infrastructure.Services
 
             _discountRepo.SoftDelete(discount);
             await _discountRepo.SaveChangesAsync();
+            await _cache.RemoveAsync("discounts:");
+
 
             return ApiResponse<bool>.Ok(true, "Discount deleted successfully");
         }

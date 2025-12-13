@@ -1,0 +1,258 @@
+import { Component, EventEmitter, Input, Output, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { GenericFormComponent } from 'app/shared/components/generic-form/generic-form.component';
+
+import { EmployeeService } from 'app/core/services/employee.service';
+import { BranchService } from 'app/core/services/branch.service';
+
+import { ToastrService } from 'ngx-toastr';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { FormFieldConfig } from 'app/core/models/form-field-config';
+
+@Component({
+  selector: 'app-employee-create-update',
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    TranslateModule,
+    GenericFormComponent
+  ],
+  templateUrl: './employee-create-update.component.html'
+})
+export class EmployeeCreateUpdateComponent implements OnInit {
+
+  @Input() isEdit: boolean = false;
+  @Input() employeeId: number | null = null;
+  @Output() formSubmitted = new EventEmitter<void>();
+
+  branches: any[] = [];
+  roles: any[] = [];
+
+  title = 'EMPLOYEE.TITLE';
+  breadcrumbs = ['HOME', 'EMPLOYEES'];
+  activeitem = 'EMPLOYEE.CREATE';
+
+  formGroup!: FormGroup;
+
+  formConfig: FormFieldConfig[] = [
+    { 
+      type: 'input', 
+      label: 'EMPLOYEE.FULL_NAME', 
+      name: 'fullName', 
+      validations: { required: true, maxlength: 250 }, 
+      defaultValue: '' 
+    },
+    { 
+      type: 'select', 
+      label: 'EMPLOYEE.BRANCH', 
+      selectType: 'simple',
+      name: 'branchId', 
+      options: [], 
+      validations: { required: false } 
+    },
+    { 
+      type: 'input', 
+      label: 'EMPLOYEE.TITLE', 
+      name: 'title', 
+      validations: { maxlength: 50 }, 
+      defaultValue: '' 
+    },
+    { 
+      type: 'input', 
+      label: 'EMPLOYEE.NATIONALITY', 
+      name: 'nationality', 
+      validations: { maxlength: 100 }, 
+      defaultValue: '' 
+    },
+    { 
+      type: 'input', 
+      label: 'EMPLOYEE.IDENTITY_NUMBER', 
+      name: 'identityNumber', 
+      validations: { maxlength: 100 }, 
+      defaultValue: '' 
+    },
+    { 
+      type: 'input', 
+      label: 'EMPLOYEE.MOBILE', 
+      name: 'mobile', 
+      validations: { maxlength: 50 }, 
+      defaultValue: '' 
+    },
+    { 
+      type: 'input', 
+      label: 'EMPLOYEE.ADDRESS', 
+      name: 'address', 
+      validations: { maxlength: 500 }, 
+      defaultValue: '' 
+    },
+    { 
+      type: 'input', 
+      label: 'EMPLOYEE.QUALIFICATION', 
+      name: 'qualification', 
+      validations: { maxlength: 200 }, 
+      defaultValue: '' 
+    },
+    { 
+      type: 'select', 
+      label: 'EMPLOYEE.ROLES', 
+      selectType: 'simple',
+      name: 'roleIds', 
+      multiple: true,
+      options: [], 
+      validations: { required: true } 
+    },
+    { 
+      type: 'input', 
+      inputType: 'email',
+      label: 'EMPLOYEE.EMAIL', 
+      name: 'email', 
+      validations: { email: true, maxlength: 200 }, 
+      defaultValue: '' 
+    },
+    { 
+      type: 'input', 
+      inputType: 'password',
+      label: 'EMPLOYEE.PASSWORD', 
+      name: 'password', 
+      validations: { required: !this.isEdit, maxlength: 500 }, 
+      defaultValue: '' 
+    }
+  ];
+
+  constructor(
+    private fb: FormBuilder,
+    private employeeService: EmployeeService,
+    private branchService: BranchService,
+   // private roleService: RoleService,
+    private toastr: ToastrService,
+    private translate: TranslateService
+  ) { }
+
+  ngOnInit() {
+    this.initForm();
+    this.loadBranches();
+    this.loadRoles();
+    if (this.isEdit && this.employeeId) {
+      this.loadEmployee();
+    }
+  }
+
+  initForm() {
+    this.formGroup = this.fb.group({
+      fullName: ['', Validators.required],
+      branchId: [null],
+      title: [''],
+      nationality: [''],
+      identityNumber: [''],
+      mobile: [''],
+      address: [''],
+      qualification: [''],
+      roleIds: [[], Validators.required],
+      email: ['', Validators.email],
+      password: ['']
+    });
+
+    if (!this.isEdit) {
+      this.formGroup.get('password')?.setValidators([Validators.required, Validators.maxLength(500)]);
+    }
+  }
+
+  loadEmployee() {
+    if (!this.employeeId) return;
+
+    this.employeeService.getById(this.employeeId).subscribe(res => {
+      const emp = res.data;
+
+      this.formGroup.patchValue({
+        fullName: emp.fullName,
+        branchId: emp.branchId,
+        title: emp.title,
+        nationality: emp.nationality,
+        identityNumber: emp.identityNumber,
+        mobile: emp.mobile,
+        address: emp.address,
+        qualification: emp.qualification,
+        roleIds: emp.roleIds || [],
+        email: emp.email,
+        password: '' // Don't fill password in edit
+      });
+    });
+  }
+
+  loadBranches() {
+    const req = {
+      searchKey: '',
+      pageIndex: 1,
+      pageSize: 500,
+      sortColumn: 'Id',
+      sortDirection: 'ASC'
+    };
+
+    this.branchService.getAll(req).subscribe(res => {
+      const list: { id: number, name: string }[] = res.data.data;
+      const field = this.formConfig.find(x => x.name === 'branchId');
+
+      if (field) {
+        field.options = list.map(b => ({
+          label: b.name,
+          value: b.id
+        }));
+      }
+    });
+  }
+
+  loadRoles() {
+    // Assuming you have a RoleService with getAll method
+    const req = {
+      searchKey: '',
+      pageIndex: 1,
+      pageSize: 500,
+      sortColumn: 'Id',
+      sortDirection: 'ASC'
+    };
+
+  
+  }
+
+  onSubmit(formValue: any) {
+    if (this.formGroup.invalid) {
+      this.formGroup.markAllAsTouched();
+      this.toastr.error(this.translate.instant('FORM.VALIDATION_ERROR'));
+      return;
+    }
+
+    // Remove password field if empty in edit mode
+    const submitData = { ...this.formGroup.value };
+    if (this.isEdit && !submitData.password) {
+      delete submitData.password;
+    }
+
+    // UPDATE
+    if (this.isEdit && this.employeeId) {
+      this.employeeService.update(this.employeeId, submitData).subscribe({
+        next: () => {
+          this.toastr.success(this.translate.instant('EMPLOYEE.UPDATE_SUCCESS'));
+          this.formSubmitted.emit();
+        },
+        error: () => {
+          this.toastr.error(this.translate.instant('EMPLOYEE.UPDATE_FAILED'));
+        }
+      });
+    }
+
+    // CREATE
+    else {
+      this.employeeService.create(submitData).subscribe({
+        next: () => {
+          this.toastr.success(this.translate.instant('EMPLOYEE.CREATE_SUCCESS'));
+          this.formSubmitted.emit();
+        },
+        error: () => {
+          this.toastr.error(this.translate.instant('EMPLOYEE.CREATE_FAILED'));
+        }
+      });
+    }
+  }
+}

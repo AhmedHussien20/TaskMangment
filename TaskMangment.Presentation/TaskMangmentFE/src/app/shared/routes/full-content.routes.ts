@@ -40,6 +40,7 @@ export const content: Routes = [
       { path: 'branch', loadChildren: () => import('../../../app/components/branch/branch.routes').then(r => r.BranchRoutingModule) },
       { path: 'department', loadChildren: () => import('../../../app/components/department/department.routes').then(r => r.DepartmentRoutingModule) },
       { path: 'task', loadChildren: () => import('../../../app/components/tasks/task.routes').then(r => r.TaskRoutingModule) },
+      {path: 'employee', loadChildren: () => import('../../../app/components/employee/employee.routes').then(r => r.EmployeeRoutingModule)},
 
        //    {
       //     path: '',

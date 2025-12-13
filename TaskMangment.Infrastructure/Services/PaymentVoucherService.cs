@@ -49,7 +49,7 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<PagedResponse<PaymentVoucherGetDto>>> GetAllAsync(PaymentVoucherRequest request)
         {
-            string cacheKey = $"vouchers{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
+            string cacheKey = $"vouchers:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
 
             if (!request.BypassCache)
             {
@@ -124,6 +124,7 @@ namespace TaskMangment.Infrastructure.Services
 
             await _voucherRepo.AddAsync(voucher);
             await _voucherRepo.SaveChangesAsync();
+            await _cache.RemoveAsync("vouchers:");
 
             // Optional: clear cache pattern
             // await _cache.RemoveByPatternAsync("vouchers-");
@@ -150,6 +151,7 @@ namespace TaskMangment.Infrastructure.Services
             voucher.ModifiedDate = DateTime.UtcNow;
 
             await _voucherRepo.SaveChangesAsync();
+            await _cache.RemoveAsync("vouchers:");
 
             // Optional: clear cache pattern
             // await _cache.RemoveByPatternAsync("vouchers-");
@@ -172,6 +174,7 @@ namespace TaskMangment.Infrastructure.Services
 
             _voucherRepo.SoftDelete(voucher);
             await _voucherRepo.SaveChangesAsync();
+            await _cache.RemoveAsync("vouchers:");
 
             // Optional: clear cache pattern
             // await _cache.RemoveByPatternAsync("vouchers-");

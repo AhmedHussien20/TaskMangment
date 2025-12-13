@@ -38,7 +38,7 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<PagedResponse<TaskCommentGetDto>>> GetAllAsync(TaskCommentRequest request)
         {
-            string cacheKey = $"taskComments{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
+            string cacheKey = $"taskComments:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
 
             if (!request.BypassCache)
             {
@@ -107,6 +107,38 @@ namespace TaskMangment.Infrastructure.Services
             await _commentRepo.AddAsync(comment);
             await _commentRepo.SaveChangesAsync();
 
+            if (dto.File != null)
+            {
+                var fileName = $"{Guid.NewGuid()}_{dto.File.FileName}";
+                var filePath = Path.Combine("wwwroot/uploads/comments", fileName);
+
+                Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await dto.File.CopyToAsync(stream);
+                }
+
+                var attachment = new Attachment
+                {
+                    FileName = dto.File.FileName,
+                    FilePath = filePath,
+                    Size = dto.File.Length,
+                    CommentId = comment.Id,
+                    UploadedBy = employeeId,
+                    CreatedBy= employeeId,
+                    ContentType = dto.File.ContentType,
+                    UploadedAt = DateTime.UtcNow,
+                    TaskId= taskId
+
+
+                };
+
+                await _attachmentRepo.AddAsync(attachment);
+                await _attachmentRepo.SaveChangesAsync();
+            }
+
+            await _cache.RemoveAsync("taskComments:");
             return ApiResponse<bool>.Ok(true, "Comment added successfully");
         }
 
@@ -120,6 +152,8 @@ namespace TaskMangment.Infrastructure.Services
 
             await _commentRepo.SaveChangesAsync();
 
+            await _cache.RemoveAsync("taskComments:");
+
             return ApiResponse<bool>.Ok(true, "Comment updated");
         }
 
@@ -131,6 +165,7 @@ namespace TaskMangment.Infrastructure.Services
 
             _commentRepo.SoftDelete(comment);
             await _commentRepo.SaveChangesAsync();
+            await _cache.RemoveAsync("taskComments:");
 
             return ApiResponse<bool>.Ok(true, "Comment deleted");
         }
