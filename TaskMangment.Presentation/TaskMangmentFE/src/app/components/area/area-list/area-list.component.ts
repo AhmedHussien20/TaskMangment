@@ -146,37 +146,29 @@ export class AreaListComponent implements OnInit {
   selectedAreaId: number | null = null;
   isEdit = false;
 
-  openAdd() {
-  this.isEdit = false;
-  this.selectedAreaId = null;
-  this.openModal();
-}
+  openAdd(modal: any) {
+    this.isEdit = false;
+    this.selectedAreaId = null;
+    this.open(modal);
+  }
 
-openEdit(id: number) {
-  this.isEdit = true;
-  this.selectedAreaId = id;
-  this.openModal();
-}
+  openEdit(id: number, modal: any) {
+    this.isEdit = true;
+    this.selectedAreaId = id;
+    this.open(modal);
+  }
 
-openModal() {
-  const modalEl = document.getElementById('areaModal');
-  modalEl?.classList.add('show');
-  modalEl!.style.display = 'block';
+  open(content: any) {
+    this.modalService.open(content, {
+      centered: true,
+      backdrop: true,
+      size: 'lg',
+      windowClass: 'effect-scale'
+    });
+  }
 
-  document.body.classList.add('modal-open');
-}
-
-closeModal() {
-  const modalEl = document.getElementById('areaModal');
-  modalEl?.classList.remove('show');
-  modalEl!.style.display = 'none';
-
-  document.body.classList.remove('modal-open');
-}
-
-onFormSubmitted() {
-  this.closeModal();
-  this.loadData();
-}
-
+  onFormSubmitted() {
+    this.modalService.dismissAll();
+    this.loadData();
+  } 
 }

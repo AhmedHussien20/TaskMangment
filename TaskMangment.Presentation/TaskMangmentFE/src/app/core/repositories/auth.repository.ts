@@ -8,16 +8,22 @@ import { BaseResponse } from '../../models/base.response.model';
   providedIn: 'root',
 })
 export class AuthRepository {
-  constructor(private apiService: ApiService) {
-    apiService.serviceName = 'Auth';
-  }
-  
 
-  login(email: string, password: string): Observable<BaseResponse<{ user?: User, token: string }>> {
-    return this.apiService.post<BaseResponse<{ user?: User, token: string }>>(`login`, { email, password });
+  private readonly service = 'Auth';
+
+  constructor(private apiService: ApiService) {}
+
+  login(
+    email: string,
+    password: string
+  ): Observable<BaseResponse<{ user?: User; token: string }>> {
+    return this.apiService.post<
+      BaseResponse<{ user?: User; token: string }>
+    >(this.service, 'login', { email, password });
   }
 
   logout(): void {
     localStorage.removeItem('authToken');
   }
 }
+

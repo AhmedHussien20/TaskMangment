@@ -1,59 +1,48 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ApiService } from './api.service';
-import { Employee, EmployeePagedResponse } from '../models/employee/employee';
+import { Employee, EmployeePagedResponse, EmployeeRequest } from '../models/employee/employee';
 import { SearchCriteria } from '../models/search-criteria.model';
 import { Observable } from 'rxjs';
-
+import { BaseResponse } from 'app/models/base.response.model';
 @Injectable({
   providedIn: 'root'
-} )
+})
 export class EmployeeService {
 
-  constructor(private http: HttpClient, private api: ApiService ) {
-    this.api.serviceName = 'Employee';
-  }
+  private readonly service = 'Employee';
 
-  // GET /Employee?...
-  getAll(request: any): Observable<EmployeePagedResponse> {
-    this.api.serviceName = 'Employee'; 
+  constructor(private api: ApiService) {}
+
+  getAll(request: any): Observable<any> {
     const query = this.buildQuery(request);
-    return this.api.get<EmployeePagedResponse>(`?${query}`);
-  }
-  
-  // GET /Employee/{id}
-  getById(id: number): Observable<Employee> {
-    this.api.serviceName = 'Employee'; 
-    return this.api.get<Employee>(`/${id}`);
+    return this.api.get<EmployeePagedResponse>(this.service, `?${query}`);
   }
 
-  // POST /Employee
+  getById(id: number): Observable<Employee>  {
+    return this.api.get<Employee>(this.service, `${id}`);
+  }
+
   create(model: any) {
-    this.api.serviceName = 'Employee'; 
-    return this.api.post('', model);
+    return this.api.post<any>(this.service, '', model);
   }
 
-  // PUT /Employee/{id}
   update(id: number, model: any) {
-    this.api.serviceName = 'Employee';
-    return this.api.put(`/${id}`, model);
+    return this.api.put<any>(this.service, `${id}`, model);
   }
 
-  // DELETE /Employee/{id}
   delete(id: number) {
-    this.api.serviceName = 'Employee';
-    return this.api.delete(`/${id}`);
+    return this.api.delete<any>(this.service, `${id}`);
   }
 
-  // Build query string
-  private buildQuery(req: SearchCriteria): string {
-     const params: string[] = []; 
-     params.push(`searchKey=${req.searchKey}`);
-     params.push(`PageIndex=${req.pageIndex}`);
-     params.push(`PageSize=${req.pageSize}`);
-     params.push(`SortColumn=${req.sortColumn}`);
-     params.push(`SortDirection=${req.sortDirection}`);
- 
-     return params.join('&');
-   }
+  private buildQuery(req: any): string {
+    return [
+      `searchKey=${req.searchKey ?? ''}`,
+      `PageIndex=${req.pageIndex}`,
+      `PageSize=${req.pageSize}`,
+      `SortColumn=${req.sortColumn}`,
+      `SortDirection=${req.sortDirection}`
+    ].join('&');
+  }
 }
+

@@ -1,158 +1,155 @@
 <div class="card">
-  <div class="card-body">    
-    <form
-      [formGroup]="formGroup"
-      (ngSubmit)="onSubmit()"
-      class="row gy-2 gx-3 align-items-center generic-form"
-    ><div class="d-flex justify-content-end mb-4">
-      <button type="button" class="btn btn-secondary me-2" (click)="goBack()">
-        {{ 'FORM.BACK' | translate }}      
-      </button>
-      <button type="submit" class="btn btn-primary">
-        {{ 'FORM.SAVE' | translate }}      
-      </button>
-    </div>
+  <div class="card-body">
+    <form [formGroup]="formGroup" (ngSubmit)="onSubmit()" class="row gy-2 gx-3 align-items-center generic-form" [dir]="'rtl'">
+      <div class="d-flex justify-content-end mb-4">
+        <button type="button" class="btn btn-secondary me-2" (click)="goBack()">
+          {{ 'FORM.BACK' | translate }}
+        </button>
+        <button type="submit" class="btn btn-primary">
+          {{ 'FORM.SAVE' | translate }}
+        </button>
+      </div>
       <div *ngFor="let field of formConfig; let i = index" class="col-md-4">
         <label [for]="field.name">{{ field.label | translate}}</label>
-        <div
-          *ngIf="
+        <div *ngIf="
             field.type === 'input' ||
             field.type === 'text' ||
             field.type === 'number' ||
             field.type === 'password'
-          "
-          class="input-group"
-        >
+          " class="input-group">
           <div *ngIf="field.prefix" class="input-group-text">
-            {{ field.prefix  | translate}}
+            {{ field.prefix | translate}}
           </div>
-          <input
-            [type]="field.type === 'password' && field.showPassword ? 'text' : field.type"
-            class="form-control"
-            [id]="field.name"
-            [formControlName]="field.name"
+          <input [type]="field.type === 'password' && field.showPassword ? 'text' : field.type" class="form-control"
+            [id]="field.name" [formControlName]="field.name"
             [placeholder]="field.placeholder ? (field.placeholder | translate) : (field.label | translate)"
-            [readOnly]="field.disabled"
-            [disabled]="field.disabled"
-            autocomplete="new-password"
-            [ngClass]="{
+            [readOnly]="field.disabled" [disabled]="field.disabled" autocomplete="new-password" [ngClass]="{
               'is-invalid':
                 formGroup.controls[field.name].invalid &&
                 (formGroup.controls[field.name].dirty ||
                   formGroup.controls[field.name].touched)
-            }"
-          />
-          <button
-            *ngIf="field.name === 'password'"
-            type="button"
-            class="btn btn-outline-secondary"
-            (click)="onGeneratePassword(field.name)"
-          >
+            }" />
+          <button *ngIf="field.name === 'password'" type="button" class="btn btn-outline-secondary"
+            (click)="onGeneratePassword(field.name)">
             {{ 'FORM.GENERATE' | translate }}
           </button>
-          <button
-            *ngIf="field.type === 'password'"
-            type="button"
-            class="btn btn-outline-secondary"
-            (click)="field.showPassword = !field.showPassword"
-          >
+          <button *ngIf="field.type === 'password'" type="button" class="btn btn-outline-secondary"
+            (click)="field.showPassword = !field.showPassword">
             <i [class]="field.showPassword ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
-             <span class="visually-hidden">
+            <span class="visually-hidden">
               {{ field.showPassword ? ('FORM.HIDE_PASSWORD' | translate) : ('FORM.SHOW_PASSWORD' | translate) }}
             </span>
           </button>
-          <div
-            *ngIf="
+          <div *ngIf="
               formGroup.controls[field.name].invalid &&
               (formGroup.controls[field.name].dirty ||
                 formGroup.controls[field.name].touched)
-            "
-            class="invalid-feedback"
-          >
+            " class="invalid-feedback">
             <div *ngIf="formGroup.controls[field.name].errors?.['required']">
               {{ field.label | translate }} {{ 'FORM.IS_REQUIRED' | translate }}
             </div>
             <div *ngIf="formGroup.controls[field.name].errors?.['minlength']">
-               {{ 'FORM.MINIMUM_LENGTH' | translate }}
+              {{ 'FORM.MINIMUM_LENGTH' | translate }}
               {{ formGroup.controls[field.name].errors?.['minlength'].requiredLength }}
               {{ 'FORM.CHARACTERS' | translate }}
             </div>
             <div *ngIf="formGroup.controls[field.name].errors?.['maxlength']">
-                {{ 'FORM.MAXIMUM_LENGTH' | translate }}
+              {{ 'FORM.MAXIMUM_LENGTH' | translate }}
               {{ formGroup.controls[field.name].errors?.['maxlength'].requiredLength }}
               {{ 'FORM.CHARACTERS' | translate }}
             </div>
             <!-- Password mismatch message -->
-            <div
-              *ngIf="
+            <div *ngIf="
                 field.name === 'confirmPassword' &&
                 formGroup.errors?.['passwordMismatch']
-              "
-            >
+              ">
               {{ 'FORM.PASSWORD_MISMATCH' | translate }}
+            </div>
+          </div>
+        </div>
+        <!-- TEXTAREA -->
+        <div *ngIf="field.type === 'textarea'" class="mb-3">
+          <label [for]="field.name" class="form-label">
+            {{ field.label | translate }}
+          </label>
+
+          <textarea class="form-control" [id]="field.name" [formControlName]="field.name" rows="4"
+            [placeholder]="field.placeholder ? (field.placeholder | translate) : (field.label | translate)" [ngClass]="{
+      'is-invalid':
+        formGroup.controls[field.name].invalid &&
+        (formGroup.controls[field.name].dirty ||
+         formGroup.controls[field.name].touched)
+    }"></textarea>
+
+          <div *ngIf="
+      formGroup.controls[field.name].invalid &&
+      (formGroup.controls[field.name].dirty ||
+       formGroup.controls[field.name].touched)
+    " class="invalid-feedback">
+            <div *ngIf="formGroup.controls[field.name].errors?.['required']">
+              {{ field.label | translate }} {{ 'FORM.IS_REQUIRED' | translate }}
             </div>
           </div>
         </div>
 
         <!-- Dropdown -->
-        <div *ngIf="field.type === 'select' || field.type === 'dropdown'">
-          <select
-            class="form-select"
-            [id]="field.name"
-            [formControlName]="field.name"
-            [disabled]="field.disabled"
-            [ngClass]="{
-              'is-invalid':
-                formGroup.controls[field.name].invalid &&
-                (formGroup.controls[field.name].dirty ||
-                  formGroup.controls[field.name].touched)
-            }"
-          >
-            <option *ngFor="let option of field.options" [value]="option.id">
-              {{ option.name | translate}}
-            </option>
-          </select>
-          <div
-            *ngIf="
-              formGroup.controls[field.name].invalid &&
-              (formGroup.controls[field.name].dirty ||
-                formGroup.controls[field.name].touched)
-            "
-            class="invalid-feedback"
-          >
-            <div *ngIf="formGroup.controls[field.name].errors?.['required']">
-              {{ field.label | translate }} {{ 'FORM.IS_REQUIRED' | translate }}
-            </div>
+        <!-- SELECT FIELD (Custom Template for managers) -->
+        <div *ngIf="field.type === 'select'" class="mb-3">
+          <label class="form-label"></label>
+
+          <ng-select [items]="field.options" bindLabel="label" bindValue="value" [searchable]="true"
+            placeholder="{{ 'FORM.SELECT' | translate }}" [formControlName]="field.name" class="custom-ng-select">
+
+            <!-- Item Template (List dropdown) -->
+            <ng-template ng-option-tmp let-item="item" let-index="index">
+              <div class="d-flex align-items-center p-2">
+
+                <div class="flex-grow-1">
+                  <img [src]="item.imageUrl || 'assets/images/user.png'" (error)="onImageError($event)" width="28"
+                    height="28" class="rounded-circle border me-2" />
+                  <div class="fw-bold">{{ item.label }}</div>
+                  <div class="text-muted small">📱 {{ item.mobile }}</div>
+                  <div class="text-muted small">✉️ {{ item.email }}</div>
+                </div>
+              </div>
+              <hr *ngIf="index < field.options.length - 1" />
+            </ng-template>
+
+            <!-- Selected Value Template -->
+            <ng-template ng-label-tmp let-item="item">
+              <div class="d-flex align-items-center">
+                <img [src]="item.imageUrl || 'assets/images/user.png'" (error)="onImageError($event)" width="28"
+                  height="28" class="rounded-circle border me-2" />
+                <div>{{ item.label }}</div>
+              </div>
+            </ng-template>
+
+          </ng-select>
+
+          <div *ngIf="formGroup.get(field.name)?.invalid && formGroup.get(field.name)?.touched"
+            class="text-danger mt-1">
+            {{ 'VALIDATION.REQUIRED' | translate }}
           </div>
         </div>
 
+
         <!-- Checkbox -->
         <div *ngIf="field.type === 'checkbox'" class="form-check">
-          <input
-            class="form-check-input"
-            type="checkbox"
-            [id]="field.name"
-            [formControlName]="field.name"
-            [readOnly]="field.disabled"
-            [disabled]="field.disabled"
-            [ngClass]="{
+          <input class="form-check-input" type="checkbox" [id]="field.name" [formControlName]="field.name"
+            [readOnly]="field.disabled" [disabled]="field.disabled" [ngClass]="{
               'is-invalid':
                 formGroup.controls[field.name].invalid &&
                 (formGroup.controls[field.name].dirty ||
                   formGroup.controls[field.name].touched)
-            }"
-          />
+            }" />
           <label class="form-check-label" [for]="field.name">
-               {{ field.label | translate }}
+            {{ field.label | translate }}
           </label>
-          <div
-            *ngIf="
+          <div *ngIf="
               formGroup.controls[field.name].invalid &&
               (formGroup.controls[field.name].dirty ||
                 formGroup.controls[field.name].touched)
-            "
-            class="invalid-feedback"
-          >
+            " class="invalid-feedback">
             <div *ngIf="formGroup.controls[field.name].errors?.['required']">
               {{ field.label | translate }} {{ 'FORM.IS_REQUIRED' | translate }}
             </div>
@@ -161,28 +158,18 @@
 
         <!-- Date Picker -->
         <div *ngIf="field.type === 'date'">
-          <input
-            type="date"
-            class="form-control"
-            [id]="field.name"
-            [formControlName]="field.name"
-            [readOnly]="field.disabled"
-            [disabled]="field.disabled"
-            [ngClass]="{
+          <input type="date" class="form-control" [id]="field.name" [formControlName]="field.name"
+            [readOnly]="field.disabled" [disabled]="field.disabled" [ngClass]="{
               'is-invalid':
                 formGroup.controls[field.name].invalid &&
                 (formGroup.controls[field.name].dirty ||
                   formGroup.controls[field.name].touched)
-            }"
-          />
-          <div
-            *ngIf="
+            }" />
+          <div *ngIf="
               formGroup.controls[field.name].invalid &&
               (formGroup.controls[field.name].dirty ||
                 formGroup.controls[field.name].touched)
-            "
-            class="invalid-feedback"
-          >
+            " class="invalid-feedback">
             <div *ngIf="formGroup.controls[field.name].errors?.['required']">
               {{ field.label | translate }} {{ 'FORM.IS_REQUIRED' | translate }}
             </div>

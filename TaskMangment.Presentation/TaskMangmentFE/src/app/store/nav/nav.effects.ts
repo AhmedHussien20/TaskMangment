@@ -34,51 +34,42 @@ export class NavEffects {
       dirchange: false,
       children: [
         {
-          title: 'nav.apps.orders.title',
+          title: 'nav.apps.area.title',
           icon: 'ti-write',
           type: 'sub',
-          path: '/online-order',
+          path: '/area',
           active: false,
           selected: false,
           dirchange: false,
           children: [
             {
-              title: 'nav.apps.orders.list',
+              title: 'nav.apps.area.list',
               type: 'link',
-              path: '/online-order/list',
+              path: '/area/area-list',
               dirchange: false,
-            },
-            {
-              title: 'nav.apps.orders.tracking',
-              type: 'link',
-              dirchange: false,
-            },
+            }
+             
           ],
         },
         {
-          title: 'nav.apps.expiry.title',
+          title: 'nav.apps.branch.title',
           icon: 'ti-write',
           type: 'sub',
-          path: '/expiry',
+          path: '/branch',
           active: false,
           selected: false,
           dirchange: false,
           children: [
             {
-              title: 'nav.apps.expiry.list',
+              title: 'nav.apps.branch.list',
               type: 'link',
-              path: '/expiry-list',
+              path: '/branch/branch-list',
               dirchange: false,
-            },
-            {
-              title: 'nav.apps.expiry.tracking',
-              type: 'link',
-              dirchange: false,
-            },
+            } 
           ],
         },
         {
-          title: 'nav.apps.customers.title',
+          title: 'nav.apps.department.title',
           icon: 'ti-write',
           type: 'sub',
           active: false,
@@ -86,19 +77,15 @@ export class NavEffects {
           dirchange: false,
           children: [
             {
-              title: 'nav.apps.customers.notifications',
+              title: 'nav.apps.department.list',
               type: 'link',
+               path: '/department/department-list',
               dirchange: false,
-            },
-            {
-              title: 'nav.apps.customers.customers',
-              type: 'link',
-              dirchange: false,
-            },
+            } 
           ],
         },
         {
-          title: 'nav.apps.users.title',
+          title: 'nav.apps.task.title',
           icon: 'ti-write',
           type: 'sub',
           active: false,
@@ -106,9 +93,9 @@ export class NavEffects {
           dirchange: false,
           children: [
             {
-              title: 'nav.apps.users.list',
+              title: 'nav.apps.task.list',
               type: 'link',
-              path: '/user/list',
+              path: '/task/task-list',
               dirchange: false,
             },
           ],

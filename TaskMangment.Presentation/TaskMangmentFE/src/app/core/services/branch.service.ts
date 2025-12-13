@@ -1,49 +1,54 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { ApiService } from 'app/core/services/api.service';
-import { BranchPagedResponse, BranchRequest } from '../models/branch/branch';
 
+import { Observable } from 'rxjs';
+import { BaseResponse } from 'app/models/base.response.model';
+import { BranchAddEditDto, BranchGetDto, BranchPagedResponse } from '../models/branch/branch';
+import { SearchCriteria } from '../models/search-criteria.model';
 @Injectable({
   providedIn: 'root'
 })
 export class BranchService {
-  constructor(private http: HttpClient, private api: ApiService) {
-    this.api.serviceName = 'Branch';
-  }
 
-  getAll(request: any) {
+  private readonly service = 'Branch';
+
+  constructor(private api: ApiService) {}
+
+  // GET /Branch?query
+  getAll(request: any): Observable<any> {
     const query = this.buildQuery(request);
-    return this.api.get<BranchPagedResponse>(`?${query}`);
+    return this.api.get<any>(this.service, `?${query}`);
   }
 
-  getById(id: number) {
-    return this.api.get(`/${id}`);
+  // GET /Branch/{id}
+  getById(id: number): Observable<BaseResponse<BranchAddEditDto>> {
+    return this.api.get<BaseResponse<BranchAddEditDto>>(this.service, `${id}`);
   }
 
-  create(model: any) {
-    return this.api.post('', model);
+  // POST /Branch
+  create(model: BranchAddEditDto): Observable<BaseResponse<any>> {
+    return this.api.post<BaseResponse<any>>(this.service, '', model);
   }
 
-  update(id: number, model: any) {
-    return this.api.put(`/${id}`, model);
+  // PUT /Branch/{id}
+  update(id: number, model: BranchAddEditDto): Observable<BaseResponse<any>> {
+    return this.api.put<BaseResponse<any>>(this.service, `${id}`, model);
   }
 
-  delete(id: number) {
-    return this.api.delete(`/${id}`);
+  // DELETE /Branch/{id}
+  delete(id: number): Observable<BaseResponse<any>> {
+    return this.api.delete<BaseResponse<any>>(this.service, `${id}`);
   }
 
-  private buildQuery(req: BranchRequest): string {
-    const params: string[] = [];
-
-    if (req.name) params.push(`Name=${encodeURIComponent(req.name)}`);
-    if (req.companyId) params.push(`CompanyId=${req.companyId}`);
-    if (req.areaId) params.push(`AreaId=${req.areaId}`);
-
-    params.push(`PageIndex=${req.pageIndex}`);
-    params.push(`PageSize=${req.pageSize}`);
-    params.push(`SortColumn=${req.sortColumn}`);
-    params.push(`SortDirection=${req.sortDirection}`);
-
-    return params.join('&');
+  // Build Query String
+  private buildQuery(req: SearchCriteria): string {
+    return [
+      `searchKey=${req.searchKey ?? ''}`,
+      `PageIndex=${req.pageIndex}`,
+      `PageSize=${req.pageSize}`,
+      `SortColumn=${req.sortColumn}`,
+      `SortDirection=${req.sortDirection}`
+    ].join('&');
   }
 }

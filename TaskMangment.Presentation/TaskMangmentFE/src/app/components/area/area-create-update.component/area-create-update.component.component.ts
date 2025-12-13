@@ -4,9 +4,26 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { GenericFormComponent } from 'app/shared/components/generic-form/generic-form.component';
 import { AreaService } from 'app/core/services/area.service';
 import { Router } from '@angular/router'; // ← أضف Router
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { EmployeeService } from '../../../core/services/employee.service';
 import { Employee } from 'app/core/models/employee/employee';
+import { ToastrService } from 'ngx-toastr';
+
+export interface SelectOption {
+  label: string;
+  value: number;
+  mobile?: string;
+  email?: string;
+}
+
+interface FormFieldConfig {
+  type: 'input' | 'select' | 'textarea';
+  label: string;
+  name: string;
+  validations?: any;
+  defaultValue?: any;
+  options?: SelectOption[];
+}
 
 @Component({
   selector: 'app-area-create-update',
@@ -19,8 +36,9 @@ import { Employee } from 'app/core/models/employee/employee';
   ],
   templateUrl: './area-create-update.component.component.html'
 })
+
 export class AreaCreateUpdateComponent implements OnInit {
-    employees: Employee[] = [];
+  employees: Employee[] = [];
 
   @Input() isEdit: boolean = false;
   @Input() areaId: number | null = null;
@@ -32,42 +50,43 @@ export class AreaCreateUpdateComponent implements OnInit {
 
   formGroup!: FormGroup; // ← أضف !
 
-  formConfig = [
-    { 
-      type: 'input', 
-      label: 'AREA.NAME', 
-      name: 'name', 
-      validations: { required: true, minlength: 3, maxlength: 100 }, 
-      defaultValue: '' 
-    },
-    { 
-      type: 'input', 
-      label: 'AREA.ADDRESS', 
-      name: 'address', 
-      validations: { maxlength: 200 }, 
-      defaultValue: '' 
+  formConfig: FormFieldConfig[] = [
+    {
+      type: 'input',
+      label: 'AREA.NAME',
+      name: 'name',
+      validations: { required: true, minlength: 3, maxlength: 100 },
+      defaultValue: ''
     },
     {
-  type: 'select',
-  label: 'AREA.MANAGER',
-  name: 'managerId',
-  options: [],   // ← سيتم ملؤها لاحقاً
-  validations: { required: true },
-  defaultValue: null
-}
-
+      type: 'input',
+      label: 'AREA.ADDRESS',
+      name: 'address',
+      validations: { maxlength: 200 },
+      defaultValue: ''
+    },
+    {
+      type: 'select',
+      label: 'AREA.MANAGER',
+      name: 'managerId',
+      options: [],
+      validations: { required: true },
+      defaultValue: null
+    }
   ];
 
   constructor(
     private fb: FormBuilder,
-    private areaService: AreaService,
-    private router: Router,
-   private employeeService: EmployeeService
-  ) {}
+    private areaService: AreaService, 
+    private employeeService: EmployeeService,
+    private toastr: ToastrService,
+    private translate: TranslateService
+
+  ) { }
 
   ngOnInit() {
     this.initForm();
-  this.loadEmployees();  
+    this.loadEmployees();
 
     if (this.isEdit && this.areaId) {
       this.loadArea();
@@ -79,7 +98,7 @@ export class AreaCreateUpdateComponent implements OnInit {
       name: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100)]],
       address: ['', Validators.maxLength(200)],
       managerName: ['', Validators.maxLength(100)],
-          managerId: [null, Validators.required] 
+      managerId: [null, Validators.required]
 
     });
   }
@@ -88,62 +107,121 @@ export class AreaCreateUpdateComponent implements OnInit {
     if (!this.areaId) return;
 
     this.areaService.getById(this.areaId).subscribe(res => {
+      if (!res) return;
+      const area = res.data;
       this.formGroup.patchValue({
-    name: res.name,
-    address: res.address,
-    managerId: res.managerID 
-  });
+        name: area.name,
+        address: area.address,
+        managerId: area.managerID
+      });
+
+      console.log('Loaded area data: ', res);
     });
   }
 
- loadEmployees() {
-  const request = {
-    searchKey: '',
-    pageIndex: 1,
-    pageSize: 1000,
-    sortColumn: 'Id',
-    sortDirection: 'ASC'
-  };
+  loadEmployees() {
+    const request = {
+      searchKey: '',
+      pageIndex: 1,
+      pageSize: 1000,
+      sortColumn: 'Id',
+      sortDirection: 'ASC'
+    };
 
-  this.employeeService.getAll(request).subscribe(res => {
-    this.employees = res.data; 
-  });
-}
+    this.employeeService.getAll(request).subscribe(res => {
+      const list = res.data.data;
+
+      const managerField = this.formConfig.find(f => f.name === 'managerId');
+
+       if (managerField) {
+    managerField.options = list.map((emp: Employee) => ({
+          label: emp.fullName,
+          value: emp.id,
+          mobile: emp.mobile,
+          email: emp.email
+        }));
+      }
+    });
+  }
+
+
 
   onSubmit(formData: any) {
-    console.log('Form submitted with data:', formData);
-    
+
     if (this.formGroup.invalid) {
-      console.log('Form is invalid');
       this.formGroup.markAllAsTouched();
+
+      this.toastr.error(
+        this.translate.instant('FORM.VALIDATION_ERROR'),
+        this.translate.instant('FORM.ERROR'),
+        {
+          timeOut: 3000,
+          positionClass: 'toast-top-right',
+        }
+      );
+
       return;
     }
 
+    // ----------- UPDATE MODE -----------
     if (this.isEdit && this.areaId) {
-      console.log('Updating area with ID:', this.areaId);
       this.areaService.update(this.areaId, this.formGroup.value).subscribe({
         next: (response) => {
-          console.log('Update successful:', response);
           this.formSubmitted.emit();
-          //this.router.navigate(['/areas/area-list']); 
+
+          this.toastr.success(
+            this.translate.instant('AREA.UPDATE_SUCCESS'),
+            this.translate.instant('FORM.SUCCESS'),
+            {
+              timeOut: 3000,
+              positionClass: 'toast-top-right',
+            }
+          );
         },
         error: (error) => {
           console.error('Update error:', error);
+
+          this.toastr.error(
+            this.translate.instant('AREA.UPDATE_FAILED'),
+            this.translate.instant('FORM.ERROR'),
+            {
+              timeOut: 3000,
+              positionClass: 'toast-top-right',
+            }
+          );
         }
       });
-    } else {
-      console.log('Creating new area');
+    }
+
+    // ----------- CREATE MODE -----------
+    else {
       this.areaService.create(this.formGroup.value).subscribe({
         next: (response) => {
-          console.log('Create successful:', response);
           this.formSubmitted.emit();
-         // this.router.navigate(['/areas/area-list']); 
+
+          this.toastr.success(
+            this.translate.instant('AREA.CREATE_SUCCESS'),
+            this.translate.instant('FORM.SUCCESS'),
+            {
+              timeOut: 3000,
+              positionClass: 'toast-top-right',
+            }
+          );
         },
         error: (error) => {
           console.error('Create error:', error);
-          alert(error);
+
+          this.toastr.error(
+            this.translate.instant('AREA.CREATE_FAILED'),
+            this.translate.instant('FORM.ERROR'),
+            {
+              timeOut: 3000,
+              positionClass: 'toast-top-right',
+            }
+          );
         }
       });
     }
   }
+
 }
