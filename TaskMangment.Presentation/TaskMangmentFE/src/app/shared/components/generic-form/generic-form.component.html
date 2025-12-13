@@ -3,9 +3,7 @@
     <form [formGroup]="formGroup" (ngSubmit)="onSubmit()" class="row gy-2 gx-3 align-items-center generic-form"
       [dir]="'rtl'">
       <div class="d-flex justify-content-end mb-4">
-        <button type="button" class="btn btn-secondary me-2" (click)="goBack()">
-          {{ 'FORM.BACK' | translate }}
-        </button>
+        
         <button type="submit" class="btn btn-primary">
           {{ 'FORM.SAVE' | translate }}
         </button>
@@ -96,11 +94,11 @@
 
             <!-- ================= SIMPLE SELECT (label only) ================= -->
             <ng-template *ngIf="field.selectType === 'simple'" ng-option-tmp let-item="item">
-              {{ item.label }}
+              {{ item.label | translate }}
             </ng-template>
 
             <ng-template *ngIf="field.selectType === 'simple'" ng-label-tmp let-item="item">
-              {{ item.label }}
+              {{ item.label | translate }}
             </ng-template>
 
 
