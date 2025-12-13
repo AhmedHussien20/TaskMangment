@@ -1,13 +1,13 @@
-import { Component, EventEmitter, Input, Output, OnInit } from '@angular/core'; // ← أضف OnInit
+import { Component, EventEmitter, Input, Output, OnInit } from '@angular/core'; 
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { GenericFormComponent } from 'app/shared/components/generic-form/generic-form.component';
 import { AreaService } from 'app/core/services/area.service';
-import { Router } from '@angular/router'; // ← أضف Router
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { EmployeeService } from '../../../core/services/employee.service';
 import { Employee } from 'app/core/models/employee/employee';
-import { ToastrService } from 'ngx-toastr';
+import { ToastrService } from 'ngx-toastr'; 
+import { FormFieldConfig } from 'app/core/models/form-field-config';
 
 export interface SelectOption {
   label: string;
@@ -15,15 +15,7 @@ export interface SelectOption {
   mobile?: string;
   email?: string;
 }
-
-interface FormFieldConfig {
-  type: 'input' | 'select' | 'textarea';
-  label: string;
-  name: string;
-  validations?: any;
-  defaultValue?: any;
-  options?: SelectOption[];
-}
+ 
 
 @Component({
   selector: 'app-area-create-update',
@@ -69,6 +61,7 @@ export class AreaCreateUpdateComponent implements OnInit {
       type: 'select',
       label: 'AREA.MANAGER',
       name: 'managerId',
+      selectType: 'employee',
       options: [],
       validations: { required: true },
       defaultValue: null
