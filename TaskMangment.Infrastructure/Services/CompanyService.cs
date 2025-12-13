@@ -33,10 +33,7 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<PagedResponse<CompanyGetDto>>> GetAllAsync(CompanyRequest request)
         {
-            string safeName = request.Name ?? string.Empty;
-            string safeIsActive = request.IsActive?.ToString() ?? "null";
-
-            string cacheKey = $"companies-{request.PageIndex}-{request.PageSize}-{request.SortColumn}-{request.SortDirection}-{safeName}-{safeIsActive}";
+            string cacheKey = $"companies:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
 
             if (!request.BypassCache)
             {
@@ -48,14 +45,7 @@ namespace TaskMangment.Infrastructure.Services
             var query = _companyRepository.GetAll()
                 .Include(c => c.TechnicalManager)
                 .Include(c => c.FinancialManager)
-                .AsQueryable();
-
-            if (!string.IsNullOrWhiteSpace(request.Name))
-                query = query.Where(c => c.Name.Contains(request.Name));
-
-            if (request.IsActive.HasValue)
-                query = query.Where(c => c.IsActive == request.IsActive.Value);
-
+                .ApplySearch(request.searchKey);
             var totalCount = await query.CountAsync();
 
             query = query.OrderByDynamicSafe(request.SortColumn, request.SortDirection);
@@ -101,6 +91,8 @@ namespace TaskMangment.Infrastructure.Services
 
             await _companyRepository.AddAsync(company);
             await _companyRepository.SaveChangesAsync();
+            await _cache.RemoveAsync("companies:");
+
             var campanydto = _mapper.Map<CompanyGetDto>(company);
 
             return ApiResponse<CompanyGetDto>.Ok(campanydto, "Company added successfully");
@@ -121,6 +113,8 @@ namespace TaskMangment.Infrastructure.Services
             _mapper.Map(dto, company);
 
             await _companyRepository.SaveChangesAsync();
+            await _cache.RemoveAsync("companies:");
+
             var campanydto = _mapper.Map<CompanyGetDto>(company);
             return ApiResponse<CompanyGetDto>.Ok(campanydto, "Company updated successfully");
         }
@@ -133,6 +127,8 @@ namespace TaskMangment.Infrastructure.Services
 
             _companyRepository.SoftDelete(company);
             await _companyRepository.SaveChangesAsync();
+            await _cache.RemoveAsync("companies:");
+
 
             return ApiResponse<bool>.Ok(true, "Company deleted successfully");
         }

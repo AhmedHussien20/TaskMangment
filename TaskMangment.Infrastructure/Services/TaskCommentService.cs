@@ -41,9 +41,7 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<PagedResponse<TaskCommentGetDto>>> GetAllAsync(TaskCommentRequest request)
         {
-            string safeTaskId = request.TaskId?.ToString() ?? "null";
-
-            string cacheKey = $"taskComments-{request.PageIndex}-{request.PageSize}-{request.SortColumn}-{request.SortDirection}-{safeTaskId}";
+            string cacheKey = $"taskComments:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
 
             if (!request.BypassCache)
             {
@@ -55,10 +53,8 @@ namespace TaskMangment.Infrastructure.Services
             var query = _commentRepo.GetAll()
                 .Include(c => c.Employee)
                 .Include(c => c.Task)
-                .AsQueryable();
+                .ApplySearch(request.searchKey);
 
-            if (request.TaskId.HasValue)
-                query = query.Where(c => c.TaskId == request.TaskId.Value);
 
             var totalCount = await query.CountAsync();
 
@@ -114,13 +110,39 @@ namespace TaskMangment.Infrastructure.Services
             await _commentRepo.AddAsync(comment);
             await _commentRepo.SaveChangesAsync();
 
-            var savedComment = await _commentRepo.GetAll(c => c.Id == comment.Id)
-                                                 .Include(c => c.Employee)
-                                                 .FirstOrDefaultAsync();
+            if (dto.File != null)
+            {
+                var fileName = $"{Guid.NewGuid()}_{dto.File.FileName}";
+                var filePath = Path.Combine("wwwroot/uploads/comments", fileName);
 
-            var commentDto = _mapper.Map<TaskCommentGetDto>(savedComment);
+                Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
 
-            return ApiResponse<TaskCommentGetDto>.Ok(commentDto, "Comment added successfully");
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await dto.File.CopyToAsync(stream);
+                }
+
+                var attachment = new Attachment
+                {
+                    FileName = dto.File.FileName,
+                    FilePath = filePath,
+                    Size = dto.File.Length,
+                    CommentId = comment.Id,
+                    UploadedBy = employeeId,
+                    CreatedBy= employeeId,
+                    ContentType = dto.File.ContentType,
+                    UploadedAt = DateTime.UtcNow,
+                    TaskId= taskId
+
+
+                };
+
+                await _attachmentRepo.AddAsync(attachment);
+                await _attachmentRepo.SaveChangesAsync();
+            }
+
+            await _cache.RemoveAsync("taskComments:");
+            return ApiResponse<bool>.Ok(true, "Comment added successfully");
         }
 
 
@@ -140,7 +162,9 @@ namespace TaskMangment.Infrastructure.Services
 
             commentDto.AttachmentCount = await _attachmentRepo.CountAsync(a => a.CommentId == comment.Id);
 
-            return ApiResponse<TaskCommentGetDto>.Ok(commentDto, "Comment updated successfully");
+            await _cache.RemoveAsync("taskComments:");
+
+            return ApiResponse<bool>.Ok(true, "Comment updated");
         }
 
 
@@ -152,6 +176,7 @@ namespace TaskMangment.Infrastructure.Services
 
             _commentRepo.SoftDelete(comment);
             await _commentRepo.SaveChangesAsync();
+            await _cache.RemoveAsync("taskComments:");
 
             return ApiResponse<bool>.Ok(true, "Comment deleted");
         }

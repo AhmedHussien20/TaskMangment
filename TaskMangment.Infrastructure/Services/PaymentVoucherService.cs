@@ -49,10 +49,7 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<PagedResponse<PaymentVoucherGetDto>>> GetAllAsync(PaymentVoucherRequest request)
         {
-            string safeCompanyId = request.CompanyId?.ToString() ?? "null";
-            string safeBranchId = request.BranchId?.ToString() ?? "null";
-
-            string cacheKey = $"vouchers-{request.PageIndex}-{request.PageSize}-{request.SortColumn}-{request.SortDirection}-{safeCompanyId}-{safeBranchId}";
+            string cacheKey = $"vouchers:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
 
             if (!request.BypassCache)
             {
@@ -65,13 +62,7 @@ namespace TaskMangment.Infrastructure.Services
                 .Include(v => v.Company)
                 .Include(v => v.Branch)
                 .Include(v => v.CreatedBy)
-                .AsQueryable();
-
-            if (request.CompanyId.HasValue)
-                query = query.Where(v => v.CompanyId == request.CompanyId.Value);
-
-            if (request.BranchId.HasValue)
-                query = query.Where(v => v.BranchId == request.BranchId.Value);
+                .ApplySearch(request.searchKey);
 
             var totalCount = await query.CountAsync();
 
@@ -133,6 +124,7 @@ namespace TaskMangment.Infrastructure.Services
 
             await _voucherRepo.AddAsync(voucher);
             await _voucherRepo.SaveChangesAsync();
+            await _cache.RemoveAsync("vouchers:");
 
             // Optional: clear cache pattern
             // await _cache.RemoveByPatternAsync("vouchers-");
@@ -159,6 +151,7 @@ namespace TaskMangment.Infrastructure.Services
             voucher.ModifiedDate = DateTime.UtcNow;
 
             await _voucherRepo.SaveChangesAsync();
+            await _cache.RemoveAsync("vouchers:");
 
             // Optional: clear cache pattern
             // await _cache.RemoveByPatternAsync("vouchers-");
@@ -181,6 +174,7 @@ namespace TaskMangment.Infrastructure.Services
 
             _voucherRepo.SoftDelete(voucher);
             await _voucherRepo.SaveChangesAsync();
+            await _cache.RemoveAsync("vouchers:");
 
             // Optional: clear cache pattern
             // await _cache.RemoveByPatternAsync("vouchers-");

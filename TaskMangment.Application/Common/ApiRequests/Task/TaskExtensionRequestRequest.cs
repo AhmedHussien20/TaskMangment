@@ -10,6 +10,5 @@ namespace TaskMangment.Application.Common.ApiRequests.Task
 {
     public class TaskExtensionRequestRequest : BaseApiRequest
     {
-        public ExtensionRequestStatus? Status { get; set; }  
     }
 }

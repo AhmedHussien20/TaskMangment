@@ -38,13 +38,9 @@ namespace TaskMangment.Infrastructure.Services
             _cache = cache;
         }
 
-        public async Task<ApiResponse<PagedResponse<AreaGetDto>>> GetAllAsync(AreaRequest request)
+        public async Task<ApiResponse<PagedResponse<AreaGetDto>>> GetAllAsync(AreaRequest request, int CompanyId)
         {
-            string safeName = request.Name ?? string.Empty;
-            string safeCompanyId = request.CompanyId?.ToString() ?? "null";
-
-            string cacheKey =
-                $"areas-{request.PageIndex}-{request.PageSize}-{request.SortColumn}-{request.SortDirection}-{safeName}-{safeCompanyId}";
+            string cacheKey = $"areas:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}:{CompanyId}";
 
             if (!request.BypassCache)
             {
@@ -53,44 +49,43 @@ namespace TaskMangment.Infrastructure.Services
                     return ApiResponse<PagedResponse<AreaGetDto>>.Ok(cached);
             }
 
-
             var query = _areaRepository.GetAll()
                 .Include(a => a.Manager)
-                .AsQueryable();
-
-            if (!string.IsNullOrWhiteSpace(request.Name))
-                query = query.Where(a => a.Name.Contains(request.Name));
-
-            if (request.CompanyId.HasValue)
-                query = query.Where(a => a.CompanyId == request.CompanyId.Value);
-
+                .ApplySearch(request.searchKey);   
+              
             var totalCount = await query.CountAsync();
-
+             
             query = query.OrderByDynamicSafe(request.SortColumn, request.SortDirection);
-
-            // Pagination
-            var list = await query
+             
+            var areas = await query
                 .Skip((request.PageIndex - 1) * request.PageSize)
                 .Take(request.PageSize)
                 .ToListAsync();
+             
+            var areaIds = areas.Select(a => a.Id).ToList();
 
-            // Map
-            var dtos = _mapper.Map<ICollection<AreaGetDto>>(list);
+            var branchCounts = await _branchRepository
+                .GetAll(b => areaIds.Contains(b.AreaId ?? 0))
+                .GroupBy(b => b.AreaId)
+                .Select(g => new { AreaId = g.Key, Count = g.Count() })
+                .ToListAsync();
+             
+            var dtoList = _mapper.Map<List<AreaGetDto>>(areas);
 
-            // Branch counts
-            foreach (var dto in dtos)
+            foreach (var dto in dtoList)
             {
-                dto.BranchCount = await _branchRepository.CountAsync(b => b.AreaId == dto.Id);
+                dto.BranchCount = branchCounts
+                    .FirstOrDefault(x => x.AreaId == dto.Id)?.Count ?? 0;
             }
-
+             
             var response = new PagedResponse<AreaGetDto>(
-                dtos, totalCount, request.PageIndex, request.PageSize);
-
-            // Save to cache for 10 minutes
+                dtoList, totalCount, request.PageIndex, request.PageSize);
+             
             await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
 
             return ApiResponse<PagedResponse<AreaGetDto>>.Ok(response);
         }
+
 
 
 
@@ -118,6 +113,13 @@ namespace TaskMangment.Infrastructure.Services
             if (!await _companyRepo.IsExistAsync(CompanyId))
                 return ApiResponse<AreaGetDto>.Fail("Company not found", StatusCode.NotFound);
 
+            var isManagerUsed = await _areaRepository
+                .GetAll(a => a.ManagerEmployeeId == dto.ManagerID)
+                .AnyAsync();
+
+            if (isManagerUsed)
+                return ApiResponse<AreaGetDto>.Fail("This manager is already assigned to another area");
+
             var area = _mapper.Map<Area>(dto);
             area.CompanyId = CompanyId;
             area.CreatedBy = createdby;
@@ -125,14 +127,19 @@ namespace TaskMangment.Infrastructure.Services
 
             await _areaRepository.AddAsync(area);
             await _areaRepository.SaveChangesAsync();
-            var areaDto = _mapper.Map<AreaGetDto>(area);
 
+            await _cache.RemoveAsync("areas:");
 
-            // TODO: Optional: Clear area cache pattern
-            // await _cache.RemoveByPatternAsync("areas-");
+            var fullArea = await _areaRepository.GetAll()
+                .Include(a => a.Manager)
+                .FirstOrDefaultAsync(a => a.Id == area.Id);
+
+            var areaDto = _mapper.Map<AreaGetDto>(fullArea);
 
             return ApiResponse<AreaGetDto>.Ok(areaDto, "Area added successfully");
         }
+
+
 
         public async Task<ApiResponse<AreaGetDto>> UpdateAsync(int id, AreaAddEditDto dto)
         {
@@ -143,15 +150,29 @@ namespace TaskMangment.Infrastructure.Services
             if (!await _employeeRepository.IsExistAsync(dto.ManagerEmployeeId))
                 return ApiResponse<AreaGetDto>.Fail("Manager not found", StatusCode.NotFound);
 
+            var isManagerUsed = await _areaRepository
+                .GetAll(a => a.ManagerEmployeeId == dto.ManagerID && a.Id != id)
+                .AnyAsync();
+
+            if (isManagerUsed)
+                return ApiResponse<AreaGetDto>.Fail("This manager is already assigned to another area");
+
             _mapper.Map(dto, area);
 
             await _areaRepository.SaveChangesAsync();
-            var areaDto = _mapper.Map<AreaGetDto>(area);
 
-            //  TODO: Invalidate cache later
+            await _cache.RemoveAsync("areas:");
+
+            var fullArea = await _areaRepository.GetAll()
+                .Include(a => a.Manager)
+                .FirstOrDefaultAsync(a => a.Id == area.Id);
+
+            var areaDto = _mapper.Map<AreaGetDto>(fullArea);
 
             return ApiResponse<AreaGetDto>.Ok(areaDto, "Area updated successfully");
         }
+
+
 
         public async Task<ApiResponse<bool>> DeleteAsync(int id)
         {
@@ -161,6 +182,7 @@ namespace TaskMangment.Infrastructure.Services
 
             _areaRepository.SoftDelete(area);
             await _areaRepository.SaveChangesAsync();
+            await _cache.RemoveAsync("areas:");
 
             // TODO: Invalidate cache later
 

@@ -1,0 +1,50 @@
+<app-page-header [title]="title | translate" [title1]="breadcrumbs" [activeitem]="activeitem | translate">
+</app-page-header>
+<div class="row row-sm">
+  <div class="col-md-12 col-lg-12">
+    <div class="card custom-card">
+
+      <div class="card-header border-bottom-0">
+        <div class="d-flex">
+          <label class="main-content-label my-auto pt-2">{{ title | translate }}</label>
+        </div>
+      </div>
+
+      <div class="card-body pt-2">
+
+        <!-- LOADING -->
+        <div *ngIf="isLoading" class="text-center my-3">
+          <div class="spinner-border" role="status">
+            <span class="visually-hidden">{{ 'TABLE.LOADING' | translate }}</span>
+          </div>
+        </div>
+
+        <!-- TABLE -->
+        <div *ngIf="!isLoading">
+          <app-generic-table [title]="title" [breadcrumbs]="breadcrumbs" [activeitem]="activeitem" [labels]="labels"
+            [columns]="columns" [data]="rows" [entries]="entries" [page]="page" [totalItems]="totalItems"
+            [showAddButton]="true" [addButtonLabel]="'DEPARTMENT.ADD' | translate" (addClick)="openAdd(departmentModal)"
+            [showFilters]="true" [showEditButton]="true" [showDeleteButton]="false" [searchCriteria]="searchCriteria"
+            [onSearch]="applyFilters.bind(this)" (pageChange)="onPageChange($event)"
+            (entriesChange)="onEntriesChange($event)" (edit)="openEdit($event, departmentModal)">
+          </app-generic-table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<ng-template #departmentModal let-modal>
+  <div class="modal-header">
+    <h6 class="modal-title">
+      {{ isEdit ? ('DEPARTMENT.EDIT' | translate) : ('DEPARTMENT.ADD' | translate) }}
+    </h6>
+    <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
+  </div>
+
+  <div class="modal-body">
+    <app-department-create-update [isEdit]="isEdit" [departmentId]="selectedDeptId" (formSubmitted)="onFormSubmitted()">
+    </app-department-create-update>
+  </div>
+</ng-template>

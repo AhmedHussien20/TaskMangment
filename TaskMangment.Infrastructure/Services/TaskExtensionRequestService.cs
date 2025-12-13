@@ -42,7 +42,7 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<PagedResponse<TaskExtensionRequestListDto>>> GetAllAsync(TaskExtensionRequestRequest request)
         {
-            string cacheKey = $"taskExtensionRequests-{request.PageIndex}-{request.PageSize}-{request.SortColumn}-{request.SortDirection}";
+            string cacheKey = $"taskExtensionRequests:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
 
             if (!request.BypassCache)
             {
@@ -55,10 +55,7 @@ namespace TaskMangment.Infrastructure.Services
                 .Include(r => r.TaskAssignment)
                 .Include(r => r.RequestedBy)
                 .Include(r => r.ReviewedBy)
-                .AsQueryable();
-
-            if (request.Status.HasValue)
-                query = query.Where(r => r.Status == request.Status.Value);
+                .ApplySearch(request.searchKey);
 
             var totalCount = await query.CountAsync();
 
@@ -114,6 +111,8 @@ namespace TaskMangment.Infrastructure.Services
 
             await _requestRepo.AddAsync(request);
             await _requestRepo.SaveChangesAsync();
+            await _cache.RemoveAsync("taskExtensionRequests:");
+
 
             var savedRequest = await _requestRepo.GetAll(r => r.Id == request.Id)
                                                  .Include(r => r.RequestedBy)
@@ -142,6 +141,7 @@ namespace TaskMangment.Infrastructure.Services
             request.ModifiedDate = DateTime.UtcNow;
 
             await _requestRepo.SaveChangesAsync();
+            await _cache.RemoveAsync("taskExtensionRequests:");
 
             var updatedRequest = await _requestRepo.GetAll(r => r.Id == id)
                                                      .Include(r => r.RequestedBy)

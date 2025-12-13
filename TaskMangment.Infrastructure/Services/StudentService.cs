@@ -32,10 +32,7 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<PagedResponse<StudentGetDto>>> GetAllAsync(StudentRequest request)
         {
-            string safeName = request.FullName ?? string.Empty;
-            string safeEmail = request.Email ?? string.Empty;
-
-            string cacheKey = $"students-{request.PageIndex}-{request.PageSize}-{request.SortColumn}-{request.SortDirection}-{safeName}-{safeEmail}";
+            string cacheKey = $"students:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
 
             if (!request.BypassCache)
             {
@@ -46,13 +43,7 @@ namespace TaskMangment.Infrastructure.Services
 
             var query = _studentRepository.GetAll()
                 .Include(s => s.OfferAssignments)
-                .AsQueryable();
-
-            if (!string.IsNullOrWhiteSpace(request.FullName))
-                query = query.Where(s => s.FullName.Contains(request.FullName));
-
-            if (!string.IsNullOrWhiteSpace(request.Email))
-                query = query.Where(s => s.Email.Contains(request.Email));
+                .ApplySearch(request.searchKey);
 
             var totalCount = await query.CountAsync();
 
@@ -100,6 +91,8 @@ namespace TaskMangment.Infrastructure.Services
 
             await _studentRepository.AddAsync(student);
             await _studentRepository.SaveChangesAsync();
+            await _cache.RemoveAsync("students:");
+
 
             var studentDto = _mapper.Map<StudentGetDto>(student);
             studentDto.OfferCount = student.OfferAssignments?.Count ?? 0;
@@ -115,6 +108,8 @@ namespace TaskMangment.Infrastructure.Services
 
             _mapper.Map(dto, student);
             await _studentRepository.SaveChangesAsync();
+            await _cache.RemoveAsync("students:");
+
 
             var studentDto = _mapper.Map<StudentGetDto>(student);
             studentDto.OfferCount = student.OfferAssignments?.Count ?? 0;
@@ -131,6 +126,7 @@ namespace TaskMangment.Infrastructure.Services
 
             _studentRepository.SoftDelete(student);
             await _studentRepository.SaveChangesAsync();
+            await _cache.RemoveAsync("students:");
 
             return ApiResponse<bool>.Ok(true, "Student deleted successfully");
         }

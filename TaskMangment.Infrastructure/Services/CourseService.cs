@@ -38,9 +38,7 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<PagedResponse<CourseGetDto>>> GetAllAsync(CourseRequest request)
         {
-            string safeTitle = request.Title ?? string.Empty;
-
-            string cacheKey = $"courses-{request.PageIndex}-{request.PageSize}-{request.SortColumn}-{request.SortDirection}-{safeTitle}";
+            string cacheKey = $"courses:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
 
             if (!request.BypassCache)
             {
@@ -52,10 +50,7 @@ namespace TaskMangment.Infrastructure.Services
             var query = _courseRepository.GetAll()
                 .Include(c => c.Subjects)
                 .Include(c => c.Offers)
-                .AsQueryable();
-
-            if (!string.IsNullOrWhiteSpace(request.Title))
-                query = query.Where(c => c.Title.Contains(request.Title));
+                .ApplySearch(request.searchKey);
 
             var totalCount = await query.CountAsync();
 
@@ -115,6 +110,8 @@ namespace TaskMangment.Infrastructure.Services
 
             await _courseRepository.AddAsync(course);
             await _courseRepository.SaveChangesAsync();
+            await _cache.RemoveAsync("courses:");
+
             var coursedto = _mapper.Map<CourseGetDto>(course);
 
             return ApiResponse<CourseGetDto>.Ok(coursedto, "Course added successfully");
@@ -149,6 +146,8 @@ namespace TaskMangment.Infrastructure.Services
             }
 
             await _courseRepository.SaveChangesAsync();
+            await _cache.RemoveAsync("courses:");
+
             var coursedto = _mapper.Map<CourseGetDto>(course);
 
             return ApiResponse<CourseGetDto>.Ok(coursedto, "Course updated successfully");
@@ -162,6 +161,8 @@ namespace TaskMangment.Infrastructure.Services
 
             _courseRepository.SoftDelete(course);
             await _courseRepository.SaveChangesAsync();
+            await _cache.RemoveAsync("courses:");
+
 
             return ApiResponse<bool>.Ok(true, "Course deleted successfully");
         }

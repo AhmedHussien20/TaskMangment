@@ -55,6 +55,8 @@ namespace TaskMangment.Infrastructure.Services
 
                 await _auditRepo.AddAsync(audit);
                 await _auditRepo.SaveChangesAsync();
+                await _cache.RemoveAsync("auditLogs:");
+
             }
             catch (Exception ex)
             {
@@ -65,7 +67,7 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<PagedResponse<AuditLogDTO>>> GetAllAsync(AuditLogRequest request)
         {
-            string cacheKey = $"auditLogs-{request.PageIndex}-{request.PageSize}-{request.SortColumn}-{request.SortDirection}";
+            string cacheKey = $"auditLogs:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
 
             if (!request.BypassCache)
             {
@@ -74,10 +76,7 @@ namespace TaskMangment.Infrastructure.Services
                     return ApiResponse<PagedResponse<AuditLogDTO>>.Ok(cached);
             }
 
-            var query = _auditRepo.GetAll().AsQueryable();
-
-            if (!string.IsNullOrWhiteSpace(request.EntityName))
-                query = query.Where(x => x.EntityName.Contains(request.EntityName));
+            var query = _auditRepo.GetAll().ApplySearch(request.searchKey);
 
             var totalCount = await query.CountAsync();
 

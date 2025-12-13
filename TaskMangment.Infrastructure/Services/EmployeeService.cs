@@ -49,12 +49,8 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<PagedResponse<EmployeeGetDto>>> GetAllAsync(EmployeeRequest request)
         {
-            string safeName = request.Name ?? string.Empty;
-            string safeCompanyId = request.CompanyId?.ToString() ?? "null";
-            string safeBranchId = request.BranchId?.ToString() ?? "null";
-
             string cacheKey =
-                $"employees-{request.PageIndex}-{request.PageSize}-{request.SortColumn}-{request.SortDirection}-{safeName}-{safeCompanyId}-{safeBranchId}";
+                $"employees:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
 
             if (!request.BypassCache)
             {
@@ -67,16 +63,7 @@ namespace TaskMangment.Infrastructure.Services
                 .Include(e => e.Branch)
                 .Include(e => e.EmployeeRoles)
                     .ThenInclude(er => er.Role)
-                .AsQueryable();
-
-            if (!string.IsNullOrWhiteSpace(request.Name))
-                query = query.Where(e => e.FullName.Contains(request.Name));
-
-            if (request.CompanyId.HasValue)
-                query = query.Where(e => e.CompanyId == request.CompanyId.Value);
-
-            if (request.BranchId.HasValue)
-                query = query.Where(e => e.BranchId == request.BranchId.Value);
+                .ApplySearch(request.searchKey);
 
             var totalCount = await query.CountAsync();
 
@@ -138,6 +125,7 @@ namespace TaskMangment.Infrastructure.Services
             await _employeeRepo.AddAsync(employee);
             await _employeeRepo.SaveChangesAsync();
 
+
             // Assign roles
             foreach (var roleId in dto.RoleIds)
             {
@@ -152,6 +140,8 @@ namespace TaskMangment.Infrastructure.Services
             }
 
             await _employeeRoleRepo.SaveChangesAsync();
+            await _cache.RemoveAsync("employees:");
+
             var fullEmployee = await _employeeRepo.GetAll(e => e.Id == employee.Id)
                                                   .Include(e => e.Branch)
                                                   .Include(e => e.EmployeeRoles)
@@ -194,6 +184,8 @@ namespace TaskMangment.Infrastructure.Services
 
             await _employeeRepo.SaveChangesAsync();
             await _employeeRoleRepo.SaveChangesAsync();
+            await _cache.RemoveAsync("employees:");
+
             var fullEmployee = await _employeeRepo.GetAll(e => e.Id == employee.Id)
                                                              .Include(e => e.Branch)
                                                              .Include(e => e.EmployeeRoles)
@@ -212,6 +204,8 @@ namespace TaskMangment.Infrastructure.Services
 
             _employeeRepo.SoftDelete(employee);
             await _employeeRepo.SaveChangesAsync();
+            await _cache.RemoveAsync("employees:");
+
 
             return ApiResponse<bool>.Ok(true, "Employee deleted successfully");
         }

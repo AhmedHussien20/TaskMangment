@@ -42,8 +42,7 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<PagedResponse<DiscountListDto>>> GetAllAsync(DiscountRequest request)
         {
-            string cacheKey =
-                $"discounts-{request.PageIndex}-{request.PageSize}-{request.SortColumn}-{request.SortDirection}-{request.EmployeeId}-{request.TaskId}";
+            string cacheKey = $"discounts:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
 
             if (!request.BypassCache)
             {
@@ -56,14 +55,8 @@ namespace TaskMangment.Infrastructure.Services
                 .Include(d => d.Employee)
                 .Include(d => d.Task)
                 .Include(d => d.CreatedBy)
-                .AsQueryable();
-
-            if (request.EmployeeId.HasValue)
-                query = query.Where(x => x.EmployeeId == request.EmployeeId.Value);
-
-            if (request.TaskId.HasValue)
-                query = query.Where(x => x.TaskId == request.TaskId.Value);
-
+                .ApplySearch(request.searchKey);
+            
             var totalCount = await query.CountAsync();
 
             query = query.OrderByDynamicSafe(request.SortColumn, request.SortDirection);
@@ -114,6 +107,8 @@ namespace TaskMangment.Infrastructure.Services
 
             await _discountRepo.AddAsync(discount);
             await _discountRepo.SaveChangesAsync();
+            await _cache.RemoveAsync("discounts:");
+
 
             var fullDiscount = await _discountRepo
       .GetAll(d => d.Id == discount.Id)
@@ -147,6 +142,8 @@ namespace TaskMangment.Infrastructure.Services
             discount.ModifiedDate = DateTime.UtcNow;
 
             await _discountRepo.SaveChangesAsync();
+            await _cache.RemoveAsync("discounts:");
+
             var fullDiscount = await _discountRepo
                 .GetAll(d => d.Id == discount.Id)
                 .Include(d => d.Employee)
@@ -165,6 +162,8 @@ namespace TaskMangment.Infrastructure.Services
 
             _discountRepo.SoftDelete(discount);
             await _discountRepo.SaveChangesAsync();
+            await _cache.RemoveAsync("discounts:");
+
 
             return ApiResponse<bool>.Ok(true, "Discount deleted successfully");
         }

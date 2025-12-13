@@ -12,7 +12,7 @@ namespace TaskMangment.Application.Interfaces.Services
 {
     public interface IAreaService
     {
-        Task<ApiResponse<PagedResponse<AreaGetDto>>> GetAllAsync(AreaRequest request);
+        Task<ApiResponse<PagedResponse<AreaGetDto>>> GetAllAsync(AreaRequest request,int CompanyId);
         Task<ApiResponse<AreaGetDto>> GetByIdAsync(int id);
         Task<ApiResponse<AreaGetDto>> AddAsync(AreaAddEditDto dto, int CompanyId, int createdby);
         Task<ApiResponse<AreaGetDto>> UpdateAsync(int id, AreaAddEditDto dto);

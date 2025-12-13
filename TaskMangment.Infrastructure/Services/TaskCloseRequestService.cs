@@ -42,7 +42,7 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<PagedResponse<TaskCloseRequestListDto>>> GetAllAsync(TaskCloseRequestRequest request)
         {
-            string cacheKey = $"taskCloseRequests-{request.PageIndex}-{request.PageSize}-{request.SortColumn}-{request.SortDirection}";
+            string cacheKey = $"taskCloseRequests:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
 
             if (!request.BypassCache)
             {
@@ -54,10 +54,7 @@ namespace TaskMangment.Infrastructure.Services
             var query = _requestRepo.GetAll()
                 .Include(r => r.TaskAssignment)
                 .Include(r => r.ReviewedBy)
-                .AsQueryable();
-
-            if (request.Status.HasValue)
-                query = query.Where(r => r.Status == request.Status.Value);
+                .ApplySearch(request.searchKey);
 
             var totalCount = await query.CountAsync();
 
@@ -112,15 +109,8 @@ namespace TaskMangment.Infrastructure.Services
 
             await _requestRepo.AddAsync(request);
             await _requestRepo.SaveChangesAsync();
+            await _cache.RemoveAsync("taskCloseRequests:");
 
-            var savedRequest = await _requestRepo.GetAll(r => r.Id == request.Id)
-                                                 .Include(r => r.RequestedBy)
-                                                .Include(r => r.TaskAssignment)
-                                                .ThenInclude(a => a.Employee)
-                                                .AsNoTracking()
-                                                .FirstOrDefaultAsync();
-
-            var resultDto = _mapper.Map<TaskCloseRequestDetailsDto>(savedRequest);
 
             return ApiResponse<TaskCloseRequestDetailsDto>.Ok(resultDto, "Close request added successfully");
         }
@@ -140,16 +130,8 @@ namespace TaskMangment.Infrastructure.Services
             request.ReviewedAt = DateTime.UtcNow;
 
             await _requestRepo.SaveChangesAsync();
+            await _cache.RemoveAsync("taskCloseRequests:");
 
-            var updatedRequest = await _requestRepo.GetAll(r => r.Id == id)
-                                                    .Include(r => r.RequestedBy)
-                                                     .Include(r => r.ReviewedBy)
-                                                    .Include(r => r.TaskAssignment)
-                                                    .ThenInclude(a => a.Employee)
-                                                    .AsNoTracking()
-                                                    .FirstOrDefaultAsync();
-
-            var resultDto = _mapper.Map<TaskCloseRequestDetailsDto>(updatedRequest);
 
             return ApiResponse<TaskCloseRequestDetailsDto>.Ok(resultDto, "Request reviewed successfully");
         }

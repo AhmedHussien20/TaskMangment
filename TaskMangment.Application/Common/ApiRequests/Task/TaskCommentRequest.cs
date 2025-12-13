@@ -9,6 +9,5 @@ namespace TaskMangment.Application.Common.ApiRequests.Task
 {
     public class TaskCommentRequest : BaseApiRequest
     {
-        public int? TaskId { get; set; }
     }
 }

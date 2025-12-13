@@ -9,19 +9,19 @@ namespace TaskMangment.Infrastructure.Authentication
     public static class JwtHelper
     {
         public static string GenerateToken(
-            Employee user,
-            string key,
-            string issuer,
-            string audience,
-            int expiryHours = 10)
+    Employee user,
+    string key,
+    string issuer,
+    string audience,
+    int expiryHours = 10)
         {
             var claims = new List<Claim>
-            {
-                new Claim("UserId", user.Id.ToString()),
-                new Claim("CompanyId", user.CompanyId.ToString() ?? "0"),
-                new Claim(ClaimTypes.Name, user.FullName ?? user.Email)
-            };
-             
+    {
+        new Claim("UserId", user.Id.ToString()),
+        new Claim("CompanyId", user.CompanyId.ToString() ?? "0"),
+        new Claim(ClaimTypes.Name, user.FullName ?? user.Email ?? "Unknown")
+    };
+
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
@@ -35,5 +35,6 @@ namespace TaskMangment.Infrastructure.Authentication
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
+
     }
 }

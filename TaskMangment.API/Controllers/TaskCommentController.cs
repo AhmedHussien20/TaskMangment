@@ -34,7 +34,7 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpPost("{taskId}")]
-        public async Task<IActionResult> Add(int taskId, [FromBody] TaskCommentAddEditDto dto)
+        public async Task<IActionResult> Add(int taskId, [FromForm] TaskCommentAddEditDto dto)
         {
             var result = await _service.AddAsync(taskId, this.CurrentUserId, dto);
             if (!result.Success) return Fail(result.Message);

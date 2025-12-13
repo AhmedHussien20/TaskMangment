@@ -10,7 +10,5 @@ namespace TaskMangment.Application.Common.ApiRequests.Task
 {
     public class TaskCloseRequestRequest :BaseApiRequest
     {
-        public CloseRequestStatus? Status { get; set; }
-
     }
 }
