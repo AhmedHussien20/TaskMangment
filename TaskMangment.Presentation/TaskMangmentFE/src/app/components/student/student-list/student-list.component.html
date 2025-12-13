@@ -1,0 +1,54 @@
+<app-page-header [title]="title | translate" [title1]="breadcrumbs" [activeitem]="activeitem | translate">
+</app-page-header>
+
+<div class="row row-sm">
+  <div class="col-md-12 col-lg-12">
+    <div class="card custom-card">
+
+      <div class="card-header border-bottom-0">
+        <div class="d-flex">
+          <label class="main-content-label my-auto pt-2">{{ title | translate }}</label>
+        </div>
+      </div>
+
+      <div class="card-body pt-2">
+
+        <!-- LOADING -->
+        <div *ngIf="isLoading" class="text-center my-3">
+          <div class="spinner-border" role="status">
+            <span class="visually-hidden">{{ 'TABLE.LOADING' | translate }}</span>
+          </div>
+        </div>
+
+        <!-- TABLE -->
+        <div *ngIf="!isLoading">
+
+          <app-generic-table [title]="title" [breadcrumbs]="breadcrumbs" [activeitem]="activeitem" [labels]="labels"
+            [columns]="columns" [data]="rows" [entries]="entries" [page]="page" [totalItems]="totalItems"
+            [showAddButton]="true" [addButtonLabel]="'STUDENT.ADD' | translate" (addClick)="openAdd(studentModal)"
+            [showEditButton]="true" (edit)="openEdit($event, studentModal)" [showFilters]="true"
+            [searchCriteria]="searchCriteria" [onSearch]="applyFilters.bind(this)" (pageChange)="onPageChange($event)"
+            (entriesChange)="onEntriesChange($event)">
+          </app-generic-table>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL TEMPLATE -->
+<ng-template #studentModal let-modal>
+  <div class="modal-header">
+    <h6 class="modal-title">
+      {{ isEdit ? ('STUDENT.EDIT' | translate) : ('STUDENT.ADD' | translate) }}
+    </h6>
+    <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
+  </div>
+
+  <div class="modal-body">
+    <app-student-create-update *ngIf="key" [isEdit]="isEdit" [studentId]="selectedStudentId"
+      (formSubmitted)="onFormSubmitted()">
+    </app-student-create-update>
+  </div>
+</ng-template>
