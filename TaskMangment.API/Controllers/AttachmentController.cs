@@ -33,9 +33,9 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Add([FromForm] AttachmentAddDto dto)
+        public async Task<IActionResult> Add([FromForm] AttachmentAddDto dto )
         {
-            var result = await _service.AddAsync(dto);
+            var result = await _service.AddAsync(dto, this.CurrentUserId);
             if (!result.Success) return Fail(result.Message!);
             return Success(result.Data, "Attachment added successfully");
         }

@@ -105,9 +105,9 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<AreaGetDto>.Ok(dto);
         }
 
-        public async Task<ApiResponse<AreaGetDto>> AddAsync(AreaAddEditDto dto, int CompanyId)
+        public async Task<ApiResponse<AreaGetDto>> AddAsync(AreaAddEditDto dto, int CompanyId, int createdby)
         {
-            if (!await _employeeRepository.IsExistAsync(dto.ManagerID))
+            if (!await _employeeRepository.IsExistAsync(dto.ManagerEmployeeId))
                 return ApiResponse<AreaGetDto>.Fail("Manager not found", StatusCode.NotFound);
 
             if (!await _companyRepo.IsExistAsync(CompanyId))
@@ -122,6 +122,8 @@ namespace TaskMangment.Infrastructure.Services
 
             var area = _mapper.Map<Area>(dto);
             area.CompanyId = CompanyId;
+            area.CreatedBy = createdby;
+            area.CreatedDate = DateTime.UtcNow;
 
             await _areaRepository.AddAsync(area);
             await _areaRepository.SaveChangesAsync();
@@ -145,7 +147,7 @@ namespace TaskMangment.Infrastructure.Services
             if (area == null)
                 return ApiResponse<AreaGetDto>.Fail("Area not found", StatusCode.NotFound);
 
-            if (!await _employeeRepository.IsExistAsync(dto.ManagerID))
+            if (!await _employeeRepository.IsExistAsync(dto.ManagerEmployeeId))
                 return ApiResponse<AreaGetDto>.Fail("Manager not found", StatusCode.NotFound);
 
             var isManagerUsed = await _areaRepository

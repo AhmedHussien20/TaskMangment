@@ -13,8 +13,8 @@ namespace TaskMangment.Application.Interfaces.Services
     public interface ITaskCloseRequestService
     {
         Task<ApiResponse<PagedResponse<TaskCloseRequestListDto>>> GetAllAsync(TaskCloseRequestRequest request);
-        Task<ApiResponse<bool>> AddAsync(TaskCloseRequestAddDto dto, int taskAssignmentId, int employeeId);
+        Task<ApiResponse<TaskCloseRequestDetailsDto>> AddAsync(TaskCloseRequestAddDto dto, int tasktId, int employeeId);
         Task<ApiResponse<TaskCloseRequestDetailsDto>> GetByIdAsync(int id);
-        Task<ApiResponse<bool>> ReviewAsync(int id, bool approved, int reviewerId);
+        Task<ApiResponse<TaskCloseRequestDetailsDto>> ReviewAsync(int id, bool approved, int reviewerId);
     }
 }

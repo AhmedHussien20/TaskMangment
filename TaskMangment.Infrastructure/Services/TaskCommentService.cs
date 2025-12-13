@@ -21,6 +21,7 @@ namespace TaskMangment.Infrastructure.Services
     {
         private readonly IRepository<TaskComment> _commentRepo;
         private readonly IRepository<Attachment> _attachmentRepo;
+        private readonly IRepository<WorkTask> _taskRepo;
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
 
@@ -28,12 +29,14 @@ namespace TaskMangment.Infrastructure.Services
             IRepository<TaskComment> commentRepo,
             IRepository<Attachment> attachmentRepo,
             IMapper mapper,
-            ICachingService cache)
+            ICachingService cache,
+            IRepository<WorkTask> taskRepo)
         {
             _commentRepo = commentRepo;
             _attachmentRepo = attachmentRepo;
             _mapper = mapper;
             _cache = cache;
+            _taskRepo = taskRepo;
         }
 
         public async Task<ApiResponse<PagedResponse<TaskCommentGetDto>>> GetAllAsync(TaskCommentRequest request)
@@ -94,19 +97,18 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<TaskCommentGetDto>.Ok(dto);
         }
 
-        public async Task<ApiResponse<bool>> AddAsync(int taskId, int employeeId, TaskCommentAddEditDto dto)
+        public async Task<ApiResponse<TaskCommentGetDto>> AddAsync(int taskId, int employeeId, TaskCommentAddEditDto dto)
         {
-
-            var comment = new TaskComment
-            {
-                TaskId = taskId,
-                EmployeeId = employeeId,
-                CommentText = dto.CommentText
-            };
+            var task = await _taskRepo.GetByIDAsync(taskId);
+            if (task == null)
+                return ApiResponse<TaskCommentGetDto>.Fail("Task not found", StatusCode.NotFound);
+            var comment = _mapper.Map<TaskComment>(dto);
+            comment.TaskId = taskId;
+            comment.EmployeeId = employeeId;
+            comment.CreatedDate = DateTime.UtcNow;
 
             await _commentRepo.AddAsync(comment);
             await _commentRepo.SaveChangesAsync();
-
             if (dto.File != null)
             {
                 var fileName = $"{Guid.NewGuid()}_{dto.File.FileName}";
@@ -126,10 +128,10 @@ namespace TaskMangment.Infrastructure.Services
                     Size = dto.File.Length,
                     CommentId = comment.Id,
                     UploadedBy = employeeId,
-                    CreatedBy= employeeId,
+                    CreatedBy = employeeId,
                     ContentType = dto.File.ContentType,
                     UploadedAt = DateTime.UtcNow,
-                    TaskId= taskId
+                    TaskId = taskId
 
 
                 };
@@ -139,23 +141,29 @@ namespace TaskMangment.Infrastructure.Services
             }
 
             await _cache.RemoveAsync("taskComments:");
-            return ApiResponse<bool>.Ok(true, "Comment added successfully");
+            return ApiResponse<TaskCommentGetDto>.Ok(commentDto, "Comment added successfully");
         }
 
-        public async Task<ApiResponse<bool>> UpdateAsync(int id, TaskCommentAddEditDto dto)
+
+        public async Task<ApiResponse<TaskCommentGetDto>> UpdateAsync(int id, TaskCommentAddEditDto dto)
         {
-            var comment = await _commentRepo.GetByIDAsync(id);
+            var comment = await _commentRepo.GetAll(c => c.Id == id)
+                                             .Include(c => c.Employee)
+                                             .FirstOrDefaultAsync();
+
             if (comment == null)
-                return ApiResponse<bool>.Fail("Comment not found");
+                return ApiResponse<TaskCommentGetDto>.Fail("Comment not found");
 
             comment.CommentText = dto.CommentText;
-
             await _commentRepo.SaveChangesAsync();
 
-            await _cache.RemoveAsync("taskComments:");
+            var commentDto = _mapper.Map<TaskCommentGetDto>(comment);
 
-            return ApiResponse<bool>.Ok(true, "Comment updated");
+            commentDto.AttachmentCount = await _attachmentRepo.CountAsync(a => a.CommentId == comment.Id);
+
+            return ApiResponse<TaskCommentGetDto>.Ok(commentDto, "Comment updated successfully");
         }
+
 
         public async Task<ApiResponse<bool>> DeleteAsync(int id)
         {

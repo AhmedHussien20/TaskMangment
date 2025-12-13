@@ -15,6 +15,7 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
     }
     public class TaskExtensionRequestListDto
     {
+        public int Id { get; set; }
         public string Reason { get; set; }
         public ExtensionRequestStatus Status { get; set; }
         public string RequestedByName { get; set; }
@@ -22,6 +23,7 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
     }
     public class TaskExtensionRequestDetailsDto
     {
+        public int Id { get; set; }
         public string Reason { get; set; }
         public ExtensionRequestStatus Status { get; set; }
         public DateTime RequestedAt { get; set; }

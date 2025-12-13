@@ -14,8 +14,8 @@ namespace TaskMangment.Application.Interfaces.Services
     {
         Task<ApiResponse<PagedResponse<TaskCommentGetDto>>> GetAllAsync(TaskCommentRequest request);
         Task<ApiResponse<TaskCommentGetDto>> GetByIdAsync(int id);
-        Task<ApiResponse<bool>> AddAsync(int taskId, int employeeId, TaskCommentAddEditDto dto);
-        Task<ApiResponse<bool>> UpdateAsync(int id, TaskCommentAddEditDto dto);
+        Task<ApiResponse<TaskCommentGetDto>> AddAsync(int taskId, int employeeId, TaskCommentAddEditDto dto);
+        Task<ApiResponse<TaskCommentGetDto>> UpdateAsync(int id, TaskCommentAddEditDto dto);
         Task<ApiResponse<bool>> DeleteAsync(int id);
     }
 }

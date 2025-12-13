@@ -43,4 +43,6 @@ public class AuthController : BaseController
             return Fail(result.Message);
         return Success(result.Data);
     }
+
+
 }

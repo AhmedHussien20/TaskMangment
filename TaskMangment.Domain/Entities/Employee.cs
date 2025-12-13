@@ -45,7 +45,7 @@ namespace TaskMangment.Domain.Entities
 
         public bool IsActive { get; set; } = true;
 
-        public string ResetPasswordToken { get; set; }
+        public string? ResetPasswordToken { get; set; }
         public DateTime? ResetPasswordExpiry { get; set; }
 
 

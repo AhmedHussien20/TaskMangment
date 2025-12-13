@@ -49,7 +49,7 @@ namespace TaskMangment.API.Controllers
             if (!result.Success)
                 return Fail(result.Message);
 
-            return Success(true, "Student added successfully");
+            return Success(result.Data, "Student added successfully");
         }
 
         [HttpPut("{id}")]
@@ -60,7 +60,7 @@ namespace TaskMangment.API.Controllers
             if (!result.Success)
                 return Fail(result.Message, 404);
 
-            return Success(true, "Student updated successfully");
+            return Success(result.Data, "Student updated successfully");
         }
 
         [HttpDelete("{id}")]

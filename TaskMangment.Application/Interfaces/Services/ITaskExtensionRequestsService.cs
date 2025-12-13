@@ -13,8 +13,8 @@ namespace TaskMangment.Application.Interfaces.Services
     public interface ITaskExtensionRequestsService
     {
         Task<ApiResponse<PagedResponse<TaskExtensionRequestListDto>>> GetAllAsync(TaskExtensionRequestRequest request);
-        Task<ApiResponse<bool>> AddAsync(TaskExtensionRequestAddDto dto, int taskAssignmentId, int employeeId);
+        Task<ApiResponse<TaskExtensionRequestDetailsDto>> AddAsync(TaskExtensionRequestAddDto dto, int taskId, int employeeId);
         Task<ApiResponse<TaskExtensionRequestDetailsDto>> GetByIdAsync(int id);
-        Task<ApiResponse<bool>> ReviewAsync(int id, bool approved, int reviewerId);
+        Task<ApiResponse<TaskExtensionRequestDetailsDto>> ReviewAsync(int id, bool approved, int reviewerId);
     }
 }
