@@ -1,0 +1,239 @@
+{
+  "common": {
+    "welcome": "Welcome",
+    "login": "Login",
+    "logout": "Logout",
+    "register": "Register",
+    "dashboard": "Dashboard"
+  },
+  "validation": {
+    "required": "This field is required",
+    "email": "Please enter a valid email address",
+    "password": "Password must be at least 6 characters"
+  },
+  "nav": {
+    "dashboard": {
+      "header": "Dashboard",
+      "title": "Dashboard"
+    },
+    "applications": {
+      "header": "Applications"
+    },
+    "apps": {
+      "title": "Apps",
+      "orders": {
+        "title": "Orders",
+        "list": "Orders List",
+        "tracking": "Orders Tracking"
+      },
+      "expiry": {
+        "title": "Expiry",
+        "list": "Expiry List",
+        "tracking": "Expiry Tracking"
+      },
+      "customers": {
+        "title": "Customers",
+        "notifications": "Customers Notifications",
+        "customers": "Customers"
+      },
+      "users": {
+        "title": "Users",
+        "users": "Users",
+        "list": "Users List"
+      },
+      "group": {
+        "title": "Groups",
+        "list": "Groups List"
+      },
+      "configurations": {
+        "title": "Configurations",
+        "onlineOrders": "Online Orders",
+        "expiry": "Expiry",
+        "externalIntegration": "External Integration",
+        "moduleAvailability": "Module Availability",
+        "modules": "Modules",
+        "branches": "Branches",
+        "campaigns": "Campaigns",
+        "ads": "Ads",
+        "notifications": "Notifications"
+      }
+    },
+    "components": {
+      "header": "Components",
+      "submenus": {
+        "title": "Submenus",
+        "level1": "Level 1",
+        "level2": {
+          "title": "Level 2",
+          "level2_0": "Level 2.0",
+          "level2_1": "Level 2.1",
+          "level2_2": {
+            "title": "Level 2.2",
+            "level2_2_1": "Level 2.2.1",
+            "level2_2_2": "Level 2.2.2"
+          }
+        },
+        "level3": "Level 3"
+      }
+    }
+  },
+  "LOGIN": {
+    "TITLE": "Login",
+    "USERNAME": "Username",
+    "USERNAME_PLACEHOLDER": "Enter your username",
+    "PASSWORD": "Password",
+    "PASSWORD_PLACEHOLDER": "Enter your password",
+    "SUBMIT": "Submit",
+    "FORGOT_PASSWORD": "Forgot Password?",
+    "DONT_HAVE_ACCOUNT": "Don't have an account?",
+    "REGISTER_HERE": "Register here",
+    "SUBTITLE": "Please login to continue"
+  },
+  "form": {
+    "transactionNumber": "Transaction Number",
+    "customerCode": "Customer Code",
+    "branchCode": "Branch Code",
+    "phone": "Phone",
+    "pharmacyName": "Pharmacy Name",
+    "status": "Status",
+    "totalAmount": "Total Amount",
+    "createdOn": "Created On",
+    "createdByUsername": "Created By Username",
+    "transactionCode": "Transaction Code",
+    "transactionDate": "Transaction Date",
+    "itemCount": "Item Count",
+    "creditNoteStatus": "Credit Note Status",
+    "creditNoteDate": "Credit Note Date",
+    "dateOfReview": "Date Of Review",
+    "expiryCollection": "Expiry Collection",
+    "expiryReview": "Expiry Review",
+    "dateOfCollection": "Date Of Collection",
+    "customerSegment": "Customer Segment",
+    "serialNumber": "Serial Number",
+    "createdOnFrom": "Created On (From)",
+    "createdOnTo": "Created On (To)",
+    "phoneNumber": "Phone Number"
+  },
+  "AREA": {
+    "COMPANY": "CompanyId",
+    "LIST_TITLE": "Area List",
+    "HOME": "Home",
+    "AREAS": "Areas",
+    "ID": "ID",
+    "NAME": "Area Name",
+    "ADDRESS": "Address",
+    "MANAGER": "Manager",
+    "BRANCHES": "Branches",
+    "companyId": "Company",
+    "searchKey": "Search",
+    "CREATE_SUCCESS": "Saved successfully",
+    "UPDATE_SUCCESS": "Updated successfully",
+    "ADD": "Add",
+    "EDIT": "Update"
+  },
+  "TABLE": {
+    "SEARCH": "Search",
+    "CLEAR_FILTERS": "Clear Filters",
+    "ADD_NEW": "Add New",
+    "ACTIONS": "Actions",
+    "EDIT_ITEM": "Edit Item",
+    "DELETE_ITEM": "Delete Item",
+    "TOTAL_RECORDS": "Total Records",
+    "TOTAL_PAGES": "Total Pages",
+    "SHOW": "Show",
+    "ENTRIES": "entries",
+    "PREV": "Prev",
+    "NEXT": "Next",
+    "SELECT_ENTRIES": "Select number of entries to display",
+    "LOADING": "Loading",
+    "ACTIVE": "Active",
+    "INACTIVE": "Inactive",
+    "SELECT_STATUS": "Select Status",
+    "SELECT_ASSIGNMENT": "Select Assignment",
+    "SELECT_ACTIVE_STATUS": "Select Active Status",
+    "FILTERS": "Filters",
+    "NO_DATA": "No data available"
+  },
+  "FORM": {
+    "BACK": "Back",
+    "SAVE": "Save",
+    "GENERATE": "Generate",
+    "SHOW_PASSWORD": "Show Password",
+    "HIDE_PASSWORD": "Hide Password",
+    "IS_REQUIRED": "is required",
+    "MINIMUM_LENGTH": "Minimum length is",
+    "MAXIMUM_LENGTH": "Maximum length is",
+    "CHARACTERS": "characters",
+    "PASSWORD_MISMATCH": "Password and Confirm Password do not match",
+    "SELECT_AREA": "Select Area",
+    "SELECT_COMPANY": "Select Company",
+    "SELECT_STATUS": "Select Status",
+    "SELECT_OPTION": "Select an option"
+  },
+  "VALIDATION": {
+    "REQUIRED": "This field is required",
+    "MIN_LENGTH": "Minimum length is",
+    "MAX_LENGTH": "Maximum length is",
+    "EMAIL": "Please enter a valid email",
+    "NUMBER": "Please enter a valid number",
+    "PASSWORD_MISMATCH": "Passwords do not match"
+  },
+  "BRANCH": {
+    "TITLE": "Branches",
+    "LIST_TITLE": "Branches List",
+    "CREATE_TITLE": "Add Branch",
+    "EDIT_TITLE": "Edit Branch",
+    "ID": "ID",
+    "NAME": "Branch Name",
+    "ADDRESS": "Address",
+    "PHONE": "Phone",
+    "MOBILE": "Mobile",
+    "FAX": "Fax",
+    "EMAIL": "Email",
+    "AREA": "Area",
+    "MANAGER": "Manager",
+    "RESPONSIBLE": "Responsible",
+    "SEARCH": "Search Branches",
+    "ADD_BRANCH": "Add Branch",
+    "EDIT_BRANCH": "Edit Branch",
+    "CREATE_SUCCESS": "Branch created successfully",
+    "UPDATE_SUCCESS": "Branch updated successfully",
+    "CREATE_FAILED": "Failed to create branch",
+    "UPDATE_FAILED": "Failed to update branch",
+    "DELETE_CONFIRM": "Are you sure you want to delete this branch?",
+    "DELETE_SUCCESS": "Branch deleted successfully",
+    "DELETE_FAILED": "Failed to delete branch",
+    "VALIDATION_ERROR": "Please fill in all required fields correctly."
+  },
+  "AUTH": {
+    "SESSION_EXPIRED": "Your session has expired. Please login again.",
+    "UNAUTHORIZED": "Unauthorized"
+  },
+  "DEPARTMENT": {
+  "TITLE": "Department",
+  "LIST_TITLE": "Department List",
+  "ADD": "Add Department",
+  "EDIT": "Edit Department",
+  "NAME": "Department Name",
+  "BRANCH": "Branch",
+  "MANAGER": "Manager",
+  "CREATE_SUCCESS": "Department created successfully",
+  "UPDATE_SUCCESS": "Department updated successfully",
+  "SEARCH": "Search Departments"
+},
+"TASK": {
+  "LIST_TITLE": "Tasks",
+  "ADD": "Add Task",
+  "EDIT": "Edit Task",
+  "TITLE": "Title",
+  "DESCRIPTION": "Description",
+  "PRIORITY": "Priority",
+  "STATUS": "Status",
+  "DUE_DATE": "Due Date",
+  "ASSIGNED_BY": "Assigned By",
+  "SAVED_SUCCESS": "Task saved successfully"
+  
+}
+
+
+}

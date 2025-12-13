@@ -41,11 +41,7 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<PagedResponse<JobGetDto>>> GetAllAsync(JobRequest request)
         {
-            string safeTitle = request.Title ?? string.Empty;
-            string safeEmployeeId = request.EmployeeId?.ToString() ?? "null";
-            string safeDepartmentId = request.DepartmentId?.ToString() ?? "null";
-
-            string cacheKey = $"jobs-{request.PageIndex}-{request.PageSize}-{request.SortColumn}-{request.SortDirection}-{safeTitle}-{safeEmployeeId}-{safeDepartmentId}";
+            string cacheKey = $"jobs:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
 
             if (!request.BypassCache)
             {
@@ -58,16 +54,8 @@ namespace TaskMangment.Infrastructure.Services
                 .Include(j => j.Employees)
                 .Include(j => j.Department)
                     .ThenInclude(d => d.Branch)
-                .AsQueryable();
+                .ApplySearch(request.searchKey);
 
-            if (!string.IsNullOrWhiteSpace(request.Title))
-                query = query.Where(j => j.Title.Contains(request.Title));
-
-            if (request.EmployeeId.HasValue)
-                query = query.Where(j => j.Employees.Any(e => e.Id == request.EmployeeId.Value));
-
-            if (request.DepartmentId.HasValue)
-                query = query.Where(j => j.DepartmentId == request.DepartmentId.Value);
 
             var totalCount = await query.CountAsync();
 
@@ -118,6 +106,8 @@ namespace TaskMangment.Infrastructure.Services
 
             await _jobRepository.AddAsync(job);
             await _jobRepository.SaveChangesAsync();
+            await _cache.RemoveAsync("jobs:");
+
 
             var fullJob = await _jobRepository.GetAll(j => j.Id == job.Id)
                                      .Include(j => j.Department)
@@ -153,6 +143,8 @@ namespace TaskMangment.Infrastructure.Services
             job.Employees.Add(employee);
 
             await _jobRepository.SaveChangesAsync();
+            await _cache.RemoveAsync("jobs:");
+
             var fullJob = await _jobRepository.GetAll(j => j.Id == job.Id)
                                      .Include(j => j.Department)
                                      .Include(j => j.Employees)
@@ -172,6 +164,7 @@ namespace TaskMangment.Infrastructure.Services
 
             _jobRepository.SoftDelete(job);
             await _jobRepository.SaveChangesAsync();
+            await _cache.RemoveAsync("jobs:");
 
             return ApiResponse<bool>.Ok(true, "Job deleted successfully");
         }

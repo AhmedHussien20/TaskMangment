@@ -12,7 +12,7 @@ namespace TaskMangment.Application.Interfaces.Services
 {
     public interface ITaskService
     {
-        Task<ApiResponse<PagedResponse<TaskGetDto>>> GetAllAsync(TaskRequest request);
+        Task<ApiResponse<PagedResponse<TaskGetDto>>> GetAllAsync(TaskRequest request, int CompanyId);
         Task<ApiResponse<TaskGetDto>> GetByIdAsync(int id);
         Task<ApiResponse<TaskGetDto>> AddAsync(TaskAddEditDto dto, int createdUser, int companyId);
         Task<ApiResponse<TaskGetDto>> UpdateAsync(int id, TaskAddEditDto dto, int modifierUser);

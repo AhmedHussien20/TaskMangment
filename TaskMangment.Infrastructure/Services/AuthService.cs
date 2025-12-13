@@ -31,23 +31,23 @@ public class AuthService : IAuthService
 
         return ApiResponse<LoginResponse>.Ok(new LoginResponse
         {
-                UserId = user.Id,
-                FullName = user.FullName,
-                Email = user.Email,
-                CompanyId = user.CompanyId,
-                BranchId = user.BranchId,
-                DepartmentId = user.DepartmentId,
-                JobId = user.JobId,
-                Title = user.Title,
-                Nationality = user.Nationality,
-                IdentityNumber = user.IdentityNumber,
-                Mobile = user.Mobile,
-                Address = user.Address,
-                Qualification = user.Qualification,
-                IsActive = user.IsActive,
-                //Roles = roles,
-                //Permissions = permissions,
-                Token = token
+            UserId = user.Id,
+            FullName = user.FullName,
+            Email = user.Email,
+            CompanyId = user.CompanyId,
+            BranchId = user.BranchId,
+            DepartmentId = user.DepartmentId,
+            JobId = user.JobId,
+            Title = user.Title,
+            Nationality = user.Nationality,
+            IdentityNumber = user.IdentityNumber,
+            Mobile = user.Mobile,
+            Address = user.Address,
+            Qualification = user.Qualification,
+            IsActive = user.IsActive,
+           // Roles = roles,
+            //Permissions = permissions,
+            Token = token
         });
     } 
 

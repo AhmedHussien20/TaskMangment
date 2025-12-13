@@ -29,8 +29,6 @@ namespace TaskMangment.Application.DTOs
 
       
 
-      
-
         public int? AreaId { get; set; }
 
         public int? ManagerId { get; set; }
@@ -44,6 +42,10 @@ namespace TaskMangment.Application.DTOs
         public string AreaName { get; set; }
         public string ManagerName { get; set; }
         public string ResponsibleName { get; set; }
+        public string Address { get; set; }
+        public string Phone { get; set; }
+        public string Fax { get; set; }
+        public string Email { get; set; }
     }
 
 }

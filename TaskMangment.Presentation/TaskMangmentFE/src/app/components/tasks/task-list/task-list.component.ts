@@ -1,0 +1,130 @@
+import { TaskGet } from "app/core/models/task/task";
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { NgbModal, NgbModalModule, NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
+import { GenericTableComponent } from 'app/shared/components/generic-table/generic-table.component';
+import { PageHeaderComponent } from 'app/shared/components/page-header/page-header.component';
+import { TranslateModule } from '@ngx-translate/core';
+import { TaskCreateUpdateComponent } from "../task-create-update/task-create-update.component";
+import { TaskService } from "app/core/services/task.service";
+import { SearchCriteria } from "app/models/search-criteria.model";
+
+@Component({
+  selector: 'app-task-list',
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    TranslateModule,
+    GenericTableComponent,
+    PageHeaderComponent,
+    NgbModalModule,
+    TaskCreateUpdateComponent
+  ],
+  templateUrl: './task-list.component.html'
+})
+export class TaskListComponent implements OnInit {
+
+  title = 'TASK.LIST_TITLE';
+  breadcrumbs = ['HOME', 'TASKS'];
+  activeitem = 'TASK.LIST_TITLE';
+  isLoading = false;
+  columns = [
+    { key: 'id', label: 'TASK.ID' },
+    { key: 'title', label: 'TASK.TITLE' },
+    { key: 'assignedByName', label: 'TASK.ASSIGNED_BY' },
+    { key: 'priority', label: 'TASK.PRIORITY' },
+    { key: 'status', label: 'TASK.STATUS' },
+    { key: 'dueDate', label: 'TASK.DUE_DATE' }
+  ];
+
+  rows: TaskGet[] = [];
+  totalItems = 0;
+
+  page = 1;
+  entries = 10;
+
+
+  searchCriteria: SearchCriteria = {
+    searchKey: '',
+    pageIndex: this.page,
+    pageSize: this.entries,
+    sortColumn: 'Id',
+    sortDirection: 'ASC',
+    filterTypes: {
+      searchKey: 'text',
+    }
+  };
+
+  labels = {
+    searchKey: 'TASK.searchKey'
+  };
+  isEdit = false;
+  selectedTaskId: number | null = null;
+
+  constructor(
+    private taskService: TaskService,
+    private modalService: NgbModal
+  ) {}
+
+  ngOnInit() {
+    this.loadData();
+  }
+
+  loadData() {
+    this.taskService.getAll(this.searchCriteria).subscribe({
+      next: (res: any) => {
+        this.rows = res.data.data;
+        this.totalItems = res.data.totalCount;
+        this.page = res.data.pageIndex;
+        this.entries = res.data.pageSize;
+        this.isLoading = false;
+      },
+      error: () => {
+        this.isLoading = false;
+      }
+    });
+  }
+
+  onPageChange(page: number) {
+    this.page = page;
+    this.searchCriteria.pageIndex = page;
+    this.loadData();
+  }
+
+  onEntriesChange(entries: number) {
+    this.entries = entries;
+    this.searchCriteria.pageSize = entries;
+    this.searchCriteria.pageIndex = 1;
+    this.page = 1;
+    this.loadData();
+  }
+
+  applyFilters(filters: any) {
+    this.searchCriteria = {
+      ...this.searchCriteria,
+      ...filters,
+      pageIndex: 1
+    };
+    this.page = 1;
+    this.loadData();
+  }
+
+  openAdd(modal: any) {
+    this.isEdit = false;
+    this.selectedTaskId = null;
+    this.modalService.open(modal, { size: 'lg', centered: true });
+  }
+
+  openEdit(id: number, modal: any) {
+    this.isEdit = true;
+    this.selectedTaskId = id;
+    this.modalService.open(modal, { size: 'lg', centered: true });
+  }
+
+  onFormSubmitted() {
+    this.modalService.dismissAll();
+    this.loadData();
+  }
+}

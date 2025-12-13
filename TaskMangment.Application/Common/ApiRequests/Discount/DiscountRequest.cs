@@ -9,7 +9,6 @@ namespace TaskMangment.Application.Common.ApiRequests.Discount
 {
     public class DiscountRequest : BaseApiRequest
     {
-        public int? EmployeeId { get; set; }
-        public int? TaskId { get; set; }
+      
     }
 }

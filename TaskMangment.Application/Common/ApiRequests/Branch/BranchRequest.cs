@@ -9,8 +9,5 @@ namespace TaskMangment.Application.Common.ApiRequests.Branch
 {
     public class BranchRequest: BaseApiRequest
     {
-        public string? Name { get; set; }
-        public int? CompanyId { get; set; }
-        public int? AreaId { get; set; }
     }
 }

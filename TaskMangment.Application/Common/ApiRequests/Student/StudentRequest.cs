@@ -9,7 +9,5 @@ namespace TaskMangment.Application.Common.ApiRequests.Student
 {
     public class StudentRequest : BaseApiRequest
     {
-        public string? FullName { get; set; }
-        public string? Email { get; set; }
     }
 }

@@ -35,13 +35,7 @@ namespace TaskMangment.Infrastructure.Services
                 .Include(x => x.Task)
                 .AsQueryable();
 
-            // Filters
-            if (request.TaskId.HasValue)
-                query = query.Where(x => x.TaskId == request.TaskId);
-
-            if (request.EmployeeId.HasValue)
-                query = query.Where(x => x.EmployeeId == request.EmployeeId);
-
+ 
             // Sorting
             query = query.OrderByDynamicSafe(request.SortColumn, request.SortDirection);
 

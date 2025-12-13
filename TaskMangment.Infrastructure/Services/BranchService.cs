@@ -44,12 +44,8 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<PagedResponse<BranchGetDto>>> GetAllAsync(BranchRequest request)
         {
-            string safeName = request.Name ?? string.Empty;
-            string safeCompanyId = request.CompanyId?.ToString() ?? "null";
-            string safeAreaId = request.AreaId?.ToString() ?? "null";
-
             string cacheKey =
-                $"branches-{request.PageIndex}-{request.PageSize}-{request.SortColumn}-{request.SortDirection}-{safeName}-{safeCompanyId}-{safeAreaId}";
+                $"branches:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
 
             if (!request.BypassCache)
             {
@@ -62,18 +58,7 @@ namespace TaskMangment.Infrastructure.Services
                 .Include(b => b.Manager)
                 .Include(b => b.Responsible)
                 .Include(b => b.Area)
-
-                .AsQueryable();
-
-            if (!string.IsNullOrWhiteSpace(request.Name))
-                query = query.Where(b => b.Name.Contains(request.Name));
-
-            if (request.CompanyId.HasValue)
-                query = query.Where(b => b.CompanyId == request.CompanyId.Value);
-
-            if (request.AreaId.HasValue)
-                query = query.Where(b => b.AreaId == request.AreaId.Value);
-
+                .ApplySearch(request.searchKey); ;
             var totalCount = await query.CountAsync();
 
             query = query.OrderByDynamicSafe(request.SortColumn, request.SortDirection);
@@ -128,8 +113,16 @@ namespace TaskMangment.Infrastructure.Services
 
             await _branchRepository.AddAsync(branch);
             await _branchRepository.SaveChangesAsync();
+            await _cache.RemoveAsync("branches:");
 
-            var branchdto = _mapper.Map<BranchGetDto>(branch);
+
+            var branchFull = await _branchRepository.GetAll()
+    .Include(b => b.Manager)
+    .Include(b => b.Responsible)
+    .Include(b => b.Area)
+    .FirstOrDefaultAsync(b => b.Id == branch.Id);
+
+            var branchdto = _mapper.Map<BranchGetDto>(branchFull);
 
             // TODO: Optional: Clear branch cache pattern
             // await _cache.RemoveByPatternAsync("branches-");
@@ -157,6 +150,13 @@ namespace TaskMangment.Infrastructure.Services
             _mapper.Map(dto, branch);
 
             await _branchRepository.SaveChangesAsync();
+            await _cache.RemoveAsync("branches:");
+
+            var branchFull = await _branchRepository.GetAll()
+   .Include(b => b.Manager)
+   .Include(b => b.Responsible)
+   .Include(b => b.Area)
+   .FirstOrDefaultAsync(b => b.Id == branch.Id);
             var branchdto = _mapper.Map<BranchGetDto>(branch);
 
             // TODO: Optional: Invalidate cache
@@ -172,6 +172,8 @@ namespace TaskMangment.Infrastructure.Services
 
             _branchRepository.SoftDelete(branch);
             await _branchRepository.SaveChangesAsync();
+            await _cache.RemoveAsync("branches:");
+
 
             // TODO: Optional: Invalidate cache
 
