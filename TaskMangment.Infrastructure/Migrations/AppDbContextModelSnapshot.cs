@@ -800,7 +800,6 @@ namespace TaskMangment.Infrastructure.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("ResetPasswordToken")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Title")

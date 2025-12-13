@@ -12,12 +12,9 @@ namespace TaskMangment.Application.AutoMapper
         {
             CreateMap<Company, CompanyGetDto>();
             CreateMap<CompanyAddEditDto, Company>();
-            CreateMap<Area, AreaGetDto>()
-                  .ForMember(dest => dest.ManagerID, opt => opt.MapFrom(src => src.ManagerEmployeeId))
-                  .ForMember(dest => dest.ManagerName, opt => opt.MapFrom(src => src.Manager.FullName));
-            CreateMap<AreaAddEditDto, Area>()
-                .ForMember(dest => dest.ManagerEmployeeId, opt => opt.MapFrom(src => src.ManagerID));
 
+            CreateMap<Area, AreaGetDto>();
+            CreateMap<AreaAddEditDto, Area>();
 
 
             CreateMap<Branch, BranchGetDto>()
@@ -124,8 +121,11 @@ namespace TaskMangment.Application.AutoMapper
 
             CreateMap<PaymentVoucherAddEditDto, PaymentVoucher>();
 
+            CreateMap<TaskCommentAddEditDto, TaskComment>();
+
             CreateMap<TaskComment, TaskCommentGetDto>()
-    .ForMember(d => d.EmployeeName, o => o.MapFrom(s => s.Employee.FullName));
+          .ForMember(d => d.EmployeeName, o => o.MapFrom(s => s.Employee.FullName));
+
 
             CreateMap<TaskExtensionRequest, TaskExtensionRequestListDto>()
               .ForMember(dest => dest.RequestedByName, opt => opt.MapFrom(src => src.RequestedBy.FullName));
@@ -152,6 +152,17 @@ namespace TaskMangment.Application.AutoMapper
                 .ForMember(dest => dest.RequestedAt, opt => opt.Ignore());
 
 
+            CreateMap<Warning, WarningGetDto>()
+               .ForMember(dest => dest.IssuedByName, opt => opt.MapFrom(src => src.IssuedBy.FullName));
+
+            CreateMap<Warning, WarningListDto>()
+                .ForMember(dest => dest.IssuedByName, opt => opt.MapFrom(src => src.IssuedBy.FullName));
+
+            CreateMap<WarningAddEditDto, Warning>()
+                .ForMember(dest => dest.IssuedAt, opt => opt.Ignore());
+
+
+
             CreateMap<CalendarEventAddEditDto, CalendarEvent>();
             CreateMap<CalendarEvent, CalendarEventGetDto>()
                 .ForMember(d => d.RelatedTaskTitle,
@@ -168,6 +179,14 @@ namespace TaskMangment.Application.AutoMapper
 
             CreateMap<AuditLog,AuditLogDTO>()
                 .ForMember(dest => dest.ChangedBy, opt => opt.MapFrom(src => src.ChangedBy != null ? src.ChangedBy : "System"));
+
+            CreateMap<Role, RoleGetDto>();
+            CreateMap<RoleAddDto, Role>();
+            CreateMap<Role, RoleWithPermissionsDto>()
+                .ForMember(dest => dest.Permissions, opt => opt.MapFrom(src => src.RolePermissions.Select(rp => rp.Permission)));
+
+            CreateMap<PermissionAddDto, Permission>();
+            CreateMap<Permission, PermissionGetDto>();
 
         }
     }

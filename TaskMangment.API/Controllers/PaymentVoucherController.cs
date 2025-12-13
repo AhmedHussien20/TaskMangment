@@ -34,9 +34,9 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Add([FromBody] PaymentVoucherAddEditDto dto, int companyId, int createdby)
+        public async Task<IActionResult> Add([FromBody] PaymentVoucherAddEditDto dto)
         {
-            var result = await _service.AddAsync(dto, companyId, createdby);
+            var result = await _service.AddAsync(dto, this.CompanyId, this.CurrentUserId);
             if (!result.Success) return Fail(result.Message);
             return Success(result.Data, "Voucher added successfully");
         }

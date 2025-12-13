@@ -43,9 +43,9 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Add([FromBody] CalendarEventAddEditDto dto, int createdByEmployeeId, int? companyId)
+        public async Task<IActionResult> Add([FromBody] CalendarEventAddEditDto dto)
         {
-            var result = await _service.AddAsync(dto, createdByEmployeeId, companyId);
+            var result = await _service.AddAsync(dto, this.CurrentUserId, this.CompanyId);
 
             if (!result.Success)
                 return Fail(result.Message);

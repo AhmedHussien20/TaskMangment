@@ -12,6 +12,7 @@ using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Infrastructure;
 using TaskMangment.Infrastructure.Caching;
 using TaskMangment.Infrastructure.DataContext;
+using TaskMangment.Infrastructure.Seeding;
 using TaskMangment.Infrastructure.Services;
 using TaskMangment.Infrastructure.SignalR;
 
@@ -19,7 +20,7 @@ namespace TaskMangment.API
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
@@ -165,6 +166,7 @@ namespace TaskMangment.API
             // Global Exception Middleware (catch unhandled exceptions)
             app.UseMiddleware<ExceptionLogMiddleware>();
 
+           
             app.UseHttpsRedirection();
 
             app.UseCors("AllowAll");
@@ -189,6 +191,11 @@ namespace TaskMangment.API
 
             // API Controllers
             app.MapControllers();
+            using (var scope = app.Services.CreateScope())
+            {
+                var seeder = scope.ServiceProvider.GetRequiredService<DataSeeder>();
+                await seeder.SeedAsync();
+            }
 
             app.Run();
         }

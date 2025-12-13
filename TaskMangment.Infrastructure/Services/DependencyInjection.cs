@@ -11,6 +11,7 @@ using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Infrastructure.Caching;
 using TaskMangment.Infrastructure.Repositories;
+using TaskMangment.Infrastructure.Seeding;
 using TaskMangment.Utilities.Localization;
 
 namespace TaskMangment.Infrastructure.Services
@@ -45,10 +46,15 @@ namespace TaskMangment.Infrastructure.Services
             services.AddScoped<ITaskCommentService, TaskCommentService>();
             services.AddScoped<ITaskExtensionRequestsService, TaskExtensionRequestService>();
             services.AddScoped<ITaskCloseRequestService, TaskCloseRequestService>();
+            services.AddScoped<ITaskWarningService, TaskWarningService>();
+
             services.AddScoped<ICurrentUserService, CurrentUserService>();
             services.AddScoped<IAuditLogService, AuditLogService>();
             services.AddScoped<ICalenderEventsService, CalendarEventService>();
             services.AddScoped<IDiscountService, DiscountService>();
+            services.AddScoped<DataSeeder>();
+
+
 
 
 

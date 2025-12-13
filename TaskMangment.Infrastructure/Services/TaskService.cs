@@ -111,11 +111,12 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<TaskGetDto>.Ok(dto);
         }
 
-        public async Task<ApiResponse<TaskGetDto>> AddAsync(TaskAddEditDto dto)
+        public async Task<ApiResponse<TaskGetDto>> AddAsync(TaskAddEditDto dto, int createdUser, int companyId)
         {
             var task = _mapper.Map<WorkTask>(dto);
-            //task.CompanyId = companyId;
-            //task.CreatedByEmployeeId = createdBy;
+            task.CreatedByEmployeeId = createdUser;
+            task.CompanyId = companyId;
+            task.AssignedByEmployeeId = createdUser;
 
             await _taskRepo.AddAsync(task);
             await _taskRepo.SaveChangesAsync();
@@ -148,13 +149,14 @@ namespace TaskMangment.Infrastructure.Services
 
             return ApiResponse<TaskGetDto>.Ok(taskDto, "Task added successfully");
         }
-        public async Task<ApiResponse<TaskGetDto>> UpdateAsync(int id, TaskAddEditDto dto)
+        public async Task<ApiResponse<TaskGetDto>> UpdateAsync(int id, TaskAddEditDto dto, int modifierUser)
         {
             var task = await _taskRepo.GetByIDAsync(id);
             if (task == null)
                 return ApiResponse<TaskGetDto>.Fail("Task not found", StatusCode.NotFound);
 
             _mapper.Map(dto, task);
+            task.ModifiedBy = modifierUser;
 
             var existingAssignments = await _assignmentRepo
                 .GetAll(a => a.TaskId == id)

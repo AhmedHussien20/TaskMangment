@@ -42,9 +42,9 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Add(int createdByEmployeeId, int TaskId, [FromBody] DiscountAddEditDto dto)
+        public async Task<IActionResult> Add(int TaskId, [FromBody] DiscountAddEditDto dto)
         {
-            var result = await _service.AddAsync(createdByEmployeeId, TaskId, dto);
+            var result = await _service.AddAsync(this.CurrentUserId, TaskId, dto);
 
             if (!result.Success)
                 return Fail(result.Message);
@@ -53,9 +53,9 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id,int TaskId, [FromBody] DiscountAddEditDto dto, int ModifiedByEmployeeId)
+        public async Task<IActionResult> Update(int id,int TaskId, [FromBody] DiscountAddEditDto dto)
         {
-            var result = await _service.UpdateAsync(id,TaskId, dto,ModifiedByEmployeeId);
+            var result = await _service.UpdateAsync(id,TaskId, dto,this.CurrentUserId);
 
             if (!result.Success)
                 return Fail(result.Message, 404);
