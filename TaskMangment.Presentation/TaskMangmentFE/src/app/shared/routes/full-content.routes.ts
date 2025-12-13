@@ -1,6 +1,5 @@
 import { NgModule } from '@angular/core';
-import { RouterModule, Routes } from '@angular/router';
-import { EmployeeManagementComponent } from '../../components/employee-management/employee-management.component';
+import { RouterModule, Routes } from '@angular/router'; 
 // import { admin, adminuiRoutingModule } from '../../components/adminui/adminui.routes';
 // import { chartsRoutingModule } from '../../components/charts/charts.routes';
 // import { dashboardRoutingModule } from '../../components/dashboard/dashboard.routes';
@@ -34,8 +33,7 @@ export const content: Routes = [
       { path: '', loadChildren: () => import('../../../app/components/charts/charts.route').then(r => r.chartsRoutingModule) },
       { path: '', loadChildren: () => import('../../../app/components/Forms/Form-Elements/form-elements.routes').then(r => r.formelementsRoutingModule) },
       { path: '', loadChildren: () => import('../../../app/components/Forms/forms.routes').then(r => r.formsRoutingModule) },
-      { path: '', loadChildren: () => import('../../../app/components/Forms/form-editor/form-editor.routes').then(r => r.formeditorRoutingModule) },
-      { path: '', loadChildren: () => import('../../../app/components/employee-management/employee.routes').then(r => r.EmployeeRoutingModule) },
+      { path: '', loadChildren: () => import('../../../app/components/Forms/form-editor/form-editor.routes').then(r => r.formeditorRoutingModule) }, 
       { path: 'area', loadChildren: () => import('../../../app/components/area/area.routes').then(r => r.AreaRoutingModule) },
       { path: 'branch', loadChildren: () => import('../../../app/components/branch/branch.routes').then(r => r.BranchRoutingModule) },
       { path: 'department', loadChildren: () => import('../../../app/components/department/department.routes').then(r => r.DepartmentRoutingModule) },

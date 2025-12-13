@@ -1,7 +1,6 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
-import { employeeRoutes } from '../employee-management/employee.routes';
+import { TranslateModule } from '@ngx-translate/core'; 
 
 export const EmployeeRoutes: Routes = [
   {
@@ -25,9 +24,9 @@ export const EmployeeRoutes: Routes = [
 ];
 
 @NgModule({
-  imports: [RouterModule.forChild(employeeRoutes), TranslateModule.forChild()],
+  imports: [RouterModule.forChild(EmployeeRoutes), TranslateModule.forChild()],
   exports: [RouterModule]
 })
 export class EmployeeRoutingModule {
-  static routes = employeeRoutes;
+  static routes = EmployeeRoutes;
 }
