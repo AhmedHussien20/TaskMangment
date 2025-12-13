@@ -32,7 +32,7 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<PagedResponse<StudentGetDto>>> GetAllAsync(StudentRequest request)
         {
-            string cacheKey = $"students{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
+            string cacheKey = $"students:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
 
             if (!request.BypassCache)
             {
@@ -91,6 +91,8 @@ namespace TaskMangment.Infrastructure.Services
 
             await _studentRepository.AddAsync(student);
             await _studentRepository.SaveChangesAsync();
+            await _cache.RemoveAsync("students:");
+
 
             return ApiResponse<bool>.Ok(true, "Student added successfully");
         }
@@ -103,6 +105,8 @@ namespace TaskMangment.Infrastructure.Services
 
             _mapper.Map(dto, student);
             await _studentRepository.SaveChangesAsync();
+            await _cache.RemoveAsync("students:");
+
 
             return ApiResponse<bool>.Ok(true, "Student updated successfully");
         }
@@ -115,6 +119,7 @@ namespace TaskMangment.Infrastructure.Services
 
             _studentRepository.SoftDelete(student);
             await _studentRepository.SaveChangesAsync();
+            await _cache.RemoveAsync("students:");
 
             return ApiResponse<bool>.Ok(true, "Student deleted successfully");
         }

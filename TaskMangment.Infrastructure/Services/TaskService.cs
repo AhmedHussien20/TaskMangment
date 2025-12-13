@@ -52,7 +52,7 @@ namespace TaskMangment.Infrastructure.Services
         public async Task<ApiResponse<PagedResponse<TaskGetDto>>> GetAllAsync(TaskRequest request, int CompanyId)
         {
             string cacheKey =
-                $"tasks{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}:{CompanyId}";
+                $"tasks:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}:{CompanyId}";
 
             if (!request.BypassCache)
             {
@@ -134,6 +134,8 @@ namespace TaskMangment.Infrastructure.Services
                 await _assignmentRepo.AddAsync(assignment);
             }
             await _assignmentRepo.SaveChangesAsync();
+            await _cache.RemoveAsync("tasks:");
+
 
             var fullTask = await _taskRepo.GetAll(t => t.Id == task.Id)
      .Include(t => t.CreatedBy)
@@ -190,6 +192,8 @@ namespace TaskMangment.Infrastructure.Services
 
 
             await _assignmentRepo.SaveChangesAsync();
+            await _cache.RemoveAsync("tasks:");
+
             var fullTask = await _taskRepo.GetAll(t => t.Id == task.Id)
       .Include(t => t.Company)
       .Include(t => t.CreatedBy)
@@ -213,6 +217,7 @@ namespace TaskMangment.Infrastructure.Services
                 return ApiResponse<bool>.Fail("Task not found", StatusCode.NotFound);
             _taskRepo.SoftDelete(task);
             await _taskRepo.SaveChangesAsync();
+            await _cache.RemoveAsync("tasks:");
 
             //need to know if we need to delete assignments also or cascade delete will handle it
             //var assignments = await _assignmentRepo.GetAll(a => a.TaskId == task.Id).ToListAsync();
