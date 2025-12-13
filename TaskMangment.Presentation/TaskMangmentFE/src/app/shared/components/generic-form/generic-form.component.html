@@ -3,7 +3,7 @@
     <form [formGroup]="formGroup" (ngSubmit)="onSubmit()" class="row gy-2 gx-3 align-items-center generic-form"
       [dir]="'rtl'">
       <div class="d-flex justify-content-end mb-4">
-        
+
         <button type="submit" class="btn btn-primary">
           {{ 'FORM.SAVE' | translate }}
         </button>
@@ -69,7 +69,6 @@
 
         <!-- TEXTAREA -->
         <div *ngIf="field.type === 'textarea'" class="mb-3 col-md-8">
-          <label class="form-label">{{ field.label | translate }}</label>
 
           <textarea class="form-control" rows="4" [formControlName]="field.name" [placeholder]="field.label | translate"
             style="direction: rtl; text-align: right"></textarea>
@@ -84,9 +83,7 @@
         <!-- ================= SELECT FIELD ================= -->
         <div *ngIf="field.type === 'select'" class="mb-3">
 
-          <label class="form-label">
-            {{ field.label | translate }}
-          </label>
+
 
           <ng-select [items]="field.options" bindLabel="label" bindValue="value" [multiple]="field.multiple"
             [searchable]="true" [closeOnSelect]="!field.multiple" placeholder="{{ 'FORM.SELECT' | translate }}"
@@ -156,9 +153,7 @@
                 (formGroup.controls[field.name].dirty ||
                   formGroup.controls[field.name].touched)
             }" />
-          <label class="form-check-label" [for]="field.name">
-            {{ field.label | translate }}
-          </label>
+
           <div *ngIf="
               formGroup.controls[field.name].invalid &&
               (formGroup.controls[field.name].dirty ||
