@@ -16,7 +16,7 @@ namespace TaskMangment.Application.AutoMapper
                   .ForMember(dest => dest.ManagerID, opt => opt.MapFrom(src => src.ManagerEmployeeId))
                   .ForMember(dest => dest.ManagerName, opt => opt.MapFrom(src => src.Manager.FullName));
             CreateMap<AreaAddEditDto, Area>()
-                .ForMember(dest => dest.ManagerEmployeeId, opt => opt.MapFrom(src => src.ManagerID));
+                .ForMember(dest => dest.ManagerEmployeeId, opt => opt.MapFrom(src => src.ManagerEmployeeId));
 
 
 
