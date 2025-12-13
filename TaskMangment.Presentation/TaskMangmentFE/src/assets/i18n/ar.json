@@ -192,52 +192,48 @@
     "UNAUTHORIZED": "غير مصرح"
   },
   "DEPARTMENT": {
-  "TITLE": "القسم",
-  "LIST_TITLE": "قائمة الأقسام",
-  "ADD": "إضافة قسم",
-  "EDIT": "تعديل قسم",
-  "NAME": "اسم القسم",
-  "BRANCH": "الفرع",
-  "MANAGER": "المدير",
-  "CREATE_SUCCESS": "تم إنشاء القسم بنجاح",
-  "UPDATE_SUCCESS": "تم تحديث القسم بنجاح",
-  "SEARCH": "بحث عن الأقسام",
-  "EMPLOYEE_COUNT": "عدد الموظفين",
-  "AREA": "المنطقة",
-  "ID":"الكود"
-},
- "TASK": {
+    "TITLE": "القسم",
+    "LIST_TITLE": "قائمة الأقسام",
+    "ADD": "إضافة قسم",
+    "EDIT": "تعديل قسم",
+    "NAME": "اسم القسم",
+    "BRANCH": "الفرع",
+    "MANAGER": "المدير",
+    "CREATE_SUCCESS": "تم إنشاء القسم بنجاح",
+    "UPDATE_SUCCESS": "تم تحديث القسم بنجاح",
+    "SEARCH": "بحث عن الأقسام",
+    "EMPLOYEE_COUNT": "عدد الموظفين",
+    "AREA": "المنطقة",
+    "ID": "الكود"
+  },
+  "TASK": {
     "LIST_TITLE": "المهام",
     "ADD": "إضافة مهمة",
     "EDIT": "تعديل مهمة",
-
-"TITLE": "العنوان",
-  "DESCRIPTION": "الوصف",
-  "ASSIGNED_EMPLOYEES": "الموظفون المكلفون",
-  "PRIORITY": "الأولوية",
-  "PRIORITY_LOW": "منخفضة",
-  "PRIORITY_MEDIUM": "متوسطة",
-  "PRIORITY_HIGH": "عالية",
-  "DUE_DATE": "تاريخ الانتهاء",
-  "COMMENT_ALLOW_PERIOD": "مدة السماح بالتعليق (بالأيام)",
-  "MAX_WARNINGS": "الحد الأقصى للتنبيهات",
-  "PENALTY_AT_MAX_WARNINGS": "الجزاء عند الحد الأقصى للتنبيهات",
-  "PENALTY_ON_AUTO_CLOSE": "الجزاء عند الإغلاق التلقائي",
-  "IS_SHARED": "مهمة مشتركة",
-
+    "TITLE": "العنوان",
+    "DESCRIPTION": "الوصف",
+    "ASSIGNED_EMPLOYEES": "الموظفون المكلفون",
+    "PRIORITY": "الأولوية",
+    "PRIORITY_LOW": "منخفضة",
+    "PRIORITY_MEDIUM": "متوسطة",
+    "PRIORITY_HIGH": "عالية",
+    "DUE_DATE": "تاريخ الانتهاء",
+    "COMMENT_ALLOW_PERIOD": "مدة السماح بالتعليق (بالأيام)",
+    "MAX_WARNINGS": "الحد الأقصى للتنبيهات",
+    "PENALTY_AT_MAX_WARNINGS": "الجزاء عند الحد الأقصى للتنبيهات",
+    "PENALTY_ON_AUTO_CLOSE": "الجزاء عند الإغلاق التلقائي",
+    "IS_SHARED": "مهمة مشتركة",
     "ASSIGNED_BY": "تم الإسناد بواسطة",
-
-
     "STATUS_OPEN": "مفتوحة",
     "STATUS_IN_PROGRESS": "قيد التنفيذ",
     "STATUS_COMPLETED": "مكتملة",
     "STATUS_CLOSED": "مغلقة",
-
     "CREATE_SUCCESS": "تم إنشاء المهمة بنجاح",
     "UPDATE_SUCCESS": "تم تعديل المهمة بنجاح",
     "CREATE_FAILED": "فشل إنشاء المهمة",
     "UPDATE_FAILED": "فشل تعديل المهمة",
-    "searchKey": "بحث عن المهام"
+    "searchKey": "بحث عن المهام",
+    "STATUS": "الحالة",
+    "ID": "الكود"
   }
-
 }
