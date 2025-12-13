@@ -110,6 +110,8 @@ namespace TaskMangment.Infrastructure.Services
 
             await _courseRepository.AddAsync(course);
             await _courseRepository.SaveChangesAsync();
+            await _cache.RemoveAsync("courses:");
+
             var coursedto = _mapper.Map<CourseGetDto>(course);
 
             return ApiResponse<CourseGetDto>.Ok(coursedto, "Course added successfully");
@@ -144,6 +146,8 @@ namespace TaskMangment.Infrastructure.Services
             }
 
             await _courseRepository.SaveChangesAsync();
+            await _cache.RemoveAsync("courses:");
+
             var coursedto = _mapper.Map<CourseGetDto>(course);
 
             return ApiResponse<CourseGetDto>.Ok(coursedto, "Course updated successfully");
@@ -157,6 +161,8 @@ namespace TaskMangment.Infrastructure.Services
 
             _courseRepository.SoftDelete(course);
             await _courseRepository.SaveChangesAsync();
+            await _cache.RemoveAsync("courses:");
+
 
             return ApiResponse<bool>.Ok(true, "Course deleted successfully");
         }

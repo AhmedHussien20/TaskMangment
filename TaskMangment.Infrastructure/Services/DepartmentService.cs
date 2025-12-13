@@ -119,6 +119,8 @@ namespace TaskMangment.Infrastructure.Services
 
             await _departmentRepository.AddAsync(department);
             await _departmentRepository.SaveChangesAsync();
+            await _cache.RemoveAsync("departments:");
+
             var fullDepartment = await _departmentRepository
       .GetAll(d => d.Id == department.Id)
       .Include(d => d.Branch)
@@ -153,6 +155,8 @@ namespace TaskMangment.Infrastructure.Services
 
             _mapper.Map(dto, department);
             await _departmentRepository.SaveChangesAsync();
+            await _cache.RemoveAsync("departments:");
+
             var fullDepartment = await _departmentRepository
                  .GetAll(d => d.Id == department.Id)
                  .Include(d => d.Branch)
@@ -174,6 +178,8 @@ namespace TaskMangment.Infrastructure.Services
             department.ManagerEmployeeId = null;
 
             await _departmentRepository.SaveChangesAsync();
+            await _cache.RemoveAsync("departments:");
+
 
             return ApiResponse<bool>.Ok(true, "Department deleted successfully");
         }

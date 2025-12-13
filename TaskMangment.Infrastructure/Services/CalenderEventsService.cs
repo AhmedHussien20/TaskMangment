@@ -90,6 +90,7 @@ namespace TaskMangment.Infrastructure.Services
 
             await _eventRepo.AddAsync(ev);
             await _eventRepo.SaveChangesAsync();
+            await _cache.RemoveAsync("events:");
             var calendarEventdto = _mapper.Map<CalendarEventGetDto>(ev);
 
 
@@ -105,6 +106,7 @@ namespace TaskMangment.Infrastructure.Services
             _mapper.Map(dto, ev);
 
             await _eventRepo.SaveChangesAsync();
+            await _cache.RemoveAsync("events:");
             var calendarEventdto = _mapper.Map<CalendarEventGetDto>(ev);
 
             return ApiResponse<CalendarEventGetDto>.Ok(calendarEventdto, "Event updated");
@@ -118,6 +120,8 @@ namespace TaskMangment.Infrastructure.Services
 
             _eventRepo.SoftDelete(ev);
             await _eventRepo.SaveChangesAsync();
+            await _cache.RemoveAsync("events:");
+
 
             return ApiResponse<bool>.Ok(true, "Event deleted");
         }

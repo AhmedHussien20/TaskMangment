@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Http;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -12,6 +13,8 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
         [Required]
         [MinLength(50, ErrorMessage = "Comment must be at least 50 characters")]
         public string CommentText { get; set; }
+        public IFormFile? File { get; set; }
+
     }
     public class TaskCommentGetDto
     {

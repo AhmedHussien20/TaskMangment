@@ -39,7 +39,7 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<PagedResponse<TaskExtensionRequestListDto>>> GetAllAsync(TaskExtensionRequestRequest request)
         {
-            string cacheKey = $"taskExtensionRequests{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
+            string cacheKey = $"taskExtensionRequests:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
 
             if (!request.BypassCache)
             {
@@ -103,6 +103,8 @@ namespace TaskMangment.Infrastructure.Services
 
             await _requestRepo.AddAsync(request);
             await _requestRepo.SaveChangesAsync();
+            await _cache.RemoveAsync("taskExtensionRequests:");
+
 
             // Optional: clear cache pattern
             // await _cache.RemoveByPatternAsync("taskExtensionRequests-");
@@ -124,6 +126,7 @@ namespace TaskMangment.Infrastructure.Services
             request.ReviewedAt = DateTime.UtcNow;
 
             await _requestRepo.SaveChangesAsync();
+            await _cache.RemoveAsync("taskExtensionRequests:");
 
             // Optional: clear cache pattern
             // await _cache.RemoveByPatternAsync("taskExtensionRequests-");

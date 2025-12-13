@@ -180,6 +180,7 @@ namespace TaskMangment.Infrastructure.Services
 
             _areaRepository.SoftDelete(area);
             await _areaRepository.SaveChangesAsync();
+            await _cache.RemoveAsync("areas:");
 
             // TODO: Invalidate cache later
 
