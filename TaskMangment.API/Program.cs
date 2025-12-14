@@ -191,11 +191,11 @@ namespace TaskMangment.API
 
             // API Controllers
             app.MapControllers();
-            using (var scope = app.Services.CreateScope())
-            {
-                var seeder = scope.ServiceProvider.GetRequiredService<DataSeeder>();
-                await seeder.SeedAsync();
-            }
+            //using (var scope = app.Services.CreateScope())
+            //{
+            //    var seeder = scope.ServiceProvider.GetRequiredService<DataSeeder>();
+            //    await seeder.SeedAsync();
+            //}
 
             app.Run();
         }

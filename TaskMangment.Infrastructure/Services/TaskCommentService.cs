@@ -133,14 +133,15 @@ namespace TaskMangment.Infrastructure.Services
                     UploadedAt = DateTime.UtcNow,
                     TaskId = taskId
 
-
                 };
 
                 await _attachmentRepo.AddAsync(attachment);
                 await _attachmentRepo.SaveChangesAsync();
             }
-
             await _cache.RemoveAsync("taskComments:");
+            var commentDto = _mapper.Map<TaskCommentGetDto>(comment);
+            commentDto.AttachmentCount = await _attachmentRepo.CountAsync(a => a.CommentId == comment.Id);
+
             return ApiResponse<TaskCommentGetDto>.Ok(commentDto, "Comment added successfully");
         }
 

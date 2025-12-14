@@ -5,7 +5,6 @@ export interface Role {
 }
 
 export interface RoleAddEdit {
-  companyId?: number;
   name: string;
   description?: string;
 }
@@ -18,4 +17,18 @@ export interface RolePermissionAssign {
 export interface AssignRoleToEmployee {
   employeeId: number;
   roleId: number;
+}
+
+export interface RoleRequest {
+  pageIndex: number;
+  pageSize: number;
+  sortColumn: string;
+  sortDirection: string;
+}
+
+export interface RolePagedResponse {
+  data: Role[];
+  totalCount: number;
+  pageIndex: number;
+  pageSize: number;
 }

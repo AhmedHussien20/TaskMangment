@@ -39,6 +39,9 @@ export const content: Routes = [
       { path: 'department', loadChildren: () => import('../../../app/components/department/department.routes').then(r => r.DepartmentRoutingModule) },
       { path: 'task', loadChildren: () => import('../../../app/components/tasks/task.routes').then(r => r.TaskRoutingModule) },
       {path: 'employee', loadChildren: () => import('../../../app/components/employee/employee.routes').then(r => r.EmployeeRoutingModule)},
+      {path: 'role', loadChildren: () => import('../../../app/components/role/role.routes').then(r => r.RoleRoutingModule)},
+      {path: 'student', loadChildren: () => import('../../../app/components/student/student.routes').then(r => r.StudentRoutingModule)},
+      {path: 'course', loadChildren: () => import('../../../app/components/course/course.routes').then(r => r.CourseRoutingModule)},
 
        //    {
       //     path: '',

@@ -54,11 +54,9 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<PagedResponse<PermissionGetDto>>> GetAllAsync(PermissionRequest request)
         {
-            string safeName = request.Name ?? "";
-            string safeCode = request.Code ?? "";
-
+          
             string cacheKey =
-                $"permissions-{request.PageIndex}-{request.PageSize}-{request.SortColumn}-{request.SortDirection}-{safeName}-{safeCode}";
+                $"permissions:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
 
             if (!request.BypassCache)
             {
@@ -69,12 +67,7 @@ namespace TaskMangment.Infrastructure.Services
 
             var query = _permissionRepo.GetAll().AsNoTracking().AsQueryable();
 
-            if (!string.IsNullOrWhiteSpace(request.Name))
-                query = query.Where(p => p.Name.Contains(request.Name));
-
-            if (!string.IsNullOrWhiteSpace(request.Code))
-                query = query.Where(p => p.Code.Contains(request.Code));
-
+          
             int totalCount = await query.CountAsync();
 
             query = query.OrderByDynamicSafe(request.SortColumn, request.SortDirection);
@@ -105,6 +98,8 @@ namespace TaskMangment.Infrastructure.Services
           
 
             var resultDto = _mapper.Map<PermissionGetDto>(permission);
+            await _cache.RemoveAsync("permissions:");
+
             return ApiResponse<PermissionGetDto>.Ok(resultDto, "Permission created successfully");
         }
 
@@ -123,10 +118,12 @@ namespace TaskMangment.Infrastructure.Services
 
             _mapper.Map(dto, permission);
             await _permissionRepo.SaveChangesAsync();
+            await _cache.RemoveAsync("permissions:");
 
-          
+
 
             var resultDto = _mapper.Map<PermissionGetDto>(permission);
+
             return ApiResponse<PermissionGetDto>.Ok(resultDto, "Permission updated successfully");
         }
 
@@ -138,7 +135,7 @@ namespace TaskMangment.Infrastructure.Services
 
             _permissionRepo.SoftDelete(permission);
             await _permissionRepo.SaveChangesAsync();
-
+            await _cache.RemoveAsync("permissions:");
 
             return ApiResponse<bool>.Ok(true, "Permission deleted successfully");
         }
