@@ -94,7 +94,7 @@ export class EmployeeCreateUpdateComponent implements OnInit {
       validations: { maxlength: 200 }, 
       defaultValue: '' 
     },
-    { 
+    /*{ 
       type: 'select', 
       label: 'EMPLOYEE.ROLES', 
       selectType: 'simple',
@@ -102,7 +102,7 @@ export class EmployeeCreateUpdateComponent implements OnInit {
       multiple: true,
       options: [], 
       validations: { required: true } 
-    },
+    },*/
     { 
       type: 'input', 
       inputType: 'email',
@@ -117,7 +117,18 @@ export class EmployeeCreateUpdateComponent implements OnInit {
       label: 'EMPLOYEE.PASSWORD', 
       name: 'password', 
       validations: { required: !this.isEdit, maxlength: 500 }, 
-      defaultValue: '' 
+      defaultValue: '',
+      showPassword: false
+ 
+    },
+     { 
+      type: 'input', 
+      inputType: 'password',
+      label: 'EMPLOYEE.CONFIRM_PASSWORD', 
+      name: 'confirmPassword', 
+      validations: { required: !this.isEdit, maxlength: 500 }, 
+      defaultValue: '',
+      showPassword: false
     }
   ];
 
@@ -133,7 +144,7 @@ export class EmployeeCreateUpdateComponent implements OnInit {
   ngOnInit() {
     this.initForm();
     this.loadBranches();
-    this.loadRoles();
+   // this.loadRoles();
     if (this.isEdit && this.employeeId) {
       this.loadEmployee();
     }
@@ -149,14 +160,31 @@ export class EmployeeCreateUpdateComponent implements OnInit {
       mobile: [''],
       address: [''],
       qualification: [''],
-      roleIds: [[], Validators.required],
+    //  roleIds: [[], Validators.required],
       email: ['', Validators.email],
-      password: ['']
+      password: [''],
+      confirmPassword: ['']
+    }, { 
+      validators: this.passwordMatchValidator 
     });
 
-    if (!this.isEdit) {
+     if (!this.isEdit) {
       this.formGroup.get('password')?.setValidators([Validators.required, Validators.maxLength(500)]);
+      this.formGroup.get('confirmPassword')?.setValidators([Validators.required, Validators.maxLength(500)]);
     }
+  }
+
+  passwordMatchValidator(formGroup: FormGroup) {
+    const password = formGroup.get('password')?.value;
+    const confirmPassword = formGroup.get('confirmPassword')?.value;
+    
+    if (password !== confirmPassword) {
+      formGroup.get('confirmPassword')?.setErrors({ passwordMismatch: true });
+    } else {
+      formGroup.get('confirmPassword')?.setErrors(null);
+    }
+    
+    return null;
   }
 
   loadEmployee() {
@@ -176,7 +204,9 @@ export class EmployeeCreateUpdateComponent implements OnInit {
         qualification: emp.qualification,
         roleIds: emp.roleIds || [],
         email: emp.email,
-        password: '' // Don't fill password in edit
+        password: '', // Don't fill password in edit
+        confirmPassword: ''
+
       });
     });
   }
@@ -203,7 +233,7 @@ export class EmployeeCreateUpdateComponent implements OnInit {
     });
   }
 
-  loadRoles() {
+ /* loadRoles() {
     // Assuming you have a RoleService with getAll method
     const req = {
       searchKey: '',
@@ -214,7 +244,7 @@ export class EmployeeCreateUpdateComponent implements OnInit {
     };
 
   
-  }
+  }*/
 
   onSubmit(formValue: any) {
     if (this.formGroup.invalid) {
@@ -224,7 +254,10 @@ export class EmployeeCreateUpdateComponent implements OnInit {
     }
 
     // Remove password field if empty in edit mode
-    const submitData = { ...this.formGroup.value };
+      const submitData = { ...this.formGroup.value };
+    delete submitData.confirmPassword;
+    
+    // Remove password field if empty in edit mode
     if (this.isEdit && !submitData.password) {
       delete submitData.password;
     }

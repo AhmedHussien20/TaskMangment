@@ -10,17 +10,42 @@ export const RoleRoutes: Routes = [
         .then(m => m.RoleListComponent)
   },
   {
-    path: 'add',
+    path: 'create-role',
     loadComponent: () =>
       import('./role-create-update/role-create-update.component')
         .then(m => m.RoleCreateUpdateComponent)
   },
   {
-    path: 'edit/:id',
+    path: 'permission-list',
     loadComponent: () =>
-      import('./role-create-update/role-create-update.component')
-        .then(m => m.RoleCreateUpdateComponent)
+      import('./permission-list/permission-list.component')
+        .then(m => m.PermissionListComponent)
+  },
+  {
+    path: 'create-permission',
+    loadComponent: () =>
+      import('./permission-create-update/permission-create-update.component')
+        .then(m => m.PermissionCreateUpdateComponent)
+  },
+  {
+    path: 'edit-permission/:id',
+    loadComponent: () =>
+      import('./permission-create-update/permission-create-update.component')
+        .then(m => m.PermissionCreateUpdateComponent)
+  },
+  {
+    path: 'assign-permissions',
+    loadComponent: () =>
+      import('./role-assign-permission/role-assign-permission.component')
+        .then(m => m.RoleAssignPermissionsComponent)
+  },
+  {
+    path: 'assign-to-employee',
+    loadComponent: () =>
+      import('./role-assign-employee/role-assign-employee.component')
+        .then(m => m.RoleAssignEmployeeComponent)
   }
+
 ];
 
 @NgModule({

@@ -28,10 +28,10 @@ namespace TaskMangment.API.Controllers
             return Success(result.Data, "Role created successfully");
         }
 
-        [HttpPost("{roleId}/assign-permissions")]
-        public async Task<IActionResult> AssignPermissions(int roleId, [FromBody] List<int> permissionIds)
+        [HttpPost("assign-permissions")]
+        public async Task<IActionResult> AssignPermissions(RolePermissionAssignDto dto)
         {
-            var result = await _service.AssignPermissionsAsync(roleId, permissionIds);
+            var result = await _service.AssignPermissionsAsync(dto);
 
             if (!result.Success)
                 return Fail(result.Message);
@@ -40,9 +40,9 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpPost("assign-to-employee")]
-        public async Task<IActionResult> AssignRoleToEmployee([FromQuery] int employeeId, [FromQuery] int roleId)
+        public async Task<IActionResult> AssignRoleToEmployee(AssignRoleToEmployeeDto dto)
         {
-            var result = await _service.AssignRoleToEmployeeAsync(employeeId, roleId);
+            var result = await _service.AssignRoleToEmployeeAsync(dto);
 
             if (!result.Success)
                 return Fail(result.Message);

@@ -1,16 +1,15 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { NgbModal, NgbModalModule, NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
-
+import { NgbModal, NgbModalModule } from '@ng-bootstrap/ng-bootstrap';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
-import { GenericTableComponent } from '../../../shared/components/generic-table/generic-table.component';
-
 import { RoleService } from 'app/core/services/role.service';
-
 import { TranslateModule } from '@ngx-translate/core';
 import { Role } from 'app/core/models/roles/role';
-import { RoleCreateUpdateComponent } from '../role-create-update/role-create-update.component';
+import { RoleCreateUpdateComponent } from "../role-create-update/role-create-update.component";
+import { RoleAssignEmployeeComponent } from '../role-assign-employee/role-assign-employee.component';
+import { RoleAssignPermissionsComponent } from '../role-assign-permission/role-assign-permission.component';
+
 
 @Component({
   selector: 'app-role-list',
@@ -18,13 +17,14 @@ import { RoleCreateUpdateComponent } from '../role-create-update/role-create-upd
   imports: [
     CommonModule,
     FormsModule,
-    NgbPaginationModule,
     PageHeaderComponent,
-    GenericTableComponent,
     TranslateModule,
     NgbModalModule,
-    RoleCreateUpdateComponent
-  ],
+    RoleCreateUpdateComponent,
+    RoleAssignEmployeeComponent,
+    RoleAssignPermissionsComponent
+
+],
   templateUrl: './role-list.component.html'
 })
 export class RoleListComponent implements OnInit {
@@ -33,14 +33,7 @@ export class RoleListComponent implements OnInit {
   breadcrumbs = ['HOME', 'ROLES'];
   activeitem = 'ROLE.LIST_TITLE';
 
-  columns = [
-    { key: 'id', label: 'ROLE.ID' },
-    { key: 'name', label: 'ROLE.NAME' },
-    { key: 'description', label: 'ROLE.DESCRIPTION' }
-  ];
-
-  rows: Role[] = [];
-
+  roles: Role[] = [];
   isLoading = false;
 
   constructor(
@@ -54,12 +47,10 @@ export class RoleListComponent implements OnInit {
 
   loadData() {
     this.isLoading = true;
-    // هنا نحتاج companyId - لازم تجيبه من الـ auth أو localStorage
-    const companyId = 1; // مؤقت
 
-    this.roleService.getRoles(companyId).subscribe({
+    this.roleService.getRoles().subscribe({
       next: (res: any) => {
-        this.rows = res.data;
+        this.roles = res.data;
         this.isLoading = false;
       },
       error: () => {
@@ -69,6 +60,23 @@ export class RoleListComponent implements OnInit {
   }
 
   openAdd(modal: any) {
+    this.modalService.open(modal, {
+      centered: true,
+      backdrop: true,
+      size: 'lg',
+      windowClass: 'effect-scale'
+    });
+  }
+   openAssignPermissions(modal: any) {
+    this.modalService.open(modal, {
+      centered: true,
+      backdrop: true,
+      size: 'lg',
+      windowClass: 'effect-scale'
+    });
+  }
+
+  openAssignToEmployee(modal: any) {
     this.modalService.open(modal, {
       centered: true,
       backdrop: true,
