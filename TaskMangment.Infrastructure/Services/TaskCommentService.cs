@@ -97,11 +97,12 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<TaskCommentGetDto>.Ok(dto);
         }
 
-        public async Task<ApiResponse<TaskCommentGetDto>> AddAsync(int taskId, int employeeId, TaskCommentAddEditDto dto)
+        public async Task<ApiResponse<TaskCommentGetDto>> AddAsync( int taskId, int employeeId,TaskCommentAddEditDto dto)
         {
             var task = await _taskRepo.GetByIDAsync(taskId);
             if (task == null)
                 return ApiResponse<TaskCommentGetDto>.Fail("Task not found", StatusCode.NotFound);
+
             var comment = _mapper.Map<TaskComment>(dto);
             comment.TaskId = taskId;
             comment.EmployeeId = employeeId;
@@ -109,12 +110,21 @@ namespace TaskMangment.Infrastructure.Services
 
             await _commentRepo.AddAsync(comment);
             await _commentRepo.SaveChangesAsync();
+
+           
             if (dto.File != null)
             {
-                var fileName = $"{Guid.NewGuid()}_{dto.File.FileName}";
-                var filePath = Path.Combine("wwwroot/uploads/comments", fileName);
+                var uploadsRoot = Path.Combine(
+                    Directory.GetCurrentDirectory(),
+                    "wwwroot",
+                    "uploads",
+                    "comments");
 
-                Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
+                if (!Directory.Exists(uploadsRoot))
+                    Directory.CreateDirectory(uploadsRoot);
+
+                var fileName = $"{Guid.NewGuid()}_{dto.File.FileName}";
+                var filePath = Path.Combine(uploadsRoot, fileName);
 
                 using (var stream = new FileStream(filePath, FileMode.Create))
                 {
@@ -124,7 +134,7 @@ namespace TaskMangment.Infrastructure.Services
                 var attachment = new Attachment
                 {
                     FileName = dto.File.FileName,
-                    FilePath = filePath,
+                    FilePath = $"uploads/comments/{fileName}",  
                     Size = dto.File.Length,
                     CommentId = comment.Id,
                     UploadedBy = employeeId,
@@ -132,7 +142,6 @@ namespace TaskMangment.Infrastructure.Services
                     ContentType = dto.File.ContentType,
                     UploadedAt = DateTime.UtcNow,
                     TaskId = taskId
-
                 };
 
                 await _attachmentRepo.AddAsync(attachment);
@@ -144,6 +153,7 @@ namespace TaskMangment.Infrastructure.Services
 
             return ApiResponse<TaskCommentGetDto>.Ok(commentDto, "Comment added successfully");
         }
+
 
 
         public async Task<ApiResponse<TaskCommentGetDto>> UpdateAsync(int id, TaskCommentAddEditDto dto)
