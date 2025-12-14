@@ -33,6 +33,9 @@ namespace TaskMangment.Infrastructure.Services
             services.AddScoped<IEmployeeService, EmployeeService>();
             services.AddScoped<IPermissionService, PermissionService>();
             services.AddScoped<IRoleService, RoleService>();
+            services.AddScoped<IRoleAssignmentService, RoleAssignmentService>();
+            services.AddScoped<IRolePermissionService, RolePermissionService>();
+
             services.AddScoped<ITaskService, TaskService>();
             services.AddSingleton<ICachingService, NoCacheService>();
 
