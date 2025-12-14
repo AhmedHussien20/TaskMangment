@@ -29,33 +29,6 @@ namespace TaskMangment.Application.DTOs
         public int PermissionCount { get; set; }
     }
 
-    public class RolePermissionAssignDto
-    {
-        [Required]
-        public int RoleId { get; set; }
-
-        [Required]
-        public List<int> PermissionIds { get; set; }
-    }
-
-    public class AssignRoleToEmployeeDto
-    {
-        [Required]
-        public int EmployeeId { get; set; }
-
-        [Required]
-        public int RoleId { get; set; }
-    }
-
-    public class RoleWithPermissionsDto
-    {
-        public int Id { get; set; }
-        public int? CompanyId { get; set; }
-        public string Name { get; set; }
-        public string? Description { get; set; }
-
-        public List<PermissionGetDto> Permissions { get; set; }
-    }
     public class PermissionAddDto
     {
         [Required, MaxLength(100)]
@@ -77,4 +50,55 @@ namespace TaskMangment.Application.DTOs
     }
 
 
-}
+
+    public class EmployeeRoleAssignDto
+    {
+        [Required]
+        public int RoleId { get; set; }
+
+        [Required]
+        public List<int> EmployeeIds { get; set; } = new();
+    }
+
+    //public class AssignedEmployeeDto
+    //{
+    //    public int EmployeeId { get; set; }
+    //    public string FullName { get; set; }
+    //    public string Email { get; set; }
+    //    public string Mobile { get; set; }
+    //    public string? BranchName { get; set; }
+    //    public bool IsAssigned { get; set; }
+    //}
+
+ 
+    }
+
+    public class AssignedPermissionDto
+    {
+        public int PermissionId { get; set; }
+        public string Code { get; set; }
+        public string Name { get; set; }
+        public string? Description { get; set; }
+        public bool IsAssigned { get; set; }
+    }
+
+    //public class RoleEmployeeBulkAssignDto
+    //{
+    //    [Required]
+    //    public int RoleId { get; set; }
+
+    //    [Required]
+    //    public List<EmployeeRoleAssignmentDto> Assignments { get; set; } = new();
+    //}
+
+    //public class EmployeeRoleAssignmentDto
+    //{
+    //    [Required]
+    //    public int EmployeeId { get; set; }
+
+    //    [Required]
+    //    public bool Assign { get; set; } // true = assign, false = unassign
+    //}
+
+   
+

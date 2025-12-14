@@ -13,6 +13,7 @@ namespace TaskMangment.Domain.Entities
     {
         public int EmployeeId { get; set; }
         public int RoleId { get; set; }
+        public bool IsAssigned { get; set; } = true; 
 
         public Employee Employee { get; set; }
         public Role Role { get; set; }
