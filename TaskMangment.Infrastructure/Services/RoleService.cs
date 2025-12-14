@@ -59,67 +59,6 @@ namespace TaskMangment.Infrastructure.Services
 
             return ApiResponse<int>.Ok(role.Id, "Role created");
         }
-
-        public async Task<ApiResponse<bool>> AssignPermissionsAsync(RolePermissionAssignDto dto)
-        {
-            if (!await _roleRepo.IsExistAsync(dto.RoleId))
-                return ApiResponse<bool>.Fail("role not found", StatusCode.NotFound);
-
-            if (dto.PermissionIds == null || !dto.PermissionIds.Any())
-                return ApiResponse<bool>.Fail("no permissions to assign");
-
-            foreach (var pid in dto.PermissionIds)
-            {
-                if (!await _permissionRepo.IsExistAsync(pid))
-                    return ApiResponse<bool>.Fail("permission not found", StatusCode.NotFound);
-            }
-
-            foreach (var pid in dto.PermissionIds)
-            {
-                var rp = new RolePermission
-                {
-                    RoleId = dto.RoleId,
-                    PermissionId = pid,
-                    CreatedDate= DateTime.UtcNow
-                };
-
-                await _rolePermRepo.AddAsync(rp);
-            }
-
-            await _rolePermRepo.SaveChangesAsync();
-            return ApiResponse<bool>.Ok(true,"Permissions assigned");
-        }
-
-        public async Task<ApiResponse<bool>> AssignRoleToEmployeeAsync(AssignRoleToEmployeeDto dto)
-        {
-
-            if (!await _employeeRepo.IsExistAsync(dto.EmployeeId))
-                return ApiResponse<bool>.Fail("employee not found", StatusCode.NotFound);
-
-            if (!await _roleRepo.IsExistAsync(dto.RoleId))
-                return ApiResponse<bool>.Fail("this role not found", StatusCode.NotFound);
-
-            var alreadyAssigned = await _employeeRoleRepo
-                   .GetAll(er => er.EmployeeId == dto.EmployeeId && er.RoleId == dto.RoleId)
-                   .AnyAsync();
-
-            if (alreadyAssigned)
-                return ApiResponse<bool>.Fail("Role already assigned");
-
-            var er = new EmployeeRole
-            {
-                EmployeeId = dto.EmployeeId,
-                RoleId = dto.RoleId,
-                CreatedDate = DateTime.UtcNow
-            };
-
-            await _employeeRoleRepo.AddAsync(er);
-            await _employeeRoleRepo.SaveChangesAsync();
-
-
-            return ApiResponse<bool>.Ok(true, "Role assigned to employee");
-        }
-
         public async Task<ApiResponse<List<RoleGetDto>>> GetRolesAsync(int companyId)
         {
             var roles = await _roleRepo.GetAll(r => r.CompanyId == companyId).ToListAsync();
@@ -133,6 +72,8 @@ namespace TaskMangment.Infrastructure.Services
 
             return ApiResponse<List<RoleGetDto>>.Ok(result);
         }
+
+
     }
 }
 
