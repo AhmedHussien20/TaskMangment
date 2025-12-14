@@ -44,14 +44,6 @@ export class RoleCreateUpdateComponent implements OnInit {
       name: 'description', 
       validations: { maxlength: 500 }, 
       defaultValue: '' 
-    },
-    { 
-      type: 'input', 
-      inputType: 'number',
-      label: 'ROLE.COMPANY_ID', 
-      name: 'companyId', 
-      validations: { required: false }, 
-      defaultValue: '' 
     }
   ];
 
@@ -69,8 +61,7 @@ export class RoleCreateUpdateComponent implements OnInit {
   initForm() {
     this.formGroup = this.fb.group({
       name: ['', Validators.required],
-      description: [''],
-      companyId: [null]
+      description: ['']
     });
   }
 
@@ -82,7 +73,7 @@ export class RoleCreateUpdateComponent implements OnInit {
     }
 
     this.roleService.create(this.formGroup.value).subscribe({
-      next: (res) => {
+      next: () => {
         this.toastr.success(this.translate.instant('ROLE.CREATE_SUCCESS'));
         this.formSubmitted.emit();
       },

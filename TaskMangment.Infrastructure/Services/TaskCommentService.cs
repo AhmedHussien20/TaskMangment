@@ -147,17 +147,9 @@ namespace TaskMangment.Infrastructure.Services
                 await _attachmentRepo.AddAsync(attachment);
                 await _attachmentRepo.SaveChangesAsync();
             }
-
-            // Reload comment with relations if needed
-            var fullComment = await _commentRepo.GetAll(c => c.Id == comment.Id)
-                .Include(c => c.Attachments)
-                .AsNoTracking()
-                .FirstOrDefaultAsync();
-
-            var commentDto = _mapper.Map<TaskCommentGetDto>(fullComment);
-
-            // Clear cache
             await _cache.RemoveAsync("taskComments:");
+            var commentDto = _mapper.Map<TaskCommentGetDto>(comment);
+            commentDto.AttachmentCount = await _attachmentRepo.CountAsync(a => a.CommentId == comment.Id);
 
             return ApiResponse<TaskCommentGetDto>.Ok(commentDto, "Comment added successfully");
         }
