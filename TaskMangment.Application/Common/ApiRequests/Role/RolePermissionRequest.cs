@@ -7,10 +7,7 @@ using TaskMangment.Application.ApiRequests;
 
 namespace TaskMangment.Application.Common.ApiRequests.Role
 {
-    public class RoleRequest : BaseApiRequest
+    public class RolePermissionRequest : BaseApiRequest
     {
-       
     }
-
-    
 }

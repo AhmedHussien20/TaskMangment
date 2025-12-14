@@ -13,9 +13,11 @@ namespace TaskMangment.Application.Interfaces
     public interface IRoleService
     {
         Task<ApiResponse<int>> CreateRoleAsync(RoleAddDto dto);
-        Task<ApiResponse<bool>> AssignPermissionsAsync(RolePermissionAssignDto dto);
-        Task<ApiResponse<bool>> AssignRoleToEmployeeAsync(AssignRoleToEmployeeDto dto);
+
         Task<ApiResponse<List<RoleGetDto>>> GetRolesAsync(int companyId);
+
+
+
     }
 
 }
