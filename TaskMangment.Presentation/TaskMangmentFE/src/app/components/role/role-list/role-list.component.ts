@@ -1,15 +1,16 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { NgbModal, NgbModalModule } from '@ng-bootstrap/ng-bootstrap';
-import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
-import { RoleService } from 'app/core/services/role.service';
+import { NgbPaginationModule, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { TranslateModule } from '@ngx-translate/core';
-import { Role } from 'app/core/models/roles/role';
-import { RoleCreateUpdateComponent } from "../role-create-update/role-create-update.component";
-import { RoleAssignEmployeeComponent } from '../role-assign-employee/role-assign-employee.component';
-import { RoleAssignPermissionsComponent } from '../role-assign-permission/role-assign-permission.component';
 
+import { PageHeaderComponent } from 'app/shared/components/page-header/page-header.component';
+import { GenericTableComponent } from 'app/shared/components/generic-table/generic-table.component';
+
+import { Role } from 'app/core/models/roles/role';
+import { RoleService } from 'app/core/services/role.service';
+import { SearchCriteria } from 'app/core/models/search-criteria.model';
+import { RoleCreateUpdateComponent } from '../role-create-update/role-create-update.component';
 
 @Component({
   selector: 'app-role-list',
@@ -17,25 +18,63 @@ import { RoleAssignPermissionsComponent } from '../role-assign-permission/role-a
   imports: [
     CommonModule,
     FormsModule,
-    PageHeaderComponent,
+    NgbPaginationModule,
     TranslateModule,
-    NgbModalModule,
-    RoleCreateUpdateComponent,
-    RoleAssignEmployeeComponent,
-    RoleAssignPermissionsComponent
-
-],
-  templateUrl: './role-list.component.html'
+    PageHeaderComponent,
+    GenericTableComponent,
+    RoleCreateUpdateComponent
+  ],
+  templateUrl: './role-list.component.html',
+  styleUrls: ['./role-list.component.scss']
 })
 export class RoleListComponent implements OnInit {
 
   title = 'ROLE.LIST_TITLE';
   breadcrumbs = ['HOME', 'ROLES'];
   activeitem = 'ROLE.LIST_TITLE';
+  isEdit = false;
+  columns = [
+    { key: 'id', label: 'ROLE.ID' },
+    { key: 'name', label: 'ROLE.NAME' },
+    { key: 'description', label: 'ROLE.DESCRIPTION' },
+    {
+    key: 'employeeCount',
+    label: 'ROLE.EMPLOYEES',
+    type: 'icon-action' as const,
+    icon: 'bi bi-people'
+  },
+  {
+    key: 'permissionCount',
+    label: 'ROLE.PERMISSIONS',
+    type: 'icon-action' as const,
+    icon: 'bi-shield-lock'
+  }
 
-  roles: Role[] = [];
+  ];
+
+  rows: Role[] = [];
+  totalItems = 0;
+
+  page = 1;
+  entries = 10;
+
+  searchCriteria: SearchCriteria = {
+    searchKey: '',
+    pageIndex: this.page,
+    pageSize: this.entries,
+    sortColumn: 'Id',
+    sortDirection: 'ASC',
+    filterTypes: {
+      searchKey: 'text'
+    }
+  };
+
+  labels = {
+    searchKey: 'ROLE.SEARCH'
+  };
+
   isLoading = false;
-
+  selectedRoleId: number | null = null;
   constructor(
     private roleService: RoleService,
     private modalService: NgbModal
@@ -48,9 +87,12 @@ export class RoleListComponent implements OnInit {
   loadData() {
     this.isLoading = true;
 
-    this.roleService.getRoles().subscribe({
+    this.roleService.getAll(this.searchCriteria).subscribe({
       next: (res: any) => {
-        this.roles = res.data;
+        this.rows = res.data.data;
+        this.totalItems = res.data.totalCount;
+        this.page = res.data.pageIndex;
+        this.entries = res.data.pageSize;
         this.isLoading = false;
       },
       error: () => {
@@ -59,25 +101,44 @@ export class RoleListComponent implements OnInit {
     });
   }
 
-  openAdd(modal: any) {
-    this.modalService.open(modal, {
-      centered: true,
-      backdrop: true,
-      size: 'lg',
-      windowClass: 'effect-scale'
-    });
-  }
-   openAssignPermissions(modal: any) {
-    this.modalService.open(modal, {
-      centered: true,
-      backdrop: true,
-      size: 'lg',
-      windowClass: 'effect-scale'
-    });
+  onPageChange(page: number) {
+    this.page = page;
+    this.searchCriteria.pageIndex = page;
+    this.loadData();
   }
 
-  openAssignToEmployee(modal: any) {
-    this.modalService.open(modal, {
+  onEntriesChange(entries: number) {
+    this.entries = entries;
+    this.searchCriteria.pageSize = entries;
+    this.searchCriteria.pageIndex = 1;
+    this.page = 1;
+    this.loadData();
+  }
+
+  applyFilters(filters: any) {
+    this.searchCriteria = {
+      ...this.searchCriteria,
+      ...filters,
+      pageIndex: 1
+    };
+    this.page = 1;
+    this.loadData();
+  }
+
+  openAdd(modal: any) {
+    this.isEdit = false;
+    this.selectedRoleId = null;
+    this.open(modal);
+  }
+
+  openEdit(id: number, modal: any) {
+    this.isEdit = true;
+    this.selectedRoleId = id;
+    this.open(modal);
+  }
+
+  open(content: any) {
+    this.modalService.open(content, {
       centered: true,
       backdrop: true,
       size: 'lg',
@@ -89,4 +150,18 @@ export class RoleListComponent implements OnInit {
     this.modalService.dismissAll();
     this.loadData();
   }
+
+onIconAction(event: { type: string; row: any }) {
+  if (event.type === 'employeeCount') {
+    // this.router.navigate(
+    //   ['/employee/employee-list'],
+    //   {
+    //     queryParams: {
+    //       roleId: event.row.id   // 👈 فلترة حسب الدور
+    //     }
+    //   }
+    // );
+  }
+}
+
 }

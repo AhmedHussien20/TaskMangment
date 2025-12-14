@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace TaskMangment.Application.DTOs
 {
-    public class RoleAddDto
+    public class RoleAddEditDto
     {
         public int? CompanyId { get; set; }
 
@@ -24,6 +24,9 @@ namespace TaskMangment.Application.DTOs
         public int? CompanyId { get; set; }
         public string Name { get; set; }
         public string? Description { get; set; }
+
+        public int EmployeeCount { get; set; }
+        public int PermissionCount { get; set; }
     }
 
     public class RolePermissionAssignDto

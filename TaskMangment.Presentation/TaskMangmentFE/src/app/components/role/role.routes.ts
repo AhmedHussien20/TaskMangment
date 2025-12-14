@@ -32,19 +32,7 @@ export const RoleRoutes: Routes = [
     loadComponent: () =>
       import('./permission-create-update/permission-create-update.component')
         .then(m => m.PermissionCreateUpdateComponent)
-  },
-  {
-    path: 'assign-permissions',
-    loadComponent: () =>
-      import('./role-assign-permission/role-assign-permission.component')
-        .then(m => m.RoleAssignPermissionsComponent)
-  },
-  {
-    path: 'assign-to-employee',
-    loadComponent: () =>
-      import('./role-assign-employee/role-assign-employee.component')
-        .then(m => m.RoleAssignEmployeeComponent)
-  }
+  } 
 
 ];
 

@@ -5,13 +5,20 @@ import { NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
 import { TranslateModule } from '@ngx-translate/core';
 import { SearchCriteria } from 'app/core/models/search-criteria.model';
 
+export type ColumnType =
+  | 'text'
+  | 'icon-action'
+  | 'icon'
+  | 'custom';
+
 export interface TableColumn {
   key: string;
-  label: string;         // translation key أو نص عادي
-  isButton?: boolean;    // لو عمود زرار
-  icon?: string;         // للأعمدة اللي هي buttons
-  onClick?: (item: any) => void
+  label: string;
+  type?: ColumnType;
+  icon?: string;
 }
+
+
 interface HasId {
   id: any;
 }
@@ -30,7 +37,7 @@ export class GenericTableComponent<T> implements OnDestroy {
 
   @Input() formUrl: string = '';
   @Input() breadcrumbs: string[] = [];
-  @Input() activeitem: string = ''; 
+  @Input() activeitem: string = '';
 
   // ---------- Inputs ----------
   @Input() title: string = '';
@@ -64,6 +71,7 @@ export class GenericTableComponent<T> implements OnDestroy {
   @Output() entriesChange = new EventEmitter<number>();
   @Output() edit = new EventEmitter<number>();
   @Output() delete = new EventEmitter<number>();
+  @Input() rowClickable: boolean = false;
 
   // ---------- UI State ----------
   loading: boolean = false;             // لو حبيت تستخدمه بعدين
@@ -79,6 +87,11 @@ export class GenericTableComponent<T> implements OnDestroy {
   private resizeStartWidth: number = 0;
 
   // ---------- Helpers ----------
+  @Output() iconAction = new EventEmitter<{
+    type: string;
+    row: any;
+  }>();
+
 
   objectKeys(obj: any): string[] {
     return obj ? Object.keys(obj) : [];
@@ -252,4 +265,23 @@ export class GenericTableComponent<T> implements OnDestroy {
     document.removeEventListener('mousemove', this.onMouseMove);
     document.removeEventListener('mouseup', this.onMouseUp);
   }
+
+  onRowClick(item: T, event: MouseEvent) {
+    if (!this.rowClickable) return;
+
+    const target = event.target as HTMLElement;
+    if (
+      target.closest('button') ||
+      target.closest('input') ||
+      target.closest('a')
+    ) {
+      return;
+    }
+
+    const id = this.getItemId(item);
+    if (id !== undefined && id !== null) {
+      this.edit.emit(id);
+    }
+  }
+
 }

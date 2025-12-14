@@ -31,7 +31,7 @@ namespace TaskMangment.Application.AutoMapper
 
 
             CreateMap<Role, RoleGetDto>();
-            CreateMap<RoleAddDto, Role>();
+            CreateMap<RoleAddEditDto, Role>();
             CreateMap<Role, RoleWithPermissionsDto>();
 
             CreateMap<Permission, PermissionGetDto>();
@@ -181,7 +181,7 @@ namespace TaskMangment.Application.AutoMapper
                 .ForMember(dest => dest.ChangedBy, opt => opt.MapFrom(src => src.ChangedBy != null ? src.ChangedBy : "System"));
 
             CreateMap<Role, RoleGetDto>();
-            CreateMap<RoleAddDto, Role>();
+            CreateMap<RoleAddEditDto, Role>();
             CreateMap<Role, RoleWithPermissionsDto>()
                 .ForMember(dest => dest.Permissions, opt => opt.MapFrom(src => src.RolePermissions.Select(rp => rp.Permission)));
 
