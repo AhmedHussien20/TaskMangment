@@ -114,7 +114,7 @@ namespace TaskMangment.Infrastructure.Services
                 return ApiResponse<AreaGetDto>.Fail("Company not found", StatusCode.NotFound);
 
             var isManagerUsed = await _areaRepository
-                .GetAll(a => a.ManagerEmployeeId == dto.ManagerID)
+                .GetAll(a => a.ManagerEmployeeId == dto.ManagerEmployeeId)
                 .AnyAsync();
 
             if (isManagerUsed)
@@ -151,7 +151,7 @@ namespace TaskMangment.Infrastructure.Services
                 return ApiResponse<AreaGetDto>.Fail("Manager not found", StatusCode.NotFound);
 
             var isManagerUsed = await _areaRepository
-                .GetAll(a => a.ManagerEmployeeId == dto.ManagerID && a.Id != id)
+                .GetAll(a => a.ManagerEmployeeId == dto.ManagerEmployeeId && a.Id != id)
                 .AnyAsync();
 
             if (isManagerUsed)
