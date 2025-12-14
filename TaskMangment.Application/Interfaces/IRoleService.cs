@@ -12,10 +12,12 @@ namespace TaskMangment.Application.Interfaces
 {
     public interface IRoleService
     {
-        Task<ApiResponse<int>> CreateRoleAsync(RoleAddDto dto);
-        Task<ApiResponse<bool>> AssignPermissionsAsync(RolePermissionAssignDto dto);
-        Task<ApiResponse<bool>> AssignRoleToEmployeeAsync(AssignRoleToEmployeeDto dto);
-        Task<ApiResponse<List<RoleGetDto>>> GetRolesAsync(int companyId);
+        Task<ApiResponse<PagedResponse<RoleGetDto>>> GetAllAsync(RoleRequest request, int companyId);
+        Task<ApiResponse<RoleGetDto>> GetByIdAsync(int id, int companyId);
+        Task<ApiResponse<int>> CreateAsync(RoleAddEditDto dto, int companyId);
+        Task<ApiResponse<RoleGetDto>> UpdateAsync(int id, RoleAddEditDto dto, int companyId);
+        Task<ApiResponse<bool>> DeleteAsync(int id, int companyId);
     }
+
 
 }

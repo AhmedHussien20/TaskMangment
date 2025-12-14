@@ -4,109 +4,68 @@
 <div class="row row-sm">
   <div class="col-md-12 col-lg-12">
     <div class="card custom-card">
-
       <div class="card-header border-bottom-0">
-        <div class="d-flex justify-content-between align-items-center">
-          <label class="main-content-label my-auto pt-2">{{ title | translate }}</label>
-          
-          <button class="btn btn-success btn-sm" (click)="openAdd(roleModal)">
-            <i class="fa fa-plus"></i> {{ 'ROLE.ADD' | translate }}
-          </button>
-           <button class="btn btn-info btn-sm" (click)="openAssignPermissions(assignPermissionsModal)">
-              <i class="bi bi-shield-check"></i> {{ 'ROLE.ASSIGN_PERMISSIONS' | translate }}
-            </button>
-            <button class="btn btn-warning btn-sm" (click)="openAssignToEmployee(assignToEmployeeModal)">
-              <i class="bi bi-person-check"></i> {{ 'ROLE.ASSIGN_TO_EMPLOYEE' | translate }}
-            </button>
-        </div>
+        <label class="main-content-label my-auto pt-2">
+          {{ title | translate }}
+        </label>
       </div>
 
       <div class="card-body pt-2">
 
-        <!-- LOADING -->
+        <!-- Loading -->
         <div *ngIf="isLoading" class="text-center my-3">
-          <div class="spinner-border" role="status">
-            <span class="visually-hidden">{{ 'TABLE.LOADING' | translate }}</span>
-          </div>
+          <div class="spinner-border"></div>
         </div>
 
-        <!-- TABLE -->
-        <div *ngIf="!isLoading && roles.length > 0">
-          <div class="table-responsive">
-            <table class="table table-bordered table-hover align-middle">
-              <thead class="table-light">
-                <tr>
-                  <th>{{ 'ROLE.ID' | translate }}</th>
-                  <th>{{ 'ROLE.NAME' | translate }}</th>
-                  <th>{{ 'ROLE.DESCRIPTION' | translate }}</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let role of roles">
-                  <td>{{ role.id }}</td>
-                  <td>{{ role.name }}</td>
-                  <td>{{ role.description || '-' }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <!-- Table -->
+        <div *ngIf="!isLoading">
+          <app-generic-table
+            [title]="title"
+            [breadcrumbs]="breadcrumbs"
+            [activeitem]="activeitem"
+            [labels]="labels"
+            [columns]="columns"
+            [data]="rows"
 
-        <!-- NO DATA -->
-        <div *ngIf="!isLoading && roles.length === 0" class="text-center text-muted py-5">
-          <i class="bi bi-inbox fa-3x mb-3"></i>
-          <p>{{ 'TABLE.NO_DATA' | translate }}</p>
+            [entries]="entries"
+            [page]="page"
+            [totalItems]="totalItems"
+
+            [showAddButton]="true"
+            [addButtonLabel]="'ROLE.ADD' | translate"
+            (addClick)="openAdd(roleModal)"
+
+            [showEditButton]="true"
+            (edit)="openEdit($event, roleModal)"
+
+            (iconAction)="onIconAction($event)"
+
+            [showFilters]="true"
+            [searchCriteria]="searchCriteria"
+            [onSearch]="applyFilters.bind(this)"
+
+            (pageChange)="onPageChange($event)"
+            (entriesChange)="onEntriesChange($event)">
+          </app-generic-table>
         </div>
 
       </div>
     </div>
   </div>
 </div>
-
-<!-- MODAL TEMPLATE -->
 <ng-template #roleModal let-modal>
   <div class="modal-header">
     <h6 class="modal-title">
-      {{ 'ROLE.CREATE_TITLE' | translate }}
+      {{ isEdit ? ('ROLE.EDIT' | translate) : ('ROLE.ADD' | translate) }}
     </h6>
     <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
   </div>
 
   <div class="modal-body">
-    <app-role-create-update (formSubmitted)="onFormSubmitted()"></app-role-create-update>
-
+    <app-role-create-update
+      [isEdit]="isEdit"
+      [roleId]="selectedRoleId"
+      (formSubmitted)="onFormSubmitted()">
+    </app-role-create-update>
   </div>
 </ng-template>
-<ng-template #assignPermissionsModal let-modal>
-  <div class="modal-header">
-    <h6 class="modal-title">
-      {{ 'ROLE.ASSIGN_PERMISSIONS_TITLE' | translate }}
-    </h6>
-    <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
-  </div>
-
-  <div class="modal-body">
-    <app-role-assign-permissions 
-      (assigned)="onFormSubmitted()" 
-      (cancel)="modal.dismiss()">
-    </app-role-assign-permissions>
-  </div>
-</ng-template>
-
-<!-- ASSIGN TO EMPLOYEE MODAL -->
-<ng-template #assignToEmployeeModal let-modal>
-  <div class="modal-header">
-    <h6 class="modal-title">
-      {{ 'ROLE.ASSIGN_TO_EMPLOYEE_TITLE' | translate }}
-    </h6>
-    <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
-  </div>
-
-  <div class="modal-body">
-    <app-role-assign-employee 
-      (assigned)="onFormSubmitted()" 
-      (cancel)="modal.dismiss()">
-    </app-role-assign-employee>
-  </div>
-</ng-template>
-

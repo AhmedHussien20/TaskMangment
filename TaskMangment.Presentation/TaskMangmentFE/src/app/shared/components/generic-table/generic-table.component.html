@@ -1,28 +1,29 @@
 <div class="generic-table-container">
 
-    <!-- Header -->
+    <!-- ================= HEADER ================= -->
     <div *ngIf="title" class="d-flex justify-content-between align-items-center mb-3">
         <h5>{{ title | translate }}</h5>
 
         <div class="d-flex gap-2">
             <button *ngIf="showAddButton" class="btn btn-success btn-sm" (click)="addClick.emit()">
-                <i class="fa fa-plus"></i> {{ addButtonLabel | translate }}
+                <i class="fa fa-plus"></i>
+                {{ addButtonLabel | translate }}
             </button>
 
-            <button class="btn btn-outline-info btn-sm btn-export" (click)="exportExcel()">
-                <i class="fa fa-file-excel"></i> {{ 'TABLE.EXPORT' | translate }}
+            <button class="btn btn-outline-info btn-sm" (click)="exportExcel()">
+                <i class="fa fa-file-excel"></i>
+                {{ 'TABLE.EXPORT' | translate }}
             </button>
         </div>
     </div>
 
-    <!-- Filter Toggle -->
+    <!-- ================= FILTERS ================= -->
     <div *ngIf="showFilters">
         <div class="filter-header" (click)="toggleFilters()">
             <span>{{ 'TABLE.FILTERS' | translate }}</span>
             <i class="fa" [ngClass]="filtersOpen ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
         </div>
 
-        <!-- Filters -->
         <div class="filter-card" *ngIf="filtersOpen">
             <div class="filter-grid">
 
@@ -52,21 +53,23 @@
 
             <div class="filter-actions">
                 <button class="btn btn-primary btn-sm me-2" (click)="applyFilters()">
-                    <i class="fa fa-search"></i> {{ 'TABLE.SEARCH' | translate }}
+                    <i class="fa fa-search"></i>
+                    {{ 'TABLE.SEARCH' | translate }}
                 </button>
 
                 <button class="btn btn-outline-secondary btn-sm" (click)="clearFilters()">
-                    <i class="fa fa-times"></i> {{ 'TABLE.CLEAR_FILTERS' | translate }}
+                    <i class="fa fa-times"></i>
+                    {{ 'TABLE.CLEAR_FILTERS' | translate }}
                 </button>
             </div>
-
         </div>
     </div>
 
-    <!-- Table -->
+    <!-- ================= TABLE ================= -->
     <div class="table-responsive mt-3">
         <table class="table table-bordered table-hover align-middle">
 
+            <!-- ===== HEADER ===== -->
             <thead class="table-light">
                 <tr>
 
@@ -76,39 +79,61 @@
 
                     <th *ngFor="let col of columns" [ngStyle]="getColumnStyle(col.key)">
                         <div class="d-flex justify-content-between align-items-center">
-
-                            <span (click)="sort(col.key)">
+                            <span (click)="sort(col.key)" class="cursor-pointer">
                                 {{ col.label | translate }}
-                                <i class="sort-icon" *ngIf="sortColumn === col.key">
+                                <i *ngIf="sortColumn === col.key">
                                     {{ sortDirection === 'ASC' ? '↑' : '↓' }}
                                 </i>
                             </span>
 
-                            <span class="col-resizer" (mousedown)="startResize($event, col.key)">
-                            </span>
-
+                            <span class="col-resizer" (mousedown)="startResize($event, col.key)"></span>
                         </div>
                     </th>
 
                     <th *ngIf="showEditButton || showDeleteButton" class="text-center">
                         {{ 'TABLE.ACTIONS' | translate }}
                     </th>
+
                 </tr>
             </thead>
 
+            <!-- ===== BODY ===== -->
             <tbody>
 
-                <tr *ngFor="let item of data">
+                <tr *ngFor="let item of data" (click)="onRowClick(item, $event)" [class.row-clickable]="rowClickable">
 
+                    <!-- Checkbox -->
                     <td *ngIf="showCheckbox" class="text-center">
                         <input type="checkbox" [ngModel]="isItemSelected(item)"
                             (ngModelChange)="setItemSelected(item, $event); updateSelectedItems()" />
                     </td>
 
+                    <!-- Columns -->
                     <td *ngFor="let col of columns">
-                        {{ getValue(item, col.key) }}
+
+
+
+                        <!-- ICON ACTION COLUMN -->
+                        <ng-container *ngIf="col.type === 'icon-action'; else normalCell">
+                            <button class="btn btn-outline-secondary btn-sm"
+                                (click)="iconAction.emit({ type: col.key, row: item })">
+                                <i [class]="col.icon"></i>
+                                <span class="badge bg-info ms-1">
+                                    {{ getValue(item, col.key) }}
+                                </span>
+                            </button>
+                        </ng-container>
+
+                        <!-- NORMAL CELL -->
+                        <ng-template #normalCell>
+                            {{ getValue(item, col.key) }}
+                        </ng-template>
+
+
                     </td>
 
+
+                    <!-- ACTIONS -->
                     <td *ngIf="showEditButton || showDeleteButton" class="text-center">
 
                         <button *ngIf="showEditButton" class="btn btn-outline-primary btn-sm"
@@ -116,15 +141,15 @@
                             <i class="bi bi-pencil-square"></i>
                         </button>
 
-                        <button *ngIf="showDeleteButton" class="btn btn-outline-danger btn-sm btn-action"
+                        <button *ngIf="showDeleteButton" class="btn btn-outline-danger btn-sm ms-1"
                             (click)="deleteItem(getItemId(item))">
                             <i class="bi bi-trash"></i>
                         </button>
 
-
                     </td>
                 </tr>
 
+                <!-- NO DATA -->
                 <tr *ngIf="!data || data.length === 0">
                     <td [attr.colspan]="columns.length + (showCheckbox?1:0) + (showEditButton||showDeleteButton?1:0)"
                         class="text-center text-muted py-3">
@@ -133,17 +158,14 @@
                 </tr>
 
             </tbody>
-
         </table>
     </div>
 
-    <!-- Pagination -->
+    <!-- ================= PAGINATION ================= -->
     <div *ngIf="showPagination" class="mt-3 d-flex justify-content-between align-items-center">
 
         <div class="text-muted small">
             {{ 'TABLE.TOTAL_RECORDS' | translate }}: {{ totalItems }}
-            &nbsp;|&nbsp;
-            {{ 'TABLE.TOTAL_PAGES' | translate }}: {{ totalPages }}
         </div>
 
         <div class="d-flex align-items-center gap-2">

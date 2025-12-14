@@ -20,119 +20,191 @@ namespace TaskMangment.Infrastructure.Services
     public class RoleService : IRoleService
     {
         private readonly IRepository<Role> _roleRepo;
-        private readonly IRepository<Permission> _permissionRepo;
-        private readonly IRepository<RolePermission> _rolePermRepo;
         private readonly IRepository<EmployeeRole> _employeeRoleRepo;
-        private readonly IRepository<Employee> _employeeRepo;
+        private readonly IRepository<RolePermission> _rolePermissionRepo;
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
 
         public RoleService(
             IRepository<Role> roleRepo,
-            IRepository<Permission> permissionRepo,
-            IRepository<RolePermission> rolePermRepo,
-            IRepository<EmployeeRole> employeeRoleRepo,
             IMapper mapper,
             ICachingService cache,
-            IRepository<Employee> employeeRepo)
+            IRepository<EmployeeRole> employeeRoleRepo,
+            IRepository<RolePermission> rolePermissionRepo)
         {
             _roleRepo = roleRepo;
-            _permissionRepo = permissionRepo;
-            _rolePermRepo = rolePermRepo;
-            _employeeRoleRepo = employeeRoleRepo;
             _mapper = mapper;
             _cache = cache;
-            _employeeRepo = employeeRepo;
+            _employeeRoleRepo = employeeRoleRepo;
+            _rolePermissionRepo = rolePermissionRepo;
         }
 
-        public async Task<ApiResponse<int>> CreateRoleAsync(RoleAddDto dto)
+        public async Task<ApiResponse<PagedResponse<RoleGetDto>>> GetAllAsync(
+    RoleRequest request,
+    int companyId)
         {
-            var role = new Role
+            string cacheKey =
+                $"roles:{companyId}:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
+
+            if (!request.BypassCache)
             {
-                Name = dto.Name,
-                CompanyId = dto.CompanyId,
-                Description = dto.Description
-            };
+                var cached = await _cache.GetAsync<PagedResponse<RoleGetDto>>(cacheKey);
+                if (cached != null)
+                    return ApiResponse<PagedResponse<RoleGetDto>>.Ok(cached);
+            }
+
+            // Base query
+            var query = _roleRepo
+                .GetAll(r => r.CompanyId == companyId)
+                .ApplySearch(request.searchKey);
+
+            var totalCount = await query.CountAsync();
+
+            query = query.OrderByDynamicSafe(
+                request.SortColumn,
+                request.SortDirection);
+
+            var roles = await query
+                .Skip((request.PageIndex - 1) * request.PageSize)
+                .Take(request.PageSize)
+                .ToListAsync();
+
+            var roleIds = roles.Select(r => r.Id).ToList();
+             
+            var employeeCounts = await _employeeRoleRepo
+                .GetAll(er => roleIds.Contains(er.RoleId))
+                .GroupBy(er => er.RoleId)
+                .Select(g => new
+                {
+                    RoleId = g.Key,
+                    Count = g.Count()
+                })
+                .ToListAsync();
+             
+            var permissionCounts = await _rolePermissionRepo
+                .GetAll(rp => roleIds.Contains(rp.RoleId))
+                .GroupBy(rp => rp.RoleId)
+                .Select(g => new
+                {
+                    RoleId = g.Key,
+                    Count = g.Count()
+                })
+                .ToListAsync();
+             
+            var dtos = _mapper.Map<List<RoleGetDto>>(roles);
+
+            foreach (var dto in dtos)
+            {
+                dto.EmployeeCount =
+                    employeeCounts.FirstOrDefault(x => x.RoleId == dto.Id)?.Count ?? 0;
+
+                dto.PermissionCount =
+                    permissionCounts.FirstOrDefault(x => x.RoleId == dto.Id)?.Count ?? 0;
+            }
+
+            var response = new PagedResponse<RoleGetDto>(
+                dtos,
+                totalCount,
+                request.PageIndex,
+                request.PageSize);
+
+            await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
+
+            return ApiResponse<PagedResponse<RoleGetDto>>.Ok(response);
+        }
+
+
+        public async Task<ApiResponse<RoleGetDto>> GetByIdAsync(int id, int companyId)
+        {
+            var role = await _roleRepo.GetAll(r =>
+                    r.Id == id &&
+                    r.CompanyId == companyId)
+                .AsNoTracking()
+                .FirstOrDefaultAsync();
+
+            if (role == null)
+                return ApiResponse<RoleGetDto>.Fail("Role not found", StatusCode.NotFound);
+
+            var dto = _mapper.Map<RoleGetDto>(role);
+            return ApiResponse<RoleGetDto>.Ok(dto);
+        }
+         
+        public async Task<ApiResponse<int>> CreateAsync(
+            RoleAddEditDto dto,
+            int companyId)
+        {
+            var roleExists = await _roleRepo
+                .GetAll(r =>
+                    r.CompanyId == companyId &&
+                    r.Name == dto.Name)
+                .AnyAsync();
+
+            if (roleExists)
+                return ApiResponse<int>.Fail(
+                    "Role with the same name already exists",
+                    StatusCode.AlreadyUsed);
+
+            var role = _mapper.Map<Role>(dto);
+            role.CompanyId = companyId;
 
             await _roleRepo.AddAsync(role);
             await _roleRepo.SaveChangesAsync();
 
-            return ApiResponse<int>.Ok(role.Id, "Role created");
+            await _cache.RemoveAsync("roles:");
+
+            return ApiResponse<int>.Ok(role.Id, "Role created successfully");
+        }
+         
+        public async Task<ApiResponse<RoleGetDto>> UpdateAsync(int id,RoleAddEditDto dto,int companyId)
+        {
+            var role = await _roleRepo.GetAll(r =>
+                    r.Id == id &&
+                    r.CompanyId == companyId)
+                .FirstOrDefaultAsync();
+
+            if (role == null)
+                return ApiResponse<RoleGetDto>.Fail("Role not found", StatusCode.NotFound);
+
+            var roleExists = await _roleRepo
+                .GetAll(r =>
+                    r.CompanyId == companyId &&
+                    r.Name == dto.Name &&
+                    r.Id != id)
+                .AnyAsync();
+
+            if (roleExists)
+                return ApiResponse<RoleGetDto>.Fail(
+                    "Role with the same name already exists",
+                    StatusCode.AlreadyUsed);
+            dto.CompanyId = companyId;
+            _mapper.Map(dto, role);
+
+            await _roleRepo.SaveChangesAsync();
+            await _cache.RemoveAsync("roles:");
+
+            var dtoResult = _mapper.Map<RoleGetDto>(role);
+            return ApiResponse<RoleGetDto>.Ok(dtoResult, "Role updated successfully");
         }
 
-        public async Task<ApiResponse<bool>> AssignPermissionsAsync(RolePermissionAssignDto dto)
+        
+        public async Task<ApiResponse<bool>> DeleteAsync(int id, int companyId)
         {
-            if (!await _roleRepo.IsExistAsync(dto.RoleId))
-                return ApiResponse<bool>.Fail("role not found", StatusCode.NotFound);
+            var role = await _roleRepo.GetAll(r =>
+                    r.Id == id &&
+                    r.CompanyId == companyId)
+                .FirstOrDefaultAsync();
 
-            if (dto.PermissionIds == null || !dto.PermissionIds.Any())
-                return ApiResponse<bool>.Fail("no permissions to assign");
+            if (role == null)
+                return ApiResponse<bool>.Fail("Role not found", StatusCode.NotFound);
 
-            foreach (var pid in dto.PermissionIds)
-            {
-                if (!await _permissionRepo.IsExistAsync(pid))
-                    return ApiResponse<bool>.Fail("permission not found", StatusCode.NotFound);
-            }
+            _roleRepo.SoftDelete(role);
+            await _roleRepo.SaveChangesAsync();
 
-            foreach (var pid in dto.PermissionIds)
-            {
-                var rp = new RolePermission
-                {
-                    RoleId = dto.RoleId,
-                    PermissionId = pid,
-                    CreatedDate= DateTime.UtcNow
-                };
+            await _cache.RemoveAsync("roles:");
 
-                await _rolePermRepo.AddAsync(rp);
-            }
-
-            await _rolePermRepo.SaveChangesAsync();
-            return ApiResponse<bool>.Ok(true,"Permissions assigned");
-        }
-
-        public async Task<ApiResponse<bool>> AssignRoleToEmployeeAsync(AssignRoleToEmployeeDto dto)
-        {
-
-            if (!await _employeeRepo.IsExistAsync(dto.EmployeeId))
-                return ApiResponse<bool>.Fail("employee not found", StatusCode.NotFound);
-
-            if (!await _roleRepo.IsExistAsync(dto.RoleId))
-                return ApiResponse<bool>.Fail("this role not found", StatusCode.NotFound);
-
-            var alreadyAssigned = await _employeeRoleRepo
-                   .GetAll(er => er.EmployeeId == dto.EmployeeId && er.RoleId == dto.RoleId)
-                   .AnyAsync();
-
-            if (alreadyAssigned)
-                return ApiResponse<bool>.Fail("Role already assigned");
-
-            var er = new EmployeeRole
-            {
-                EmployeeId = dto.EmployeeId,
-                RoleId = dto.RoleId,
-                CreatedDate = DateTime.UtcNow
-            };
-
-            await _employeeRoleRepo.AddAsync(er);
-            await _employeeRoleRepo.SaveChangesAsync();
-
-
-            return ApiResponse<bool>.Ok(true, "Role assigned to employee");
-        }
-
-        public async Task<ApiResponse<List<RoleGetDto>>> GetRolesAsync(int companyId)
-        {
-            var roles = await _roleRepo.GetAll(r => r.CompanyId == companyId).ToListAsync();
-
-            var result = roles.Select(r => new RoleGetDto
-            {
-                Id = r.Id,
-                Name = r.Name,
-                Description = r.Description
-            }).ToList();
-
-            return ApiResponse<List<RoleGetDto>>.Ok(result);
+            return ApiResponse<bool>.Ok(true, "Role deleted successfully");
         }
     }
+
 }
 

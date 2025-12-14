@@ -31,4 +31,7 @@ export interface RolePagedResponse {
   totalCount: number;
   pageIndex: number;
   pageSize: number;
+  
+  employeeCount: number;
+  permissionCount: number;
 }

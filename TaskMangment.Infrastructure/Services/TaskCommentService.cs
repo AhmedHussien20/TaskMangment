@@ -109,16 +109,13 @@ namespace TaskMangment.Infrastructure.Services
             comment.CreatedDate = DateTime.UtcNow;
 
             await _commentRepo.AddAsync(comment);
-            await _commentRepo.SaveChangesAsync();
+            
 
            
             if (dto.File != null)
             {
                 var uploadsRoot = Path.Combine(
-                    Directory.GetCurrentDirectory(),
-                    "wwwroot",
-                    "uploads",
-                    "comments");
+                    Directory.GetCurrentDirectory(),"wwwroot",  "uploads", "comments");
 
                 if (!Directory.Exists(uploadsRoot))
                     Directory.CreateDirectory(uploadsRoot);
@@ -145,8 +142,9 @@ namespace TaskMangment.Infrastructure.Services
                 };
 
                 await _attachmentRepo.AddAsync(attachment);
-                await _attachmentRepo.SaveChangesAsync();
+                //await _attachmentRepo.SaveChangesAsync();
             }
+            await _commentRepo.SaveChangesAsync();
             await _cache.RemoveAsync("taskComments:");
             var commentDto = _mapper.Map<TaskCommentGetDto>(comment);
             commentDto.AttachmentCount = await _attachmentRepo.CountAsync(a => a.CommentId == comment.Id);

@@ -210,31 +210,30 @@
     "UNAUTHORIZED": "Unauthorized"
   },
   "DEPARTMENT": {
-  "TITLE": "Department",
-  "LIST_TITLE": "Department List",
-  "ADD": "Add Department",
-  "EDIT": "Edit Department",
-  "NAME": "Department Name",
-  "BRANCH": "Branch",
-  "MANAGER": "Manager",
-  "CREATE_SUCCESS": "Department created successfully",
-  "UPDATE_SUCCESS": "Department updated successfully",
-  "SEARCH": "Search Departments"
-},
-"TASK": {
-  "LIST_TITLE": "Tasks",
-  "ADD": "Add Task",
-  "EDIT": "Edit Task",
-  "TITLE": "Title",
-  "DESCRIPTION": "Description",
-  "PRIORITY": "Priority",
-  "STATUS": "Status",
-  "DUE_DATE": "Due Date",
-  "ASSIGNED_BY": "Assigned By",
-  "SAVED_SUCCESS": "Task saved successfully"
-  
-},
- "EMPLOYEE": {
+    "TITLE": "Department",
+    "LIST_TITLE": "Department List",
+    "ADD": "Add Department",
+    "EDIT": "Edit Department",
+    "NAME": "Department Name",
+    "BRANCH": "Branch",
+    "MANAGER": "Manager",
+    "CREATE_SUCCESS": "Department created successfully",
+    "UPDATE_SUCCESS": "Department updated successfully",
+    "SEARCH": "Search Departments"
+  },
+  "TASK": {
+    "LIST_TITLE": "Tasks",
+    "ADD": "Add Task",
+    "EDIT": "Edit Task",
+    "TITLE": "Title",
+    "DESCRIPTION": "Description",
+    "PRIORITY": "Priority",
+    "STATUS": "Status",
+    "DUE_DATE": "Due Date",
+    "ASSIGNED_BY": "Assigned By",
+    "SAVED_SUCCESS": "Task saved successfully"
+  },
+  "EMPLOYEE": {
     "TITLE": "Employees",
     "LIST_TITLE": "Employees List",
     "CREATE_TITLE": "Add Employee",
@@ -290,7 +289,6 @@
     "VALIDATION_ERROR": "Please fill in all required fields correctly.",
     "searchKey": "Search by student name"
   },
-  
   "ROLE": {
     "TITLE": "Roles Management",
     "LIST_TITLE": "Roles List",
@@ -320,8 +318,8 @@
     "ASSIGN_TO_EMPLOYEE": "Assign to Employee",
     "searchKey": "Search by role name",
     "VALIDATION_ERROR": "Please fill in all required fields correctly",
-    "SELECT_EMPLOYEE": "Select Employee"
-
+    "SELECT_EMPLOYEE": "Select Employee",
+    "SEARCH": "Search for roles"
   },
   "PERMISSION": {
     "TITLE": "Permissions Management",
@@ -344,5 +342,4 @@
     "VALIDATION_ERROR": "Please fill in all required fields correctly",
     "searchKey": "Search by permission name or code"
   }
-
 }

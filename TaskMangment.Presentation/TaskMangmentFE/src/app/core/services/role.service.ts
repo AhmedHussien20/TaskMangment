@@ -1,9 +1,16 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { BaseResponse } from 'app/models/base.response.model';
+
 import { ApiService } from 'app/core/services/api.service';
-import { SearchCriteria } from '../models/search-criteria.model';
-import { Role, RoleAddEdit, RolePermissionAssign, AssignRoleToEmployee } from '../models/roles/role';
+import { BaseResponse } from 'app/models/base.response.model';
+
+import {
+  Role,
+  RoleAddEdit,
+  RolePagedResponse
+} from 'app/core/models/roles/role';
+
+import { SearchCriteria } from 'app/core/models/search-criteria.model';
 
 @Injectable({
   providedIn: 'root'
@@ -14,25 +21,52 @@ export class RoleService {
 
   constructor(private api: ApiService) {}
 
+  // =============================
+  // GET /Role?query
+  // =============================
+  getAll(request: SearchCriteria): Observable<BaseResponse<RolePagedResponse>> {
+    const query = this.buildQuery(request);
+    return this.api.get<BaseResponse<RolePagedResponse>>(this.service, `?${query}`);
+  }
+
+  // =============================
+  // GET /Role/{id}
+  // =============================
+  getById(id: number): Observable<BaseResponse<Role>> {
+    return this.api.get<BaseResponse<Role>>(this.service, `${id}`);
+  }
+
+  // =============================
   // POST /Role
-  create(model: RoleAddEdit): Observable<BaseResponse<number>> {
-    return this.api.post<BaseResponse<number>>(this.service, '', model);
+  // =============================
+  create(model: RoleAddEdit): Observable<BaseResponse<any>> {
+    return this.api.post<BaseResponse<any>>(this.service, '', model);
   }
 
-  // POST /Role/{roleId}/assign-permissions
-  assignPermissions(roleId: number, permissionIds: number[]): Observable<BaseResponse<boolean>> {
-    const body = { roleId ,permissionIds };
-    return this.api.post<BaseResponse<boolean>>(this.service, 'assign-permissions', body);
+  // =============================
+  // PUT /Role/{id}
+  // =============================
+  update(id: number, model: RoleAddEdit): Observable<BaseResponse<any>> {
+    return this.api.put<BaseResponse<any>>(this.service, `${id}`, model);
   }
 
-  // POST /Role/assign-to-employee?employeeId=X&roleId=Y
-    assignToEmployee(employeeId: number, roleId: number): Observable<BaseResponse<boolean>> {
-   const body = { employeeId, roleId };
-     return this.api.post<BaseResponse<boolean>>(this.service, 'assign-to-employee', body);
-    }
+  // =============================
+  // DELETE /Role/{id}
+  // =============================
+  delete(id: number): Observable<BaseResponse<any>> {
+    return this.api.delete<BaseResponse<any>>(this.service, `${id}`);
+  }
 
-  // GET /Role/company
-  getRoles(): Observable<BaseResponse<Role[]>> {
-    return this.api.get<BaseResponse<Role[]>>(this.service, 'company');
+  // =============================
+  // QUERY BUILDER
+  // =============================
+  private buildQuery(req: SearchCriteria): string {
+    return [
+      `searchKey=${req.searchKey ?? ''}`,
+      `PageIndex=${req.pageIndex}`,
+      `PageSize=${req.pageSize}`,
+      `SortColumn=${req.sortColumn}`,
+      `SortDirection=${req.sortDirection}`
+    ].join('&');
   }
 }
