@@ -9,15 +9,16 @@ export interface BaseApiRequest {
 }
 
 export interface CalendarEventRequest extends BaseApiRequest {}
-export type CalendarEventType =
-  | 'Calendar'
-  | 'Birthday'
-  | 'Holiday'
-  | 'Office'
-  | 'Other'
-  | 'Festival'
-  | 'Timeline';
 
+export enum CalendarEventType {
+  Meeting = 1,
+  Appointment = 2,
+  TaskDeadline = 3,
+  Holiday = 4,
+  Reminder = 5,
+  Birthday = 6,
+  Anniversar = 7
+}
 export interface CalendarEventGetDto {
   title: string;
   description: string;

@@ -71,14 +71,15 @@ export class EventCalenderComponent implements OnInit, AfterViewInit {
   @ViewChild('external', { static: false }) external!: ElementRef;
  
   categories: CategoryItem[] = [
-    { key: 'calendar', labelKey: 'CALENDAR.CAT_CALENDAR', className: 'bg-primary border border-primary', borderClass: 'bg-primary border border-primary' },
-    { key: 'birthday', labelKey: 'CALENDAR.CAT_BIRTHDAY', className: 'bg-secondary border border-secondary', borderClass: 'bg-secondary border border-secondary' },
-    { key: 'holiday', labelKey: 'CALENDAR.CAT_HOLIDAY', className: 'bg-success border border-success', borderClass: 'bg-success border border-success' },
-    { key: 'office',  labelKey: 'CALENDAR.CAT_OFFICE',  className: 'bg-info border border-info', borderClass: 'bg-info border border-info' },
-    { key: 'other',   labelKey: 'CALENDAR.CAT_OTHER',   className: 'bg-warning border border-warning', borderClass: 'bg-warning border border-warning' },
-    { key: 'festival',labelKey: 'CALENDAR.CAT_FESTIVAL',className: 'bg-danger border border-danger', borderClass: 'bg-danger border border-danger' },
-    { key: 'timeline',labelKey: 'CALENDAR.CAT_TIMELINE',className: 'bg-teal border border-teal', borderClass: 'bg-teal border border-teal' }
-  ];
+  { key: 'calendar', labelKey: 'CALENDAR.EVENT_TYPE.Meeting', className: 'bg-primary border border-primary', borderClass: 'bg-primary border border-primary' },
+  { key: 'birthday', labelKey: 'CALENDAR.EVENT_TYPE.Birthday', className: 'bg-warning border border-warning', borderClass: 'bg-warning border border-warning' },
+  { key: 'holiday', labelKey: 'CALENDAR.EVENT_TYPE.Holiday', className: 'bg-success border border-success', borderClass: 'bg-success border border-success' },
+  { key: 'office',  labelKey: 'CALENDAR.EVENT_TYPE.Appointment', className: 'bg-info border border-info', borderClass: 'bg-info border border-info' },
+  { key: 'other',   labelKey: 'CALENDAR.EVENT_TYPE.Reminder', className: 'bg-secondary border border-secondary', borderClass: 'bg-secondary border border-secondary' },
+  { key: 'festival',labelKey: 'CALENDAR.EVENT_TYPE.Anniversar', className: 'bg-danger border border-danger', borderClass: 'bg-danger border border-danger' },
+  { key: 'timeline',labelKey: 'CALENDAR.EVENT_TYPE.TaskDeadline', className: 'bg-teal border border-teal', borderClass: 'bg-teal border border-teal' }
+];
+
 
   // fullcalendar events
   calendarEvents: any[] = [];
@@ -185,6 +186,8 @@ export class EventCalenderComponent implements OnInit, AfterViewInit {
       };
 
       this.loading = false;
+      this.buildActivity(list);
+
     },
     error: () => {
       this.loading = false;
@@ -217,18 +220,20 @@ export class EventCalenderComponent implements OnInit, AfterViewInit {
 
 private resolveEventClass(e: CalendarEventGetDto): string {
   switch (e.eventType) {
-    case 'Birthday':
+    case CalendarEventType.Meeting:
       return 'bg-secondary-transparent';
-    case 'Holiday':
+    case CalendarEventType.Appointment:
       return 'bg-success-transparent';
-    case 'Office':
+    case CalendarEventType.TaskDeadline:
       return 'bg-info-transparent';
-    case 'Festival':
+    case CalendarEventType.Holiday:
       return 'bg-danger-transparent';
-    case 'Timeline':
+    case CalendarEventType.Reminder:
       return 'bg-teal-transparent';
-    case 'Other':
+    case CalendarEventType.Birthday:
       return 'bg-warning-transparent';
+    case CalendarEventType.Anniversar:
+      return 'bg-success-transparent';
     default:
       return 'bg-warning-transparent';
   }
@@ -242,44 +247,57 @@ private resolveEventClass(e: CalendarEventGetDto): string {
   }
 
   // ========= ACTIVITY =========
-  private buildActivity(list: CalendarEventGetDto[]): void {
-    this.activityLoading = true;
+ private buildActivity(list: CalendarEventGetDto[]): void {
+  this.activityLoading = true;
 
-    const sorted = [...list].sort((a, b) => {
-      const ta = new Date(a.startDate).getTime();
-      const tb = new Date(b.startDate).getTime();
-      return tb - ta;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // بداية اليوم
+
+  // فلترة الأحداث لتكون اليوم فقط
+  const todayEvents = list.filter(e => {
+    const eventDate = new Date(e.startDate);
+    eventDate.setHours(0, 0, 0, 0);
+    return eventDate.getTime() === today.getTime();
+  });
+
+  // ترتيب الأحداث حسب الوقت أو أي معيار آخر
+  const sorted = [...todayEvents].sort((a, b) => {
+    const ta = new Date(a.startDate).getTime();
+    const tb = new Date(b.startDate).getTime();
+    return ta - tb; // أصغر وقت أولًا
+  });
+
+  // لو عايز بس top 6
+  const top = sorted.slice(0, 6);
+
+  this.activity = top.map((e) => {
+    const date = new Date(e.startDate);
+    const dateText = date.toLocaleDateString(this.getLocale(), {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
     });
 
-    const top = sorted.slice(0, 6);
+    const badge = e.allDay
+      ? this.translate.instant('CALENDAR.ALL_DAY')
+      : date.toLocaleTimeString(this.getLocale(), { hour: '2-digit', minute: '2-digit' });
 
-    this.activity = top.map((e) => {
-      const date = new Date(e.startDate);
-      const dateText = date.toLocaleDateString(this.getLocale(), {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-      });
+    return {
+      title: e.title,
+      dateText,
+      badgeText: badge,
+      badgeClass: e.allDay ? 'bg-success' : 'bg-light text-default',
+      description: e.description || e.relatedTaskTitle || e.title
+    };
+  });
 
-      const badge = e.allDay
-        ? this.translate.instant('CALENDAR.ALL_DAY')
-        : date.toLocaleTimeString(this.getLocale(), { hour: '2-digit', minute: '2-digit' });
+  this.activityLoading = false;
+}
 
-      return {
-        title: e.title,
-        dateText,
-        badgeText: badge,
-        badgeClass: e.allDay ? 'bg-success' : 'bg-light text-default',
-        description: e.description || e.relatedTaskTitle || e.title
-      };
-    });
 
-    this.activityLoading = false;
-  }
 
   private getLocale(): string {
-    // لو عندك switching في المشروع خليها من currentLang
     const lang = this.translate.currentLang || 'en';
     return lang.startsWith('ar') ? 'ar-EG' : 'en-US';
   }
