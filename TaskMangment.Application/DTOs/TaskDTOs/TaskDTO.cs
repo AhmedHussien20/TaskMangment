@@ -43,7 +43,10 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
         public List<string> EmployeeNames { get; set; } = new(); 
         public TaskPriority Priority { get; set; }   
         public TaskStatus Status { get; set; }    
-        public DateTime? DueDate { get; set; }     
+        public DateTime? DueDate { get; set; }
+
+        public string PriorityText => Priority.ToString();
+        public string StatusText => Status.ToString();
     }
 
 }

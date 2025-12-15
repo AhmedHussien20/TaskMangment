@@ -34,8 +34,8 @@ export class TaskListComponent implements OnInit {
     { key: 'id', label: 'TASK.ID' },
     { key: 'title', label: 'TASK.TITLE' },
     { key: 'assignedByName', label: 'TASK.ASSIGNED_BY' },
-    { key: 'priority', label: 'TASK.PRIORITY' },
-    { key: 'status', label: 'TASK.STATUS' },
+    { key: 'priorityText', label: 'TASK.PRIORITY' },
+    { key: 'statusText', label: 'TASK.STATUS' },
     { key: 'dueDate', label: 'TASK.DUE_DATE' }
   ];
 
