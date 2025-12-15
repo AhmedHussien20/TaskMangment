@@ -1,0 +1,71 @@
+<div class="modal-header">
+  <h5 class="modal-title">
+    {{ 'CALENDAR.CREATE_EVENT' | translate }}
+  </h5>
+  <button type="button" class="btn-close" (click)="activeModal.dismiss()"></button>
+</div>
+
+<form [formGroup]="form" (ngSubmit)="onSave()">
+  <div class="modal-body">
+
+    <div class="mb-3">
+      <label class="form-label">
+        {{ 'CALENDAR.TITLE' | translate }}
+      </label>
+      <input class="form-control" formControlName="title" />
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">
+        {{ 'CALENDAR.DESCRIPTION' | translate }}
+      </label>
+      <textarea class="form-control" rows="3"
+        formControlName="description"></textarea>
+    </div>
+
+    <div class="row">
+      <div class="col-6">
+        <label class="form-label">
+          {{ 'CALENDAR.START_DATE' | translate }}
+        </label>
+        <input type="datetime-local"
+          class="form-control"
+          formControlName="startDate" />
+      </div>
+
+      <div class="col-6">
+        <label class="form-label">
+          {{ 'CALENDAR.END_DATE' | translate }}
+        </label>
+        <input type="datetime-local"
+          class="form-control"
+          formControlName="endDate" />
+      </div>
+    </div>
+
+    <div class="form-check mt-3">
+      <input class="form-check-input"
+        type="checkbox"
+        formControlName="allDay"
+        id="allDay">
+      <label class="form-check-label" for="allDay">
+        {{ 'CALENDAR.ALL_DAY' | translate }}
+      </label>
+    </div>
+
+  </div>
+
+  <div class="modal-footer">
+    <button type="button"
+      class="btn btn-light"
+      (click)="activeModal.dismiss()">
+      {{ 'COMMON.CANCEL' | translate }}
+    </button>
+
+    <button type="submit"
+      class="btn btn-primary"
+      [disabled]="form.invalid || saving">
+      {{ 'COMMON.SAVE' | translate }}
+    </button>
+  </div>
+</form>
