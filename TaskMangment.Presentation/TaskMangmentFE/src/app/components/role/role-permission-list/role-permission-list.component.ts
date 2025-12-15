@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule,TranslateService  } from '@ngx-translate/core';
 import { RolePermissionService } from 'app/core/services/role-permission.service';
 import { RoleService } from 'app/core/services/role.service'; // Service جديد
 import { SearchCriteria } from 'app/models/search-criteria.model';
@@ -45,7 +45,7 @@ export class RolePermissionListComponent implements OnInit {
   };
 
   labels = {
-    searchKey: 'PERMISSION.SEARCH'
+    searchKey: 'ROLE.SEARCH'
   };
 
   isLoading = true;
@@ -54,7 +54,9 @@ export class RolePermissionListComponent implements OnInit {
     private route: ActivatedRoute,
     private rolePermissionService: RolePermissionService,
     private roleService: RoleService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private translate: TranslateService 
+
   ) {}
 
   ngOnInit() {
@@ -67,9 +69,12 @@ export class RolePermissionListComponent implements OnInit {
       next: (res) => {
         this.roleName = res.data.name;
         
-        this.title = `ROLE.ASSIGN_PERMISSIONS`;
+        //this.title = `ROLE.ASSIGN_PERMISSIONS ${this.roleName}`;
+        const assignText = this.translate.instant('ROLE.ASSIGN_PERMISSIONS');
+        this.title = `${assignText}: ${this.roleName}`;
+        
         this.breadcrumbs = ['HOME', 'ROLES', this.roleName, 'PERMISSIONS'];
-        this.activeitem = `ROLE.ASSIGN_PERMISSIONS: ${this.roleName}`;
+        this.activeitem = `ROLE.ASSIGN_PERMISSIONS`;
         
         this.loadData();
       },
