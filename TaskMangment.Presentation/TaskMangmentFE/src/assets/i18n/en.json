@@ -341,5 +341,6 @@
     "SELECT_PERMISSIONS": "Select Permissions",
     "VALIDATION_ERROR": "Please fill in all required fields correctly",
     "searchKey": "Search by permission name or code"
+    
   }
 }

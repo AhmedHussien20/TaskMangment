@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { EmployeeRoleListComponent } from './employee-role-list/employee-role-list.component';
+import { RolePermissionListComponent } from './role-permission-list/role-permission-list.component';
 
 export const RoleRoutes: Routes = [
   {
@@ -37,6 +38,10 @@ export const RoleRoutes: Routes = [
   {
     path: ':roleId/employees',
     component: EmployeeRoleListComponent
+  },
+  {
+    path: ':roleId/permissions',
+    component: RolePermissionListComponent
   }
 
 ];
