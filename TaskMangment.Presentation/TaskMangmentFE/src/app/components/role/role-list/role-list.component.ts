@@ -11,6 +11,7 @@ import { Role } from 'app/core/models/roles/role';
 import { RoleService } from 'app/core/services/role.service';
 import { SearchCriteria } from 'app/core/models/search-criteria.model';
 import { RoleCreateUpdateComponent } from '../role-create-update/role-create-update.component';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-role-list',
@@ -38,17 +39,17 @@ export class RoleListComponent implements OnInit {
     { key: 'name', label: 'ROLE.NAME' },
     { key: 'description', label: 'ROLE.DESCRIPTION' },
     {
-    key: 'employeeCount',
-    label: 'ROLE.EMPLOYEES',
-    type: 'icon-action' as const,
-    icon: 'bi bi-people'
-  },
-  {
-    key: 'permissionCount',
-    label: 'ROLE.PERMISSIONS',
-    type: 'icon-action' as const,
-    icon: 'bi-shield-lock'
-  }
+      key: 'employeeCount',
+      label: 'ROLE.EMPLOYEES',
+      type: 'icon-action' as const,
+      icon: 'bi bi-people'
+    },
+    {
+      key: 'permissionCount',
+      label: 'ROLE.PERMISSIONS',
+      type: 'icon-action' as const,
+      icon: 'bi-shield-lock'
+    }
 
   ];
 
@@ -77,7 +78,8 @@ export class RoleListComponent implements OnInit {
   selectedRoleId: number | null = null;
   constructor(
     private roleService: RoleService,
-    private modalService: NgbModal
+    private modalService: NgbModal,
+    private router: Router
   ) { }
 
   ngOnInit(): void {
@@ -151,17 +153,14 @@ export class RoleListComponent implements OnInit {
     this.loadData();
   }
 
-onIconAction(event: { type: string; row: any }) {
-  if (event.type === 'employeeCount') {
-    // this.router.navigate(
-    //   ['/employee/employee-list'],
-    //   {
-    //     queryParams: {
-    //       roleId: event.row.id   // 👈 فلترة حسب الدور
-    //     }
-    //   }
-    // );
+  onIconAction(event: { type: string; row: any }) {
+    if (event.type === 'employeeCount') {
+      this.router.navigate([
+        '/role',
+        event.row.id,
+        'employees'
+      ]);
+    }
   }
-}
-
+  
 }
