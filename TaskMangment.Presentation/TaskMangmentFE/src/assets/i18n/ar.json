@@ -351,5 +351,25 @@
     "SELECT_PERMISSIONS": "اختر التصاريح",
     "VALIDATION_ERROR": "يرجى إدخال جميع الحقول المطلوبة بشكل صحيح",
     "searchKey": "بحث باسم التصريح أو الكود"
+  },
+   "CALENDAR": {
+    "TITLE": "التقويم",
+    "CREATE_EVENT": "إنشاء حدث جديد",
+    "ACTIVITY": "النشاط",
+    "VIEW_ALL": "عرض الكل",
+    "LOADING": "جاري التحميل",
+    "NO_ACTIVITY": "لا توجد أنشطة بعد",
+    "ENTER_TITLE": "اكتب عنوان الحدث:",
+    "ENTER_DESC": "اكتب وصف الحدث (اختياري):",
+    "CONFIRM_DELETE": "هل أنت متأكد من حذف هذا الحدث؟",
+    "ALL_DAY": "طوال اليوم",
+
+    "CAT_CALENDAR": "أحداث التقويم",
+    "CAT_BIRTHDAY": "أحداث أعياد الميلاد",
+    "CAT_HOLIDAY": "الإجازات",
+    "CAT_OFFICE": "أحداث المكتب",
+    "CAT_OTHER": "أحداث أخرى",
+    "CAT_FESTIVAL": "المهرجانات",
+    "CAT_TIMELINE": "الخط الزمني"
   }
 }

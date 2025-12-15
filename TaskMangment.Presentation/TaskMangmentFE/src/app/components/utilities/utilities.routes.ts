@@ -55,7 +55,11 @@ export const admin: Routes = [
     loadComponent: () =>
       import('./position/position.component').then((m) => m.PositionComponent),
   },
-
+  {
+    path: 'event-calender',
+    loadComponent: () =>
+      import('../event-calender/event-calender.component').then((m) => m.EventCalenderComponent),
+  },
 
 ]}
 ];

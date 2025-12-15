@@ -67,7 +67,7 @@ export class RolePermissionListComponent implements OnInit {
       next: (res) => {
         this.roleName = res.data.name;
         
-        this.title = `ROLE.ASSIGN_PERMISSIONS: ${this.roleName}`;
+        this.title = `ROLE.ASSIGN_PERMISSIONS`;
         this.breadcrumbs = ['HOME', 'ROLES', this.roleName, 'PERMISSIONS'];
         this.activeitem = `ROLE.ASSIGN_PERMISSIONS: ${this.roleName}`;
         

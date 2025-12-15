@@ -1,0 +1,97 @@
+<app-page-header
+  [title]="'CALENDAR.TITLE' | translate"
+  [title1]="['Advanced Ui']"
+  [activeitem]="'CALENDAR.TITLE' | translate">
+</app-page-header>
+
+<div class="row row-sm">
+  <!-- LEFT PANEL -->
+  <div class="col-xl-3">
+    <div class="card custom-card">
+      <div class="card-header d-grid">
+        <button class="btn btn-primary-light btn-wave">
+          <i class="ri-add-line align-middle me-1 fw-semibold d-inline-block"></i>
+          {{ 'CALENDAR.CREATE_EVENT' | translate }}
+        </button>
+      </div>
+
+      <div class="card-body p-0">
+        <!-- external categories -->
+        <div id="external-events" #external class="border-bottom p-3">
+          <div
+            *ngFor="let c of categories"
+            class="fc-event fc-h-event fc-daygrid-event fc-daygrid-block-event"
+            [ngClass]="c.borderClass"
+            [attr.data-class]="c.className">
+            <div class="fc-event-main">
+              {{ c.labelKey | translate }}
+            </div>
+          </div>
+        </div>
+
+        <!-- activity -->
+        <div class="p-3 border-bottom">
+          <div class="d-flex align-items-center mb-4 justify-content-between">
+            <h6 class="fw-semibold mb-0">
+              {{ 'CALENDAR.ACTIVITY' | translate }} :
+            </h6>
+
+            <button class="btn btn-primary-light btn-sm btn-wave" (click)="onViewAllActivity()">
+              {{ 'CALENDAR.VIEW_ALL' | translate }}
+            </button>
+          </div>
+
+          <overlay-scrollbars>
+            <ul class="list-unstyled mb-0 fullcalendar-events-activity" id="full-calendar-activity">
+              <li *ngIf="activityLoading" class="text-muted fs-12">
+                {{ 'CALENDAR.LOADING' | translate }}...
+              </li>
+
+              <li *ngFor="let item of activity">
+                <div class="d-flex align-items-center justify-content-between flex-wrap">
+                  <p class="mb-1 fw-semibold">
+                    {{ item.dateText }}
+                  </p>
+                  <span class="badge mb-1" [ngClass]="item.badgeClass">
+                    {{ item.badgeText }}
+                  </span>
+                </div>
+                <p class="mb-0 text-muted fs-12">
+                  {{ item.description }}
+                </p>
+              </li>
+
+              <li *ngIf="!activityLoading && activity.length === 0" class="text-muted fs-12">
+                {{ 'CALENDAR.NO_ACTIVITY' | translate }}
+              </li>
+            </ul>
+          </overlay-scrollbars>
+        </div>
+
+        <!-- image -->
+        <div class="p-3">
+          <img src="./assets/images/media/media-80.svg" alt="">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="col-xl-9">
+    <div class="card custom-card">
+      <div class="card-header">
+        <div class="card-title">{{ 'CALENDAR.TITLE' | translate }}</div>
+      </div>
+
+      <div class="card-body">
+        <div id="calendar2">
+          <div *ngIf="loading" class="text-muted fs-12 mb-2">
+            {{ 'CALENDAR.LOADING' | translate }}...
+          </div>
+
+          <full-calendar [options]="calendarOptions"></full-calendar>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
