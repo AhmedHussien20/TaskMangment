@@ -88,6 +88,7 @@ namespace TaskMangment.Infrastructure.Services
             ev.CompanyId = companyId;
             ev.CreatedDate = DateTime.UtcNow;
 
+
             await _eventRepo.AddAsync(ev);
             await _eventRepo.SaveChangesAsync();
             await _cache.RemoveAsync("events:");

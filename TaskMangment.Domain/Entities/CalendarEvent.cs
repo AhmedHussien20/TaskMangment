@@ -5,6 +5,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TaskMangment.Domain.Entities.Enum;
 
 namespace TaskMangment.Domain.Entities
 {
@@ -18,6 +19,7 @@ namespace TaskMangment.Domain.Entities
         public bool AllDay { get; set; } = false;
         public int? RelatedTaskId { get; set; }
         public int? CreatedByEmployeeId { get; set; }
+        public CalendarEventType EventType { get; set; } = CalendarEventType.Reminder;
         //public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         [ForeignKey(nameof(CompanyId))] public Company Company { get; set; }
