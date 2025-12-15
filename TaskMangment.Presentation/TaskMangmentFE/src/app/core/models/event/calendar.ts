@@ -9,21 +9,26 @@ export interface BaseApiRequest {
 }
 
 export interface CalendarEventRequest extends BaseApiRequest {}
+export type CalendarEventType =
+  | 'Calendar'
+  | 'Birthday'
+  | 'Holiday'
+  | 'Office'
+  | 'Other'
+  | 'Festival'
+  | 'Timeline';
 
 export interface CalendarEventGetDto {
   title: string;
   description: string;
-
   startDate: string;     // ISO
   endDate?: string | null;
   allDay: boolean;
-
   relatedTaskId?: number | null;
   relatedTaskTitle?: string | null;
-
   companyId?: number | null;
-
   id?: number;
+   eventType?: CalendarEventType;
 }
 
 export interface CalendarEventUpsertDto {
@@ -50,4 +55,10 @@ export interface CalendarEventFormModel {
   endDate?: string | null;
   allDay: boolean;
   relatedTaskId?: number | null;
+}
+export interface CalendarPagedResponse {
+  data: CalendarEventGetDto[];
+  totalCount: number;
+  pageIndex: number;
+  pageSize: number;
 }
