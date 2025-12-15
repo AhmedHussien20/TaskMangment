@@ -3,6 +3,7 @@ using TaskMangment.Application.DTOs;
 using TaskMangment.Domain.Entities;
 using AutoMapper;
 using TaskMangment.Application.DTOs.TaskDTOs;
+using TaskMangment.Domain.Entities.Enum;
 
 namespace TaskMangment.Application.AutoMapper
 {
@@ -165,10 +166,14 @@ namespace TaskMangment.Application.AutoMapper
 
 
 
-            CreateMap<CalendarEventAddEditDto, CalendarEvent>();
+            CreateMap<CalendarEventAddEditDto, CalendarEvent>()
+                .ForMember(dest => dest.EventType, opt => opt.MapFrom(src => (CalendarEventType)src.EventType));
+
             CreateMap<CalendarEvent, CalendarEventGetDto>()
                 .ForMember(d => d.RelatedTaskTitle,
-                    opt => opt.MapFrom(s => s.RelatedTask != null ? s.RelatedTask.Title : null));
+                    opt => opt.MapFrom(s => s.RelatedTask != null ? s.RelatedTask.Title : null))
+                .ForMember(dest => dest.EventTypeText, opt => opt.MapFrom(src => src.EventType));
+
 
             CreateMap<DiscountAddEditDto, Discount>();
             CreateMap<Discount, DiscountListDto>()
