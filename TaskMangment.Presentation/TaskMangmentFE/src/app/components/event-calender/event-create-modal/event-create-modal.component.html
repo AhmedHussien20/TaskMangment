@@ -8,6 +8,7 @@
 <form [formGroup]="form" (ngSubmit)="onSave()">
   <div class="modal-body">
 
+    <!-- عنوان الحدث -->
     <div class="mb-3">
       <label class="form-label">
         {{ 'CALENDAR.TITLE' | translate }}
@@ -15,39 +16,46 @@
       <input class="form-control" formControlName="title" />
     </div>
 
+    <!-- وصف الحدث -->
     <div class="mb-3">
       <label class="form-label">
         {{ 'CALENDAR.DESCRIPTION' | translate }}
       </label>
-      <textarea class="form-control" rows="3"
-        formControlName="description"></textarea>
+      <textarea class="form-control" rows="3" formControlName="description"></textarea>
     </div>
 
+    <!-- نوع الحدث -->
+    <div class="mb-3">
+      <label class="form-label">
+        {{ 'CALENDAR.EVENT_TYPE' | translate }}
+      </label>
+      <select class="form-select" formControlName="eventType">
+        <option *ngFor="let type of eventTypes" [value]="type.value">
+          {{ type.label }}
+        </option>
+      </select>
+    </div>
+
+    <!-- التواريخ -->
     <div class="row">
       <div class="col-6">
         <label class="form-label">
           {{ 'CALENDAR.START_DATE' | translate }}
         </label>
-        <input type="datetime-local"
-          class="form-control"
-          formControlName="startDate" />
+        <input type="datetime-local" class="form-control" formControlName="startDate" />
       </div>
 
       <div class="col-6">
         <label class="form-label">
           {{ 'CALENDAR.END_DATE' | translate }}
         </label>
-        <input type="datetime-local"
-          class="form-control"
-          formControlName="endDate" />
+        <input type="datetime-local" class="form-control" formControlName="endDate" />
       </div>
     </div>
 
+    <!-- خيار كل اليوم -->
     <div class="form-check mt-3">
-      <input class="form-check-input"
-        type="checkbox"
-        formControlName="allDay"
-        id="allDay">
+      <input class="form-check-input" type="checkbox" formControlName="allDay" id="allDay">
       <label class="form-check-label" for="allDay">
         {{ 'CALENDAR.ALL_DAY' | translate }}
       </label>
@@ -56,15 +64,11 @@
   </div>
 
   <div class="modal-footer">
-    <button type="button"
-      class="btn btn-light"
-      (click)="activeModal.dismiss()">
+    <button type="button" class="btn btn-light" (click)="activeModal.dismiss()">
       {{ 'COMMON.CANCEL' | translate }}
     </button>
 
-    <button type="submit"
-      class="btn btn-primary"
-      [disabled]="form.invalid || saving">
+    <button type="submit" class="btn btn-primary" [disabled]="form.invalid || saving">
       {{ 'COMMON.SAVE' | translate }}
     </button>
   </div>

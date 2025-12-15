@@ -354,7 +354,6 @@
     "ENTER_DESC": "Enter event description (optional):",
     "CONFIRM_DELETE": "Are you sure you want to delete this event?",
     "ALL_DAY": "All Day",
-
     "CAT_CALENDAR": "Calendar Events",
     "CAT_BIRTHDAY": "Birthday Events",
     "CAT_HOLIDAY": "Holiday Calendar",
