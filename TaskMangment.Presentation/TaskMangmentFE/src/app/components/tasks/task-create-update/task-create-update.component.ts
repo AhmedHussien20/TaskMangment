@@ -1,14 +1,14 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { Employee } from 'app/core/models/employee/employee';
-import { FormFieldConfig } from 'app/core/models/form-field-config';
-import { EmployeeService } from 'app/core/services/employee.service';
-import { TaskService } from 'app/core/services/task.service';
 import { GenericFormComponent } from 'app/shared/components/generic-form/generic-form.component';
-import { Validators } from 'ngx-editor';
+import { TaskService } from 'app/core/services/task.service';
+import { EmployeeService } from 'app/core/services/employee.service';
+import { Employee } from 'app/core/models/employee/employee';
 import { ToastrService } from 'ngx-toastr';
+import { FormFieldConfig } from 'app/core/models/form-field-config';
+import { TaskPriority } from 'app/core/models/task/task';
 
 @Component({
   selector: 'app-task-create-update',
@@ -23,122 +23,128 @@ import { ToastrService } from 'ngx-toastr';
 })
 export class TaskCreateUpdateComponent implements OnInit {
 
-  @Input() isEdit = false;
+  @Input() isEdit: boolean = false;
   @Input() taskId: number | null = null;
   @Output() formSubmitted = new EventEmitter<void>();
 
   formGroup!: FormGroup;
 
+  title = 'TASK.ADD';
+  breadcrumbs = ['HOME', 'TASKS'];
+  activeitem = 'TASK.ADD';
+
   formConfig: FormFieldConfig[] = [
 
-    /* ================= TITLE ================= */
     {
       type: 'input',
-      inputType: 'text',
       label: 'TASK.TITLE',
       name: 'title',
-      validations: { required: true, maxlength: 300 }
+      validations: { required: true, maxlength: 300 },
+      defaultValue: ''
     },
 
-    /* ================= ASSIGNED EMPLOYEES ================= */
     {
       type: 'select',
       label: 'TASK.ASSIGNED_EMPLOYEES',
       name: 'assignedEmployeeIds',
-      options: [],              // تُملأ من employees
+      selectType: 'employee',
       multiple: true,
-      selectType: 'employee',   // مهم للـ template
-      validations: { required: true }
+      options: [],
+      validations: { required: true },
+      defaultValue: []
     },
 
-    /* ================= PRIORITY ================= */
     {
       type: 'select',
       label: 'TASK.PRIORITY',
       name: 'priority',
       selectType: 'simple',
       options: [
-        { label: 'TASK.PRIORITY_LOW', value: 0 },
-        { label: 'TASK.PRIORITY_MEDIUM', value: 1 },
-        { label: 'TASK.PRIORITY_HIGH', value: 2 }
+        { label: 'TASK.PRIORITY_LOW', value: TaskPriority.Low },
+        { label: 'TASK.PRIORITY_MEDIUM', value: TaskPriority.Medium },
+        { label: 'TASK.PRIORITY_HIGH', value: TaskPriority.High }
       ],
-      validations: { required: true }
+      validations: { required: true },
+      defaultValue: TaskPriority.Low
     },
 
-    /* ================= DUE DATE ================= */
     {
       type: 'date',
       label: 'TASK.DUE_DATE',
-      name: 'dueDate'
+      name: 'dueDate',
+      defaultValue: null
     },
 
-    /* ================= COMMENT PERIOD ================= */
     {
       type: 'input',
       inputType: 'number',
       label: 'TASK.COMMENT_ALLOW_PERIOD',
-      name: 'commentAllowPeriodDays'
+      name: 'commentAllowPeriodDays',
+      defaultValue: null
     },
 
-    /* ================= WARNINGS ================= */
     {
       type: 'input',
       inputType: 'number',
       label: 'TASK.MAX_WARNINGS',
-      name: 'maxWarnings'
+      name: 'maxWarnings',
+      defaultValue: 3
     },
 
-    /* ================= PENALTIES ================= */
     {
       type: 'input',
       inputType: 'number',
       label: 'TASK.PENALTY_AT_MAX_WARNINGS',
-      name: 'penaltyAtMaxWarnings'
+      name: 'penaltyAtMaxWarnings',
+      defaultValue: 0
     },
 
     {
       type: 'input',
       inputType: 'number',
       label: 'TASK.PENALTY_ON_AUTO_CLOSE',
-      name: 'penaltyOnAutoClose'
+      name: 'penaltyOnAutoClose',
+      defaultValue: 0
     },
 
-    /* ================= SHARED ================= */
     {
       type: 'checkbox',
       label: 'TASK.IS_SHARED',
-      name: 'isShared'
+      name: 'isShared',
+      defaultValue: false
     },
 
-    /* ================= DESCRIPTION ================= */
     {
       type: 'textarea',
       label: 'TASK.DESCRIPTION',
-      name: 'description'
+      name: 'description',
+      defaultValue: ''
     }
-
   ];
-
-
-
-  title = 'TASK.ADD';
-  breadcrumbs = ['HOME', 'TASKS'];
-  activeitem = 'TASK.ADD';
 
   constructor(
     private fb: FormBuilder,
     private taskService: TaskService,
-    private toastr: ToastrService,
     private employeeService: EmployeeService,
+    private toastr: ToastrService,
     private translate: TranslateService
-  ) { }
+  ) {}
 
-  ngOnInit() {
+  ngOnInit(): void {
+    this.initForm();
+    this.loadEmployees();
+
+    if (this.isEdit && this.taskId) {
+      this.loadTask();
+    }
+  }
+
+  initForm() {
     this.formGroup = this.fb.group({
       title: ['', Validators.required],
       description: [''],
       assignedEmployeeIds: [[], Validators.required],
-      priority: [0, Validators.required],
+      priority: [TaskPriority.Low, Validators.required],
       dueDate: [null],
       commentAllowPeriodDays: [null],
       maxWarnings: [3],
@@ -146,30 +152,16 @@ export class TaskCreateUpdateComponent implements OnInit {
       penaltyOnAutoClose: [0],
       isShared: [false]
     });
-
-    this.loadEmployees();
-    if (this.isEdit && this.taskId) {
-      this.taskService.getById(this.taskId).subscribe(res => {
-        this.formGroup.patchValue(res.data);
-      });
-    }
   }
 
-  onSubmit() {
-    if (this.formGroup.invalid) return;
-
-    const req = this.isEdit
-      ? this.taskService.update(this.taskId!, this.formGroup.value)
-      : this.taskService.create(this.formGroup.value);
-
-    req.subscribe(() => {
-      this.toastr.success(this.translate.instant('TASK.SAVED_SUCCESS'));
-      this.formSubmitted.emit();
+  loadTask() {
+    this.taskService.getById(this.taskId!).subscribe(res => {
+      this.formGroup.patchValue(res.data);
     });
   }
 
   loadEmployees() {
-    const req = {
+    const request = {
       searchKey: '',
       pageIndex: 1,
       pageSize: 1000,
@@ -177,17 +169,40 @@ export class TaskCreateUpdateComponent implements OnInit {
       sortDirection: 'ASC'
     };
 
-    this.employeeService.getAll(req).subscribe(res => {
+    this.employeeService.getAll(request).subscribe(res => {
       const list = res.data.data;
 
-      const assignedEmployeeIds = this.formConfig.find(x => x.name === 'assignedEmployeeIds');
-       
-      if (assignedEmployeeIds) {
-        assignedEmployeeIds.options = list.map((emp: Employee) => ({
+      const field = this.formConfig.find(f => f.name === 'assignedEmployeeIds');
+      if (field) {
+        field.options = list.map((emp: Employee) => ({
           label: emp.fullName,
-          value: emp.id
+          value: emp.id,
+          mobile: emp.mobile,
+          email: emp.email
         }));
-      } 
+      }
+    });
+  }
+
+  onSubmit(formData: any) {
+    if (this.formGroup.invalid) {
+      this.formGroup.markAllAsTouched();
+      this.toastr.error(
+        this.translate.instant('FORM.VALIDATION_ERROR'),
+        this.translate.instant('FORM.ERROR')
+      );
+      return;
+    }
+
+    const request$ = this.isEdit && this.taskId
+      ? this.taskService.update(this.taskId, this.formGroup.value)
+      : this.taskService.create(this.formGroup.value);
+
+    request$.subscribe({
+      next: () => {
+        this.toastr.success(this.translate.instant('TASK.SAVED_SUCCESS'));
+        this.formSubmitted.emit();
+      }
     });
   }
 }
