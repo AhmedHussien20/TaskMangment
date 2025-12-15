@@ -65,9 +65,10 @@ namespace TaskMangment.Infrastructure.Services
                     return ApiResponse<PagedResponse<PermissionGetDto>>.Ok(cached);
             }
 
-            var query = _permissionRepo.GetAll().AsNoTracking().AsQueryable();
+            var query = _permissionRepo.GetAll().ApplySearch(request.searchKey);
+            ;
 
-          
+
             int totalCount = await query.CountAsync();
 
             query = query.OrderByDynamicSafe(request.SortColumn, request.SortDirection);

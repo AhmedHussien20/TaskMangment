@@ -117,6 +117,7 @@ namespace TaskMangment.Infrastructure.Services
             task.CreatedByEmployeeId = createdUser;
             task.CompanyId = companyId;
             task.AssignedByEmployeeId = createdUser;
+            task.AssignedBy= await _employeeRepo.GetByIDAsync(createdUser);
 
             await _taskRepo.AddAsync(task);
             await _taskRepo.SaveChangesAsync();
