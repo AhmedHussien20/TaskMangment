@@ -65,6 +65,7 @@ export class GenericTableComponent<T> implements OnDestroy {
   @Input() onSearch?: (criteria: SearchCriteria<T>) => void;
   @Input() onAddClick?: () => void;
   @Output() addClick = new EventEmitter<void>();
+  @Input() checkboxKey?: string;
 
   // ---------- Outputs ----------
   @Output() pageChange = new EventEmitter<number>();
@@ -90,6 +91,11 @@ export class GenericTableComponent<T> implements OnDestroy {
   @Output() iconAction = new EventEmitter<{
     type: string;
     row: any;
+  }>();
+
+  @Output() checkboxChange = new EventEmitter<{
+    row: any;
+    checked: boolean;
   }>();
 
 
@@ -283,5 +289,23 @@ export class GenericTableComponent<T> implements OnDestroy {
       this.edit.emit(id);
     }
   }
+
+
+  onCheckboxChange(item: T, event: Event) {
+    const checked = (event.target as HTMLInputElement).checked;
+
+    this.checkboxChange.emit({
+      row: item,
+      checked
+    });
+  }
+
+  isChecked(item: T): boolean {
+    if (!this.checkboxKey) return false;
+
+    const value = (item as any)[this.checkboxKey];
+    return value === true;
+  }
+
 
 }

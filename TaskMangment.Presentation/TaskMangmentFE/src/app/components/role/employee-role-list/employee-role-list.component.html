@@ -1,0 +1,31 @@
+<div class="card">
+  <div class="card-body">
+
+    <app-generic-table
+      [title]="title"
+      [columns]="columns"
+      [data]="rows"
+
+      [showCheckbox]="true"
+      checkboxKey="isAssigned"
+      (checkboxChange)="onAssignToggle($event)"
+
+      [entries]="entries"
+      [page]="page"
+      [totalItems]="totalItems"
+
+      [searchCriteria]="searchCriteria"
+      [onSearch]="applyFilters"
+      [labels]="labels"
+      (pageChange)="onPageChange($event)"
+      (entriesChange)="onEntriesChange($event)">
+    </app-generic-table>
+
+    <div class="d-flex justify-content-end mt-3">
+      <button class="btn btn-primary" (click)="saveAssignments()">
+        {{ 'FORM.SAVE' | translate }}
+      </button>
+    </div>
+
+  </div>
+</div>

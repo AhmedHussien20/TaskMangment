@@ -104,9 +104,10 @@
 
                     <!-- Checkbox -->
                     <td *ngIf="showCheckbox" class="text-center">
-                        <input type="checkbox" [ngModel]="isItemSelected(item)"
-                            (ngModelChange)="setItemSelected(item, $event); updateSelectedItems()" />
+                        <input type="checkbox" class="form-check-input" [checked]="isChecked(item)"
+                            (change)="onCheckboxChange(item, $event)" />
                     </td>
+
 
                     <!-- Columns -->
                     <td *ngFor="let col of columns">

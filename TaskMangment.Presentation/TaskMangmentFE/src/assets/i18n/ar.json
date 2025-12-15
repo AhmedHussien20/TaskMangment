@@ -328,7 +328,8 @@
     "SELECT_EMPLOYEE": "اختر الموظف",
     "SEARCH": "بحث عن الصلاحيات",
     "PERMISSIONS": "الصلاحيات المخصصة",
-    "EMPLOYEES": "الموظفون المعينون"
+    "EMPLOYEES": "الموظفون المعينون",
+    "ASSIGN_EMPLOYEES": "تعيين موظفين"
   },
   "PERMISSION": {
     "TITLE": "إدارة التصاريح",
