@@ -21,7 +21,7 @@ import { SharedModule } from 'app/shared/shared.module';
 import { TranslateService } from '@ngx-translate/core';
  
 import { CalendarOptions, EventClickArg, EventDropArg } from '@fullcalendar/core/index.js'; 
-import { CalendarEventGetDto, CalendarEventUpsertDto } from 'app/core/models/event/calendar';
+import { CalendarEventGetDto, CalendarEventType, CalendarEventUpsertDto } from 'app/core/models/event/calendar';
 import { CommonModule } from '@angular/common';
 import { EventCreateModalComponent } from './event-create-modal/event-create-modal.component';
 import { CalendarEventService } from 'app/core/services/calendar-events.service';
@@ -69,8 +69,7 @@ interface ActivityItem {
 })
 export class EventCalenderComponent implements OnInit, AfterViewInit {
   @ViewChild('external', { static: false }) external!: ElementRef;
-
-  // Categories (left panel) - نفس design بتاع Spruha
+ 
   categories: CategoryItem[] = [
     { key: 'calendar', labelKey: 'CALENDAR.CAT_CALENDAR', className: 'bg-primary border border-primary', borderClass: 'bg-primary border border-primary' },
     { key: 'birthday', labelKey: 'CALENDAR.CAT_BIRTHDAY', className: 'bg-secondary border border-secondary', borderClass: 'bg-secondary border border-secondary' },
@@ -106,8 +105,7 @@ export class EventCalenderComponent implements OnInit, AfterViewInit {
     droppable: true,
     weekends: true,
     dayMaxEvents: true,
-
-    // مهم: bind events array
+ 
     events: [],
 
     dateClick: (arg) => this.onDateClick(arg),
@@ -126,8 +124,7 @@ export class EventCalenderComponent implements OnInit, AfterViewInit {
     this.loadEvents();
   }
 
-  ngAfterViewInit(): void {
-    // draggable categories from left panel
+  ngAfterViewInit(): void { 
     if (!this.external?.nativeElement) return;
 
     new Draggable(this.external.nativeElement, {
@@ -142,37 +139,62 @@ export class EventCalenderComponent implements OnInit, AfterViewInit {
       }
     });
   }
+ 
+ loadEvents(): void {
+  this.loading = true;
 
-  // ========= LOAD =========
-  loadEvents(): void {
-    this.loading = true;
+  this.calendarService.getAll({
+    pageIndex: 1,
+    pageSize: 100
+  }).subscribe({
+    next: (res) => {
 
-    this.calendarService.getAll({
-      pageIndex: 1,
-      pageSize: 100,
-      bypassCache: true
-    }).subscribe({
-      next: (res) => {
-        const list: CalendarEventGetDto[] = res.data || [];
-        this.calendarEvents = list.map((e, idx) => this.mapDtoToEvent(e, idx));
+      const list: CalendarEventGetDto[] = res.data?.data ?? [];
 
-        // refresh calendar
-        this.calendarOptions = {
-          ...this.calendarOptions,
-          events: [...this.calendarEvents]
+      this.calendarEvents = list.map((e, index) => {
+        const isAllDay = e.allDay === true;
+
+        return {
+          id: (e.id ?? index + 1).toString(),  
+          title: e.title,
+
+          start: isAllDay
+            ? e.startDate.split('T')[0]
+            : e.startDate,
+
+          end: isAllDay && e.endDate
+            ? e.endDate.split('T')[0]
+            : e.endDate ?? undefined,
+
+          allDay: isAllDay,
+
+          className: this.resolveEventClass(e),
+
+          extendedProps: {
+            description: e.description,
+            relatedTaskId: e.relatedTaskId,
+            relatedTaskTitle: e.relatedTaskTitle,
+            companyId: e.companyId
+          }
         };
+      });
 
-        this.buildActivity(list);
-        this.loading = false;
-      },
-      error: () => {
-        this.calendarEvents = [];
-        this.calendarOptions = { ...this.calendarOptions, events: [] };
-        this.activity = [];
-        this.loading = false;
-      }
-    });
-  }
+      this.calendarOptions = {
+        ...this.calendarOptions,
+        events: [...this.calendarEvents]
+      };
+
+      this.loading = false;
+    },
+    error: () => {
+      this.loading = false;
+    }
+  });
+}
+
+
+
+ 
 
   private mapDtoToEvent(dto: CalendarEventGetDto, fallbackIndex: number): any {
     const idValue = (dto.id ?? fallbackIndex + 1).toString();
@@ -193,8 +215,27 @@ export class EventCalenderComponent implements OnInit, AfterViewInit {
     };
   }
 
+private resolveEventClass(e: CalendarEventGetDto): string {
+  switch (e.eventType) {
+    case 'Birthday':
+      return 'bg-secondary-transparent';
+    case 'Holiday':
+      return 'bg-success-transparent';
+    case 'Office':
+      return 'bg-info-transparent';
+    case 'Festival':
+      return 'bg-danger-transparent';
+    case 'Timeline':
+      return 'bg-teal-transparent';
+    case 'Other':
+      return 'bg-warning-transparent';
+    default:
+      return 'bg-warning-transparent';
+  }
+}
+
+
   private resolveClass(dto: CalendarEventGetDto): string {
-    // انت ممكن تعمل mapping من DB لاحقاً، حالياً logic بسيط
     if (dto.relatedTaskId) return 'bg-primary-transparent';
     if (dto.allDay) return 'bg-success-transparent';
     return 'bg-info-transparent';
