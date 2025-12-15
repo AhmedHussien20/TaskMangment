@@ -352,7 +352,7 @@
     "VALIDATION_ERROR": "يرجى إدخال جميع الحقول المطلوبة بشكل صحيح",
     "searchKey": "بحث باسم التصريح أو الكود"
   },
-   "CALENDAR": {
+  "CALENDAR": {
     "TITLE": "التقويم",
     "CREATE_EVENT": "إنشاء حدث جديد",
     "ACTIVITY": "النشاط",
@@ -363,7 +363,9 @@
     "ENTER_DESC": "اكتب وصف الحدث (اختياري):",
     "CONFIRM_DELETE": "هل أنت متأكد من حذف هذا الحدث؟",
     "ALL_DAY": "طوال اليوم",
-
+    "DESCRIPTION": "Description",
+    "START_DATE": "Start Date",
+    "END_DATE": "End Date",
     "CAT_CALENDAR": "أحداث التقويم",
     "CAT_BIRTHDAY": "أحداث أعياد الميلاد",
     "CAT_HOLIDAY": "الإجازات",

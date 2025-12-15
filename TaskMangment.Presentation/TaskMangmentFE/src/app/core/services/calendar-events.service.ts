@@ -3,7 +3,7 @@ import { Observable } from 'rxjs';
 import { ApiService } from 'app/core/services/api.service';
 
 import { BaseResponse } from 'app/models/base.response.model';
-import { CalendarEventGetDto, CalendarEventRequest, CalendarEventUpsertDto } from '../models/event/calendar';
+import { CalendarEventGetDto, CalendarEventRequest, CalendarEventUpsertDto, CalendarPagedResponse } from '../models/event/calendar';
 
 @Injectable({
   providedIn: 'root'
@@ -15,9 +15,9 @@ export class CalendarEventService {
   constructor(private api: ApiService) {}
 
  
-  getAll(request?: CalendarEventRequest): Observable<BaseResponse<CalendarEventGetDto[]>> {
+  getAll(request?: CalendarEventRequest): Observable<BaseResponse<CalendarPagedResponse>> {
     const query = request ? `?${this.buildQuery(request)}` : '';
-    return this.api.get<BaseResponse<CalendarEventGetDto[]>>(this.service, query);
+    return this.api.get<BaseResponse<CalendarPagedResponse>>(this.service, query);
   }
 
  

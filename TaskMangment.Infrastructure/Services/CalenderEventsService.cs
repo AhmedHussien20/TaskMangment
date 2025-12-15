@@ -35,7 +35,7 @@ namespace TaskMangment.Infrastructure.Services
         {
             string cacheKey =
                 $"events:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.searchKey}";
-
+            request.BypassCache = true;
             if (!request.BypassCache)
             {
                 var cached = await _cache.GetAsync<PagedResponse<CalendarEventGetDto>>(cacheKey);
@@ -92,8 +92,6 @@ namespace TaskMangment.Infrastructure.Services
             await _eventRepo.SaveChangesAsync();
             await _cache.RemoveAsync("events:");
             var calendarEventdto = _mapper.Map<CalendarEventGetDto>(ev);
-
-
             return ApiResponse<CalendarEventGetDto>.Ok(calendarEventdto, "Event added");
         }
 

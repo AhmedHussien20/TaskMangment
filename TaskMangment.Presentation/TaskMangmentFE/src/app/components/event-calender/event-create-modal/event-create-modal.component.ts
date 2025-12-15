@@ -1,8 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap'; 
-import { TranslateModule } from '@ngx-translate/core'; 
+import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import { TranslateModule } from '@ngx-translate/core';
+import { CalendarEventGetDto } from 'app/core/models/event/calendar';
 import { CalendarEventService } from 'app/core/services/calendar-events.service';
 
 @Component({
@@ -14,14 +15,18 @@ export class EventCreateModalComponent {
   @Input() startDate!: Date;
   form!: FormGroup;
   saving = false;
+  isEdit = false;
 
+  @Input() event?: CalendarEventGetDto;
   constructor(
     private fb: FormBuilder,
     private calendarService: CalendarEventService,
     public activeModal: NgbActiveModal
-  ) {}
+  ) { }
 
   ngOnInit(): void {
+    this.isEdit = !!this.event;
+
     this.form = this.fb.nonNullable.group({
       title: ['', Validators.required],
       description: [''],
@@ -30,13 +35,21 @@ export class EventCreateModalComponent {
       allDay: true
     });
 
-    const iso = this.toInputDate(this.startDate);
-    this.form.patchValue({
-      startDate: iso,
-      endDate: iso
-    });
+    if (this.isEdit && this.event) {
+      this.form.patchValue({
+        title: this.event.title,
+        description: this.event.description,
+        startDate: this.toInputDate(new Date(this.event.startDate)),
+        endDate: this.event.endDate
+          ? this.toInputDate(new Date(this.event.endDate))
+          : '',
+        allDay: this.event.allDay
+      });
+    } else {
+      const iso = this.toInputDate(this.startDate);
+      this.form.patchValue({ startDate: iso, endDate: iso });
+    }
   }
-
   onSave() {
     if (this.form.invalid) return;
 
