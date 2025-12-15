@@ -2,20 +2,27 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { RoleAssignmentService } from 'app/core/services/role-assignment.service';
+import { RoleService } from 'app/core/services/role.service';
 import { SearchCriteria } from 'app/models/search-criteria.model';
 import { GenericTableComponent, TableColumn } from 'app/shared/components/generic-table/generic-table.component';
+import { PageHeaderComponent } from 'app/shared/components/page-header/page-header.component';
+import { ToastrService } from 'ngx-toastr';
+
 
 @Component({
   selector: 'app-employee-role-list',
-  imports: [ TranslateModule,GenericTableComponent],
+  imports: [ TranslateModule,GenericTableComponent,PageHeaderComponent],
   templateUrl: './employee-role-list.component.html',
   styleUrl: './employee-role-list.component.scss'
 })
 export class EmployeeRoleListComponent implements OnInit {
 
   roleId!: number;
+  roleName: string = '';
 
-  title = 'ROLE.ASSIGN_EMPLOYEES';
+ title = '';
+  breadcrumbs: string[] = [];
+  activeitem = '';
 
   columns: TableColumn[] = [
     { key: 'fullName', label: 'EMPLOYEE.NAME' },
@@ -44,12 +51,17 @@ export class EmployeeRoleListComponent implements OnInit {
   };
   constructor(
     private route: ActivatedRoute,
-    private roleAssignmentService: RoleAssignmentService
+    private roleAssignmentService: RoleAssignmentService,
+    private roleService: RoleService,
+    private toastr: ToastrService
+
   ) {}
 
   ngOnInit() {
     this.roleId = Number(this.route.snapshot.paramMap.get('roleId'));
-    this.loadData();
+    //this.loadData();
+    this.loadRoleInfo();
+
   }
 
   loadData() {
@@ -63,7 +75,25 @@ export class EmployeeRoleListComponent implements OnInit {
         this.totalItems = res.data.totalCount;
       });
   }
-
+loadRoleInfo() {
+    this.roleService.getById(this.roleId).subscribe({
+      next: (res) => {
+        this.roleName = res.data.name;
+        
+        this.title = `ROLE.ASSIGN_TO_EMPLOYEE: ${this.roleName}`;
+        this.breadcrumbs = ['HOME', 'ROLES', this.roleName, 'EMPLOYEE'];
+        this.activeitem = `ROLE.ASSIGN_TO_EMPLOYEE: ${this.roleName}`;
+        
+        this.loadData();
+      },
+      error: () => {
+        this.title = 'ROLE.ASSIGN_TO_EMPLOYEE';
+        this.breadcrumbs = ['HOME', 'ROLES', 'EMPLOYEE'];
+        this.activeitem = 'ROLE.ASSIGN_TO_EMPLOYEE';
+        this.loadData();
+      }
+    });
+  }
   onPageChange(page: number) {
     this.searchCriteria.pageIndex = page;
     this.loadData();
@@ -88,8 +118,15 @@ export class EmployeeRoleListComponent implements OnInit {
 
     this.roleAssignmentService
       .bulkAssignEmployees(this.roleId, assignments)
-      .subscribe(() => {
-        this.loadData();
+      .subscribe({
+        next: () => {
+          this.toastr.success('ROLE.ASSIGNED_TO_EMPLOYEE_SUCCESS', 'Success');
+          this.loadData();
+        },
+        error: (error) => {
+          console.error('Error saving assignments:', error);
+          this.toastr.error('ROLE.ASSIGNED_TO_EMPLOYEE_FAILED', 'Error');
+        }
       });
   }
 
@@ -110,10 +147,15 @@ export class EmployeeRoleListComponent implements OnInit {
 
   this.roleAssignmentService
     .bulkAssignEmployees(this.roleId, payload.assignments)
-    .subscribe({
-      error: () => {
-        emp.isAssigned = !checked;
-      }
+     .subscribe({
+           next: () => {
+          this.toastr.success('ROLE.ASSIGNED_TO_EMPLOYEE_SUCCESS', 'Success');
+        },
+        error: () => {
+          emp.isAssigned = !checked;
+          this.toastr.error('ROLE.ASSIGNED_TO_EMPLOYEE_FAILED', 'Error');
+
+        }
     });
 }
 

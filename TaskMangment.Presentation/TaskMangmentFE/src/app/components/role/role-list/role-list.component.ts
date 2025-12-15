@@ -161,6 +161,15 @@ export class RoleListComponent implements OnInit {
         'employees'
       ]);
     }
+    else if (event.type === 'permissionCount') 
+    {
+      this.router.navigate([
+        '/role',
+        event.row.id,
+        'permissions'
+      ]);
+    }
+
   }
   
 }
