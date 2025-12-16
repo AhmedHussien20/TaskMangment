@@ -10,7 +10,7 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
     public class WarningAddEditDto
     {
         [Required]
-        public int IssuedByEmployeeId { get; set; }
+        public int IssuedEmployeeId { get; set; }
 
         [Required, MaxLength(1000)]
         public string Reason { get; set; }
@@ -19,17 +19,31 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
     public class WarningGetDto
     {
         public int Id { get; set; }
+
+        public int TaskId { get; set; }
+        public string TaskTitle { get; set; }
+
         public int TaskAssignmentId { get; set; }
         public string Reason { get; set; }
         public DateTime IssuedAt { get; set; }
+
+        public string IssuedEmployeeName { get; set; }
         public string IssuedByName { get; set; }
+
+
     }
 
     public class WarningListDto
     {
         public int Id { get; set; }
+
+        public int TaskId { get; set; }
+        public string TaskTitle { get; set; }
+
         public string Reason { get; set; }
         public DateTime IssuedAt { get; set; }
+
+        public string IssuedEmployeeName { get; set; }
         public string IssuedByName { get; set; }
     }
 }

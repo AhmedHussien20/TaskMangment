@@ -156,10 +156,15 @@ namespace TaskMangment.Application.AutoMapper
 
 
             CreateMap<Warning, WarningGetDto>()
-               .ForMember(dest => dest.IssuedByName, opt => opt.MapFrom(src => src.IssuedBy.FullName));
+               .ForMember(dest => dest.IssuedByName, opt => opt.MapFrom(src => src.IssuedBy.FullName))
+                .ForMember(dest => dest.TaskTitle, opt => opt.MapFrom(src => src.TaskAssignment.Task.Title))
+                .ForMember(dest => dest.IssuedEmployeeName, opt => opt.MapFrom(src => src.Issued.FullName));
+
 
             CreateMap<Warning, WarningListDto>()
-                .ForMember(dest => dest.IssuedByName, opt => opt.MapFrom(src => src.IssuedBy.FullName));
+                .ForMember(dest => dest.IssuedByName, opt => opt.MapFrom(src => src.IssuedBy.FullName))
+                 .ForMember(dest => dest.TaskTitle, opt => opt.MapFrom(src => src.TaskAssignment.Task.Title))
+                .ForMember(dest => dest.IssuedEmployeeName, opt => opt.MapFrom(src => src.Issued.FullName));
 
             CreateMap<WarningAddEditDto, Warning>()
                 .ForMember(dest => dest.IssuedAt, opt => opt.Ignore());

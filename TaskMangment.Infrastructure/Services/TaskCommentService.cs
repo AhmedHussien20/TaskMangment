@@ -22,6 +22,7 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<TaskComment> _commentRepo;
         private readonly IRepository<Attachment> _attachmentRepo;
         private readonly IRepository<WorkTask> _taskRepo;
+        private readonly IRepository<TaskAssignment> _taskAssignmentRepo;
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
 
@@ -30,18 +31,20 @@ namespace TaskMangment.Infrastructure.Services
             IRepository<Attachment> attachmentRepo,
             IMapper mapper,
             ICachingService cache,
-            IRepository<WorkTask> taskRepo)
+            IRepository<WorkTask> taskRepo,
+            IRepository<TaskAssignment> taskAssignmentRepo)
         {
             _commentRepo = commentRepo;
             _attachmentRepo = attachmentRepo;
             _mapper = mapper;
             _cache = cache;
             _taskRepo = taskRepo;
+            _taskAssignmentRepo = taskAssignmentRepo;
         }
 
         public async Task<ApiResponse<PagedResponse<TaskCommentGetDto>>> GetAllAsync(TaskCommentRequest request)
         {
-            string cacheKey = $"taskComments:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
+            string cacheKey = $"taskComments:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}:{request.TaskId}";
 
             if (!request.BypassCache)
             {
@@ -50,7 +53,7 @@ namespace TaskMangment.Infrastructure.Services
                     return ApiResponse<PagedResponse<TaskCommentGetDto>>.Ok(cached);
             }
 
-            var query = _commentRepo.GetAll()
+            var query = _commentRepo.GetAll(c => c.TaskId == request.TaskId)
                 .Include(c => c.Employee)
                 .Include(c => c.Task)
                 .ApplySearch(request.searchKey);
@@ -71,6 +74,8 @@ namespace TaskMangment.Infrastructure.Services
             {
                 var comment = list.First(c => c.Id == dto.Id);
                 dto.AttachmentCount = await _attachmentRepo.CountAsync(a => a.CommentId == comment.Id);
+                dto.TaskTitle = comment.Task?.Title;
+                dto.EmployeeName = comment.Employee?.FullName;
             }
 
             var response = new PagedResponse<TaskCommentGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
@@ -84,6 +89,7 @@ namespace TaskMangment.Infrastructure.Services
         {
             var comment = await _commentRepo.GetAll(c => c.Id == id)
                 .Include(c => c.Employee)
+                .Include(c => c.Task)
                 .AsNoTracking()
                 .FirstOrDefaultAsync();
 
@@ -102,6 +108,11 @@ namespace TaskMangment.Infrastructure.Services
             var task = await _taskRepo.GetByIDAsync(taskId);
             if (task == null)
                 return ApiResponse<TaskCommentGetDto>.Fail("Task not found", StatusCode.NotFound);
+
+            var assignment = await _taskAssignmentRepo.GetAll(a => a.TaskId == taskId && a.EmployeeId == employeeId && a.IsActive)
+                                                      .FirstOrDefaultAsync();
+            if (assignment == null)
+                return ApiResponse<TaskCommentGetDto>.Fail("Employee is not assigned to this task", StatusCode.BadRequest);
 
             var comment = _mapper.Map<TaskComment>(dto);
             comment.TaskId = taskId;
@@ -146,8 +157,17 @@ namespace TaskMangment.Infrastructure.Services
             }
             await _commentRepo.SaveChangesAsync();
             await _cache.RemoveAsync("taskComments:");
-            var commentDto = _mapper.Map<TaskCommentGetDto>(comment);
+
+            var savedComment = await _commentRepo.GetAll(c => c.Id == comment.Id)
+                                      .Include(c => c.Employee)
+                                      .Include(c => c.Task)
+                                      .AsNoTracking()
+                                      .FirstOrDefaultAsync();
+
+            var commentDto = _mapper.Map<TaskCommentGetDto>(savedComment);
             commentDto.AttachmentCount = await _attachmentRepo.CountAsync(a => a.CommentId == comment.Id);
+            commentDto.TaskTitle = savedComment.Task?.Title;
+            commentDto.EmployeeName = savedComment.Employee?.FullName;
 
             return ApiResponse<TaskCommentGetDto>.Ok(commentDto, "Comment added successfully");
         }
@@ -158,6 +178,7 @@ namespace TaskMangment.Infrastructure.Services
         {
             var comment = await _commentRepo.GetAll(c => c.Id == id)
                                              .Include(c => c.Employee)
+                                             .Include(c => c.Task)
                                              .FirstOrDefaultAsync();
 
             if (comment == null)
@@ -166,10 +187,16 @@ namespace TaskMangment.Infrastructure.Services
             comment.CommentText = dto.CommentText;
             await _commentRepo.SaveChangesAsync();
 
-            var commentDto = _mapper.Map<TaskCommentGetDto>(comment);
+            var savedComment = await _commentRepo.GetAll(c => c.Id == comment.Id)
+                                     .Include(c => c.Employee)
+                                     .Include(c => c.Task)
+                                     .AsNoTracking()
+                                     .FirstOrDefaultAsync();
 
+            var commentDto = _mapper.Map<TaskCommentGetDto>(savedComment);
             commentDto.AttachmentCount = await _attachmentRepo.CountAsync(a => a.CommentId == comment.Id);
-
+            commentDto.TaskTitle = savedComment.Task?.Title;
+            commentDto.EmployeeName = savedComment.Employee?.FullName;
             return ApiResponse<TaskCommentGetDto>.Ok(commentDto, "Comment updated successfully");
         }
 
