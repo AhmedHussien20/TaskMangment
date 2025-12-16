@@ -42,7 +42,7 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<PagedResponse<TaskExtensionRequestListDto>>> GetAllAsync(TaskExtensionRequestRequest request)
         {
-            string cacheKey = $"taskExtensionRequests:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
+            string cacheKey = $"taskExtensionRequests:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}:{request.TaskId}";
 
             if (!request.BypassCache)
             {
@@ -51,8 +51,9 @@ namespace TaskMangment.Infrastructure.Services
                     return ApiResponse<PagedResponse<TaskExtensionRequestListDto>>.Ok(cached);
             }
 
-            var query = _requestRepo.GetAll()
+            var query = _requestRepo.GetAll(c => c.TaskId == request.TaskId)
                 .Include(r => r.TaskAssignment)
+                        .ThenInclude(ta => ta.Task)               
                 .Include(r => r.RequestedBy)
                 .Include(r => r.ReviewedBy)
                 .ApplySearch(request.searchKey);
@@ -97,13 +98,14 @@ namespace TaskMangment.Infrastructure.Services
             if (task == null)
                 return ApiResponse<TaskExtensionRequestDetailsDto>.Fail("Task not found", StatusCode.NotFound);
 
-            var assignment = await _taskAssignmentRepo.GetAll(a => a.TaskId == taskId && a.EmployeeId == employeeId)
+            var assignment = await _taskAssignmentRepo.GetAll(a => a.TaskId == taskId && a.EmployeeId == employeeId  && a.IsActive)
                                                       .FirstOrDefaultAsync();
             if (assignment == null)
                 return ApiResponse<TaskExtensionRequestDetailsDto>.Fail("Employee is not assigned to this task", StatusCode.BadRequest);
 
             var request = _mapper.Map<TaskExtensionRequest>(dto);
             request.TaskAssignmentId = assignment.Id;
+            request.TaskId = taskId;
             request.RequestedByEmployeeId = employeeId;
             request.CreatedBy = employeeId;
             request.RequestedAt = DateTime.UtcNow;
@@ -116,12 +118,16 @@ namespace TaskMangment.Infrastructure.Services
 
             var savedRequest = await _requestRepo.GetAll(r => r.Id == request.Id)
                                                  .Include(r => r.RequestedBy)
-                                                .Include(r => r.TaskAssignment)
-                                                .ThenInclude(a => a.Employee)
+                                                 .Include(r => r.TaskAssignment)
+                                                 .ThenInclude(a => a.Employee) 
+                                                 .Include(r => r.TaskAssignment)
+                                                 .ThenInclude(a => a.Task) 
                                                 .AsNoTracking()
                                                 .FirstOrDefaultAsync();
 
             var resultDto = _mapper.Map<TaskExtensionRequestDetailsDto>(savedRequest);
+            resultDto.TaskTitle = savedRequest.TaskAssignment.Task?.Title; 
+
 
             return ApiResponse<TaskExtensionRequestDetailsDto>.Ok(resultDto, "Extension request added successfully");
         }
@@ -148,10 +154,14 @@ namespace TaskMangment.Infrastructure.Services
                                                      .Include(r => r.ReviewedBy)
                                                     .Include(r => r.TaskAssignment)
                                                     .ThenInclude(a => a.Employee)
+                                                    .Include(r => r.TaskAssignment)
+                                                 .ThenInclude(a => a.Task)
                                                     .AsNoTracking()
                                                     .FirstOrDefaultAsync();
 
             var resultDto = _mapper.Map<TaskExtensionRequestDetailsDto>(updatedRequest);
+            resultDto.TaskTitle = updatedRequest.TaskAssignment.Task?.Title;
+
 
             return ApiResponse<TaskExtensionRequestDetailsDto>.Ok(resultDto, "Request reviewed successfully");
         }

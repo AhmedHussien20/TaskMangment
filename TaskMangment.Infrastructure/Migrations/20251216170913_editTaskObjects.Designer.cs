@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TaskMangment.Infrastructure.DataContext;
 
@@ -11,9 +12,11 @@ using TaskMangment.Infrastructure.DataContext;
 namespace TaskMangment.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251216170913_editTaskObjects")]
+    partial class editTaskObjects
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1706,9 +1709,6 @@ namespace TaskMangment.Infrastructure.Migrations
                     b.Property<int?>("IssuedByEmployeeId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("IssuedEmployeeId")
-                        .HasColumnType("int");
-
                     b.Property<int?>("ModifiedBy")
                         .HasColumnType("int");
 
@@ -1729,8 +1729,6 @@ namespace TaskMangment.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("IssuedByEmployeeId");
-
-                    b.HasIndex("IssuedEmployeeId");
 
                     b.HasIndex("TaskAssignmentId");
 
@@ -2255,17 +2253,11 @@ namespace TaskMangment.Infrastructure.Migrations
                         .WithMany()
                         .HasForeignKey("IssuedByEmployeeId");
 
-                    b.HasOne("TaskMangment.Domain.Entities.Employee", "Issued")
-                        .WithMany()
-                        .HasForeignKey("IssuedEmployeeId");
-
                     b.HasOne("TaskMangment.Domain.Entities.TaskAssignment", "TaskAssignment")
                         .WithMany("Warnings")
                         .HasForeignKey("TaskAssignmentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Issued");
 
                     b.Navigation("IssuedBy");
 

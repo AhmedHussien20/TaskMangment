@@ -11,6 +11,7 @@ namespace TaskMangment.Domain.Entities
     public class TaskExtensionRequest : BaseEntity
     {
 
+        public int TaskId { get; set; }
         [Required] 
         public int TaskAssignmentId { get; set; }
         public int? RequestedByEmployeeId { get; set; }

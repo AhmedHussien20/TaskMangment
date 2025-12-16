@@ -20,9 +20,11 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
     {
         public int Id { get; set; }
         public int TaskId { get; set; }
+        public string TaskTitle { get; set; }
+
         public string CommentText { get; set; }
         public string EmployeeName { get; set; }
-        public DateTime CreatedAt { get; set; }
+        public DateTime CreatedDate { get; set; }
 
         public int AttachmentCount { get; set; }
     }

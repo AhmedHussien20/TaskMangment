@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Runtime.CompilerServices;
 using TaskMangment.Application.Common.ApiRequests.Task;
 using TaskMangment.Application.DTOs.TaskDTOs;
 using TaskMangment.Application.Interfaces.Services;
@@ -42,7 +43,7 @@ namespace TaskMangment.API.Controllers
         [HttpPost]
         public async Task<IActionResult> Add(int tasktId, [FromBody] WarningAddEditDto dto)
         {
-            var result = await _service.AddAsync(dto, tasktId);
+            var result = await _service.AddAsync(dto, tasktId,this.CurrentUserId);
             if (!result.Success)
                 return Fail(result.Message);
 

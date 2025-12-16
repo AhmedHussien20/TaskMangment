@@ -14,7 +14,7 @@ namespace TaskMangment.Application.Interfaces.Services
     {
         Task<ApiResponse<PagedResponse<WarningListDto>>> GetAllAsync(WarningRequest request);
         Task<ApiResponse<WarningGetDto>> GetByIdAsync(int id);
-        Task<ApiResponse<WarningGetDto>> AddAsync(WarningAddEditDto dto, int taskId);
+        Task<ApiResponse<WarningGetDto>> AddAsync(WarningAddEditDto dto, int taskId, int employeeId);
         Task<ApiResponse<WarningGetDto>> UpdateAsync(int id, WarningAddEditDto dto);
         Task<ApiResponse<bool>> DeleteAsync(int id);
     }

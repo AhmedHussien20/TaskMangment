@@ -10,6 +10,8 @@ namespace TaskMangment.Domain.Entities
 {
     public class TaskCloseRequest : BaseEntity
     {
+        public int TaskId { get; set; }
+
         [Required] 
         public int TaskAssignmentId { get; set; }
         [MaxLength(1000)] 
