@@ -4,6 +4,8 @@ import { SwitcherService } from '../../services/switcher.service';
 import { Router, NavigationEnd } from '@angular/router';
 import { Subscription, filter } from 'rxjs';
 import { MenuItem } from '../../models/menu-item.model'; 
+import { AuthService } from 'app/core/services/auth.service';
+import { SignalRService } from 'app/core/services/signalr.service';
 
 @Component({
   selector: 'app-full-layout',
@@ -23,7 +25,9 @@ export class FullLayoutComponent implements OnInit, OnDestroy {
     public navServices: NavService,
     private elementRef: ElementRef,
     public switcherService: SwitcherService,
-    private renderer: Renderer2
+    private renderer: Renderer2,
+    private authService: AuthService,
+    private signalR: SignalRService
   ) {
     const htmlElement =
       this.elementRef.nativeElement.ownerDocument.documentElement;
@@ -52,6 +56,13 @@ export class FullLayoutComponent implements OnInit, OnDestroy {
         console.error('Error fetching menu items:', err);
       }
     });
+    
+    const user = this.authService.getCurrentUser();
+
+    if (user) {
+      console.log('🔁 Reconnecting SignalR for user:', user.userId);
+      this.signalR.startConnection(user.userId);
+    }
   }
 
   ngOnDestroy() {

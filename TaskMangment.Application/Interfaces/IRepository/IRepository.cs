@@ -17,7 +17,7 @@ namespace TaskMangment.Application.Interfaces.IRepository
         Task AddRangeAsync(IEnumerable<TEntity> entities);
 
         void SaveInclude(TEntity entity, params string[] properties);
-
+        IQueryable<TEntity> Query();
         void SoftDelete(TEntity entity);
         void HardDelete(TEntity entity);
 

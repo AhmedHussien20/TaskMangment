@@ -46,6 +46,7 @@ namespace TaskMangment.Infrastructure.DataContext
         public DbSet<TaskComment> TaskComments { get; set; }
         public DbSet<TaskExtensionRequest> TaskExtensionRequests { get; set; }
         public DbSet<Warning> Warnings { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

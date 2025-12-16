@@ -6,12 +6,17 @@ using System.Text;
 using TaskMangment.API.Extensions;
 using TaskMangment.API.Filters;
 using TaskMangment.API.Middlewares;
+using TaskMangment.Application.Behaviors;
+using TaskMangment.Application.Common;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Interfaces;
+using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
+using TaskMangment.Domain.Event;
 using TaskMangment.Infrastructure;
 using TaskMangment.Infrastructure.Caching;
 using TaskMangment.Infrastructure.DataContext;
+using TaskMangment.Infrastructure.Repositories;
 using TaskMangment.Infrastructure.Seeding;
 using TaskMangment.Infrastructure.Services;
 using TaskMangment.Infrastructure.SignalR;
@@ -43,8 +48,16 @@ namespace TaskMangment.API
             builder.Services.AddScoped<IRoleService, RoleService>();
             builder.Services.AddScoped<IWhatsAppService, WhatsAppService>();
             builder.Services.AddScoped<INotificationService, NotificationService>();
+            builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
             builder.Services.AddScoped<IAuthService, AuthService>();
-            builder.Services.AddScoped<IJwtService, JwtService>(); 
+            builder.Services.AddScoped<IJwtService, JwtService>();
+            // Domain Events
+            builder.Services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
+            // Notification sender 
+            builder.Services.AddScoped<INotificationSender, NotificationSender>();
+            builder.Services.AddScoped<
+    IEventHandler<TaskAssignedEvent>,
+    TaskAssignedEventHandler>();
 
             builder.Services.AddScoped<AuditLogAttribute>();
             builder.Services.AddHttpContextAccessor();

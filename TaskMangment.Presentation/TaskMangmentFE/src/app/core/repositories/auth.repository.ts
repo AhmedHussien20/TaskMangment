@@ -16,9 +16,10 @@ export class AuthRepository {
   login(
     email: string,
     password: string
-  ): Observable<BaseResponse<{ user?: User; token: string }>> {
+  ): Observable<BaseResponse<User & { token: string }>>
+ {
     return this.apiService.post<
-      BaseResponse<{ user?: User; token: string }>
+      BaseResponse<User & { token: string }>
     >(this.service, 'login', { email, password });
   }
 
