@@ -157,6 +157,7 @@
   "FORM": {
     "BACK": "Back",
     "SAVE": "Save",
+    "UPDATE": "Update",
     "GENERATE": "Generate",
     "SHOW_PASSWORD": "Show Password",
     "HIDE_PASSWORD": "Hide Password",
@@ -360,6 +361,28 @@
     "CAT_OFFICE": "Office Events",
     "CAT_OTHER": "Other Events",
     "CAT_FESTIVAL": "Festival Events",
-    "CAT_TIMELINE": "Timeline Events"
+    "CAT_TIMELINE": "Timeline Events",
+    "EVENTS_TYPE": "Event Type",
+    "REMINDER": "reminder",
+    "START_DATE" : "start date",
+    "END_DATE" : "end date",
+    "DESCRIPTION" : "Description",
+    "EVENT_TYPE":
+    {
+      "MEETING": "Meeting",
+      "BIRTHDAY": "Birthday",
+      "HOLIDAY": "Holiday",
+      "APPOINTMENT": "Appointment",
+      "ANNIVERSARY": "Anniversary",
+      "REMINDER": "Reminder",
+      "TASKDEADLINE": "Task Deadline"
+    },
+    "PREVIOUS": "Previous",
+    "NEXT": "Next",
+    "15MIN": "15 Minutes",
+    "30MIN": "30 Minutes",
+    "60MIN": "60 Minutes",
+    "EDIT_EVENT" : "Edit Event",
+    "DELETE_EVENT" : "Delete Event"
   }
 }

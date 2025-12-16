@@ -134,6 +134,7 @@
   "FORM": {
     "BACK": "رجوع",
     "SAVE": "حفظ",
+    "UPDATE": "تحديث",
     "GENERATE": "توليد",
     "SHOW_PASSWORD": "إظهار كلمة المرور",
     "HIDE_PASSWORD": "إخفاء كلمة المرور",
@@ -363,15 +364,34 @@
     "ENTER_DESC": "اكتب وصف الحدث (اختياري):",
     "CONFIRM_DELETE": "هل أنت متأكد من حذف هذا الحدث؟",
     "ALL_DAY": "طوال اليوم",
-    "DESCRIPTION": "Description",
-    "START_DATE": "Start Date",
-    "END_DATE": "End Date",
     "CAT_CALENDAR": "أحداث التقويم",
     "CAT_BIRTHDAY": "أحداث أعياد الميلاد",
     "CAT_HOLIDAY": "الإجازات",
     "CAT_OFFICE": "أحداث المكتب",
     "CAT_OTHER": "أحداث أخرى",
     "CAT_FESTIVAL": "المهرجانات",
-    "CAT_TIMELINE": "الخط الزمني"
+    "CAT_TIMELINE": "الخط الزمني",
+    "EVENTS_TYPE": "نوع الحدث",
+    "REMINDER": "التذكير",
+    "START_DATE" : "تاريخ البدء",
+    "END_DATE" : "تاريخ الانتهاء",
+    "DESCRIPTION" : "الوصف",
+    "EVENT_TYPE":
+    {
+      "MEETING": "اجتماع",
+      "BIRTHDAY": "عيد ميلاد",
+      "HOLIDAY": "إجازة",
+      "APPOINTMENT": "موعد",
+      "ANNIVERSARY": "ذكرى سنوية",
+      "REMINDER": "تذكير",
+      "TASKDEADLINE": "المهلة النهائية للمهمة"
+     
+    },
+    "15MIN": "15 دقيقة",
+    "30MIN": "30 دقيقة",
+    "60MIN": "60 دقيقة",
+    "EDIT_EVENT" : "تعديل الحدث",
+    "CANCEL_EVENT" : "الغاء الحدث"
+
   }
 }

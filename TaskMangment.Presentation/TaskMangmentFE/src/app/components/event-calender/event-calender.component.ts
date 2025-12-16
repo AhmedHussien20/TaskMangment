@@ -9,7 +9,7 @@ import {
 import { FullCalendarModule } from '@fullcalendar/angular'; 
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
-import interactionPlugin, { DateClickArg, Draggable, EventResizeDoneArg } from '@fullcalendar/interaction';
+import interactionPlugin, { DateClickArg, Draggable, EventResizeDoneArg, DropArg } from '@fullcalendar/interaction';
 
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -26,22 +26,8 @@ import { CommonModule } from '@angular/common';
 import { EventCreateModalComponent } from './event-create-modal/event-create-modal.component';
 import { CalendarEventService } from 'app/core/services/calendar-events.service';
 
-type CategoryKey =
-  | 'calendar'
-  | 'birthday'
-  | 'holiday'
-  | 'office'
-  | 'other'
-  | 'festival'
-  | 'timeline';
-
-interface CategoryItem {
-  key: CategoryKey;
-  labelKey: string;     // translate key
-  className: string;    // FullCalendar className
-  borderClass: string;  // left panel style
-}
-
+import { EventApi } from '@fullcalendar/core';
+import Swal from 'sweetalert2';
 interface ActivityItem {
   title: string;
   dateText: string;
@@ -70,27 +56,63 @@ interface ActivityItem {
 export class EventCalenderComponent implements OnInit, AfterViewInit {
   @ViewChild('external', { static: false }) external!: ElementRef;
  
-  categories: CategoryItem[] = [
-  { key: 'calendar', labelKey: 'CALENDAR.EVENT_TYPE.Meeting', className: 'bg-primary border border-primary', borderClass: 'bg-primary border border-primary' },
-  { key: 'birthday', labelKey: 'CALENDAR.EVENT_TYPE.Birthday', className: 'bg-warning border border-warning', borderClass: 'bg-warning border border-warning' },
-  { key: 'holiday', labelKey: 'CALENDAR.EVENT_TYPE.Holiday', className: 'bg-success border border-success', borderClass: 'bg-success border border-success' },
-  { key: 'office',  labelKey: 'CALENDAR.EVENT_TYPE.Appointment', className: 'bg-info border border-info', borderClass: 'bg-info border border-info' },
-  { key: 'other',   labelKey: 'CALENDAR.EVENT_TYPE.Reminder', className: 'bg-secondary border border-secondary', borderClass: 'bg-secondary border border-secondary' },
-  { key: 'festival',labelKey: 'CALENDAR.EVENT_TYPE.Anniversar', className: 'bg-danger border border-danger', borderClass: 'bg-danger border border-danger' },
-  { key: 'timeline',labelKey: 'CALENDAR.EVENT_TYPE.TaskDeadline', className: 'bg-teal border border-teal', borderClass: 'bg-teal border border-teal' }
-];
+  categories = [
+    {
+      key: 'Meeting',
+      labelKey: 'CALENDAR.EVENT_TYPE.MEETING',
+      className: 'bg-secondary',
+      borderClass: 'bg-secondary',
+      eventType: CalendarEventType.Meeting
+    },
+    {
+      key: 'Appointment',
+      labelKey: 'CALENDAR.EVENT_TYPE.APPOINTMENT',
+      className: 'bg-success',
+      borderClass: 'bg-success',
+      eventType: CalendarEventType.Appointment
+    },
+    {
+      key: 'TaskDeadline',
+      labelKey: 'CALENDAR.EVENT_TYPE.TASKDEADLINE',
+      className: 'bg-info',
+      borderClass: 'bg-info',
+      eventType: CalendarEventType.TaskDeadline
+    },
+    {
+      key: 'Holiday',
+      labelKey: 'CALENDAR.EVENT_TYPE.HOLIDAY',
+      className: 'bg-danger',
+      borderClass: 'bg-danger',
+      eventType: CalendarEventType.Holiday
+    },
+    {
+      key: 'Reminder',
+      labelKey: 'CALENDAR.EVENT_TYPE.REMINDER',
+      className: 'bg-teal',
+      borderClass: 'bg-teal',
+      eventType: CalendarEventType.Reminder
+    },
+    {
+      key: 'Birthday',
+      labelKey: 'CALENDAR.EVENT_TYPE.BIRTHDAY',
+      className: 'bg-warning',
+      borderClass: 'bg-warning',
+      eventType: CalendarEventType.Birthday
+    },
+    {
+      key: 'Anniversar',
+      labelKey: 'CALENDAR.EVENT_TYPE.ANNIVERSARY',
+      className: 'bg-purple',
+      borderClass: 'bg-purple',
+      eventType: CalendarEventType.Anniversar
+    }
+  ];
 
-
-  // fullcalendar events
   calendarEvents: any[] = [];
-
-  // activity panel
   activity: ActivityItem[] = [];
   activityLoading = false;
-
   loading = false;
 
-  // options
   calendarOptions: CalendarOptions = {
     plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
     initialView: 'dayGridMonth',
@@ -106,13 +128,26 @@ export class EventCalenderComponent implements OnInit, AfterViewInit {
     droppable: true,
     weekends: true,
     dayMaxEvents: true,
- 
     events: [],
 
-    dateClick: (arg) => this.onDateClick(arg),
+    dateClick: (arg) => this.onDateClick(arg, null),
     eventClick: (arg) => this.onEventClick(arg),
     eventDrop: (arg) => this.onEventDrop(arg),
-    eventResize: (arg) => this.onEventResize(arg)
+    eventResize: (arg) => this.onEventResize(arg),
+
+    drop: (arg: DropArg) => {
+      const eventType = Number(arg.draggedEl?.getAttribute('data-event-type'));
+      
+      const clickArg: DateClickArg = {
+        date: arg.date,
+        dateStr: arg.date.toISOString(),
+        allDay: arg.allDay,
+        jsEvent: arg.jsEvent,
+        view: arg.view
+      } as DateClickArg;
+      
+      this.onDateClick(clickArg, eventType);
+    }
   };
 
   constructor(
@@ -125,218 +160,291 @@ export class EventCalenderComponent implements OnInit, AfterViewInit {
     this.loadEvents();
   }
 
-  ngAfterViewInit(): void { 
-    if (!this.external?.nativeElement) return;
-
+  ngAfterViewInit(): void {
     new Draggable(this.external.nativeElement, {
       itemSelector: '.fc-event',
-      eventData: (eventEl: HTMLElement) => {
-        const title = eventEl.innerText.trim();
-        const cls = eventEl.getAttribute('data-class') || '';
-        return {
-          title,
-          className: cls + ' overflow-hidden'
-        };
-      }
-    });
-  }
- 
- loadEvents(): void {
-  this.loading = true;
-
-  this.calendarService.getAll({
-    pageIndex: 1,
-    pageSize: 100
-  }).subscribe({
-    next: (res) => {
-
-      const list: CalendarEventGetDto[] = res.data?.data ?? [];
-
-      this.calendarEvents = list.map((e, index) => {
-        const isAllDay = e.allDay === true;
+      eventData: (el: HTMLElement) => {
+        const eventType = Number(el.getAttribute('data-event-type'));
 
         return {
-          id: (e.id ?? index + 1).toString(),  
-          title: e.title,
-
-          start: isAllDay
-            ? e.startDate.split('T')[0]
-            : e.startDate,
-
-          end: isAllDay && e.endDate
-            ? e.endDate.split('T')[0]
-            : e.endDate ?? undefined,
-
-          allDay: isAllDay,
-
-          className: this.resolveEventClass(e),
-
+          title: el.innerText.trim(),
+          className: el.getAttribute('data-class') + ' overflow-hidden',
           extendedProps: {
-            description: e.description,
-            relatedTaskId: e.relatedTaskId,
-            relatedTaskTitle: e.relatedTaskTitle,
-            companyId: e.companyId
+            eventType
           }
         };
-      });
-
-      this.calendarOptions = {
-        ...this.calendarOptions,
-        events: [...this.calendarEvents]
-      };
-
-      this.loading = false;
-      this.buildActivity(list);
-
-    },
-    error: () => {
-      this.loading = false;
-    }
-  });
-}
-
-
-
- 
-
-  private mapDtoToEvent(dto: CalendarEventGetDto, fallbackIndex: number): any {
-    const idValue = (dto.id ?? fallbackIndex + 1).toString();
-
-    return {
-      id: idValue,
-      title: dto.title,
-      start: dto.startDate,
-      end: dto.endDate ?? undefined,
-      allDay: dto.allDay,
-      className: this.resolveClass(dto),
-      extendedProps: {
-        description: dto.description,
-        relatedTaskId: dto.relatedTaskId,
-        relatedTaskTitle: dto.relatedTaskTitle,
-        companyId: dto.companyId
       }
-    };
+    });
   }
 
-private resolveEventClass(e: CalendarEventGetDto): string {
-  switch (e.eventType) {
-    case CalendarEventType.Meeting:
-      return 'bg-secondary-transparent';
-    case CalendarEventType.Appointment:
-      return 'bg-success-transparent';
-    case CalendarEventType.TaskDeadline:
-      return 'bg-info-transparent';
-    case CalendarEventType.Holiday:
-      return 'bg-danger-transparent';
-    case CalendarEventType.Reminder:
-      return 'bg-teal-transparent';
-    case CalendarEventType.Birthday:
-      return 'bg-warning-transparent';
-    case CalendarEventType.Anniversar:
-      return 'bg-success-transparent';
-    default:
-      return 'bg-warning-transparent';
+  loadEvents(): void {
+    this.loading = true;
+
+    this.calendarService.getAll({
+      pageIndex: 1,
+      pageSize: 100
+    }).subscribe({
+      next: (res) => {
+        const list: CalendarEventGetDto[] = res.data?.data ?? [];
+
+        this.calendarEvents = list.map((e, index) => {
+          const isAllDay = e.allDay === true;
+
+          return {
+            id: (e.id ?? index + 1).toString(),  
+            title: e.title,
+            start: isAllDay
+              ? e.startDate.split('T')[0]
+              : e.startDate,
+            end: isAllDay && e.endDate
+              ? e.endDate.split('T')[0]
+              : e.endDate ?? undefined,
+            allDay: isAllDay,
+            className: this.resolveEventClass(e),
+            extendedProps: {
+              description: e.description,
+              relatedTaskId: e.relatedTaskId,
+              relatedTaskTitle: e.relatedTaskTitle,
+              companyId: e.companyId,
+              reminder: e.reminder ?? 15,
+              eventType: e.eventType
+            }
+          };
+        });
+
+        this.calendarOptions = {
+          ...this.calendarOptions,
+          events: [...this.calendarEvents]
+        };
+
+        this.loading = false;
+        this.buildActivity(list);
+      },
+      error: () => {
+        this.loading = false;
+      }
+    });
   }
-}
 
-
-  private resolveClass(dto: CalendarEventGetDto): string {
-    if (dto.relatedTaskId) return 'bg-primary-transparent';
-    if (dto.allDay) return 'bg-success-transparent';
-    return 'bg-info-transparent';
+  private resolveEventClass(e: CalendarEventGetDto): string {
+    switch (e.eventType) {
+      case CalendarEventType.Meeting:
+        return 'bg-secondary-transparent';
+      case CalendarEventType.Appointment:
+        return 'bg-success-transparent';
+      case CalendarEventType.TaskDeadline:
+        return 'bg-info-transparent';
+      case CalendarEventType.Holiday:
+        return 'bg-danger-transparent';
+      case CalendarEventType.Reminder:
+        return 'bg-teal-transparent';
+      case CalendarEventType.Birthday:
+        return 'bg-warning-transparent';
+      case CalendarEventType.Anniversar:
+        return 'bg-purple-transparent';
+      default:
+        return 'bg-primary-transparent';
+    }
   }
 
-  // ========= ACTIVITY =========
- private buildActivity(list: CalendarEventGetDto[]): void {
-  this.activityLoading = true;
+  private buildActivity(list: CalendarEventGetDto[]): void {
+    this.activityLoading = true;
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0); // بداية اليوم
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-  // فلترة الأحداث لتكون اليوم فقط
-  const todayEvents = list.filter(e => {
-    const eventDate = new Date(e.startDate);
-    eventDate.setHours(0, 0, 0, 0);
-    return eventDate.getTime() === today.getTime();
-  });
-
-  // ترتيب الأحداث حسب الوقت أو أي معيار آخر
-  const sorted = [...todayEvents].sort((a, b) => {
-    const ta = new Date(a.startDate).getTime();
-    const tb = new Date(b.startDate).getTime();
-    return ta - tb; // أصغر وقت أولًا
-  });
-
-  // لو عايز بس top 6
-  const top = sorted.slice(0, 6);
-
-  this.activity = top.map((e) => {
-    const date = new Date(e.startDate);
-    const dateText = date.toLocaleDateString(this.getLocale(), {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
+    const todayEvents = list.filter(e => {
+      const eventDate = new Date(e.startDate);
+      eventDate.setHours(0, 0, 0, 0);
+      return eventDate.getTime() === today.getTime();
     });
 
-    const badge = e.allDay
-      ? this.translate.instant('CALENDAR.ALL_DAY')
-      : date.toLocaleTimeString(this.getLocale(), { hour: '2-digit', minute: '2-digit' });
+    const sorted = [...todayEvents].sort((a, b) => {
+      const ta = new Date(a.startDate).getTime();
+      const tb = new Date(b.startDate).getTime();
+      return ta - tb;
+    });
 
-    return {
-      title: e.title,
-      dateText,
-      badgeText: badge,
-      badgeClass: e.allDay ? 'bg-success' : 'bg-light text-default',
-      description: e.description || e.relatedTaskTitle || e.title
-    };
-  });
+    const top = sorted.slice(0, 6);
 
-  this.activityLoading = false;
-}
+    this.activity = top.map((e) => {
+      const date = new Date(e.startDate);
+      const dateText = date.toLocaleDateString(this.getLocale(), {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
 
+      const badge = e.allDay
+        ? this.translate.instant('CALENDAR.ALL_DAY')
+        : date.toLocaleTimeString(this.getLocale(), { hour: '2-digit', minute: '2-digit' });
 
+      return {
+        title: e.title,
+        dateText,
+        badgeText: badge,
+        badgeClass: e.allDay ? 'bg-success' : 'bg-light text-default',
+        description: e.description || e.relatedTaskTitle || e.title
+      };
+    });
+
+    this.activityLoading = false;
+  }
 
   private getLocale(): string {
     const lang = this.translate.currentLang || 'en';
     return lang.startsWith('ar') ? 'ar-EG' : 'en-US';
   }
 
-  // ========= CRUD =========
+  onDateClick(arg: DateClickArg, eventType: CalendarEventType | null): void {
+    const modalRef = this.modal.open(EventCreateModalComponent, {
+      size: 'lg',
+      centered: true
+    });
 
-  onDateClick(arg: DateClickArg): void {
-  const modalRef = this.modal.open(EventCreateModalComponent, {
-    size: 'lg',
-    centered: true
-  });
+    modalRef.componentInstance.startDate = arg.date;
+    
+    // إذا كان هناك نوع حدث (من الـ drag) اضبطه
+    if (eventType !== null) {
+      modalRef.componentInstance.preselectedEventType = eventType;
+    }
 
-  modalRef.componentInstance.startDate = arg.date;
+    modalRef.result.then(
+      (saved) => {
+        if (saved) {
+          this.loadEvents();
+        }
+      },
+      () => {}
+    );
+  }
 
-  modalRef.result.then(
-    (saved) => {
-      if (saved) {
-        this.loadEvents(); // refresh calendar
-      }
-    },
-    () => {}
-  );
-}
-
-  onEventClick(arg: EventClickArg): void {
+ /* onEventClick(arg: EventClickArg): void {
     const eventId = Number(arg.event.id);
-    const ok = confirm(this.translate.instant('CALENDAR.CONFIRM_DELETE'));
-    if (!ok) return;
-
-    // لو id مش موجود/مش رقم (لأن API ما بيرجعش Id)
+    
     if (!eventId || Number.isNaN(eventId)) {
-      arg.event.remove();
+      // إذا كان الحدث غير موجود في قاعدة البيانات (مثل الأحداث المؤقتة)
       return;
     }
 
-    this.calendarService.delete(eventId).subscribe({
-      next: () => arg.event.remove(),
-      error: () => {}
+    // تحميل بيانات الحدث وفتح مودال التعديل
+    this.calendarService.getById(eventId).subscribe({
+      next: (res) => {
+        const eventData = res.data;
+        if (eventData) {
+          this.openEditModal(eventData);
+        }
+      },
+      error: () => {
+        // إذا حدث خطأ، افتح مودال بالبيانات الأساسية
+        this.openEditModalFromCalendarEvent(arg.event);
+      }
     });
+  }*/
+ onEventClick(arg: { event: EventApi }) {
+  const event = arg.event;
+  const jsEvent = (arg as any).jsEvent as MouseEvent;
+
+  const menu = document.createElement('div');
+  menu.classList.add('dropdown-menu', 'show');
+  menu.style.position = 'absolute';
+  menu.style.zIndex = '9999';
+
+  const scrollX = window.scrollX || window.pageXOffset;
+  const scrollY = window.scrollY || window.pageYOffset;
+
+  menu.style.top = `${jsEvent.clientY + scrollY}px`;
+  menu.style.left = `${jsEvent.clientX + scrollX}px`;
+
+  const editBtn = document.createElement('button');
+  editBtn.classList.add('dropdown-item');
+editBtn.innerText = this.translate.instant('CALENDAR.EDIT_EVENT');
+  editBtn.onclick = () => {
+    this.openEditModalFromCalendarEvent(event);
+    document.body.removeChild(menu);
+  };
+
+  const deleteBtn = document.createElement('button');
+  deleteBtn.classList.add('dropdown-item');
+deleteBtn.innerText = this.translate.instant('CALENDAR.CANCEL_EVENT');
+  deleteBtn.onclick = () => {
+    document.body.removeChild(menu);
+    Swal.fire({
+      title: 'تأكيد الغاء الحدث',
+      text: 'هل أنت متأكد من الغاء هذا الحدث؟',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'نعم',
+      cancelButtonText: 'لا'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.deleteEvent(event);
+      }
+    });
+  };
+
+  menu.appendChild(editBtn);
+  menu.appendChild(deleteBtn);
+  document.body.appendChild(menu);
+
+  const removeMenu = () => {
+    if (menu.parentElement) {
+      document.body.removeChild(menu);
+    }
+    document.removeEventListener('click', removeMenu);
+  };
+  setTimeout(() => {
+    document.addEventListener('click', removeMenu);
+  }, 0);
+}
+
+deleteEvent(event: EventApi) {
+  const eventId = Number(event.id);
+  if (!eventId) return;
+
+  this.calendarService.delete(eventId).subscribe({
+    next: () => {
+      event.remove(); // إزالة الحدث من الـ calendar مباشرة
+    },
+    error: (err) => {
+      console.error('Failed to delete event', err);
+    }
+  });
+}
+
+
+  private openEditModalFromCalendarEvent(event: any): void {
+    const modalRef = this.modal.open(EventCreateModalComponent, {
+      size: 'lg',
+      centered: true
+    });
+
+    const tempEvent: CalendarEventGetDto = {
+      id: Number(event.id),
+      title: event.title,
+      description: event.extendedProps?.description || '',
+      startDate: event.start?.toISOString() || '',
+      endDate: event.end?.toISOString() || null,
+      allDay: event.allDay,
+      eventType: event.extendedProps?.eventType || CalendarEventType.Reminder,
+      relatedTaskId: event.extendedProps?.relatedTaskId || null,
+      relatedTaskTitle: event.extendedProps?.relatedTaskTitle || '',
+      companyId: event.extendedProps?.companyId || null,
+      reminder: event.extendedProps?.reminder || 15
+    };
+
+    modalRef.componentInstance.event = tempEvent;
+    modalRef.componentInstance.isEdit = true;
+
+    modalRef.result.then(
+      (saved) => {
+        if (saved) {
+          this.loadEvents();
+        }
+      },
+      () => {}
+    );
   }
 
   onEventDrop(arg: EventDropArg): void {
@@ -357,7 +465,9 @@ private resolveEventClass(e: CalendarEventGetDto): string {
       startDate: event.start?.toISOString(),
       endDate: event.end ? event.end.toISOString() : null,
       allDay: event.allDay,
-      relatedTaskId: event.extendedProps?.relatedTaskId ?? null
+      eventType: event.extendedProps?.eventType ?? CalendarEventType.Reminder,
+      relatedTaskId: event.extendedProps?.relatedTaskId ?? null,
+      reminder: event.extendedProps?.reminder ?? 15
     };
 
     this.calendarService.update(eventId, payload).subscribe({
@@ -366,7 +476,6 @@ private resolveEventClass(e: CalendarEventGetDto): string {
     });
   }
 
-  // زر view all
   onViewAllActivity(): void {
     // لو عايز تروح لصفحة list
     // this.router.navigate(['/calendar/activity']);

@@ -14,18 +14,25 @@ import { CalendarEventService } from 'app/core/services/calendar-events.service'
 export class EventCreateModalComponent {
   @Input() startDate!: Date;
   @Input() event?: CalendarEventGetDto;
-
+  @Input() isEdit = false;
+  @Input() preselectedEventType?: CalendarEventType;
   
   form!: FormGroup;
   saving = false;
-  isEdit = false;
 
-  // لإنشاء Dropdown من enum
+  CalendarEventType = CalendarEventType;
+
+  reminderOptions = [
+    { value: 15, label: 'CALENDAR.15MIN' },
+    { value: 30, label: 'CALENDAR.30MIN' },
+    { value: 60, label: 'CALENDAR.60MIN' }
+  ];
+
   eventTypes = Object.keys(CalendarEventType)
-    .filter(k => !isNaN(Number(CalendarEventType[k as any]))) // فلتر القيم الرقمية
+    .filter(k => !isNaN(Number(CalendarEventType[k as any]))) 
     .map(k => ({
       value: CalendarEventType[k as keyof typeof CalendarEventType],
-      label: k
+      label: 'CALENDAR.EVENT_TYPE.' + k.toUpperCase()
     }));
 
   constructor(
@@ -35,65 +42,77 @@ export class EventCreateModalComponent {
   ) {}
 
   ngOnInit(): void {
-    this.isEdit = !!this.event;
-
     this.form = this.fb.nonNullable.group({
       title: ['', Validators.required],
       description: [''],
       startDate: ['', Validators.required],
       endDate: [''],
-      allDay: true,
-      eventType: [CalendarEventType.Reminder, Validators.required] // ← نوع الحدث
+      allDay: [true],
+      eventType: [CalendarEventType.Reminder, Validators.required],
+      reminder: [15]
     });
 
     if (this.isEdit && this.event) {
       this.form.patchValue({
         title: this.event.title,
         description: this.event.description,
-        startDate: this.event.startDate, 
-        endDate: this.event.endDate ?? '',
+        startDate: this.formatDateLocal(new Date(this.event.startDate)),
+        endDate: this.event.endDate ? this.formatDateLocal(new Date(this.event.endDate)) : '',
         allDay: this.event.allDay,
-        eventType: this.event.eventType 
+        eventType: this.event.eventType,
+        reminder: this.event.reminder || 15
       });
     } else {
-      const dateStr = this.formatDateLocal(this.startDate);
-    this.form.patchValue({ startDate: dateStr, endDate: dateStr });
+      const dateStr = this.formatDateLocal(this.startDate || new Date());
+      this.form.patchValue({ 
+        startDate: dateStr, 
+        endDate: dateStr,
+        eventType: this.preselectedEventType || CalendarEventType.Reminder
+      });
     }
   }
 
   private formatDateLocal(date: Date): string {
-  const d = new Date(date);
-  const pad = (n: number) => n.toString().padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
+    const d = new Date(date);
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
 
   onSave() {
     if (this.form.invalid) return;
 
     this.saving = true;
 
-    const payload = {
-  ...this.form.value,
-    startDate: this.form.value.startDate, 
-  endDate: this.form.value.endDate,
-    
-  relatedTaskId: this.form.value.relatedTaskId ? Number(this.form.value.relatedTaskId) : null,
-  eventType: this.form.value.eventType
-};
+    const payload: any = {
+      title: this.form.value.title,
+      description: this.form.value.description,
+      startDate: this.form.value.startDate + ':00',
+      endDate: this.form.value.endDate ? this.form.value.endDate + ':00' : null,
+      allDay: this.form.value.allDay,
+      eventType: Number(this.form.value.eventType),
+      reminder: Number(this.form.value.reminder)
+    };
 
-    this.calendarService.create(payload).subscribe({
-      next: () => {
-        this.activeModal.close(true);
-      },
-      error: () => {
-        this.saving = false;
-      }
-    });
+    if (this.isEdit && this.event?.id) {
+      this.calendarService.update(this.event.id, payload).subscribe({
+        next: () => {
+          this.activeModal.close(true);
+        },
+        error: () => {
+          this.saving = false;
+        }
+      });
+    } else {
+      this.calendarService.create(payload).subscribe({
+        next: () => {
+          this.activeModal.close(true);
+        },
+        error: () => {
+          this.saving = false;
+        }
+      });
+    }
   }
 
-  private toInputDate(date: Date): string {
-    return new Date(date)
-      .toISOString()
-      .slice(0, 16);
-  }
+  
 }
