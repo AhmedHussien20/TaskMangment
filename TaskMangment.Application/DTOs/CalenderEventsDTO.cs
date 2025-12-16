@@ -24,9 +24,13 @@ namespace TaskMangment.Application.DTOs
 
         public CalendarEventType EventType { get; set; } = CalendarEventType.Reminder;
 
+        public int reminder { get; set; }
+
     }
     public class CalendarEventGetDto
     {
+
+        public int Id { get; set; } 
 
         public string Title { get; set; }
         public string Description { get; set; }
@@ -43,6 +47,9 @@ namespace TaskMangment.Application.DTOs
         public CalendarEventType EventType { get; set; }
 
         public string EventTypeText => EventType.ToString();
+
+        public int reminder { get; set; }
+
 
     }
 }

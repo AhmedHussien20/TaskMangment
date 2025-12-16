@@ -28,8 +28,9 @@ export interface CalendarEventGetDto {
   relatedTaskId?: number | null;
   relatedTaskTitle?: string | null;
   companyId?: number | null;
-  id?: number;
-   eventType?: CalendarEventType;
+  id: number;
+  eventType: CalendarEventType;
+  reminder?: number | null;
 }
 
 export interface CalendarEventUpsertDto {
@@ -39,6 +40,8 @@ export interface CalendarEventUpsertDto {
   endDate?: string | null | undefined;
   allDay?: boolean | null | undefined;
   relatedTaskId?: number | null | undefined;
+  eventType?: CalendarEventType | null | undefined;
+  reminder?: number | null | undefined;
 }
 
 
