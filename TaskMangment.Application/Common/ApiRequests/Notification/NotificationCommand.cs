@@ -3,14 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TaskMangment.Domain.Entities;
 
-namespace TaskMangment.Domain.Entities
+namespace TaskMangment.Application.Common.ApiRequests.Notification
 {
-    public class Notification : BaseEntity
+    public class NotificationCommand
     {
         public int UserId { get; set; }
         public string Message { get; set; }
-        public NotificationChannel Channel { get; set; }
-        public bool IsRead { get; set; } = false;  
+        public List<NotificationChannel> Channels { get; set; }
     }
+
 }

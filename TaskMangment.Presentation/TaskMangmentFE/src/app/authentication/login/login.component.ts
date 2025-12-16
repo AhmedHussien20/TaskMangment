@@ -8,6 +8,8 @@ import { CommonModule, DOCUMENT } from '@angular/common';
 import { DomSanitizer } from '@angular/platform-browser';
 import { AuthService } from 'app/core/services/auth.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { NotificationApiService } from 'app/core/services/notification.service';
+import { SignalRService } from 'app/core/services/signalr.service';
 
 @Component({
   selector: 'app-login',
@@ -37,10 +39,10 @@ export class LoginComponent {
     private router: Router,
     private formBuilder: FormBuilder,
     private renderer: Renderer2,
-    private toastr: ToastrService,private translate: TranslateService) {
-  this.translate.use('ar');
-  document.documentElement.dir = 'rtl';
-  document.documentElement.lang = 'ar';
+    private toastr: ToastrService, private translate: TranslateService, private notificationService: NotificationApiService, private signalRService: SignalRService) {
+    this.translate.use('ar');
+    document.documentElement.dir = 'rtl';
+    document.documentElement.lang = 'ar';
   }
 
   ngOnInit(): void {
@@ -61,7 +63,7 @@ export class LoginComponent {
   getValidationMessages(controlName: string): string[] {
     const control = this.loginForm.controls[controlName];
     const messages: string[] = [];
-  
+
     if (control && control.errors && control.touched) {
       for (const errorKey in control.errors) {
         if (control.errors.hasOwnProperty(errorKey)) {
@@ -71,16 +73,16 @@ export class LoginComponent {
     }
     return messages;
   }
-  
+
   getErrorMessage(controlName: string, errorKey: string, errorValue: any): string {
     const fieldNames: { [key: string]: string } = {
       username: 'Username',  // Change userCode to username
       password: 'Password',
       email: 'Email'
     };
-  
+
     const defaultFieldName = fieldNames[controlName] || controlName;
-  
+
     const errorMessages: { [key: string]: string } = {
       required: `${defaultFieldName} is required.`,
       minlength: `${defaultFieldName} must be at least ${errorValue.requiredLength} characters.`,
@@ -88,10 +90,10 @@ export class LoginComponent {
       pattern: `${defaultFieldName} format is invalid.`,
       email: `Please enter a valid ${defaultFieldName}.`
     };
-  
+
     return errorMessages[errorKey] || `${defaultFieldName} is invalid.`;
   }
-  
+
 
   Submit(event: Event) {
     event.preventDefault();
@@ -102,6 +104,21 @@ export class LoginComponent {
 
       this.authservice.login(username, password).subscribe({  // Change userCode to username
         next: (response) => {
+          this.notificationService.getUnread().subscribe(res => {
+            console.log('Login successful:', response);
+            const userId = response.data?.userId || 0;
+            console.log('Starting SignalR connection for user1:', userId);
+            this.signalRService.startConnection(userId);
+            const unread = res.data;
+
+            unread.forEach(n => {
+              this.toastr.info(
+                n.message,
+                'Notification'
+              );
+            });
+
+          });
           this.router.navigate(['/dashboard']);
         },
         error: (error) => {
