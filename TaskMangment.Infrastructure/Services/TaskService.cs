@@ -14,6 +14,7 @@ using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
+using TaskMangment.Domain.Event;
 using TaskMangment.Infrastructure.Persistence.Extensions;
 using TaskMangment.Infrastructure.SignalR;
 
@@ -25,7 +26,7 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<Employee> _employeeRepo;
         private readonly IRepository<TaskAssignment> _assignmentRepo;
         private readonly IRepository<AuditLog> _audit;
-        private readonly IHubContext<NotificationHub> _hub;
+        private readonly IDomainEventDispatcher _eventDispatcher;
 
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
@@ -35,10 +36,9 @@ namespace TaskMangment.Infrastructure.Services
             IRepository<Employee> employeeRepo,
             IRepository<TaskAssignment> assignmentRepo,
             IRepository<AuditLog> audit,
-            IMapper mapper,
-            IHubContext<NotificationHub> hub,
-
-            ICachingService cache)
+            IMapper mapper, 
+            ICachingService cache ,
+            IDomainEventDispatcher eventDispatcher)
         {
             _taskRepo = taskRepo;
             _employeeRepo = employeeRepo;
@@ -46,7 +46,7 @@ namespace TaskMangment.Infrastructure.Services
             _audit = audit;
             _mapper = mapper;
             _cache = cache;
-            _hub = hub;
+            _eventDispatcher = eventDispatcher;
         }
 
         public async Task<ApiResponse<PagedResponse<TaskGetDto>>> GetAllAsync(TaskRequest request, int CompanyId)
@@ -137,7 +137,9 @@ namespace TaskMangment.Infrastructure.Services
             }
             await _assignmentRepo.SaveChangesAsync();
             await _cache.RemoveAsync("tasks:");
-
+            
+            //Notfication
+            await _eventDispatcher.PublishAsync(new TaskAssignedEvent(task.Id,task.Title,dto.AssignedEmployeeIds));
 
             var fullTask = await _taskRepo.GetAll(t => t.Id == task.Id)
      .Include(t => t.CreatedBy)

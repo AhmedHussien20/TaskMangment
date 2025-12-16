@@ -1,5 +1,5 @@
-import { Injectable } from '@angular/core'; 
-import { Observable, throwError } from 'rxjs'; 
+import { Injectable } from '@angular/core';
+import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { AuthRepository } from '../repositories/auth.repository';
 import { User } from '../../models/user.model';
@@ -14,7 +14,7 @@ import { Router } from '@angular/router';
   providedIn: 'root',
 })
 export class AuthService {
-  public showLoader:boolean=false;
+  public showLoader: boolean = false;
   constructor(
     private authRepository: AuthRepository,
     private store: Store<AppState>,
@@ -24,7 +24,11 @@ export class AuthService {
       this.showLoader = loading;
     });
   }
-  login(userCode: string, password: string): Observable<BaseResponse<{ user?: User, token: string }>> {
+  getCurrentUser() {
+    const user = localStorage.getItem('userData');
+    return user ? JSON.parse(user) : null;
+  }
+  login(userCode: string, password: string): Observable<BaseResponse<User & { token: string }>> {
     this.store.dispatch(login({ userCode, password }));
     return this.authRepository.login(userCode, password).pipe(
       map(response => {
@@ -50,10 +54,10 @@ export class AuthService {
   }
 
   logout() {
-  localStorage.removeItem('authToken');
-  localStorage.removeItem('userData');
-  this.router.navigate(['/auth/login'], { replaceUrl: true });
-}
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userData');
+    this.router.navigate(['/auth/login'], { replaceUrl: true });
+  }
 
 
   isAuthenticated(): boolean {

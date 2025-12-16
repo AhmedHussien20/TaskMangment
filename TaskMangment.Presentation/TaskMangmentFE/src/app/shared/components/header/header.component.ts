@@ -9,6 +9,8 @@ import { AppStateService } from '../../services/app-state.service';
 import { MenuItem } from '../../models/menu-item.model';
 import { AuthService } from 'app/core/services/auth.service';
 import { TranslationService } from 'app/shared/services/translation.service';
+import { SignalRService } from 'app/core/services/signalr.service';
+import { NotificationApiService } from 'app/core/services/notification.service';
 
 interface Item {
   id: number;
@@ -63,7 +65,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
     public renderer: Renderer2,
     private appStateService: AppStateService,
     private authService: AuthService,
-    private translate: TranslationService
+    private translate: TranslationService,
+    private signalR: SignalRService,
+    private notificationService: NotificationApiService
   ) {
     this.layoutSubscription = layoutService.changeEmitted.subscribe(
       direction => {
@@ -312,6 +316,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   public items!: MenuItem[];
   public text!: string;
   public SearchResultEmpty: boolean = false;
+
   ngOnInit(): void {
     this.menuitemsSubscribe$ = this.navServices.getMenuItems().subscribe({
       next: (menuItems) => {
