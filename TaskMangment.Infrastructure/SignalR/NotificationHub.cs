@@ -8,7 +8,7 @@ namespace TaskMangment.Infrastructure.SignalR
     public class NotificationHub : Hub
     {
 
-        private static readonly ConcurrentDictionary<int, List<string>> _onlineUsers
+        public static readonly ConcurrentDictionary<int, List<string>> _onlineUsers
             = new ConcurrentDictionary<int, List<string>>();
 
         public override async Task OnConnectedAsync()

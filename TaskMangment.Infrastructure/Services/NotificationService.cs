@@ -1,35 +1,59 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using TaskMangment.Infrastructure.SignalR;
 using TaskMangment.Application.Interfaces.Services;
+using TaskMangment.Application.Interfaces.IRepository;
+using TaskMangment.Domain.Entities;
 
 public class NotificationService : INotificationService
 {
-    private readonly IWhatsAppService _whatsapp;
-    private readonly IHubContext<NotificationHub> _hub;
-    private readonly IEmailService _email;
+    private readonly INotificationRepository _repo;
+    private readonly INotificationSender _sender;
 
     public NotificationService(
-        IWhatsAppService whatsapp,
-        IHubContext<NotificationHub> hub,
-        IEmailService email)
+        INotificationRepository repo,
+        INotificationSender sender)
     {
-        _whatsapp = whatsapp;
-        _hub = hub;
-        _email = email;
+        _repo = repo;
+        _sender = sender;
     }
 
-    public async Task SendAsync(int userId, string message, bool sendEmail, bool sendWhatsApp)
+    public async Task<List<Notification>> GetUnreadAsync(int userId)
     {
-        // 1) Web real-time
-        await _hub.Clients.User(userId.ToString())
-            .SendAsync("ReceiveNotification", message);
+        return await _repo.GetUnreadAsync(userId);
+    }
 
-        // 2) Email
+    public async Task MarkAsReadAsync(int notificationId)
+    {
+        await _repo.MarkAsReadAsync(notificationId);
+         
+    }
+
+    public async Task MarkAllAsReadAsync(int userId)
+    {
+        await _repo.MarkAllAsReadAsync(userId);
+ 
+    }
+
+    public async Task SendAsync(
+        int userId,
+        string message,
+        bool sendEmail,
+        bool sendWhatsApp)
+    { 
+        await _repo.AddAsync(new Notification
+        {
+            UserId = userId,
+            Message = message,
+            IsRead = false,
+        });
+         
+        await _sender.SendWebAsync(userId, message);
+         
         if (sendEmail)
-            await _email.SendEmailAsync("user@mail.com", "Notification", message);
-
-        // 3) WhatsApp
+            await _sender.SendEmailAsync("user@mail.com", "Notification", message);
+         
         if (sendWhatsApp)
-            await _whatsapp.SendMessageAsync("01000000000", message);
+            await _sender.SendWhatsAppAsync("01000000000", message);
     }
 }
+
