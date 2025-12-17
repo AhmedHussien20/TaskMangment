@@ -1,0 +1,38 @@
+<div class="modal-header">
+  <h6 class="modal-title text-danger">
+    {{ 'TASK.CLOSE_REQUEST' | translate }}
+  </h6>
+  <button class="btn-close" (click)="modal.dismiss()"></button>
+</div>
+
+<div class="modal-body">
+
+  <div class="alert alert-warning">
+    سيتم إرسال طلب إغلاق المهمة للإدارة، ولن يتم إغلاق المهمة فورًا.
+  </div>
+
+  <label class="form-label">
+    سبب طلب الإغلاق
+  </label>
+
+  <textarea
+    class="form-control"
+    rows="4"
+    [(ngModel)]="reason"
+    placeholder="اكتب سبب طلب إغلاق المهمة">
+  </textarea>
+
+</div>
+
+<div class="modal-footer">
+  <button class="btn btn-secondary" (click)="modal.dismiss()">
+    {{ 'FORM.CANCEL' | translate }}
+  </button>
+
+  <button
+    class="btn btn-danger"
+    [disabled]="!reason || isSubmitting"
+    (click)="submit()">
+    {{ 'TASK.SUBMIT_CLOSE_REQUEST' | translate }}
+  </button>
+</div>

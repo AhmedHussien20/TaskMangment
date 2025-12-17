@@ -9,12 +9,19 @@ export type ColumnType =
   | 'text'
   | 'icon-action'
   | 'icon'
+  | 'badge'
   | 'custom';
 
 export interface TableColumn {
   key: string;
   label: string;
   type?: ColumnType;
+  badgeMap?: {
+    [key: string]: {
+      text: string;
+      class: string;
+    };
+  };
   icon?: string;
 }
 
@@ -38,6 +45,9 @@ export class GenericTableComponent<T> implements OnDestroy {
   @Input() formUrl: string = '';
   @Input() breadcrumbs: string[] = [];
   @Input() activeitem: string = '';
+  @Input() showDetailsButton: boolean = false;
+
+  @Output() details = new EventEmitter<number>();
 
   // ---------- Inputs ----------
   @Input() title: string = '';
@@ -107,6 +117,18 @@ export class GenericTableComponent<T> implements OnDestroy {
     return this.labels?.[key] ?? key;
   }
 
+  getBadgeText(col: TableColumn, item: any): string {
+    if (!col.badgeMap) return '';
+    const value = this.getValue(item, col.key);
+    return col.badgeMap[value]?.text ?? '';
+  }
+
+  getBadgeClass(col: TableColumn, item: any): string {
+    if (!col.badgeMap) return '';
+    const value = this.getValue(item, col.key);
+    return col.badgeMap[value]?.class ?? '';
+  }
+
 
   getInputType(key: string): 'text' | 'dropdown' | 'date' | 'number' {
     const filterTypes = (this.searchCriteria?.filterTypes || {}) as any;
@@ -115,7 +137,6 @@ export class GenericTableComponent<T> implements OnDestroy {
 
   getDropdownOptions(key: string) {
     if (key === 'statusId') return this.statusOptions;
-    // تقدر تزود switch هنا لباقي الفلاتر
     return [];
   }
 
@@ -123,10 +144,14 @@ export class GenericTableComponent<T> implements OnDestroy {
 
   applyFilters() {
     if (this.onSearch) {
-      // نمرر نسخة عشان منلعبش فى الريفرنس الأصلي
       this.onSearch({ ...(this.searchCriteria || {}) });
     }
   }
+
+  viewDetails(id: number) {
+  this.details.emit(id);
+}
+
 
   getItemId(item: T): any {
     return (item as any)['id'];

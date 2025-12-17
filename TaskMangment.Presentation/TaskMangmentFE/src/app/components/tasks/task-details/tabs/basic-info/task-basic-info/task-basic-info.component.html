@@ -1,0 +1,47 @@
+ 
+<div *ngIf="readonly" class="table-responsive">
+  <table class="table table-bordered align-middle">
+    <tbody>
+      <tr>
+        <th>رقم المهمة</th>
+        <td>{{ taskInfo?.id }}</td>
+      </tr>
+      <tr>
+        <th>عنوان المهمة</th>
+        <td>{{ taskInfo?.title }}</td>
+      </tr>
+      <tr>
+        <th>تفاصيل المهمة</th>
+        <td>{{ taskInfo?.description }}</td>
+      </tr>
+      <tr>
+        <th>فترة السماح للتعليق</th>
+        <td>{{ taskInfo?.commentPeriod }}</td>
+      </tr>
+      <tr>
+        <th>الحد الأقصى للتحذيرات</th>
+        <td>{{ taskInfo?.maxWarnings }}</td>
+      </tr>
+      <tr>
+        <th>مقدار الخصم عند الوصول للحد الأقصى</th>
+        <td>{{ taskInfo?.warningPenalty }}</td>
+      </tr>
+      <tr>
+        <th>مقدار الخصم عند إغلاق المهمة تلقائيًا</th>
+        <td>{{ taskInfo?.autoClosePenalty }}</td>
+      </tr>
+      <tr>
+        <th>تاريخ الإنشاء</th>
+        <td>{{ taskInfo?.startDate }}</td>
+      </tr>
+      <tr>
+        <th>تاريخ التسليم</th>
+        <td>{{ taskInfo?.endDate }}</td>
+      </tr>
+      <tr>
+        <th>جهة التكليف</th>
+        <td>{{ taskInfo?.assignedTo }}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>

@@ -1,0 +1,20 @@
+<ul class="list-group list-group-flush">
+
+  <li *ngFor="let item of items" class="list-group-item">
+    <div class="d-flex align-items-start gap-3">
+      <i [class]="icon(item.type)" style="font-size: 1.2rem;"></i>
+
+      <div class="flex-grow-1">
+        <div class="fw-semibold">{{ item.message }}</div>
+        <div class="text-muted small">
+          {{ item.user }} • {{ item.date | date:'medium' }}
+        </div>
+      </div>
+    </div>
+  </li>
+
+  <li *ngIf="items.length === 0" class="list-group-item text-muted text-center">
+    {{ 'AUDIT.NO_DATA' | translate }}
+  </li>
+
+</ul>

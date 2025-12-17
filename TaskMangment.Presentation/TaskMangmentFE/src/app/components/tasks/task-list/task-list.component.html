@@ -25,10 +25,10 @@
 
                     <app-generic-table [title]="title" [breadcrumbs]="breadcrumbs" [columns]="columns" [data]="rows"
                         [entries]="entries" [page]="page" [labels]="labels" [totalItems]="totalItems"
-                        [showAddButton]="true" (addClick)="openAdd(taskModal)" [showEditButton]="true"
+                        [showAddButton]="true" (addClick)="openAdd(taskModal)" [showEditButton]="true" [showDetailsButton]="true"
                         [showFilters]="true" [searchCriteria]="searchCriteria" [onSearch]="applyFilters.bind(this)"
                         (pageChange)="onPageChange($event)" [addButtonLabel]="'TASK.ADD' | translate"
-                        (edit)="openEdit($event, taskModal)">
+                        (edit)="openEdit($event, taskModal)" (details)="openDetails($event)">
                     </app-generic-table>
                 </div>
             </div>
@@ -48,4 +48,18 @@
         <app-task-create-update [isEdit]="isEdit" [taskId]="selectedTaskId" (formSubmitted)="onFormSubmitted()">
         </app-task-create-update>
     </div>
+</ng-template>
+
+<ng-template #detailsModal let-modal>
+  <div class="modal-header">
+    <h6 class="modal-title">
+      {{ 'TASK.DETAILS' | translate }}
+    </h6>
+
+    <button class="btn-close" (click)="modal.dismiss()"></button>
+  </div>
+
+  <div class="modal-body p-0">
+     
+  </div>
 </ng-template>
