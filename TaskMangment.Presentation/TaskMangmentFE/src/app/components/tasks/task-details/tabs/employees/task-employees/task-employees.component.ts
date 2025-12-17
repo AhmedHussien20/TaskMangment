@@ -1,8 +1,10 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { GenericTableComponent } from 'app/shared/components/generic-table/generic-table.component';
 import { TaskDetailsRefreshService } from '../../../task-details-refresh.service';
+import { TaskService } from 'app/core/services/task.service';
 import { Subscription } from 'rxjs';
+import { TaskAssignedEmployee } from 'app/core/models/task/task';
 
 @Component({
   selector: 'app-task-employees',
@@ -10,22 +12,25 @@ import { Subscription } from 'rxjs';
   imports: [CommonModule, GenericTableComponent],
   templateUrl: './task-employees.component.html'
 })
-export class TaskEmployeesComponent implements OnInit {
+export class TaskEmployeesComponent implements OnInit, OnDestroy {
 
   @Input() taskId!: number;
   @Input() readonly = false;
-  private sub!: Subscription;
 
-  rows: any[] = [];
+  rows: TaskAssignedEmployee[] = [];
   columns = [
-    { key: 'name', label: 'EMPLOYEE.NAME' },
+    { key: 'employeeName', label: 'EMPLOYEE.NAME' },
     { key: 'role', label: 'EMPLOYEE.ROLE' },
     { key: 'status', label: 'STATUS' }
   ];
-  constructor(
-    private refreshService: TaskDetailsRefreshService
-  ) {}
+
   totalItems = 0;
+  private sub!: Subscription;
+
+  constructor(
+    private refreshService: TaskDetailsRefreshService,
+    private taskService: TaskService
+  ) {}
 
   ngOnInit() {
     this.loadEmployees();
@@ -42,11 +47,23 @@ export class TaskEmployeesComponent implements OnInit {
   }
 
   loadEmployees() {
-    this.rows = [
-      { id: 1, name: 'Ahmed', role: 'Developer', status: 'Active' },
-      { id: 2, name: 'Sara', role: 'QA', status: 'Inactive' }
-    ];
+    if (!this.taskId) return;
 
-    this.totalItems = this.rows.length;
+    this.taskService.getAssignedEmployees(this.taskId).subscribe({
+      next: res => {
+        if (res.success && res.data) {
+          this.rows = res.data;
+          this.totalItems = this.rows.length;
+        } else {
+          this.rows = [];
+          this.totalItems = 0;
+        }
+      },
+      error: err => {
+        console.error('Failed to load assigned employees', err);
+        this.rows = [];
+        this.totalItems = 0;
+      }
+    });
   }
 }

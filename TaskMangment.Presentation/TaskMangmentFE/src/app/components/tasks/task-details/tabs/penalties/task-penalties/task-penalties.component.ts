@@ -4,6 +4,8 @@ import { Subscription } from 'rxjs';
 import { GenericTableComponent } from 'app/shared/components/generic-table/generic-table.component'; 
 import { TaskDetailsRefreshService } from '../../../task-details-refresh.service';
 import { TranslateModule } from '@ngx-translate/core';
+import { DiscountListDto } from 'app/core/models/task/task-penalty';
+import { TaskPenaltyService } from 'app/core/services/task-penalty.service';
 
 @Component({
   selector: 'app-task-penalties',
@@ -16,40 +18,47 @@ export class TaskPenaltiesComponent implements OnInit, OnDestroy {
   @Input() taskId!: number;
   @Input() readonly = false;
 
-  rows: any[] = [];
+  rows: DiscountListDto[] = [];
   totalItems = 0;
 
   columns = [
-    { key: 'date', label: 'DATE' },
+    { key: 'createdAt', label: 'DATE' },
     { key: 'reason', label: 'PENALTY.REASON' },
     { key: 'amount', label: 'PENALTY.AMOUNT' },
-    {
-      key: 'status',
-      label: 'STATUS',
-      // type: 'badge',
-      // badgeMap: {
-      //   Active: { text: 'ACTIVE', class: 'bg-danger' },
-      //   Paid: { text: 'PAID', class: 'bg-success' }
-      // }
-    }
+    { key: 'status', label: 'STATUS' }
   ];
 
   private sub!: Subscription;
 
-  constructor(private refresh: TaskDetailsRefreshService) {}
+  constructor(
+    private refresh: TaskDetailsRefreshService,
+    private penaltyService: TaskPenaltyService
+  ) {}
 
   ngOnInit(): void {
     this.loadPenalties();
     this.sub = this.refresh.refresh$.subscribe(() => this.loadPenalties());
   }
 
-  loadPenalties() {
-    // TODO: Replace with API
-    this.rows = [
-      { id: 1, date: '2025-01-12', reason: 'Late delivery', amount: '500 EGP', status: 'Active' },
-      { id: 2, date: '2025-01-03', reason: 'Policy breach', amount: '250 EGP', status: 'Paid' }
-    ];
-    this.totalItems = this.rows.length;
+  loadPenalties(pageIndex = 1, pageSize = 10) {
+    const request = {
+      taskId: this.taskId,
+      searchKey: '',
+      pageIndex,
+      pageSize,
+      sortColumn: 'CreatedDate',
+      sortDirection: 'desc'
+    };
+
+    this.penaltyService.getAll(request).subscribe({
+      next: (res) => {
+        this.rows = res.data.data;
+        this.totalItems = res.data.totalCount;
+      },
+      error: (err) => {
+        console.error('Failed to load penalties', err);
+      }
+    });
   }
 
   ngOnDestroy(): void {

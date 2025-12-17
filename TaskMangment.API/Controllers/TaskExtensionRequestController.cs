@@ -40,7 +40,7 @@ namespace TaskMangment.API.Controllers
             return Success(result.Data);
         }
 
-        [HttpPost]
+        [HttpPost("{taskId}")]
         public async Task<IActionResult> Add([FromBody] TaskExtensionRequestAddDto dto, int taskId)
         {
             var result = await _service.AddAsync(dto, taskId, this.CurrentUserId);

@@ -42,7 +42,6 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
 
         public string Reason { get; set; }
         public DateTime IssuedAt { get; set; }
-
         public string IssuedEmployeeName { get; set; }
         public string IssuedByName { get; set; }
     }

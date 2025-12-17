@@ -132,8 +132,10 @@ namespace TaskMangment.Application.AutoMapper
 
 
             CreateMap<TaskExtensionRequest, TaskExtensionRequestListDto>()
-              .ForMember(dest => dest.RequestedByName, opt => opt.MapFrom(src => src.RequestedBy.FullName))
-                .ForMember(dest => dest.TaskTitle, opt => opt.MapFrom(src => src.Task.Title)); 
+                .ForMember(dest => dest.RequestedByName, opt => opt.MapFrom(src => src.RequestedBy.FullName))
+                .ForMember(dest => dest.TaskTitle, opt => opt.MapFrom(src => src.Task.Title))
+                .ForMember(dest => dest.ReviewedByName, opt => opt.MapFrom(src => src.ReviewedBy.FullName));
+
 
 
             CreateMap<TaskExtensionRequest, TaskExtensionRequestDetailsDto>()
@@ -190,7 +192,7 @@ namespace TaskMangment.Application.AutoMapper
                 .ForMember(dest => dest.EmployeeName, opt => opt.MapFrom(src => src.Employee.FullName))
                 .ForMember(dest => dest.TaskTitle, opt => opt.MapFrom(src => src.Task != null ? src.Task.Title : null));
 
-            CreateMap<Discount, DiscountDetailsDto>()
+            CreateMap<Discount, DiscountListDto>()
                 .ForMember(dest => dest.EmployeeName, opt => opt.MapFrom(src => src.Employee.FullName))
                 .ForMember(dest => dest.TaskTitle, opt => opt.MapFrom(src => src.Task != null ? src.Task.Title : null));
 

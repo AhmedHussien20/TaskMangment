@@ -25,6 +25,8 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
         public ExtensionRequestStatus Status { get; set; }
         public string RequestedByName { get; set; }
         public DateTime RequestedAt { get; set; }
+        public DateTime? ReviewedAt { get; set; }
+        public string ReviewedByName { get; set; }
     }
     public class TaskExtensionRequestDetailsDto
     {

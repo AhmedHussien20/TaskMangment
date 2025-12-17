@@ -14,7 +14,7 @@ export enum TaskStatus {
 export interface TaskAddEdit {
   assignedEmployeeIds: number[];
   title: string;
-  description?: string;
+  description: string;
   commentAllowPeriodDays?: number;
   maxWarnings: number;
   penaltyAtMaxWarnings: number;
@@ -27,18 +27,41 @@ export interface TaskAddEdit {
 export interface TaskGet {
   id: number;
   title: string;
+  description: string;
   isShared: boolean;
   createdAt: string;
   assignedByName: string;
-  employeeNames: string[];
-  priority: TaskPriority;
+assignedEmployees?: {
+    id: number;
+    name: string;
+    role: string;
+    isActive: boolean;
+  }[];  priority: TaskPriority;
   status: TaskStatus;
   dueDate?: string;
+  commentAllowPeriodDays?: number;
+  maxWarnings?: number;
+  penaltyAtMaxWarnings?: number;
+  penaltyOnAutoClose?: number;
 }
+
 
 export interface TaskPagedResponse {
   data: TaskGet[];
   totalCount: number;
   pageIndex: number;
   pageSize: number;
+}
+
+
+export interface TaskAssignedEmployee {
+  employeeId: number;
+  employeeName: string;
+  role: string; 
+  status: string;
+}
+
+export interface SimpleEmployee {
+  id: number;
+  fullName: string;
 }

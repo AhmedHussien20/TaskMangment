@@ -21,7 +21,8 @@ import { TaskDetailsShellComponent } from "../task-details/task-details-shell/ta
     GenericTableComponent,
     PageHeaderComponent,
     NgbModalModule,
-    TaskCreateUpdateComponent
+    TaskCreateUpdateComponent,
+    TaskDetailsShellComponent
   ],
   templateUrl: './task-list.component.html'
 })
@@ -150,15 +151,17 @@ export class TaskListComponent implements OnInit {
     this.loadData();
   }
 
-openDetails(taskId: number): void {
+
+openDetails(taskId: number) {
   const modalRef = this.modalService.open(TaskDetailsShellComponent, {
     size: 'xl',
     backdrop: 'static',
     scrollable: true
   });
 
-  modalRef.componentInstance.taskId = taskId;
+  modalRef.componentInstance.taskId = taskId; // <-- هنا بنمرر الـ id
   modalRef.componentInstance.readonly = true;
 }
+
 
 }

@@ -17,5 +17,7 @@ namespace TaskMangment.Application.Interfaces.Services
         Task<ApiResponse<TaskGetDto>> AddAsync(TaskAddEditDto dto, int createdUser, int companyId);
         Task<ApiResponse<TaskGetDto>> UpdateAsync(int id, TaskAddEditDto dto, int modifierUser);
         Task<ApiResponse<bool>> DeleteAsync(int id);
+        Task<ApiResponse<List<TaskAssignmentDto>>> GetAssignedEmployeesAsync(int taskId);
+
     }
 }

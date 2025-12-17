@@ -36,7 +36,9 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
     public class TaskGetDto
     {
         public int Id { get; set; }               
-        public string Title { get; set; }         
+        public string Title { get; set; }
+        public string Description { get; set; }
+
         public bool IsShared { get; set; }        
         public DateTime CreatedAt { get; set; }     
         public string AssignedByName { get; set; }  
@@ -47,6 +49,19 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
 
         public string PriorityText => Priority.ToString();
         public string StatusText => Status.ToString();
+
+        public int MaxWarnings { get; set; } = 3;
+        public decimal PenaltyAtMaxWarnings { get; set; } = 0;
+        public decimal PenaltyOnAutoClose { get; set; } = 0;
+        public int? CommentAllowPeriodDays { get; set; }
+    }
+
+    public class TaskAssignmentDto
+    {
+        public int EmployeeId { get; set; }
+        public string EmployeeName { get; set; } = string.Empty;
+        public string Role { get; set; } = string.Empty;
+        public string Status { get; set; } = "Active";
     }
 
 }

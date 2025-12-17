@@ -119,17 +119,11 @@ namespace TaskMangment.Infrastructure.Services
             comment.EmployeeId = employeeId;
             comment.CreatedDate = DateTime.UtcNow;
 
-            await _commentRepo.AddAsync(comment);
-            
-
-           
+            // لو فيه ملف
             if (dto.File != null)
             {
-                var uploadsRoot = Path.Combine(
-                    Directory.GetCurrentDirectory(),"wwwroot",  "uploads", "comments");
-
-                if (!Directory.Exists(uploadsRoot))
-                    Directory.CreateDirectory(uploadsRoot);
+                var uploadsRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "comments");
+                Directory.CreateDirectory(uploadsRoot);
 
                 var fileName = $"{Guid.NewGuid()}_{dto.File.FileName}";
                 var filePath = Path.Combine(uploadsRoot, fileName);
@@ -139,23 +133,27 @@ namespace TaskMangment.Infrastructure.Services
                     await dto.File.CopyToAsync(stream);
                 }
 
-                var attachment = new Attachment
-                {
-                    FileName = dto.File.FileName,
-                    FilePath = $"uploads/comments/{fileName}",  
-                    Size = dto.File.Length,
-                    CommentId = comment.Id,
-                    UploadedBy = employeeId,
-                    CreatedBy = employeeId,
-                    ContentType = dto.File.ContentType,
-                    UploadedAt = DateTime.UtcNow,
-                    TaskId = taskId
-                };
-
-                await _attachmentRepo.AddAsync(attachment);
-                //await _attachmentRepo.SaveChangesAsync();
+                // ضيف الـ attachment مباشرة للـ comment
+                comment.Attachments = new List<Attachment>
+    {
+        new Attachment
+        {
+            FileName = dto.File.FileName,
+            FilePath = $"uploads/comments/{fileName}",
+            Size = dto.File.Length,
+            UploadedBy = employeeId,
+            CreatedBy = employeeId,
+            ContentType = dto.File.ContentType,
+            UploadedAt = DateTime.UtcNow,
+            TaskId = taskId
+        }
+    };
             }
-            await _commentRepo.SaveChangesAsync();
+
+            // إضافة التعليق (مع الـ attachment) مرة واحدة
+            await _commentRepo.AddAsync(comment);
+            await _commentRepo.SaveChangesAsync(); // تحفظ كل شيء مرة واحدة
+
             await _cache.RemoveAsync("taskComments:");
 
             var savedComment = await _commentRepo.GetAll(c => c.Id == comment.Id)

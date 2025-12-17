@@ -5,10 +5,11 @@ using System.Text;
 using System.Threading.Tasks;
 using TaskMangment.Application.ApiRequests;
 
-namespace TaskMangment.Application.Common.ApiRequests.Discount
+namespace TaskMangment.Application.Common.ApiRequests.Task
 {
-    public class DiscountRequest : BaseApiRequest
+    public class TaskDiscountRequest : BaseApiRequest
     {
-      
+        public int TaskId { get; set; }
+
     }
 }

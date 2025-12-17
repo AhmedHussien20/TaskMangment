@@ -1,1 +1,33 @@
-<p>comment-modal works!</p>
+<div class="modal-header">
+  <h6 class="modal-title">{{ 'TASK.ADD_COMMENT' | translate }}</h6>
+  <button class="btn-close" (click)="modal.dismiss()"></button>
+</div>
+
+<div class="modal-body">
+  <textarea
+    class="form-control"
+    rows="4"
+    [(ngModel)]="comment"
+    placeholder="{{ 'TASK.COMMENT_PLACEHOLDER' | translate }}">
+  </textarea>
+
+  <div class="mb-3 mt-2">
+    <label for="formFileMultiple" class="form-label">Multiple files input example</label>
+    <input 
+      class="form-control" 
+      type="file" 
+      id="formFileMultiple" 
+      (change)="onFileChange($event)" 
+      multiple>
+  </div>
+</div>
+
+<div class="modal-footer">
+  <button class="btn btn-secondary" (click)="modal.dismiss()">
+    {{ 'FORM.CANCEL' | translate }}
+  </button>
+
+  <button class="btn btn-primary" [disabled]="isSubmitting" (click)="submit()">
+    {{ 'FORM.SAVE' | translate }}
+  </button>
+</div>

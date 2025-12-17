@@ -54,6 +54,7 @@ namespace TaskMangment.Infrastructure.Services
             var query = _requestRepo.GetAll(c => c.TaskId == request.TaskId)
                                                       .Include(r => r.RequestedBy)
                                                      .Include(r => r.ReviewedBy)
+
                                                     .Include(r => r.TaskAssignment)
                                                     .ThenInclude(a => a.Employee)
                                                     .Include(r => r.TaskAssignment)

@@ -235,5 +235,29 @@ namespace TaskMangment.Infrastructure.Services
             //await _assignmentRepo.SaveChangesAsync();
             return ApiResponse<bool>.Ok(true, "Task deleted successfully");
         }
+
+
+        public async Task<ApiResponse<List<TaskAssignmentDto>>> GetAssignedEmployeesAsync(int taskId)
+        {
+            var assignments = await _assignmentRepo.GetAll(a => a.TaskId == taskId)
+            .Include(a => a.Employee)
+           .ThenInclude(e => e.EmployeeRoles)   
+               .ThenInclude(er => er.Role)   
+                .ToListAsync();
+
+            if (!assignments.Any())
+                return ApiResponse<List<TaskAssignmentDto>>.Ok(new List<TaskAssignmentDto>());
+
+            var dtos = assignments.Select(a => new TaskAssignmentDto
+            {
+                EmployeeId = a.EmployeeId,
+                EmployeeName = a.Employee.FullName,
+                Role = string.Join(", ", a.Employee.EmployeeRoles.Select(er => er.Role.Name)),
+                Status = a.IsActive ? "Active" : "Inactive"
+            }).ToList();
+
+            return ApiResponse<List<TaskAssignmentDto>>.Ok(dtos);
+        }
+
     }
 }
