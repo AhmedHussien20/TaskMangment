@@ -64,6 +64,7 @@ namespace TaskMangment.Infrastructure.Services
             var query = _taskRepo.GetAll()
                 .Include(t => t.CreatedBy)
                 .Include(t => t.Assignments).ThenInclude(a => a.Employee)
+                .Include(t => t.AssignedBy)
                 .ApplySearch(request.searchKey);
 
 

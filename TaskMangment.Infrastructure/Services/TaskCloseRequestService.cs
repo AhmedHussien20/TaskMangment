@@ -136,6 +136,9 @@ namespace TaskMangment.Infrastructure.Services
             if (request == null)
                 return ApiResponse<TaskCloseRequestDetailsDto>.Fail("Request not found");
 
+            if (request.Status != CloseRequestStatus.Pending)
+                return ApiResponse<TaskCloseRequestDetailsDto>.Fail("Request has already been reviewed");
+
             request.Status = approved
                 ? CloseRequestStatus.Approved
                 : CloseRequestStatus.Rejected;

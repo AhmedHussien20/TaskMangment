@@ -52,10 +52,13 @@ namespace TaskMangment.Infrastructure.Services
             }
 
             var query = _requestRepo.GetAll(c => c.TaskId == request.TaskId)
-                .Include(r => r.TaskAssignment)
-                        .ThenInclude(ta => ta.Task)               
-                .Include(r => r.RequestedBy)
-                .Include(r => r.ReviewedBy)
+                                                      .Include(r => r.RequestedBy)
+                                                     .Include(r => r.ReviewedBy)
+                                                    .Include(r => r.TaskAssignment)
+                                                    .ThenInclude(a => a.Employee)
+                                                    .Include(r => r.TaskAssignment)
+                                                    .ThenInclude(a => a.Task)
+
                 .ApplySearch(request.searchKey);
 
             var totalCount = await query.CountAsync();
@@ -88,8 +91,21 @@ namespace TaskMangment.Infrastructure.Services
             if (request == null)
                 return ApiResponse<TaskExtensionRequestDetailsDto>.Fail("Request not found");
 
-            var dto = _mapper.Map<TaskExtensionRequestDetailsDto>(request);
-            return ApiResponse<TaskExtensionRequestDetailsDto>.Ok(dto);
+            var savedRequest = await _requestRepo.GetAll(r => r.Id == request.Id)
+                                                             .Include(r => r.RequestedBy)
+                                                             .Include(r => r.TaskAssignment)
+                                                             .ThenInclude(a => a.Employee)
+                                                             .Include(r => r.TaskAssignment)
+                                                             .ThenInclude(a => a.Task)
+                                                            .AsNoTracking()
+                                                            .FirstOrDefaultAsync();
+
+            var resultDto = _mapper.Map<TaskExtensionRequestDetailsDto>(savedRequest);
+            resultDto.TaskTitle = savedRequest.TaskAssignment?.Task?.Title;
+            resultDto.ReviewedByName = savedRequest.ReviewedBy?.FullName;
+
+
+            return ApiResponse<TaskExtensionRequestDetailsDto>.Ok(resultDto);
         }
 
         public async Task<ApiResponse<TaskExtensionRequestDetailsDto>> AddAsync(TaskExtensionRequestAddDto dto, int taskId, int employeeId)
@@ -129,6 +145,7 @@ namespace TaskMangment.Infrastructure.Services
             resultDto.TaskTitle = savedRequest.TaskAssignment.Task?.Title; 
 
 
+
             return ApiResponse<TaskExtensionRequestDetailsDto>.Ok(resultDto, "Extension request added successfully");
         }
 
@@ -137,6 +154,10 @@ namespace TaskMangment.Infrastructure.Services
             var request = await _requestRepo.GetByIDAsync(id);
             if (request == null)
                 return ApiResponse<TaskExtensionRequestDetailsDto>.Fail("Request not found");
+
+            if (request.Status != ExtensionRequestStatus.Pending)
+                return ApiResponse<TaskExtensionRequestDetailsDto>.Fail("Request has already been reviewed");
+
 
             request.Status = approved
                 ? Domain.Entities.ExtensionRequestStatus.Approved

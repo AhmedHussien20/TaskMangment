@@ -43,6 +43,7 @@ namespace TaskMangment.Application.AutoMapper
            .ForMember(dest => dest.EmployeeNames, opt => opt.MapFrom(src => src.Assignments != null
                                                                      ? src.Assignments.Select(a => a.Employee.FullName).ToList()
                                                                      : new List<string>()))
+           .ForMember(dest => dest.AssignedByName, opt => opt.MapFrom(src => src.CreatedBy != null ? src.CreatedBy.FullName : string.Empty))
              .ForMember(dest => dest.PriorityText, opt => opt.MapFrom(src => src.Priority))
     .ForMember(dest => dest.StatusText, opt => opt.MapFrom(src => src.Status));
 
@@ -131,11 +132,15 @@ namespace TaskMangment.Application.AutoMapper
 
 
             CreateMap<TaskExtensionRequest, TaskExtensionRequestListDto>()
-              .ForMember(dest => dest.RequestedByName, opt => opt.MapFrom(src => src.RequestedBy.FullName));
+              .ForMember(dest => dest.RequestedByName, opt => opt.MapFrom(src => src.RequestedBy.FullName))
+                .ForMember(dest => dest.TaskTitle, opt => opt.MapFrom(src => src.Task.Title)); 
+
 
             CreateMap<TaskExtensionRequest, TaskExtensionRequestDetailsDto>()
                 .ForMember(dest => dest.RequestedByName, opt => opt.MapFrom(src => src.RequestedBy.FullName))
-                .ForMember(dest => dest.ReviewedByName, opt => opt.MapFrom(src => src.ReviewedBy.FullName));
+                .ForMember(dest => dest.ReviewedByName, opt => opt.MapFrom(src => src.ReviewedBy.FullName))
+                            .ForMember(dest => dest.TaskTitle, opt => opt.MapFrom(src => src.Task.Title));
+
 
             CreateMap<TaskExtensionRequestAddDto, TaskExtensionRequest>()
                 .ForMember(dest => dest.Status, opt => opt.Ignore())
