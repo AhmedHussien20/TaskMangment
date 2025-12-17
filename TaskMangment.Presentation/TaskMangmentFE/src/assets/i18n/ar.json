@@ -1,10 +1,13 @@
 {
-  "common": {
+  "COMMON": {
     "welcome": "مرحباً",
     "login": "تسجيل الدخول",
     "logout": "تسجيل الخروج",
     "register": "تسجيل جديد",
-    "dashboard": "لوحة التحكم"
+    "dashboard": "لوحة التحكم",
+    "SEND": "إرسال",
+    "CANCEL": "إلغاء",
+    "DELETE": "حذف"
   },
   "validation": {
     "required": "هذا الحقل مطلوب",
@@ -133,6 +136,7 @@
   },
   "FORM": {
     "BACK": "رجوع",
+    "CANCEL": "إلغاء",
     "SAVE": "حفظ",
     "UPDATE": "تحديث",
     "GENERATE": "توليد",
@@ -239,9 +243,58 @@
     "EXTEND_REQUEST_TITLE": "طلب تمديد للمهمة",
     "EXTEND_REQUEST_NOTE": "سيتم إرسال طلب التمديد إلى جهة التكليف ويجب عليك الاستمرار في التفاعل مع المهمة حتى يتم الرد.",
     "EXTEND_REQUEST_PLACEHOLDER": "اذكر بإختصار سبب طلبك لتمديد المهمة",
-    "MESSAGE": "الرسالة"
+    "MESSAGE": "الرسالة",
+    "BASIC_INFO": "البيانات الأساسية",
+    "EMPLOYEES": "الموظفين",
+    "WARNINGS": "التحذيرات",
+    "COMMENTS": "التعليقات",
+    "ACTIONS": "الإجراءات",
+    "AUDIT": "سجل العمليات",
+    "CLOSE_REQUEST_TITLE": "طلب إغلاق المهمة",
+    "CLOSE_REQUEST_NOTE": "ملحوظة هامة: سيتم إرسال طلب الإغلاق إلى جهة التكليف ويجب عليك الاستمرار في التفاعل مع المهمة حتى يتم الرد.",
+    "CLOSE_REQUEST_PLACEHOLDER": "اذكر بإختصار سبب طلبك لإغلاق المهمة",
+    "PENALTIES": "الجزاءات",
+    "WARNING_TITLE": "تحذير جديد",
+    "WARNING_NOTE": "سيتم إرسال التحذير إلى الموظف عبر البريد الإلكتروني.",
+    "WARNING_PLACEHOLDER": "أدخل نص التحذير",
+    "ADD_COMMENT": "إضافة تعليق",
+    "PENALTY_TITLE": "خصم جديد",
+    "PENALTY_NOTE": "سيتم إرسال الخصم مباشرة إلى الموظف عبر البريد الإلكتروني.",
+    "PENALTY_AMOUNT": "مقدار الخصم",
+    "PENALTY_PLACEHOLDER": "أدخل سبب الخصم",
+    "COMMENTS_TITLE": "التعليقات",
+    "NO_COMMENTS": "لا يوجد تعليقات حتى الآن",
+    "COMMENT_TAG": "تعليق",
+    "TIME_AGO": "الوقت المنقضي",
+    "REQUESTS_TAB": "طلبات الإغلاق / التمديد",
+    "REQUEST_NUMBER": "رقم الطلب",
+    "REQUEST_TYPE": "نوع الطلب",
+    "REQUEST_SENDER": "المرسل",
+    "REQUEST_DATE": "التاريخ",
+    "REQUEST_COMMENT": "التعليق",
+    "REQUEST_REPLY": "الرد",
+    "REQUEST_REPLY_DATE": "تاريخ الرد",
+    "NO_REQUESTS": "لا يوجد طلبات إغلاق / تمديد حتى الآن",
+    "REQUEST_TYPE_CLOSE": "إغلاق",
+    "REQUEST_TYPE_EXTEND": "تمديد",
+    "AUDIT_TITLE": "سجل العمليات",
+    "AUDIT_ACTION": "الإجراء",
+    "AUDIT_USER": "المستخدم",
+    "AUDIT_DATE": "التاريخ",
+    "AUDIT_DETAILS": "التفاصيل",
+    "NO_AUDIT": "لا يوجد سجل عمليات",
+    "STATUS_PENDING": "معلقة",
+    "SEND": "إرسال",
+    "DELETE": "حذف",
+    "CANCEL": "إلغاء",
+    "CONFIRM": "تأكيد",
+    "CLOSE": "إغلاق",
+    "EXTEND": "تمديد",
+    "COMMENT_PLACEHOLDER": "اكتب تعليقك هنا...",
+    "CLOSE_REQUEST": "طلب إغلاق",
+    "SUBMIT_CLOSE_REQUEST": "إرسال طلب الإغلاق"
   },
-  "EMPLOYEE": { 
+  "EMPLOYEE": {
     "LIST_TITLE": "قائمة الموظفين",
     "CREATE_TITLE": "إضافة موظف",
     "EDIT_TITLE": "تعديل موظف",
@@ -272,7 +325,8 @@
     "DELETE_FAILED": "فشل في حذف الموظف",
     "VALIDATION_ERROR": "يرجى إدخال جميع الحقول المطلوبة بشكل صحيح.",
     "searchKey": "بحث باسم الموظف",
-    "CONFIRM_PASSWORD": "تأكيد كلمة المرور"
+    "CONFIRM_PASSWORD": "تأكيد كلمة المرور",
+    "ROLE": "الدور"
   },
   "STUDENT": {
     "TITLE": "الطلاب",
@@ -383,11 +437,10 @@
     "CAT_TIMELINE": "الخط الزمني",
     "EVENTS_TYPE": "نوع الحدث",
     "REMINDER": "التذكير",
-    "START_DATE" : "تاريخ البدء",
-    "END_DATE" : "تاريخ الانتهاء",
-    "DESCRIPTION" : "الوصف",
-    "EVENT_TYPE":
-    {
+    "START_DATE": "تاريخ البدء",
+    "END_DATE": "تاريخ الانتهاء",
+    "DESCRIPTION": "الوصف",
+    "EVENT_TYPE": {
       "MEETING": "اجتماع",
       "BIRTHDAY": "عيد ميلاد",
       "HOLIDAY": "إجازة",
@@ -395,13 +448,11 @@
       "ANNIVERSARY": "ذكرى سنوية",
       "REMINDER": "تذكير",
       "TASKDEADLINE": "المهلة النهائية للمهمة"
-     
     },
     "15MIN": "15 دقيقة",
     "30MIN": "30 دقيقة",
     "60MIN": "60 دقيقة",
-    "EDIT_EVENT" : "تعديل الحدث",
-    "CANCEL_EVENT" : "الغاء الحدث"
-
+    "EDIT_EVENT": "تعديل الحدث",
+    "CANCEL_EVENT": "الغاء الحدث"
   }
 }
