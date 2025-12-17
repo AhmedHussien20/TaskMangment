@@ -1,24 +1,24 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using TaskMangment.Application.Common.ApiRequests.CalenderEvents;
-using TaskMangment.Application.Common.ApiRequests.Discount;
-using TaskMangment.Application.DTOs;
+using TaskMangment.Application.Common.ApiRequests.Task;
+using TaskMangment.Application.DTOs.TaskDTOs;
 using TaskMangment.Application.Interfaces.Services;
 
 namespace TaskMangment.API.Controllers
 {
     [Route("api/[controller]")]
-    public class DiscountController : BaseController
+    public class TaskPenaltyController  : BaseController
     {
-        private readonly IDiscountService _service;
+        private readonly ITaskDiscountService _service;
 
-        public DiscountController(IDiscountService service)
+        public TaskPenaltyController (ITaskDiscountService service)
         {
             _service = service;
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll([FromQuery] DiscountRequest request)
+        public async Task<IActionResult> GetAll([FromQuery] TaskDiscountRequest request)
         {
             var result = await _service.GetAllAsync(request);
 
@@ -41,10 +41,10 @@ namespace TaskMangment.API.Controllers
             return Success(result.Data);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Add(int TaskId, [FromBody] DiscountAddEditDto dto)
+        [HttpPost("{taskId}")]
+        public async Task<IActionResult> Add(int taskId, [FromBody] DiscountAddEditDto dto)
         {
-            var result = await _service.AddAsync(this.CurrentUserId, TaskId, dto);
+            var result = await _service.AddAsync(this.CurrentUserId, taskId, dto);
 
             if (!result.Success)
                 return Fail(result.Message);

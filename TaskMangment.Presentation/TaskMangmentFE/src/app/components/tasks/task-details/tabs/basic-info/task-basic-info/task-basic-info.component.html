@@ -16,7 +16,7 @@
       </tr>
       <tr>
         <th>فترة السماح للتعليق</th>
-        <td>{{ taskInfo?.commentPeriod }}</td>
+        <td>{{ taskInfo?.commentAllowPeriodDays }}</td>
       </tr>
       <tr>
         <th>الحد الأقصى للتحذيرات</th>
@@ -24,23 +24,20 @@
       </tr>
       <tr>
         <th>مقدار الخصم عند الوصول للحد الأقصى</th>
-        <td>{{ taskInfo?.warningPenalty }}</td>
+        <td>{{ taskInfo?.penaltyAtMaxWarnings }}</td>
       </tr>
       <tr>
         <th>مقدار الخصم عند إغلاق المهمة تلقائيًا</th>
-        <td>{{ taskInfo?.autoClosePenalty }}</td>
+        <td>{{ taskInfo?.penaltyOnAutoClose }}</td>
       </tr>
-      <tr>
-        <th>تاريخ الإنشاء</th>
-        <td>{{ taskInfo?.startDate }}</td>
-      </tr>
+      
       <tr>
         <th>تاريخ التسليم</th>
-        <td>{{ taskInfo?.endDate }}</td>
+        <td>{{ taskInfo?.dueDate }}</td>
       </tr>
       <tr>
         <th>جهة التكليف</th>
-        <td>{{ taskInfo?.assignedTo }}</td>
+        <td>{{ taskInfo?.assignedByName }}</td>
       </tr>
     </tbody>
   </table>

@@ -1,78 +1,68 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { GenericFormComponent } from 'app/shared/components/generic-form/generic-form.component';
+import { TaskService } from 'app/core/services/task.service';
+import { TaskGet } from 'app/core/models/task/task';
 
 @Component({
   selector: 'app-task-basic-info',
   standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    GenericFormComponent
-  ],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './task-basic-info.component.html'
 })
-export class TaskBasicInfoComponent implements OnInit {
+export class TaskBasicInfoComponent implements OnChanges {
 
   @Input() taskId!: number;
   @Input() readonly = false;
 
   form!: FormGroup;
+  taskInfo!: TaskGet | null;
 
-  taskInfo: any;
-
-  formConfig = [
-    { name: 'title', label: 'عنوان المهمة', type: 'text' },
-    { name: 'description', label: 'تفاصيل المهمة', type: 'textarea' },
-    {
-      name: 'commentPeriod',
-      label: 'فترة السماح للتعليق',
-      type: 'text'
-    },
-    { name: 'maxWarnings', label: 'الحد الأقصى للتحذيرات', type: 'number' },
-    { name: 'startDate', label: 'تاريخ الإنشاء', type: 'date' },
-    { name: 'endDate', label: 'تاريخ التسليم', type: 'date' }
-  ];
-
-  constructor(private fb: FormBuilder) {}
-
-  ngOnInit(): void {
+  constructor(private fb: FormBuilder, private taskService: TaskService) {
     this.buildForm();
-    this.loadTask();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['taskId'] && this.taskId) {
+      this.loadTask();
+    }
   }
 
   buildForm() {
     this.form = this.fb.group({
       title: ['', Validators.required],
       description: [''],
-      commentPeriod: [''],
+      commentAllowPeriodDays: [''],
       maxWarnings: [0],
-      startDate: [null],
-      endDate: [null]
+      penaltyAtMaxWarnings: [0],
+      penaltyOnAutoClose: [0],
+      dueDate: [null],
+      assignedByName: ['']
     });
   }
 
   loadTask() {
-    //  replace with API
-    this.taskInfo = {
-      id: 19353,
-      title: 'مشروع دبي أبو وشاح',
-      description: 'تذكير بمشروع دبي أبو وشاح',
-      commentPeriod: 'يومي',
-      maxWarnings: 3,
-      warningPenalty: 'SAR 0',
-      autoClosePenalty: 'SAR 0',
-      startDate: '2025-11-09 12:05 PM',
-      endDate: '2026-01-01 01:59 AM',
-      assignedTo: 'المهندس وسام أبو خضر'
-    };
+    if (!this.taskId) return;
 
-    this.form.patchValue(this.taskInfo);
-  }
-
-  onSubmit() {
-    if (this.form.invalid) return;
-    console.log('Save basic info:', this.form.value);
+    this.taskService.getById(this.taskId).subscribe({
+      next: (res) => {
+        this.taskInfo = res.data;
+        if (this.taskInfo) {
+          this.form.patchValue({
+            title: this.taskInfo.title,
+            description: this.taskInfo.description,
+            commentAllowPeriodDays: this.taskInfo.commentAllowPeriodDays,
+            maxWarnings: this.taskInfo.maxWarnings,
+            penaltyAtMaxWarnings: this.taskInfo.penaltyAtMaxWarnings,
+            penaltyOnAutoClose: this.taskInfo.penaltyOnAutoClose,
+            dueDate: this.taskInfo.dueDate,
+            assignedByName: this.taskInfo.assignedByName
+          });
+        }
+      },
+      error: (err) => {
+        console.error('Failed to load task:', err);
+      }
+    });
   }
 }

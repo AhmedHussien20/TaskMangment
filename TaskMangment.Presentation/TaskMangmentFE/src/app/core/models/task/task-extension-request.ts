@@ -16,7 +16,7 @@ export interface TaskExtensionRequestGet {
   status: ExtensionRequestStatus;
   requestedAt: string;
   requestedByName?: string;
-  reviewedAt?: string;
+reviewedAt?: string | null;
   reviewedByName?: string;
 }
 

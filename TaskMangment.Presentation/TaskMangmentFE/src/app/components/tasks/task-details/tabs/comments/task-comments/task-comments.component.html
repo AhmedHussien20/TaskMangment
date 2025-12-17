@@ -1,6 +1,6 @@
-<div class="table-responsive">
+<div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
   <table class="table table-bordered align-middle">
-    <thead class="table-light">
+    <thead class="table-light" style="position: sticky; top: 0; z-index: 10;">
       <tr>
         <th>#</th>
         <th>المرسل</th>
@@ -13,23 +13,18 @@
     <tbody>
       <tr *ngFor="let c of comments">
         <td>{{ c.id }}</td>
-
-        <td>{{ c.sender }}</td>
-
+        <td>{{ c.employeeName }}</td>
         <td>
           <span class="badge bg-success">{{ c.timeLabel }}</span>
           <br />
-          <small class="text-muted">{{ c.date | date:'yyyy-MM-dd' }}</small>
+          <small class="text-muted">{{ c.createdDate | date:'yyyy-MM-dd' }}</small>
         </td>
-
         <td>
           <span class="badge bg-secondary mb-1">تعليق</span>
-          <p class="mb-1">{{ c.comment }}</p>
-          <small class="badge bg-dark">{{ c.ip }}</small>
+          <p class="mb-1">{{ c.commentText }}</p>
         </td>
-
         <td class="text-muted">
-          {{ timeAgo(c.date) }}
+          {{ timeAgo(c.createdDate) }}
         </td>
       </tr>
     </tbody>

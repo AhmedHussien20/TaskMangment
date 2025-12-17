@@ -8,7 +8,6 @@ using TaskMangment.Application.Interfaces.Services;
 namespace TaskMangment.API.Controllers
 {
     [Route("api/[controller]")]
-    [ApiController]
     public class TaskWarningController : BaseController
     {
         private readonly ITaskWarningService _service;

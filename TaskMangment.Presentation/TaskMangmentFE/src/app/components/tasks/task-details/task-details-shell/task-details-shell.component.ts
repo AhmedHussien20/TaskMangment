@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Input, OnInit, SimpleChanges } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { TaskTabsComponent } from '../task-tabs/task-tabs.component';
 import { PageHeaderComponent } from 'app/shared/components/page-header/page-header.component';
@@ -10,6 +10,8 @@ import { WarningModalComponent } from '../actions/warning/warning-modal/warning-
 import { PenaltyModalComponent } from '../actions/penalty/penalty-modal/penalty-modal.component';
 import { CloseRequestModalComponent } from '../actions/close-request/close-request-modal/close-request-modal.component';
 import { ExtendRequestComponent } from '../actions/extend-request/extend-request.component';
+import { TaskService } from 'app/core/services/task.service';
+import { TaskGet } from 'app/core/models/task/task';
 
 @Component({
   selector: 'app-task-details-shell',
@@ -23,14 +25,39 @@ import { ExtendRequestComponent } from '../actions/extend-request/extend-request
 })
 export class TaskDetailsShellComponent implements OnInit {
 
-  taskId!: number;
+  @Input() taskId!: number; 
   readonly = false;
 
-  constructor(private route: ActivatedRoute, private modal: NgbModal, private refreshService: TaskDetailsRefreshService) { }
+  constructor(
+    private route: ActivatedRoute, private modal: NgbModal, private refreshService: TaskDetailsRefreshService,
+    private taskService: TaskService ) { }
+
+  
+  taskInfo: TaskGet | null = null;
 
   ngOnInit(): void {
-    this.taskId = Number(this.route.snapshot.paramMap.get('id'));
+
+    if (this.taskId) {
+      this.loadTask();
+    }
   }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['taskId'] && this.taskId) {
+      this.loadTask();
+    }
+  }
+
+
+ loadTask() {
+    this.taskService.getById(this.taskId).subscribe({
+      next: res => {
+        this.taskInfo = res.data;
+      },
+      error: err => console.error('Failed to load task', err)
+    });
+  }
+
 
   openAction(action: string) {
 

@@ -1,14 +1,9 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-
-interface TaskComment {
-  id: number;
-  sender: string;
-  date: string;
-  timeLabel: string;
-  comment: string;
-  ip: string;
-}
+import { Subscription } from 'rxjs';
+import { TaskDetailsRefreshService } from '../../../task-details-refresh.service';
+import { TaskCommentService } from 'app/core/services/task-comment.service';
+import { TaskCommentGetDto } from 'app/core/models/task/task-comment';
 
 @Component({
   selector: 'app-task-comments',
@@ -16,48 +11,63 @@ interface TaskComment {
   imports: [CommonModule],
   templateUrl: './task-comments.component.html'
 })
-export class TaskCommentsComponent implements OnInit {
-
+export class TaskCommentsComponent implements OnInit, OnDestroy {
   @Input() taskId!: number;
 
-  comments: TaskComment[] = [];
+  comments: (TaskCommentGetDto & { timeLabel?: string })[] = [];
+  private sub!: Subscription;
+
+  constructor(
+    private refresh: TaskDetailsRefreshService,
+    private commentService: TaskCommentService
+  ) {}
 
   ngOnInit(): void {
     this.loadComments();
+    this.sub = this.refresh.refresh$.subscribe(() => this.loadComments());
   }
 
   loadComments(): void {
-    //   Replace with API
-    this.comments = [
-      {
-        id: 1,
-        sender: 'المهندس وسام أبو خضر',
-        date: '2025-11-11T14:56:00',
-        timeLabel: 'PM 2:56',
-        ip: '149.109.142.189',
-        comment:
-          'أسامة أبو وشاح – تم التواصل اليوم مع أسامة بخصوص تحديد موعد اجتماع بالرياض...'
+    const request = {
+      taskId: this.taskId,
+      searchKey: '',
+      pageIndex: 1,
+      pageSize: 10,
+      sortColumn: 'CreatedDate',
+      sortDirection: 'desc'
+    };
+
+    this.commentService.getAll(request).subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          this.comments = res.data.data.map(c => ({
+            ...c,
+            timeLabel: this.timeAgo(c.createdDate)
+          }));
+        }
       },
-      {
-        id: 2,
-        sender: 'المهندس وسام أبو خضر',
-        date: '2025-11-12T09:54:00',
-        timeLabel: 'AM 9:54',
-        ip: '149.109.142.189',
-        comment:
-          'تم الرد على الإيميل من خلال أسامة بأنه متواجد بالرياض يوم 11/24، 23...'
-      }
-    ];
+      error: (err) => console.error('Failed to load comments', err)
+    });
   }
 
-  timeAgo(date: string): string {
-    const diff = Date.now() - new Date(date).getTime();
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(minutes / 60);
-    const days = Math.floor(hours / 24);
+  timeAgo(dateString: string): string {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
 
-    if (days > 0) return `منذ ${days} يوم`;
-    if (hours > 0) return `منذ ${hours} ساعة`;
-    return `منذ ${minutes} دقيقة`;
+    if (diffDays === 0) {
+      if (diffHours > 0) return `${diffHours} ساعة`;
+      if (diffMins > 0) return `${diffMins} دقيقة`;
+      return 'الآن';
+    }
+    return `${diffDays} يوم`;
+  }
+
+  ngOnDestroy(): void {
+    this.sub?.unsubscribe();
   }
 }

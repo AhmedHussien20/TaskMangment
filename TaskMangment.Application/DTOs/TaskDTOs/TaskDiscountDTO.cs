@@ -6,24 +6,23 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TaskMangment.Application.DTOs
+namespace TaskMangment.Application.DTOs.TaskDTOs
 {
     public class DiscountAddEditDto
     {
         [Required]
         public int EmployeeId { get; set; }
 
-
-        [Required, MaxLength(1000)]
-        public string Reason { get; set; }
-
         [Required]
         [Column(TypeName = "decimal(18,2)")]
         public decimal Amount { get; set; }
+        public string Reason { get; set; }
+
     }
 
     public class DiscountListDto
     {
+        public int TaskId { get; set; }
         public string EmployeeName { get; set; }
         public string? TaskTitle { get; set; }
         public string Reason { get; set; }
@@ -31,12 +30,5 @@ namespace TaskMangment.Application.DTOs
         public DateTime CreatedAt { get; set; }
     }
 
-    public class DiscountDetailsDto
-    {
-        public string EmployeeName { get; set; }
-        public string? TaskTitle { get; set; }
-        public string Reason { get; set; }
-        public decimal Amount { get; set; }
-        public DateTime CreatedAt { get; set; }
-    }
+   
 }

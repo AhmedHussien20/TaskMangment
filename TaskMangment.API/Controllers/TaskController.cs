@@ -5,6 +5,7 @@ using TaskMangment.Application.Common.ApiRequests.Task;
 using TaskMangment.Application.DTOs.TaskDTOs;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Domain.Entities;
+using TaskMangment.Infrastructure.Services;
 using TaskMangment.Infrastructure.SignalR;
 
 namespace TaskMangment.API.Controllers
@@ -79,6 +80,16 @@ namespace TaskMangment.API.Controllers
                 return Fail(result.Message, 404);
 
             return Success(true, "Task deleted successfully");
+        }
+
+        [HttpGet("{taskId}/assigned-employees")]
+        public async Task<IActionResult> GetAssignedEmployees(int taskId)
+        {
+            var response = await _service.GetAssignedEmployeesAsync(taskId);
+            if (!response.Success)
+                return Fail(response.Message, 404);
+
+            return Success(response.Data);
         }
     }
 }

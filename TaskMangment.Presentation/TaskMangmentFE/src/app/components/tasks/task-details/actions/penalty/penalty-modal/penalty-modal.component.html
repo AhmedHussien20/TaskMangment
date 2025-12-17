@@ -1,1 +1,35 @@
-<p>penalty-modal works!</p>
+<div class="modal-header">
+      <h6>{{ 'PENALTY.ADD' | translate }}</h6>
+      <button class="btn-close" (click)="modal.dismiss()"></button>
+    </div>
+
+
+ <label class="form-label">
+    {{ 'EMPLOYEE' | translate }}
+  </label>
+  <select class="form-select" [(ngModel)]="selectedEmployeeId">
+  <option *ngFor="let emp of employees" [value]="emp.id">
+    {{ emp.fullName }}
+  </option>
+</select>
+
+    <div class="modal-body">
+      <input class="form-control mb-2" type="number"
+        [(ngModel)]="amount"
+        placeholder="{{ 'PENALTY.AMOUNT' | translate }}" />
+
+      <textarea class="form-control" rows="3"
+        [(ngModel)]="reason"
+        placeholder="{{ 'PENALTY.REASON' | translate }}">
+      </textarea>
+    </div>
+    
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="modal.dismiss()">
+        {{ 'FORM.CANCEL' | translate }}
+      </button>
+      <button class="btn btn-danger" (click)="submit()">
+        {{ 'FORM.SAVE' | translate }}
+      </button>
+    </div>
