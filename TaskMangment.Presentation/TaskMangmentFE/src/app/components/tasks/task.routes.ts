@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
+import { TaskDetailsShellComponent } from './task-details/task-details-shell/task-details-shell.component';
 
 export const TaskRoutes: Routes = [
   {
@@ -19,6 +20,10 @@ export const TaskRoutes: Routes = [
     loadComponent: () =>
       import('./task-create-update/task-create-update.component')
         .then(m => m.TaskCreateUpdateComponent)
+  },
+  {
+    path: 'details/:id',
+    component: TaskDetailsShellComponent
   }
 ];
 @NgModule({

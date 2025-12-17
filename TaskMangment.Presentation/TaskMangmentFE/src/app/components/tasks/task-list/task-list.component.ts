@@ -9,6 +9,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { TaskCreateUpdateComponent } from "../task-create-update/task-create-update.component";
 import { TaskService } from "app/core/services/task.service";
 import { SearchCriteria } from "app/models/search-criteria.model";
+import { TaskDetailsShellComponent } from "../task-details/task-details-shell/task-details-shell.component";
 
 @Component({
   selector: 'app-task-list',
@@ -34,8 +35,29 @@ export class TaskListComponent implements OnInit {
     { key: 'id', label: 'TASK.ID' },
     { key: 'title', label: 'TASK.TITLE' },
     { key: 'assignedByName', label: 'TASK.ASSIGNED_BY' },
-    { key: 'priorityText', label: 'TASK.PRIORITY' },
-    { key: 'statusText', label: 'TASK.STATUS' },
+    {
+      key: 'priority',
+      label: 'TASK.PRIORITY'
+      //,
+      // type: 'badge' as const,
+      // badgeMap: {
+      //   Low:    { text: 'TASK.PRIORITY_LOW', class: 'bg-success' },
+      //   Medium: { text: 'TASK.PRIORITY_MEDIUM', class: 'bg-warning' },
+      //   High:   { text: 'TASK.PRIORITY_HIGH', class: 'bg-danger' }
+      // }
+    },
+
+    {
+      key: 'status',
+      label: 'TASK.STATUS',
+      type: 'badge' as const,
+      badgeMap: {
+        New: { text: 'TASK.STATUS_NEW', class: 'bg-secondary' },
+        InProgress: { text: 'TASK.STATUS_IN_PROGRESS', class: 'bg-info' },
+        Closed: { text: 'TASK.STATUS_CLOSED', class: 'bg-success' },
+        Archived: { text: 'TASK.STATUS_ARCHIVED', class: 'bg-dark' }
+      }
+    },
     { key: 'dueDate', label: 'TASK.DUE_DATE' }
   ];
 
@@ -66,7 +88,7 @@ export class TaskListComponent implements OnInit {
   constructor(
     private taskService: TaskService,
     private modalService: NgbModal
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.loadData();
@@ -127,4 +149,16 @@ export class TaskListComponent implements OnInit {
     this.modalService.dismissAll();
     this.loadData();
   }
+
+openDetails(taskId: number): void {
+  const modalRef = this.modalService.open(TaskDetailsShellComponent, {
+    size: 'xl',
+    backdrop: 'static',
+    scrollable: true
+  });
+
+  modalRef.componentInstance.taskId = taskId;
+  modalRef.componentInstance.readonly = true;
+}
+
 }

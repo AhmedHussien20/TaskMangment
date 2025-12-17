@@ -113,6 +113,10 @@
                     <td *ngFor="let col of columns">
 
 
+                        <!-- BADGE -->
+                        <span *ngIf="col.type === 'badge'" class="badge" [ngClass]="getBadgeClass(col, item)">
+                            {{ getBadgeText(col, item) | translate }}
+                        </span>
 
                         <!-- ICON ACTION COLUMN -->
                         <ng-container *ngIf="col.type === 'icon-action'; else normalCell">
@@ -135,7 +139,13 @@
 
 
                     <!-- ACTIONS -->
-                    <td *ngIf="showEditButton || showDeleteButton" class="text-center">
+                    <td *ngIf="showEditButton || showDeleteButton || showDetailsButton" class="text-center">
+
+                        <!-- DETAILS -->
+                        <button *ngIf="showDetailsButton" class="btn btn-outline-info btn-sm me-1"
+                            (click)="viewDetails(getItemId(item))">
+                            <i class="bi bi-eye"></i>
+                        </button>
 
                         <button *ngIf="showEditButton" class="btn btn-outline-primary btn-sm"
                             (click)="editItem(getItemId(item))">
