@@ -1,0 +1,41 @@
+<div class="table-responsive">
+  <table class="table table-bordered align-middle">
+    <thead class="table-light">
+      <tr>
+        <th>#</th>
+        <th>المرسل</th>
+        <th>التاريخ</th>
+        <th>التعليق</th>
+        <th>الوقت المنقضي</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <tr *ngFor="let c of comments">
+        <td>{{ c.id }}</td>
+
+        <td>{{ c.sender }}</td>
+
+        <td>
+          <span class="badge bg-success">{{ c.timeLabel }}</span>
+          <br />
+          <small class="text-muted">{{ c.date | date:'yyyy-MM-dd' }}</small>
+        </td>
+
+        <td>
+          <span class="badge bg-secondary mb-1">تعليق</span>
+          <p class="mb-1">{{ c.comment }}</p>
+          <small class="badge bg-dark">{{ c.ip }}</small>
+        </td>
+
+        <td class="text-muted">
+          {{ timeAgo(c.date) }}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div *ngIf="!comments.length" class="text-center text-muted mt-3">
+  لا يوجد تعليقات حتى الآن
+</div>

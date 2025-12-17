@@ -1,0 +1,70 @@
+<ul
+  ngbNav
+  #nav="ngbNav"
+  [(activeId)]="activeTab"
+  class="nav-tabs"
+>
+
+  <li ngbNavItem="basic">
+    <a ngbNavLink>{{ 'TASK.BASIC_INFO' | translate }}</a>
+    <ng-template ngbNavContent>
+      <app-task-basic-info
+        [taskId]="taskId"
+        [readonly]="readonly">
+      </app-task-basic-info>
+    </ng-template>
+  </li>
+
+  <li ngbNavItem="employees">
+    <a ngbNavLink>{{ 'TASK.EMPLOYEES' | translate }}</a>
+    <ng-template ngbNavContent>
+      <app-task-employees
+        [taskId]="taskId"
+        [readonly]="readonly">
+      </app-task-employees>
+    </ng-template>
+  </li>
+
+  <li ngbNavItem="warnings">
+  <a ngbNavLink>{{ 'TASK.WARNINGS' | translate }}</a>
+  <ng-template ngbNavContent>
+    <app-task-warnings
+      [taskId]="taskId"
+      [readonly]="readonly">
+    </app-task-warnings>
+  </ng-template>
+</li>
+
+<li ngbNavItem="penalties">
+  <a ngbNavLink>{{ 'TASK.PENALTIES' | translate }}</a>
+  <ng-template ngbNavContent>
+    <app-task-penalties
+      [taskId]="taskId"
+      [readonly]="readonly">
+    </app-task-penalties>
+  </ng-template>
+</li>
+<li ngbNavItem="comments">
+  <a ngbNavLink>التعليقات</a>
+  <ng-template ngbNavContent>
+    <app-task-comments [taskId]="taskId"></app-task-comments>
+  </ng-template>
+</li>
+
+<li ngbNavItem="audit">
+  <a ngbNavLink>{{ 'TASK.AUDIT' | translate }}</a>
+  <ng-template ngbNavContent>
+    <app-task-audit [taskId]="taskId"></app-task-audit>
+  </ng-template>
+</li>
+
+<li ngbNavItem="requests">
+  <a ngbNavLink>طلبات الإغلاق / التمديد</a>
+  <ng-template ngbNavContent>
+    <app-task-requests [taskId]="taskId"></app-task-requests>
+  </ng-template>
+</li>
+
+</ul>
+
+<div [ngbNavOutlet]="nav" class="mt-3"></div>

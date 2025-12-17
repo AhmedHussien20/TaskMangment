@@ -1,0 +1,43 @@
+<!-- HEADER -->
+<app-page-header
+  [title]="'TASK.DETAILS' | translate"
+  [title1]="['TASKS']"
+  [activeitem]="'TASK.DETAILS' | translate">
+</app-page-header>
+
+<div class="card">
+  <div class="card-body">
+
+    <!-- ACTION ICONS -->
+    <div class="d-flex justify-content-center gap-4 mb-3">
+
+      <button class="btn btn-light" (click)="openAction('comment')">
+        <i class="bi bi-chat-dots"></i>
+      </button>
+
+      <button class="btn btn-light" (click)="openAction('close')">
+        <i class="bi bi-x-square"></i>
+      </button>
+
+      <button class="btn btn-light" (click)="openAction('extend')">
+        <i class="bi bi-clock-history"></i>
+      </button>
+
+      <button class="btn btn-light" (click)="openAction('warning')">
+        <i class="bi bi-exclamation-triangle"></i>
+      </button>
+
+      <button class="btn btn-light" (click)="openAction('penalty')">
+        <i class="bi bi-cash-coin"></i>
+      </button>
+
+    </div>
+
+    <!-- TABS -->
+    <app-task-tabs
+      [taskId]="taskId"
+      [readonly]="readonly">
+    </app-task-tabs>
+
+  </div>
+</div>
