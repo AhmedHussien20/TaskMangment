@@ -1,0 +1,27 @@
+<div class="mb-2 d-flex justify-content-end gap-2">
+
+  <button class="btn btn-light" (click)="refresh()">
+    <i class="bi bi-arrow-clockwise"></i>
+  </button>
+
+  <button class="btn btn-light text-danger" *ngIf="rows.length">
+    <i class="bi bi-trash"></i>
+  </button>
+
+</div>
+
+<app-generic-table
+  [columns]="columns"
+  [data]="rows"
+  [page]="page"
+  [entries]="entries"
+  [totalItems]="totalItems"
+  [showAddButton]="false"
+  [showEditButton]="false"
+  [showDetailsButton]="false"
+  (pageChange)="onPageChange($event)">
+</app-generic-table>
+
+<div *ngIf="!isLoading && !rows.length" class="text-center text-muted mt-4">
+  لا يوجد طلبات إغلاق/تمديد حتى الآن
+</div>

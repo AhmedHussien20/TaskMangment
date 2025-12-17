@@ -235,10 +235,13 @@
     "UPDATE_FAILED": "فشل تعديل المهمة",
     "searchKey": "بحث عن المهام",
     "STATUS": "الحالة",
-    "ID": "الكود"
+    "ID": "الكود",
+    "EXTEND_REQUEST_TITLE": "طلب تمديد للمهمة",
+    "EXTEND_REQUEST_NOTE": "سيتم إرسال طلب التمديد إلى جهة التكليف ويجب عليك الاستمرار في التفاعل مع المهمة حتى يتم الرد.",
+    "EXTEND_REQUEST_PLACEHOLDER": "اذكر بإختصار سبب طلبك لتمديد المهمة",
+    "MESSAGE": "الرسالة"
   },
-  "EMPLOYEE": {
-    "TITLE": "الموظفين",
+  "EMPLOYEE": { 
     "LIST_TITLE": "قائمة الموظفين",
     "CREATE_TITLE": "إضافة موظف",
     "EDIT_TITLE": "تعديل موظف",
@@ -330,7 +333,14 @@
     "SEARCH": "بحث عن الصلاحيات",
     "PERMISSIONS": "الصلاحيات المخصصة",
     "EMPLOYEES": "الموظفون المعينون",
-    "ASSIGN_EMPLOYEES": "تعيين موظفين"
+    "ASSIGN_EMPLOYEES": "تعيين موظفين",
+    "PRIORITY_LOW": "منخفض",
+    "PRIORITY_MEDIUM": "متوسط",
+    "PRIORITY_HIGH": "مرتفع",
+    "STATUS_NEW": "جديد",
+    "STATUS_IN_PROGRESS": "قيد التنفيذ",
+    "STATUS_CLOSED": "مغلق",
+    "STATUS_ARCHIVED": "مؤرشف"
   },
   "PERMISSION": {
     "TITLE": "إدارة التصاريح",
