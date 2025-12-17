@@ -24,8 +24,9 @@ namespace TaskMangment.Domain.Entities
 
         [ForeignKey(nameof(TaskAssignmentId))] 
         public TaskAssignment TaskAssignment { get; set; }
-        public WorkTask Task { get; set; }
 
+        [ForeignKey(nameof(TaskId))]
+        public WorkTask Task { get; set; }
         [ForeignKey(nameof(IssuedEmployeeId))] public Employee Issued { get; set; }
         [ForeignKey(nameof(IssuedByEmployeeId))] public Employee IssuedBy { get; set; }
     }
