@@ -73,7 +73,7 @@ namespace TaskMangment.Infrastructure.Services
             foreach (var dto in dtos)
             {
                 var comment = list.First(c => c.Id == dto.Id);
-                dto.AttachmentCount = await _attachmentRepo.CountAsync(a => a.CommentId == comment.Id);
+                dto.AttachmentCount = await _attachmentRepo.CountAsync(a => a.ReferenceId == comment.Id && a.AttachmentType == AttachmentType.Comment);
                 dto.TaskTitle = comment.Task?.Title;
                 dto.EmployeeName = comment.Employee?.FullName;
             }
@@ -98,7 +98,7 @@ namespace TaskMangment.Infrastructure.Services
 
             var dto = _mapper.Map<TaskCommentGetDto>(comment);
 
-            dto.AttachmentCount = await _attachmentRepo.CountAsync(a => a.CommentId == id);
+            dto.AttachmentCount = await _attachmentRepo.CountAsync(a => a.ReferenceId == id && a.AttachmentType==AttachmentType.Comment);
 
             return ApiResponse<TaskCommentGetDto>.Ok(dto);
         }
@@ -145,7 +145,8 @@ namespace TaskMangment.Infrastructure.Services
             CreatedBy = employeeId,
             ContentType = dto.File.ContentType,
             UploadedAt = DateTime.UtcNow,
-            TaskId = taskId
+            ReferenceId = taskId,
+            AttachmentType= AttachmentType.Task,
         }
     };
             }
@@ -163,7 +164,7 @@ namespace TaskMangment.Infrastructure.Services
                                       .FirstOrDefaultAsync();
 
             var commentDto = _mapper.Map<TaskCommentGetDto>(savedComment);
-            commentDto.AttachmentCount = await _attachmentRepo.CountAsync(a => a.CommentId == comment.Id);
+            commentDto.AttachmentCount = await _attachmentRepo.CountAsync(a => a.ReferenceId == comment.Id && a.AttachmentType==AttachmentType.Comment);
             commentDto.TaskTitle = savedComment.Task?.Title;
             commentDto.EmployeeName = savedComment.Employee?.FullName;
 
@@ -192,7 +193,7 @@ namespace TaskMangment.Infrastructure.Services
                                      .FirstOrDefaultAsync();
 
             var commentDto = _mapper.Map<TaskCommentGetDto>(savedComment);
-            commentDto.AttachmentCount = await _attachmentRepo.CountAsync(a => a.CommentId == comment.Id);
+            commentDto.AttachmentCount = await _attachmentRepo.CountAsync(a => a.ReferenceId == comment.Id && a.AttachmentType==AttachmentType.Comment);
             commentDto.TaskTitle = savedComment.Task?.Title;
             commentDto.EmployeeName = savedComment.Employee?.FullName;
             return ApiResponse<TaskCommentGetDto>.Ok(commentDto, "Comment updated successfully");
