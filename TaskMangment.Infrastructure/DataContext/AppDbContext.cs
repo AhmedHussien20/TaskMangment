@@ -19,6 +19,8 @@ namespace TaskMangment.Infrastructure.DataContext
 
         public DbSet<Area> Areas { get; set; }
         public DbSet<Attachment> Attachments { get; set; }
+        public DbSet<AttachmentType> AttachmentTypes { get; set; }
+
         public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<Branch> Branches { get; set; }
         public DbSet<CalendarEvent> CalendarEvents { get; set; }
@@ -106,24 +108,12 @@ namespace TaskMangment.Infrastructure.DataContext
                  .WithMany(t => t.Assignments)
                  .HasForeignKey(a => a.TaskId)
                  .OnDelete(DeleteBehavior.Cascade);
-             
-            builder.Entity<Attachment>()
-                 .HasOne(a => a.Task)
-                 .WithMany(t => t.Attachments)
-                 .HasForeignKey(a => a.TaskId)
-                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<Attachment>()
-                 .HasOne(a => a.Comment)
-                 .WithMany(c => c.Attachments)
-                 .HasForeignKey(a => a.CommentId)
-                 .OnDelete(DeleteBehavior.Restrict);
-
-            builder.Entity<Attachment>()
-                 .HasOne(a => a.Voucher)
-                 .WithMany(v => v.Attachments)
-                 .HasForeignKey(a => a.VoucherId)
-                 .OnDelete(DeleteBehavior.Restrict);
+         .HasOne(a => a.AttachmentType)
+         .WithMany()
+         .HasForeignKey(a => a.AttachmentTypeId)
+         .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<Attachment>()
                  .HasOne(a => a.UploadedByEmployee)
@@ -150,11 +140,11 @@ namespace TaskMangment.Infrastructure.DataContext
                  .HasForeignKey(w => w.TaskAssignmentId)
                  .OnDelete(DeleteBehavior.Cascade);
 
-            builder.Entity<PaymentVoucher>()
-                 .HasMany(v => v.Attachments)
-                 .WithOne(a => a.Voucher)
-                 .HasForeignKey(a => a.VoucherId)
-                 .OnDelete(DeleteBehavior.Cascade);
+            //builder.Entity<PaymentVoucher>()
+            //     .HasMany(v => v.Attachments)
+            //     .WithOne(a => a.Voucher)
+            //     .HasForeignKey(a => a.VoucherId)
+            //     .OnDelete(DeleteBehavior.Cascade);
         }
 
     }

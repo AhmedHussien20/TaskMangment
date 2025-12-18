@@ -22,6 +22,8 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
 
         public string Message { get; set; }
         public CloseRequestStatus Status { get; set; }
+        public string CloseRequestText => Status.ToString();
+
         public DateTime RequestedAt { get; set; }
         public string RequestedByName { get; set; }
 
@@ -37,6 +39,8 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
 
         public string Message { get; set; }
         public CloseRequestStatus Status { get; set; }
+
+        public string CloseRequestText => Status.ToString();
         public DateTime RequestedAt { get; set; }
         public DateTime? ReviewedAt { get; set; }
         public string ReviewedByName { get; set; }

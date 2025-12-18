@@ -22,7 +22,7 @@ import { TaskDetailsShellComponent } from "../task-details/task-details-shell/ta
     PageHeaderComponent,
     NgbModalModule,
     TaskCreateUpdateComponent,
-    TaskDetailsShellComponent
+    TaskDetailsShellComponent,
   ],
   templateUrl: './task-list.component.html'
 })

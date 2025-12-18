@@ -1,1 +1,46 @@
-<p>warning-modal works!</p>
+<div class="modal-header">
+  <h6 class="modal-title">{{ 'WARNING.ADD' | translate }}</h6>
+  <button class="btn-close" (click)="modal.dismiss()"></button>
+</div>
+
+<div class="modal-body">
+
+  <!-- Employee Dropdown -->
+  <div class="mb-3">
+    <label class="form-label">{{ 'TASK.ASSIGNED_EMPLOYEES' | translate }}</label>
+    <select
+      class="form-select"
+      [(ngModel)]="selectedEmployeeId">
+      <option [ngValue]="null" disabled>
+        -- اختر الموظف --
+      </option>
+      <option *ngFor="let emp of employees" [ngValue]="emp.id">
+        {{ emp.fullName }}
+      </option>
+    </select>
+  </div>
+
+  <!-- Reason -->
+  <div class="mb-3">
+    <textarea
+      class="form-control"
+      rows="3"
+      [(ngModel)]="reason"
+      placeholder="{{ 'WARNING.REASON' | translate }}">
+    </textarea>
+  </div>
+
+</div>
+
+<div class="modal-footer">
+  <button class="btn btn-secondary" (click)="modal.dismiss()">
+    {{ 'FORM.CANCEL' | translate }}
+  </button>
+
+  <button
+    class="btn btn-warning"
+    [disabled]="isSubmitting"
+    (click)="submit()">
+    {{ 'FORM.SAVE' | translate }}
+  </button>
+</div>

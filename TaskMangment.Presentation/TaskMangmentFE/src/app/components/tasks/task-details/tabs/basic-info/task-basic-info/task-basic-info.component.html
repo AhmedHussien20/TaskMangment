@@ -3,40 +3,40 @@
   <table class="table table-bordered align-middle">
     <tbody>
       <tr>
-        <th>رقم المهمة</th>
+        <th>{{ "TASK.NUMBER" | translate }}</th>
         <td>{{ taskInfo?.id }}</td>
       </tr>
       <tr>
-        <th>عنوان المهمة</th>
+        <th>{{ "TASK.TITLE" | translate }}</th>
         <td>{{ taskInfo?.title }}</td>
       </tr>
       <tr>
-        <th>تفاصيل المهمة</th>
+        <th>{{ "TASK.DESCRIPTION" | translate }}</th>
         <td>{{ taskInfo?.description }}</td>
       </tr>
       <tr>
-        <th>فترة السماح للتعليق</th>
+        <th>{{ "TASK.COMMENT_ALLOW_PERIOD" | translate }}</th>
         <td>{{ taskInfo?.commentAllowPeriodDays }}</td>
       </tr>
       <tr>
-        <th>الحد الأقصى للتحذيرات</th>
+        <th>{{ "TASK.MAX_WARNINGS" | translate }}</th>
         <td>{{ taskInfo?.maxWarnings }}</td>
       </tr>
       <tr>
-        <th>مقدار الخصم عند الوصول للحد الأقصى</th>
+        <th>{{ "TASK.PENALTY_AT_MAX_WARNINGS" | translate }}</th>
         <td>{{ taskInfo?.penaltyAtMaxWarnings }}</td>
       </tr>
       <tr>
-        <th>مقدار الخصم عند إغلاق المهمة تلقائيًا</th>
+        <th>{{ "TASK.PENALTY_ON_AUTO_CLOSE" | translate }}</th>
         <td>{{ taskInfo?.penaltyOnAutoClose }}</td>
       </tr>
       
       <tr>
-        <th>تاريخ التسليم</th>
+        <th>{{ "TASK.DUE_DATE" | translate }}</th>
         <td>{{ taskInfo?.dueDate }}</td>
       </tr>
       <tr>
-        <th>جهة التكليف</th>
+        <th>{{ "TASK.ASSIGNED_BY" | translate }}</th>
         <td>{{ taskInfo?.assignedByName }}</td>
       </tr>
     </tbody>

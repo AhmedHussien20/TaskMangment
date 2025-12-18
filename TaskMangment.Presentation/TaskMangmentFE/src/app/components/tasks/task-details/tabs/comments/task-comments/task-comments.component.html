@@ -3,10 +3,10 @@
     <thead class="table-light" style="position: sticky; top: 0; z-index: 10;">
       <tr>
         <th>#</th>
-        <th>المرسل</th>
-        <th>التاريخ</th>
-        <th>التعليق</th>
-        <th>الوقت المنقضي</th>
+        <th>{{ 'TASK.COMMENTED_BY' | translate }}</th>
+        <th>{{ 'TASK.COMMENTED_DATE' | translate }}</th>
+        <th>{{ 'TASK.COMMENT' | translate }}</th>
+        <th>{{ 'TASK.TIME_ELAPSED' | translate }}</th>
       </tr>
     </thead>
 
@@ -20,11 +20,11 @@
           <small class="text-muted">{{ c.createdDate | date:'yyyy-MM-dd' }}</small>
         </td>
         <td>
-          <span class="badge bg-secondary mb-1">تعليق</span>
+          <span class="badge bg-secondary mb-1">{{ 'TASK.COMMENT' | translate }}</span>
           <p class="mb-1">{{ c.commentText }}</p>
         </td>
         <td class="text-muted">
-          {{ timeAgo(c.createdDate) }}
+          {{ timeAgo(c.createdDate) | translate}}
         </td>
       </tr>
     </tbody>

@@ -78,7 +78,7 @@ namespace TaskMangment.Infrastructure.Services
             foreach (var dto in dtos)
             {
                 var voucher = list.First(v => v.Id == dto.Id);
-                dto.AttachmentCount = await _attachmentRepo.CountAsync(a => a.VoucherId == voucher.Id);
+               // dto.AttachmentCount = await _attachmentRepo.CountAsync(a => a.VoucherId == voucher.Id);
             }
 
             var response = new PagedResponse<PaymentVoucherGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
@@ -101,7 +101,7 @@ namespace TaskMangment.Infrastructure.Services
                 return ApiResponse<PaymentVoucherGetDto>.Fail("Voucher not found");
 
             var dto = _mapper.Map<PaymentVoucherGetDto>(voucher);
-            dto.AttachmentCount = await _attachmentRepo.CountAsync(a => a.VoucherId == id);
+           // dto.AttachmentCount = await _attachmentRepo.CountAsync(a => a.VoucherId == id);
 
             return ApiResponse<PaymentVoucherGetDto>.Ok(dto);
         }

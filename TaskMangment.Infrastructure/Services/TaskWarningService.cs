@@ -90,53 +90,53 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<WarningGetDto>.Ok(dto);
         }
 
-        public async Task<ApiResponse<WarningGetDto>> AddAsync(WarningAddEditDto dto, int taskId, int employeeId)
+        public async Task<ApiResponse<WarningGetDto>> AddAsync(WarningAddEditDto dto,int taskId,int employeeId)
         {
-
-            var assignments = await _taskAssignmentRepo.GetAll(ta => ta.TaskId == taskId)
-       .Include(ta => ta.Employee)
-       .ToListAsync();
-
-            if (assignments == null || !assignments.Any())
-                return ApiResponse<WarningGetDto>.Fail("Task not found or has no assignments");
-
-            var assignment = assignments.FirstOrDefault(a => a.TaskId == taskId && a.EmployeeId == dto.IssuedEmployeeId);
+            var assignment = await _taskAssignmentRepo.GetAll(a =>
+                    a.TaskId == taskId &&
+                    a.EmployeeId == dto.IssuedEmployeeId &&
+                    a.IsActive
+                )
+                .FirstOrDefaultAsync();
 
             if (assignment == null)
-                return ApiResponse<WarningGetDto>.Fail("This employee is not assigned to this task");
+                return ApiResponse<WarningGetDto>.Fail(
+                    "This employee is not assigned to this task"
+                );
 
             var warning = _mapper.Map<Warning>(dto);
             warning.TaskAssignmentId = assignment.Id;
             warning.TaskId = taskId;
-            warning.IssuedByEmployeeId = employeeId;
+            warning.IssuedByEmployeeId = employeeId;   // اللي بيعمل التحذير
+            warning.IssuedEmployeeId = dto.IssuedEmployeeId; // اللي بيتحذر
             warning.CreatedBy = employeeId;
             warning.CreatedDate = DateTime.UtcNow;
-            warning.IssuedEmployeeId= dto.IssuedEmployeeId;
-
-
 
             await _warningRepo.AddAsync(warning);
             await _warningRepo.SaveChangesAsync();
+
             await _cache.RemoveAsync("warnings:");
 
+            // تحميل البيانات للـ response
+            var savedWarning = await _warningRepo.GetAll(w => w.Id == warning.Id)
+                .Include(w => w.IssuedBy)
+                .Include(w => w.Issued)
+                .Include(w => w.TaskAssignment)
+                    .ThenInclude(a => a.Task)
+                .AsNoTracking()
+                .FirstOrDefaultAsync();
 
-            var savedRequest = await _warningRepo.GetAll(r => r.Id == warning.Id)
-                                               .Include(r => r.IssuedBy)
-                                               .Include(r => r.Issued)
-                                               .Include(r => r.TaskAssignment)
-                                               .ThenInclude(a => a.Employee)
-                                               .Include(r => r.TaskAssignment)
-                                               .ThenInclude(a => a.Task)
-                                              .AsNoTracking()
-                                              .FirstOrDefaultAsync();
+            var warningDto = _mapper.Map<WarningGetDto>(savedWarning);
+            warningDto.TaskTitle = savedWarning.TaskAssignment.Task?.Title;
+            warningDto.IssuedEmployeeName = savedWarning.Issued?.FullName;
+            warningDto.IssuedByName = savedWarning.IssuedBy?.FullName;
 
-            var warningDto = _mapper.Map<WarningGetDto>(savedRequest);
-            warningDto.TaskTitle = savedRequest.TaskAssignment.Task?.Title;
-            warningDto.IssuedEmployeeName = savedRequest.Issued?.FullName;
-            warningDto.IssuedByName = savedRequest.IssuedBy?.FullName;
-
-            return ApiResponse<WarningGetDto>.Ok(warningDto, "Warning added successfully");
+            return ApiResponse<WarningGetDto>.Ok(
+                warningDto,
+                "Warning added successfully"
+            );
         }
+
         public async Task<ApiResponse<WarningGetDto>> UpdateAsync(int id, WarningAddEditDto dto)
         {
             var warning = await _warningRepo.GetAll(w => w.Id == id)
