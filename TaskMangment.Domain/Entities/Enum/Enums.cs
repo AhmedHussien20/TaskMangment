@@ -18,5 +18,11 @@ namespace TaskMangment.Domain.Entities
         WhatsApp
     }
 
+    public enum AttachmentType
+    {
+        Task = 1,
+        Comment = 2,
+        Voucher = 3
+    }
 
 }
