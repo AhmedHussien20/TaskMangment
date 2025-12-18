@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TaskMangment.Infrastructure.DataContext;
 
@@ -11,9 +12,11 @@ using TaskMangment.Infrastructure.DataContext;
 namespace TaskMangment.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251218140647_editAttachments")]
+    partial class editAttachments
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -73,7 +76,7 @@ namespace TaskMangment.Infrastructure.Migrations
 
                     b.HasIndex("ManagerEmployeeId");
 
-                    b.ToTable("Areas", (string)null);
+                    b.ToTable("Areas");
                 });
 
             modelBuilder.Entity("TaskMangment.Domain.Entities.Attachment", b =>
@@ -153,7 +156,7 @@ namespace TaskMangment.Infrastructure.Migrations
 
                     b.HasIndex("WorkTaskId");
 
-                    b.ToTable("Attachments", (string)null);
+                    b.ToTable("Attachments");
                 });
 
             modelBuilder.Entity("TaskMangment.Domain.Entities.AttachmentType", b =>
@@ -195,7 +198,7 @@ namespace TaskMangment.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AttachmentTypes", (string)null);
+                    b.ToTable("AttachmentTypes");
                 });
 
             modelBuilder.Entity("TaskMangment.Domain.Entities.AuditLog", b =>
@@ -251,7 +254,7 @@ namespace TaskMangment.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AuditLogs", (string)null);
+                    b.ToTable("AuditLogs");
                 });
 
             modelBuilder.Entity("TaskMangment.Domain.Entities.Branch", b =>
@@ -338,7 +341,7 @@ namespace TaskMangment.Infrastructure.Migrations
 
                     b.HasIndex("ResponsibleID");
 
-                    b.ToTable("Branches", (string)null);
+                    b.ToTable("Branches");
                 });
 
             modelBuilder.Entity("TaskMangment.Domain.Entities.CalendarEvent", b =>
@@ -409,7 +412,7 @@ namespace TaskMangment.Infrastructure.Migrations
 
                     b.HasIndex("RelatedTaskId");
 
-                    b.ToTable("CalendarEvents", (string)null);
+                    b.ToTable("CalendarEvents");
                 });
 
             modelBuilder.Entity("TaskMangment.Domain.Entities.Company", b =>
@@ -496,7 +499,7 @@ namespace TaskMangment.Infrastructure.Migrations
 
                     b.HasIndex("TechnicalManagerId");
 
-                    b.ToTable("Companies", (string)null);
+                    b.ToTable("Companies");
                 });
 
             modelBuilder.Entity("TaskMangment.Domain.Entities.Course", b =>
@@ -540,7 +543,7 @@ namespace TaskMangment.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Courses", (string)null);
+                    b.ToTable("Courses");
                 });
 
             modelBuilder.Entity("TaskMangment.Domain.Entities.CourseSubject", b =>
@@ -584,7 +587,7 @@ namespace TaskMangment.Infrastructure.Migrations
 
                     b.HasIndex("CourseId");
 
-                    b.ToTable("CourseSubjects", (string)null);
+                    b.ToTable("CourseSubjects");
                 });
 
             modelBuilder.Entity("TaskMangment.Domain.Entities.Deduction", b =>
@@ -635,7 +638,7 @@ namespace TaskMangment.Infrastructure.Migrations
 
                     b.HasIndex("EmployeeId");
 
-                    b.ToTable("Deductions", (string)null);
+                    b.ToTable("Deductions");
                 });
 
             modelBuilder.Entity("TaskMangment.Domain.Entities.DeductionType", b =>
@@ -657,7 +660,7 @@ namespace TaskMangment.Infrastructure.Migrations
 
                     b.HasKey("DeductionTypeId");
 
-                    b.ToTable("DeductionTypes", (string)null);
+                    b.ToTable("DeductionTypes");
                 });
 
             modelBuilder.Entity("TaskMangment.Domain.Entities.Department", b =>
@@ -708,7 +711,7 @@ namespace TaskMangment.Infrastructure.Migrations
                         .IsUnique()
                         .HasFilter("[ManagerEmployeeId] IS NOT NULL");
 
-                    b.ToTable("Departments", (string)null);
+                    b.ToTable("Departments");
                 });
 
             modelBuilder.Entity("TaskMangment.Domain.Entities.Discount", b =>
@@ -762,7 +765,7 @@ namespace TaskMangment.Infrastructure.Migrations
 
                     b.HasIndex("TaskId");
 
-                    b.ToTable("Discounts", (string)null);
+                    b.ToTable("Discounts");
                 });
 
             modelBuilder.Entity("TaskMangment.Domain.Entities.Employee", b =>
@@ -868,7 +871,7 @@ namespace TaskMangment.Infrastructure.Migrations
 
                     b.HasIndex("JobId");
 
-                    b.ToTable("Employees", (string)null);
+                    b.ToTable("Employees");
                 });
 
             modelBuilder.Entity("TaskMangment.Domain.Entities.EmployeeRole", b =>
@@ -915,7 +918,7 @@ namespace TaskMangment.Infrastructure.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("EmployeeRoles", (string)null);
+                    b.ToTable("EmployeeRoles");
                 });
 
             modelBuilder.Entity("TaskMangment.Domain.Entities.Job", b =>
@@ -964,7 +967,7 @@ namespace TaskMangment.Infrastructure.Migrations
 
                     b.HasIndex("DepartmentId");
 
-                    b.ToTable("Jobs", (string)null);
+                    b.ToTable("Jobs");
                 });
 
             modelBuilder.Entity("TaskMangment.Domain.Entities.Leave", b =>
@@ -1018,7 +1021,7 @@ namespace TaskMangment.Infrastructure.Migrations
 
                     b.HasIndex("LeaveTypeId");
 
-                    b.ToTable("Leaves", (string)null);
+                    b.ToTable("Leaves");
                 });
 
             modelBuilder.Entity("TaskMangment.Domain.Entities.LeaveType", b =>
@@ -1061,7 +1064,7 @@ namespace TaskMangment.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("leaveTypes", (string)null);
+                    b.ToTable("leaveTypes");
                 });
 
             modelBuilder.Entity("TaskMangment.Domain.Entities.Notification", b =>
@@ -1108,7 +1111,7 @@ namespace TaskMangment.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Notifications", (string)null);
+                    b.ToTable("Notifications");
                 });
 
             modelBuilder.Entity("TaskMangment.Domain.Entities.Offer", b =>
@@ -1168,7 +1171,7 @@ namespace TaskMangment.Infrastructure.Migrations
 
                     b.HasIndex("SubjectId");
 
-                    b.ToTable("Offers", (string)null);
+                    b.ToTable("Offers");
                 });
 
             modelBuilder.Entity("TaskMangment.Domain.Entities.OfferAssignment", b =>
@@ -1218,7 +1221,7 @@ namespace TaskMangment.Infrastructure.Migrations
 
                     b.HasIndex("StudentId");
 
-                    b.ToTable("OfferAssignments", (string)null);
+                    b.ToTable("OfferAssignments");
                 });
 
             modelBuilder.Entity("TaskMangment.Domain.Entities.PaymentVoucher", b =>
@@ -1272,7 +1275,7 @@ namespace TaskMangment.Infrastructure.Migrations
 
                     b.HasIndex("CreatedByEmployeeId");
 
-                    b.ToTable("PaymentVouchers", (string)null);
+                    b.ToTable("PaymentVouchers");
                 });
 
             modelBuilder.Entity("TaskMangment.Domain.Entities.Permission", b =>
@@ -1321,7 +1324,7 @@ namespace TaskMangment.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Permissions", (string)null);
+                    b.ToTable("Permissions");
                 });
 
             modelBuilder.Entity("TaskMangment.Domain.Entities.Role", b =>
@@ -1370,7 +1373,7 @@ namespace TaskMangment.Infrastructure.Migrations
 
                     b.HasIndex("CompanyId");
 
-                    b.ToTable("Roles", (string)null);
+                    b.ToTable("Roles");
                 });
 
             modelBuilder.Entity("TaskMangment.Domain.Entities.RolePermission", b =>
@@ -1417,7 +1420,7 @@ namespace TaskMangment.Infrastructure.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("RolePermission", (string)null);
+                    b.ToTable("RolePermission");
                 });
 
             modelBuilder.Entity("TaskMangment.Domain.Entities.Student", b =>
@@ -1466,7 +1469,7 @@ namespace TaskMangment.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Students", (string)null);
+                    b.ToTable("Students");
                 });
 
             modelBuilder.Entity("TaskMangment.Domain.Entities.TaskAssignment", b =>
@@ -1528,7 +1531,7 @@ namespace TaskMangment.Infrastructure.Migrations
 
                     b.HasIndex("TaskId");
 
-                    b.ToTable("TaskAssignments", (string)null);
+                    b.ToTable("TaskAssignments");
                 });
 
             modelBuilder.Entity("TaskMangment.Domain.Entities.TaskCloseRequest", b =>
@@ -1599,7 +1602,7 @@ namespace TaskMangment.Infrastructure.Migrations
 
                     b.HasIndex("WorkTaskId");
 
-                    b.ToTable("TaskCloseRequests", (string)null);
+                    b.ToTable("TaskCloseRequests");
                 });
 
             modelBuilder.Entity("TaskMangment.Domain.Entities.TaskComment", b =>
@@ -1647,7 +1650,7 @@ namespace TaskMangment.Infrastructure.Migrations
 
                     b.HasIndex("TaskId");
 
-                    b.ToTable("TaskComments", (string)null);
+                    b.ToTable("TaskComments");
                 });
 
             modelBuilder.Entity("TaskMangment.Domain.Entities.TaskExtensionRequest", b =>
@@ -1718,7 +1721,7 @@ namespace TaskMangment.Infrastructure.Migrations
 
                     b.HasIndex("TaskId");
 
-                    b.ToTable("TaskExtensionRequests", (string)null);
+                    b.ToTable("TaskExtensionRequests");
                 });
 
             modelBuilder.Entity("TaskMangment.Domain.Entities.Warning", b =>
@@ -1780,7 +1783,7 @@ namespace TaskMangment.Infrastructure.Migrations
 
                     b.HasIndex("TaskId");
 
-                    b.ToTable("Warnings", (string)null);
+                    b.ToTable("Warnings");
                 });
 
             modelBuilder.Entity("TaskMangment.Domain.Entities.WorkTask", b =>
@@ -1859,7 +1862,7 @@ namespace TaskMangment.Infrastructure.Migrations
 
                     b.HasIndex("CreatedByEmployeeId");
 
-                    b.ToTable("Tasks", (string)null);
+                    b.ToTable("Tasks");
                 });
 
             modelBuilder.Entity("TaskMangment.Domain.Entities.Area", b =>

@@ -2,8 +2,8 @@
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using TaskMangment.Application.Common.ApiRequests.Task;
 using TaskMangment.Application.Common.Interfaces;
@@ -21,6 +21,7 @@ namespace TaskMangment.Infrastructure.Services
     {
         private readonly IRepository<TaskComment> _commentRepo;
         private readonly IRepository<Attachment> _attachmentRepo;
+        private readonly IRepository<AttachmentType> _attachmentTypeRepo;
         private readonly IRepository<WorkTask> _taskRepo;
         private readonly IRepository<TaskAssignment> _taskAssignmentRepo;
         private readonly IMapper _mapper;
@@ -32,7 +33,8 @@ namespace TaskMangment.Infrastructure.Services
             IMapper mapper,
             ICachingService cache,
             IRepository<WorkTask> taskRepo,
-            IRepository<TaskAssignment> taskAssignmentRepo)
+            IRepository<TaskAssignment> taskAssignmentRepo,
+            IRepository<AttachmentType> attachmentTypeRepo)
         {
             _commentRepo = commentRepo;
             _attachmentRepo = attachmentRepo;
@@ -40,6 +42,7 @@ namespace TaskMangment.Infrastructure.Services
             _cache = cache;
             _taskRepo = taskRepo;
             _taskAssignmentRepo = taskAssignmentRepo;
+            _attachmentTypeRepo = attachmentTypeRepo;
         }
 
         public async Task<ApiResponse<PagedResponse<TaskCommentGetDto>>> GetAllAsync(TaskCommentRequest request)
@@ -58,7 +61,6 @@ namespace TaskMangment.Infrastructure.Services
                 .Include(c => c.Task)
                 .ApplySearch(request.searchKey);
 
-
             var totalCount = await query.CountAsync();
 
             query = query.OrderByDynamicSafe(request.SortColumn, request.SortDirection);
@@ -73,13 +75,12 @@ namespace TaskMangment.Infrastructure.Services
             foreach (var dto in dtos)
             {
                 var comment = list.First(c => c.Id == dto.Id);
-                dto.AttachmentCount = await _attachmentRepo.CountAsync(a => a.CommentId == comment.Id);
                 dto.TaskTitle = comment.Task?.Title;
                 dto.EmployeeName = comment.Employee?.FullName;
+                // لا حاجة لـ AttachmentCount لأنه غير مرتبط بـ Comment مباشرة
             }
 
             var response = new PagedResponse<TaskCommentGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
-
             await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(8));
 
             return ApiResponse<PagedResponse<TaskCommentGetDto>>.Ok(response);
@@ -97,32 +98,58 @@ namespace TaskMangment.Infrastructure.Services
                 return ApiResponse<TaskCommentGetDto>.Fail("Comment not found");
 
             var dto = _mapper.Map<TaskCommentGetDto>(comment);
-
-            dto.AttachmentCount = await _attachmentRepo.CountAsync(a => a.CommentId == id);
-
+            // AttachmentCount غير مستخدم الآن
             return ApiResponse<TaskCommentGetDto>.Ok(dto);
         }
 
-        public async Task<ApiResponse<TaskCommentGetDto>> AddAsync( int taskId, int employeeId,TaskCommentAddEditDto dto)
+        public async Task<ApiResponse<TaskCommentGetDto>> AddAsync(
+            int taskId,
+            int employeeId,
+            TaskCommentAddEditDto dto)
         {
             var task = await _taskRepo.GetByIDAsync(taskId);
             if (task == null)
                 return ApiResponse<TaskCommentGetDto>.Fail("Task not found", StatusCode.NotFound);
 
-            var assignment = await _taskAssignmentRepo.GetAll(a => a.TaskId == taskId && a.EmployeeId == employeeId && a.IsActive)
-                                                      .FirstOrDefaultAsync();
+            var assignment = await _taskAssignmentRepo
+                .GetAll(a => a.TaskId == taskId && a.EmployeeId == employeeId && a.IsActive)
+                .FirstOrDefaultAsync();
+
             if (assignment == null)
-                return ApiResponse<TaskCommentGetDto>.Fail("Employee is not assigned to this task", StatusCode.BadRequest);
+                return ApiResponse<TaskCommentGetDto>.Fail(
+                    "Employee is not assigned to this task",
+                    StatusCode.BadRequest);
+
+            // الحصول على AttachmentType أو إنشاؤه بدون حفظ
+            var attachmentType = await _attachmentTypeRepo
+                .GetAll(at => at.TypeName == "Comment")
+                .FirstOrDefaultAsync();
+
+            if (attachmentType == null)
+            {
+                attachmentType = new AttachmentType
+                {
+                    TypeName = "Comment",
+                    CreatedDate = DateTime.UtcNow
+                };
+
+                await _attachmentTypeRepo.AddAsync(attachmentType);
+            }
 
             var comment = _mapper.Map<TaskComment>(dto);
             comment.TaskId = taskId;
             comment.EmployeeId = employeeId;
             comment.CreatedDate = DateTime.UtcNow;
 
-            // لو فيه ملف
+            // إضافة الملف إن وجد
             if (dto.File != null)
             {
-                var uploadsRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "comments");
+                var uploadsRoot = Path.Combine(
+                    Directory.GetCurrentDirectory(),
+                    "wwwroot",
+                    "uploads",
+                    "comments");
+
                 Directory.CreateDirectory(uploadsRoot);
 
                 var fileName = $"{Guid.NewGuid()}_{dto.File.FileName}";
@@ -133,51 +160,50 @@ namespace TaskMangment.Infrastructure.Services
                     await dto.File.CopyToAsync(stream);
                 }
 
-                // ضيف الـ attachment مباشرة للـ comment
                 comment.Attachments = new List<Attachment>
-    {
-        new Attachment
         {
-            FileName = dto.File.FileName,
-            FilePath = $"uploads/comments/{fileName}",
-            Size = dto.File.Length,
-            UploadedBy = employeeId,
-            CreatedBy = employeeId,
-            ContentType = dto.File.ContentType,
-            UploadedAt = DateTime.UtcNow,
-            TaskId = taskId
-        }
-    };
+            new Attachment
+            {
+                FileName = dto.File.FileName,
+                FilePath = $"uploads/comments/{fileName}",
+                Size = dto.File.Length,
+                UploadedBy = employeeId,
+                CreatedBy = employeeId,
+                ContentType = dto.File.ContentType,
+                UploadedAt = DateTime.UtcNow,
+                AttachmentType = attachmentType
+            }
+        };
             }
 
-            // إضافة التعليق (مع الـ attachment) مرة واحدة
             await _commentRepo.AddAsync(comment);
-            await _commentRepo.SaveChangesAsync(); // تحفظ كل شيء مرة واحدة
+            await _commentRepo.SaveChangesAsync();
 
             await _cache.RemoveAsync("taskComments:");
 
-            var savedComment = await _commentRepo.GetAll(c => c.Id == comment.Id)
-                                      .Include(c => c.Employee)
-                                      .Include(c => c.Task)
-                                      .AsNoTracking()
-                                      .FirstOrDefaultAsync();
+            var savedComment = await _commentRepo
+                .GetAll(c => c.Id == comment.Id)
+                .Include(c => c.Employee)
+                .Include(c => c.Task)
+                .Include(c => c.Attachments)
+                    .ThenInclude(a => a.AttachmentType)
+                .AsNoTracking()
+                .FirstOrDefaultAsync();
 
             var commentDto = _mapper.Map<TaskCommentGetDto>(savedComment);
-            commentDto.AttachmentCount = await _attachmentRepo.CountAsync(a => a.CommentId == comment.Id);
             commentDto.TaskTitle = savedComment.Task?.Title;
             commentDto.EmployeeName = savedComment.Employee?.FullName;
 
-            return ApiResponse<TaskCommentGetDto>.Ok(commentDto, "Comment added successfully");
+            return ApiResponse<TaskCommentGetDto>
+                .Ok(commentDto, "Comment added successfully");
         }
-
-
 
         public async Task<ApiResponse<TaskCommentGetDto>> UpdateAsync(int id, TaskCommentAddEditDto dto)
         {
             var comment = await _commentRepo.GetAll(c => c.Id == id)
-                                             .Include(c => c.Employee)
-                                             .Include(c => c.Task)
-                                             .FirstOrDefaultAsync();
+                                            .Include(c => c.Employee)
+                                            .Include(c => c.Task)
+                                            .FirstOrDefaultAsync();
 
             if (comment == null)
                 return ApiResponse<TaskCommentGetDto>.Fail("Comment not found");
@@ -186,18 +212,17 @@ namespace TaskMangment.Infrastructure.Services
             await _commentRepo.SaveChangesAsync();
 
             var savedComment = await _commentRepo.GetAll(c => c.Id == comment.Id)
-                                     .Include(c => c.Employee)
-                                     .Include(c => c.Task)
-                                     .AsNoTracking()
-                                     .FirstOrDefaultAsync();
+                                                 .Include(c => c.Employee)
+                                                 .Include(c => c.Task)
+                                                 .AsNoTracking()
+                                                 .FirstOrDefaultAsync();
 
             var commentDto = _mapper.Map<TaskCommentGetDto>(savedComment);
-            commentDto.AttachmentCount = await _attachmentRepo.CountAsync(a => a.CommentId == comment.Id);
             commentDto.TaskTitle = savedComment.Task?.Title;
             commentDto.EmployeeName = savedComment.Employee?.FullName;
+
             return ApiResponse<TaskCommentGetDto>.Ok(commentDto, "Comment updated successfully");
         }
-
 
         public async Task<ApiResponse<bool>> DeleteAsync(int id)
         {

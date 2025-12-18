@@ -39,10 +39,10 @@ namespace TaskMangment.API.Controllers
             return Success(result.Data);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Add(int tasktId, [FromBody] WarningAddEditDto dto)
+        [HttpPost("{taskId}")]
+        public async Task<IActionResult> Add(int taskId, [FromBody] WarningAddEditDto dto)
         {
-            var result = await _service.AddAsync(dto, tasktId,this.CurrentUserId);
+            var result = await _service.AddAsync(dto, taskId,this.CurrentUserId);
             if (!result.Success)
                 return Fail(result.Message);
 

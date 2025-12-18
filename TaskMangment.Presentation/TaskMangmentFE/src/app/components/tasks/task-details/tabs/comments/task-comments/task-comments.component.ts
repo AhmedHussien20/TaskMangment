@@ -4,11 +4,12 @@ import { Subscription } from 'rxjs';
 import { TaskDetailsRefreshService } from '../../../task-details-refresh.service';
 import { TaskCommentService } from 'app/core/services/task-comment.service';
 import { TaskCommentGetDto } from 'app/core/models/task/task-comment';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-task-comments',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslateModule],
   templateUrl: './task-comments.component.html'
 })
 export class TaskCommentsComponent implements OnInit, OnDestroy {
@@ -60,11 +61,11 @@ export class TaskCommentsComponent implements OnInit, OnDestroy {
     const diffDays = Math.floor(diffHours / 24);
 
     if (diffDays === 0) {
-      if (diffHours > 0) return `${diffHours} ساعة`;
-      if (diffMins > 0) return `${diffMins} دقيقة`;
-      return 'الآن';
+      if (diffHours > 0) return `${diffHours} TASK.HOURS_AGO`;
+      if (diffMins > 0) return `${diffMins} TASK.MINUTES_AGO`;
+      return 'TASK.NOW';
     }
-    return `${diffDays} يوم`;
+    return `${diffDays} TASK.DAYS_AGO`;
   }
 
   ngOnDestroy(): void {

@@ -1,12 +1,20 @@
-<!-- HEADER -->
-<app-page-header
-  [title]="'TASK.DETAILS' | translate"
-  [title1]="['TASKS']"
-  [activeitem]="'TASK.DETAILS' | translate">
-</app-page-header>
 
-<div class="card">
-  <div class="card-body">
+<div class="card position-relative">
+  <button
+    type="button"
+    class="btn-close position-absolute top-0 end-0 m-2"
+    aria-label="Close"
+    (click)="modall.dismiss()">
+  </button>
+
+
+<div class="card-body">
+    <!-- HEADER -->
+    <app-page-header
+      [title]="'TASK.DETAILS' | translate"
+      [title1]="['TASKS']"
+      [activeitem]="'TASK.DETAILS' | translate">
+    </app-page-header>
 
     <!-- ACTION ICONS -->
     <div class="d-flex justify-content-center gap-4 mb-3">

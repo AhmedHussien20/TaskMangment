@@ -45,7 +45,7 @@
   </ng-template>
 </li>
 <li ngbNavItem="comments">
-  <a ngbNavLink>التعليقات</a>
+  <a ngbNavLink>{{ 'TASK.COMMENTS' | translate }}</a>
   <ng-template ngbNavContent>
     <app-task-comments [taskId]="taskId"></app-task-comments>
   </ng-template>
@@ -59,7 +59,7 @@
 </li>
 
 <li ngbNavItem="requests">
-  <a ngbNavLink>طلبات الإغلاق / التمديد</a>
+  <a ngbNavLink>{{ 'TASK.REQUESTS_TAB' | translate }}</a>
   <ng-template ngbNavContent>
     <app-task-requests [taskId]="taskId"></app-task-requests>
   </ng-template>

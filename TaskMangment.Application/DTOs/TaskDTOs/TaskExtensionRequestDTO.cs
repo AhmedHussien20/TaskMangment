@@ -23,6 +23,8 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
 
         public string Reason { get; set; }
         public ExtensionRequestStatus Status { get; set; }
+        public string ExtendRequestText => Status.ToString();
+
         public string RequestedByName { get; set; }
         public DateTime RequestedAt { get; set; }
         public DateTime? ReviewedAt { get; set; }
@@ -37,9 +39,16 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
 
         public string Reason { get; set; }
         public ExtensionRequestStatus Status { get; set; }
+
+        public string ExtendRequestText => Status.ToString();
+
+
+
         public DateTime RequestedAt { get; set; }
         public string? RequestedByName { get; set; }
         public DateTime? ReviewedAt { get; set; }
         public string ReviewedByName { get; set; }
+
+
     }
 }

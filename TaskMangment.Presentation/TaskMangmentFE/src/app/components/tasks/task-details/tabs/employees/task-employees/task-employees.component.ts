@@ -21,7 +21,7 @@ export class TaskEmployeesComponent implements OnInit, OnDestroy {
   columns = [
     { key: 'employeeName', label: 'EMPLOYEE.NAME' },
     { key: 'role', label: 'EMPLOYEE.ROLE' },
-    { key: 'status', label: 'STATUS' }
+    { key: 'status', label: 'TASK.STATUS' }
   ];
 
   totalItems = 0;

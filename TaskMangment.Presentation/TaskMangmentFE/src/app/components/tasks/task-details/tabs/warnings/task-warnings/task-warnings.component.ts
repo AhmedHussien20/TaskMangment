@@ -21,10 +21,10 @@ export class TaskWarningsComponent implements OnInit, OnDestroy {
   totalItems = 0;
 
   columns = [
-    { key: 'issuedAt', label: 'DATE' },
-    { key: 'reason', label: 'WARNING.REASON' },
-    { key: 'issuedEmployeeName', label: 'WARNING.WARNED_EMPLOYEE' },
-    { key: 'issuedByName', label: 'WARNING.ISSUED_BY' }
+    { key: 'issuedAt', label: 'TASK.DATE' },
+    { key: 'reason', label: 'TASK.WARNING_RESON' },
+    { key: 'issuedEmployeeName', label: 'TASK.WARNED_EMPLOYEE' },
+    { key: 'issuedByName', label: 'TASK.WARNED_BY' }
   ];
 
   private sub!: Subscription;
@@ -57,11 +57,7 @@ export class TaskWarningsComponent implements OnInit, OnDestroy {
       },
       error: (err) => {console.error('Failed to load warnings', err)
          console.error('Failed to load warnings - Full Error:', err);
-  console.error('Error Status:', err.status);
-  console.error('Error Message:', err.message);
-  console.error('Error Body:', err.error); // هذا قد يحتوي على رسالة الخطأ من السيرفر
       }
-      
     });
   }
 

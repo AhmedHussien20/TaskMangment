@@ -98,18 +98,25 @@ namespace TaskMangment.Infrastructure.Services
         {
             var task = await _taskRepo.GetAll(t => t.Id == id)
                 .Include(t => t.CreatedBy)
-                .Include(t => t.Assignments).ThenInclude(a => a.Employee)
+                .Include(t => t.Assignments)
+                .ThenInclude(a => a.Employee)
+                .Include(t => t.AssignedBy)
                 .AsNoTracking()
                 .FirstOrDefaultAsync();
 
             if (task == null)
                 return ApiResponse<TaskGetDto>.Fail("Task not found", StatusCode.NotFound);
 
-            var dto = _mapper.Map<TaskGetDto>(task);
-            dto.EmployeeNames = task.Assignments.Select(a => a.Employee.FullName).ToList();
-            dto.AssignedByName = task.AssignedBy?.FullName;
+            var fullTask = await _taskRepo.GetAll(t => t.Id == task.Id)
+                .Include(t => t.CreatedBy)
+                .Include(t => t.AssignedBy)
+                .Include(t => t.Assignments).ThenInclude(a => a.Employee)
+                .AsNoTracking()
+                .FirstOrDefaultAsync();
 
-            return ApiResponse<TaskGetDto>.Ok(dto);
+            var taskDto = _mapper.Map<TaskGetDto>(fullTask); ;
+
+            return ApiResponse<TaskGetDto>.Ok(taskDto);
         }
 
         public async Task<ApiResponse<TaskGetDto>> AddAsync(TaskAddEditDto dto, int createdUser, int companyId)

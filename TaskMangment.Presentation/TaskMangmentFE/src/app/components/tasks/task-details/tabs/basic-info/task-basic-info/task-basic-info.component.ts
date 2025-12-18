@@ -3,11 +3,15 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { TaskService } from 'app/core/services/task.service';
 import { TaskGet } from 'app/core/models/task/task';
+import { TranslateModule } from '@ngx-translate/core';
+import { MyDatePipe } from 'app/components/utilities/pipline/MyDatePipe';
 
 @Component({
   selector: 'app-task-basic-info',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule,TranslateModule,  MyDatePipe
+
+],
   templateUrl: './task-basic-info.component.html'
 })
 export class TaskBasicInfoComponent implements OnChanges {
@@ -65,4 +69,6 @@ export class TaskBasicInfoComponent implements OnChanges {
       }
     });
   }
+
+  
 }

@@ -4,7 +4,7 @@ import { TaskTabsComponent } from '../task-tabs/task-tabs.component';
 import { PageHeaderComponent } from 'app/shared/components/page-header/page-header.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { CommentModalComponent } from '../actions/comment/comment-modal/comment-modal.component';
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { TaskDetailsRefreshService } from '../task-details-refresh.service';
 import { WarningModalComponent } from '../actions/warning/warning-modal/warning-modal.component';
 import { PenaltyModalComponent } from '../actions/penalty/penalty-modal/penalty-modal.component';
@@ -30,7 +30,8 @@ export class TaskDetailsShellComponent implements OnInit {
 
   constructor(
     private route: ActivatedRoute, private modal: NgbModal, private refreshService: TaskDetailsRefreshService,
-    private taskService: TaskService ) { }
+    private taskService: TaskService,    public modall: NgbActiveModal,
+     ) { }
 
   
   taskInfo: TaskGet | null = null;

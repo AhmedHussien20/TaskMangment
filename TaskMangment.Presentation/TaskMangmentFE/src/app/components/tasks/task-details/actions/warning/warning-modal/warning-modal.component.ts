@@ -1,45 +1,70 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { TranslateModule } from '@ngx-translate/core';
+import { TaskService } from 'app/core/services/task.service';
+import { SimpleEmployee } from 'app/core/models/task/task';
+import { TaskWarningService } from 'app/core/services/task-warning.service';
+import { WarningAddEditDto } from 'app/core/models/task/task-warning';
 
 @Component({
   selector: 'app-warning-modal',
   standalone: true,
   imports: [CommonModule, FormsModule, TranslateModule],
-  template: `
-    <div class="modal-header">
-      <h6>{{ 'WARNING.ADD' | translate }}</h6>
-      <button class="btn-close" (click)="modal.dismiss()"></button>
-    </div>
-
-    <div class="modal-body">
-      <textarea class="form-control" rows="3"
-        [(ngModel)]="reason"
-        placeholder="{{ 'WARNING.REASON' | translate }}">
-      </textarea>
-    </div>
-
-    <div class="modal-footer">
-      <button class="btn btn-secondary" (click)="modal.dismiss()">
-        {{ 'FORM.CANCEL' | translate }}
-      </button>
-      <button class="btn btn-warning" (click)="submit()">
-        {{ 'FORM.SAVE' | translate }}
-      </button>
-    </div>
-  `
+  templateUrl: './warning-modal.component.html'
 })
-export class WarningModalComponent {
+export class WarningModalComponent implements OnInit {
+
   @Input() taskId!: number;
+
+  selectedEmployeeId!: number;
   reason = '';
+  isSubmitting = false;
+  employees: SimpleEmployee[] = [];
 
-  constructor(public modal: NgbActiveModal) {}
+  constructor(
+    public modal: NgbActiveModal,
+    private warningService: TaskWarningService,
+    private taskService: TaskService
+  ) {}
 
-  submit() {
-    if (!this.reason.trim()) return;
-    // TODO: API
-    this.modal.close(true);
+  ngOnInit(): void {
+    this.loadEmployees();
+  }
+
+  loadEmployees(): void {
+    this.taskService.getAssignedEmployees(this.taskId).subscribe(res => {
+      this.employees = res.data.map(e => ({
+        id: e.employeeId,
+        fullName: e.employeeName
+      }));
+    });
+  }
+
+  submit(): void {
+    if (
+      !this.selectedEmployeeId ||
+      !this.reason.trim() ||
+      this.isSubmitting
+    ) return;
+
+    const model: WarningAddEditDto = {
+      issuedEmployeeId: this.selectedEmployeeId,
+      reason: this.reason.trim()
+    };
+
+    this.isSubmitting = true;
+
+    this.warningService.create(this.taskId, model).subscribe({
+      next: () => {
+        this.isSubmitting = false;
+        this.modal.close(true);
+      },
+      error: (err) => {
+        console.error('Failed to submit warning', err);
+        this.isSubmitting = false;
+      }
+    });
   }
 }

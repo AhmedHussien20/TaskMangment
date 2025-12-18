@@ -5,6 +5,7 @@ import { forkJoin } from 'rxjs';
 import { TaskExtensionRequestService } from 'app/core/services/task-extension-request.service';
 import { TaskCloseRequestService } from 'app/core/services/task-close-request.service';
 import { BaseResponse } from 'app/models/base.response.model';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-task-requests',
@@ -23,27 +24,28 @@ export class TaskRequestsComponent implements OnInit, OnChanges, AfterViewInit {
   entries = 10;
 
   columns = [
-    { key: 'requestNo', label: 'رقم الطلب' },
+    { key: 'requestNo', label: 'TASK.REQUEST_NUMBER' },
     {
       key: 'type',
-      label: 'نوع الطلب',
+      label: 'TASK.REQUEST_TYPE',
       badgeMap: {
-        close: { text: 'إغلاق', class: 'bg-danger' },
-        extend: { text: 'تمديد', class: 'bg-warning' }
+        close: { text: 'TASK.REQUEST_TYPE_CLOSE', class: 'bg-danger' },
+        extend: { text: 'TASK.REQUEST_TYPE_EXTEND', class: 'bg-warning' }
       }
     },
-    { key: 'sender', label: 'المرسل' },
-    { key: 'createdAt', label: 'التاريخ' },
-    { key: 'comment', label: 'التعليق' },
-    { key: 'response', label: 'الرد' },
-    { key: 'responseDate', label: 'تاريخ الرد' }
+    { key: 'sender', label: 'TASK.REQUEST_SENDER' },
+    { key: 'createdAt', label: 'TASK.DATE' },
+    { key: 'comment', label: 'TASK.REQUEST_COMMENT' },
+    { key: 'response', label: 'TASK.REQUEST_REPLY' },
+    { key: 'responseDate', label: 'TASK.REQUEST_REPLY_DATE' }
   ];
 
   private initialized = false;
 
   constructor(
     private extensionService: TaskExtensionRequestService,
-    private closeService: TaskCloseRequestService
+    private closeService: TaskCloseRequestService,
+    private translate : TranslateService
   ) {
     console.log('TaskRequestsComponent CREATED');
   }
@@ -94,7 +96,6 @@ export class TaskRequestsComponent implements OnInit, OnChanges, AfterViewInit {
 
     console.log('Request payload:', requestPayload);
 
-    // استخدام type assertion هنا
     forkJoin({
       extensions: this.extensionService.getAll(requestPayload) as any,
       closes: this.closeService.getAll(requestPayload) as any
@@ -118,7 +119,8 @@ export class TaskRequestsComponent implements OnInit, OnChanges, AfterViewInit {
           sender: x.requestedByName,
           createdAt: x.requestedAt,
           comment: x.reason,
-          response: this.getStatusText(x.status),
+          response: this.translate.instant(this.getStatusText(x.extendRequestText)),
+
           responseDate: x.reviewedAt || null
         }));
 
@@ -128,7 +130,7 @@ export class TaskRequestsComponent implements OnInit, OnChanges, AfterViewInit {
           sender: x.requestedByName,
           createdAt: x.requestedAt,
           comment: x.message || x.reason || '',
-          response: this.getStatusText(x.status),
+          response: this.translate.instant(this.getStatusText(x.closeRequestText)),
           responseDate: x.reviewedAt || null
         }));
 
@@ -156,17 +158,21 @@ export class TaskRequestsComponent implements OnInit, OnChanges, AfterViewInit {
     });
   }
 
-  // دالة مساعدة لتحويل status إلى نص
-  private getStatusText(status: number): string {
-    if (status === undefined || status === null) return 'غير معروف';
-    
-    switch(status) {
-      case 1: return 'قيد الانتظار';
-      case 2: return 'مقبول';
-      case 3: return 'مرفوض';
-      default: return `حالة ${status}`;
-    }
+  private getStatusText(status: string): string {
+  if (!status) return 'TASK.REQUEST_STATUS_UNKNOWN';
+
+  switch (status) {
+    case 'Pending':
+      return 'TASK.REQUEST_STATUS_PENDING';
+    case 'Approved':
+      return 'TASK.REQUEST_STATUS_APPROVED';
+    case 'Rejected':
+      return 'TASK.REQUEST_STATUS_REJECTED';
+    default:
+      return status;
   }
+}
+
 
   refresh(): void {
     console.log('Refreshing requests');

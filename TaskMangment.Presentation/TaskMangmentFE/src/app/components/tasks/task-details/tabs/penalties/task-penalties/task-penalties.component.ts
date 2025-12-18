@@ -22,9 +22,9 @@ export class TaskPenaltiesComponent implements OnInit, OnDestroy {
   totalItems = 0;
 
   columns = [
-    { key: 'createdAt', label: 'DATE' },
-    { key: 'reason', label: 'PENALTY.REASON' },
-    { key: 'amount', label: 'PENALTY.AMOUNT' },
+    { key: 'createdAt', label: 'TASK.DATE' },
+    { key: 'reason', label: 'TASK.PENALTY_REASON'},
+    { key: 'amount', label: 'TASK.PENALTY_AMOUNT_LABEL' },
     { key: 'status', label: 'STATUS' }
   ];
 
