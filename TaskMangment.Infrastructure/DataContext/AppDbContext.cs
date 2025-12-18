@@ -110,12 +110,6 @@ namespace TaskMangment.Infrastructure.DataContext
                  .OnDelete(DeleteBehavior.Cascade);
 
             builder.Entity<Attachment>()
-         .HasOne(a => a.AttachmentType)
-         .WithMany()
-         .HasForeignKey(a => a.AttachmentTypeId)
-         .OnDelete(DeleteBehavior.Restrict);
-
-            builder.Entity<Attachment>()
                  .HasOne(a => a.UploadedByEmployee)
                  .WithMany()
                  .HasForeignKey(a => a.UploadedBy)
@@ -140,11 +134,7 @@ namespace TaskMangment.Infrastructure.DataContext
                  .HasForeignKey(w => w.TaskAssignmentId)
                  .OnDelete(DeleteBehavior.Cascade);
 
-            //builder.Entity<PaymentVoucher>()
-            //     .HasMany(v => v.Attachments)
-            //     .WithOne(a => a.Voucher)
-            //     .HasForeignKey(a => a.VoucherId)
-            //     .OnDelete(DeleteBehavior.Cascade);
+         
         }
 
     }

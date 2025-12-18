@@ -75,6 +75,7 @@ namespace TaskMangment.Infrastructure.Services
             foreach (var dto in dtos)
             {
                 var comment = list.First(c => c.Id == dto.Id);
+                dto.AttachmentCount = await _attachmentRepo.CountAsync(a => a.ReferenceId == comment.Id && a.AttachmentType == AttachmentType.Comment);
                 dto.TaskTitle = comment.Task?.Title;
                 dto.EmployeeName = comment.Employee?.FullName;
                 // لا حاجة لـ AttachmentCount لأنه غير مرتبط بـ Comment مباشرة
@@ -98,7 +99,9 @@ namespace TaskMangment.Infrastructure.Services
                 return ApiResponse<TaskCommentGetDto>.Fail("Comment not found");
 
             var dto = _mapper.Map<TaskCommentGetDto>(comment);
-            // AttachmentCount غير مستخدم الآن
+
+            dto.AttachmentCount = await _attachmentRepo.CountAsync(a => a.ReferenceId == id && a.AttachmentType==AttachmentType.Comment);
+
             return ApiResponse<TaskCommentGetDto>.Ok(dto);
         }
 
@@ -161,19 +164,20 @@ namespace TaskMangment.Infrastructure.Services
                 }
 
                 comment.Attachments = new List<Attachment>
+    {
+        new Attachment
         {
-            new Attachment
-            {
-                FileName = dto.File.FileName,
-                FilePath = $"uploads/comments/{fileName}",
-                Size = dto.File.Length,
-                UploadedBy = employeeId,
-                CreatedBy = employeeId,
-                ContentType = dto.File.ContentType,
-                UploadedAt = DateTime.UtcNow,
-                AttachmentType = attachmentType
-            }
-        };
+            FileName = dto.File.FileName,
+            FilePath = $"uploads/comments/{fileName}",
+            Size = dto.File.Length,
+            UploadedBy = employeeId,
+            CreatedBy = employeeId,
+            ContentType = dto.File.ContentType,
+            UploadedAt = DateTime.UtcNow,
+            ReferenceId = taskId,
+            AttachmentType= AttachmentType.Task,
+        }
+    };
             }
 
             await _commentRepo.AddAsync(comment);
@@ -191,6 +195,7 @@ namespace TaskMangment.Infrastructure.Services
                 .FirstOrDefaultAsync();
 
             var commentDto = _mapper.Map<TaskCommentGetDto>(savedComment);
+            commentDto.AttachmentCount = await _attachmentRepo.CountAsync(a => a.ReferenceId == comment.Id && a.AttachmentType==AttachmentType.Comment);
             commentDto.TaskTitle = savedComment.Task?.Title;
             commentDto.EmployeeName = savedComment.Employee?.FullName;
 
@@ -218,6 +223,7 @@ namespace TaskMangment.Infrastructure.Services
                                                  .FirstOrDefaultAsync();
 
             var commentDto = _mapper.Map<TaskCommentGetDto>(savedComment);
+            commentDto.AttachmentCount = await _attachmentRepo.CountAsync(a => a.ReferenceId == comment.Id && a.AttachmentType==AttachmentType.Comment);
             commentDto.TaskTitle = savedComment.Task?.Title;
             commentDto.EmployeeName = savedComment.Employee?.FullName;
 
