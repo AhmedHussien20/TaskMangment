@@ -19,7 +19,6 @@ namespace TaskMangment.Infrastructure.DataContext
 
         public DbSet<Area> Areas { get; set; }
         public DbSet<Attachment> Attachments { get; set; }
-        public DbSet<AttachmentType> AttachmentTypes { get; set; }
 
         public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<Branch> Branches { get; set; }
@@ -107,7 +106,7 @@ namespace TaskMangment.Infrastructure.DataContext
                  .HasOne(a => a.Task)
                  .WithMany(t => t.Assignments)
                  .HasForeignKey(a => a.TaskId)
-                 .OnDelete(DeleteBehavior.Cascade);
+                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<Attachment>()
                  .HasOne(a => a.UploadedByEmployee)
@@ -120,19 +119,19 @@ namespace TaskMangment.Infrastructure.DataContext
                  .HasOne(r => r.TaskAssignment)
                  .WithMany(a => a.ExtensionRequests)
                  .HasForeignKey(r => r.TaskAssignmentId)
-                 .OnDelete(DeleteBehavior.Cascade);
+                 .OnDelete(DeleteBehavior.NoAction);
 
             builder.Entity<TaskCloseRequest>()
                  .HasOne(r => r.TaskAssignment)
                  .WithMany(a => a.CloseRequests)
                  .HasForeignKey(r => r.TaskAssignmentId)
-                 .OnDelete(DeleteBehavior.Cascade);
+                 .OnDelete(DeleteBehavior.NoAction);
 
             builder.Entity<Warning>()
                  .HasOne(w => w.TaskAssignment)
                  .WithMany(a => a.Warnings)
                  .HasForeignKey(w => w.TaskAssignmentId)
-                 .OnDelete(DeleteBehavior.Cascade);
+                 .OnDelete(DeleteBehavior.NoAction);
 
          
         }

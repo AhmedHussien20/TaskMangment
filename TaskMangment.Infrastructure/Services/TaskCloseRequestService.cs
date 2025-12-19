@@ -79,7 +79,7 @@ namespace TaskMangment.Infrastructure.Services
         {
             var request = await _requestRepo.GetAll(r => r.Id == id)
                 .Include(r => r.TaskAssignment)
-                .Include(r => r.ReviewedBy)
+                .Include(r => r.ReviewedBy).Include(r => r.RequestedBy)
                 .AsNoTracking()
                 .FirstOrDefaultAsync();
 

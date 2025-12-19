@@ -21,7 +21,7 @@ namespace TaskMangment.Infrastructure.Services
     {
         private readonly IRepository<TaskComment> _commentRepo;
         private readonly IRepository<Attachment> _attachmentRepo;
-        private readonly IRepository<AttachmentType> _attachmentTypeRepo;
+         
         private readonly IRepository<WorkTask> _taskRepo;
         private readonly IRepository<TaskAssignment> _taskAssignmentRepo;
         private readonly IMapper _mapper;
@@ -33,8 +33,8 @@ namespace TaskMangment.Infrastructure.Services
             IMapper mapper,
             ICachingService cache,
             IRepository<WorkTask> taskRepo,
-            IRepository<TaskAssignment> taskAssignmentRepo,
-            IRepository<AttachmentType> attachmentTypeRepo)
+            IRepository<TaskAssignment> taskAssignmentRepo
+            )
         {
             _commentRepo = commentRepo;
             _attachmentRepo = attachmentRepo;
@@ -42,7 +42,6 @@ namespace TaskMangment.Infrastructure.Services
             _cache = cache;
             _taskRepo = taskRepo;
             _taskAssignmentRepo = taskAssignmentRepo;
-            _attachmentTypeRepo = attachmentTypeRepo;
         }
 
         public async Task<ApiResponse<PagedResponse<TaskCommentGetDto>>> GetAllAsync(TaskCommentRequest request)
@@ -105,10 +104,7 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<TaskCommentGetDto>.Ok(dto);
         }
 
-        public async Task<ApiResponse<TaskCommentGetDto>> AddAsync(
-            int taskId,
-            int employeeId,
-            TaskCommentAddEditDto dto)
+        public async Task<ApiResponse<TaskCommentGetDto>> AddAsync( int taskId, int employeeId, TaskCommentAddEditDto dto)
         {
             var task = await _taskRepo.GetByIDAsync(taskId);
             if (task == null)
@@ -123,21 +119,7 @@ namespace TaskMangment.Infrastructure.Services
                     "Employee is not assigned to this task",
                     StatusCode.BadRequest);
 
-            // الحصول على AttachmentType أو إنشاؤه بدون حفظ
-            var attachmentType = await _attachmentTypeRepo
-                .GetAll(at => at.TypeName == "Comment")
-                .FirstOrDefaultAsync();
-
-            if (attachmentType == null)
-            {
-                attachmentType = new AttachmentType
-                {
-                    TypeName = "Comment",
-                    CreatedDate = DateTime.UtcNow
-                };
-
-                await _attachmentTypeRepo.AddAsync(attachmentType);
-            }
+           
 
             var comment = _mapper.Map<TaskComment>(dto);
             comment.TaskId = taskId;
@@ -164,21 +146,21 @@ namespace TaskMangment.Infrastructure.Services
                 }
 
                 comment.Attachments = new List<Attachment>
-    {
-        new Attachment
-        {
-            FileName = dto.File.FileName,
-            FilePath = $"uploads/comments/{fileName}",
-            Size = dto.File.Length,
-            UploadedBy = employeeId,
-            CreatedBy = employeeId,
-            ContentType = dto.File.ContentType,
-            UploadedAt = DateTime.UtcNow,
-            ReferenceId = taskId,
-            AttachmentType= AttachmentType.Task,
-        }
-    };
-            }
+                {
+                    new Attachment
+                    {
+                        FileName = dto.File.FileName,
+                        FilePath = $"uploads/comments/{fileName}",
+                        Size = dto.File.Length,
+                        UploadedBy = employeeId,
+                        CreatedBy = employeeId,
+                        ContentType = dto.File.ContentType,
+                        UploadedAt = DateTime.UtcNow,
+                        ReferenceId = taskId,
+                        AttachmentType= AttachmentType.Task,
+                    }
+                };
+                }
 
             await _commentRepo.AddAsync(comment);
             await _commentRepo.SaveChangesAsync();
@@ -190,7 +172,7 @@ namespace TaskMangment.Infrastructure.Services
                 .Include(c => c.Employee)
                 .Include(c => c.Task)
                 .Include(c => c.Attachments)
-                    .ThenInclude(a => a.AttachmentType)
+                    
                 .AsNoTracking()
                 .FirstOrDefaultAsync();
 
