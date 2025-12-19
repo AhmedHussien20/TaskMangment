@@ -4,7 +4,7 @@ import { Subscription } from 'rxjs';
 import { TaskDetailsRefreshService } from '../../../task-details-refresh.service';
 import { TaskCommentService } from 'app/core/services/task-comment.service';
 import { TaskCommentGetDto } from 'app/core/models/task/task-comment';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-task-comments',
@@ -20,7 +20,8 @@ export class TaskCommentsComponent implements OnInit, OnDestroy {
 
   constructor(
     private refresh: TaskDetailsRefreshService,
-    private commentService: TaskCommentService
+    private commentService: TaskCommentService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -61,11 +62,13 @@ export class TaskCommentsComponent implements OnInit, OnDestroy {
     const diffDays = Math.floor(diffHours / 24);
 
     if (diffDays === 0) {
-      if (diffHours > 0) return `${diffHours} TASK.HOURS_AGO`;
-      if (diffMins > 0) return `${diffMins} TASK.MINUTES_AGO`;
-      return 'TASK.NOW';
-    }
-    return `${diffDays} TASK.DAYS_AGO`;
+    if (diffHours > 0) 
+      return this.translate.instant('TASK.HOURS_AGO', { value: diffHours });
+    if (diffMins > 0) 
+      return this.translate.instant('TASK.MINUTES_AGO', { value: diffMins });
+    return this.translate.instant('TASK.NOW');
+  }
+  return this.translate.instant('TASK.DAYS_AGO', { value: diffDays });
   }
 
   ngOnDestroy(): void {
