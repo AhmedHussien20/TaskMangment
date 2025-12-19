@@ -371,12 +371,12 @@ deleteBtn.innerText = this.translate.instant('CALENDAR.CANCEL_EVENT');
   deleteBtn.onclick = () => {
     document.body.removeChild(menu);
     Swal.fire({
-      title: 'تأكيد الغاء الحدث',
-      text: 'هل أنت متأكد من الغاء هذا الحدث؟',
+      title: this.translate.instant('COMMON.CONFIRM_DELETE_TITLE'),
+      text: this.translate.instant('COMMON.CONFIRM_DELETE_TEXT'),
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonText: 'نعم',
-      cancelButtonText: 'لا'
+      confirmButtonText: this.translate.instant('COMMON.DELETE_BUTTON'),
+      cancelButtonText: this.translate.instant('COMMON.CANCEL_BUTTON'),
     }).then((result) => {
       if (result.isConfirmed) {
         this.deleteEvent(event);
@@ -405,7 +405,7 @@ deleteEvent(event: EventApi) {
 
   this.calendarService.delete(eventId).subscribe({
     next: () => {
-      event.remove(); // إزالة الحدث من الـ calendar مباشرة
+      event.remove();
     },
     error: (err) => {
       console.error('Failed to delete event', err);

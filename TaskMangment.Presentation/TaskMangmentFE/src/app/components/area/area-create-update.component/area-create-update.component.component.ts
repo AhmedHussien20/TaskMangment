@@ -54,7 +54,7 @@ export class AreaCreateUpdateComponent implements OnInit {
       type: 'input',
       label: 'AREA.ADDRESS',
       name: 'address',
-      validations: { maxlength: 200 },
+      validations: {required: true, maxlength: 200 },
       defaultValue: ''
     },
     {

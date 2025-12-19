@@ -2,6 +2,11 @@ export interface BranchGetDto {
   id: number;
   name: string;
   areaName?: string;
+  address?: string;
+  phone?: string;
+  mobile?: string;
+  fax?: string;
+  email?: string;
   managerName?: string;
   responsibleName?: string;
 }

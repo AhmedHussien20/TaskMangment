@@ -26,7 +26,8 @@
             [showAddButton]="true" [addButtonLabel]="'DEPARTMENT.ADD' | translate" (addClick)="openAdd(departmentModal)"
             [showFilters]="true" [showEditButton]="true" [showDeleteButton]="false" [searchCriteria]="searchCriteria"
             [onSearch]="applyFilters.bind(this)" (pageChange)="onPageChange($event)"
-            (entriesChange)="onEntriesChange($event)" (edit)="openEdit($event, departmentModal)">
+            (entriesChange)="onEntriesChange($event)" (edit)="openEdit($event, departmentModal)"
+            [showDeleteButton]="true" (delete)="confirmDelete($event)">
           </app-generic-table>
         </div>
       </div>

@@ -10,7 +10,7 @@ export interface DiscountListDto {
   taskTitle?: string;
   reason: string;
   amount: number;
-  createdAt: string;
+CreatedDate: string;
 }
 
 export interface DiscountPagedResponse {

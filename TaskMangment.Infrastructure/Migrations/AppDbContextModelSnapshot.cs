@@ -123,9 +123,6 @@ namespace TaskMangment.Infrastructure.Migrations
                     b.Property<DateTime?>("ModifiedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("PaymentVoucherId")
-                        .HasColumnType("int");
-
                     b.Property<int>("ReferenceId")
                         .HasColumnType("int");
 
@@ -144,18 +141,11 @@ namespace TaskMangment.Infrastructure.Migrations
                     b.Property<int?>("UploadedBy")
                         .HasColumnType("int");
 
-                    b.Property<int?>("WorkTaskId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("PaymentVoucherId");
 
                     b.HasIndex("TaskCommentId");
 
                     b.HasIndex("UploadedBy");
-
-                    b.HasIndex("WorkTaskId");
 
                     b.ToTable("Attachments");
                 });
@@ -1843,10 +1833,6 @@ namespace TaskMangment.Infrastructure.Migrations
 
             modelBuilder.Entity("TaskMangment.Domain.Entities.Attachment", b =>
                 {
-                    b.HasOne("TaskMangment.Domain.Entities.PaymentVoucher", null)
-                        .WithMany("Attachments")
-                        .HasForeignKey("PaymentVoucherId");
-
                     b.HasOne("TaskMangment.Domain.Entities.TaskComment", null)
                         .WithMany("Attachments")
                         .HasForeignKey("TaskCommentId");
@@ -1855,10 +1841,6 @@ namespace TaskMangment.Infrastructure.Migrations
                         .WithMany()
                         .HasForeignKey("UploadedBy")
                         .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("TaskMangment.Domain.Entities.WorkTask", null)
-                        .WithMany("Attachments")
-                        .HasForeignKey("WorkTaskId");
 
                     b.Navigation("UploadedByEmployee");
                 });
@@ -2350,11 +2332,6 @@ namespace TaskMangment.Infrastructure.Migrations
                     b.Navigation("Assignments");
                 });
 
-            modelBuilder.Entity("TaskMangment.Domain.Entities.PaymentVoucher", b =>
-                {
-                    b.Navigation("Attachments");
-                });
-
             modelBuilder.Entity("TaskMangment.Domain.Entities.Permission", b =>
                 {
                     b.Navigation("RolePermissions");
@@ -2389,8 +2366,6 @@ namespace TaskMangment.Infrastructure.Migrations
             modelBuilder.Entity("TaskMangment.Domain.Entities.WorkTask", b =>
                 {
                     b.Navigation("Assignments");
-
-                    b.Navigation("Attachments");
 
                     b.Navigation("CloseRequests");
 

@@ -26,7 +26,7 @@
             [showAddButton]="true" [addButtonLabel]="'AREA.addArea' | translate" (addClick)="openAdd(areaModal)"
             [showEditButton]="true" (edit)="openEdit($event, areaModal)" [showFilters]="true" [formUrl]="formUrl"
             [searchCriteria]="searchCriteria" [onSearch]="applyFilters.bind(this)" (pageChange)="onPageChange($event)"
-            (entriesChange)="onEntriesChange($event)">
+            (entriesChange)="onEntriesChange($event)" [showDeleteButton]="true" (delete)="confirmDelete($event)">
           </app-generic-table>
 
         </div>
