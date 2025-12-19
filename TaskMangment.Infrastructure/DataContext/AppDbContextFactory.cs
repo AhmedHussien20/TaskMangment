@@ -13,7 +13,7 @@ namespace TaskMangment.Infrastructure.DataContext
             var basePath = Directory.GetCurrentDirectory();
 
             // If running from Infrastructure, move up to API project
-            if (!File.Exists(Path.Combine(basePath, "appsettings.json")))
+            if (!File.Exists(Path.Combine(basePath, "appsettings.Azure.json")))
             {
                 basePath = Directory.GetParent(basePath)
                                     ?.Parent?
@@ -24,7 +24,7 @@ namespace TaskMangment.Infrastructure.DataContext
             // Read appsettings.json normally
             var config = new ConfigurationBuilder()
                 .SetBasePath(basePath)
-                .AddJsonFile("appsettings.json", optional: false)
+                .AddJsonFile("appsettings.Azure.json", optional: false)
                 .Build();
 
             var connectionString = config.GetConnectionString("DefaultConnection");

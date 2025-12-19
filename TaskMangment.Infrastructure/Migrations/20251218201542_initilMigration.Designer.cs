@@ -12,8 +12,8 @@ using TaskMangment.Infrastructure.DataContext;
 namespace TaskMangment.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251216183308_editwarning")]
-    partial class editwarning
+    [Migration("20251218201542_initilMigration")]
+    partial class initilMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -87,7 +87,7 @@ namespace TaskMangment.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("CommentId")
+                    b.Property<int>("AttachmentType")
                         .HasColumnType("int");
 
                     b.Property<string>("ContentType")
@@ -126,10 +126,19 @@ namespace TaskMangment.Infrastructure.Migrations
                     b.Property<DateTime?>("ModifiedDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<int?>("PaymentVoucherId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ReferenceId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ReferenceType")
+                        .HasColumnType("int");
+
                     b.Property<long?>("Size")
                         .HasColumnType("bigint");
 
-                    b.Property<int?>("TaskId")
+                    b.Property<int?>("TaskCommentId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("UploadedAt")
@@ -138,18 +147,18 @@ namespace TaskMangment.Infrastructure.Migrations
                     b.Property<int?>("UploadedBy")
                         .HasColumnType("int");
 
-                    b.Property<int?>("VoucherId")
+                    b.Property<int?>("WorkTaskId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CommentId");
+                    b.HasIndex("PaymentVoucherId");
 
-                    b.HasIndex("TaskId");
+                    b.HasIndex("TaskCommentId");
 
                     b.HasIndex("UploadedBy");
 
-                    b.HasIndex("VoucherId");
+                    b.HasIndex("WorkTaskId");
 
                     b.ToTable("Attachments");
                 });
@@ -1664,9 +1673,6 @@ namespace TaskMangment.Infrastructure.Migrations
                     b.Property<int>("TaskId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("WorkTaskId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.HasIndex("RequestedByEmployeeId");
@@ -1675,7 +1681,7 @@ namespace TaskMangment.Infrastructure.Migrations
 
                     b.HasIndex("TaskAssignmentId");
 
-                    b.HasIndex("WorkTaskId");
+                    b.HasIndex("TaskId");
 
                     b.ToTable("TaskExtensionRequests");
                 });
@@ -1736,6 +1742,8 @@ namespace TaskMangment.Infrastructure.Migrations
                     b.HasIndex("IssuedEmployeeId");
 
                     b.HasIndex("TaskAssignmentId");
+
+                    b.HasIndex("TaskId");
 
                     b.ToTable("Warnings");
                 });
@@ -1838,33 +1846,24 @@ namespace TaskMangment.Infrastructure.Migrations
 
             modelBuilder.Entity("TaskMangment.Domain.Entities.Attachment", b =>
                 {
-                    b.HasOne("TaskMangment.Domain.Entities.TaskComment", "Comment")
+                    b.HasOne("TaskMangment.Domain.Entities.PaymentVoucher", null)
                         .WithMany("Attachments")
-                        .HasForeignKey("CommentId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .HasForeignKey("PaymentVoucherId");
 
-                    b.HasOne("TaskMangment.Domain.Entities.WorkTask", "Task")
+                    b.HasOne("TaskMangment.Domain.Entities.TaskComment", null)
                         .WithMany("Attachments")
-                        .HasForeignKey("TaskId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .HasForeignKey("TaskCommentId");
 
                     b.HasOne("TaskMangment.Domain.Entities.Employee", "UploadedByEmployee")
                         .WithMany()
                         .HasForeignKey("UploadedBy")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("TaskMangment.Domain.Entities.PaymentVoucher", "Voucher")
+                    b.HasOne("TaskMangment.Domain.Entities.WorkTask", null)
                         .WithMany("Attachments")
-                        .HasForeignKey("VoucherId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
-                    b.Navigation("Comment");
-
-                    b.Navigation("Task");
+                        .HasForeignKey("WorkTaskId");
 
                     b.Navigation("UploadedByEmployee");
-
-                    b.Navigation("Voucher");
                 });
 
             modelBuilder.Entity("TaskMangment.Domain.Entities.Branch", b =>
@@ -2173,7 +2172,7 @@ namespace TaskMangment.Infrastructure.Migrations
                     b.HasOne("TaskMangment.Domain.Entities.WorkTask", "Task")
                         .WithMany("Assignments")
                         .HasForeignKey("TaskId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Employee");
@@ -2194,7 +2193,7 @@ namespace TaskMangment.Infrastructure.Migrations
                     b.HasOne("TaskMangment.Domain.Entities.TaskAssignment", "TaskAssignment")
                         .WithMany("CloseRequests")
                         .HasForeignKey("TaskAssignmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("TaskMangment.Domain.Entities.WorkTask", null)
@@ -2238,16 +2237,20 @@ namespace TaskMangment.Infrastructure.Migrations
                     b.HasOne("TaskMangment.Domain.Entities.TaskAssignment", "TaskAssignment")
                         .WithMany("ExtensionRequests")
                         .HasForeignKey("TaskAssignmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("TaskMangment.Domain.Entities.WorkTask", null)
+                    b.HasOne("TaskMangment.Domain.Entities.WorkTask", "Task")
                         .WithMany("ExtensionRequests")
-                        .HasForeignKey("WorkTaskId");
+                        .HasForeignKey("TaskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("RequestedBy");
 
                     b.Navigation("ReviewedBy");
+
+                    b.Navigation("Task");
 
                     b.Navigation("TaskAssignment");
                 });
@@ -2265,12 +2268,20 @@ namespace TaskMangment.Infrastructure.Migrations
                     b.HasOne("TaskMangment.Domain.Entities.TaskAssignment", "TaskAssignment")
                         .WithMany("Warnings")
                         .HasForeignKey("TaskAssignmentId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("TaskMangment.Domain.Entities.WorkTask", "Task")
+                        .WithMany()
+                        .HasForeignKey("TaskId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Issued");
 
                     b.Navigation("IssuedBy");
+
+                    b.Navigation("Task");
 
                     b.Navigation("TaskAssignment");
                 });
