@@ -19,8 +19,6 @@ namespace TaskMangment.Infrastructure.DataContext
 
         public DbSet<Area> Areas { get; set; }
         public DbSet<Attachment> Attachments { get; set; }
-        public DbSet<AttachmentType> AttachmentTypes { get; set; }
-
         public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<Branch> Branches { get; set; }
         public DbSet<CalendarEvent> CalendarEvents { get; set; }

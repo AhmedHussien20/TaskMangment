@@ -3,7 +3,7 @@
   <table class="table table-bordered align-middle">
     <tbody>
       <tr>
-        <th>{{ "TASK.NUMBER" | translate }}</th>
+        <th>{{ "TASK.TASK_NUMBER" | translate }}</th>
         <td>{{ taskInfo?.id }}</td>
       </tr>
       <tr>
@@ -33,7 +33,7 @@
       
       <tr>
         <th>{{ "TASK.DUE_DATE" | translate }}</th>
-        <td>{{ taskInfo?.dueDate }}</td>
+        <td>{{ taskInfo?.dueDate | myDate}}</td>
       </tr>
       <tr>
         <th>{{ "TASK.ASSIGNED_BY" | translate }}</th>

@@ -132,7 +132,7 @@ namespace TaskMangment.Infrastructure.Services
                        .Include(v => v.Company)
        .Include(v => v.Branch)
        .Include(v => v.CreatedBy)
-       .Include(v => v.Attachments)
+      // .Include(v => v.Attachments)
        .FirstOrDefaultAsync();
 
             var voucherDto = _mapper.Map<PaymentVoucherGetDto>(fullVoucher);
@@ -159,7 +159,7 @@ namespace TaskMangment.Infrastructure.Services
        .Include(v => v.Company)
        .Include(v => v.Branch)
        .Include(v => v.CreatedBy)
-       .Include(v => v.Attachments)
+      // .Include(v => v.Attachments)
        .FirstOrDefaultAsync();
 
             var voucherDto = _mapper.Map<PaymentVoucherGetDto>(fullVoucher);
