@@ -28,7 +28,7 @@
             [showAddButton]="true" [addButtonLabel]="'BRANCH.ADD' | translate" (addClick)="openAdd(branchModal)"
             [showEditButton]="true" (edit)="openEdit($event, branchModal)" [showFilters]="true"
             [searchCriteria]="searchCriteria" [onSearch]="applyFilters.bind(this)" (pageChange)="onPageChange($event)"
-            (entriesChange)="onEntriesChange($event)">
+            (entriesChange)="onEntriesChange($event)" [showDeleteButton]="true" (delete)="confirmDelete($event)">
           </app-generic-table>
 
         </div>

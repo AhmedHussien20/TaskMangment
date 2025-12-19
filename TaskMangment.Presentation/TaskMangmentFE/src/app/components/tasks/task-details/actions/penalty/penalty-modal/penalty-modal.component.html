@@ -1,43 +1,54 @@
-<div class="modal-header">
-      <h6>{{ 'TASK.ADD_PENALTY' | translate }}</h6>
-      <button class="btn-close" (click)="modal.dismiss()"></button>
-    </div>
+<form [formGroup]="form">
 
-
-<div class="modal-body">
-
-  <!-- Employee Dropdown -->
-  <div class="mb-3">
-    <label class="form-label">{{ 'TASK.ASSIGNED_EMPLOYEES' | translate }}</label>
-    <select
-      class="form-select"
-      [(ngModel)]="selectedEmployeeId">
-      <option [ngValue]="null" disabled>
-        {{ 'TASK.SELECT_EMPLOYEE' | translate }}
-      </option>
-      <option *ngFor="let emp of employees" [ngValue]="emp.id">
-        {{ emp.fullName }}
-      </option>
-    </select>
+  <div class="modal-header">
+    <h6>{{ 'TASK.ADD_PENALTY' | translate }}</h6>
+    <button class="btn-close" (click)="modal.dismiss()"></button>
   </div>
-</div>
-    <div class="modal-body">
-      <input class="form-control mb-2" type="number"
-        [(ngModel)]="amount"
-        placeholder="{{ 'TASK.PENALTY_AMOUNT' | translate }}" />
 
-      <textarea class="form-control" rows="3"
-        [(ngModel)]="reason"
-        placeholder="{{ 'TASK.PENALTY_REASON' | translate }}">
-      </textarea>
-    </div>
-    
+  <div class="modal-body">
 
-    <div class="modal-footer">
-      <button class="btn btn-secondary" (click)="modal.dismiss()">
-        {{ 'FORM.CANCEL' | translate }}
-      </button>
-      <button class="btn btn-danger" (click)="submit()">
-        {{ 'FORM.SAVE' | translate }}
-      </button>
+    <!-- Employee Dropdown -->
+    <div class="mb-3">
+      <label class="form-label">{{ 'TASK.ASSIGNED_EMPLOYEES' | translate }}</label>
+      <select class="form-select" formControlName="selectedEmployeeId">
+        <option [ngValue]="null" disabled>{{ 'TASK.SELECT_EMPLOYEE' | translate }}</option>
+        <option *ngFor="let emp of employees" [ngValue]="emp.id">{{ emp.fullName }}</option>
+      </select>
+      <div class="text-danger small mt-1" *ngIf="form.controls['selectedEmployeeId'].touched && form.controls['selectedEmployeeId'].invalid">
+        {{ 'TASK.SELECT_EMPLOYEE' | translate }}
+      </div>
     </div>
+
+    <!-- Amount Input -->
+    <div class="mb-3">
+      <input type="number" class="form-control" placeholder="{{ 'TASK.PENALTY_AMOUNT' | translate }}" formControlName="amount">
+      <div class="text-danger small mt-1" *ngIf="form.controls['amount'].touched && form.controls['amount'].invalid">
+        <div *ngIf="form.controls['amount'].errors?.['required']">{{ 'TASK.REQUIRED_FIELD' | translate }}</div>
+        <div *ngIf="form.controls['amount'].errors?.['min']"> {{ 'TASK.PENALTY_AMOUNT_MIN' | translate }}</div>
+      </div>
+    </div>
+
+    <!-- Reason Textarea -->
+    <div class="mb-3">
+      <textarea class="form-control" rows="3" placeholder="{{ 'TASK.PENALTY_REASON' | translate }}" formControlName="reason"></textarea>
+      <div class="text-danger small mt-1" *ngIf="form.controls['reason'].touched && form.controls['reason'].invalid">
+        <div *ngIf="form.controls['reason'].errors?.['required']">{{ 'TASK.REQUIRED_FIELD' | translate }}</div>
+        <div *ngIf="form.controls['reason'].errors?.['minlength']">{{ 'TASK.MIN_LENGTH' | translate }} 5 {{ 'TASK.CHARACTERS' | translate }}</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="modal-footer">
+    <button class="btn btn-secondary" (click)="modal.dismiss()">
+      {{ 'FORM.CANCEL' | translate }}
+    </button>
+
+    <button
+      class="btn btn-danger"
+      [disabled]="form.invalid || isSubmitting"
+      (click)="submit()">
+      {{ 'TASK.SUBMIT_PENALTY' | translate }}
+    </button>
+  </div>
+</form>

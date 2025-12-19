@@ -76,6 +76,9 @@ namespace TaskMangment.Infrastructure.Services
             {
                 dto.BranchCount = branchCounts
                     .FirstOrDefault(x => x.AreaId == dto.Id)?.Count ?? 0;
+
+                dto.ManagerName = areas
+        .FirstOrDefault(a => a.Id == dto.Id)?.Manager?.FullName;
             }
              
             var response = new PagedResponse<AreaGetDto>(
@@ -101,7 +104,7 @@ namespace TaskMangment.Infrastructure.Services
 
             var dto = _mapper.Map<AreaGetDto>(area);
             dto.BranchCount = await _branchRepository.CountAsync(b => b.AreaId == id);
-
+            dto.ManagerName = area.Manager?.FullName;
             return ApiResponse<AreaGetDto>.Ok(dto);
         }
 

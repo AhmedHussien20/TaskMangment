@@ -7,7 +7,15 @@
     "dashboard": "لوحة التحكم",
     "SEND": "إرسال",
     "CANCEL": "إلغاء",
-    "DELETE": "حذف"
+    "DELETE": "حذف",
+    "CONFIRM_DELETE_TITLE": "تأكيد الحذف",
+    "CONFIRM_DELETE_TEXT": "هل أنت متأكد من الحذف؟",
+    "DELETE_BUTTON": "نعم، احذف",
+    "CANCEL_BUTTON": "إلغاء",
+    "DELETE_SUCCESS": "تم الحذف بنجاح"
+
+
+
   },
   "validation": {
     "required": "هذا الحقل مطلوب",
@@ -153,7 +161,10 @@
     "SELECT_OPTION": "اختر خيار",
     "VALIDATION_ERROR": "هناك أخطاء في النموذج. يرجى التحقق من الحقول.",
     "ERROR": "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
-    "SELECT": "اختر"
+    "SELECT": "اختر",
+    "PATTERN_INVALID_NUMBER": "ادخل رقم صحيح",
+    "PATTERN_INVALID_EMAIL": "ادخل بريد إلكتروني صحيح"
+
   },
   "VALIDATION": {
     "REQUIRED": "هذا الحقل مطلوب",
@@ -224,10 +235,21 @@
     "PRIORITY_HIGH": "عالية",
     "DUE_DATE": "تاريخ الانتهاء",
     "STATUS": "الحالة",
+    "STATUS_NEW": "جديدة",
+    "STATUS_IN_PROGRESS": "قيد التنفيذ",
+    "STATUS_CLOSED": "مغلقة",
+    "STATUS_ARCHIVED": "مؤرشفة",
     "ASSIGNED_BY": "تم الإسناد بواسطة",
     "SAVED_SUCCESS": "تم حفظ المهمة بنجاح",
+    "TASK.PRIORITY_LOW": "منخفضة",
+    "TASK.PRIORITY_MEDIUM": "متوسطة",
+    "TASK.PRIORITY_HIGH": "عالية",
+    "TASK.STATUS_NEW": "جديدة",
+    "TASK.STATUS_IN_PROGRESS": "قيد التنفيذ",
+    "TASK.STATUS_CLOSED": "مغلقة",
+    "TASK.STATUS_ARCHIVED": "مؤرشفة",
 
-
+   
     "TASK_DETAILS": "تفاصيل المهمة",
     "COMMENT_ALLOW_PERIOD": "مدة السماح بالتعليق (بالأيام)",
     "MAX_WARNINGS": "الحد الأقصى للتنبيهات",
@@ -235,9 +257,7 @@
     "PENALTY_ON_AUTO_CLOSE": "الجزاء عند الإغلاق التلقائي",
     "IS_SHARED": "مهمة مشتركة",
     "STATUS_OPEN": "مفتوحة",
-    "STATUS_IN_PROGRESS": "قيد التنفيذ",
     "STATUS_COMPLETED": "مكتملة",
-    "STATUS_CLOSED": "مغلقة",
     "CREATE_SUCCESS": "تم إنشاء المهمة بنجاح",
     "UPDATE_SUCCESS": "تم تعديل المهمة بنجاح",
     "CREATE_FAILED": "فشل إنشاء المهمة",
@@ -246,7 +266,7 @@
     "ID": "الكود",
 
 
-
+"CLOSE_REQUEST_WARNING_INFO": "ملحوظة هامة: سيتم إرسال طلب الإغلاق إلى جهة التكليف ويجب عليك الاستمرار في التفاعل مع المهمة حتى يتم الرد.",
     "EXTEND_REQUEST_TITLE": "طلب تمديد للمهمة",
     "EXTEND_REQUEST_NOTE": "سيتم إرسال طلب التمديد إلى جهة التكليف ويجب عليك الاستمرار في التفاعل مع المهمة حتى يتم الرد.",
     "EXTEND_REQUEST_PLACEHOLDER": "اذكر بإختصار سبب طلبك لتمديد المهمة",
@@ -304,7 +324,7 @@
     "EXTEND": "تمديد",
     "COMMENT_PLACEHOLDER": "اكتب تعليقك هنا...",
     "CLOSE_REQUEST": "طلب إغلاق",
-    "SUBMIT_CLOSE_REQUEST": "إرسال طلب الإغلاق",
+    "SUBMIT_REQUEST": "إرسال الطلب",
      "EXTEND_REQUEST": "طلب تمديد",
     "WARNING_RESON": "سبب التحذير",
     "WARNED_DATES": "تواريخ التحذير",
@@ -314,6 +334,7 @@
     "PENALTY_REASON": "سبب الخصم",
     "PENALTY_AMOUNT_LABEL": "مقدار الخصم",
     "SUBMIT_PENALTY": "إرسال خصم",
+    "SUBMIT_COMMENT": "إرسال تعليق",
     "DATE": "التاريخ",
     "COMMENTED_BY": "المرسل",
     "COMMENTED_DATE": "التاريخ",
@@ -331,7 +352,11 @@
     "TASK_STATUS": "حالة المهمة",
     "SELECT_EMPLOYEE": "اختر الموظف",
     "ADD_WARNING": "إضافة تحذير",
-    "ADD_PENALTY": "إضافة خصم"
+    "ADD_PENALTY": "إضافة خصم",
+    "REQUIRED_FIELD": "هذا الحقل مطلوب",
+    "ADD_ATTACHMENTS": "إضافة مرفقات"
+    
+
 
 
 
@@ -500,5 +525,31 @@
     "60MIN": "60 دقيقة",
     "EDIT_EVENT": "تعديل الحدث",
     "CANCEL_EVENT": "الغاء الحدث"
+  },
+  "COURSE": {
+    "TITLE": "الدورات",
+    "LIST_TITLE": "قائمة الدورات",
+    "CREATE_TITLE": "إضافة دورة جديدة",
+    "EDIT_TITLE": "تعديل دورة",
+    "ID": "رقم الدورة",
+    "NAME": "اسم الدورة",
+    "DESCRIPTION": "الوصف",
+    "SUBJECTS": "المواد",
+    "ADD": "إضافة دورة",
+    "EDIT": "تعديل دورة",
+    "SEARCH": "بحث عن الدورات",
+    "ADD_COURSE": "إضافة دورة",
+    "EDIT_COURSE": "تعديل دورة",
+    "CREATE_SUCCESS": "تم إنشاء الدورة بنجاح",
+    "UPDATE_SUCCESS": "تم تحديث الدورة بنجاح",
+    "CREATE_FAILED": "فشل في إنشاء الدورة",
+    "UPDATE_FAILED": "فشل في تحديث الدورة",
+    "VALIDATION_ERROR": "يرجى إدخال جميع الحقول المطلوبة بشكل صحيح.",
+    "OFFER_COUNT": "عدد العروض",
+    "searchKey": "بحث باسم الدورة",
+    "ADD_SUBJECT": "إضافة مادة",
+    "SUBJECT_PLACEHOLDER": "أدخل اسم المادة",
+    "NO_SUBJECTS": "لا توجد مواد مضافة بعد"
+
   }
 }
