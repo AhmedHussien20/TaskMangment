@@ -9,6 +9,16 @@
 bin/
 obj/
 appsettings.Production.json
+# ======================
+# Uploaded files
+wwwroot/uploads/*
+!wwwroot/uploads/.gitkeep
+# ======================
+# Logs
+logs/*
+*.log
+!logs/.gitkeep
+
 
 # ======================
 # Angular

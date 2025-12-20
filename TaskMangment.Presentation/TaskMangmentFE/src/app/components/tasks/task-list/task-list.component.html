@@ -27,7 +27,7 @@
                         [entries]="entries" [page]="page" [labels]="labels" [totalItems]="totalItems"
                         [showAddButton]="true" (addClick)="openAdd(taskModal)" [showEditButton]="true" [showDetailsButton]="true"
                         [showFilters]="true" [searchCriteria]="searchCriteria" [onSearch]="applyFilters.bind(this)"
-                        (pageChange)="onPageChange($event)" [addButtonLabel]="'TASK.ADD' | translate"
+                        (pageChange)="onPageChange($event)" [addButtonLabel]="'TASK.ADD' | translate"  [showDeleteButton]="true"
                         (edit)="openEdit($event, taskModal)" (details)="openDetails($event)">
                     </app-generic-table>
                 </div>

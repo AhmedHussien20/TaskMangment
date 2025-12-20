@@ -11,7 +11,7 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
     public class TaskCommentAddEditDto
     {
         [Required]
-        [MinLength(50, ErrorMessage = "Comment must be at least 50 characters")]
+        [MinLength(2, ErrorMessage = "Comment must be at least 2 characters")]
         public string CommentText { get; set; }
         public IFormFile? File { get; set; }
 

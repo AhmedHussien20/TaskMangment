@@ -6,18 +6,52 @@ using System.Linq;
 using System.Reflection.Emit;
 using System.Text;
 using System.Threading.Tasks;
+using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Domain.Entities;
 
 namespace TaskMangment.Infrastructure.DataContext
 {
     public class AppDbContext : DbContext
     {
-        public AppDbContext(DbContextOptions<AppDbContext> options)
-           : base(options)
+        private readonly ICurrentUserService _currentUserService;
+
+        public AppDbContext(
+            DbContextOptions<AppDbContext> options,
+            ICurrentUserService currentUserService)
+            : base(options)
         {
+            _currentUserService = currentUserService;
         }
 
-        public DbSet<Area> Areas { get; set; }
+        public override async Task<int> SaveChangesAsync( CancellationToken cancellationToken = default)
+        {
+            var userId = 
+                _currentUserService.UserId;
+
+            foreach (var entry in ChangeTracker.Entries<BaseEntity>())
+            {
+                if (entry.State == EntityState.Added)
+                {
+                    entry.Entity.CreatedBy = userId;
+                    entry.Entity.CreatedDate = DateTime.UtcNow;
+                }
+                else if (entry.State == EntityState.Modified)
+                {
+                    entry.Entity.ModifiedBy = userId;
+                    entry.Entity.ModifiedDate = DateTime.UtcNow;
+                }
+                else if (entry.State == EntityState.Deleted)
+                {
+                    entry.Entity.DeletedBy = userId;
+                    entry.Entity.DeletedDate = DateTime.UtcNow;
+                }
+            }
+
+            return await base.SaveChangesAsync(cancellationToken);
+        }
+     
+
+    public DbSet<Area> Areas { get; set; }
         public DbSet<Attachment> Attachments { get; set; }
 
         public DbSet<AuditLog> AuditLogs { get; set; }

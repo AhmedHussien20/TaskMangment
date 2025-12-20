@@ -150,11 +150,11 @@ namespace TaskMangment.Infrastructure.Services
             await _eventDispatcher.PublishAsync(new TaskAssignedEvent(task.Id,task.Title,dto.AssignedEmployeeIds));
 
             var fullTask = await _taskRepo.GetAll(t => t.Id == task.Id)
-     .Include(t => t.CreatedBy)
-     .Include(t => t.AssignedBy)
-     .Include(t => t.Assignments).ThenInclude(a => a.Employee)
-     .AsNoTracking()
-     .FirstOrDefaultAsync();
+                         .Include(t => t.CreatedBy)
+                         .Include(t => t.AssignedBy)
+                         .Include(t => t.Assignments).ThenInclude(a => a.Employee)
+                         .AsNoTracking()
+                         .FirstOrDefaultAsync();
 
             var taskDto = _mapper.Map<TaskGetDto>(fullTask); ;
 
