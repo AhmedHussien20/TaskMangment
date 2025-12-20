@@ -214,7 +214,7 @@ namespace TaskMangment.Infrastructure.Services
       .Include(t => t.Assignments)
           .ThenInclude(a => a.Employee)
       .Include(t => t.Comments)
-      .Include(t => t.Attachments)
+      //.Include(t => t.Attachments)
       .Include(t => t.CloseRequests)
       .Include(t => t.ExtensionRequests)
       .FirstOrDefaultAsync();

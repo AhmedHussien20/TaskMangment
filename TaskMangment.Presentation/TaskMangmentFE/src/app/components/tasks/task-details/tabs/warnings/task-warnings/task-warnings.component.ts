@@ -6,11 +6,14 @@ import { TaskDetailsRefreshService } from '../../../task-details-refresh.service
 import { TranslateModule } from '@ngx-translate/core';
 import { WarningGetDto} from 'app/core/models/task/task-warning';
 import { TaskWarningService } from 'app/core/services/task-warning.service';
+import { MyDatePipe } from 'app/components/utilities/pipline/MyDatePipe';
 
 @Component({
   selector: 'app-task-warnings',
   standalone: true,
-  imports: [CommonModule, GenericTableComponent, TranslateModule],
+  imports: [CommonModule, GenericTableComponent, TranslateModule, MyDatePipe],
+    providers: [MyDatePipe], 
+
   templateUrl: './task-warnings.component.html'
 })
 export class TaskWarningsComponent implements OnInit, OnDestroy {
@@ -21,7 +24,7 @@ export class TaskWarningsComponent implements OnInit, OnDestroy {
   totalItems = 0;
 
   columns = [
-    { key: 'issuedAt', label: 'TASK.DATE' },
+     { key: 'issuedAt', label: 'TASK.DATE' },
     { key: 'reason', label: 'TASK.WARNING_RESON' },
     { key: 'issuedEmployeeName', label: 'TASK.WARNED_EMPLOYEE' },
     { key: 'issuedByName', label: 'TASK.WARNED_BY' }
@@ -31,7 +34,9 @@ export class TaskWarningsComponent implements OnInit, OnDestroy {
 
   constructor(
     private refresh: TaskDetailsRefreshService,
-    private warningService: TaskWarningService
+    private warningService: TaskWarningService,
+    private myDatePipe: MyDatePipe
+
   ) {}
 
   ngOnInit(): void {

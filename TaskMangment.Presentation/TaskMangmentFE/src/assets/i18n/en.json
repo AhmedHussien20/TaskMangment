@@ -241,6 +241,7 @@
     "SAVED_SUCCESS": "Task saved successfully",
 
 
+    "TASK_DETAILS": "Task Details",
     "COMMENT_ALLOW_PERIOD": "allow comment period (days)",
     "MAX_WARNINGS": "maximum warnings",
     "PENALTY_AT_MAX_WARNINGS": "penalty at maximum warnings",
@@ -277,6 +278,7 @@
     "PENALTY_TITLE": "New Penalty",
     "PENALTY_NOTE": "The penalty will be sent directly to the employee via email.",
     "PENALTY_AMOUNT": "Penalty Amount",
+    "PENALTY_EMPLOYEE_NAME": "penalty Employee Name",
     "PENALTY_PLACEHOLDER": "Enter penalty reason",
     "COMMENTS_TITLE": "Comments",
     "NO_COMMENTS": "No comments yet",
@@ -327,16 +329,19 @@
     "COMMENTED_DATE": "Commented Date",
     "COMMENT": "Comment",
     "TIME_ELAPSED": "Time Elapsed",
-    "DAYS_AGO": "days ago",
-    "HOURS_AGO": "hours ago",
-    "MINUTES_AGO": "minutes ago",
-    "NOW": "now",
+      "HOURS_AGO": "{{value}} hours ago",
+    "MINUTES_AGO": "{{value}} minutes ago",
+    "DAYS_AGO": "{{value}} days ago",
+    "NOW": "Now",
      "TASK_NUMBER": "task number",
     "TASK_TITLE": "task title",
     "TASK_DESCRIPTION": "task description",
     "TASK_PRIORITY": "task priority",
     "TASK_DUE_DATE": "task due date",
-    "TASK_STATUS": "task status"
+    "TASK_STATUS": "task status",
+    "SELECT_EMPLOYEES": "Select Employees",
+    "ADD_WARNING": "Add Warning",
+    "ADD_PENALTY": "Add Penalty"
 
 
 

@@ -5,12 +5,12 @@ import { forkJoin } from 'rxjs';
 import { TaskExtensionRequestService } from 'app/core/services/task-extension-request.service';
 import { TaskCloseRequestService } from 'app/core/services/task-close-request.service';
 import { BaseResponse } from 'app/models/base.response.model';
-import { TranslateService } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-task-requests',
   standalone: true,
-  imports: [CommonModule, GenericTableComponent],
+  imports: [CommonModule, GenericTableComponent, TranslateModule],
   templateUrl: './task-requests.component.html'
 })
 export class TaskRequestsComponent implements OnInit, OnChanges, AfterViewInit {

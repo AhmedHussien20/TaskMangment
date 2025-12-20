@@ -23,5 +23,5 @@
 </app-generic-table>
 
 <div *ngIf="!isLoading && !rows.length" class="text-center text-muted mt-4">
-  لا يوجد طلبات إغلاق/تمديد حتى الآن
+  {{ 'TASK.NO_REQUESTS' | translate }}
 </div>

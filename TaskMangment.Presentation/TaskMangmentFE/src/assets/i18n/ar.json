@@ -226,6 +226,9 @@
     "STATUS": "الحالة",
     "ASSIGNED_BY": "تم الإسناد بواسطة",
     "SAVED_SUCCESS": "تم حفظ المهمة بنجاح",
+
+
+    "TASK_DETAILS": "تفاصيل المهمة",
     "COMMENT_ALLOW_PERIOD": "مدة السماح بالتعليق (بالأيام)",
     "MAX_WARNINGS": "الحد الأقصى للتنبيهات",
     "PENALTY_AT_MAX_WARNINGS": "الجزاء عند الحد الأقصى للتنبيهات",
@@ -241,6 +244,9 @@
     "UPDATE_FAILED": "فشل تعديل المهمة",
     "searchKey": "بحث عن المهام",
     "ID": "الكود",
+
+
+
     "EXTEND_REQUEST_TITLE": "طلب تمديد للمهمة",
     "EXTEND_REQUEST_NOTE": "سيتم إرسال طلب التمديد إلى جهة التكليف ويجب عليك الاستمرار في التفاعل مع المهمة حتى يتم الرد.",
     "EXTEND_REQUEST_PLACEHOLDER": "اذكر بإختصار سبب طلبك لتمديد المهمة",
@@ -262,6 +268,7 @@
     "PENALTY_TITLE": "خصم جديد",
     "PENALTY_NOTE": "سيتم إرسال الخصم مباشرة إلى الموظف عبر البريد الإلكتروني.",
     "PENALTY_AMOUNT": "مقدار الخصم",
+    "PENALTY_EMPLOYEE_NAME": "اسم الموظف المجذى",
     "PENALTY_PLACEHOLDER": "أدخل سبب الخصم",
     "COMMENTS_TITLE": "التعليقات",
     "NO_COMMENTS": "لا يوجد تعليقات حتى الآن",
@@ -312,16 +319,19 @@
     "COMMENTED_DATE": "التاريخ",
     "COMMENT": "التعليق",
     "TIME_ELAPSED": "الوقت المنقضي",
-    "DAYS_AGO": "يومًا مضت",
-    "HOURS_AGO": "ساعات مضت",
-    "MINUTES_AGO": "دقائق مضت",
+      "HOURS_AGO": "{{value}} ساعات مضت",
+    "MINUTES_AGO": "{{value}} دقائق مضت",
+    "DAYS_AGO": "{{value}} أيام مضت",
     "NOW": "الآن",
     "TASK_NUMBER": "رقم المهمة",
     "TASK_TITLE": "عنوان المهمة",
     "TASK_DESCRIPTION": "وصف المهمة",
     "TASK_PRIORITY": "أولوية المهمة",
     "TASK_DUE_DATE": "تاريخ استحقاق المهمة",
-    "TASK_STATUS": "حالة المهمة"
+    "TASK_STATUS": "حالة المهمة",
+    "SELECT_EMPLOYEE": "اختر الموظف",
+    "ADD_WARNING": "إضافة تحذير",
+    "ADD_PENALTY": "إضافة خصم"
 
 
 
