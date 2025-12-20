@@ -5,11 +5,14 @@ import { FormsModule } from '@angular/forms';
 import { NgbModal, NgbModalModule, NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
 import { GenericTableComponent } from 'app/shared/components/generic-table/generic-table.component';
 import { PageHeaderComponent } from 'app/shared/components/page-header/page-header.component';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { TaskCreateUpdateComponent } from "../task-create-update/task-create-update.component";
 import { TaskService } from "app/core/services/task.service";
 import { SearchCriteria } from "app/models/search-criteria.model";
 import { TaskDetailsShellComponent } from "../task-details/task-details-shell/task-details-shell.component";
+import Swal from 'sweetalert2';
+import { ToastrService } from "ngx-toastr";
+
 
 @Component({
   selector: 'app-task-list',
@@ -37,7 +40,7 @@ export class TaskListComponent implements OnInit {
     { key: 'title', label: 'TASK.TITLE' },
     { key: 'assignedByName', label: 'TASK.ASSIGNED_BY' },
     {
-      key: 'priority',
+      key: 'priorityText',
       label: 'TASK.PRIORITY'
       //,
       // type: 'badge' as const,
@@ -49,7 +52,7 @@ export class TaskListComponent implements OnInit {
     },
 
     {
-      key: 'status',
+      key: 'statusText',
       label: 'TASK.STATUS',
       type: 'badge' as const,
       badgeMap: {
@@ -57,7 +60,7 @@ export class TaskListComponent implements OnInit {
         InProgress: { text: 'TASK.STATUS_IN_PROGRESS', class: 'bg-info' },
         Closed: { text: 'TASK.STATUS_CLOSED', class: 'bg-success' },
         Archived: { text: 'TASK.STATUS_ARCHIVED', class: 'bg-dark' }
-      }
+      },
     },
     { key: 'dueDate', label: 'TASK.DUE_DATE' }
   ];
@@ -88,7 +91,10 @@ export class TaskListComponent implements OnInit {
 
   constructor(
     private taskService: TaskService,
-    private modalService: NgbModal
+    private modalService: NgbModal,
+      private toastr: ToastrService,
+    private translate: TranslateService
+
   ) { }
 
   ngOnInit() {
@@ -159,8 +165,47 @@ openDetails(taskId: number) {
     scrollable: true
   });
 
-  modalRef.componentInstance.taskId = taskId; // <-- هنا بنمرر الـ id
+  modalRef.componentInstance.taskId = taskId;
   modalRef.componentInstance.readonly = true;
+}
+confirmDelete(taskId: number) {
+  Swal.fire({
+    title: this.translate.instant('TASK.CONFIRM_DELETE_TITLE'),
+    text: this.translate.instant('TASK.CONFIRM_DELETE_TEXT'),
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: this.translate.instant('TASK.DELETE_BUTTON'),
+    cancelButtonText: this.translate.instant('TASK.CANCEL_BUTTON'),
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#6c757d'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      this.deleteTask(taskId);
+    }
+  });
+}
+
+deleteTask(taskId: number) {
+  this.isLoading = true;
+
+  this.taskService.delete(taskId).subscribe({
+    next: () => {
+    this.toastr.success(this.translate.instant('TASK.DELETE_SUCCESS'));
+
+
+      this.isLoading = false;
+      this.loadData();
+    },
+    error: () => {
+      this.isLoading = false;
+
+      this.toastr.error(
+        this.translate.instant('TASK.DELETE_FAILED'),
+        undefined,
+        { timeOut: 3000 }
+      );
+    }
+  });
 }
 
 

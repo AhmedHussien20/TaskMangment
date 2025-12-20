@@ -57,13 +57,26 @@
               {{ formGroup.controls[field.name].errors?.['maxlength'].requiredLength }}
               {{ 'FORM.CHARACTERS' | translate }}
             </div>
-            <!-- Password mismatch message -->
-            <div *ngIf="
-                field.name === 'confirmPassword' &&
-                formGroup.errors?.['passwordMismatch']
-              ">
-              {{ 'FORM.PASSWORD_MISMATCH' | translate }}
+
+             <div *ngIf="formGroup.controls[field.name].errors?.['pattern'] && field.inputType === 'number'" class="input-group">
+              {{ 'FORM.PATTERN_INVALID_NUMBER' | translate }}
             </div>
+             <div *ngIf="formGroup.controls[field.name].errors?.['email']">
+              {{ 'FORM.PATTERN_INVALID_EMAIL' | translate }}
+            </div>
+            
+
+
+
+            <!-- Password mismatch message -->
+           <!-- Password mismatch -->
+<div *ngIf="
+  field.name === 'confirmPassword' &&
+  formGroup.controls[field.name]?.errors?.['passwordMismatch']
+">
+  {{ 'FORM.PASSWORD_MISMATCH' | translate }}
+</div>
+
           </div>
         </div>
 

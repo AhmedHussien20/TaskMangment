@@ -9,9 +9,11 @@ import { GenericTableComponent } from '../../../shared/components/generic-table/
 import { CourseService } from 'app/core/services/course.service';
 
 import { SearchCriteria } from 'app/core/models/search-criteria.model';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Course } from 'app/core/models/course/course';
 import { CourseCreateUpdateComponent } from '../course-create-update/course-create-update.component';
+import { ToastrService } from 'ngx-toastr';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-course-list',
@@ -72,7 +74,9 @@ export class CourseListComponent implements OnInit {
 
   constructor(
     private courseService: CourseService,
-    private modalService: NgbModal
+    private modalService: NgbModal,
+    private translate: TranslateService,
+    private toastr: ToastrService
   ) { }
 
   ngOnInit(): void {
@@ -149,4 +153,44 @@ export class CourseListComponent implements OnInit {
     this.modalService.dismissAll();
     this.loadData();
   }
+  confirmDelete(courseId: number) {
+    Swal.fire({
+      title: this.translate.instant('COMMON.CONFIRM_DELETE_TITLE'),
+      text: this.translate.instant('COMMON.CONFIRM_DELETE_TEXT'),
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: this.translate.instant('COMMON.DELETE_BUTTON'),
+      cancelButtonText: this.translate.instant('COMMON.CANCEL_BUTTON'),
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#6c757d'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.deleteCourse(courseId);
+      }
+    });
+  }
+  
+  deleteCourse(courseId: number) {
+    this.isLoading = true;
+
+    this.courseService.delete(courseId).subscribe({
+      next: () => {
+      this.toastr.success(this.translate.instant('COMMON.DELETE_SUCCESS'));
+  
+  
+        this.isLoading = false;
+        this.loadData();
+      },
+      error: () => {
+        this.isLoading = false;
+  
+        this.toastr.error(
+          this.translate.instant('COMMON.DELETE_FAILED'),
+          undefined,
+          { timeOut: 3000 }
+        );
+      }
+    });
+  }
+  
 }

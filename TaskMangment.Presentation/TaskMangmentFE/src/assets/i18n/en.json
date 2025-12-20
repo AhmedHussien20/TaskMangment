@@ -4,7 +4,17 @@
     "login": "Login",
     "logout": "Logout",
     "register": "Register",
-    "dashboard": "Dashboard"
+    "dashboard": "Dashboard",
+    "CONFIRM_DELETE_TITLE": "Confirm Delete",
+    "CONFIRM_DELETE_TEXT": "Are you sure you want to delete?",
+    "DELETE_BUTTON": "Yes, Delete",
+    "CANCEL_BUTTON": "Cancel",
+    "DELETE_SUCCESS": "deleted successfully",
+    "DELETE_FAILED": "Failed to delete"
+
+
+
+
   },
   "validation": {
     "required": "This field is required",
@@ -157,6 +167,7 @@
   "FORM": {
     "BACK": "Back",
     "SAVE": "Save",
+    "CANCEL": "Cancel",
     "UPDATE": "Update",
     "GENERATE": "Generate",
     "SHOW_PASSWORD": "Show Password",
@@ -169,7 +180,9 @@
     "SELECT_AREA": "Select Area",
     "SELECT_COMPANY": "Select Company",
     "SELECT_STATUS": "Select Status",
-    "SELECT_OPTION": "Select an option"
+    "SELECT_OPTION": "Select an option",
+    "PATTERN_INVALID_NUMBER": "Please enter a valid number",
+    "PATTERN_INVALID_EMAIL": "Please enter a valid email"
   },
   "VALIDATION": {
     "REQUIRED": "This field is required",
@@ -237,9 +250,21 @@
     "PRIORITY_HIGH": "high",
     "DUE_DATE": "Due Date",
     "STATUS": "Status",
+    "STATUS_NEW": "New",
+    "STATUS_IN_PROGRESS": "In Progress",
+    "STATUS_CLOSED": "Closed",
+    "STATUS_ARCHIVED": "Archived",
     "ASSIGNED_BY": "Assigned By",
     "SAVED_SUCCESS": "Task saved successfully",
+    "TASK.PRIORITY_LOW": "low",
+    "TASK.PRIORITY_MEDIUM": "medium",
+    "TASK.PRIORITY_HIGH": "high",
+    "TASK.STATUS_NEW": "new",
+    "TASK.STATUS_IN_PROGRESS": "in progress",
+    "TASK.STATUS_CLOSED": "closed",
+    "TASK.STATUS_ARCHIVED": "archived",
 
+   
 
     "TASK_DETAILS": "Task Details",
     "COMMENT_ALLOW_PERIOD": "allow comment period (days)",
@@ -248,15 +273,15 @@
     "PENALTY_ON_AUTO_CLOSE": "penalty on auto close",
     "IS_SHARED": "shared task",
     "STATUS_OPEN": "open",
-    "STATUS_IN_PROGRESS": "in progress",
     "STATUS_COMPLETED": "completed",
-    "STATUS_CLOSED": "closed",
     "CREATE_SUCCESS": "Task created successfully",
     "UPDATE_SUCCESS": "Task updated successfully",
     "CREATE_FAILED": "Failed to create task",
     "UPDATE_FAILED": "Failed to update task",
     "searchKey": "Search tasks",
     "ID": "ID",
+
+    "CLOSE_REQUEST_WARNING_INFO": "Important Note: The close request will be sent to the assignee. You must continue interacting with the task until a response is received.",
     "EXTEND_REQUEST_TITLE": "Extend Task Request",
     "EXTEND_REQUEST_NOTE": "The extension request will be sent to the assignee. You must continue interacting with the task until a response is received.",
     "EXTEND_REQUEST_PLACEHOLDER": "Briefly state the reason for your extension request",
@@ -313,6 +338,8 @@
     "CLOSE": "Close",
     "EXTEND": "Extend",
     "COMMENT_PLACEHOLDER": "Write your comment here...",
+    "SUBMIT_COMMENT": "Submit Comment",
+    "SUBMIT_REQUEST": "Submit Request",
     "CLOSE_REQUEST": "Close Request",
     "SUBMIT_CLOSE_REQUEST": "Submit Close Request",
     "EXTEND_REQUEST": "Extend Request",
@@ -339,9 +366,12 @@
     "TASK_PRIORITY": "task priority",
     "TASK_DUE_DATE": "task due date",
     "TASK_STATUS": "task status",
-    "SELECT_EMPLOYEES": "Select Employees",
+    "SELECT_EMPLOYEE": "Select Employees",
     "ADD_WARNING": "Add Warning",
-    "ADD_PENALTY": "Add Penalty"
+    "ADD_PENALTY": "Add Penalty",
+    "REQUIRED_FIELD": "This field is required",
+    "ADD_ATTACHMENTS": "Add Attachment"
+
 
 
 
@@ -497,5 +527,29 @@
     "60MIN": "60 Minutes",
     "EDIT_EVENT" : "Edit Event",
     "DELETE_EVENT" : "Delete Event"
+  },
+  "COURSE": {
+    "TITLE": "Courses",
+    "LIST_TITLE": "Courses List",
+    "CREATE_TITLE": "Add Course",
+    "EDIT_TITLE": "Edit Course",
+    "ID": "ID",
+    "NAME": "Course Name",
+    "DESCRIPTION": "Description",
+    "SUBJECTS": "Subjects",
+    "SEARCH": "Search Courses",
+    "ADD_COURSE": "Add Course",
+    "EDIT_COURSE": "Edit Course",
+    "CREATE_SUCCESS": "Course created successfully",
+    "UPDATE_SUCCESS": "Course updated successfully",
+    "CREATE_FAILED": "Failed to create course",
+    "UPDATE_FAILED": "Failed to update course",
+    "VALIDATION_ERROR": "Please fill in all required fields correctly.",
+    "OFFER_COUNT": "Offer Count",
+    "searchKey": "Search by course name",
+    "ADD_SUBJECT": "Add Subject",
+    "SUBJECT_PLACEHOLDER": "Enter subject name",
+    "NO_SUBJECTS": "No subjects added yet"
+
   }
 }

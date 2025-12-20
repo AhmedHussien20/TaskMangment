@@ -9,9 +9,11 @@ import { GenericTableComponent } from '../../../shared/components/generic-table/
 import { StudentService } from 'app/core/services/student.service';
 
 import { SearchCriteria } from 'app/core/models/search-criteria.model';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Student } from 'app/core/models/student/student';
 import { StudentCreateUpdateComponent } from '../student-create-update/student-create-update.component';
+import { ToastrService } from 'ngx-toastr';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-student-list',
@@ -72,7 +74,9 @@ export class StudentListComponent implements OnInit {
 
   constructor(
     private studentService: StudentService,
-    private modalService: NgbModal
+    private modalService: NgbModal,
+    private translate: TranslateService,
+    private toastr: ToastrService
   ) { }
 
   ngOnInit(): void {
@@ -150,4 +154,45 @@ export class StudentListComponent implements OnInit {
     this.modalService.dismissAll();
     this.loadData();
   }
+
+   confirmDelete(studentId: number) {
+    Swal.fire({
+      title: this.translate.instant('COMMON.CONFIRM_DELETE_TITLE'),
+      text: this.translate.instant('COMMON.CONFIRM_DELETE_TEXT'),
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: this.translate.instant('COMMON.DELETE_BUTTON'),
+      cancelButtonText: this.translate.instant('COMMON.CANCEL_BUTTON'),
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#6c757d'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.deleteStudent(studentId);
+      }
+    });
+  }
+
+  deleteStudent(studentId: number) {
+    this.isLoading = true;
+
+    this.studentService.delete(studentId).subscribe({
+      next: () => {
+      this.toastr.success(this.translate.instant('COMMON.DELETE_SUCCESS'));
+  
+  
+        this.isLoading = false;
+        this.loadData();
+      },
+      error: () => {
+        this.isLoading = false;
+  
+        this.toastr.error(
+          this.translate.instant('COMMON.DELETE_FAILED'),
+          undefined,
+          { timeOut: 3000 }
+        );
+      }
+    });
+  }
+  
 }

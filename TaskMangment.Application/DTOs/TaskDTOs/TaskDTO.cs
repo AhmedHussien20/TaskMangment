@@ -30,6 +30,8 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
         public bool IsShared { get; set; } = false;
 
         public TaskPriority Priority { get; set; } = TaskPriority.Low;
+        public TaskStatus Status { get; set; } = TaskStatus.New;
+
 
         public DateTime? DueDate { get; set; }
     }

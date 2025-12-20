@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, Output, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, MinLengthValidator, ReactiveFormsModule, Validators } from '@angular/forms';
 import { GenericFormComponent } from 'app/shared/components/generic-form/generic-form.component';
 
 import { EmployeeService } from 'app/core/services/employee.service';
@@ -41,7 +41,6 @@ export class EmployeeCreateUpdateComponent implements OnInit {
       type: 'input', 
       label: 'EMPLOYEE.FULL_NAME', 
       name: 'fullName', 
-      validations: { required: true, maxlength: 250 }, 
       defaultValue: '' 
     },
     { 
@@ -56,42 +55,38 @@ export class EmployeeCreateUpdateComponent implements OnInit {
       type: 'input', 
       label: 'EMPLOYEE.TITLE', 
       name: 'title', 
-      validations: { maxlength: 50 }, 
       defaultValue: '' 
     },
     { 
       type: 'input', 
       label: 'EMPLOYEE.NATIONALITY', 
       name: 'nationality', 
-      validations: { maxlength: 100 }, 
       defaultValue: '' 
     },
     { 
       type: 'input', 
+      inputType: 'number',
       label: 'EMPLOYEE.IDENTITY_NUMBER', 
       name: 'identityNumber', 
-      validations: { maxlength: 100 }, 
       defaultValue: '' 
     },
     { 
       type: 'input', 
+      inputType: 'number',
       label: 'EMPLOYEE.MOBILE', 
       name: 'mobile', 
-      validations: { maxlength: 50 }, 
       defaultValue: '' 
     },
     { 
       type: 'input', 
       label: 'EMPLOYEE.ADDRESS', 
       name: 'address', 
-      validations: { maxlength: 500 }, 
       defaultValue: '' 
     },
     { 
       type: 'input', 
       label: 'EMPLOYEE.QUALIFICATION', 
       name: 'qualification', 
-      validations: { maxlength: 200 }, 
       defaultValue: '' 
     },
     /*{ 
@@ -108,7 +103,6 @@ export class EmployeeCreateUpdateComponent implements OnInit {
       inputType: 'email',
       label: 'EMPLOYEE.EMAIL', 
       name: 'email', 
-      validations: { email: true, maxlength: 200 }, 
       defaultValue: '' 
     },
     { 
@@ -126,7 +120,7 @@ export class EmployeeCreateUpdateComponent implements OnInit {
       inputType: 'password',
       label: 'EMPLOYEE.CONFIRM_PASSWORD', 
       name: 'confirmPassword', 
-      validations: { required: !this.isEdit, maxlength: 500 }, 
+      validations: { required: !this.isEdit, maxlength: 500 , equalto: 'password' }, 
       defaultValue: '',
       showPassword: false
     }
@@ -151,41 +145,88 @@ export class EmployeeCreateUpdateComponent implements OnInit {
   }
 
   initForm() {
-    this.formGroup = this.fb.group({
-      fullName: ['', Validators.required],
-      branchId: [null],
-      title: [''],
-      nationality: [''],
-      identityNumber: [''],
-      mobile: [''],
-      address: [''],
-      qualification: [''],
-    //  roleIds: [[], Validators.required],
-      email: ['', Validators.email],
-      password: [''],
-      confirmPassword: ['']
-    }, { 
-      validators: this.passwordMatchValidator 
+  this.formGroup = this.fb.group({
+    fullName: ['', [
+      Validators.required,
+      Validators.minLength(3),
+      Validators.maxLength(250)
+    ]],
+
+    branchId: [null],
+
+    title: ['', [
+      Validators.minLength(3),
+      Validators.maxLength(50)
+    ]],
+
+    nationality: ['', Validators.maxLength(100)],
+
+    identityNumber: ['', [
+      Validators.maxLength(100),
+      Validators.pattern('^[0-9]+$')
+    ]],
+
+    mobile: ['', [
+      Validators.maxLength(50),
+      Validators.pattern('^[0-9]+$')
+    ]],
+
+    address: ['', Validators.maxLength(500)],
+
+    qualification: ['', Validators.maxLength(200)],
+
+    email: ['', [
+      Validators.email,
+      Validators.maxLength(200),
+       Validators.email
+    ]],
+
+    password: [''],
+    confirmPassword: ['']
+  }, {
+    validators: this.passwordMatchValidator
+  });
+
+  if (!this.isEdit) {
+    this.formGroup.get('password')?.setValidators([
+      Validators.required,
+      Validators.maxLength(500)
+    ]);
+
+    this.formGroup.get('confirmPassword')?.setValidators([
+      Validators.required,
+      Validators.maxLength(500)
+    ]);
+  }
+
+  this.formGroup.get('password')?.updateValueAndValidity();
+  this.formGroup.get('confirmPassword')?.updateValueAndValidity();
+}
+
+
+ passwordMatchValidator(formGroup: FormGroup) {
+  const password = formGroup.get('password');
+  const confirmPassword = formGroup.get('confirmPassword');
+
+  if (!password || !confirmPassword) return null;
+
+  if (password.value !== confirmPassword.value) {
+    confirmPassword.setErrors({
+      ...confirmPassword.errors,
+      passwordMismatch: true
     });
-
-     if (!this.isEdit) {
-      this.formGroup.get('password')?.setValidators([Validators.required, Validators.maxLength(500)]);
-      this.formGroup.get('confirmPassword')?.setValidators([Validators.required, Validators.maxLength(500)]);
+  } else {
+    if (confirmPassword.errors) {
+      delete confirmPassword.errors['passwordMismatch'];
+      if (Object.keys(confirmPassword.errors).length === 0) {
+        confirmPassword.setErrors(null);
+      }
     }
   }
 
-  passwordMatchValidator(formGroup: FormGroup) {
-    const password = formGroup.get('password')?.value;
-    const confirmPassword = formGroup.get('confirmPassword')?.value;
-    
-    if (password !== confirmPassword) {
-      formGroup.get('confirmPassword')?.setErrors({ passwordMismatch: true });
-    } else {
-      formGroup.get('confirmPassword')?.setErrors(null);
-    }
-    
-    return null;
-  }
+  return null;
+}
+
 
   loadEmployee() {
     if (!this.employeeId) return;

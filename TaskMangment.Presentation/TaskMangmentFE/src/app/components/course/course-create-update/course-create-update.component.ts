@@ -47,14 +47,6 @@ export class CourseCreateUpdateComponent implements OnInit {
       name: 'description', 
       validations: { maxlength: 1000 }, 
       defaultValue: '' 
-    },
-    { 
-      type: 'input', 
-      label: 'COURSE.ADD_SUBJECT', 
-      name: 'newSubject', 
-      placeholder: 'COURSE.SUBJECT_PLACEHOLDER',
-      validations: { maxlength: 100 }, 
-      defaultValue: '' 
     }
   ];
 
@@ -97,27 +89,28 @@ export class CourseCreateUpdateComponent implements OnInit {
   }
 
   addSubject() {
-    const newSubject = this.formGroup.get('newSubject')?.value?.trim();
-    
-    if (!newSubject) {
-      this.toastr.warning(this.translate.instant('COURSE.SUBJECT_REQUIRED'));
-      return;
-    }
-
-    if (this.subjects.includes(newSubject)) {
-      this.toastr.warning(this.translate.instant('COURSE.SUBJECT_EXISTS'));
-      return;
-    }
-
-    this.subjects.push(newSubject);
-    this.formGroup.patchValue({ subjects: this.subjects });
-    this.formGroup.get('newSubject')?.setValue('');
+  const newSubject = this.formGroup.get('newSubject')?.value?.trim();
+  
+  if (!newSubject) {
+    this.toastr.warning(this.translate.instant('COURSE.SUBJECT_REQUIRED'));
+    return;
   }
 
-  removeSubject(index: number) {
-    this.subjects.splice(index, 1);
-    this.formGroup.patchValue({ subjects: this.subjects });
+  if (this.subjects.includes(newSubject)) {
+    this.toastr.warning(this.translate.instant('COURSE.SUBJECT_EXISTS'));
+    return;
   }
+
+  this.subjects.push(newSubject);
+  this.formGroup.patchValue({ subjects: this.subjects });
+  this.formGroup.get('newSubject')?.setValue('');
+}
+
+removeSubject(index: number) {
+  this.subjects.splice(index, 1);
+  this.formGroup.patchValue({ subjects: this.subjects });
+}
+
 
   onSubmit(formValue: any) {
     if (this.formGroup.invalid) {

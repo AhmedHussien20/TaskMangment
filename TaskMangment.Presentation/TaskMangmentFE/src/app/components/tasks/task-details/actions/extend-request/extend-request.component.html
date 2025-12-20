@@ -1,48 +1,54 @@
-<div class="modal-header">
-  <h6 class="modal-title">
-    {{ 'TASK.EXTEND_REQUEST_TITLE' | translate }} / {{ taskId }}
-  </h6>
-  <button class="btn-close" (click)="modal.dismiss()"></button>
-</div>
+<form [formGroup]="form">
 
-<div class="modal-body">
-
-  <div class="alert alert-success text-center">
-    {{ 'TASK.EXTEND_REQUEST_NOTE' | translate }}
+  <div class="modal-header">
+    <h6 class="modal-title">
+      {{ 'TASK.EXTEND_REQUEST_TITLE' | translate }} / {{ taskId }}
+    </h6>
+    <button class="btn-close" (click)="modal.dismiss()"></button>
   </div>
 
-  <div class="mb-3">
-    <label class="form-label">
-      {{ 'TASK.MESSAGE' | translate }}
-    </label>
+  <div class="modal-body">
 
-    <textarea
-      class="form-control"
-      rows="4"
-      [(ngModel)]="reason"
-      [placeholder]="'TASK.EXTEND_REQUEST_PLACEHOLDER' | translate">
-    </textarea>
+    <div class="alert alert-success text-center">
+      {{ 'TASK.EXTEND_REQUEST_NOTE' | translate }}
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">
+        {{ 'TASK.MESSAGE' | translate }}
+      </label>
+
+      <textarea
+        class="form-control"
+        rows="4"
+        formControlName="reason"
+        [placeholder]="'TASK.EXTEND_REQUEST_PLACEHOLDER' | translate">
+      </textarea>
+
+      <!-- رسالة الخطأ تظهر مباشرة عند الكتابة -->
+      <div class="text-danger small mt-1" *ngIf="form.controls['reason'].touched && form.controls['reason'].invalid">
+        <div *ngIf="form.controls['reason'].errors?.['required']">
+          {{ 'TASK.REQUIRED_FIELD' | translate }}
+        </div>
+        <div *ngIf="form.controls['reason'].errors?.['minlength']">
+          {{ 'TASK.MIN_LENGTH' | translate }} 5 {{ 'TASK.CHARACTERS' | translate }}
+        </div>
+      </div>
+    </div>
+
   </div>
 
-</div>
+  <div class="modal-footer">
+    <button class="btn btn-secondary" (click)="modal.dismiss()">
+      {{ 'FORM.CANCEL' | translate }}
+    </button>
 
-<div class="modal-footer justify-content-between">
+    <button
+      class="btn btn-danger"
+      [disabled]="form.invalid || isSubmitting"
+      (click)="submit()">
+      {{ 'TASK.SUBMIT_REQUEST' | translate }}
+    </button>
+  </div>
 
-  <button
-    class="btn btn-light"
-    data-bs-dismiss="modal">
-    {{ 'COMMON.CANCEL' | translate }}
-  </button>
-
-  <button
-    class="btn btn-danger">
-    {{ 'COMMON.DELETE' | translate }}
-  </button>
-
-  <button
-    class="btn btn-success"
-    (click)="submit()">
-    {{ 'COMMON.SEND' | translate }}
-  </button>
-
-</div>
+</form>

@@ -1,35 +1,40 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { TranslateModule } from '@ngx-translate/core';
 import { TaskService } from 'app/core/services/task.service';
-import { SimpleEmployee } from 'app/core/models/task/task';
 import { TaskWarningService } from 'app/core/services/task-warning.service';
 import { WarningAddEditDto } from 'app/core/models/task/task-warning';
+import { SimpleEmployee } from 'app/core/models/task/task';
 
 @Component({
   selector: 'app-warning-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslateModule],
   templateUrl: './warning-modal.component.html'
 })
 export class WarningModalComponent implements OnInit {
 
   @Input() taskId!: number;
 
-  selectedEmployeeId!: number;
-  reason = '';
-  isSubmitting = false;
+  form!: FormGroup;
   employees: SimpleEmployee[] = [];
+  isSubmitting = false;
 
   constructor(
     public modal: NgbActiveModal,
+    private fb: FormBuilder,
     private warningService: TaskWarningService,
     private taskService: TaskService
   ) {}
 
   ngOnInit(): void {
+    this.form = this.fb.group({
+      selectedEmployeeId: [null, Validators.required],
+      reason: ['', [Validators.required, Validators.minLength(5)]]
+    });
+
     this.loadEmployees();
   }
 
@@ -43,15 +48,11 @@ export class WarningModalComponent implements OnInit {
   }
 
   submit(): void {
-    if (
-      !this.selectedEmployeeId ||
-      !this.reason.trim() ||
-      this.isSubmitting
-    ) return;
+    if (this.form.invalid || this.isSubmitting) return;
 
     const model: WarningAddEditDto = {
-      issuedEmployeeId: this.selectedEmployeeId,
-      reason: this.reason.trim()
+      issuedEmployeeId: this.form.value.selectedEmployeeId,
+      reason: this.form.value.reason.trim()
     };
 
     this.isSubmitting = true;

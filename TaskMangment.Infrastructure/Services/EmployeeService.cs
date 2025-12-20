@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Azure.Core;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -120,8 +121,7 @@ namespace TaskMangment.Infrastructure.Services
 
 
             var hasher = new PasswordHasher<Employee>();
-            employee.PasswordHash = hasher.HashPassword(employee, dto.Password);
-
+            employee.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
             await _employeeRepo.AddAsync(employee);
             await _employeeRepo.SaveChangesAsync();
 
