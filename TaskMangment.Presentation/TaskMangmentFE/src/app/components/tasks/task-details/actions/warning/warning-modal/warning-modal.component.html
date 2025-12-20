@@ -1,46 +1,61 @@
-<div class="modal-header">
-  <h6 class="modal-title">{{ 'TASK.ADD_WARNING' | translate }}</h6>
-  <button class="btn-close" (click)="modal.dismiss()"></button>
-</div>
+<form [formGroup]="form">
 
-<div class="modal-body">
-
-  <!-- Employee Dropdown -->
-  <div class="mb-3">
-    <label class="form-label">{{ 'TASK.SELECT_EMPLOYEE' | translate }}</label>
-    <select
-      class="form-select"
-      [(ngModel)]="selectedEmployeeId">
-      <option [ngValue]="null" disabled>
-        {{ 'TASK.SELECT_EMPLOYEE' | translate }}
-      </option>
-      <option *ngFor="let emp of employees" [ngValue]="emp.id">
-        {{ emp.fullName }}
-      </option>
-    </select>
+  <div class="modal-header">
+    <h6 class="modal-title">{{ 'TASK.ADD_WARNING' | translate }}</h6>
+    <button class="btn-close" (click)="modal.dismiss()"></button>
   </div>
 
-  <!-- Reason -->
-  <div class="mb-3">
-    <textarea
-      class="form-control"
-      rows="3"
-      [(ngModel)]="reason"
-      placeholder="{{ 'TASK.WARNING_RESON' | translate }}">
-    </textarea>
+  <div class="modal-body">
+
+    <!-- Employee Dropdown -->
+    <div class="mb-3">
+      <label class="form-label">{{ 'TASK.SELECT_EMPLOYEE' | translate }}</label>
+      <select class="form-select" formControlName="selectedEmployeeId">
+        <option [ngValue]="null" disabled>
+          {{ 'TASK.SELECT_EMPLOYEE' | translate }}
+        </option>
+        <option *ngFor="let emp of employees" [ngValue]="emp.id">
+          {{ emp.fullName }}
+        </option>
+      </select>
+
+      <div class="text-danger small mt-1" *ngIf="form.controls['selectedEmployeeId'].touched && form.controls['selectedEmployeeId'].invalid">
+        يجب اختيار موظف
+      </div>
+    </div>
+
+    <!-- Reason -->
+    <div class="mb-3">
+      <textarea
+        class="form-control"
+        rows="3"
+        formControlName="reason"
+        placeholder="{{ 'TASK.WARNING_RESON' | translate }}">
+      </textarea>
+
+      <div class="text-danger small mt-1" *ngIf="form.controls['reason'].touched && form.controls['reason'].invalid">
+        <div *ngIf="form.controls['reason'].errors?.['required']">
+          {{ 'TASK.REQUIRED_FIELD' | translate }}
+        </div>
+        <div *ngIf="form.controls['reason'].errors?.['minlength']">
+          {{ 'TASK.MIN_LENGTH' | translate }} 5 {{ 'TASK.CHARACTERS' | translate }}
+        </div>
+      </div>
+    </div>
+
   </div>
 
-</div>
+   <div class="modal-footer">
+    <button class="btn btn-secondary" (click)="modal.dismiss()">
+      {{ 'FORM.CANCEL' | translate }}
+    </button>
 
-<div class="modal-footer">
-  <button class="btn btn-secondary" (click)="modal.dismiss()">
-    {{ 'FORM.CANCEL' | translate }}
-  </button>
+    <button
+      class="btn btn-danger"
+      [disabled]="form.invalid || isSubmitting"
+      (click)="submit()">
+      {{ 'TASK.SUBMIT_WARNING' | translate }}
+    </button>
+  </div>
 
-  <button
-    class="btn btn-warning"
-    [disabled]="isSubmitting"
-    (click)="submit()">
-    {{ 'FORM.SAVE' | translate }}
-  </button>
-</div>
+</form>

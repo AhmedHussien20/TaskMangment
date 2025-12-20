@@ -14,6 +14,7 @@ using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
+using TaskMangment.Domain.Event;
 using TaskMangment.Infrastructure.Persistence.Extensions;
 using Attachment = TaskMangment.Domain.Entities.Attachment;
 
@@ -27,6 +28,8 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<TaskAssignment> _taskAssignmentRepo;
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
+        private readonly IDomainEventDispatcher _eventDispatcher;
+
 
         public TaskCommentService(
             IRepository<TaskComment> commentRepo,
@@ -34,7 +37,8 @@ namespace TaskMangment.Infrastructure.Services
             IMapper mapper,
             ICachingService cache,
             IRepository<WorkTask> taskRepo,
-            IRepository<TaskAssignment> taskAssignmentRepo
+            IRepository<TaskAssignment> taskAssignmentRepo,
+            IDomainEventDispatcher eventDispatcher
             )
         {
             _commentRepo = commentRepo;
@@ -43,6 +47,7 @@ namespace TaskMangment.Infrastructure.Services
             _cache = cache;
             _taskRepo = taskRepo;
             _taskAssignmentRepo = taskAssignmentRepo;
+            _eventDispatcher = eventDispatcher;
         }
 
         public async Task<ApiResponse<PagedResponse<TaskCommentGetDto>>> GetAllAsync(TaskCommentRequest request)
@@ -111,30 +116,16 @@ namespace TaskMangment.Infrastructure.Services
             if (task == null)
                 return ApiResponse<TaskCommentGetDto>.Fail("Task not found", StatusCode.NotFound);
 
+
             var assignment = await _taskAssignmentRepo
                 .GetAll(a => a.TaskId == taskId && a.EmployeeId == employeeId && a.IsActive)
                 .FirstOrDefaultAsync();
+
 
             if (assignment == null)
                 return ApiResponse<TaskCommentGetDto>.Fail(
                     "Employee is not assigned to this task",
                     StatusCode.BadRequest);
-
-            // الحصول على AttachmentType أو إنشاؤه بدون حفظ
-            //var attachmentType = await _attachmentTypeRepo
-            //    .GetAll(at => at.TypeName == "Comment")
-            //    .FirstOrDefaultAsync();
-
-            //if (attachmentType == null)
-            //{
-            //    attachmentType = new AttachmentType
-            //    {
-            //        TypeName = "Comment",
-            //        CreatedDate = DateTime.UtcNow
-            //    };
-
-            //    await _attachmentTypeRepo.AddAsync(attachmentType);
-            //}
 
             var comment = _mapper.Map<TaskComment>(dto);
             comment.TaskId = taskId;
@@ -170,16 +161,37 @@ namespace TaskMangment.Infrastructure.Services
                     ContentType = dto.File.ContentType,
                     UploadedAt = DateTime.UtcNow,
                     ReferenceId = comment.Id,
-                    AttachmentType = AttachmentType.Comment,
+                    AttachmentType = AttachmentType.Comment
+                    //ReferenceId = taskId,
+                    //AttachmentType = AttachmentType.Task,
                 };
 
                 await _attachmentRepo.AddAsync(attachment);
             }
 
             await _commentRepo.AddAsync(comment);
+            await _attachmentRepo.AddAsync(attachment);
             await _commentRepo.SaveChangesAsync();
-
             await _cache.RemoveAsync("taskComments:");
+
+            var assignedEmployeeIds = await _taskAssignmentRepo
+          .GetAll(a => a.TaskId == taskId && a.IsActive)
+    .Select(a => a.EmployeeId)
+    .ToListAsync();
+
+
+            if (task.AssignedByEmployeeId.HasValue && !assignedEmployeeIds.Contains(task.AssignedByEmployeeId.Value))
+            {
+                assignedEmployeeIds.Add(task.AssignedByEmployeeId.Value);
+            }
+
+
+            await _eventDispatcher.PublishAsync(
+                new TaskRequstAddedEvent(comment.Id, taskId, employeeId, assignedEmployeeIds)
+            );
+
+
+
 
             var savedComment = await _commentRepo
                 .GetAll(c => c.Id == comment.Id)

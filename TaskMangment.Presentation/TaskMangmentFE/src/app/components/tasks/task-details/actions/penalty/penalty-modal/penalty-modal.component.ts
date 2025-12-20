@@ -1,73 +1,60 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { TranslateModule } from '@ngx-translate/core';
-import { DiscountAddEditDto } from 'app/core/models/task/task-penalty';
 import { TaskPenaltyService } from 'app/core/services/task-penalty.service';
-import { EmployeeService } from 'app/core/services/employee.service';
-import { Employee } from 'app/core/models/employee/employee';
 import { TaskService } from 'app/core/services/task.service';
+import { DiscountAddEditDto } from 'app/core/models/task/task-penalty';
 import { SimpleEmployee } from 'app/core/models/task/task';
 
 @Component({
   selector: 'app-penalty-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslateModule],
   templateUrl: './penalty-modal.component.html'
 })
 export class PenaltyModalComponent implements OnInit {
 
   @Input() taskId!: number;
 
-  selectedEmployeeId!: number;
-
-  amount!: number;
-  reason = '';
+  form!: FormGroup;
   isSubmitting = false;
   employees: SimpleEmployee[] = [];
 
-
   constructor(
     public modal: NgbActiveModal,
+    private fb: FormBuilder,
     private penaltyService: TaskPenaltyService,
     private employeeService: TaskService
   ) {}
 
   ngOnInit(): void {
+    this.form = this.fb.group({
+      selectedEmployeeId: [null, Validators.required],
+      amount: [null, [Validators.required, Validators.min(1)]],
+      reason: ['', [Validators.required, Validators.minLength(5)]]
+    });
+
     this.loadEmployees();
   }
 
   loadEmployees(): void {
-    const request = {
-      searchKey: '',
-      pageIndex: 1,
-      pageSize: 1000,
-      sortColumn: 'Id',
-      sortDirection: 'ASC'
-    };
-
-
-
     this.employeeService.getAssignedEmployees(this.taskId).subscribe(res => {
-this.employees = res.data.map(e => ({
-  id: e.employeeId,
-  fullName: e.employeeName
-}));    });
+      this.employees = res.data.map(e => ({
+        id: e.employeeId,
+        fullName: e.employeeName
+      }));
+    });
   }
 
   submit(): void {
-    if (
-      !this.selectedEmployeeId ||
-      !this.amount ||
-      !this.reason.trim() ||
-      this.isSubmitting
-    ) return;
+    if (this.form.invalid || this.isSubmitting) return;
 
     const model: DiscountAddEditDto = {
-      employeeId: this.selectedEmployeeId,
-      amount: this.amount,
-      reason: this.reason.trim()
+      employeeId: this.form.value.selectedEmployeeId,
+      amount: this.form.value.amount,
+      reason: this.form.value.reason.trim()
     };
 
     this.isSubmitting = true;

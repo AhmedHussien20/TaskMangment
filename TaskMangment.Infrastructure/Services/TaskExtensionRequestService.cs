@@ -14,6 +14,7 @@ using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
+using TaskMangment.Domain.Event;
 using TaskMangment.Infrastructure.Persistence.Extensions;
 
 namespace TaskMangment.Infrastructure.Services
@@ -25,19 +26,23 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<WorkTask> _taskRepo;
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
+        private readonly IDomainEventDispatcher _eventDispatcher;
+
 
         public TaskExtensionRequestService(
             IRepository<TaskExtensionRequest> requestRepo,
             IRepository<TaskAssignment> taskAssignmentRepo,
             IMapper mapper,
             ICachingService cache,
-            IRepository<WorkTask> taskRepo)
+            IRepository<WorkTask> taskRepo,
+            IDomainEventDispatcher eventDispatcher)
         {
             _requestRepo = requestRepo;
             _taskAssignmentRepo = taskAssignmentRepo;
             _mapper = mapper;
             _cache = cache;
             _taskRepo = taskRepo;
+            _eventDispatcher = eventDispatcher;
         }
 
         public async Task<ApiResponse<PagedResponse<TaskExtensionRequestListDto>>> GetAllAsync(TaskExtensionRequestRequest request)
@@ -131,6 +136,23 @@ namespace TaskMangment.Infrastructure.Services
             await _requestRepo.AddAsync(request);
             await _requestRepo.SaveChangesAsync();
             await _cache.RemoveAsync("taskExtensionRequests:");
+
+
+            var assignedEmployeeIds = await _taskAssignmentRepo
+         .GetAll(a => a.TaskId == taskId && a.IsActive)
+   .Select(a => a.EmployeeId)
+   .ToListAsync();
+
+
+            if (task.AssignedByEmployeeId.HasValue && !assignedEmployeeIds.Contains(task.AssignedByEmployeeId.Value))
+            {
+                assignedEmployeeIds.Add(task.AssignedByEmployeeId.Value);
+            }
+
+
+            await _eventDispatcher.PublishAsync(
+                new TaskRequestAddedEvent(request.Id, taskId, employeeId, assignedEmployeeIds)
+            );
 
 
             var savedRequest = await _requestRepo.GetAll(r => r.Id == request.Id)

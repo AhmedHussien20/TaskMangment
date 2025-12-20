@@ -46,15 +46,31 @@ export class BranchCreateUpdateComponent implements OnInit {
   formGroup!: FormGroup;
 
   formConfig: FormFieldConfig[] = [
-    { type: 'input', label: 'BRANCH.NAME', name: 'name', validations: { required: true, maxlength: 200 }, defaultValue: '' },
-    { type: 'input', label: 'BRANCH.ADDRESS', name: 'address', validations: { maxlength: 500 }, defaultValue: '' },
-    { type: 'input', label: 'BRANCH.PHONE', name: 'phone', validations: { maxlength: 50 }, defaultValue: '' },
-    { type: 'input', label: 'BRANCH.MOBILE', name: 'mobile', validations: { maxlength: 50 }, defaultValue: '' },
-    { type: 'input', label: 'BRANCH.FAX', name: 'fax', validations: { maxlength: 50 }, defaultValue: '' },
-    { type: 'input', label: 'BRANCH.EMAIL', name: 'email', validations: { email: true, maxlength: 200 }, defaultValue: '' },
-    { type: 'select', label: 'BRANCH.AREA', selectType: 'simple',name: 'areaId', options: [], validations: { required: true } },
-    { type: 'select', label: 'BRANCH.MANAGER',selectType: 'employee',name: 'managerId', options: [], validations: { required: false } },
-    { type: 'select', label: 'BRANCH.RESPONSIBLE',selectType: 'employee',name: 'responsibleId', options: [], validations: { required: false } }
+    { type: 'input', label: 'BRANCH.NAME', name: 'name' },
+    { type: 'input', label: 'BRANCH.ADDRESS', name: 'address' },
+    {
+       type: 'input',
+      inputType: 'number',
+      label: 'BRANCH.PHONE',
+      name: 'phone'},
+
+    { 
+      type: 'input', 
+      inputType: 'number',
+      label: 'BRANCH.MOBILE', 
+      name: 'mobile'
+    },
+    { type: 'input', label: 'BRANCH.FAX', name: 'fax'},
+
+    { 
+      type: 'input',
+      inputType: 'email',
+      label: 'BRANCH.EMAIL', 
+      name: 'email'
+    },
+    { type: 'select', label: 'BRANCH.AREA', selectType: 'simple',name: 'areaId', options: []},
+    { type: 'select', label: 'BRANCH.MANAGER',selectType: 'employee',name: 'managerId', options: []},
+    { type: 'select', label: 'BRANCH.RESPONSIBLE',selectType: 'employee',name: 'responsibleId', options: []}
   ];
 
   constructor(
@@ -76,19 +92,40 @@ export class BranchCreateUpdateComponent implements OnInit {
   }
 
   initForm() {
-    this.formGroup = this.fb.group({
-      name: ['', Validators.required],
-      address: [''],
-      phone: [''],
-      mobile: [''],
-      fax: [''],
-      email: ['', Validators.email],
+  this.formGroup = this.fb.group({
+    name: ['', [
+      Validators.required,
+      Validators.maxLength(200)
+    ]],
 
-      areaId: [null, Validators.required],
-      managerId: [null],
-      responsibleId: [null],
-    });
-  }
+    address: ['', Validators.maxLength(500)],
+
+    phone: ['', [
+      Validators.maxLength(50),
+      Validators.pattern('^[0-9]+$')
+    ]],
+
+    mobile: ['', [
+      Validators.maxLength(50),
+      Validators.pattern('^[0-9]+$')
+    ]],
+
+    fax: ['', Validators.maxLength(50)],
+
+    email: ['', [
+      Validators.email,
+      Validators.maxLength(200),
+      Validators.email
+    ]],
+
+    areaId: [null, Validators.required],
+
+    managerId: [null],
+
+    responsibleId: [null],
+  });
+}
+
 
   loadBranch() {
     if (!this.branchId) return;

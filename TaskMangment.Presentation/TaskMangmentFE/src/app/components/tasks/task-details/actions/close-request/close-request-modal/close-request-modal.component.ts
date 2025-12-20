@@ -1,6 +1,6 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { TranslateModule } from '@ngx-translate/core';
 import { TaskCloseRequestAdd } from 'app/core/models/task/task-close-request';
@@ -9,26 +9,33 @@ import { TaskCloseRequestService } from 'app/core/services/task-close-request.se
 @Component({
   selector: 'app-close-request-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslateModule],
   templateUrl: './close-request-modal.component.html'
 })
-export class CloseRequestModalComponent {
+export class CloseRequestModalComponent implements OnInit {
 
   @Input() taskId!: number;
 
-  reason = '';
+  form!: FormGroup;
   isSubmitting = false;
 
   constructor(
     public modal: NgbActiveModal,
+    private fb: FormBuilder,
     private closeRequestService: TaskCloseRequestService
   ) {}
 
+  ngOnInit(): void {
+    this.form = this.fb.group({
+      reason: ['', [Validators.required, Validators.minLength(5)]]
+    });
+  }
+
   submit(): void {
-    if (!this.reason.trim() || this.isSubmitting) return;
+    if (this.form.invalid || this.isSubmitting) return;
 
     const model: TaskCloseRequestAdd = {
-      message: this.reason.trim()
+      message: this.form.value.reason.trim()
     };
 
     this.isSubmitting = true;

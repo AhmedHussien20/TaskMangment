@@ -27,7 +27,7 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
         public string? TaskTitle { get; set; }
         public string Reason { get; set; }
         public decimal Amount { get; set; }
-        public DateTime CreatedAt { get; set; }
+        public DateTime CreatedDate { get; set; }
     }
 
    

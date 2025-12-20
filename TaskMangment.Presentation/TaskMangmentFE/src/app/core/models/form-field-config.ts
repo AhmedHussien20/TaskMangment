@@ -18,4 +18,14 @@ export interface FormFieldConfig {
   disabled?: boolean;
   
   showPassword?: boolean;
+errorMessages?: {
+    required?: string;
+    pattern?: string;
+    min?: string;
+    max?: string;
+    minlength?: string;
+    maxlength?: string;
+    email?: string;
+    [key: string]: string | undefined;
+  };
 }

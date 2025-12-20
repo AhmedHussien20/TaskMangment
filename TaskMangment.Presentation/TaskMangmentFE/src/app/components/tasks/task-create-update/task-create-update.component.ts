@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, MinLengthValidator, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { GenericFormComponent } from 'app/shared/components/generic-form/generic-form.component';
 import { TaskService } from 'app/core/services/task.service';
@@ -8,7 +8,7 @@ import { EmployeeService } from 'app/core/services/employee.service';
 import { Employee } from 'app/core/models/employee/employee';
 import { ToastrService } from 'ngx-toastr';
 import { FormFieldConfig } from 'app/core/models/form-field-config';
-import { TaskPriority } from 'app/core/models/task/task';
+import { TaskPriority, TaskStatus } from 'app/core/models/task/task';
 
 @Component({
   selector: 'app-task-create-update',
@@ -39,7 +39,7 @@ export class TaskCreateUpdateComponent implements OnInit {
       type: 'input',
       label: 'TASK.TITLE',
       name: 'title',
-      validations: { required: true, maxlength: 300 },
+      validations: { required: true, minlength: 3, maxlength: 300 },
       defaultValue: ''
     },
 
@@ -66,6 +66,21 @@ export class TaskCreateUpdateComponent implements OnInit {
       ],
       validations: { required: true },
       defaultValue: TaskPriority.Low
+    },
+    {
+      type: 'select',
+      label: 'TASK.Status',
+      name: 'status',
+      selectType: 'simple',
+      options: [
+        { label: 'TASK.STATUS_NEW', value: TaskStatus.New },
+        { label: 'TASK.STATUS_IN_PROGRESS', value: TaskStatus.InProgress },
+        { label: 'TASK.STATUS_CLOSED', value: TaskStatus.Closed },
+        { label: 'TASK.STATUS_ARCHIVED', value: TaskStatus.Archived }
+
+      ],
+      validations: { required: true },
+      defaultValue: TaskStatus.New
     },
 
     {
@@ -140,25 +155,51 @@ export class TaskCreateUpdateComponent implements OnInit {
   }
 
   initForm() {
-    this.formGroup = this.fb.group({
-      title: ['', Validators.required],
-      description: [''],
-      assignedEmployeeIds: [[], Validators.required],
-      priority: [TaskPriority.Low, Validators.required],
-      dueDate: [null],
-      commentAllowPeriodDays: [null],
-      maxWarnings: [3],
-      penaltyAtMaxWarnings: [0],
-      penaltyOnAutoClose: [0],
-      isShared: [false]
-    });
+   this.formGroup = this.fb.group({
+  title: ['', [
+    Validators.required,
+    Validators.minLength(3),
+    Validators.maxLength(100)
+  ]],
+  description: [''],
+  assignedEmployeeIds: [[], Validators.required],
+  priority: [TaskPriority.Low, Validators.required],
+  status: [TaskStatus.New, Validators.required],
+  dueDate: [null],
+  commentAllowPeriodDays: [null, [Validators.pattern('^[0-9]+$')]],
+  maxWarnings: [3, [Validators.pattern('^[0-9]+$')]],
+  penaltyAtMaxWarnings: [0, [Validators.pattern('^[0-9]+$')]],
+  penaltyOnAutoClose: [0, [Validators.pattern('^[0-9]+$')]],
+  isShared: [false]
+});
+
   }
 
-  loadTask() {
-    this.taskService.getById(this.taskId!).subscribe(res => {
-      this.formGroup.patchValue(res.data);
-    });
-  }
+ loadTask() {
+  this.taskService.getById(this.taskId!).subscribe(res => {
+    const task = res.data;
+
+    // معالجة الموظفين
+    const assignedEmployeeIds = task.assignedEmployees?.map((e: any) => e.id) || [];
+
+    let dueDate: string | null = null;
+    if (task.dueDate) {
+      const d = new Date(task.dueDate);
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      dueDate = `${d.getFullYear()}-${month}-${day}`;
+    }
+
+    const patch = {
+      ...task,
+      assignedEmployeeIds,
+      dueDate
+    };
+
+    this.formGroup.patchValue(patch);
+  });
+}
+
 
   loadEmployees() {
     const request = {
