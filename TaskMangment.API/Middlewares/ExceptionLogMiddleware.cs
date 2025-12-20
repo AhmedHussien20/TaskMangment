@@ -2,6 +2,7 @@
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Application.Responses;
 using Serilog;
+using TaskMangment.Application.Common.Exceptions;
 
 namespace TaskMangment.API.Middlewares
 {
@@ -61,7 +62,7 @@ namespace TaskMangment.API.Middlewares
                 }
                 else if (ex is AppException appEx)
                 {
-                    statusCode = appEx.StatusCode;
+                    statusCode =(StatusCode)appEx.StatusCode;
                     message = appEx.Message;
                 }
                 else
@@ -87,15 +88,6 @@ namespace TaskMangment.API.Middlewares
             return context.Response.WriteAsJsonAsync(response);
         }
     }
+     
 
-    public class AppException : Exception
-    {
-        public StatusCode StatusCode { get; }
-
-        public AppException(string message, StatusCode statusCode) : base(message)
-        {
-            StatusCode = statusCode;
-        }
-    }
-    
 }

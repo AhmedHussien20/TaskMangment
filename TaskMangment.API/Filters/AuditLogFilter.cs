@@ -19,22 +19,31 @@ namespace TaskMangment.API.Filters
             _currentUserService = currentUserService;
         }
 
-        public override async Task OnActionExecutionAsync(
-            ActionExecutingContext context,
-            ActionExecutionDelegate next)
+        public override async Task OnActionExecutionAsync(ActionExecutingContext context,ActionExecutionDelegate next)
         {
             var controllerName = context.Controller.GetType().Name.Replace("Controller", "");
-
             var actionName = context.ActionDescriptor.DisplayName;
-
             var httpMethod = context.HttpContext.Request.Method;
 
             int? entityId = ExtractEntityId(context);
 
-            var result = await next();
+            ActionExecutedContext result;
 
-            var isSuccess = result.Exception == null;
+            try
+            {
+                result = await next();  
+            }
+            catch (Exception ex)
+            {
+                await LogAudit(context, controllerName, actionName, httpMethod, entityId, ex);
 
+                throw;
+            }
+
+            await LogAudit(context, controllerName, actionName, httpMethod, entityId, null);
+        }
+        private async Task LogAudit(ActionExecutingContext context,string controllerName,string actionName,string httpMethod,int? entityId,Exception? exception)
+        {
             var details = new
             {
                 Controller = controllerName,
@@ -43,9 +52,9 @@ namespace TaskMangment.API.Filters
                 RequestUrl = context.HttpContext.Request.Path,
                 IpAddress = context.HttpContext.Connection.RemoteIpAddress?.ToString(),
                 StatusCode = context.HttpContext.Response.StatusCode,
-                Status = isSuccess ? "Success" : "Failed",
+                Status = exception == null ? "Success" : "Failed",
                 Timestamp = DateTime.UtcNow,
-                Error = result.Exception?.Message
+                Error = exception?.Message
             };
 
             string actionType = GetActionType(httpMethod, actionName);

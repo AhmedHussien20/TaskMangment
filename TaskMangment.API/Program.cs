@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using System.Globalization;
 using System.Text;
 using TaskMangment.API.Extensions;
 using TaskMangment.API.Filters;
@@ -55,12 +57,12 @@ namespace TaskMangment.API
             builder.Services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
             // Notification sender 
             builder.Services.AddScoped<INotificationSender, NotificationSender>();
-            builder.Services.AddScoped<
-    IEventHandler<TaskAssignedEvent>,
-    TaskAssignedEventHandler>();
-
+            builder.Services.AddScoped<IEventHandler<TaskAssignedEvent>,TaskAssignedEventHandler>();
+    
             builder.Services.AddScoped<AuditLogAttribute>();
             builder.Services.AddHttpContextAccessor();
+            builder.Services.AddHttpContextAccessor();
+            builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
             // SignalR
             builder.Services.AddSignalR();
@@ -78,6 +80,12 @@ namespace TaskMangment.API
                         .SetIsOriginAllowed(origin => true)
                         .AllowCredentials();
                 });
+            });
+
+            //Localization
+            builder.Services.AddLocalization(options =>
+            {
+                options.ResourcesPath = "Resources";
             });
 
             // ------------------------------
@@ -148,19 +156,19 @@ namespace TaskMangment.API
                 });
 
                 c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
-    {
-        {
-            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
-            {
-                Reference = new Microsoft.OpenApi.Models.OpenApiReference
                 {
-                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            Array.Empty<string>()
-        }
-    });
+                    {
+                        new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+                        {
+                            Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                            {
+                                Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        },
+                        Array.Empty<string>()
+                    }
+                });
             });
 
 
@@ -176,25 +184,29 @@ namespace TaskMangment.API
                 app.UseSwaggerUI();
             }
 
-            // Global Exception Middleware (catch unhandled exceptions)
-            app.UseMiddleware<ExceptionLogMiddleware>();
-
-           
-            app.UseHttpsRedirection();
-
-            app.UseCors("AllowAll");
-
-            // 401 Handler BEFORE authorization
-            app.Use(async (context, next) =>
+            var supportedCultures = new[]
             {
-                await next();
+                new CultureInfo("en"),
+                new CultureInfo("ar")
+            };
 
-                if (context.Response.StatusCode == 401 && !context.Response.HasStarted)
+            app.UseRequestLocalization(new RequestLocalizationOptions
+            {
+                DefaultRequestCulture = new RequestCulture("ar"),
+                SupportedCultures = supportedCultures,
+                SupportedUICultures = supportedCultures,
+
+                RequestCultureProviders = new IRequestCultureProvider[]
                 {
-                    context.Response.ContentType = "application/json";
-                    await context.Response.WriteAsync("{\"error\": true, \"message\": \"Unauthorized - Token missing or invalid.\"}");
+                    new AcceptLanguageHeaderRequestCultureProvider()
                 }
             });
+            app.UseMiddleware<ExceptionHandlingMiddleware>();
+            app.UseHttpsRedirection();
+
+            app.UseCors("AllowAll"); 
+
+            //app.UseMiddleware<ExceptionLogMiddleware>();
 
             app.UseAuthentication();
             app.UseAuthorization();

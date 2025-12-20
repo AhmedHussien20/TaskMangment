@@ -16,14 +16,28 @@ namespace TaskMangment.Infrastructure.Services
         public CurrentUserService(IHttpContextAccessor httpContextAccessor)
         {
             _httpContextAccessor = httpContextAccessor;
+            var claims = _httpContextAccessor.HttpContext?.User?.Claims;
+
+            foreach (var claim in claims ?? Enumerable.Empty<Claim>())
+            {
+                Console.WriteLine($"CLAIM: {claim.Type} = {claim.Value}");
+            }
         }
 
-        public string UserId =>
-     _httpContextAccessor.HttpContext?.User?.FindFirst("UserId")?.Value
-     ?? "Anonymous";
+        public int? UserId =>
+           int.TryParse(
+               _httpContextAccessor.HttpContext?
+                   .User?
+                   .FindFirst("UserId")?.Value,
+               out var id) ? id : null; 
 
-        public string UserName =>
-     _httpContextAccessor.HttpContext?.User?.FindFirst("FullName")?.Value
-     ?? "System";
+        public int? CompanyId =>
+              int.TryParse(
+               _httpContextAccessor.HttpContext?
+                   .User?
+                   .FindFirst("CompanyId")?.Value,
+               out var companyId) ? companyId : null;
+
+        public string? UserName => throw new NotImplementedException();
     }
 }

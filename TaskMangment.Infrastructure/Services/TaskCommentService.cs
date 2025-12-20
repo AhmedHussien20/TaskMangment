@@ -138,8 +138,7 @@ namespace TaskMangment.Infrastructure.Services
 
             var comment = _mapper.Map<TaskComment>(dto);
             comment.TaskId = taskId;
-            comment.EmployeeId = employeeId;
-            comment.CreatedDate = DateTime.UtcNow;
+            comment.EmployeeId = employeeId; 
             Attachment attachment = new Attachment();
 
             // إضافة الملف إن وجد
@@ -168,17 +167,16 @@ namespace TaskMangment.Infrastructure.Services
                     FilePath = $"uploads/comments/{fileName}",
                     Size = dto.File.Length,
                     UploadedBy = employeeId,
-                    CreatedBy = employeeId,
                     ContentType = dto.File.ContentType,
                     UploadedAt = DateTime.UtcNow,
-                    ReferenceId = taskId,
-                    AttachmentType = AttachmentType.Task,
+                    ReferenceId = comment.Id,
+                    AttachmentType = AttachmentType.Comment,
                 };
-    
+
+                await _attachmentRepo.AddAsync(attachment);
             }
 
             await _commentRepo.AddAsync(comment);
-            await _attachmentRepo.AddAsync(attachment);
             await _commentRepo.SaveChangesAsync();
 
             await _cache.RemoveAsync("taskComments:");
