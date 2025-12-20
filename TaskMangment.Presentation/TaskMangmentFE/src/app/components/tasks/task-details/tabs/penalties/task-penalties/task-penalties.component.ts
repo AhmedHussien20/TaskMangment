@@ -25,7 +25,7 @@ export class TaskPenaltiesComponent implements OnInit, OnDestroy {
     { key: 'createdAt', label: 'TASK.DATE' },
     { key: 'reason', label: 'TASK.PENALTY_REASON'},
     { key: 'amount', label: 'TASK.PENALTY_AMOUNT_LABEL' },
-    { key: 'status', label: 'STATUS' }
+    { key: 'employeeName', label: 'TASK.PENALTY_EMPLOYEE_NAME' }
   ];
 
   private sub!: Subscription;

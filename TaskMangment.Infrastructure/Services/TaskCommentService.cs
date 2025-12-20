@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Mail;
 using System.Threading.Tasks;
 using TaskMangment.Application.Common.ApiRequests.Task;
 using TaskMangment.Application.Common.Interfaces;
@@ -14,6 +15,7 @@ using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
 using TaskMangment.Infrastructure.Persistence.Extensions;
+using Attachment = TaskMangment.Domain.Entities.Attachment;
 
 namespace TaskMangment.Infrastructure.Services
 {
@@ -21,7 +23,6 @@ namespace TaskMangment.Infrastructure.Services
     {
         private readonly IRepository<TaskComment> _commentRepo;
         private readonly IRepository<Attachment> _attachmentRepo;
-         
         private readonly IRepository<WorkTask> _taskRepo;
         private readonly IRepository<TaskAssignment> _taskAssignmentRepo;
         private readonly IMapper _mapper;
@@ -119,12 +120,27 @@ namespace TaskMangment.Infrastructure.Services
                     "Employee is not assigned to this task",
                     StatusCode.BadRequest);
 
-           
+            // الحصول على AttachmentType أو إنشاؤه بدون حفظ
+            //var attachmentType = await _attachmentTypeRepo
+            //    .GetAll(at => at.TypeName == "Comment")
+            //    .FirstOrDefaultAsync();
+
+            //if (attachmentType == null)
+            //{
+            //    attachmentType = new AttachmentType
+            //    {
+            //        TypeName = "Comment",
+            //        CreatedDate = DateTime.UtcNow
+            //    };
+
+            //    await _attachmentTypeRepo.AddAsync(attachmentType);
+            //}
 
             var comment = _mapper.Map<TaskComment>(dto);
             comment.TaskId = taskId;
             comment.EmployeeId = employeeId;
             comment.CreatedDate = DateTime.UtcNow;
+            Attachment attachment = new Attachment();
 
             // إضافة الملف إن وجد
             if (dto.File != null)
@@ -145,24 +161,24 @@ namespace TaskMangment.Infrastructure.Services
                     await dto.File.CopyToAsync(stream);
                 }
 
-                comment.Attachments = new List<Attachment>
+
+                attachment= new Attachment
                 {
-                    new Attachment
-                    {
-                        FileName = dto.File.FileName,
-                        FilePath = $"uploads/comments/{fileName}",
-                        Size = dto.File.Length,
-                        UploadedBy = employeeId,
-                        CreatedBy = employeeId,
-                        ContentType = dto.File.ContentType,
-                        UploadedAt = DateTime.UtcNow,
-                        ReferenceId = taskId,
-                        AttachmentType= AttachmentType.Task,
-                    }
+                    FileName = dto.File.FileName,
+                    FilePath = $"uploads/comments/{fileName}",
+                    Size = dto.File.Length,
+                    UploadedBy = employeeId,
+                    CreatedBy = employeeId,
+                    ContentType = dto.File.ContentType,
+                    UploadedAt = DateTime.UtcNow,
+                    ReferenceId = taskId,
+                    AttachmentType = AttachmentType.Task,
                 };
-                }
+    
+            }
 
             await _commentRepo.AddAsync(comment);
+            await _attachmentRepo.AddAsync(attachment);
             await _commentRepo.SaveChangesAsync();
 
             await _cache.RemoveAsync("taskComments:");
@@ -172,7 +188,6 @@ namespace TaskMangment.Infrastructure.Services
                 .Include(c => c.Employee)
                 .Include(c => c.Task)
                 .Include(c => c.Attachments)
-                    
                 .AsNoTracking()
                 .FirstOrDefaultAsync();
 
