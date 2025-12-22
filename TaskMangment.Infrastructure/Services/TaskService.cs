@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -7,6 +8,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TaskMangment.Application.Common.ApiRequests.Task;
+using TaskMangment.Application.Common.Errors;
+using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Responses;
 using TaskMangment.Application.DTOs.TaskDTOs;
@@ -119,7 +122,7 @@ namespace TaskMangment.Infrastructure.Services
                 .FirstOrDefaultAsync();
 
             if (task == null)
-                return ApiResponse<TaskGetDto>.Fail("Task not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.TaskNotFound, StatusCodes.Status400BadRequest);
 
             var fullTask = await _taskRepo.GetAll(t => t.Id == task.Id)
                 .Include(t => t.CreatedBy)
@@ -147,7 +150,7 @@ namespace TaskMangment.Infrastructure.Services
             foreach (var empId in dto.AssignedEmployeeIds)
             {
                 if (!await _employeeRepo.IsExistAsync(empId))
-                    return ApiResponse<TaskGetDto>.Fail($"Employee with ID {empId} not found");
+                    throw new AppException(ErrorCodes.EmployeeNotFound, StatusCodes.Status400BadRequest);
 
                 var assignment = new TaskAssignment
                 {
@@ -195,10 +198,9 @@ namespace TaskMangment.Infrastructure.Services
         {
             var task = await _taskRepo.GetByIDAsync(id);
             if (task == null)
-                return ApiResponse<TaskGetDto>.Fail("Task not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.TaskNotFound, StatusCodes.Status400BadRequest);
 
             _mapper.Map(dto, task);
-            task.ModifiedBy = modifierUser;
 
             var existingAssignments = await _assignmentRepo
                 .GetAll(a => a.TaskId == id)
@@ -258,7 +260,8 @@ namespace TaskMangment.Infrastructure.Services
         {
             var task = await _taskRepo.GetByIDAsync(id);
             if (task == null)
-                return ApiResponse<bool>.Fail("Task not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.TaskNotFound, StatusCodes.Status400BadRequest);
+
             _taskRepo.SoftDelete(task);
             await _taskRepo.SaveChangesAsync();
             await _cache.RemoveAsync("tasks:");
@@ -277,6 +280,11 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<List<TaskAssignmentDto>>> GetAssignedEmployeesAsync(int taskId)
         {
+
+            var task = await _taskRepo.GetByIDAsync(taskId);
+            if (task == null)
+                throw new AppException(ErrorCodes.TaskNotFound, StatusCodes.Status400BadRequest);
+
             var assignments = await _assignmentRepo.GetAll(a => a.TaskId == taskId)
             .Include(a => a.Employee)
            .ThenInclude(e => e.EmployeeRoles)   

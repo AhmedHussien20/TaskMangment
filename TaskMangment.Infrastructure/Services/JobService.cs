@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -6,6 +7,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TaskMangment.Application.Common.ApiRequests.Job;
+using TaskMangment.Application.Common.Errors;
+using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Responses;
 using TaskMangment.Application.DTOs;
@@ -85,7 +88,7 @@ namespace TaskMangment.Infrastructure.Services
                 .FirstOrDefaultAsync();
 
             if (job == null)
-                return ApiResponse<JobGetDto>.Fail("Job not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.JobNotFound,StatusCodes.Status400BadRequest);
 
             var dto = _mapper.Map<JobGetDto>(job);
             return ApiResponse<JobGetDto>.Ok(dto);
@@ -94,10 +97,12 @@ namespace TaskMangment.Infrastructure.Services
         public async Task<ApiResponse<JobGetDto>> AddAsync(JobAddEditDto dto)
         {
             if (!await _employeeRepository.IsExistAsync(dto.EmployeeId))
-                return ApiResponse<JobGetDto>.Fail("Employee not found", StatusCode.NotFound);
+                throw new AppException(
+                                                    ErrorCodes.EmployeeNotFound,
+                                                    StatusCodes.Status400BadRequest);
 
             if (!await _departmentRepository.IsExistAsync(dto.DepartmentId))
-                return ApiResponse<JobGetDto>.Fail("Department not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.DepartmentNotFound, StatusCodes.Status400BadRequest);
 
             var job = _mapper.Map<Job>(dto);
 
@@ -127,13 +132,13 @@ namespace TaskMangment.Infrastructure.Services
                 .FirstOrDefaultAsync();
 
             if (job == null)
-                return ApiResponse<JobGetDto>.Fail("Job not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.JobNotFound, StatusCodes.Status400BadRequest);
 
             if (!await _employeeRepository.IsExistAsync(dto.EmployeeId))
-                return ApiResponse<JobGetDto>.Fail("Employee not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.EmployeeNotFound, StatusCodes.Status400BadRequest);
 
             if (!await _departmentRepository.IsExistAsync(dto.DepartmentId))
-                return ApiResponse<JobGetDto>.Fail("Department not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.DepartmentNotFound,StatusCodes.Status400BadRequest);
 
             _mapper.Map(dto, job);
 
@@ -160,7 +165,7 @@ namespace TaskMangment.Infrastructure.Services
         {
             var job = await _jobRepository.GetByIDAsync(id);
             if (job == null)
-                return ApiResponse<bool>.Fail("Job not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.JobNotFound, StatusCodes.Status400BadRequest);
 
             _jobRepository.SoftDelete(job);
             await _jobRepository.SaveChangesAsync();

@@ -118,9 +118,73 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="MANAGER_NOT_FOUND" xml:space="preserve">
-    <value>MANAGER NOT FOUND</value>
+    <value>manager not found</value>
   </data>
   <data name="SAVE_FAILED" xml:space="preserve">
     <value>save failed</value>
+  </data>
+  <data name="EMAIL_NOT_FOUND" xml:space="preserve">
+    <value>email not fond</value>
+  </data>
+  <data name="AREA_NOT_FOUND" xml:space="preserve">
+    <value>area not found</value>
+  </data>
+  <data name="INVALID_PASS_OR_EMAIL" xml:space="preserve">
+    <value>invalid password or email</value>
+    <comment>&#x8;</comment>
+  </data>
+  <data name="BRANCH_NOT_FOUND" xml:space="preserve">
+    <value>branch not found</value>
+  </data>
+  <data name="COURSE_NOT_FOUND" xml:space="preserve">
+    <value>course not found</value>
+  </data>
+  <data name="EMPLOYEE_NOT_FOUND" xml:space="preserve">
+    <value>employee not found</value>
+  </data>
+  <data name="OFFER_NOT_FOUND" xml:space="preserve">
+    <value>offer not found</value>
+  </data>
+  <data name="STUDENT_NOT_FOUND" xml:space="preserve">
+    <value>student not found</value>
+  </data>
+  <data name="SUBJECT_NOT_FOUND" xml:space="preserve">
+    <value>subject not found</value>
+  </data>
+  <data name="HAS_NO_ROLES" xml:space="preserve">
+    <value>the user has no role</value>
+  </data>
+  <data name="NOT_FOUND" xml:space="preserve">
+    <value>not found</value>
+  </data>
+  <data name="TASK_NOT_FOUND" xml:space="preserve">
+    <value>task not found</value>
+  </data>
+  <data name="NOT_ASSIGNED" xml:space="preserve">
+    <value>the employee not assigned </value>
+  </data>
+  <data name="ALREADY_REVIEWED" xml:space="preserve">
+    <value>already reviewed</value>
+  </data>
+  <data name="COMPANY_NOT_FOUND" xml:space="preserve">
+    <value>company not found</value>
+  </data>
+  <data name="DEPARTMENT_NOT_FOUND" xml:space="preserve">
+    <value>department not found</value>
+  </data>
+  <data name="JOB_NOT_FOUND" xml:space="preserve">
+    <value>job not found</value>
+  </data>
+  <data name="ROLE_NOT_FOUND" xml:space="preserve">
+    <value>role not found</value>
+  </data>
+  <data name="PERMISSION_NOT_FOUND" xml:space="preserve">
+    <value>permission not found</value>
+  </data>
+  <data name="ALREADY_EXISTS" xml:space="preserve">
+    <value>already exists</value>
+  </data>
+  <data name="ALREADY_ASSIGNED" xml:space="preserve">
+    <value>already assigned</value>
   </data>
 </root>

@@ -99,9 +99,6 @@ export class PermissionCreateUpdateComponent implements OnInit {
         next: () => {
           this.toastr.success(this.translate.instant('PERMISSION.UPDATE_SUCCESS'));
           this.formSubmitted.emit();
-        },
-        error: () => {
-          this.toastr.error(this.translate.instant('PERMISSION.UPDATE_FAILED'));
         }
       });
     }
@@ -112,10 +109,8 @@ export class PermissionCreateUpdateComponent implements OnInit {
         next: () => {
           this.toastr.success(this.translate.instant('PERMISSION.CREATE_SUCCESS'));
           this.formSubmitted.emit();
-        },
-        error: () => {
-          this.toastr.error(this.translate.instant('PERMISSION.CREATE_FAILED'));
         }
+      
       });
     }
   }

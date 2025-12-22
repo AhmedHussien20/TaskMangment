@@ -1,8 +1,13 @@
-﻿using Microsoft.EntityFrameworkCore;
-using TaskMangment.Application.Interfaces.Services;  
-using TaskMangment.Infrastructure.DataContext;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using Pipelines.Sockets.Unofficial.Arenas;
 using TaskMangment.Application.Common.ApiRequests.Auth;
+using TaskMangment.Application.Common.Errors;
+using TaskMangment.Application.Common.Exceptions;
+using TaskMangment.Application.Interfaces.Services;  
 using TaskMangment.Application.Responses;
+using TaskMangment.Domain.Entities;
+using TaskMangment.Infrastructure.DataContext;
 
 public class AuthService : IAuthService
 {
@@ -22,11 +27,14 @@ public class AuthService : IAuthService
         var user = await _db.Employees.FirstOrDefaultAsync(u => u.Email == request.Email);
 
         if (user == null)
-            return ApiResponse<LoginResponse>.Fail("Invalid email or password");
+                throw new AppException(
+                    ErrorCodes.EmailNotFound,
+                    StatusCodes.Status404NotFound);
 
         if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
-            return ApiResponse<LoginResponse>.Fail("Invalid email or password");
-
+                throw new AppException(
+                    ErrorCodes.Invalid,
+                    StatusCodes.Status404NotFound);
         var token = _jwt.GenerateToken(user);
 
         return ApiResponse<LoginResponse>.Ok(new LoginResponse
@@ -56,7 +64,9 @@ public class AuthService : IAuthService
         var user = await _db.Employees.FirstOrDefaultAsync(u => u.Email == email);
 
         if (user == null)
-            return ApiResponse<bool>.Fail("User not found");
+            throw new AppException(
+                ErrorCodes.EmailNotFound,
+                StatusCodes.Status404NotFound);
 
         string resetToken = Guid.NewGuid().ToString();
 
@@ -79,7 +89,9 @@ public class AuthService : IAuthService
                 u.ResetPasswordExpiry > DateTime.UtcNow);
 
         if (user == null)
-            return ApiResponse<bool>.Fail("Invalid or expired token");
+            throw new AppException(
+                ErrorCodes.EmailNotFound,
+                StatusCodes.Status404NotFound);
 
         user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
         user.ResetPasswordToken = string.Empty;

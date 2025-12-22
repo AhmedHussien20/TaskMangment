@@ -23,10 +23,6 @@ namespace TaskMangment.API.Controllers
         public async Task<IActionResult> Create([FromBody] RoleAddEditDto dto)
         {
             var result = await _service.CreateAsync(dto, this.CompanyId);
-
-            if (!result.Success)
-                return Fail(result.Message);
-
             return Success(result.Data, "Role created successfully");
         }
 
@@ -35,10 +31,6 @@ namespace TaskMangment.API.Controllers
         public async Task<IActionResult> GetAll([FromQuery] RoleRequest request)
         {
             var result = await _service.GetAllAsync(request, this.CompanyId);
-
-            if (!result.Success)
-                return Fail(result.Message);
-
             return Success(result.Data);
         }
 
@@ -48,9 +40,6 @@ namespace TaskMangment.API.Controllers
         {
             var result = await _service.GetByIdAsync(id, this.CompanyId);
 
-            if (!result.Success)
-                return Fail(result.Message);
-
             return Success(result.Data);
         }
 
@@ -59,10 +48,6 @@ namespace TaskMangment.API.Controllers
         public async Task<IActionResult> Update(int id, [FromBody] RoleAddEditDto dto)
         {
             var result = await _service.UpdateAsync(id, dto, this.CompanyId);
-
-            if (!result.Success)
-                return Fail(result.Message);
-
             return Success(result.Data, "Role updated successfully");
         }
 
@@ -71,10 +56,6 @@ namespace TaskMangment.API.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             var result = await _service.DeleteAsync(id, this.CompanyId);
-
-            if (!result.Success)
-                return Fail(result.Message);
-
             return Success(true, "Role deleted successfully");
         }
     }

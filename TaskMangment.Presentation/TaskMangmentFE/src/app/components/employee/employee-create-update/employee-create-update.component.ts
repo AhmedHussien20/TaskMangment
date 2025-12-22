@@ -309,9 +309,6 @@ export class EmployeeCreateUpdateComponent implements OnInit {
         next: () => {
           this.toastr.success(this.translate.instant('EMPLOYEE.UPDATE_SUCCESS'));
           this.formSubmitted.emit();
-        },
-        error: () => {
-          this.toastr.error(this.translate.instant('EMPLOYEE.UPDATE_FAILED'));
         }
       });
     }
@@ -322,9 +319,6 @@ export class EmployeeCreateUpdateComponent implements OnInit {
         next: () => {
           this.toastr.success(this.translate.instant('EMPLOYEE.CREATE_SUCCESS'));
           this.formSubmitted.emit();
-        },
-        error: () => {
-          this.toastr.error(this.translate.instant('EMPLOYEE.CREATE_FAILED'));
         }
       });
     }

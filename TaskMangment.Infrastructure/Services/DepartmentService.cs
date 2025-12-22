@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -6,6 +7,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TaskMangment.Application.Common.ApiRequests.Department;
+using TaskMangment.Application.Common.Errors;
+using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Responses;
 using TaskMangment.Application.DTOs;
@@ -91,8 +94,9 @@ namespace TaskMangment.Infrastructure.Services
                 .FirstOrDefaultAsync();
 
             if (department == null)
-                return ApiResponse<DepartmentGetDto>.Fail("Department not found", StatusCode.NotFound);
-
+                throw new AppException(
+                    ErrorCodes.DepartmentNotFound,
+                    StatusCodes.Status404NotFound);
             var dto = _mapper.Map<DepartmentGetDto>(department);
             dto.EmployeeCount = department.Jobs.Count;
 
@@ -102,18 +106,19 @@ namespace TaskMangment.Infrastructure.Services
         public async Task<ApiResponse<DepartmentGetDto>> AddAsync(DepartmentAddEditDto dto)
         {
             if (!await _branchRepository.IsExistAsync(dto.BranchId))
-                return ApiResponse<DepartmentGetDto>.Fail("Branch not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.BranchNotFound, StatusCodes.Status404NotFound);
 
             if (dto.ManagerEmployeeId.HasValue && !await _employeeRepository.IsExistAsync(dto.ManagerEmployeeId.Value))
-                return ApiResponse<DepartmentGetDto>.Fail("Manager not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.ManagerNotFound, StatusCodes.Status404NotFound);
 
             var managerAlreadyUsed = await _departmentRepository
                 .GetAll(d => d.ManagerEmployeeId == dto.ManagerEmployeeId)
                 .AnyAsync();
 
             if (managerAlreadyUsed)
-                return ApiResponse<DepartmentGetDto>.Fail("This employee is already assigned as a manager in another department", StatusCode.AlreadyUsed);
-
+                throw new AppException(
+                                    ErrorCodes.AlreadyAssigned,
+                                    StatusCodes.Status400BadRequest);
 
             var department = _mapper.Map<Department>(dto);
 
@@ -137,13 +142,14 @@ namespace TaskMangment.Infrastructure.Services
         {
             var department = await _departmentRepository.GetByIDAsync(id);
             if (department == null)
-                return ApiResponse<DepartmentGetDto>.Fail("Department not found", StatusCode.NotFound);
-
+                throw new AppException(
+                                    ErrorCodes.DepartmentNotFound,
+                                    StatusCodes.Status400BadRequest);
             if (!await _branchRepository.IsExistAsync(dto.BranchId))
-                return ApiResponse<DepartmentGetDto>.Fail("Branch not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.BranchNotFound, StatusCodes.Status400BadRequest);
 
             if (dto.ManagerEmployeeId.HasValue && !await _employeeRepository.IsExistAsync(dto.ManagerEmployeeId.Value))
-                return ApiResponse<DepartmentGetDto>.Fail("Manager not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.ManagerNotFound, StatusCodes.Status400BadRequest);
 
 
             var managerAlreadyUsed = await _departmentRepository
@@ -151,7 +157,7 @@ namespace TaskMangment.Infrastructure.Services
                 .AnyAsync();
 
             if (managerAlreadyUsed)
-                return ApiResponse<DepartmentGetDto>.Fail("This employee is already assigned as a manager in another department", StatusCode.AlreadyUsed);
+                throw new AppException(ErrorCodes.AlreadyAssigned, StatusCodes.Status400BadRequest);
 
             _mapper.Map(dto, department);
             await _departmentRepository.SaveChangesAsync();
@@ -172,8 +178,9 @@ namespace TaskMangment.Infrastructure.Services
         {
             var department = await _departmentRepository.GetByIDAsync(id);
             if (department == null)
-                return ApiResponse<bool>.Fail("Department not found", StatusCode.NotFound);
-
+                throw new AppException(
+                                    ErrorCodes.DepartmentNotFound,
+                                    StatusCodes.Status400BadRequest);
             _departmentRepository.SoftDelete(department);
             department.ManagerEmployeeId = null;
 

@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -6,6 +7,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TaskMangment.Application.Common.ApiRequests.CalenderEvents;
+using TaskMangment.Application.Common.Errors;
+using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Responses;
 using TaskMangment.Application.DTOs;
@@ -73,8 +76,9 @@ namespace TaskMangment.Infrastructure.Services
                 .FirstOrDefaultAsync();
 
             if (ev == null)
-                return ApiResponse<CalendarEventGetDto>.Fail("Event not found", StatusCode.NotFound);
-
+                    throw new AppException(
+                        ErrorCodes.NotFound,
+                        StatusCodes.Status404NotFound);
             var dto = _mapper.Map<CalendarEventGetDto>(ev);
 
             return ApiResponse<CalendarEventGetDto>.Ok(dto);
@@ -100,8 +104,9 @@ namespace TaskMangment.Infrastructure.Services
         {
             var ev = await _eventRepo.GetByIDAsync(id);
             if (ev == null)
-                return ApiResponse<CalendarEventGetDto>.Fail("Event not found");
-
+                throw new AppException(
+                                      ErrorCodes.NotFound,
+                                      StatusCodes.Status404NotFound);
             _mapper.Map(dto, ev);
 
             await _eventRepo.SaveChangesAsync();
@@ -115,8 +120,9 @@ namespace TaskMangment.Infrastructure.Services
         {
             var ev = await _eventRepo.GetByIDAsync(id);
             if (ev == null)
-                return ApiResponse<bool>.Fail("Event not found");
-
+                throw new AppException(
+                                      ErrorCodes.NotFound,
+                                      StatusCodes.Status404NotFound);
             _eventRepo.SoftDelete(ev);
             await _eventRepo.SaveChangesAsync();
             await _cache.RemoveAsync("events:");

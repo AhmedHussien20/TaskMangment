@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NgbPaginationModule, NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { PageHeaderComponent } from 'app/shared/components/page-header/page-header.component';
 import { GenericTableComponent } from 'app/shared/components/generic-table/generic-table.component';
@@ -12,6 +12,8 @@ import { RoleService } from 'app/core/services/role.service';
 import { SearchCriteria } from 'app/core/models/search-criteria.model';
 import { RoleCreateUpdateComponent } from '../role-create-update/role-create-update.component';
 import { Router } from '@angular/router';
+import Swal from 'sweetalert2';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-role-list',
@@ -79,7 +81,9 @@ export class RoleListComponent implements OnInit {
   constructor(
     private roleService: RoleService,
     private modalService: NgbModal,
-    private router: Router
+    private router: Router,
+    private translate: TranslateService,
+    private toastr: ToastrService
   ) { }
 
   ngOnInit(): void {
@@ -171,5 +175,38 @@ export class RoleListComponent implements OnInit {
     }
 
   }
+   confirmDelete(roleId: number) {
+      Swal.fire({
+        title: this.translate.instant('COMMON.CONFIRM_DELETE_TITLE'),
+        text: this.translate.instant('COMMON.CONFIRM_DELETE_TEXT'),
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: this.translate.instant('COMMON.DELETE_BUTTON'),
+        cancelButtonText: this.translate.instant('COMMON.CANCEL_BUTTON'),
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.deleteRole(roleId);
+        }
+      });
+    }
+    
+    deleteRole(roleId: number) {
+      this.isLoading = true;
+
+      this.roleService.delete(roleId).subscribe({
+        next: () => {
+        this.toastr.success(this.translate.instant('COMMON.DELETE_SUCCESS'));
+    
+    
+          this.isLoading = false;
+          this.loadData();
+        },
+        error: () => {
+          this.isLoading = false;
+        }
+      });
+    }
   
 }

@@ -1,10 +1,13 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TaskMangment.Application.Common.ApiRequests.Role;
+using TaskMangment.Application.Common.Errors;
+using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Responses;
 using TaskMangment.Application.DTOs;
@@ -38,7 +41,8 @@ namespace TaskMangment.Infrastructure.Services
         public async Task<ApiResponse<PagedResponse<AssignedPermissionDto>>> GetAssignedPermissionsAsync(int roleId, RolePermissionRequest request)
         {
             if (!await _roleRepo.IsExistAsync(roleId))
-                return ApiResponse<PagedResponse<AssignedPermissionDto>>.Fail("Role not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.RoleNotFound, StatusCodes.Status400BadRequest);
+          
 
             string cacheKey = $"assignedPermissions:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
 
@@ -90,9 +94,8 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<bool>> AssignPermissionsToRoleAsync(int roleId, RolePermissionBulkAssignDto dto)
         {
-            var role = await _roleRepo.GetByIDAsync(roleId);
-            if (role == null)
-                return ApiResponse<bool>.Fail("Role not found", StatusCode.NotFound);
+            if (!await _roleRepo.IsExistAsync(roleId))
+                throw new AppException(ErrorCodes.RoleNotFound, StatusCodes.Status400BadRequest);
 
             var permissionIds = dto.Assignments.Select(a => a.PermissionId).Distinct().ToList();
             var existingPermissions = await _permissionRepo.GetAll(p => permissionIds.Contains(p.Id))
@@ -101,7 +104,7 @@ namespace TaskMangment.Infrastructure.Services
 
             var nonExistingPermissions = permissionIds.Except(existingPermissions).ToList();
             if (nonExistingPermissions.Any())
-                return ApiResponse<bool>.Fail($"Permissions not found: {string.Join(", ", nonExistingPermissions)}", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.PermissionNotFound, StatusCodes.Status400BadRequest);
 
             foreach (var assignment in dto.Assignments)
             {

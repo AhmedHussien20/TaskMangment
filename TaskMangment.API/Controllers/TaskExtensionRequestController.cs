@@ -33,10 +33,6 @@ namespace TaskMangment.API.Controllers
         public async Task<IActionResult> GetById(int id)
         {
             var result = await _service.GetByIdAsync(id);
-
-            if (!result.Success)
-                return Fail(result.Message!, 404);
-
             return Success(result.Data);
         }
 
@@ -44,10 +40,6 @@ namespace TaskMangment.API.Controllers
         public async Task<IActionResult> Add([FromBody] TaskExtensionRequestAddDto dto, int taskId)
         {
             var result = await _service.AddAsync(dto, taskId, this.CurrentUserId);
-
-            if (!result.Success)
-                return Fail(result.Message);
-
             return Success(result.Data, "Extension request added successfully");
         }
 
@@ -55,10 +47,6 @@ namespace TaskMangment.API.Controllers
         public async Task<IActionResult> Review(int id, [FromQuery] bool approved)
         {
             var result = await _service.ReviewAsync(id, approved, this.CurrentUserId);
-
-            if (!result.Success)
-                return Fail(result.Message);
-
             return Success(result.Data, "Extension request reviewed successfully");
         }
     }
