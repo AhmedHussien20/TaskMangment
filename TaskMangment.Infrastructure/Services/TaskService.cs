@@ -24,6 +24,8 @@ namespace TaskMangment.Infrastructure.Services
     {
         private readonly IRepository<WorkTask> _taskRepo;
         private readonly IRepository<Employee> _employeeRepo;
+        private readonly IRepository<EmailQueue> _emailQueueRepo;
+        
         private readonly IRepository<TaskAssignment> _assignmentRepo;
         private readonly IRepository<AuditLog> _audit;
         private readonly IDomainEventDispatcher _eventDispatcher;
@@ -38,7 +40,8 @@ namespace TaskMangment.Infrastructure.Services
             IRepository<AuditLog> audit,
             IMapper mapper, 
             ICachingService cache ,
-            IDomainEventDispatcher eventDispatcher)
+            IDomainEventDispatcher eventDispatcher,
+            IRepository<EmailQueue> emailQueueRepo)
         {
             _taskRepo = taskRepo;
             _employeeRepo = employeeRepo;
@@ -47,6 +50,7 @@ namespace TaskMangment.Infrastructure.Services
             _mapper = mapper;
             _cache = cache;
             _eventDispatcher = eventDispatcher;
+            _emailQueueRepo = emailQueueRepo;
         }
 
         public async Task<ApiResponse<PagedResponse<TaskGetDto>>> GetAllAsync(TaskRequest request, int CompanyId)
@@ -83,9 +87,19 @@ namespace TaskMangment.Infrastructure.Services
             foreach (var dto in dtos)
             {
                 var task = list.FirstOrDefault(t => t.Id == dto.Id);
-                dto.EmployeeNames = task.Assignments.Select(a => a.Employee.FullName).ToList();
+                if (task == null) continue;
+
+                dto.AssignEmployee = task.Assignments
+                    .Select(a => new TaskEmployeeAssignmentDto
+                    {
+                        Id = a.Employee.Id,
+                        Name = a.Employee.FullName
+                    })
+                    .ToList();
+
                 dto.AssignedByName = task.AssignedBy?.FullName;
             }
+
 
             var response = new PagedResponse<TaskGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
 
@@ -145,7 +159,24 @@ namespace TaskMangment.Infrastructure.Services
             }
             await _assignmentRepo.SaveChangesAsync();
             await _cache.RemoveAsync("tasks:");
-            
+            foreach (var empId in dto.AssignedEmployeeIds)
+            {
+                var employee = await _employeeRepo.GetByIDAsync(empId);
+                if (employee == null || string.IsNullOrEmpty(employee.Email))
+                    continue;
+
+                await _emailQueueRepo.AddAsync(new EmailQueue
+                {
+                    ToEmail = employee.Email,           
+                    TemplateKey = "TaskAssigned",
+                    ReferenceType = ReferenceType.Task,
+                    ReferenceId = task.Id,
+                    ScheduledAt = DateTime.UtcNow,
+                    Status = EmailStatus.Pending,
+                    UserId = empId
+                });
+            }
+            await _emailQueueRepo.SaveChangesAsync();
             //Notfication
             await _eventDispatcher.PublishAsync(new TaskAssignedEvent(task.Id,task.Title,dto.AssignedEmployeeIds));
 

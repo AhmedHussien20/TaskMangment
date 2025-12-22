@@ -19,6 +19,7 @@
     <PackageReference Include="AutoMapper" Version="15.1.0" />
     <PackageReference Include="FluentValidation" Version="12.1.0" />
     <PackageReference Include="Hangfire.AspNetCore" Version="1.8.22" />
+    <PackageReference Include="Hangfire.SqlServer" Version="1.8.22" />
     <PackageReference Include="Microsoft.AspNet.SignalR.Core" Version="2.4.3" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.10" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.11" />
@@ -35,6 +36,7 @@
   <ItemGroup>
     <ProjectReference Include="..\TaskMangment.Application\TaskMangment.Application.csproj" />
     <ProjectReference Include="..\TaskMangment.Domain\TaskMangment.Domain.csproj" />
+    <ProjectReference Include="..\TaskMangment.Hangfire\TaskMangment.Hangfire.csproj" />
     <ProjectReference Include="..\TaskMangment.Infrastructure\TaskMangment.Infrastructure.csproj" />
     <ProjectReference Include="..\TaskMangment.Utilities\TaskMangment.Utilities.csproj" />
   </ItemGroup>

@@ -44,7 +44,7 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
         public bool IsShared { get; set; }        
         public DateTime CreatedAt { get; set; }     
         public string AssignedByName { get; set; }  
-        public List<string> EmployeeNames { get; set; } = new(); 
+        public List<TaskEmployeeAssignmentDto> AssignEmployee { get; set; } = new(); 
         public TaskPriority Priority { get; set; }   
         public TaskStatus Status { get; set; }    
         public DateTime? DueDate { get; set; }
@@ -56,6 +56,11 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
         public decimal PenaltyAtMaxWarnings { get; set; } = 0;
         public decimal PenaltyOnAutoClose { get; set; } = 0;
         public int? CommentAllowPeriodDays { get; set; }
+    }
+    public class TaskEmployeeAssignmentDto
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
     }
 
     public class TaskAssignmentDto

@@ -143,7 +143,7 @@ export class TaskCreateUpdateComponent implements OnInit {
     private employeeService: EmployeeService,
     private toastr: ToastrService,
     private translate: TranslateService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.initForm();
@@ -155,50 +155,54 @@ export class TaskCreateUpdateComponent implements OnInit {
   }
 
   initForm() {
-   this.formGroup = this.fb.group({
-  title: ['', [
-    Validators.required,
-    Validators.minLength(3),
-    Validators.maxLength(100)
-  ]],
-  description: [''],
-  assignedEmployeeIds: [[], Validators.required],
-  priority: [TaskPriority.Low, Validators.required],
-  status: [TaskStatus.New, Validators.required],
-  dueDate: [null],
-  commentAllowPeriodDays: [null, [Validators.pattern('^[0-9]+$')]],
-  maxWarnings: [3, [Validators.pattern('^[0-9]+$')]],
-  penaltyAtMaxWarnings: [0, [Validators.pattern('^[0-9]+$')]],
-  penaltyOnAutoClose: [0, [Validators.pattern('^[0-9]+$')]],
-  isShared: [false]
-});
+    this.formGroup = this.fb.group({
+      title: ['', [
+        Validators.required,
+        Validators.minLength(3),
+        Validators.maxLength(100)
+      ]],
+      description: [''],
+      assignedEmployeeIds: [[], Validators.required],
+      priority: [TaskPriority.Low, Validators.required],
+      status: [TaskStatus.New, Validators.required],
+      dueDate: [null],
+      commentAllowPeriodDays: [null, [Validators.pattern('^[0-9]+$')]],
+      maxWarnings: [3, [Validators.pattern('^[0-9]+$')]],
+      penaltyAtMaxWarnings: [0, [Validators.pattern('^[0-9]+$')]],
+      penaltyOnAutoClose: [0, [Validators.pattern('^[0-9]+$')]],
+      isShared: [false]
+    });
 
   }
 
- loadTask() {
-  this.taskService.getById(this.taskId!).subscribe(res => {
-    const task = res.data;
+  loadTask() {
+    this.taskService.getById(this.taskId!).subscribe(res => {
+      const task = res.data;
+      debugger
+      const assignedEmployeeIds =
+        (task.assignEmployee || []).map((e: any) => e.id);
 
-    // معالجة الموظفين
-    const assignedEmployeeIds = task.assignedEmployees?.map((e: any) => e.id) || [];
 
-    let dueDate: string | null = null;
-    if (task.dueDate) {
-      const d = new Date(task.dueDate);
-      const month = String(d.getMonth() + 1).padStart(2, '0');
-      const day = String(d.getDate()).padStart(2, '0');
-      dueDate = `${d.getFullYear()}-${month}-${day}`;
-    }
+      this.formGroup.patchValue({ assignedEmployeeIds });
 
-    const patch = {
-      ...task,
-      assignedEmployeeIds,
-      dueDate
-    };
 
-    this.formGroup.patchValue(patch);
-  });
-}
+      let dueDate: string | null = null;
+      if (task.dueDate) {
+        const d = new Date(task.dueDate);
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        dueDate = `${d.getFullYear()}-${month}-${day}`;
+      }
+
+      const patch = {
+        ...task,
+        assignedEmployeeIds,
+        dueDate
+      };
+
+      this.formGroup.patchValue(patch);
+    });
+  }
 
 
   loadEmployees() {
