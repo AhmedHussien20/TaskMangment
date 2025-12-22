@@ -118,9 +118,72 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="MANAGER_NOT_FOUND" xml:space="preserve">
-    <value>مش موجود</value>
+    <value>مدير غير موجود</value>
   </data>
   <data name="SAVE_FAILED" xml:space="preserve">
     <value>فشل</value>
+  </data>
+  <data name="EMAIL_NOT_FOUND" xml:space="preserve">
+    <value>البريد الالكتروني غير موجود</value>
+  </data>
+  <data name="AREA_NOT_FOUND" xml:space="preserve">
+    <value>المنطقة غير موجودة</value>
+  </data>
+  <data name="INVALID_PASS_OR_EMAIL" xml:space="preserve">
+    <value>خطأ في كلمة السر او البريد</value>
+  </data>
+  <data name="BRANCH_NOT_FOUND" xml:space="preserve">
+    <value>الفرع غير موجود</value>
+  </data>
+  <data name="COURSE_NOT_FOUND" xml:space="preserve">
+    <value>الكورس غير موجود</value>
+  </data>
+  <data name="EMPLOYEE_NOT_FOUND" xml:space="preserve">
+    <value>الموظف غير موجود</value>
+  </data>
+  <data name="OFFER_NOT_FOUND" xml:space="preserve">
+    <value>العرض غير موجود</value>
+  </data>
+  <data name="STUDENT_NOT_FOUND" xml:space="preserve">
+    <value>الطالب غير موجود</value>
+  </data>
+  <data name="SUBJECT_NOT_FOUND" xml:space="preserve">
+    <value>المادة غير موجوده</value>
+  </data>
+  <data name="HAS_NO_ROLES" xml:space="preserve">
+    <value>المستخدم ليس له دور</value>
+  </data>
+  <data name="NOT_FOUND" xml:space="preserve">
+    <value>غير موجود</value>
+  </data>
+  <data name="TASK_NOT_FOUND" xml:space="preserve">
+    <value>المهمة غير موجودة</value>
+  </data>
+  <data name="NOT_ASSIGNED" xml:space="preserve">
+    <value>لم يتم تعينه</value>
+  </data>
+  <data name="ALREADY_REVIEWED" xml:space="preserve">
+    <value>تم تلقيه بالفعل</value>
+  </data>
+  <data name="COMPANY_NOT_FOUND" xml:space="preserve">
+    <value>الشركة غير موجودة</value>
+  </data>
+  <data name="DEPARTMENT_NOT_FOUND" xml:space="preserve">
+    <value>القسم غير موجود</value>
+  </data>
+  <data name="JOB_NOT_FOUND" xml:space="preserve">
+    <value>الوظيفة غير موجودة</value>
+  </data>
+  <data name="ROLE_NOT_FOUND" xml:space="preserve">
+    <value>الصلاحية غير موجودة</value>
+  </data>
+  <data name="PERMISSION_NOT_FOUND" xml:space="preserve">
+    <value>الاذن غير موجود</value>
+  </data>
+  <data name="ALREADY_EXISTS" xml:space="preserve">
+    <value>موجود بالفعل</value>
+  </data>
+  <data name="ALREADY_ASSIGNED" xml:space="preserve">
+    <value>تم تعينه بالفعل</value>
   </data>
 </root>

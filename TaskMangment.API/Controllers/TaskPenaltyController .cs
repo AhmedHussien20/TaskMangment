@@ -34,10 +34,6 @@ namespace TaskMangment.API.Controllers
         public async Task<IActionResult> GetById(int id)
         {
             var result = await _service.GetByIdAsync(id);
-
-            if (!result.Success)
-                return Fail(result.Message!, 404);
-
             return Success(result.Data);
         }
 
@@ -45,10 +41,6 @@ namespace TaskMangment.API.Controllers
         public async Task<IActionResult> Add(int taskId, [FromBody] DiscountAddEditDto dto)
         {
             var result = await _service.AddAsync(this.CurrentUserId, taskId, dto);
-
-            if (!result.Success)
-                return Fail(result.Message);
-
             return Success(result.Data, "Discount added successfully");
         }
 
@@ -56,10 +48,6 @@ namespace TaskMangment.API.Controllers
         public async Task<IActionResult> Update(int id,int TaskId, [FromBody] DiscountAddEditDto dto)
         {
             var result = await _service.UpdateAsync(id,TaskId, dto,this.CurrentUserId);
-
-            if (!result.Success)
-                return Fail(result.Message, 404);
-
             return Success(result.Data, "Discount updated successfully");
         }
 
@@ -67,10 +55,6 @@ namespace TaskMangment.API.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             var result = await _service.DeleteAsync(id);
-
-            if (!result.Success)
-                return Fail(result.Message, 404);
-
             return Success(true, "Discount deleted successfully");
         }
     }

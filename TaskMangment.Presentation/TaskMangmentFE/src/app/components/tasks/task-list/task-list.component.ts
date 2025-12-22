@@ -198,12 +198,6 @@ deleteTask(taskId: number) {
     },
     error: () => {
       this.isLoading = false;
-
-      this.toastr.error(
-        this.translate.instant('TASK.DELETE_FAILED'),
-        undefined,
-        { timeOut: 3000 }
-      );
     }
   });
 }

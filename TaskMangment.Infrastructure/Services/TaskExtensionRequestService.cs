@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -6,6 +7,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TaskMangment.Application.Common.ApiRequests.Task;
+using TaskMangment.Application.Common.Errors;
+using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Responses;
 using TaskMangment.Application.DTOs;
@@ -24,6 +27,7 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<TaskExtensionRequest> _requestRepo;
         private readonly IRepository<TaskAssignment> _taskAssignmentRepo;
         private readonly IRepository<WorkTask> _taskRepo;
+        private readonly IRepository<Employee> _employeeRepo;
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
         private readonly IDomainEventDispatcher _eventDispatcher;
@@ -32,6 +36,7 @@ namespace TaskMangment.Infrastructure.Services
         public TaskExtensionRequestService(
             IRepository<TaskExtensionRequest> requestRepo,
             IRepository<TaskAssignment> taskAssignmentRepo,
+            IRepository<Employee> employeeRepo,
             IMapper mapper,
             ICachingService cache,
             IRepository<WorkTask> taskRepo,
@@ -39,6 +44,7 @@ namespace TaskMangment.Infrastructure.Services
         {
             _requestRepo = requestRepo;
             _taskAssignmentRepo = taskAssignmentRepo;
+            _employeeRepo = employeeRepo;
             _mapper = mapper;
             _cache = cache;
             _taskRepo = taskRepo;
@@ -55,6 +61,11 @@ namespace TaskMangment.Infrastructure.Services
                 if (cached != null)
                     return ApiResponse<PagedResponse<TaskExtensionRequestListDto>>.Ok(cached);
             }
+
+            var task = await _taskRepo.GetByIDAsync(request.TaskId);
+            if (task == null)
+                throw new AppException(ErrorCodes.TaskNotFound, StatusCodes.Status404NotFound);
+
 
             var query = _requestRepo.GetAll(c => c.TaskId == request.TaskId)
                                                       .Include(r => r.RequestedBy)
@@ -95,7 +106,7 @@ namespace TaskMangment.Infrastructure.Services
                 .FirstOrDefaultAsync();
 
             if (request == null)
-                return ApiResponse<TaskExtensionRequestDetailsDto>.Fail("Request not found");
+                throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
 
             var savedRequest = await _requestRepo.GetAll(r => r.Id == request.Id)
                                                              .Include(r => r.RequestedBy)
@@ -118,18 +129,17 @@ namespace TaskMangment.Infrastructure.Services
         {
             var task = await _taskRepo.GetByIDAsync(taskId);
             if (task == null)
-                return ApiResponse<TaskExtensionRequestDetailsDto>.Fail("Task not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.TaskNotFound, StatusCodes.Status404NotFound);
 
             var assignment = await _taskAssignmentRepo.GetAll(a => a.TaskId == taskId && a.EmployeeId == employeeId  && a.IsActive)
                                                       .FirstOrDefaultAsync();
             if (assignment == null)
-                return ApiResponse<TaskExtensionRequestDetailsDto>.Fail("Employee is not assigned to this task", StatusCode.BadRequest);
+                throw new AppException(ErrorCodes.NotAssigned, StatusCodes.Status400BadRequest);
 
             var request = _mapper.Map<TaskExtensionRequest>(dto);
             request.TaskAssignmentId = assignment.Id;
             request.TaskId = taskId;
             request.RequestedByEmployeeId = employeeId;
-            request.CreatedBy = employeeId;
             request.RequestedAt = DateTime.UtcNow;
             request.Status = ExtensionRequestStatus.Pending;
 
@@ -143,6 +153,7 @@ namespace TaskMangment.Infrastructure.Services
    .Select(a => a.EmployeeId)
    .ToListAsync();
 
+            var employeeName = await _employeeRepo.GetAll(e => e.Id == employeeId).Select(e => e.FullName).FirstOrDefaultAsync();
 
             if (task.AssignedByEmployeeId.HasValue && !assignedEmployeeIds.Contains(task.AssignedByEmployeeId.Value))
             {
@@ -151,7 +162,7 @@ namespace TaskMangment.Infrastructure.Services
 
 
             await _eventDispatcher.PublishAsync(
-                new TaskRequestAddedEvent(request.Id, taskId, employeeId, assignedEmployeeIds)
+                new TaskRequestAddedEvent(request.Id, taskId, employeeName, assignedEmployeeIds, task.Title)
             );
 
 
@@ -163,6 +174,7 @@ namespace TaskMangment.Infrastructure.Services
                                                  .ThenInclude(a => a.Task) 
                                                 .AsNoTracking()
                                                 .FirstOrDefaultAsync();
+
 
             var resultDto = _mapper.Map<TaskExtensionRequestDetailsDto>(savedRequest);
             resultDto.TaskTitle = savedRequest.TaskAssignment.Task?.Title; 
@@ -176,10 +188,10 @@ namespace TaskMangment.Infrastructure.Services
         {
             var request = await _requestRepo.GetByIDAsync(id);
             if (request == null)
-                return ApiResponse<TaskExtensionRequestDetailsDto>.Fail("Request not found");
+                throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
 
             if (request.Status != ExtensionRequestStatus.Pending)
-                return ApiResponse<TaskExtensionRequestDetailsDto>.Fail("Request has already been reviewed");
+                throw new AppException(ErrorCodes.AlreadyReviewed, StatusCodes.Status404NotFound);
 
 
             request.Status = approved
@@ -188,8 +200,6 @@ namespace TaskMangment.Infrastructure.Services
 
             request.ReviewedByEmployeeId = reviewerId;
             request.ReviewedAt = DateTime.UtcNow;
-            request.ModifiedDate = DateTime.UtcNow;
-
             await _requestRepo.SaveChangesAsync();
             await _cache.RemoveAsync("taskExtensionRequests:");
 

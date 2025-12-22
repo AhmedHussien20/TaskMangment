@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,6 +7,8 @@ using System.Text;
 using System.Threading.Tasks;
 using TaskMangment.Application.Common.ApiRequests.Employee;
 using TaskMangment.Application.Common.ApiRequests.Role;
+using TaskMangment.Application.Common.Errors;
+using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Responses;
 using TaskMangment.Application.DTOs;
@@ -35,9 +38,8 @@ namespace TaskMangment.Infrastructure.Services
         }
         public async Task<ApiResponse<bool>> AssignEmployeesToRoleAsync(int roleId, RoleWithManyEmployeeAssignDto dto)
         {
-            var role = await _roleRepo.GetByIDAsync(roleId);
-            if (role == null)
-                return ApiResponse<bool>.Fail("Role not found", StatusCode.NotFound);
+            if (!await _roleRepo.IsExistAsync(roleId))
+                throw new AppException(ErrorCodes.RoleNotFound, StatusCodes.Status400BadRequest);
 
             var employeeIds = dto.Assignments
                 .Select(a => a.EmployeeId)
@@ -51,10 +53,9 @@ namespace TaskMangment.Infrastructure.Services
 
             var nonExistingEmployees = employeeIds.Except(existingEmployees).ToList();
             if (nonExistingEmployees.Any())
-                return ApiResponse<bool>.Fail(
-                    $"Employees not found: {string.Join(", ", nonExistingEmployees)}",
-                    StatusCode.NotFound
-                );
+                throw new AppException(
+                    ErrorCodes.EmployeeNotFound,
+                    StatusCodes.Status400BadRequest);
 
             foreach (var assignment in dto.Assignments)
             {
@@ -68,10 +69,7 @@ namespace TaskMangment.Infrastructure.Services
 
                     if (activeRole != null)
                     {
-                        return ApiResponse<bool>.Fail(
-                            $"Employee {assignment.EmployeeId} is already assigned to another role",
-                            StatusCode.BadRequest
-                        );
+                        throw new AppException(ErrorCodes.AlreadyAssigned, StatusCodes.Status400BadRequest);
                     }
 
                     var employeeRole = await _employeeRoleRepo
@@ -115,12 +113,8 @@ namespace TaskMangment.Infrastructure.Services
         public async Task<ApiResponse<PagedResponse<AssignedEmployeeDto>>>GetAssignedEmployeesPagedAsync(int roleId, RoleAssignmentReguest request)
         {
 
-            var roleExists = await _roleRepo
-                .IsExistAsync(roleId);
-
-            if (!roleExists)
-                return ApiResponse<PagedResponse<AssignedEmployeeDto>>
-                    .Fail("Role not found", StatusCode.NotFound);
+            if (!await _roleRepo.IsExistAsync(roleId))
+                throw new AppException(ErrorCodes.RoleNotFound, StatusCodes.Status400BadRequest);
 
             string cacheKey =
                 $"assigned-employees:{roleId}:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";

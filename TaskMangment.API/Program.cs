@@ -64,7 +64,10 @@ namespace TaskMangment.API
             builder.Services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
             // Notification sender 
             builder.Services.AddScoped<INotificationSender, NotificationSender>();
-    
+            builder.Services.AddScoped<IEventHandler<TaskAssignedEvent>,TaskAssignedEventHandler>();
+            builder.Services.AddScoped<IEventHandler<TaskRequestAddedEvent>, TaskRequestEventHandler>();
+
+
             builder.Services.AddScoped<AuditLogAttribute>();
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddHttpContextAccessor();

@@ -406,9 +406,6 @@ deleteEvent(event: EventApi) {
   this.calendarService.delete(eventId).subscribe({
     next: () => {
       event.remove();
-    },
-    error: (err) => {
-      console.error('Failed to delete event', err);
     }
   });
 }

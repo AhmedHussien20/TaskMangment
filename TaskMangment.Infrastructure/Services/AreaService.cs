@@ -103,13 +103,17 @@ namespace TaskMangment.Infrastructure.Services
                 .FirstOrDefaultAsync();
 
             if (area == null)
-                return ApiResponse<AreaGetDto>.Fail( ErrorCodes.AreaNotFound, StatusCode.NotFound);
+                throw new AppException(
+                    ErrorCodes.AreaNotFound,
+                    StatusCodes.Status404NotFound);
 
             var dto = _mapper.Map<AreaGetDto>(area);
             dto.BranchCount = await _branchRepository.CountAsync(b => b.AreaId == id);
             dto.ManagerName = area.Manager?.FullName;
+
             return ApiResponse<AreaGetDto>.Ok(dto);
         }
+
 
         public async Task<ApiResponse<AreaGetDto>> AddAsync( AreaAddEditDto dto, int companyId,int createdBy) 
         {
@@ -129,7 +133,7 @@ namespace TaskMangment.Infrastructure.Services
 
             if (isManagerUsed)
                 throw new AppException(
-                    ErrorCodes.ManagerAlreadyAssigned,
+                    ErrorCodes.AlreadyAssigned,
                     StatusCodes.Status400BadRequest);
 
             var area = _mapper.Map<Area>(dto);
@@ -156,22 +160,27 @@ namespace TaskMangment.Infrastructure.Services
         {
             var area = await _areaRepository.GetByIDAsync(id);
             if (area == null)
-                return ApiResponse<AreaGetDto>.Fail(ErrorCodes.AreaNotFound, StatusCode.NotFound);
+                throw new AppException(
+                    ErrorCodes.AreaNotFound,
+                    StatusCodes.Status404NotFound);
 
             if (!await _employeeRepository.IsExistAsync(dto.ManagerEmployeeId))
-                return ApiResponse<AreaGetDto>.Fail(ErrorCodes.ManagerNotFound, StatusCode.NotFound);
+                throw new AppException(
+                    ErrorCodes.ManagerNotFound,
+                    StatusCodes.Status404NotFound);
 
             var isManagerUsed = await _areaRepository
                 .GetAll(a => a.ManagerEmployeeId == dto.ManagerEmployeeId && a.Id != id)
                 .AnyAsync();
 
             if (isManagerUsed)
-                return ApiResponse<AreaGetDto>.Fail(ErrorCodes.ManagerAlreadyAssigned);
+                throw new AppException(
+                    ErrorCodes.AlreadyAssigned,
+                    StatusCodes.Status400BadRequest);
 
             _mapper.Map(dto, area);
 
             await _areaRepository.SaveChangesAsync();
-
             await _cache.RemoveAsync("areas:");
 
             var fullArea = await _areaRepository.GetAll()
@@ -189,13 +198,13 @@ namespace TaskMangment.Infrastructure.Services
         {
             var area = await _areaRepository.GetByIDAsync(id);
             if (area == null)
-                return ApiResponse<bool>.Fail(ErrorCodes.AreaNotFound, StatusCode.NotFound);
+                throw new AppException(
+                    ErrorCodes.AreaNotFound,
+                    StatusCodes.Status404NotFound);
 
             _areaRepository.SoftDelete(area);
             await _areaRepository.SaveChangesAsync();
             await _cache.RemoveAsync("areas:");
-
-            // TODO: Invalidate cache later
 
             return ApiResponse<bool>.Ok(true, "Area deleted successfully");
         }

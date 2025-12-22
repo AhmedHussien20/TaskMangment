@@ -184,15 +184,8 @@ openEdit(id: number, modal: any) {
         this.isLoading = false;
         this.loadData();
       },
-      error: () => {
-        this.isLoading = false;
-  
-        this.toastr.error(
-          this.translate.instant('COMMON.DELETE_FAILED'),
-          undefined,
-          { timeOut: 3000 }
-        );
-      }
+      error: () => {      this.isLoading = false;
+}
     });
   }
   

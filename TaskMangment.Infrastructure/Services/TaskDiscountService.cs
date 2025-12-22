@@ -1,4 +1,6 @@
 ﻿using AutoMapper;
+using Azure.Core;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -6,6 +8,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TaskMangment.Application.Common.ApiRequests.Task;
+using TaskMangment.Application.Common.Errors;
+using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Responses;
 using TaskMangment.Application.DTOs.TaskDTOs;
@@ -51,6 +55,10 @@ namespace TaskMangment.Infrastructure.Services
                     return ApiResponse<PagedResponse<DiscountListDto>>.Ok(cached);
             }
 
+            var task = await _taskRepo.GetByIDAsync(request.TaskId);
+            if (task == null)
+                throw new AppException(ErrorCodes.TaskNotFound, StatusCodes.Status404NotFound);
+
             var query = _discountRepo.GetAll(c => c.TaskId == request.TaskId)
                 .Include(d => d.Employee)
                 .Include(d => d.Task)
@@ -95,15 +103,15 @@ namespace TaskMangment.Infrastructure.Services
         public async Task<ApiResponse<DiscountListDto>> AddAsync(int createdByEmployeeId, int TaskID, DiscountAddEditDto dto)
         {
             if (!await _employeeRepo.IsExistAsync(dto.EmployeeId))
-                return ApiResponse<DiscountListDto>.Fail("Employee not found");
+                throw new AppException(ErrorCodes.NotAssigned, StatusCodes.Status404NotFound);
 
             if (!await _taskRepo.IsExistAsync(TaskID))
-                return ApiResponse<DiscountListDto>.Fail("Task not found");
+                throw new AppException(ErrorCodes.TaskNotFound, StatusCodes.Status404NotFound);
 
             var discount = _mapper.Map<Discount>(dto);
             discount.TaskId = TaskID;
             discount.CreatedByEmployeeId = createdByEmployeeId;
-            discount.CreatedDate = DateTime.UtcNow;
+            //discount.CreatedDate = DateTime.UtcNow;
 
             await _discountRepo.AddAsync(discount);
             await _discountRepo.SaveChangesAsync();
@@ -125,16 +133,17 @@ namespace TaskMangment.Infrastructure.Services
         {
             var discount = await _discountRepo.GetByIDAsync(id);
             if (discount == null)
-                return ApiResponse<DiscountListDto>.Fail("Discount not found");
+                throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
 
             if (!await _employeeRepo.IsExistAsync(dto.EmployeeId))
-                return ApiResponse<DiscountListDto>.Fail("Employee not found");
+                throw new AppException(ErrorCodes.EmployeeNotFound, StatusCodes.Status404NotFound);
+
+            if (!await _taskRepo.IsExistAsync(TaskID))
+                throw new AppException(ErrorCodes.TaskNotFound, StatusCodes.Status404NotFound);
 
             if (!await _employeeRepo.IsExistAsync(ModifiedByEmployeeId))
                 return ApiResponse<DiscountListDto>.Fail("ModifiedByEmployee not found");
 
-            if (!await _taskRepo.IsExistAsync(TaskID))
-                return ApiResponse<DiscountListDto>.Fail("Task not found");
 
             _mapper.Map(dto, discount);
             discount.TaskId = TaskID;
@@ -158,7 +167,7 @@ namespace TaskMangment.Infrastructure.Services
         {
             var discount = await _discountRepo.GetByIDAsync(id);
             if (discount == null)
-                return ApiResponse<bool>.Fail("Discount not found");
+                throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
 
             _discountRepo.SoftDelete(discount);
             await _discountRepo.SaveChangesAsync();

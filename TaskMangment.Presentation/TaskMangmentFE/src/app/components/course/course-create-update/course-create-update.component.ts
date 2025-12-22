@@ -132,9 +132,6 @@ removeSubject(index: number) {
         next: () => {
           this.toastr.success(this.translate.instant('COURSE.UPDATE_SUCCESS'));
           this.formSubmitted.emit();
-        },
-        error: () => {
-          this.toastr.error(this.translate.instant('COURSE.UPDATE_FAILED'));
         }
       });
     }
@@ -145,9 +142,6 @@ removeSubject(index: number) {
         next: () => {
           this.toastr.success(this.translate.instant('COURSE.CREATE_SUCCESS'));
           this.formSubmitted.emit();
-        },
-        error: () => {
-          this.toastr.error(this.translate.instant('COURSE.CREATE_FAILED'));
         }
       });
     }

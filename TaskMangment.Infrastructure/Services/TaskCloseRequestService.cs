@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -6,6 +7,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TaskMangment.Application.Common.ApiRequests.Task;
+using TaskMangment.Application.Common.Errors;
+using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Responses;
 using TaskMangment.Application.DTOs.TaskDTOs;
@@ -51,6 +54,10 @@ namespace TaskMangment.Infrastructure.Services
                     return ApiResponse<PagedResponse<TaskCloseRequestListDto>>.Ok(cached);
             }
 
+            var task = await _taskRepo.GetByIDAsync(request.TaskId);
+            if (task == null)
+                throw new AppException(ErrorCodes.TaskNotFound, StatusCodes.Status404NotFound);
+
             var query = _requestRepo.GetAll(c => c.TaskId == request.TaskId)
                 .Include(r => r.TaskAssignment)
                  .Include(r => r.RequestedBy)
@@ -77,6 +84,7 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<TaskCloseRequestDetailsDto>> GetByIdAsync(int id)
         {
+
             var request = await _requestRepo.GetAll(r => r.Id == id)
                 .Include(r => r.TaskAssignment)
                 .Include(r => r.ReviewedBy).Include(r => r.RequestedBy)
@@ -84,8 +92,7 @@ namespace TaskMangment.Infrastructure.Services
                 .FirstOrDefaultAsync();
 
             if (request == null)
-                return ApiResponse<TaskCloseRequestDetailsDto>.Fail("Request not found");
-
+                throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
             var dto = _mapper.Map<TaskCloseRequestDetailsDto>(request);
             return ApiResponse<TaskCloseRequestDetailsDto>.Ok(dto);
         }
@@ -94,19 +101,19 @@ namespace TaskMangment.Infrastructure.Services
         {
             var task = await _taskRepo.GetByIDAsync(taskId);
             if (task == null)
-                return ApiResponse<TaskCloseRequestDetailsDto>.Fail("Task not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.TaskNotFound, StatusCodes.Status404NotFound);
 
             var assignment = await _taskAssignmentRepo.GetAll(a => a.TaskId == taskId && a.EmployeeId == employeeId && a.IsActive)
                                                       .FirstOrDefaultAsync();
             if (assignment == null)
-                return ApiResponse<TaskCloseRequestDetailsDto>.Fail("Employee is not assigned to this task", StatusCode.BadRequest);
+                throw new AppException(ErrorCodes.NotAssigned, StatusCodes.Status400BadRequest);
 
             var request = _mapper.Map<TaskCloseRequest>(dto);
 
             request.TaskAssignmentId = assignment.Id;
             request.TaskId = taskId;
             request.RequestedByEmployeeId = employeeId;
-            request.CreatedBy = employeeId;
+            //request.CreatedBy = employeeId;
             request.RequestedAt = DateTime.UtcNow;
             request.Status = CloseRequestStatus.Pending;
             request.ReviewedByEmployeeId = null;
@@ -134,10 +141,10 @@ namespace TaskMangment.Infrastructure.Services
         {
             var request = await _requestRepo.GetByIDAsync(id);
             if (request == null)
-                return ApiResponse<TaskCloseRequestDetailsDto>.Fail("Request not found");
+                throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
 
             if (request.Status != CloseRequestStatus.Pending)
-                return ApiResponse<TaskCloseRequestDetailsDto>.Fail("Request has already been reviewed");
+                throw new AppException(ErrorCodes.AlreadyReviewed, StatusCodes.Status400BadRequest);
 
             request.Status = approved
                 ? CloseRequestStatus.Approved
@@ -145,7 +152,7 @@ namespace TaskMangment.Infrastructure.Services
 
             request.ReviewedByEmployeeId = reviewerId;
             request.ReviewedAt = DateTime.UtcNow;
-            request.ModifiedDate = DateTime.UtcNow;
+            //request.ModifiedDate = DateTime.UtcNow;
 
 
             await _requestRepo.SaveChangesAsync();

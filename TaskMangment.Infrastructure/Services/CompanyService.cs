@@ -1,6 +1,9 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore; 
 using TaskMangment.Application.Common.ApiRequests.Company;
+using TaskMangment.Application.Common.Errors;
+using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Responses;
 using TaskMangment.Application.DTOs;
@@ -73,8 +76,9 @@ namespace TaskMangment.Infrastructure.Services
                 .FirstOrDefaultAsync();
 
             if (company == null)
-                return ApiResponse<CompanyGetDto>.Fail("Company not found", StatusCode.NotFound);
-
+                throw new AppException(
+                                      ErrorCodes.CompanyNotFound,
+                                      StatusCodes.Status404NotFound);
             var dto = _mapper.Map<CompanyGetDto>(company);
             return ApiResponse<CompanyGetDto>.Ok(dto);
         }
@@ -82,10 +86,10 @@ namespace TaskMangment.Infrastructure.Services
         public async Task<ApiResponse<CompanyGetDto>> AddAsync(CompanyAddEditDto dto)
         {
             if (dto.TechnicalManagerId.HasValue && !await _employeeRepository.IsExistAsync(dto.TechnicalManagerId.Value))
-                return ApiResponse<CompanyGetDto>.Fail("Technical Manager not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.ManagerNotFound, StatusCodes.Status404NotFound);
 
             if (dto.FinancialManagerId.HasValue && !await _employeeRepository.IsExistAsync(dto.FinancialManagerId.Value))
-                return ApiResponse<CompanyGetDto>.Fail("Financial Manager not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.ManagerNotFound, StatusCodes.Status404NotFound);
 
             var company = _mapper.Map<Company>(dto);
 
@@ -102,13 +106,13 @@ namespace TaskMangment.Infrastructure.Services
         {
             var company = await _companyRepository.GetByIDAsync(id);
             if (company == null)
-                return ApiResponse<CompanyGetDto>.Fail("Company not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.CompanyNotFound, StatusCodes.Status404NotFound);
 
             if (dto.TechnicalManagerId.HasValue && !await _employeeRepository.IsExistAsync(dto.TechnicalManagerId.Value))
-                return ApiResponse<CompanyGetDto>.Fail("Technical Manager not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.ManagerNotFound, StatusCodes.Status404NotFound);
 
             if (dto.FinancialManagerId.HasValue && !await _employeeRepository.IsExistAsync(dto.FinancialManagerId.Value))
-                return ApiResponse<CompanyGetDto>.Fail("Financial Manager not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.ManagerNotFound, StatusCodes.Status404NotFound);
 
             _mapper.Map(dto, company);
 
@@ -123,7 +127,7 @@ namespace TaskMangment.Infrastructure.Services
         {
             var company = await _companyRepository.GetByIDAsync(id);
             if (company == null)
-                return ApiResponse<bool>.Fail("Company not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.CompanyNotFound, StatusCodes.Status404NotFound);
 
             _companyRepository.SoftDelete(company);
             await _companyRepository.SaveChangesAsync();

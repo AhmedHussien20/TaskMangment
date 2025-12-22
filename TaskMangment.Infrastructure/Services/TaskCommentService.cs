@@ -1,4 +1,6 @@
 ﻿using AutoMapper;
+using Azure.Core;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -7,6 +9,8 @@ using System.Linq;
 using System.Net.Mail;
 using System.Threading.Tasks;
 using TaskMangment.Application.Common.ApiRequests.Task;
+using TaskMangment.Application.Common.Errors;
+using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Responses;
 using TaskMangment.Application.DTOs.TaskDTOs;
@@ -61,6 +65,10 @@ namespace TaskMangment.Infrastructure.Services
                     return ApiResponse<PagedResponse<TaskCommentGetDto>>.Ok(cached);
             }
 
+            var task = await _taskRepo.GetByIDAsync(request.TaskId);
+            if (task == null)
+                throw new AppException(ErrorCodes.TaskNotFound, StatusCodes.Status404NotFound);
+
             var query = _commentRepo.GetAll(c => c.TaskId == request.TaskId)
                 .Include(c => c.Employee)
                 .Include(c => c.Task)
@@ -101,7 +109,7 @@ namespace TaskMangment.Infrastructure.Services
                 .FirstOrDefaultAsync();
 
             if (comment == null)
-                return ApiResponse<TaskCommentGetDto>.Fail("Comment not found");
+                throw new AppException(ErrorCodes.NotFound, StatusCodes.Status400BadRequest);
 
             var dto = _mapper.Map<TaskCommentGetDto>(comment);
 
@@ -114,7 +122,7 @@ namespace TaskMangment.Infrastructure.Services
         {
             var task = await _taskRepo.GetByIDAsync(taskId);
             if (task == null)
-                return ApiResponse<TaskCommentGetDto>.Fail("Task not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.TaskNotFound, StatusCodes.Status404NotFound);
 
 
             var assignment = await _taskAssignmentRepo
@@ -123,9 +131,8 @@ namespace TaskMangment.Infrastructure.Services
 
 
             if (assignment == null)
-                return ApiResponse<TaskCommentGetDto>.Fail(
-                    "Employee is not assigned to this task",
-                    StatusCode.BadRequest);
+                throw new AppException(ErrorCodes.NotAssigned, StatusCodes.Status400BadRequest);
+
 
             var comment = _mapper.Map<TaskComment>(dto);
             comment.TaskId = taskId;
@@ -218,7 +225,7 @@ namespace TaskMangment.Infrastructure.Services
                                             .FirstOrDefaultAsync();
 
             if (comment == null)
-                return ApiResponse<TaskCommentGetDto>.Fail("Comment not found");
+                throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
 
             comment.CommentText = dto.CommentText;
             await _commentRepo.SaveChangesAsync();
@@ -241,7 +248,7 @@ namespace TaskMangment.Infrastructure.Services
         {
             var comment = await _commentRepo.GetByIDAsync(id);
             if (comment == null)
-                return ApiResponse<bool>.Fail("Comment not found");
+                throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
 
             _commentRepo.SoftDelete(comment);
             await _commentRepo.SaveChangesAsync();
