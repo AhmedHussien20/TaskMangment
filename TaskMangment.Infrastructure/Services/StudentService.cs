@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -6,6 +7,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TaskMangment.Application.Common.ApiRequests.Student;
+using TaskMangment.Application.Common.Errors;
+using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Responses;
 using TaskMangment.Application.DTOs;
@@ -77,7 +80,7 @@ namespace TaskMangment.Infrastructure.Services
                 .FirstOrDefaultAsync();
 
             if (student == null)
-                return ApiResponse<StudentGetDto>.Fail("Student not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.StudentNotFound, StatusCodes.Status400BadRequest);
 
             var dto = _mapper.Map<StudentGetDto>(student);
             dto.OfferCount = student.OfferAssignments.Count;
@@ -104,7 +107,7 @@ namespace TaskMangment.Infrastructure.Services
         {
             var student = await _studentRepository.GetByIDAsync(id);
             if (student == null)
-                return ApiResponse<StudentGetDto>.Fail("Student not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.StudentNotFound, StatusCodes.Status400BadRequest);
 
             _mapper.Map(dto, student);
             await _studentRepository.SaveChangesAsync();
@@ -122,7 +125,7 @@ namespace TaskMangment.Infrastructure.Services
         {
             var student = await _studentRepository.GetByIDAsync(id);
             if (student == null)
-                return ApiResponse<bool>.Fail("Student not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.StudentNotFound, StatusCodes.Status400BadRequest);
 
             _studentRepository.SoftDelete(student);
             await _studentRepository.SaveChangesAsync();

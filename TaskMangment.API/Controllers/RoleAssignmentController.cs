@@ -32,9 +32,6 @@ namespace TaskMangment.API.Controllers
         public async Task<IActionResult> BulkAssignEmployees(int roleId,[FromBody] RoleWithManyEmployeeAssignDto dto)
         {
             var result = await _service.AssignEmployeesToRoleAsync(roleId,dto);
-            if (!result.Success)
-                return Fail(result.Message);
-
             return Success(true, "Employees assigned successfully");
         }
     }

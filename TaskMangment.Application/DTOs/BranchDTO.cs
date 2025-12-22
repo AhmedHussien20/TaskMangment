@@ -28,8 +28,8 @@ namespace TaskMangment.Application.DTOs
         public string Email { get; set; }
         public int? AreaId { get; set; }
 
-        public int? ManagerId { get; set; }
-        public int? ResponsibleId { get; set; }
+        public int ManagerId { get; set; }
+        public int ResponsibleId { get; set; }
     }
 
     public class BranchGetDto

@@ -1,11 +1,16 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Pipelines.Sockets.Unofficial.Arenas;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TaskMangment.Application.Common.ApiRequests.Branch;
+using TaskMangment.Application.Common.Errors;
+using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Responses;
 using TaskMangment.Application.DTOs;
@@ -83,12 +88,13 @@ namespace TaskMangment.Infrastructure.Services
                 .Include(b => b.Manager)
                 .Include(b => b.Responsible)
                 .Include(b => b.Area)
-
                 .AsNoTracking()
                 .FirstOrDefaultAsync();
 
             if (branch == null)
-                return ApiResponse<BranchGetDto>.Fail("Branch not found", StatusCode.NotFound);
+                    throw new AppException(
+                        ErrorCodes.BranchNotFound,
+                        StatusCodes.Status404NotFound);
 
             var dto = _mapper.Map<BranchGetDto>(branch);
             return ApiResponse<BranchGetDto>.Ok(dto);
@@ -96,17 +102,29 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<BranchGetDto>> AddAsync(BranchAddEditDto dto, int CampanyId)
         {
-            if (dto.ManagerId.HasValue && !await _employeeRepository.IsExistAsync(dto.ManagerId.Value))
-                return ApiResponse<BranchGetDto>.Fail("Manager not found", StatusCode.NotFound);
+            if (!await _employeeRepository.IsExistAsync(dto.ManagerId))
+                throw new AppException(
+                    ErrorCodes.ManagerNotFound,
+                    StatusCodes.Status404NotFound);
 
-            if (dto.ResponsibleId.HasValue && !await _employeeRepository.IsExistAsync(dto.ResponsibleId.Value))
-                return ApiResponse<BranchGetDto>.Fail("Responsible employee not found", StatusCode.NotFound);
+            if (!await _employeeRepository.IsExistAsync(dto.ResponsibleId))
+                throw new AppException(
+                    ErrorCodes.ManagerNotFound,
+                    StatusCodes.Status404NotFound);
 
-            if (dto.AreaId.HasValue && !await _areaRepository.IsExistAsync(dto.AreaId.Value))
-                return ApiResponse<BranchGetDto>.Fail("Area not found", StatusCode.NotFound);
+            if (dto.AreaId.HasValue)
+            {
+                if (!await _areaRepository.IsExistAsync(dto.AreaId.Value))
+                    throw new AppException(
+                        ErrorCodes.AreaNotFound,
+                        StatusCodes.Status404NotFound);
+            }
+
 
             if (!await _companyRepository.IsExistAsync(CampanyId))
-                return ApiResponse<BranchGetDto>.Fail("Company not found", StatusCode.NotFound);
+                throw new AppException(
+                    ErrorCodes.CompanyNotFound,
+                    StatusCodes.Status404NotFound);
 
             var branch = _mapper.Map<Branch>(dto);
             branch.CompanyId = CampanyId;
@@ -134,18 +152,29 @@ namespace TaskMangment.Infrastructure.Services
         {
             var branch = await _branchRepository.GetByIDAsync(id);
             if (branch == null)
-                return ApiResponse<BranchGetDto>.Fail("Branch not found", StatusCode.NotFound);
+                throw new AppException(
+                    ErrorCodes.BranchNotFound,
+                    StatusCodes.Status404NotFound);
 
-            if (dto.ManagerId.HasValue && !await _employeeRepository.IsExistAsync(dto.ManagerId.Value))
-                return ApiResponse<BranchGetDto>.Fail("Manager not found", StatusCode.NotFound);
+            if (!await _employeeRepository.IsExistAsync(dto.ManagerId))
+                throw new AppException(
+                    ErrorCodes.ManagerNotFound,
+                    StatusCodes.Status404NotFound);
 
-            if (dto.ResponsibleId.HasValue && !await _employeeRepository.IsExistAsync(dto.ResponsibleId.Value))
-                return ApiResponse<BranchGetDto>.Fail("Responsible employee not found", StatusCode.NotFound);
+            if (!await _employeeRepository.IsExistAsync(dto.ResponsibleId))
+                throw new AppException(
+                    ErrorCodes.ManagerNotFound,
+                    StatusCodes.Status404NotFound);
 
-            if (dto.AreaId.HasValue && !await _areaRepository.IsExistAsync(dto.AreaId.Value))
-                return ApiResponse<BranchGetDto>.Fail("Area not found", StatusCode.NotFound);
+            if (dto.AreaId.HasValue)
+            {
+                if (!await _areaRepository.IsExistAsync(dto.AreaId.Value))
+                    throw new AppException(
+                        ErrorCodes.AreaNotFound,
+                        StatusCodes.Status404NotFound);
+            }
 
-         
+
 
             _mapper.Map(dto, branch);
 
@@ -168,7 +197,9 @@ namespace TaskMangment.Infrastructure.Services
         {
             var branch = await _branchRepository.GetByIDAsync(id);
             if (branch == null)
-                return ApiResponse<bool>.Fail("Branch not found", StatusCode.NotFound);
+                throw new AppException(
+                    ErrorCodes.BranchNotFound,
+                    StatusCodes.Status404NotFound);
 
             _branchRepository.SoftDelete(branch);
             await _branchRepository.SaveChangesAsync();

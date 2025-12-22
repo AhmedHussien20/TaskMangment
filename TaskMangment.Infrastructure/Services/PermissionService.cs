@@ -1,6 +1,9 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using TaskMangment.Application.Common.ApiRequests.Role;
+using TaskMangment.Application.Common.Errors;
+using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Responses;
 using TaskMangment.Application.DTOs;
@@ -90,7 +93,7 @@ namespace TaskMangment.Infrastructure.Services
         public async Task<ApiResponse<PermissionGetDto>> CreateAsync(PermissionAddDto dto)
         {
             if (await _permissionRepo.GetAll(p => p.Code == dto.Code).AnyAsync())
-                return ApiResponse<PermissionGetDto>.Fail("Permission code already exists");
+                throw new AppException(ErrorCodes.AlreadyExists, StatusCodes.Status400BadRequest);
 
             var permission = _mapper.Map<Permission>(dto);
             await _permissionRepo.AddAsync(permission);
@@ -108,13 +111,13 @@ namespace TaskMangment.Infrastructure.Services
         {
             var permission = await _permissionRepo.GetByIDAsync(id);
             if (permission == null)
-                return ApiResponse<PermissionGetDto>.Fail("Permission not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
 
             if (permission.Code != dto.Code)
             {
                 bool codeExists = await _permissionRepo.GetAll(p => p.Code == dto.Code).AnyAsync();
                 if (codeExists)
-                    return ApiResponse<PermissionGetDto>.Fail("Permission code already exists");
+                    throw new AppException(ErrorCodes.AlreadyExists, StatusCodes.Status400BadRequest);
             }
 
             _mapper.Map(dto, permission);
@@ -132,7 +135,7 @@ namespace TaskMangment.Infrastructure.Services
         {
             var permission = await _permissionRepo.GetByIDAsync(id);
             if (permission == null)
-                return ApiResponse<bool>.Fail("Permission not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
 
             _permissionRepo.SoftDelete(permission);
             await _permissionRepo.SaveChangesAsync();

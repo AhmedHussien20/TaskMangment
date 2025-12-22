@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -6,6 +7,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TaskMangment.Application.Common.ApiRequests.Course;
+using TaskMangment.Application.Common.Errors;
+using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Responses;
 using TaskMangment.Application.DTOs;
@@ -87,8 +90,9 @@ namespace TaskMangment.Infrastructure.Services
                 .FirstOrDefaultAsync();
 
             if (course == null)
-                return ApiResponse<CourseGetDto>.Fail("Course not found", StatusCode.NotFound);
-
+                throw new AppException(
+                    ErrorCodes.CourseNotFound,
+                    StatusCodes.Status404NotFound);
             var dto = _mapper.Map<CourseGetDto>(course);
             //dto.Subjects = course.Subjects.Select(s => s.Title).ToList();
             //dto.OfferCount = course.Offers.Count;
@@ -124,7 +128,9 @@ namespace TaskMangment.Infrastructure.Services
                 .FirstOrDefaultAsync();
 
             if (course == null)
-                return ApiResponse<CourseGetDto>.Fail("Course not found", StatusCode.NotFound);
+                throw new AppException(
+                    ErrorCodes.CourseNotFound,
+                    StatusCodes.Status404NotFound);
 
             // Update main properties
             _mapper.Map(dto, course);
@@ -157,7 +163,9 @@ namespace TaskMangment.Infrastructure.Services
         {
             var course = await _courseRepository.GetByIDAsync(id);
             if (course == null)
-                return ApiResponse<bool>.Fail("Course not found", StatusCode.NotFound);
+                throw new AppException(
+                    ErrorCodes.CourseNotFound,
+                    StatusCodes.Status404NotFound);
 
             _courseRepository.SoftDelete(course);
             await _courseRepository.SaveChangesAsync();

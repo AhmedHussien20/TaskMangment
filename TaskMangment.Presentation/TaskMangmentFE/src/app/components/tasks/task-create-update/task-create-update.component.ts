@@ -179,7 +179,6 @@ export class TaskCreateUpdateComponent implements OnInit {
   this.taskService.getById(this.taskId!).subscribe(res => {
     const task = res.data;
 
-    // معالجة الموظفين
     const assignedEmployeeIds = task.assignedEmployees?.map((e: any) => e.id) || [];
 
     let dueDate: string | null = null;

@@ -100,9 +100,6 @@ export class RoleCreateUpdateComponent implements OnInit {
         next: () => {
           this.toastr.success(this.translate.instant('ROLE.UPDATE_SUCCESS'));
           this.formSubmitted.emit();
-        },
-        error: () => {
-          this.toastr.error(this.translate.instant('ROLE.UPDATE_FAILED'));
         }
       });
     }
@@ -112,9 +109,6 @@ export class RoleCreateUpdateComponent implements OnInit {
         next: () => {
           this.toastr.success(this.translate.instant('ROLE.CREATE_SUCCESS'));
           this.formSubmitted.emit();
-        },
-        error: () => {
-          this.toastr.error(this.translate.instant('ROLE.CREATE_FAILED'));
         }
       });
     }
