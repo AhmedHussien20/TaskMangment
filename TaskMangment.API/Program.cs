@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Hangfire;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
@@ -40,6 +41,12 @@ namespace TaskMangment.API
             builder.Services.Configure<EmailSettings>(
                 builder.Configuration.GetSection("EmailSettings")
             );
+
+    //        builder.Services.AddHangfire(config =>
+    //config.UseSqlServerStorage(
+    //    builder.Configuration.GetConnectionString("DefaultConnection")));
+
+            //builder.Services.AddHangfireServer();
 
             builder.Services.AddDI();
 
@@ -135,6 +142,8 @@ namespace TaskMangment.API
             {
                 options.Filters.Add(new Microsoft.AspNetCore.Mvc.Authorization.AuthorizeFilter());
             });
+
+            builder.Configuration.AddUserSecrets<Program>();
 
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(c =>
