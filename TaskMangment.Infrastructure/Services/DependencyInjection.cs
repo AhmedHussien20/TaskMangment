@@ -20,7 +20,7 @@ namespace TaskMangment.Infrastructure.Services
     {
         public static IServiceCollection AddDI(this IServiceCollection services)
         {
-            services.AddSingleton<IEmailService, EmailService>();
+            services.AddScoped<IEmailService, EmailService>();
             services.AddSingleton<LocalizationService>();
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
             services.AddAutoMapper(cfg =>

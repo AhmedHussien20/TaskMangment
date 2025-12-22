@@ -15,15 +15,13 @@ namespace TaskMangment.Application.Behaviors
     {
         private readonly INotificationService _notificationService;
 
-        public TaskAssignedEventHandler(
-            INotificationService notificationService)
+        public TaskAssignedEventHandler(INotificationService notificationService)
         {
             _notificationService = notificationService;
         }
 
         public async Task Handle(TaskAssignedEvent ev)
         {
-
             foreach (var empId in ev.AssignedEmployeeIds)
             {
                 await _notificationService.SendAsync(

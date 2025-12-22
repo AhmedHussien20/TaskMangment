@@ -82,7 +82,10 @@ namespace TaskMangment.Infrastructure.DataContext
         public DbSet<TaskExtensionRequest> TaskExtensionRequests { get; set; }
         public DbSet<Warning> Warnings { get; set; }
         public DbSet<Notification> Notifications { get; set; }
-
+        public DbSet<EmailQueue> EmailQueue { get; set; }
+        public DbSet<EmailTemplate> EmailTemplates { get; set; }
+        public DbSet<WhatsAppQueue> WhatsAppQueue { get; set; }
+        
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -167,7 +170,75 @@ namespace TaskMangment.Infrastructure.DataContext
                  .HasForeignKey(w => w.TaskAssignmentId)
                  .OnDelete(DeleteBehavior.NoAction);
 
-         
+            builder.Entity<Notification>(entity =>
+            {
+                entity.ToTable("Notifications");
+
+                entity.HasKey(x => x.Id);
+
+                entity.Property(x => x.Message)
+                      .IsRequired()
+                      .HasMaxLength(1000);
+
+                entity.HasIndex(x => new { x.UserId, x.IsRead });
+            });
+
+            builder.Entity<EmailQueue>(entity =>
+            {
+                entity.ToTable("EmailQueue");
+
+                entity.HasKey(x => x.Id);
+
+                entity.Property(x => x.ToEmail)
+                      .IsRequired()
+                      .HasMaxLength(256);
+
+                entity.Property(x => x.TemplateKey)
+                      .IsRequired()
+                      .HasMaxLength(100);
+
+                entity.Property(x => x.Status)
+                      .HasConversion<int>()
+                      .IsRequired();
+
+                entity.Property(x => x.ReferenceType)
+                      .HasConversion<int>();
+
+                entity.HasIndex(x => new { x.Status, x.ScheduledAt });
+                entity.HasIndex(x => x.UserId);
+
+            });
+
+            builder.Entity<EmailTemplate>(entity =>
+            {
+                entity.ToTable("EmailTemplates");
+
+                entity.HasKey(x => x.Id);
+
+                entity.Property(x => x.Key)
+                      .IsRequired()
+                      .HasMaxLength(100);
+
+                entity.Property(x => x.SubjectTemplate)
+                      .IsRequired()
+                      .HasMaxLength(300);
+
+                entity.Property(x => x.BodyTemplate)
+                      .IsRequired();
+
+                entity.HasIndex(x => x.Key)
+                      .IsUnique();
+            });
+
+            builder.Entity<WhatsAppQueue>(entity =>
+            {
+                entity.ToTable("WhatsAppQueue");
+
+                entity.HasKey(x => x.Id); 
+                entity.Property(x => x.Message)
+                      .IsRequired()
+                      .HasMaxLength(1000);             
+            });
         }
 
     }

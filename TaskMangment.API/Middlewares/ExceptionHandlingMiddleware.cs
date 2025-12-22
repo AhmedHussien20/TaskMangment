@@ -11,14 +11,10 @@ public class ExceptionHandlingMiddleware
     private readonly IStringLocalizer _localizer;
     private readonly ILogger<ExceptionHandlingMiddleware> _logger;
 
-    public ExceptionHandlingMiddleware(
-        RequestDelegate next,
-        IStringLocalizerFactory factory,
-        ILogger<ExceptionHandlingMiddleware> logger)
+    public ExceptionHandlingMiddleware( RequestDelegate next, IStringLocalizerFactory factory, ILogger<ExceptionHandlingMiddleware> logger)
     {
         _next = next;
         _logger = logger;
-
         _localizer = factory.Create("Errors", "TaskMangment.API");
     }
 
@@ -45,10 +41,7 @@ public class ExceptionHandlingMiddleware
         }
     }
 
-    private async Task WriteError(
-        HttpContext context,
-        string errorCode,
-        int statusCode)
+    private async Task WriteError(HttpContext context, string errorCode,int statusCode)
     {
         context.Response.StatusCode = statusCode;
         context.Response.ContentType = "application/json";

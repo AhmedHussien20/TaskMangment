@@ -39,10 +39,19 @@ namespace TaskMangment.Application.AutoMapper
             CreateMap<PermissionAddDto, Permission>();
 
             CreateMap<WorkTask, TaskGetDto>()
-           .ForMember(dest => dest.AssignedByName, opt => opt.MapFrom(src => src.AssignedBy != null ? src.AssignedBy.FullName : string.Empty))
-           .ForMember(dest => dest.EmployeeNames, opt => opt.MapFrom(src => src.Assignments != null
-                                                                     ? src.Assignments.Select(a => a.Employee.FullName).ToList()
-                                                                     : new List<string>()))
+            .ForMember(dest => dest.AssignedByName, opt => opt.MapFrom(src => src.AssignedBy != null ? src.AssignedBy.FullName: string.Empty))
+               
+                   
+                       
+                        
+
+            .ForMember(dest => dest.AssignEmployee, opt => opt.MapFrom(src =>  src.Assignments != null? src.Assignments.Select(a => new TaskEmployeeAssignmentDto
+                        {
+                            Id = a.Employee.Id,
+                            Name = a.Employee.FullName
+                        }).ToList()
+                        : new List<TaskEmployeeAssignmentDto>()))
+
            .ForMember(dest => dest.AssignedByName, opt => opt.MapFrom(src => src.CreatedBy != null ? src.CreatedBy.FullName : string.Empty))
            .ForMember(dest => dest.PriorityText, opt => opt.MapFrom(src => src.Priority))
            .ForMember(dest => dest.StatusText, opt => opt.MapFrom(src => src.Status));
