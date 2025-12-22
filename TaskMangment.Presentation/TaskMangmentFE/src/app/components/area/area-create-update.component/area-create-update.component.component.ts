@@ -171,18 +171,6 @@ export class AreaCreateUpdateComponent implements OnInit {
             }
           );
         },
-        error: (error) => {
-          console.error('Update error:', error);
-
-          this.toastr.error(
-            this.translate.instant('AREA.UPDATE_FAILED'),
-            this.translate.instant('FORM.ERROR'),
-            {
-              timeOut: 3000,
-              positionClass: 'toast-top-right',
-            }
-          );
-        }
       });
     }
 
@@ -201,18 +189,6 @@ export class AreaCreateUpdateComponent implements OnInit {
             }
           );
         },
-        error: (error) => {
-          console.error('Create error:', error);
-
-          this.toastr.error(
-            this.translate.instant('AREA.CREATE_FAILED'),
-            this.translate.instant('FORM.ERROR'),
-            {
-              timeOut: 3000,
-              positionClass: 'toast-top-right',
-            }
-          );
-        }
       });
     }
   }

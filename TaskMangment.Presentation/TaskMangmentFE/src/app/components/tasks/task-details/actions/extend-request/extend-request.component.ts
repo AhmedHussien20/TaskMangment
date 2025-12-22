@@ -2,9 +2,11 @@ import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { TaskExtensionRequestService } from 'app/core/services/task-extension-request.service';
 import { TaskExtensionRequestAdd } from 'app/core/models/task/task-extension-request';
+import { ToastrService } from 'ngx-toastr';
+
 
 @Component({
   selector: 'app-extend-request-modal',
@@ -22,7 +24,9 @@ export class ExtendRequestComponent {
   constructor(
     public modal: NgbActiveModal,
     private fb: FormBuilder,
-    private extendRequestService: TaskExtensionRequestService
+    private extendRequestService: TaskExtensionRequestService,
+    private toastr: ToastrService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit() {
@@ -42,6 +46,7 @@ export class ExtendRequestComponent {
 
     this.extendRequestService.create(this.taskId, model).subscribe({
       next: () => {
+        this.toastr.success(this.translate.instant('TASK.SAVED_SUCCESS'));
         this.isSubmitting = false;
         this.modal.close(true);
       },

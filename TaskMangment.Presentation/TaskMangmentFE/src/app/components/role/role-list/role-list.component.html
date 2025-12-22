@@ -45,7 +45,9 @@
             [onSearch]="applyFilters.bind(this)"
 
             (pageChange)="onPageChange($event)"
-            (entriesChange)="onEntriesChange($event)">
+            (entriesChange)="onEntriesChange($event)"
+            [showDeleteButton]="true" (delete)="confirmDelete($event)">
+
           </app-generic-table>
         </div>
 

@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -6,6 +7,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TaskMangment.Application.Common.ApiRequests.Role;
+using TaskMangment.Application.Common.Errors;
+using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Responses;
 using TaskMangment.Application.DTOs;
@@ -123,7 +126,7 @@ namespace TaskMangment.Infrastructure.Services
                 .FirstOrDefaultAsync();
 
             if (role == null)
-                return ApiResponse<RoleGetDto>.Fail("Role not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.RoleNotFound, StatusCodes.Status400BadRequest);
 
             var dto = _mapper.Map<RoleGetDto>(role);
             return ApiResponse<RoleGetDto>.Ok(dto);
@@ -140,9 +143,8 @@ namespace TaskMangment.Infrastructure.Services
                 .AnyAsync();
 
             if (roleExists)
-                return ApiResponse<int>.Fail(
-                    "Role with the same name already exists",
-                    StatusCode.AlreadyUsed);
+                throw new AppException(ErrorCodes.AlreadyExists, StatusCodes.Status400BadRequest);
+
 
             var role = _mapper.Map<Role>(dto);
             role.CompanyId = companyId;
@@ -163,7 +165,7 @@ namespace TaskMangment.Infrastructure.Services
                 .FirstOrDefaultAsync();
 
             if (role == null)
-                return ApiResponse<RoleGetDto>.Fail("Role not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.RoleNotFound, StatusCodes.Status400BadRequest);
 
             var roleExists = await _roleRepo
                 .GetAll(r =>
@@ -173,9 +175,8 @@ namespace TaskMangment.Infrastructure.Services
                 .AnyAsync();
 
             if (roleExists)
-                return ApiResponse<RoleGetDto>.Fail(
-                    "Role with the same name already exists",
-                    StatusCode.AlreadyUsed);
+                throw new AppException(ErrorCodes.AlreadyExists, StatusCodes.Status400BadRequest);
+
             dto.CompanyId = companyId;
             _mapper.Map(dto, role);
 
@@ -195,7 +196,7 @@ namespace TaskMangment.Infrastructure.Services
                 .FirstOrDefaultAsync();
 
             if (role == null)
-                return ApiResponse<bool>.Fail("Role not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.RoleNotFound, StatusCodes.Status400BadRequest);
 
             _roleRepo.SoftDelete(role);
             await _roleRepo.SaveChangesAsync();

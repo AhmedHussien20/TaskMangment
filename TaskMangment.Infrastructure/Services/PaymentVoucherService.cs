@@ -1,11 +1,15 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TaskMangment.Application.Common.ApiRequests.PaymentVoucher;
+using TaskMangment.Application.Common.Errors;
+using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Responses;
 using TaskMangment.Application.DTOs;
@@ -98,7 +102,7 @@ namespace TaskMangment.Infrastructure.Services
                 .FirstOrDefaultAsync();
 
             if (voucher == null)
-                return ApiResponse<PaymentVoucherGetDto>.Fail("Voucher not found");
+                throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
 
             var dto = _mapper.Map<PaymentVoucherGetDto>(voucher);
             dto.AttachmentCount = await _attachmentRepo.CountAsync(a => a.ReferenceId == id && a.AttachmentType==AttachmentType.Voucher);
@@ -109,17 +113,18 @@ namespace TaskMangment.Infrastructure.Services
         public async Task<ApiResponse<PaymentVoucherGetDto>> AddAsync(PaymentVoucherAddEditDto dto, int CompanyId, int CreatedBy)
         {
             if (dto.BranchId.HasValue && !await _branchRepository.IsExistAsync(dto.BranchId.Value))
-                return ApiResponse<PaymentVoucherGetDto>.Fail("Branch not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.BranchNotFound, StatusCodes.Status404NotFound);
 
             if (!await _employeeRepository.IsExistAsync(CreatedBy))
-                return ApiResponse<PaymentVoucherGetDto>.Fail("Employee not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.EmployeeNotFound, StatusCodes.Status404NotFound);
 
             if (!await _companyRepo.IsExistAsync(CompanyId))
-                return ApiResponse<PaymentVoucherGetDto>.Fail("Company not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.CompanyNotFound, StatusCodes.Status404NotFound);
+
             var voucher = _mapper.Map<PaymentVoucher>(dto);
             voucher.CompanyId = CompanyId;
             voucher.CreatedByEmployeeId = CreatedBy;
-            voucher.CreatedDate= DateTime.UtcNow;
+            //voucher.CreatedDate= DateTime.UtcNow;
 
 
             await _voucherRepo.AddAsync(voucher);
@@ -144,11 +149,13 @@ namespace TaskMangment.Infrastructure.Services
         {
             var voucher = await _voucherRepo.GetByIDAsync(id);
             if (voucher == null)
-                return ApiResponse<PaymentVoucherGetDto>.Fail("Voucher not found");
+                throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
 
+            if (dto.BranchId.HasValue && !await _branchRepository.IsExistAsync(dto.BranchId.Value))
+                throw new AppException(ErrorCodes.BranchNotFound, StatusCodes.Status404NotFound);
 
             _mapper.Map(dto, voucher);
-            voucher.ModifiedDate = DateTime.UtcNow;
+            //voucher.ModifiedDate = DateTime.UtcNow;
 
             await _voucherRepo.SaveChangesAsync();
             await _cache.RemoveAsync("vouchers:");
@@ -170,7 +177,7 @@ namespace TaskMangment.Infrastructure.Services
         {
             var voucher = await _voucherRepo.GetByIDAsync(id);
             if (voucher == null)
-                return ApiResponse<bool>.Fail("Voucher not found");
+                throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
 
             _voucherRepo.SoftDelete(voucher);
             await _voucherRepo.SaveChangesAsync();

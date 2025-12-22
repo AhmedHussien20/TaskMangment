@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Azure.Core;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -8,6 +9,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TaskMangment.Application.Common.ApiRequests.Employee;
+using TaskMangment.Application.Common.Errors;
+using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Responses;
 using TaskMangment.Application.DTOs;
@@ -108,11 +111,12 @@ namespace TaskMangment.Infrastructure.Services
         public async Task<ApiResponse<EmployeeGetDto>> AddAsync(EmployeeAddEditDto dto, int CampanyId)
         {
             if (dto.BranchId.HasValue && !await _branchRepo.IsExistAsync(dto.BranchId.Value))
-                return ApiResponse<EmployeeGetDto>.Fail("Branch not found", StatusCode.NotFound);
-
+                throw new AppException(
+                                    ErrorCodes.BranchNotFound,
+                                    StatusCodes.Status400BadRequest);
 
             if (!await _companyRepository.IsExistAsync(CampanyId))
-                return ApiResponse<EmployeeGetDto>.Fail("Company not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.CompanyNotFound, StatusCodes.Status400BadRequest);
 
 
             var employee = _mapper.Map<Employee>(dto);
@@ -127,19 +131,19 @@ namespace TaskMangment.Infrastructure.Services
 
 
             // Assign roles
-            foreach (var roleId in dto.RoleIds)
-            {
-                if (!await _roleRepo.IsExistAsync(roleId))
-                    return ApiResponse<EmployeeGetDto>.Fail($"Role with ID {roleId} not found");
+            //foreach (var roleId in dto.RoleIds)
+            //{
+            //    if (!await _roleRepo.IsExistAsync(roleId))
+            //        return ApiResponse<EmployeeGetDto>.Fail($"Role with ID {roleId} not found");
 
-                await _employeeRoleRepo.AddAsync(new EmployeeRole
-                {
-                    EmployeeId = employee.Id,
-                    RoleId = roleId
-                });
-            }
+            //    await _employeeRoleRepo.AddAsync(new EmployeeRole
+            //    {
+            //        EmployeeId = employee.Id,
+            //        RoleId = roleId
+            //    });
+            //}
 
-            await _employeeRoleRepo.SaveChangesAsync();
+            //await _employeeRoleRepo.SaveChangesAsync();
             await _cache.RemoveAsync("employees:");
 
             var fullEmployee = await _employeeRepo.GetAll(e => e.Id == employee.Id)
@@ -155,10 +159,16 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<EmployeeGetDto>> UpdateAsync(int id, EmployeeAddEditDto dto)
         {
+            if (dto.BranchId.HasValue && !await _branchRepo.IsExistAsync(dto.BranchId.Value))
+                throw new AppException(
+                                    ErrorCodes.BranchNotFound,
+                                    StatusCodes.Status400BadRequest);
+
             var employee = await _employeeRepo.GetByIDAsync(id);
             if (employee == null)
-                return ApiResponse<EmployeeGetDto>.Fail("Employee not found");
-
+                throw new AppException(
+                                    ErrorCodes.EmployeeNotFound,
+                                    StatusCodes.Status400BadRequest);
             _mapper.Map(dto, employee);
             employee.ModifiedDate = DateTime.UtcNow;
 
@@ -166,24 +176,26 @@ namespace TaskMangment.Infrastructure.Services
             // if(!string.IsNullOrWhiteSpace(dto.Password))
             //    employee.PasswordHash = HashPassword(dto.Password);
 
+
+
             // Update roles
-            var oldRoles = await _employeeRoleRepo.GetAll(er => er.EmployeeId == id).ToListAsync();
-            _employeeRoleRepo.DeleteRange(oldRoles);
+            //var oldRoles = await _employeeRoleRepo.GetAll(er => er.EmployeeId == id).ToListAsync();
+            //_employeeRoleRepo.DeleteRange(oldRoles);
 
-            foreach (var roleId in dto.RoleIds)
-            {
-                if (!await _roleRepo.IsExistAsync(roleId))
-                    return ApiResponse<EmployeeGetDto>.Fail($"Role with ID {roleId} not found");
+            //foreach (var roleId in dto.RoleIds)
+            //{
+            //    if (!await _roleRepo.IsExistAsync(roleId))
+            //        return ApiResponse<EmployeeGetDto>.Fail($"Role with ID {roleId} not found");
 
-                await _employeeRoleRepo.AddAsync(new EmployeeRole
-                {
-                    EmployeeId = employee.Id,
-                    RoleId = roleId
-                });
-            }
+            //    await _employeeRoleRepo.AddAsync(new EmployeeRole
+            //    {
+            //        EmployeeId = employee.Id,
+            //        RoleId = roleId
+            //    });
+            //}
 
             await _employeeRepo.SaveChangesAsync();
-            await _employeeRoleRepo.SaveChangesAsync();
+           // await _employeeRoleRepo.SaveChangesAsync();
             await _cache.RemoveAsync("employees:");
 
             var fullEmployee = await _employeeRepo.GetAll(e => e.Id == employee.Id)
@@ -200,8 +212,9 @@ namespace TaskMangment.Infrastructure.Services
         {
             var employee = await _employeeRepo.GetByIDAsync(id);
             if (employee == null)
-                return ApiResponse<bool>.Fail("Employee not found");
-
+                throw new AppException(
+                    ErrorCodes.EmployeeNotFound,
+                    StatusCodes.Status400BadRequest);
             _employeeRepo.SoftDelete(employee);
             await _employeeRepo.SaveChangesAsync();
             await _cache.RemoveAsync("employees:");

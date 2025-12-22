@@ -213,10 +213,8 @@ export class BranchCreateUpdateComponent implements OnInit {
         next: () => {
           this.toastr.success(this.translate.instant('BRANCH.UPDATE_SUCCESS'));
           this.formSubmitted.emit();
-        },
-        error: () => {
-          this.toastr.error(this.translate.instant('BRANCH.UPDATE_FAILED'));
         }
+     
       });
     }
 
@@ -226,10 +224,8 @@ export class BranchCreateUpdateComponent implements OnInit {
         next: () => {
           this.toastr.success(this.translate.instant('BRANCH.CREATE_SUCCESS'));
           this.formSubmitted.emit();
-        },
-        error: () => {
-          this.toastr.error(this.translate.instant('BRANCH.CREATE_FAILED'));
         }
+       
       });
     }
   }

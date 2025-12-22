@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -6,6 +7,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TaskMangment.Application.Common.ApiRequests.Offer;
+using TaskMangment.Application.Common.Errors;
+using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Responses;
 using TaskMangment.Application.DTOs;
@@ -94,7 +97,7 @@ namespace TaskMangment.Infrastructure.Services
                 .FirstOrDefaultAsync();
 
             if (offer == null)
-                return ApiResponse<OfferGetDto>.Fail("Offer not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.OfferNotFound,StatusCodes.Status400BadRequest);
 
             var dto = _mapper.Map<OfferGetDto>(offer);
             dto.AssignedStudents = offer.Assignments.Select(a => a.Student.FullName).ToList();
@@ -106,7 +109,34 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<OfferGetDto>> AddAsync(OfferAddEditDto dto)
         {
-        
+
+            if (dto.AssignedStudentIds != null && dto.AssignedStudentIds.Any())
+            {
+                var allExist = await _studentRepo
+                    .GetAll(s => dto.AssignedStudentIds.Contains(s.Id))
+                    .CountAsync() == dto.AssignedStudentIds.Count;
+
+                if (!allExist)
+                    throw new AppException(
+                        ErrorCodes.StudentNotFound,
+                        StatusCodes.Status404NotFound
+                    );
+            }
+            if (dto.CourseId.HasValue)
+            {
+                if (!await _courseRepo.IsExistAsync(dto.CourseId.Value))
+                    throw new AppException(
+                        ErrorCodes.CourseNotFound,
+                        StatusCodes.Status404NotFound);
+            }
+            if (dto.SubjectId.HasValue)
+            {
+                if (!await _subjectRepo.IsExistAsync(dto.SubjectId.Value))
+                    throw new AppException(
+                        ErrorCodes.SubjectNotFound,
+                        StatusCodes.Status404NotFound);
+            }
+
 
             var offer = _mapper.Map<Offer>(dto);
 
@@ -141,11 +171,36 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<OfferGetDto>> UpdateAsync(int id, OfferAddEditDto dto)
         {
-         
-
             var offer = await _offerRepo.GetByIDAsync(id);
             if (offer == null)
-                return ApiResponse<OfferGetDto>.Fail("Offer not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.OfferNotFound, StatusCodes.Status400BadRequest);
+
+            if (dto.AssignedStudentIds != null && dto.AssignedStudentIds.Any())
+            {
+                var allExist = await _studentRepo
+                    .GetAll(s => dto.AssignedStudentIds.Contains(s.Id))
+                    .CountAsync() == dto.AssignedStudentIds.Count;
+
+                if (!allExist)
+                    throw new AppException(
+                        ErrorCodes.StudentNotFound,
+                        StatusCodes.Status404NotFound
+                    );
+            }
+            if (dto.CourseId.HasValue)
+            {
+                if (!await _courseRepo.IsExistAsync(dto.CourseId.Value))
+                    throw new AppException(
+                        ErrorCodes.CourseNotFound,
+                        StatusCodes.Status404NotFound);
+            }
+            if (dto.SubjectId.HasValue)
+            {
+                if (!await _subjectRepo.IsExistAsync(dto.SubjectId.Value))
+                    throw new AppException(
+                        ErrorCodes.SubjectNotFound,
+                        StatusCodes.Status404NotFound);
+            }
 
             _mapper.Map(dto, offer);
 
@@ -188,7 +243,7 @@ namespace TaskMangment.Infrastructure.Services
         {
             var offer = await _offerRepo.GetByIDAsync(id);
             if (offer == null)
-                return ApiResponse<bool>.Fail("Offer not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.OfferNotFound, StatusCodes.Status400BadRequest);
 
             _offerRepo.SoftDelete(offer);
             await _offerRepo.SaveChangesAsync();

@@ -123,10 +123,7 @@ loadRoleInfo() {
           this.toastr.success('ROLE.ASSIGNED_TO_EMPLOYEE_SUCCESS', 'Success');
           this.loadData();
         },
-        error: (error) => {
-          console.error('Error saving assignments:', error);
-          this.toastr.error('ROLE.ASSIGNED_TO_EMPLOYEE_FAILED', 'Error');
-        }
+       
       });
   }
 
@@ -153,7 +150,6 @@ loadRoleInfo() {
         },
         error: () => {
           emp.isAssigned = !checked;
-          this.toastr.error('ROLE.ASSIGNED_TO_EMPLOYEE_FAILED', 'Error');
 
         }
     });

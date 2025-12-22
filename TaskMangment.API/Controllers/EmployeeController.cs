@@ -35,10 +35,6 @@ namespace TaskMangment.API.Controllers
         public async Task<IActionResult> GetById(int id)
         {
             var result = await _service.GetByIdAsync(id);
-
-            if (!result.Success)
-                return Fail(result.Message!, 404);
-
             return Success(result.Data);
         }
 
@@ -46,10 +42,6 @@ namespace TaskMangment.API.Controllers
         public async Task<IActionResult> Add([FromBody] EmployeeAddEditDto dto)
         {
             var result = await _service.AddAsync(dto, this.CompanyId);
-
-            if (!result.Success)
-                return Fail(result.Message);
-
             return Success(result.Data, "Employee added successfully");
         }
 
@@ -57,10 +49,6 @@ namespace TaskMangment.API.Controllers
         public async Task<IActionResult> Update(int id, [FromBody] EmployeeAddEditDto dto)
         {
             var result = await _service.UpdateAsync(id, dto);
-
-            if (!result.Success)
-                return Fail(result.Message, 404);
-
             return Success(result.Data, "Employee updated successfully");
         }
 
@@ -68,10 +56,6 @@ namespace TaskMangment.API.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             var result = await _service.DeleteAsync(id);
-
-            if (!result.Success)
-                return Fail(result.Message, 404);
-
             return Success(true, "Employee deleted successfully");
         }
     }
