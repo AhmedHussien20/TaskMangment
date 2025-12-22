@@ -60,7 +60,7 @@ export class AreaCreateUpdateComponent implements OnInit {
     {
       type: 'select',
       label: 'AREA.MANAGER',
-      name: 'managerId',
+      name: 'managerEmployeeId',
       selectType: 'employee',
       options: [],
       validations: { required: true },
@@ -91,7 +91,7 @@ export class AreaCreateUpdateComponent implements OnInit {
       name: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100)]],
       address: ['', Validators.maxLength(200)],
       managerName: ['', Validators.maxLength(100)],
-      managerId: [null, Validators.required]
+      managerEmployeeId: [null, Validators.required]
 
     });
   }
@@ -105,7 +105,7 @@ export class AreaCreateUpdateComponent implements OnInit {
       this.formGroup.patchValue({
         name: area.name,
         address: area.address,
-        managerId: area.managerID
+        managerEmployeeId: area.managerEmployeeId
       });
 
       console.log('Loaded area data: ', res);
@@ -124,7 +124,7 @@ export class AreaCreateUpdateComponent implements OnInit {
     this.employeeService.getAll(request).subscribe(res => {
       const list = res.data.data;
 
-      const managerField = this.formConfig.find(f => f.name === 'managerId');
+      const managerField = this.formConfig.find(f => f.name === 'managerEmployeeId');
 
        if (managerField) {
     managerField.options = list.map((emp: Employee) => ({

@@ -48,6 +48,7 @@ import { authReducer } from './store/auth/auth.reducer';
 import { provideEffects } from '@ngrx/effects';
 import { NavEffects } from './store/nav/nav.effects';
 import { AuthEffects } from './store/auth/auth.effects';
+import { languageInterceptor } from './core/interceptors/language.interceptor';
 
 export function HttpLoaderFactory(http: HttpClient) {
     return new TranslateHttpLoader(http, './assets/i18n/', '.json');
@@ -129,7 +130,7 @@ export const appConfig: ApplicationConfig = {
 
         // HTTP + INTERCEPTOR
         provideHttpClient(
-            withInterceptors([AuthInterceptor])
+            withInterceptors([AuthInterceptor, languageInterceptor])
         ),
         provideStore({
             nav: navReducer,
