@@ -63,6 +63,7 @@ namespace TaskMangment.API
             builder.Services.AddScoped<IJwtService, JwtService>();
             // Domain Events
             builder.Services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
+
             // Notification sender 
             builder.Services.AddScoped<INotificationSender, NotificationSender>();
             builder.Services.AddScoped<IEventHandler<TaskAssignedEvent>,TaskAssignedEventHandler>();
@@ -70,12 +71,14 @@ namespace TaskMangment.API
             builder.Services.AddScoped<IEventHandler<TaskCloseRequestEvent>, TaskCloseRequestEventHandler>();
             builder.Services.AddScoped<IEventHandler<TaskCommentAddedEvent>, TaskCommentEventHandler>();
             builder.Services.AddScoped<IEventHandler<TaskPenaltyEvent>, TaskPenaltyEventHandler>();
+            builder.Services.AddScoped<IEventHandler<TaskAssignedEvent>, TaskAssignedEventHandler>();
+            builder.Services.AddScoped<IEventHandler<TaskAssignedEvent>, TaskAssignedEmailHandler>();
+            builder.Services.AddScoped<IEventHandler<TaskRequestAddedEvent>, TaskRequestEmailHandler>();
 
             builder.Services.AddScoped<IEventHandler<TaskWarningEvent>, TaskWarningEventHandler>();
             builder.Services.AddScoped<IEventHandler<TaskExtensionRequestEvent>, TaskExtenstionRequestEmailHandler>();
             builder.Services.AddScoped<IEventHandler<TaskCloseRequestEvent>, TaskCloseRequestEmailHandler>();
             builder.Services.AddScoped<IEventHandler<TaskPenaltyEvent>, TaskPenaltyEmailHandler>();
-
 
 
 
@@ -93,9 +96,8 @@ namespace TaskMangment.API
             builder.Services.AddScoped<ISignalRNotifier, SignalRNotifier>();
             builder.Services.AddScoped<INotificationService, NotificationService>();
             builder.Services.AddScoped<IEmailQueueService, EmailQueueService>();
-            builder.Services.AddScoped<IEventHandler<TaskAssignedEvent>,TaskAssignedEventHandler>();
-            builder.Services.AddScoped<IEventHandler<TaskAssignedEvent>, TaskAssignedEmailHandler>();
-
+            
+            
 
             builder.Services.AddScoped<ProcessPendingEmailsJob>();
             // ------------------------------
