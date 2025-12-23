@@ -8,27 +8,26 @@ using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Domain.Entities;
 using TaskMangment.Domain.Event;
 
-namespace TaskMangment.Application.Behaviors
+namespace TaskMangment.Application.Behaviors.EmailHandlers
 {
-    public class TaskAssignedEmailHandler: IEventHandler<TaskAssignedEvent>
+    public class TaskWarningEmailHandler : IEventHandler<TaskWarningEvent>
     {
         private readonly IEmailQueueService _emailQueue;
 
-        public TaskAssignedEmailHandler(IEmailQueueService emailQueue)
+        public TaskWarningEmailHandler(IEmailQueueService emailQueue)
         {
             _emailQueue = emailQueue;
         }
 
-        public async Task Handle(TaskAssignedEvent ev)
+        public async Task Handle(TaskWarningEvent ev)
         {
             await _emailQueue.QueueAsync(new EmailQueueRequest
             {
-                TemplateKey = "TaskAssigned",
-                ReferenceType = ReferenceType.Task,
-                ReferenceId = ev.TaskId,
-                UserIds = ev.AssignedEmployeeIds
+                TemplateKey = "EmployeeWarning",
+                ReferenceType = ReferenceType.EmployeeWarning,
+                ReferenceId = ev.WarningId,
+                UserIds = new List<int> { ev.IssuedtoId }
             });
         }
     }
-
 }

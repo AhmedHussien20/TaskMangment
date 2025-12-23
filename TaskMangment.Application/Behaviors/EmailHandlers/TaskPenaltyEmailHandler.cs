@@ -23,9 +23,9 @@ namespace TaskMangment.Application.Behaviors.EmailHandlers
         {
             await _emailQueue.QueueAsync(new EmailQueueRequest
             {
-                TemplateKey = "TaskExtensionRequest",
-                ReferenceType = ReferenceType.TaskExtensionRequest,
-                ReferenceId = ev.TaskId,
+                TemplateKey = "EmployeeDeduction",
+                ReferenceType = ReferenceType.EmployeeDeduction,
+                ReferenceId = ev.DiscountId,
                 UserIds = new List<int> { ev.IssuedtoId }
             });
         }
