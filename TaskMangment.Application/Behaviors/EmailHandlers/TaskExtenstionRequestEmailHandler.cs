@@ -25,7 +25,7 @@ namespace TaskMangment.Application.Behaviors.EmailHandlers
             {
                 TemplateKey = "TaskExtensionRequest",
                 ReferenceType = ReferenceType.TaskExtensionRequest,
-                ReferenceId = ev.TaskId,
+                ReferenceId = ev.RequestId,
                 UserIds = ev.Recipients
             });
         }

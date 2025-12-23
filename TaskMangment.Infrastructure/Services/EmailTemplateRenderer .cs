@@ -217,7 +217,7 @@ namespace TaskMangment.Infrastructure.Services
                 // =========================
                 case ReferenceType.EmployeeDeduction:
                     {
-                        var deduction = await _db.Deductions
+                        var deduction = await _db.Discounts
                             .Where(d => d.Id == referenceId)
                             .Select(d => new
                             {
@@ -235,6 +235,24 @@ namespace TaskMangment.Infrastructure.Services
                             ["DeductionAmount"] = deduction.Amount.ToString("N2")
                         };
                     }
+
+                // =========================
+                // Task Due Today Reminder
+                // =========================
+                case ReferenceType.TaskDueTodayReminder:
+                    var taskDue = await _db.Tasks
+                        .Where(t => t.Id == referenceId)
+                        .Select(t => new { t.Title, t.DueDate })
+                        .FirstOrDefaultAsync();
+
+                    if (taskDue == null)
+                        throw new Exception($"Task with Id {referenceId} not found.");
+
+                    return new Dictionary<string, string>
+                    {
+                        ["TaskTitle"] = taskDue.Title,
+                        ["DueDate"] = taskDue.DueDate?.ToString("yyyy-MM-dd") ?? "-"
+                    };
 
                 // =========================
                 default:

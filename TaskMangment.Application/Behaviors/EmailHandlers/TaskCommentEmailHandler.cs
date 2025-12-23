@@ -10,22 +10,22 @@ using TaskMangment.Domain.Event;
 
 namespace TaskMangment.Application.Behaviors.EmailHandlers
 {
-    public class TaskCloseRequestEmailHandler : IEventHandler<TaskCloseRequestEvent>
+    public class TaskCommentEmailHandler : IEventHandler<TaskCommentAddedEvent>
     {
         private readonly IEmailQueueService _emailQueue;
 
-        public TaskCloseRequestEmailHandler(IEmailQueueService emailQueue)
+        public TaskCommentEmailHandler(IEmailQueueService emailQueue)
         {
             _emailQueue = emailQueue;
         }
 
-        public async Task Handle(TaskCloseRequestEvent ev)
+        public async Task Handle(TaskCommentAddedEvent ev)
         {
             await _emailQueue.QueueAsync(new EmailQueueRequest
             {
-                TemplateKey = "TaskCloseRequest",
-                ReferenceType = ReferenceType.TaskCloseRequest,
-                ReferenceId = ev.RequestId,
+                TemplateKey = "TaskCommentAdded",
+                ReferenceType = ReferenceType.TaskComment,
+                ReferenceId = ev.CommentId,
                 UserIds = ev.Recipients
             });
         }

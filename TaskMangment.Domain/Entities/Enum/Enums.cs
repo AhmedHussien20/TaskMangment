@@ -43,7 +43,8 @@ namespace TaskMangment.Domain.Entities
         TaskCloseRequest = 5,
 
         EmployeeWarning = 6,
-        EmployeeDeduction = 7
+        EmployeeDeduction = 7,
+        TaskDueTodayReminder = 8
     }
 
 
