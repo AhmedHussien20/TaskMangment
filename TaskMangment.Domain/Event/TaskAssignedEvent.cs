@@ -12,10 +12,7 @@ namespace TaskMangment.Domain.Event
         public string TaskTitle { get; }
         public List<int> AssignedEmployeeIds { get; }
 
-        public TaskAssignedEvent(
-            int taskId,
-            string taskTitle,
-            List<int> assignedEmployeeIds)
+        public TaskAssignedEvent( int taskId, string taskTitle,List<int> assignedEmployeeIds)
         {
             TaskId = taskId;
             TaskTitle = taskTitle;
