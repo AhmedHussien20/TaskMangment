@@ -73,10 +73,17 @@ namespace TaskMangment.API
             builder.Services.AddScoped<IEventHandler<TaskPenaltyEvent>, TaskPenaltyEventHandler>();
             builder.Services.AddScoped<IEventHandler<TaskAssignedEvent>, TaskAssignedEventHandler>();
             builder.Services.AddScoped<IEventHandler<TaskAssignedEvent>, TaskAssignedEmailHandler>();
+           // builder.Services.AddScoped<IEventHandler<TaskRequestAddedEvent>, TaskRequestEmailHandler>();
+
+            builder.Services.AddScoped<IEventHandler<TaskWarningEvent>, TaskWarningEventHandler>();
             builder.Services.AddScoped<IEventHandler<TaskExtensionRequestEvent>, TaskExtenstionRequestEmailHandler>();
             builder.Services.AddScoped<IEventHandler<TaskCloseRequestEvent>, TaskCloseRequestEmailHandler>();
-            builder.Services.AddScoped<IEventHandler<TaskPenaltyEvent>, TaskPenaltyEmailHandler>(); 
-            builder.Services.AddScoped<IEventHandler<TaskWarningEvent>, TaskWarningEventHandler>();
+            builder.Services.AddScoped<IEventHandler<TaskPenaltyEvent>, TaskPenaltyEmailHandler>();
+            builder.Services.AddScoped<IEventHandler<TaskWarningEvent>, TaskWarningEmailHandler>();
+            builder.Services.AddScoped<IEventHandler<TaskCommentAddedEvent>, TaskCommentEmailHandler>();
+
+
+
 
 
 
@@ -95,6 +102,7 @@ namespace TaskMangment.API
             builder.Services.AddScoped<ISignalRNotifier, SignalRNotifier>();
             builder.Services.AddScoped<INotificationService, NotificationService>();
             builder.Services.AddScoped<IEmailQueueService, EmailQueueService>();
+            builder.Services.AddScoped<ITaskDueTodayEmailJob, TaskDueTodayEmailJob>();
 
 
 
@@ -277,6 +285,13 @@ namespace TaskMangment.API
                 j => j.ExecuteAsync(),
                 Cron.Minutely  
             );
+
+            RecurringJob.AddOrUpdate<ITaskDueTodayEmailJob>(
+                "task-due-today-email-job",
+                job => job.ExecuteAsync(),
+                Cron.Daily(8)
+               );
+
 
             RecurringJob.AddOrUpdate<AttachmentBlobMigrationJob>(
                 "attachment-blob-migration",
