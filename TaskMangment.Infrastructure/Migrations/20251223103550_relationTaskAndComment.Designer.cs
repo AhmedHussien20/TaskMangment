@@ -12,8 +12,8 @@ using TaskMangment.Infrastructure.DataContext;
 namespace TaskMangment.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251218162509_EditAttachmentType")]
-    partial class EditAttachmentType
+    [Migration("20251223103550_relationTaskAndComment")]
+    partial class relationTaskAndComment
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -126,9 +126,6 @@ namespace TaskMangment.Infrastructure.Migrations
                     b.Property<DateTime?>("ModifiedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("PaymentVoucherId")
-                        .HasColumnType("int");
-
                     b.Property<int>("ReferenceId")
                         .HasColumnType("int");
 
@@ -147,18 +144,11 @@ namespace TaskMangment.Infrastructure.Migrations
                     b.Property<int?>("UploadedBy")
                         .HasColumnType("int");
 
-                    b.Property<int?>("WorkTaskId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("PaymentVoucherId");
 
                     b.HasIndex("TaskCommentId");
 
                     b.HasIndex("UploadedBy");
-
-                    b.HasIndex("WorkTaskId");
 
                     b.ToTable("Attachments");
                 });
@@ -730,6 +720,138 @@ namespace TaskMangment.Infrastructure.Migrations
                     b.ToTable("Discounts");
                 });
 
+            modelBuilder.Entity("TaskMangment.Domain.Entities.EmailQueue", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Bcc")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Cc")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("DeletedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("ModifiedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ReferenceId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ReferenceType")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RetryCount")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("ScheduledAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("SentAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TemplateKey")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("ToEmail")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<int?>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("Status", "ScheduledAt");
+
+                    b.ToTable("EmailQueue", (string)null);
+                });
+
+            modelBuilder.Entity("TaskMangment.Domain.Entities.EmailTemplate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("BodyTemplate")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("DeletedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int?>("ModifiedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("SubjectTemplate")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Key")
+                        .IsUnique();
+
+                    b.ToTable("EmailTemplates", (string)null);
+                });
+
             modelBuilder.Entity("TaskMangment.Domain.Entities.Employee", b =>
                 {
                     b.Property<int>("Id")
@@ -1060,7 +1182,8 @@ namespace TaskMangment.Infrastructure.Migrations
 
                     b.Property<string>("Message")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<int?>("ModifiedBy")
                         .HasColumnType("int");
@@ -1073,7 +1196,9 @@ namespace TaskMangment.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Notifications");
+                    b.HasIndex("UserId", "IsRead");
+
+                    b.ToTable("Notifications", (string)null);
                 });
 
             modelBuilder.Entity("TaskMangment.Domain.Entities.Offer", b =>
@@ -1551,9 +1676,6 @@ namespace TaskMangment.Infrastructure.Migrations
                     b.Property<int>("TaskId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("WorkTaskId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.HasIndex("RequestedByEmployeeId");
@@ -1562,7 +1684,7 @@ namespace TaskMangment.Infrastructure.Migrations
 
                     b.HasIndex("TaskAssignmentId");
 
-                    b.HasIndex("WorkTaskId");
+                    b.HasIndex("TaskId");
 
                     b.ToTable("TaskCloseRequests");
                 });
@@ -1748,6 +1870,37 @@ namespace TaskMangment.Infrastructure.Migrations
                     b.ToTable("Warnings");
                 });
 
+            modelBuilder.Entity("TaskMangment.Domain.Entities.WhatsAppQueue", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("Phone")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RetryCount")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("ScheduledAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("WhatsAppQueue", (string)null);
+                });
+
             modelBuilder.Entity("TaskMangment.Domain.Entities.WorkTask", b =>
                 {
                     b.Property<int>("Id")
@@ -1846,10 +1999,6 @@ namespace TaskMangment.Infrastructure.Migrations
 
             modelBuilder.Entity("TaskMangment.Domain.Entities.Attachment", b =>
                 {
-                    b.HasOne("TaskMangment.Domain.Entities.PaymentVoucher", null)
-                        .WithMany("Attachments")
-                        .HasForeignKey("PaymentVoucherId");
-
                     b.HasOne("TaskMangment.Domain.Entities.TaskComment", null)
                         .WithMany("Attachments")
                         .HasForeignKey("TaskCommentId");
@@ -1858,10 +2007,6 @@ namespace TaskMangment.Infrastructure.Migrations
                         .WithMany()
                         .HasForeignKey("UploadedBy")
                         .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("TaskMangment.Domain.Entities.WorkTask", null)
-                        .WithMany("Attachments")
-                        .HasForeignKey("WorkTaskId");
 
                     b.Navigation("UploadedByEmployee");
                 });
@@ -2172,7 +2317,7 @@ namespace TaskMangment.Infrastructure.Migrations
                     b.HasOne("TaskMangment.Domain.Entities.WorkTask", "Task")
                         .WithMany("Assignments")
                         .HasForeignKey("TaskId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Employee");
@@ -2193,16 +2338,20 @@ namespace TaskMangment.Infrastructure.Migrations
                     b.HasOne("TaskMangment.Domain.Entities.TaskAssignment", "TaskAssignment")
                         .WithMany("CloseRequests")
                         .HasForeignKey("TaskAssignmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("TaskMangment.Domain.Entities.WorkTask", null)
+                    b.HasOne("TaskMangment.Domain.Entities.WorkTask", "Task")
                         .WithMany("CloseRequests")
-                        .HasForeignKey("WorkTaskId");
+                        .HasForeignKey("TaskId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("RequestedBy");
 
                     b.Navigation("ReviewedBy");
+
+                    b.Navigation("Task");
 
                     b.Navigation("TaskAssignment");
                 });
@@ -2237,7 +2386,7 @@ namespace TaskMangment.Infrastructure.Migrations
                     b.HasOne("TaskMangment.Domain.Entities.TaskAssignment", "TaskAssignment")
                         .WithMany("ExtensionRequests")
                         .HasForeignKey("TaskAssignmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("TaskMangment.Domain.Entities.WorkTask", "Task")
@@ -2268,7 +2417,7 @@ namespace TaskMangment.Infrastructure.Migrations
                     b.HasOne("TaskMangment.Domain.Entities.TaskAssignment", "TaskAssignment")
                         .WithMany("Warnings")
                         .HasForeignKey("TaskAssignmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("TaskMangment.Domain.Entities.WorkTask", "Task")
@@ -2353,11 +2502,6 @@ namespace TaskMangment.Infrastructure.Migrations
                     b.Navigation("Assignments");
                 });
 
-            modelBuilder.Entity("TaskMangment.Domain.Entities.PaymentVoucher", b =>
-                {
-                    b.Navigation("Attachments");
-                });
-
             modelBuilder.Entity("TaskMangment.Domain.Entities.Permission", b =>
                 {
                     b.Navigation("RolePermissions");
@@ -2392,8 +2536,6 @@ namespace TaskMangment.Infrastructure.Migrations
             modelBuilder.Entity("TaskMangment.Domain.Entities.WorkTask", b =>
                 {
                     b.Navigation("Assignments");
-
-                    b.Navigation("Attachments");
 
                     b.Navigation("CloseRequests");
 

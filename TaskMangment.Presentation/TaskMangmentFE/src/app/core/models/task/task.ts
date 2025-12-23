@@ -31,7 +31,8 @@ export interface TaskGet {
   isShared: boolean;
   createdAt: string;
   assignedByName: string;
-assignedEmployees?: {
+  assignEmployee
+?: {
     id: number;
     name: string;
     role: string;

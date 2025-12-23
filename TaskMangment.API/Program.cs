@@ -16,6 +16,7 @@ using TaskMangment.Application.Interfaces;
 using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Domain.Event;
+using TaskMangment.Hangfire.Jobs;
 using TaskMangment.Infrastructure;
 using TaskMangment.Infrastructure.Caching;
 using TaskMangment.Infrastructure.DataContext;
@@ -42,11 +43,11 @@ namespace TaskMangment.API
                 builder.Configuration.GetSection("EmailSettings")
             );
 
-    //        builder.Services.AddHangfire(config =>
-    //config.UseSqlServerStorage(
-    //    builder.Configuration.GetConnectionString("DefaultConnection")));
+            builder.Services.AddHangfire(config =>
+            config.UseSqlServerStorage(
+            builder.Configuration.GetConnectionString("DefaultConnection")));
 
-            //builder.Services.AddHangfireServer();
+            builder.Services.AddHangfireServer();
 
             builder.Services.AddDI();
 
@@ -55,8 +56,7 @@ namespace TaskMangment.API
             // ------------------------------
             builder.Services.AddScoped<IPermissionService, PermissionService>();
             builder.Services.AddScoped<IRoleService, RoleService>();
-            builder.Services.AddScoped<IWhatsAppService, WhatsAppService>();
-            builder.Services.AddScoped<INotificationService, NotificationService>();
+            builder.Services.AddScoped<IWhatsAppService, WhatsAppService>(); 
             builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IJwtService, JwtService>();
@@ -79,6 +79,16 @@ namespace TaskMangment.API
             // SignalR
             builder.Services.AddSignalR();
 
+
+            builder.Services.AddScoped<IEmailTemplateRenderer, EmailTemplateRenderer>();
+            builder.Services.AddScoped<ISignalRNotifier, SignalRNotifier>();
+            builder.Services.AddScoped<INotificationService, NotificationService>();
+            builder.Services.AddScoped<IEmailQueueService, EmailQueueService>();
+            builder.Services.AddScoped<IEventHandler<TaskAssignedEvent>,TaskAssignedEventHandler>();
+            builder.Services.AddScoped<IEventHandler<TaskAssignedEvent>, TaskAssignedEmailHandler>();
+
+
+            builder.Services.AddScoped<ProcessPendingEmailsJob>();
             // ------------------------------
             // CORS
             // ------------------------------
@@ -230,11 +240,33 @@ namespace TaskMangment.API
 
             // API Controllers
             app.MapControllers();
+
             //using (var scope = app.Services.CreateScope())
             //{
             //    var seeder = scope.ServiceProvider.GetRequiredService<DataSeeder>();
             //    await seeder.SeedAsync();
             //}
+
+            //using (var scope = app.Services.CreateScope())
+            //{
+            //    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            //    EmailTemplateSeeder.Seed(db);
+            //}
+            //using (var scope = app.Services.CreateScope())
+            //{
+            //    var jobClient = scope.ServiceProvider.GetRequiredService<IBackgroundJobClient>();
+
+            //    jobClient.Enqueue<ProcessPendingEmailsJob>(
+            //        j => j.ExecuteAsync()
+            //    );
+            //}
+            app.UseHangfireDashboard("/hangfire");
+            app.UseRouting();
+            RecurringJob.AddOrUpdate<ProcessPendingEmailsJob>(
+                "process-pending-emails",
+                j => j.ExecuteAsync(),
+                Cron.Minutely  
+            );
 
             app.Run();
         }

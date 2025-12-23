@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TaskMangment.Infrastructure.DataContext;
 
@@ -11,9 +12,11 @@ using TaskMangment.Infrastructure.DataContext;
 namespace TaskMangment.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251222194853_AddNotificationAndEmailQueue")]
+    partial class AddNotificationAndEmailQueue
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -783,12 +786,7 @@ namespace TaskMangment.Infrastructure.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
-                    b.Property<int?>("UserId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("UserId");
 
                     b.HasIndex("Status", "ScheduledAt");
 
@@ -1673,6 +1671,9 @@ namespace TaskMangment.Infrastructure.Migrations
                     b.Property<int>("TaskId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("WorkTaskId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("RequestedByEmployeeId");
@@ -1681,7 +1682,7 @@ namespace TaskMangment.Infrastructure.Migrations
 
                     b.HasIndex("TaskAssignmentId");
 
-                    b.HasIndex("TaskId");
+                    b.HasIndex("WorkTaskId");
 
                     b.ToTable("TaskCloseRequests");
                 });
@@ -2338,17 +2339,13 @@ namespace TaskMangment.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("TaskMangment.Domain.Entities.WorkTask", "Task")
+                    b.HasOne("TaskMangment.Domain.Entities.WorkTask", null)
                         .WithMany("CloseRequests")
-                        .HasForeignKey("TaskId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .HasForeignKey("WorkTaskId");
 
                     b.Navigation("RequestedBy");
 
                     b.Navigation("ReviewedBy");
-
-                    b.Navigation("Task");
 
                     b.Navigation("TaskAssignment");
                 });

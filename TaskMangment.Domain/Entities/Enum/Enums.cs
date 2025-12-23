@@ -25,4 +25,26 @@ namespace TaskMangment.Domain.Entities
         Voucher = 3
     }
 
+    public enum EmailStatus
+    {
+        Pending = 1,
+        Processing = 2,
+        Sent = 3,
+        Failed = 4
+    }
+
+    public enum ReferenceType
+    {
+        Task = 1,
+        Event = 2,
+
+        TaskComment = 3,
+        TaskExtensionRequest = 4,
+        TaskCloseRequest = 5,
+
+        EmployeeWarning = 6,
+        EmployeeDeduction = 7
+    }
+
+
 }
