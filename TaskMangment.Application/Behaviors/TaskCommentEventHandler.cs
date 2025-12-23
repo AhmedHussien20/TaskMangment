@@ -1,6 +1,9 @@
 ﻿using Microsoft.Extensions.Localization;
-using TaskMangment.Application.Common.ApiRequests.Task;
-using TaskMangment.Application.Common.Errors;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Notification;
 using TaskMangment.Application.Interfaces.Services;
@@ -8,12 +11,12 @@ using TaskMangment.Domain.Event;
 
 namespace TaskMangment.Application.Behaviors
 {
-    public class TaskRequestEventHandler : IEventHandler<TaskRequestAddedEvent>
+    public class TaskCommentEventHandler : IEventHandler<TaskCommentAddedEvent>
     {
         private readonly INotificationService _notificationService;
         private readonly IStringLocalizer _localizer;
 
-        public TaskRequestEventHandler(
+        public TaskCommentEventHandler(
             INotificationService notificationService,
             IStringLocalizerFactory factory)
         {
@@ -22,10 +25,10 @@ namespace TaskMangment.Application.Behaviors
             _localizer = factory.Create("TaskNotification", "TaskMangment.API");
         }
 
-        public async Task Handle(TaskRequestAddedEvent ev)
+        public async Task Handle(TaskCommentAddedEvent ev)
         {
             var messageTemplate = _localizer[
-                NotificationCode.TaskRequestNotification
+                NotificationCode.TaskCommentNotification
             ];
 
             var message = string.Format(

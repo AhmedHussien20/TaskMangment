@@ -1,6 +1,9 @@
 ﻿using Microsoft.Extensions.Localization;
-using TaskMangment.Application.Common.ApiRequests.Task;
-using TaskMangment.Application.Common.Errors;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Notification;
 using TaskMangment.Application.Interfaces.Services;
@@ -8,12 +11,12 @@ using TaskMangment.Domain.Event;
 
 namespace TaskMangment.Application.Behaviors
 {
-    public class TaskRequestEventHandler : IEventHandler<TaskRequestAddedEvent>
+    public class TaskPenaltyEventHandler : IEventHandler<TaskPenaltyEvent>
     {
         private readonly INotificationService _notificationService;
         private readonly IStringLocalizer _localizer;
 
-        public TaskRequestEventHandler(
+        public TaskPenaltyEventHandler(
             INotificationService notificationService,
             IStringLocalizerFactory factory)
         {
@@ -22,27 +25,26 @@ namespace TaskMangment.Application.Behaviors
             _localizer = factory.Create("TaskNotification", "TaskMangment.API");
         }
 
-        public async Task Handle(TaskRequestAddedEvent ev)
+        public async Task Handle(TaskPenaltyEvent ev)
         {
             var messageTemplate = _localizer[
-                NotificationCode.TaskRequestNotification
+                NotificationCode.TaskPenaltyNotification
             ];
 
             var message = string.Format(
                 messageTemplate,
-                ev.taskTitle,
-                ev.EmployeeName
+                ev.TaskTitle,
+                ev.IssuedbyName
             );
 
-            foreach (var empId in ev.Recipients)
-            {
+           
                 await _notificationService.SendAsync(
-                    empId,
+                    ev.IssuedtoId,
                     message,
                     sendEmail: true,
                     sendWhatsApp: false
                 );
-            }
+            
         }
     }
 }

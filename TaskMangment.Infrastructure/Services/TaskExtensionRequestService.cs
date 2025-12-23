@@ -159,6 +159,7 @@ namespace TaskMangment.Infrastructure.Services
             {
                 assignedEmployeeIds.Add(task.AssignedByEmployeeId.Value);
             }
+            assignedEmployeeIds.Remove(employeeId);
 
 
             await _eventDispatcher.PublishAsync(

@@ -6,19 +6,21 @@ using System.Threading.Tasks;
 
 namespace TaskMangment.Domain.Event
 {
-    public class TaskRequstAddedEvent
+    public class TaskCommentAddedEvent
     {
         public int CommentId { get; }
         public int TaskId { get; }
-        public int CreatedByEmployeeId { get; }
+        public string taskTitle { get; set; }
+        public string EmployeeName { get; set; }
         public List<int> Recipients { get; }
 
-        public TaskRequstAddedEvent(int commentId, int taskId, int createdByEmployeeId, List<int> recipients)
+        public TaskCommentAddedEvent(int commentId, int taskId, string employeeName, List<int> recipients, string taskTitle)
         {
             CommentId = commentId;
             TaskId = taskId;
-            CreatedByEmployeeId = createdByEmployeeId;
+            EmployeeName = employeeName;
             Recipients = recipients;
+            this.taskTitle = taskTitle;
         }
     }
 
