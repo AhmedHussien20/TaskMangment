@@ -127,12 +127,12 @@ namespace TaskMangment.Infrastructure.Services
 
 
 
-            var employeeName = await _employeeRepo.GetAll(e => e.Id == createdByEmployeeId).Select(e => e.FullName).FirstOrDefaultAsync();
+            //var employeeName = await _employeeRepo.GetAll(e => e.Id == createdByEmployeeId).Select(e => e.FullName).FirstOrDefaultAsync();
 
 
-            await _eventDispatcher.PublishAsync(
-                new TaskPenaltyEvent(discount.Id, TaskID, employeeName, dto.EmployeeId, task.Title)
-            );
+            //await _eventDispatcher.PublishAsync(
+            //    new TaskPenaltyEvent(discount.Id, TaskID, employeeName, dto.EmployeeId, task.Title)
+            //);
 
 
             var fullDiscount = await _discountRepo
