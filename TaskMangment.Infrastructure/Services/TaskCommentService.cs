@@ -29,6 +29,7 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<TaskComment> _commentRepo;
         private readonly IRepository<Attachment> _attachmentRepo;
         private readonly IRepository<WorkTask> _taskRepo;
+        private readonly IRepository<Employee> _employeeRepo;
         private readonly IRepository<TaskAssignment> _taskAssignmentRepo;
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
@@ -42,7 +43,8 @@ namespace TaskMangment.Infrastructure.Services
             ICachingService cache,
             IRepository<WorkTask> taskRepo,
             IRepository<TaskAssignment> taskAssignmentRepo,
-            IDomainEventDispatcher eventDispatcher
+            IDomainEventDispatcher eventDispatcher,
+            IRepository<Employee> employeeRepo
             )
         {
             _commentRepo = commentRepo;
@@ -52,6 +54,7 @@ namespace TaskMangment.Infrastructure.Services
             _taskRepo = taskRepo;
             _taskAssignmentRepo = taskAssignmentRepo;
             _eventDispatcher = eventDispatcher;
+            _employeeRepo = employeeRepo;
         }
 
         public async Task<ApiResponse<PagedResponse<TaskCommentGetDto>>> GetAllAsync(TaskCommentRequest request)
@@ -182,19 +185,21 @@ namespace TaskMangment.Infrastructure.Services
             await _cache.RemoveAsync("taskComments:");
 
             var assignedEmployeeIds = await _taskAssignmentRepo
-          .GetAll(a => a.TaskId == taskId && a.IsActive)
-    .Select(a => a.EmployeeId)
-    .ToListAsync();
+         .GetAll(a => a.TaskId == taskId && a.IsActive)
+   .Select(a => a.EmployeeId)
+   .ToListAsync();
 
+            var employeeName = await _employeeRepo.GetAll(e => e.Id == employeeId).Select(e => e.FullName).FirstOrDefaultAsync();
 
             if (task.AssignedByEmployeeId.HasValue && !assignedEmployeeIds.Contains(task.AssignedByEmployeeId.Value))
             {
                 assignedEmployeeIds.Add(task.AssignedByEmployeeId.Value);
             }
+            assignedEmployeeIds.Remove(employeeId);
 
 
             await _eventDispatcher.PublishAsync(
-                new TaskRequstAddedEvent(comment.Id, taskId, employeeId, assignedEmployeeIds)
+                new TaskCommentAddedEvent(comment.Id, taskId, employeeName, assignedEmployeeIds, task.Title)
             );
 
 

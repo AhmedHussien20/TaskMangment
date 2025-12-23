@@ -17,6 +17,7 @@ using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
+using TaskMangment.Domain.Event;
 using TaskMangment.Infrastructure.Persistence.Extensions;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
@@ -29,19 +30,22 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<WorkTask> _taskRepo;
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
+        private readonly IDomainEventDispatcher _eventDispatcher;
 
         public TaskDiscountService(
             IRepository<Discount> discountRepo,
             IRepository<Employee> employeeRepo,
             IRepository<WorkTask> taskRepo,
             IMapper mapper,
-            ICachingService cache)
+            ICachingService cache,
+            IDomainEventDispatcher eventDispatcher)
         {
             _discountRepo = discountRepo;
             _employeeRepo = employeeRepo;
             _taskRepo = taskRepo;
             _mapper = mapper;
             _cache = cache;
+            _eventDispatcher = eventDispatcher;
         }
 
         public async Task<ApiResponse<PagedResponse<DiscountListDto>>> GetAllAsync(TaskDiscountRequest request)
@@ -102,6 +106,10 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<DiscountListDto>> AddAsync(int createdByEmployeeId, int TaskID, DiscountAddEditDto dto)
         {
+            var task = await _taskRepo.GetByIDAsync(TaskID);
+            if (task == null)
+                throw new AppException(ErrorCodes.TaskNotFound, StatusCodes.Status404NotFound);
+
             if (!await _employeeRepo.IsExistAsync(dto.EmployeeId))
                 throw new AppException(ErrorCodes.NotAssigned, StatusCodes.Status404NotFound);
 
@@ -116,6 +124,15 @@ namespace TaskMangment.Infrastructure.Services
             await _discountRepo.AddAsync(discount);
             await _discountRepo.SaveChangesAsync();
             await _cache.RemoveAsync("discounts:");
+
+
+
+            var employeeName = await _employeeRepo.GetAll(e => e.Id == createdByEmployeeId).Select(e => e.FullName).FirstOrDefaultAsync();
+
+
+            await _eventDispatcher.PublishAsync(
+                new TaskPenaltyEvent(discount.Id, TaskID, employeeName, dto.EmployeeId, task.Title)
+            );
 
 
             var fullDiscount = await _discountRepo

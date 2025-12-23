@@ -66,6 +66,9 @@ namespace TaskMangment.API
             builder.Services.AddScoped<INotificationSender, NotificationSender>();
             builder.Services.AddScoped<IEventHandler<TaskAssignedEvent>,TaskAssignedEventHandler>();
             builder.Services.AddScoped<IEventHandler<TaskRequestAddedEvent>, TaskRequestEventHandler>();
+            builder.Services.AddScoped<IEventHandler<TaskCommentAddedEvent>, TaskCommentEventHandler>();
+            builder.Services.AddScoped<IEventHandler<TaskPenaltyEvent>, TaskPenaltyEventHandler>();
+
 
 
             builder.Services.AddScoped<AuditLogAttribute>();

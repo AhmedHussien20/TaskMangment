@@ -16,6 +16,7 @@ using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
+using TaskMangment.Domain.Event;
 using TaskMangment.Infrastructure.Persistence.Extensions;
 
 namespace TaskMangment.Infrastructure.Services
@@ -26,21 +27,29 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<TaskCloseRequest> _requestRepo;
         private readonly IRepository<TaskAssignment> _taskAssignmentRepo;
         private readonly IRepository<WorkTask> _taskRepo;
+        private readonly IRepository<Employee> _employeeRepo;
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
+        private readonly IDomainEventDispatcher _eventDispatcher;
+
 
         public TaskCloseRequestService(
             IRepository<TaskCloseRequest> requestRepo,
             IRepository<TaskAssignment> taskAssignmentRepo,
             IMapper mapper,
             ICachingService cache,
-            IRepository<WorkTask> taskRepo)
+            IRepository<WorkTask> taskRepo,
+            IRepository<Employee> employeeRepo,
+            IDomainEventDispatcher eventDispatcher)
+
         {
             _requestRepo = requestRepo;
             _taskAssignmentRepo = taskAssignmentRepo;
             _mapper = mapper;
             _cache = cache;
             _taskRepo = taskRepo;
+            _employeeRepo = employeeRepo;
+            _eventDispatcher = eventDispatcher;
         }
 
         public async Task<ApiResponse<PagedResponse<TaskCloseRequestListDto>>> GetAllAsync(TaskCloseRequestRequest request)
@@ -121,6 +130,25 @@ namespace TaskMangment.Infrastructure.Services
             await _requestRepo.AddAsync(request);
             await _requestRepo.SaveChangesAsync();
             await _cache.RemoveAsync("taskCloseRequests:");
+
+            var assignedEmployeeIds = await _taskAssignmentRepo
+       .GetAll(a => a.TaskId == taskId && a.IsActive)
+ .Select(a => a.EmployeeId)
+ .ToListAsync();
+
+            var employeeName = await _employeeRepo.GetAll(e => e.Id == employeeId).Select(e => e.FullName).FirstOrDefaultAsync();
+
+            if (task.AssignedByEmployeeId.HasValue && !assignedEmployeeIds.Contains(task.AssignedByEmployeeId.Value))
+            {
+                assignedEmployeeIds.Add(task.AssignedByEmployeeId.Value);
+            }
+            assignedEmployeeIds.Remove(employeeId);
+
+
+            await _eventDispatcher.PublishAsync(
+                new TaskRequestAddedEvent(request.Id, taskId, employeeName, assignedEmployeeIds, task.Title)
+            );
+
 
             var savedRequest = await _requestRepo.GetAll(r => r.Id == request.Id)
                                                  .Include(r => r.RequestedBy)
