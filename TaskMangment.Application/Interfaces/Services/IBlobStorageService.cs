@@ -9,7 +9,7 @@ namespace TaskMangment.Application.Interfaces.Services
 {
     public interface IBlobStorageService
     {
-        Task<string> UploadAsync(IFormFile file, string folder);
+        Task<string> UploadAsync( Stream stream,  string fileName, string contentType, string folder);
         Task DeleteAsync(string blobUrl);
     }
 

@@ -40,13 +40,13 @@ namespace TaskMangment.Infrastructure.Seeding
                     Key = "TaskAssigned",
                     SubjectTemplate = "تم إسناد مهمة جديدة: {{TaskTitle}}",
                     BodyTemplate = LayoutHeader + @"
-مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
-تم إسناد مهمة جديدة إليك.<br/><br/>
+                                            مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
+                                            تم إسناد مهمة جديدة إليك.<br/><br/>
 
-<strong>عنوان المهمة:</strong> {{TaskTitle}}<br/>
-<strong>تاريخ الاستحقاق:</strong> {{DueDate}}<br/><br/>
+                                            <strong>عنوان المهمة:</strong> {{TaskTitle}}<br/>
+                                            <strong>تاريخ الاستحقاق:</strong> {{DueDate}}<br/><br/>
 
-يرجى الدخول إلى النظام لمتابعة تفاصيل المهمة.
+                                            يرجى الدخول إلى النظام لمتابعة تفاصيل المهمة.
 " + LayoutFooter
                 },
 
@@ -56,13 +56,13 @@ namespace TaskMangment.Infrastructure.Seeding
                     Key = "TaskCommentAdded",
                     SubjectTemplate = "تعليق جديد على المهمة: {{TaskTitle}}",
                     BodyTemplate = LayoutHeader + @"
-مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
-تم إضافة تعليق جديد على المهمة:<br/><br/>
+                        مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
+                        تم إضافة تعليق جديد على المهمة:<br/><br/>
 
-<strong>{{TaskTitle}}</strong><br/><br/>
-<div style='background:#f8f9fa;padding:10px;border-right:4px solid #0d6efd'>
-{{CommentText}}
-</div>
+                        <strong>{{TaskTitle}}</strong><br/><br/>
+                        <div style='background:#f8f9fa;padding:10px;border-right:4px solid #0d6efd'>
+                        {{CommentText}}
+                        </div>
 " + LayoutFooter
                 },
 
@@ -72,12 +72,12 @@ namespace TaskMangment.Infrastructure.Seeding
                     Key = "EventReminder",
                     SubjectTemplate = "تذكير بموعد الحدث: {{EventTitle}}",
                     BodyTemplate = LayoutHeader + @"
-مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
-هذا تذكير بموعد الحدث التالي:<br/><br/>
+                        مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
+                        هذا تذكير بموعد الحدث التالي:<br/><br/>
 
-<strong>اسم الحدث:</strong> {{EventTitle}}<br/>
-<strong>التاريخ والوقت:</strong> {{EventDate}}<br/><br/>
-نرجو الالتزام بالموعد المحدد.
+                        <strong>اسم الحدث:</strong> {{EventTitle}}<br/>
+                        <strong>التاريخ والوقت:</strong> {{EventDate}}<br/><br/>
+                        نرجو الالتزام بالموعد المحدد.
 " + LayoutFooter
                 },
 
@@ -87,13 +87,13 @@ namespace TaskMangment.Infrastructure.Seeding
                     Key = "TaskExtensionRequest",
                     SubjectTemplate = "طلب تمديد موعد المهمة: {{TaskTitle}}",
                     BodyTemplate = LayoutHeader + @"
-مرحبًا،<br/><br/>
-تم تقديم طلب لتمديد موعد المهمة التالية:<br/><br/>
+                                مرحبًا،<br/><br/>
+                                تم تقديم طلب لتمديد موعد المهمة التالية:<br/><br/>
 
-<strong>عنوان المهمة:</strong> {{TaskTitle}}<br/>
-<strong>السبب:</strong> {{ExtensionReason}}<br/><br/>
+                                <strong>عنوان المهمة:</strong> {{TaskTitle}}<br/>
+                                <strong>السبب:</strong> {{ExtensionReason}}<br/><br/>
 
-يرجى مراجعة الطلب واتخاذ الإجراء المناسب.
+                                يرجى مراجعة الطلب واتخاذ الإجراء المناسب.
 " + LayoutFooter
                 },
 
@@ -103,13 +103,13 @@ namespace TaskMangment.Infrastructure.Seeding
                     Key = "TaskCloseRequest",
                     SubjectTemplate = "طلب إغلاق المهمة: {{TaskTitle}}",
                     BodyTemplate = LayoutHeader + @"
-مرحبًا،<br/><br/>
-تم تقديم طلب لإغلاق المهمة التالية:<br/><br/>
+                                        مرحبًا،<br/><br/>
+                                        تم تقديم طلب لإغلاق المهمة التالية:<br/><br/>
 
-<strong>عنوان المهمة:</strong> {{TaskTitle}}<br/>
-<strong>ملاحظات الإغلاق:</strong> {{CloseNotes}}<br/><br/>
+                                        <strong>عنوان المهمة:</strong> {{TaskTitle}}<br/>
+                                        <strong>ملاحظات الإغلاق:</strong> {{CloseNotes}}<br/><br/>
 
-يرجى مراجعة الطلب.
+                                        يرجى مراجعة الطلب.
 " + LayoutFooter
                 },
 
@@ -119,15 +119,15 @@ namespace TaskMangment.Infrastructure.Seeding
                     Key = "EmployeeWarning",
                     SubjectTemplate = "تنبيه وتحذير بخصوص الأداء الوظيفي",
                     BodyTemplate = LayoutHeader + @"
-مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
-نود تنبيهكم بوجود ملاحظة تتعلق بالأداء الوظيفي:<br/><br/>
+                                مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
+                                نود تنبيهكم بوجود ملاحظة تتعلق بالأداء الوظيفي:<br/><br/>
 
-<div style='background:#fff3cd;padding:10px;border-right:4px solid #ffc107'>
-{{WarningReason}}
-</div>
-<br/>
-يرجى الالتزام بالتعليمات لتجنب أي إجراءات لاحقة.
-" + LayoutFooter
+                                <div style='background:#fff3cd;padding:10px;border-right:4px solid #ffc107'>
+                                {{WarningReason}}
+                                </div>
+                                <br/>
+                                يرجى الالتزام بالتعليمات لتجنب أي إجراءات لاحقة.
+                                " + LayoutFooter
                 },
 
                 // 💸 Deduction
@@ -136,15 +136,32 @@ namespace TaskMangment.Infrastructure.Seeding
                     Key = "EmployeeDeduction",
                     SubjectTemplate = "إشعار بخصم إداري",
                     BodyTemplate = LayoutHeader + @"
-مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
-نحيطكم علمًا بأنه قد تم تطبيق خصم إداري وفقًا للتفاصيل التالية:<br/><br/>
+                                                مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
+                                                نحيطكم علمًا بأنه قد تم تطبيق خصم إداري وفقًا للتفاصيل التالية:<br/><br/>
 
-<strong>سبب الخصم:</strong> {{DeductionReason}}<br/>
-<strong>قيمة الخصم:</strong> {{DeductionAmount}}<br/><br/>
+                                                <strong>سبب الخصم:</strong> {{DeductionReason}}<br/>
+                                                <strong>قيمة الخصم:</strong> {{DeductionAmount}}<br/><br/>
 
-في حال وجود استفسار يرجى التواصل مع الإدارة.
-" + LayoutFooter
+                                                في حال وجود استفسار يرجى التواصل مع الإدارة.
+                                                " + LayoutFooter
+                },
+                // ⏰ Task Due Today Reminder
+                new EmailTemplate
+                {
+                    Key = "TaskDueTodayReminder",
+                    SubjectTemplate = "تذكير هام: موعد انتهاء المهمة اليوم - {{TaskTitle}}",
+                    BodyTemplate = LayoutHeader + @"
+                مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
+
+                نود تذكيرك بأن موعد انتهاء المهمة التالية هو <strong>اليوم</strong>.<br/><br/>
+
+                <strong>عنوان المهمة:</strong> {{TaskTitle}}<br/>
+                <strong>تاريخ الاستحقاق:</strong> {{DueDate}}<br/><br/>
+
+                يرجى التأكد من إنهاء المهمة في الموعد المحدد أو اتخاذ الإجراء اللازم.
+                " + LayoutFooter
                 }
+
             );
 
             context.SaveChanges();
