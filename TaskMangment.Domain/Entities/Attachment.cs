@@ -24,6 +24,11 @@ namespace TaskMangment.Domain.Entities
         public int? UploadedBy { get; set; }
         public DateTime UploadedAt { get; set; } = DateTime.UtcNow;
 
+        public bool IsUploadedToBlob { get; set; }
+        public string? BlobUrl { get; set; }
+        public DateTime? BlobUploadedAt { get; set; }
+        public string? BlobUploadError { get; set; }
+
         [ForeignKey(nameof(UploadedBy))] public Employee UploadedByEmployee { get; set; }
     }
 }

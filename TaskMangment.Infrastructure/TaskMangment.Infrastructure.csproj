@@ -5,7 +5,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
-
+	<ItemGroup>
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+	</ItemGroup>
   <ItemGroup>
     <PackageReference Include="Azure.Storage.Blobs" Version="12.26.0" />
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
@@ -27,7 +29,8 @@
     <ProjectReference Include="..\TaskMangment.Utilities\TaskMangment.Utilities.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
+
+	<ItemGroup>
     <Folder Include="Migrations\" />
   </ItemGroup>
 
