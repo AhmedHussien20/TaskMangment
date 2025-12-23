@@ -12,10 +12,12 @@ namespace TaskMangment.Domain.Entities
     {
         public int TaskId { get; set; }
 
-        [Required] 
+        [Required]
         public int TaskAssignmentId { get; set; }
-        [MaxLength(1000)] 
+
+        [MaxLength(1000)]
         public string Message { get; set; }
+
         public DateTime RequestedAt { get; set; } = DateTime.UtcNow;
         public CloseRequestStatus Status { get; set; } = CloseRequestStatus.Pending;
 
@@ -24,9 +26,18 @@ namespace TaskMangment.Domain.Entities
 
         public DateTime? ReviewedAt { get; set; }
 
-        [ForeignKey(nameof(TaskAssignmentId))] public TaskAssignment TaskAssignment { get; set; }
-        [ForeignKey(nameof(RequestedByEmployeeId))] public Employee RequestedBy { get; set; }
-        [ForeignKey(nameof(ReviewedByEmployeeId))] public Employee ReviewedBy { get; set; }
+        [ForeignKey(nameof(TaskId))]
+        public WorkTask Task { get; set; }          
+
+        [ForeignKey(nameof(TaskAssignmentId))]
+        public TaskAssignment TaskAssignment { get; set; }
+
+        [ForeignKey(nameof(RequestedByEmployeeId))]
+        public Employee RequestedBy { get; set; }
+
+        [ForeignKey(nameof(ReviewedByEmployeeId))]
+        public Employee ReviewedBy { get; set; }
     }
+
 
 }

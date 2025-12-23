@@ -20,7 +20,7 @@ namespace TaskMangment.Infrastructure.Services
             _db = db;
         }
 
-        public async Task<RenderedEmail> RenderAsync(string templateKey, ReferenceType referenceType,int referenceId, int? userId)
+        public async Task<RenderedEmail> RenderAsync(string templateKey, ReferenceType referenceType, int referenceId, int? userId)
         {
             var template = await _db.EmailTemplates
                 .FirstOrDefaultAsync(x => x.Key == templateKey && x.IsActive);
@@ -33,7 +33,7 @@ namespace TaskMangment.Infrastructure.Services
             {
                 var userName = await _db.Employees
                     .Where(e => e.Id == userId.Value)
-                    .Select(e => e.FullName) 
+                    .Select(e => e.FullName)
                     .FirstOrDefaultAsync();
 
                 data["UserName"] = string.IsNullOrWhiteSpace(userName) ? "مستخدم" : userName;
@@ -49,59 +49,198 @@ namespace TaskMangment.Infrastructure.Services
                 Body = Replace(template.BodyTemplate, data)
             };
         }
-
-        private async Task<Dictionary<string, string>> LoadDataAsync( ReferenceType referenceType,int referenceId)
+        private static string Replace(string template, Dictionary<string, string> data)
         {
-            if (referenceType == ReferenceType.Task)
-            {
-                var task = await _db.Tasks
-                    .Where(t => t.Id == referenceId)
-                    .Select(t => new
-                    {
-                        t.Title,
-                        t.DueDate
-                    })
-                    .FirstAsync();
-
-                return new Dictionary<string, string>
-                {
-                    ["TaskTitle"] = task.Title,
-                    ["DueDate"] = task.DueDate?.ToString("yyyy-MM-dd") ?? "-"
-                };
-            }
-
-            if (referenceType == ReferenceType.Event)
-            {
-                var ev = await _db.CalendarEvents
-                    .Where(e => e.Id == referenceId)
-                    .Select(e => new
-                    {
-                        e.Title,
-                        e.StartDate
-                    })
-                    .FirstAsync();
-
-                return new Dictionary<string, string>
-                {
-                    ["EventTitle"] = ev.Title,
-                    ["EventDate"] = ev.StartDate.ToString("yyyy-MM-dd HH:mm")
-                };
-            }
-
-            return new();
-        }
-
-        private static string Replace( string template, Dictionary<string, string> data)
-        {
+            if (string.IsNullOrEmpty(template))
+                return template;
             foreach (var item in data)
             {
                 template = template.Replace(
-                    $"{{{{{item.Key}}}}}",
-                    item.Value);
+                    $"{{{{{item.Key}}}}}",   // {{Key}}
+                    item.Value ?? string.Empty
+                );
             }
 
             return template;
         }
-    }
 
-}
+        private async Task<Dictionary<string, string>> LoadDataAsync(
+     ReferenceType referenceType,
+     int referenceId)
+        {
+            switch (referenceType)
+            {
+                // =========================
+                //  Task
+                // =========================
+                case ReferenceType.Task:
+                    {
+                        var task = await _db.Tasks
+                            .Where(t => t.Id == referenceId)
+                            .Select(t => new
+                            {
+                                t.Title,
+                                t.DueDate
+                            })
+                            .FirstOrDefaultAsync();
+
+                        if (task == null)
+                            throw new Exception($"Task with Id {referenceId} not found.");
+
+                        return new Dictionary<string, string>
+                        {
+                            ["TaskTitle"] = task.Title,
+                            ["DueDate"] = task.DueDate?.ToString("yyyy-MM-dd") ?? "-"
+                        };
+                    }
+
+                // =========================
+                //  Event
+                // =========================
+                case ReferenceType.Event:
+                    {
+                        var ev = await _db.CalendarEvents
+                            .Where(e => e.Id == referenceId)
+                            .Select(e => new
+                            {
+                                e.Title,
+                                e.StartDate
+                            })
+                            .FirstOrDefaultAsync();
+
+                        if (ev == null)
+                            throw new Exception($"Event with Id {referenceId} not found.");
+
+                        return new Dictionary<string, string>
+                        {
+                            ["EventTitle"] = ev.Title,
+                            ["EventDate"] = ev.StartDate.ToString("yyyy-MM-dd HH:mm")
+                        };
+                    }
+
+                // =========================
+                //  Task Comment
+                // =========================
+                case ReferenceType.TaskComment:
+                    {
+                        var comment = await _db.TaskComments
+                            .Where(c => c.Id == referenceId)
+                            .Select(c => new
+                            {
+                                TaskTitle = c.Task.Title,
+                                c.CommentText
+                            })
+                            .FirstOrDefaultAsync();
+
+                        if (comment == null)
+                            throw new Exception($"Task comment with Id {referenceId} not found.");
+
+                        return new Dictionary<string, string>
+                        {
+                            ["TaskTitle"] = comment.TaskTitle,
+                            ["CommentText"] = comment.CommentText
+                        };
+                    }
+
+                // =========================
+                //  Task Extension Request
+                // =========================
+                case ReferenceType.TaskExtensionRequest:
+                    {
+                        var request = await _db.TaskExtensionRequests
+                            .Where(r => r.Id == referenceId)
+                            .Select(r => new
+                            {
+                                TaskTitle = r.Task.Title,
+                                r.Reason
+                            })
+                            .FirstOrDefaultAsync();
+
+                        if (request == null)
+                            throw new Exception($"Task extension request with Id {referenceId} not found.");
+
+                        return new Dictionary<string, string>
+                        {
+                            ["TaskTitle"] = request.TaskTitle,
+                            ["ExtensionReason"] = request.Reason
+                        };
+                    }
+
+                // =========================
+                // ✅Task Close Request
+                // =========================
+                case ReferenceType.TaskCloseRequest:
+                    {
+                        var close = await _db.TaskCloseRequests
+                            .Where(r => r.Id == referenceId)
+                            .Select(r => new
+                            {
+                                TaskTitle = r.Task.Title,
+                                r.Message
+                            })
+                            .FirstOrDefaultAsync();
+
+                        if (close == null)
+                            throw new Exception($"Task close request with Id {referenceId} not found.");
+
+                        return new Dictionary<string, string>
+                        {
+                            ["TaskTitle"] = close.TaskTitle,
+                            ["CloseNotes"] = close.Message
+                        };
+                    }
+
+                // =========================
+                // ⚠️ Employee Warning
+                // =========================
+                case ReferenceType.EmployeeWarning:
+                    {
+                        var warning = await _db.Warnings
+                            .Where(w => w.Id == referenceId)
+                            .Select(w => new
+                            {
+                                w.Reason
+                            })
+                            .FirstOrDefaultAsync();
+
+                        if (warning == null)
+                            throw new Exception($"Employee warning with Id {referenceId} not found.");
+
+                        return new Dictionary<string, string>
+                        {
+                            ["WarningReason"] = warning.Reason
+                        };
+                    }
+
+                // =========================
+                // 💸 Employee Deduction
+                // =========================
+                case ReferenceType.EmployeeDeduction:
+                    {
+                        var deduction = await _db.Deductions
+                            .Where(d => d.Id == referenceId)
+                            .Select(d => new
+                            {
+                                d.Reason,
+                                d.Amount
+                            })
+                            .FirstOrDefaultAsync();
+
+                        if (deduction == null)
+                            throw new Exception($"Employee deduction with Id {referenceId} not found.");
+
+                        return new Dictionary<string, string>
+                        {
+                            ["DeductionReason"] = deduction.Reason,
+                            ["DeductionAmount"] = deduction.Amount.ToString("N2")
+                        };
+                    }
+
+                // =========================
+                default:
+                    return new Dictionary<string, string>();
+            }
+        }
+
+    }
+    }

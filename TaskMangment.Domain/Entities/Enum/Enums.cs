@@ -36,7 +36,15 @@ namespace TaskMangment.Domain.Entities
     public enum ReferenceType
     {
         Task = 1,
-        Event = 2
+        Event = 2,
+
+        TaskComment = 3,
+        TaskExtensionRequest = 4,
+        TaskCloseRequest = 5,
+
+        EmployeeWarning = 6,
+        EmployeeDeduction = 7
     }
+
 
 }

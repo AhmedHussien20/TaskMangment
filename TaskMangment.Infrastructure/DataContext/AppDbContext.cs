@@ -164,6 +164,13 @@ namespace TaskMangment.Infrastructure.DataContext
                  .HasForeignKey(r => r.TaskAssignmentId)
                  .OnDelete(DeleteBehavior.NoAction);
 
+            builder.Entity<TaskCloseRequest>()
+                    .HasOne(tcr => tcr.Task)
+                    .WithMany(t => t.CloseRequests)  
+                    .HasForeignKey(tcr => tcr.TaskId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+
             builder.Entity<Warning>()
                  .HasOne(w => w.TaskAssignment)
                  .WithMany(a => a.Warnings)
