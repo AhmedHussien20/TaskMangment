@@ -8,12 +8,12 @@ using TaskMangment.Domain.Event;
 
 namespace TaskMangment.Application.Behaviors
 {
-    public class TaskRequestEventHandler : IEventHandler<TaskRequestAddedEvent>
+    public class TaskExtenstionRequestEventHandler : IEventHandler<TaskExtensionRequestEvent>
     {
         private readonly INotificationService _notificationService;
         private readonly IStringLocalizer _localizer;
 
-        public TaskRequestEventHandler(
+        public TaskExtenstionRequestEventHandler(
             INotificationService notificationService,
             IStringLocalizerFactory factory)
         {
@@ -22,10 +22,10 @@ namespace TaskMangment.Application.Behaviors
             _localizer = factory.Create("TaskNotification", "TaskMangment.API");
         }
 
-        public async Task Handle(TaskRequestAddedEvent ev)
+        public async Task Handle(TaskExtensionRequestEvent ev)
         {
             var messageTemplate = _localizer[
-                NotificationCode.TaskRequestNotification
+                NotificationCode.TaskExtensionRequestNotification
             ];
 
             var message = string.Format(

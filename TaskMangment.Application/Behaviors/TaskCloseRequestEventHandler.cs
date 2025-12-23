@@ -11,12 +11,12 @@ using TaskMangment.Domain.Event;
 
 namespace TaskMangment.Application.Behaviors
 {
-    public class TaskWarningEventHandler : IEventHandler<TaskWarningEvent>
+    public class TaskCloseRequestEventHandler : IEventHandler<TaskCloseRequestEvent>
     {
         private readonly INotificationService _notificationService;
         private readonly IStringLocalizer _localizer;
 
-        public TaskWarningEventHandler(
+        public TaskCloseRequestEventHandler(
             INotificationService notificationService,
             IStringLocalizerFactory factory)
         {
@@ -25,26 +25,27 @@ namespace TaskMangment.Application.Behaviors
             _localizer = factory.Create("TaskNotification", "TaskMangment.API");
         }
 
-        public async Task Handle(TaskWarningEvent ev)
+        public async Task Handle(TaskCloseRequestEvent ev)
         {
             var messageTemplate = _localizer[
-                NotificationCode.TaskWarningNotification
+                NotificationCode.TaskCloseRequestNotification
             ];
 
             var message = string.Format(
                 messageTemplate,
-                ev.TaskTitle,
-                ev.IssuedbyName
+                ev.taskTitle,
+                ev.EmployeeName
             );
 
-
-            await _notificationService.SendAsync(
-                ev.IssuedtoId,
-                message,
-                sendEmail: true,
-                sendWhatsApp: false
-            );
-
+            foreach (var empId in ev.Recipients)
+            {
+                await _notificationService.SendAsync(
+                    empId,
+                    message,
+                    sendEmail: true,
+                    sendWhatsApp: false
+                );
+            }
         }
     }
 }

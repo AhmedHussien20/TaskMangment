@@ -10,6 +10,7 @@ using TaskMangment.API.Extensions;
 using TaskMangment.API.Filters;
 using TaskMangment.API.Middlewares;
 using TaskMangment.Application.Behaviors;
+using TaskMangment.Application.Behaviors.EmailHandlers;
 using TaskMangment.Application.Common;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Interfaces;
@@ -66,12 +67,20 @@ namespace TaskMangment.API
             // Notification sender 
             builder.Services.AddScoped<INotificationSender, NotificationSender>();
             builder.Services.AddScoped<IEventHandler<TaskAssignedEvent>,TaskAssignedEventHandler>();
-            builder.Services.AddScoped<IEventHandler<TaskRequestAddedEvent>, TaskRequestEventHandler>();
+            builder.Services.AddScoped<IEventHandler<TaskExtensionRequestEvent>, TaskExtenstionRequestEventHandler>();
+            builder.Services.AddScoped<IEventHandler<TaskCloseRequestEvent>, TaskCloseRequestEventHandler>();
             builder.Services.AddScoped<IEventHandler<TaskCommentAddedEvent>, TaskCommentEventHandler>();
             builder.Services.AddScoped<IEventHandler<TaskPenaltyEvent>, TaskPenaltyEventHandler>();
             builder.Services.AddScoped<IEventHandler<TaskAssignedEvent>, TaskAssignedEventHandler>();
             builder.Services.AddScoped<IEventHandler<TaskAssignedEvent>, TaskAssignedEmailHandler>();
             builder.Services.AddScoped<IEventHandler<TaskRequestAddedEvent>, TaskRequestEmailHandler>();
+
+            builder.Services.AddScoped<IEventHandler<TaskWarningEvent>, TaskWarningEventHandler>();
+            builder.Services.AddScoped<IEventHandler<TaskExtensionRequestEvent>, TaskExtenstionRequestEmailHandler>();
+            builder.Services.AddScoped<IEventHandler<TaskCloseRequestEvent>, TaskCloseRequestEmailHandler>();
+            builder.Services.AddScoped<IEventHandler<TaskPenaltyEvent>, TaskPenaltyEmailHandler>();
+
+
 
 
             builder.Services.AddScoped<AuditLogAttribute>();
