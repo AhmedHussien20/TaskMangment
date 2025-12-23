@@ -9,7 +9,8 @@ namespace TaskMangment.Application.Common.Notification
     public class NotificationCode
     {
         public const string NotFound = "NOT_FOUND";
-        public const string TaskRequestNotification = "TASK_REQUEST_NOTIFICATION";
+        public const string TaskExtensionRequestNotification = "TASK_EXTENSION_REQUEST_NOTIFICATION";
+        public const string TaskCloseRequestNotification = "TASK_CLOSE_REQUEST_NOTIFICATION";
         public const string TaskCommentNotification = "TASK_COMMENT_NOTIFICATION";
         public const string TaskWarningNotification = "TASK_WARNING_NOTIFICATION";
         public const string TaskPenaltyNotification = "TASK_PENALTY_NOTIFICATION";

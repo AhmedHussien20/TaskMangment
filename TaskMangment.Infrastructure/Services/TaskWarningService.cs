@@ -17,6 +17,7 @@ using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
+using TaskMangment.Domain.Event;
 using TaskMangment.Infrastructure.Persistence.Extensions;
 
 namespace TaskMangment.Infrastructure.Services
@@ -29,6 +30,8 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<WorkTask> _taskRepo;
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
+        private readonly IDomainEventDispatcher _eventDispatcher;
+
 
         public TaskWarningService(
             IRepository<Warning> warningRepo,
@@ -36,7 +39,8 @@ namespace TaskMangment.Infrastructure.Services
             IRepository<TaskAssignment> taskAssignmentRepo,
             IMapper mapper,
             ICachingService cache,
-            IRepository<WorkTask> taskRepo)
+            IRepository<WorkTask> taskRepo,
+            IDomainEventDispatcher eventDispatcher)
         {
             _warningRepo = warningRepo;
             _employeeRepo = employeeRepo;
@@ -44,6 +48,7 @@ namespace TaskMangment.Infrastructure.Services
             _mapper = mapper;
             _cache = cache;
             _taskRepo = taskRepo;
+            _eventDispatcher = eventDispatcher;
         }
 
         public async Task<ApiResponse<PagedResponse<WarningListDto>>> GetAllAsync(WarningRequest request)
@@ -128,6 +133,13 @@ namespace TaskMangment.Infrastructure.Services
             await _warningRepo.SaveChangesAsync();
 
             await _cache.RemoveAsync("warnings:");
+
+
+            var employeeName = await _employeeRepo.GetAll(e => e.Id == employeeId).Select(e => e.FullName).FirstOrDefaultAsync();
+
+            await _eventDispatcher.PublishAsync(
+                new TaskWarningEvent(warning.Id, taskId, employeeName, dto.IssuedEmployeeId, task.Title)
+            );
 
             // تحميل البيانات للـ response
             var savedWarning = await _warningRepo.GetAll(w => w.Id == warning.Id)
