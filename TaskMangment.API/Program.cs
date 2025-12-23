@@ -82,6 +82,7 @@ namespace TaskMangment.API
             builder.Services.AddScoped<INotificationService, NotificationService>();
             builder.Services.AddScoped<IEmailQueueService, EmailQueueService>();
             builder.Services.AddScoped<IEventHandler<TaskAssignedEvent>,TaskAssignedEventHandler>();
+            builder.Services.AddScoped<IEventHandler<TaskAssignedEvent>, TaskAssignedEmailHandler>();
 
 
             builder.Services.AddScoped<ProcessPendingEmailsJob>();

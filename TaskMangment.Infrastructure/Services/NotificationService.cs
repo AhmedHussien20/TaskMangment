@@ -25,11 +25,7 @@ public class NotificationService : INotificationService
         //_whatsAppQueueService = whatsAppQueueService;
     }
 
-    public async Task SendAsync(
-        int userId,
-        string message,
-        bool sendEmail,
-        bool sendWhatsApp)
+    public async Task SendAsync(int userId,string message, bool sendEmail,bool sendWhatsApp)
     {
         // 1️⃣ Save notification
         await _repo.AddAsync(new Notification
@@ -43,14 +39,14 @@ public class NotificationService : INotificationService
         await _signalRNotifier.NotifyAsync(userId, message);
 
         // 3️⃣ Email (queued)
-        if (sendEmail)
-        {
-            await _emailQueueService.QueueAsync(
-                userId,
-                message,
-                templateKey: "TaskAssigned"
-            );
-        }
+        //if (sendEmail)
+        //{
+        //    await _emailQueueService.QueueAsync(
+        //        userId,
+        //        message,
+        //        templateKey: "TaskAssigned"
+        //    );
+        //}
 
         //// 4️⃣ WhatsApp (queued)
         //if (sendWhatsApp)

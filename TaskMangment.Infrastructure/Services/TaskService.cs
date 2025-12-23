@@ -150,7 +150,7 @@ namespace TaskMangment.Infrastructure.Services
             foreach (var empId in dto.AssignedEmployeeIds)
             {
                 if (!await _employeeRepo.IsExistAsync(empId))
-                    throw new AppException(ErrorCodes.EmployeeNotFound, StatusCodes.Status400BadRequest);
+                    throw new AppException(ErrorCodes.NotFound, StatusCodes.Status400BadRequest);
 
                 var assignment = new TaskAssignment
                 {
@@ -162,26 +162,9 @@ namespace TaskMangment.Infrastructure.Services
             }
             await _assignmentRepo.SaveChangesAsync();
             await _cache.RemoveAsync("tasks:");
-            foreach (var empId in dto.AssignedEmployeeIds)
-            {
-                var employee = await _employeeRepo.GetByIDAsync(empId);
-                if (employee == null || string.IsNullOrEmpty(employee.Email))
-                    continue;
 
-                await _emailQueueRepo.AddAsync(new EmailQueue
-                {
-                    ToEmail = employee.Email,           
-                    TemplateKey = "TaskAssigned",
-                    ReferenceType = ReferenceType.Task,
-                    ReferenceId = task.Id,
-                    ScheduledAt = DateTime.UtcNow,
-                    Status = EmailStatus.Pending,
-                    UserId = empId
-                });
-            }
-            await _emailQueueRepo.SaveChangesAsync();
             //Notfication
-            await _eventDispatcher.PublishAsync(new TaskAssignedEvent(task.Id,task.Title,dto.AssignedEmployeeIds));
+            await _eventDispatcher.PublishAsync(new TaskAssignedEvent(task.Id, task.Title, dto.AssignedEmployeeIds));
 
             var fullTask = await _taskRepo.GetAll(t => t.Id == task.Id)
                          .Include(t => t.CreatedBy)
