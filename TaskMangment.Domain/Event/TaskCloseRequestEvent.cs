@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace TaskMangment.Domain.Event
 {
-    public class TaskRequestAddedEvent
+    public class TaskCloseRequestEvent
     {
         public int RequestId { get; }
         public int TaskId { get; }
@@ -14,7 +14,7 @@ namespace TaskMangment.Domain.Event
         public string EmployeeName { get; set; }
         public List<int> Recipients { get; }
 
-        public TaskRequestAddedEvent(int requestId, int taskId, string employeeName, List<int> recipients, string taskTitle)
+        public TaskCloseRequestEvent(int requestId, int taskId, string employeeName, List<int> recipients, string taskTitle)
         {
             RequestId = requestId;
             TaskId = taskId;

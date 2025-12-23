@@ -8,16 +8,16 @@ namespace TaskMangment.Domain.Event
 {
      public class TaskPenaltyEvent
     {
-        public int WarningId { get; }
+        public int DiscountId { get; }
         public int TaskId { get; }
         public string TaskTitle { get; set; }
         public string IssuedbyName { get; set; }
         public int IssuedtoId { get; set; }
 
 
-        public TaskPenaltyEvent(int warningId, int taskId, string issuedbyName,int issuedtoId, string taskTitle)
+        public TaskPenaltyEvent(int discountId, int taskId, string issuedbyName,int issuedtoId, string taskTitle)
         {
-            WarningId = warningId;
+            DiscountId = discountId;
             TaskId = taskId;
             IssuedbyName = issuedbyName;
             IssuedtoId = issuedtoId;
