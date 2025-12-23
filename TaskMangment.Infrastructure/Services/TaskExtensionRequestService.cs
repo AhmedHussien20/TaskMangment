@@ -163,7 +163,7 @@ namespace TaskMangment.Infrastructure.Services
 
 
             await _eventDispatcher.PublishAsync(
-                new TaskRequestAddedEvent(request.Id, taskId, employeeName, assignedEmployeeIds, task.Title)
+                new TaskExtensionRequestEvent(request.Id, taskId, employeeName, assignedEmployeeIds, task.Title)
             );
 
 

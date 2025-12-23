@@ -180,7 +180,7 @@ namespace TaskMangment.Infrastructure.Services
             }
 
             await _commentRepo.AddAsync(comment);
-            await _attachmentRepo.AddAsync(attachment);
+          //  await _attachmentRepo.AddAsync(attachment);
             await _commentRepo.SaveChangesAsync();
             await _cache.RemoveAsync("taskComments:");
 

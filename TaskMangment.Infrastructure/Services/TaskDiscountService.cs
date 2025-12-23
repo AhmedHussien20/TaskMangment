@@ -113,8 +113,6 @@ namespace TaskMangment.Infrastructure.Services
             if (!await _employeeRepo.IsExistAsync(dto.EmployeeId))
                 throw new AppException(ErrorCodes.NotAssigned, StatusCodes.Status404NotFound);
 
-            if (!await _taskRepo.IsExistAsync(TaskID))
-                throw new AppException(ErrorCodes.TaskNotFound, StatusCodes.Status404NotFound);
 
             var discount = _mapper.Map<Discount>(dto);
             discount.TaskId = TaskID;
@@ -127,12 +125,11 @@ namespace TaskMangment.Infrastructure.Services
 
 
 
-            //var employeeName = await _employeeRepo.GetAll(e => e.Id == createdByEmployeeId).Select(e => e.FullName).FirstOrDefaultAsync();
+            var employeeName = await _employeeRepo.GetAll(e => e.Id == createdByEmployeeId).Select(e => e.FullName).FirstOrDefaultAsync();
 
-
-            //await _eventDispatcher.PublishAsync(
-            //    new TaskPenaltyEvent(discount.Id, TaskID, employeeName, dto.EmployeeId, task.Title)
-            //);
+            await _eventDispatcher.PublishAsync(
+                new TaskPenaltyEvent(discount.Id, TaskID, employeeName, dto.EmployeeId, task.Title)
+            );
 
 
             var fullDiscount = await _discountRepo
