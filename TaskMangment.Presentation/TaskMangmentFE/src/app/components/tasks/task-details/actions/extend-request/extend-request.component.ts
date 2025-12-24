@@ -46,14 +46,11 @@ export class ExtendRequestComponent {
 
     this.extendRequestService.create(this.taskId, model).subscribe({
       next: () => {
-        this.toastr.success(this.translate.instant('TASK.SAVED_SUCCESS'));
+        this.toastr.success(this.translate.instant('TASK.REQUEST_SUCCESS'));
         this.isSubmitting = false;
         this.modal.close(true);
-      },
-      error: (err) => {
-        console.error('Failed to submit extend request', err);
-        this.isSubmitting = false;
       }
+      
     });
   }
 }

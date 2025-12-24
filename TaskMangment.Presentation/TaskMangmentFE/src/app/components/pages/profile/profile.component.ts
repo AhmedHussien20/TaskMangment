@@ -8,16 +8,117 @@ import { RouterModule } from '@angular/router';
 import { SpkNgSelectComponent } from '../../../@spk/reusable-plugins/spk-ng-select/spk-ng-select.component';
 import { SpkProfileComponent } from '../../../@spk/reusable-pages/spk-profile/spk-profile.component';
 import { SpkGalleryComponent } from '../../../@spk/reusable-plugins/spk-gallery/spk-gallery.component';
+import { AuthService } from 'app/core/services/auth.service';
+import { EmployeeAddEdit } from 'app/core/models/employee/employee';
+import { EmployeeService } from 'app/core/services/employee.service';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { ToastrService } from 'ngx-toastr';
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [SharedModule,NgbModule,NgSelectModule,GalleryModule,LightboxModule,RouterModule,SpkNgSelectComponent,SpkProfileComponent,SpkGalleryComponent],
+  imports: [SharedModule,
+    NgbModule,
+    NgSelectModule,
+    GalleryModule,LightboxModule,RouterModule,
+    SpkNgSelectComponent,SpkProfileComponent,SpkGalleryComponent,
+    FormsModule,CommonModule,ReactiveFormsModule],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.scss',
   encapsulation: ViewEncapsulation.None
 
 })
 export class ProfileComponent {
+
+   user: any;
+  employeeId!: number;
+  formGroup!: FormGroup;
+
+  constructor(
+    private authService: AuthService,
+    private employeeService: EmployeeService,
+    private fb: FormBuilder,
+    private toastr: ToastrService
+  ) {}
+
+  ngOnInit(): void {
+    const userData = localStorage.getItem('userData');
+    if (userData) {
+      this.user = JSON.parse(userData);
+      this.employeeId = this.user.userId;
+      this.loadEmployee(this.employeeId);
+    }
+
+    this.buildForm();
+  }
+
+  buildForm() {
+    this.formGroup = this.fb.group({
+      fullName: ['', Validators.required],
+      branchId: [''],
+      title: [''],
+      nationality: [''],
+      identityNumber: [''],
+      mobile: [''],
+      address: [''],
+      qualification: [''],
+      email: ['', [Validators.required, Validators.email]],
+      password: [''],
+      confirmPassword: ['']
+    }, { validators: this.passwordMatchValidator });
+  }
+
+  loadEmployee(id: number) {
+    this.employeeService.getById(id).subscribe(res => {
+      if (res.data) {
+        const emp = res.data;
+        this.formGroup.patchValue({
+          fullName: emp.fullName,
+          branchId: emp.branchId,
+          title: emp.title,
+          nationality: emp.nationality,
+          identityNumber: emp.identityNumber,
+          mobile: emp.mobile,
+          address: emp.address,
+          qualification: emp.qualification,
+          email: emp.email,
+          password: '',
+          confirmPassword: ''
+        });
+      }
+    });
+  }
+
+  passwordMatchValidator(formGroup: FormGroup) {
+    const password = formGroup.get('password')?.value;
+    const confirmPassword = formGroup.get('confirmPassword')?.value;
+
+    if (password !== confirmPassword) {
+      formGroup.get('confirmPassword')?.setErrors({ passwordMismatch: true });
+    } else {
+      formGroup.get('confirmPassword')?.setErrors(null);
+    }
+
+    return null;
+  }
+
+  onSubmit() {
+    if (this.formGroup.invalid) {
+      this.formGroup.markAllAsTouched();
+      this.toastr.error('Please fix the errors in the form.');
+      return;
+    }
+
+    const submitData = { ...this.formGroup.value };
+    delete submitData.confirmPassword;
+    if (!submitData.password) delete submitData.password;
+
+    this.employeeService.update(this.employeeId, submitData).subscribe({
+      next: () => this.toastr.success('Profile updated successfully')
+    });
+  }
+
+
   timeZone = [
     { value: 1, label: '(GMT-11:00) Midway Island, Samoa' },
     { value: 2, label: '(GMT-10:00) Hawaii-Aleutian' },
@@ -118,7 +219,6 @@ languages=[
 ]
 handleSelectChange(value: any | any[]) {
 }
-  constructor(public gallery: Gallery) {}
   users = [
     {
       avatar: './assets/images/faces/2.jpg',
@@ -168,7 +268,7 @@ handleSelectChange(value: any | any[]) {
       title: 'Administrator',
       description: 'Lorem Ipsum is not simply popular belief Contrary.',
     },
-  ];
+];
   imageData=[
     {
       srcUrl: "./assets/images/media/media-4.jpg",colClass:'col-lg-3 col-md-3 col-sm-6 col-12',
@@ -196,5 +296,8 @@ handleSelectChange(value: any | any[]) {
       srcUrl: './assets/images/media/media-5.jpg', lightboxClass:'',imageClass:'',colClass:'col-lg-3 col-md-3 col-sm-6 col-12',
     },
   ]
+
+
+
 }
 

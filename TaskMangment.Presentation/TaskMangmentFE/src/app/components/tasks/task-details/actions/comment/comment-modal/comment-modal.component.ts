@@ -2,8 +2,9 @@ import { Component, Input, OnInit } from '@angular/core';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { TaskCommentService } from 'app/core/services/task-comment.service';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-comment-modal',
@@ -22,7 +23,9 @@ export class CommentModalComponent implements OnInit {
   constructor(
     public modal: NgbActiveModal,
     private fb: FormBuilder,
-    private commentService: TaskCommentService
+    private commentService: TaskCommentService,
+    private toastr: ToastrService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -51,13 +54,14 @@ export class CommentModalComponent implements OnInit {
 
     this.commentService.create(this.taskId, formData).subscribe({
       next: () => {
+        this.toastr.success(this.translate.instant('TASK.COMMENT_SUCCESS'));
         this.isSubmitting = false;
         this.modal.close(true);
       },
-      error: (err) => {
-        console.error('Failed to save comment', err);
+      error: () => {
         this.isSubmitting = false;
       }
+
     });
   }
 }

@@ -170,12 +170,12 @@ openDetails(taskId: number) {
 }
 confirmDelete(taskId: number) {
   Swal.fire({
-    title: this.translate.instant('TASK.CONFIRM_DELETE_TITLE'),
-    text: this.translate.instant('TASK.CONFIRM_DELETE_TEXT'),
+    title: this.translate.instant('COMMON.CONFIRM_DELETE_TITLE'),
+    text: this.translate.instant('COMMON.CONFIRM_DELETE_TEXT'),
     icon: 'warning',
     showCancelButton: true,
-    confirmButtonText: this.translate.instant('TASK.DELETE_BUTTON'),
-    cancelButtonText: this.translate.instant('TASK.CANCEL_BUTTON'),
+    confirmButtonText: this.translate.instant('COMMON.DELETE_BUTTON'),
+    cancelButtonText: this.translate.instant('COMMON.CANCEL_BUTTON'),
     confirmButtonColor: '#d33',
     cancelButtonColor: '#6c757d'
   }).then((result) => {

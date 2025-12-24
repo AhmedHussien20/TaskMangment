@@ -132,4 +132,10 @@
   <data name="TASK_CLOSE_REQUEST_NOTIFICATION" xml:space="preserve">
     <value>طلب غلق جديد على المهمة: {0} من {1}</value>
   </data>
+  <data name="TASK_ASSIGNED_NOTIFICATION" xml:space="preserve">
+    <value>تم إسناد مهمة جديدة إليك: {0}</value>
+  </data>
+  <data name="TASK_UNASSIGNED_NOTIFICATION" xml:space="preserve">
+    <value>تم ازالتك من المهمة : {0}</value>
+  </data>
 </root>
