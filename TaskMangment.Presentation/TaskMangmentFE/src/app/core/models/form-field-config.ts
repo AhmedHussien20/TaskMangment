@@ -1,6 +1,6 @@
 export interface FormFieldConfig {
-  type: 'input' | 'select' | 'textarea' | 'date' | 'checkbox' | 'radio';
-  
+  type: 'input' | 'select' | 'textarea' | 'date' | 'checkbox' | 'radio' | 'file'; 
+
   inputType?: 'text' | 'number' | 'email' | 'password' | 'url';
   
   label: string;
@@ -18,7 +18,10 @@ export interface FormFieldConfig {
   disabled?: boolean;
   
   showPassword?: boolean;
-errorMessages?: {
+
+  accept?: string; 
+  
+  errorMessages?: {
     required?: string;
     pattern?: string;
     min?: string;

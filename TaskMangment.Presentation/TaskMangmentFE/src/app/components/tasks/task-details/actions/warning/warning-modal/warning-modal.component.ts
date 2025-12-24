@@ -2,11 +2,12 @@ import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { TaskService } from 'app/core/services/task.service';
 import { TaskWarningService } from 'app/core/services/task-warning.service';
 import { WarningAddEditDto } from 'app/core/models/task/task-warning';
 import { SimpleEmployee } from 'app/core/models/task/task';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-warning-modal',
@@ -26,7 +27,9 @@ export class WarningModalComponent implements OnInit {
     public modal: NgbActiveModal,
     private fb: FormBuilder,
     private warningService: TaskWarningService,
-    private taskService: TaskService
+    private taskService: TaskService,
+    private toastr: ToastrService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -59,12 +62,9 @@ export class WarningModalComponent implements OnInit {
 
     this.warningService.create(this.taskId, model).subscribe({
       next: () => {
+        this.toastr.success(this.translate.instant('TASK.WARNING_SUCCESS'));
         this.isSubmitting = false;
         this.modal.close(true);
-      },
-      error: (err) => {
-        console.error('Failed to submit warning', err);
-        this.isSubmitting = false;
       }
     });
   }

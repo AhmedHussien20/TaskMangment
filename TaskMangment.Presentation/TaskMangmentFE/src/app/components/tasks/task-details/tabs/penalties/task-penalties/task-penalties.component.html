@@ -1,8 +1,12 @@
-<app-generic-table
-  [columns]="columns"
-  [data]="rows"
-  [totalItems]="totalItems"
-  [showAddButton]="!readonly"
-  [showEditButton]="!readonly"
-  [showDeleteButton]="!readonly">
-</app-generic-table>
+<div class="table-responsive" style="max-height:400px; overflow:auto;">
+  <app-generic-table
+    [columns]="columns"
+    [data]="rows"
+    [totalItems]="totalItems"
+    [showAddButton]="!readonly"
+    [showEditButton]="!readonly"
+    [showFilters]="false"
+    [showPagination]="false"
+    [showDeleteButton]="!readonly">
+  </app-generic-table>
+</div>

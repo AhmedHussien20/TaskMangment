@@ -31,4 +31,5 @@ export class GenericFormFieldComponent {
  togglePassword(field: any) {
   field.showPassword = !field.showPassword;
 }
+
 }

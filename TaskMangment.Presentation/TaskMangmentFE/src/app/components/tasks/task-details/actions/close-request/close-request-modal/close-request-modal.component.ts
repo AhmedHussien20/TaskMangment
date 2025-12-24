@@ -2,9 +2,10 @@ import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { TaskCloseRequestAdd } from 'app/core/models/task/task-close-request';
 import { TaskCloseRequestService } from 'app/core/services/task-close-request.service';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-close-request-modal',
@@ -22,7 +23,9 @@ export class CloseRequestModalComponent implements OnInit {
   constructor(
     public modal: NgbActiveModal,
     private fb: FormBuilder,
-    private closeRequestService: TaskCloseRequestService
+    private closeRequestService: TaskCloseRequestService,
+    private toastr: ToastrService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -42,12 +45,9 @@ export class CloseRequestModalComponent implements OnInit {
 
     this.closeRequestService.create(this.taskId, model).subscribe({
       next: () => {
+        this.toastr.success(this.translate.instant('TASK.REQUEST_SUCCESS'));
         this.isSubmitting = false;
-        this.modal.close(true); // notify parent to refresh
-      },
-      error: (err) => {
-        console.error('Failed to submit close request', err);
-        this.isSubmitting = false;
+        this.modal.close(true);
       }
     });
   }

@@ -191,8 +191,13 @@
         </div>
     </div>
 
-    <ngb-pagination class="d-flex justify-content-end mt-2" [collectionSize]="totalItems" [(page)]="page"
-        [pageSize]="entries" (pageChange)="onPageChangeInternal($event)">
-    </ngb-pagination>
+   <ngb-pagination *ngIf="showPagination"
+    class="d-flex justify-content-end mt-2"
+    [collectionSize]="totalItems"
+    [(page)]="page"
+    [pageSize]="entries"
+    (pageChange)="onPageChangeInternal($event)">
+</ngb-pagination>
+
 
 </div>

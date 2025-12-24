@@ -370,7 +370,12 @@
     "ADD_WARNING": "Add Warning",
     "ADD_PENALTY": "Add Penalty",
     "REQUIRED_FIELD": "This field is required",
-    "ADD_ATTACHMENTS": "Add Attachment"
+    "ADD_ATTACHMENTS": "Add Attachment",
+    "REQUEST_SUCCESS": "Request sent successfully",
+    "WARNING_SUCCESS": "Warning sent successfully",
+    "PENALTY_SUCCESS": "Penalty sent successfully",
+    "COMMENT_SUCCESS": "Comment added successfully"
+    
 
 
 
