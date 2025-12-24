@@ -86,8 +86,8 @@ namespace TaskMangment.Infrastructure.Seeding
                 {
                     Key = "TaskExtensionRequest",
                     SubjectTemplate = "طلب تمديد موعد المهمة: {{TaskTitle}}",
-                    BodyTemplate = LayoutHeader + @"
-                                مرحبًا،<br/><br/>
+                    BodyTemplate = LayoutHeader + @" 
+مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
                                 تم تقديم طلب لتمديد موعد المهمة التالية:<br/><br/>
 
                                 <strong>عنوان المهمة:</strong> {{TaskTitle}}<br/>
@@ -103,7 +103,7 @@ namespace TaskMangment.Infrastructure.Seeding
                     Key = "TaskCloseRequest",
                     SubjectTemplate = "طلب إغلاق المهمة: {{TaskTitle}}",
                     BodyTemplate = LayoutHeader + @"
-                                        مرحبًا،<br/><br/>
+                                       مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
                                         تم تقديم طلب لإغلاق المهمة التالية:<br/><br/>
 
                                         <strong>عنوان المهمة:</strong> {{TaskTitle}}<br/>

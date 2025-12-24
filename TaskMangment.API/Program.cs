@@ -290,7 +290,7 @@ namespace TaskMangment.API
                 "task-due-today-email-job",
                 job => job.ExecuteAsync(),
                 Cron.Daily(8)
-               );
+             );
 
 
             RecurringJob.AddOrUpdate<AttachmentBlobMigrationJob>(
