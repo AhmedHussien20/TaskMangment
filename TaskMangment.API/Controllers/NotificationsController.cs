@@ -21,7 +21,7 @@ namespace TaskMangment.API.Controllers
         {
             var notifications =
                 await _notificationService.GetUnreadAsync(CurrentUserId);
-
+            await _notificationService.MarkAllAsReadAsync(CurrentUserId);
             return Ok(ApiResponse<List<Notification>>.Ok(notifications));
         }
 

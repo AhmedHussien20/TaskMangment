@@ -10,18 +10,19 @@ export type ColumnType =
   | 'icon-action'
   | 'icon'
   | 'badge'
-  | 'custom';
+  | 'custom'
+  | 'date';
+
+export interface BadgeConfig {
+  text: string;
+  class: string;
+}
 
 export interface TableColumn {
   key: string;
   label: string;
   type?: ColumnType;
-  badgeMap?: {
-    [key: string]: {
-      text: string;
-      class: string;
-    };
-  };
+  badgeMap?: Record<string, BadgeConfig>;
   icon?: string;
 }
 

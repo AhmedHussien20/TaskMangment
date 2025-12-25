@@ -11,18 +11,11 @@ namespace TaskMangment.Infrastructure.Services
 {
     public class NotificationSender : INotificationSender
     {
-        private readonly IHubContext<NotificationHub> _hub;
-        private readonly IEmailService _email;
-        private readonly IWhatsAppService _whatsapp;
+        private readonly IHubContext<NotificationHub> _hub; 
 
-        public NotificationSender(
-            IHubContext<NotificationHub> hub,
-            IEmailService email,
-            IWhatsAppService whatsapp)
+        public NotificationSender(IHubContext<NotificationHub> hub  )
         {
-            _hub = hub;
-            _email = email;
-            _whatsapp = whatsapp;
+            _hub = hub; 
         }
 
         public async Task SendWebAsync(int userId, string message)
@@ -34,21 +27,11 @@ namespace TaskMangment.Infrastructure.Services
             {
                 if (string.IsNullOrWhiteSpace(connectionId))
                     continue;
-                await _hub.Clients
-                    .Client(connectionId)
-                    .SendAsync("ReceiveNotification", message);
+                await _hub.Clients .Client(connectionId) .SendAsync("ReceiveNotification", message);
+                   
             }
-        }
+        } 
 
-        public async Task SendEmailAsync(string email, string subject, string message)
-        {
-            await _email.SendEmailAsync(email, subject, message);
-        }
-
-        public async Task SendWhatsAppAsync(string phone, string message)
-        {
-            await _whatsapp.SendMessageAsync(phone, message);
-        }
     }
 
 }

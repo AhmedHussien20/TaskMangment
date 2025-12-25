@@ -98,8 +98,7 @@ namespace TaskMangment.API
             builder.Services.AddSignalR();
 
 
-            builder.Services.AddScoped<IEmailTemplateRenderer, EmailTemplateRenderer>();
-            builder.Services.AddScoped<ISignalRNotifier, SignalRNotifier>();
+            builder.Services.AddScoped<IEmailTemplateRenderer, EmailTemplateRenderer>(); 
             builder.Services.AddScoped<INotificationService, NotificationService>();
             builder.Services.AddScoped<IEmailQueueService, EmailQueueService>();
             builder.Services.AddScoped<ITaskDueTodayEmailJob, TaskDueTodayEmailJob>();
@@ -270,6 +269,7 @@ namespace TaskMangment.API
             //    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             //    EmailTemplateSeeder.Seed(db);
             //}
+
             //using (var scope = app.Services.CreateScope())
             //{
             //    var jobClient = scope.ServiceProvider.GetRequiredService<IBackgroundJobClient>();
