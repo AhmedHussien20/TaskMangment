@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NgbModal, NgbModalModule, NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
-import { GenericTableComponent } from 'app/shared/components/generic-table/generic-table.component';
+import { GenericTableComponent, TableColumn } from 'app/shared/components/generic-table/generic-table.component';
 import { PageHeaderComponent } from 'app/shared/components/page-header/page-header.component';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { TaskCreateUpdateComponent } from "../task-create-update/task-create-update.component";
@@ -35,35 +35,36 @@ export class TaskListComponent implements OnInit {
   breadcrumbs = ['HOME', 'TASKS'];
   activeitem = 'TASK.LIST_TITLE';
   isLoading = false;
-  columns = [
+  columns: TableColumn[] = [
     { key: 'id', label: 'TASK.ID' },
     { key: 'title', label: 'TASK.TITLE' },
     { key: 'assignedByName', label: 'TASK.ASSIGNED_BY' },
+
     {
       key: 'priorityText',
-      label: 'TASK.PRIORITY'
-      //,
-      // type: 'badge' as const,
-      // badgeMap: {
-      //   Low:    { text: 'TASK.PRIORITY_LOW', class: 'bg-success' },
-      //   Medium: { text: 'TASK.PRIORITY_MEDIUM', class: 'bg-warning' },
-      //   High:   { text: 'TASK.PRIORITY_HIGH', class: 'bg-danger' }
-      // }
+      label: 'TASK.PRIORITY',
+      type: 'badge',
+      badgeMap: {
+        Low: { text: 'TASK.PRIORITY_LOW', class: 'bg-success' },
+        Medium: { text: 'TASK.PRIORITY_MEDIUM', class: 'bg-warning' },
+        High: { text: 'TASK.PRIORITY_HIGH', class: 'bg-danger' }
+      }
     },
-
     {
       key: 'statusText',
       label: 'TASK.STATUS',
-      type: 'badge' as const,
+      type: 'badge',
       badgeMap: {
         New: { text: 'TASK.STATUS_NEW', class: 'bg-secondary' },
         InProgress: { text: 'TASK.STATUS_IN_PROGRESS', class: 'bg-info' },
         Closed: { text: 'TASK.STATUS_CLOSED', class: 'bg-success' },
         Archived: { text: 'TASK.STATUS_ARCHIVED', class: 'bg-dark' }
-      },
+      }
     },
-    { key: 'dueDate', label: 'TASK.DUE_DATE' }
+
+    { key: 'dueDate', label: 'TASK.DUE_DATE', type: 'date' }
   ];
+
 
   rows: TaskGet[] = [];
   totalItems = 0;
@@ -92,7 +93,7 @@ export class TaskListComponent implements OnInit {
   constructor(
     private taskService: TaskService,
     private modalService: NgbModal,
-      private toastr: ToastrService,
+    private toastr: ToastrService,
     private translate: TranslateService
 
   ) { }
@@ -158,49 +159,49 @@ export class TaskListComponent implements OnInit {
   }
 
 
-openDetails(taskId: number) {
-  const modalRef = this.modalService.open(TaskDetailsShellComponent, {
-    size: 'xl',
-    backdrop: 'static',
-    scrollable: true
-  });
+  openDetails(taskId: number) {
+    const modalRef = this.modalService.open(TaskDetailsShellComponent, {
+      size: 'xl',
+      backdrop: 'static',
+      scrollable: true
+    });
 
-  modalRef.componentInstance.taskId = taskId;
-  modalRef.componentInstance.readonly = true;
-}
-confirmDelete(taskId: number) {
-  Swal.fire({
-    title: this.translate.instant('TASK.CONFIRM_DELETE_TITLE'),
-    text: this.translate.instant('TASK.CONFIRM_DELETE_TEXT'),
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonText: this.translate.instant('TASK.DELETE_BUTTON'),
-    cancelButtonText: this.translate.instant('TASK.CANCEL_BUTTON'),
-    confirmButtonColor: '#d33',
-    cancelButtonColor: '#6c757d'
-  }).then((result) => {
-    if (result.isConfirmed) {
-      this.deleteTask(taskId);
-    }
-  });
-}
+    modalRef.componentInstance.taskId = taskId;
+    modalRef.componentInstance.readonly = true;
+  }
+  confirmDelete(taskId: number) {
+    Swal.fire({
+      title: this.translate.instant('TASK.CONFIRM_DELETE_TITLE'),
+      text: this.translate.instant('TASK.CONFIRM_DELETE_TEXT'),
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: this.translate.instant('TASK.DELETE_BUTTON'),
+      cancelButtonText: this.translate.instant('TASK.CANCEL_BUTTON'),
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#6c757d'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.deleteTask(taskId);
+      }
+    });
+  }
 
-deleteTask(taskId: number) {
-  this.isLoading = true;
+  deleteTask(taskId: number) {
+    this.isLoading = true;
 
-  this.taskService.delete(taskId).subscribe({
-    next: () => {
-    this.toastr.success(this.translate.instant('TASK.DELETE_SUCCESS'));
+    this.taskService.delete(taskId).subscribe({
+      next: () => {
+        this.toastr.success(this.translate.instant('TASK.DELETE_SUCCESS'));
 
 
-      this.isLoading = false;
-      this.loadData();
-    },
-    error: () => {
-      this.isLoading = false;
-    }
-  });
-}
+        this.isLoading = false;
+        this.loadData();
+      },
+      error: () => {
+        this.isLoading = false;
+      }
+    });
+  }
 
 
 }

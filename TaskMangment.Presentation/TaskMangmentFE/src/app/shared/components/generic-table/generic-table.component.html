@@ -112,30 +112,37 @@
                     <!-- Columns -->
                     <td *ngFor="let col of columns">
 
-
                         <!-- BADGE -->
-                        <span *ngIf="col.type === 'badge'" class="badge" [ngClass]="getBadgeClass(col, item)">
-                            {{ getBadgeText(col, item) | translate }}
-                        </span>
-
-                        <!-- ICON ACTION COLUMN -->
-                        <ng-container *ngIf="col.type === 'icon-action'; else normalCell">
-                            <button class="btn btn-outline-secondary btn-sm"
-                                (click)="iconAction.emit({ type: col.key, row: item })">
-                                <i [class]="col.icon"></i>
-                                <span class="badge bg-info ms-1">
-                                    {{ getValue(item, col.key) }}
-                                </span>
-                            </button>
+                        <ng-container *ngIf="col.type === 'badge'; else notBadge">
+                            <span class="badge" [ngClass]="getBadgeClass(col, item)">
+                                {{ getBadgeText(col, item) | translate }}
+                            </span>
                         </ng-container>
 
-                        <!-- NORMAL CELL -->
-                        <ng-template #normalCell>
-                            {{ getValue(item, col.key) }}
+                        <!-- ICON ACTION -->
+                        <ng-template #notBadge>
+                            <ng-container *ngIf="col.type === 'icon-action'; else normalCell">
+                                <button class="btn btn-outline-secondary btn-sm"
+                                    (click)="iconAction.emit({ type: col.key, row: item })">
+                                    <i [class]="col.icon"></i>
+                                    <span class="badge bg-info ms-1">
+                                        {{ getValue(item, col.key) }}
+                                    </span>
+                                </button>
+                            </ng-container>
                         </ng-template>
 
+                        <ng-template #normalCell>
+                        <ng-container *ngIf="col.type === 'date'; else textCell">
+                           {{ getValue(item, col.key) | date:'dd MMMM yyyy':'':'ar' }}
+                        </ng-container>
+                        </ng-template>
 
+                        <ng-template #textCell>
+                        {{ getValue(item, col.key) }}
+                        </ng-template> 
                     </td>
+
 
 
                     <!-- ACTIONS -->

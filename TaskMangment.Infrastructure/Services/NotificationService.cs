@@ -8,51 +8,40 @@ using TaskMangment.Domain.Entities;
 public class NotificationService : INotificationService
 {
     private readonly INotificationRepository _repo;
-    private readonly ISignalRNotifier _signalRNotifier;
     private readonly IEmailQueueService _emailQueueService;
-    //private readonly IWhatsAppQueueService _whatsAppQueueService;
+    private readonly INotificationSender _notificationSender;
+    private readonly IOnlineUserService _onlineUserService;
 
     public NotificationService(
         INotificationRepository repo,
-        ISignalRNotifier signalRNotifier,
-        IEmailQueueService emailQueueService//,
-        //IWhatsAppQueueService whatsAppQueueService
-        )
+        IEmailQueueService emailQueueService,
+        INotificationSender notificationSender,
+        IOnlineUserService onlineUserService)
     {
         _repo = repo;
-        _signalRNotifier = signalRNotifier;
         _emailQueueService = emailQueueService;
-        //_whatsAppQueueService = whatsAppQueueService;
+        _notificationSender = notificationSender;
+        _onlineUserService = onlineUserService;
     }
 
     public async Task SendAsync(int userId,string message, bool sendEmail,bool sendWhatsApp)
     {
-        // 1️⃣ Save notification
-        await _repo.AddAsync(new Notification
+        bool isOnline = _onlineUserService.IsUserOnline(userId);
+
+        var notification = new Notification
         {
             UserId = userId,
             Message = message,
-            IsRead = false,
-        });
+            IsRead = isOnline
+        };
 
-        // 2️⃣ SignalR (instant)
-        await _signalRNotifier.NotifyAsync(userId, message);
+        await _repo.AddAsync(notification);
 
-        // 3️⃣ Email (queued)
-        //if (sendEmail)
-        //{
-        //    await _emailQueueService.QueueAsync(
-        //        userId,
-        //        message,
-        //        templateKey: "TaskAssigned"
-        //    );
-        //}
-
-        //// 4️⃣ WhatsApp (queued)
-        //if (sendWhatsApp)
-        //{
-        //    await _whatsAppQueueService.QueueAsync(userId, message);
-        //}
+        if (isOnline)
+        {
+            await _notificationSender.SendWebAsync(userId, message);
+            return;
+        }
     }
 
     public Task<List<Notification>> GetUnreadAsync(int userId)
