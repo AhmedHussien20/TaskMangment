@@ -177,7 +177,6 @@ export class TaskCreateUpdateComponent implements OnInit {
   loadTask() {
     this.taskService.getById(this.taskId!).subscribe(res => {
       const task = res.data;
-      debugger
       const assignedEmployeeIds =
         (task.assignEmployee || []).map((e: any) => e.id);
 
