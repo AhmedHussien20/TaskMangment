@@ -22,7 +22,8 @@ namespace TaskMangment.Domain.Entities
     {
         Task = 1,
         Comment = 2,
-        Voucher = 3
+        Voucher = 3,
+        Employee = 4,
     }
 
     public enum EmailStatus

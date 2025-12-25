@@ -7,7 +7,7 @@
             <div class="card-body">
                 <div class="panel profile-cover">
                     <div class="profile-cover__img">
-                        <img src="./assets/images/faces/1.jpg" alt="img">
+                        <img [src]="profileImage" alt="Profile Image">
                         <h3 class="h3">{{ user?.fullName }}</h3>
                     </div>
                     <div class="profile-cover__action bg-img"></div>
@@ -19,165 +19,112 @@
                 </div>
                 <div class="profile-tab tab-menu-heading">
                     <nav ngbNav #nav="ngbNav" class="nav main-nav-line p-3 tabs-menu profile-nav-line">
-                      <ng-container ngbNavItem *ngIf="user">
-  <a href="javascript:;" class="nav-link" ngbNavLink>About</a>
+                     <ng-container ngbNavItem *ngIf="user">
+  <a href="javascript:;" class="nav-link fw-semibold" ngbNavLink>
+    <i class="bi bi-person-lines-fill me-1"></i> About
+  </a>
   <ng-template ngbNavContent>
-    <div class="main-content-body tab-pane p-4 border-top-0 active" id="about">
-      <div class="card-body p-0 border p-0 rounded-10">
-        <div class="p-4">
-          <h4 class="fs-15 text-uppercase mb-3">BIOdata</h4>
-          <p class="m-b-5">Hi I'm {{ user?.fullName }}, Email: {{ user?.email }}</p>
-
-          <div class="m-t-30">
-            <h4 class="fs-15 text-uppercase mt-3">Experience</h4>
-            <div class="p-t-10">
-              <h5 class="text-primary m-b-5 fs-14">{{ user?.title || 'Not Provided' }}</h5>
-              <p>{{ user?.qualification || 'Not Provided' }}</p>
-              <p><b>User ID: {{ user?.userId }}</b></p>
-              <p class="text-muted fs-13 m-b-0">Company ID: {{ user?.companyId }}</p>
-            </div>
-
-            <div>
-              <h5 class="text-primary m-b-5 fs-14">Department</h5>
-              <p>{{ user?.departmentId || 'Not Assigned' }}</p>
-              <p><b>Branch</b></p>
-              <p class="text-muted fs-13 mb-0">{{ user?.branchId || 'Not Assigned' }}</p>
-            </div>
-          </div>
-
-          <div class="border-top"></div>
-          <div class="p-4">
-            <label class="main-content-label fs-13 mg-b-20">Contact</label>
-            <div class="d-sm-flex gap-2">
-              <div class="mg-sm-r-20 mg-b-10">
-                <div class="main-profile-contact-list">
-                  <div class="media">
-                    <div class="media-icon bg-primary-transparent text-primary">
-                      <i class="bi bi-telephone-forward"></i>
-                    </div>
-                    <div class="media-body">
-                      <span>Mobile</span>
-                      <div>{{ user?.mobile || 'Not Provided' }}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="mg-sm-r-20 mg-b-10">
-                <div class="main-profile-contact-list">
-                  <div class="media">
-                    <div class="media-icon bg-success-transparent text-success">
-                      <i class="bi bi-lightning-charge"></i>
-                    </div>
-                    <div class="media-body">
-                      <span>Email</span>
-                      <div>{{ user?.email }}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <div class="main-profile-contact-list">
-                  <div class="media">
-                    <div class="media-icon bg-info-transparent text-info">
-                      <i class="bi bi-geo-alt"></i>
-                    </div>
-                    <div class="media-body">
-                      <span>Current Address</span>
-                      <div>{{ user?.address || 'Not Provided' }}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-          </div>
-          <div class="border-top"></div>
+    <div class="main-content-body tab-pane p-0 border-top-0 active" id="about">
+      <div class="card border shadow-none rounded-10 overflow-hidden">
+        
+        <div class="card-header bg-light border-bottom-0 p-4">
+          <h4 class="fs-16 fw-bold text-uppercase mb-1">Personal Profile</h4>
         </div>
-      </div>
+
+        <div class="card-body p-4">
+          <div class="mb-4">
+            <h5 class="fs-14 fw-bold text-primary text-uppercase mb-3">
+              <i class="bi bi-info-circle me-2"></i>Bio Data
+            </h5>
+            <div class="bg-light p-3 rounded-3">
+              <p class="mb-1"><strong>Full Name:</strong> {{ user?.fullName }}</p>
+              <p class="mb-0 text-muted">Official registered account for {{ user?.email }}</p>
+            </div>
+          </div>
+
+          <div class="row mb-4">
+            <div class="col-md-6 border-end">
+              <h5 class="fs-14 fw-bold text-primary text-uppercase mb-3">
+                <i class="bi bi-briefcase me-2"></i>Experience
+              </h5>
+              <div class="ps-2">
+                <h6 class="fw-bold mb-1">{{ user?.title || 'No Title Provided' }}</h6>
+                <p class="text-muted small mb-2">{{ user?.qualification || 'Qualification not listed' }}</p>
+                <span class="badge bg-primary-transparent text-primary">ID: {{ user?.userId }}</span>
+              </div>
+            </div>
+            
+            <div class="col-md-6 ps-md-4 mt-3 mt-md-0">
+              <h5 class="fs-14 fw-bold text-primary text-uppercase mb-3">
+                <i class="bi bi-building me-2"></i>Organization
+              </h5>
+              <div class="ps-2">
+                <p class="mb-1"><strong>Department:</strong> {{ user?.departmentId || 'Unassigned' }}</p>
+                <p class="mb-1"><strong>Branch:</strong> {{ user?.branchId || 'Unassigned' }}</p>
+                <p class="text-muted small mb-0">Company Ref: #{{ user?.companyId }}</p>
+              </div>
+            </div>
+          </div>
+
+          <hr class="my-4 opacity-10">
+
+          <div>
+            <h5 class="fs-14 fw-bold text-primary text-uppercase mb-3">
+              <i class="bi bi-envelope-at me-2"></i>Contact Information
+            </h5>
+            <div class="row g-3">
+              <div class="col-sm-4">
+                <div class="d-flex align-items-center p-3 border rounded-3 h-100">
+                  <div class="avatar avatar-md bg-primary-transparent text-primary rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                    <i class="bi bi-telephone-fill"></i>
+                  </div>
+                  <div>
+                    <small class="text-muted d-block">Mobile</small>
+                    <span class="fw-medium">{{ user?.mobile || 'N/A' }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-sm-4">
+                <div class="d-flex align-items-center p-3 border rounded-3 h-100">
+                  <div class="avatar avatar-md bg-success-transparent text-success rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                    <i class="bi bi-envelope-fill"></i>
+                  </div>
+                  <div class="text-truncate">
+                    <small class="text-muted d-block">Email Address</small>
+                    <span class="fw-medium">{{ user?.email }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-sm-4">
+                <div class="d-flex align-items-center p-3 border rounded-3 h-100">
+                  <div class="avatar avatar-md bg-info-transparent text-info rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                    <i class="bi bi-geo-alt-fill"></i>
+                  </div>
+                  <div>
+                    <small class="text-muted d-block">Location</small>
+                    <span class="fw-medium">{{ user?.address || 'Not Provided' }}</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div> </div>
     </div>
   </ng-template>
 </ng-container>
 
 <!-- Edit Profile Tab -->
-<ng-container ngbNavItem>
+<ng-container ngbNavItem *ngIf="user">
   <a href="javascript:;" class="nav-link" ngbNavLink>Edit Profile</a>
   <ng-template ngbNavContent>
-    <div class="main-content-body tab-pane p-4 border-top-0" id="edit">
-      <div class="card-body border">
-        <div class="mb-4 main-content-label">Personal Information</div>
-
-        <form [formGroup]="formGroup" class="form-horizontal" *ngIf="formGroup">
-
-          <!-- Name -->
-          <div class="mb-4 main-content-label">Name</div>
-          <div class="form-group row row-sm">
-            <div class="col-md-3"><label class="form-label">User Name</label></div>
-            <div class="col-md-9"><input type="text" class="form-control" formControlName="fullName"></div>
-          </div>
-
-          <!-- Title -->
-          <div class="form-group row row-sm">
-            <div class="col-md-3"><label class="form-label">Title</label></div>
-            <div class="col-md-9"><input type="text" class="form-control" formControlName="title"></div>
-          </div>
-
-          <!-- Email -->
-          <div class="form-group row row-sm">
-            <div class="col-md-3"><label class="form-label">Email</label></div>
-            <div class="col-md-9"><input type="email" class="form-control" formControlName="email"></div>
-          </div>
-
-          <!-- Mobile -->
-          <div class="form-group row row-sm">
-            <div class="col-md-3"><label class="form-label">Phone</label></div>
-            <div class="col-md-9"><input type="text" class="form-control" formControlName="mobile"></div>
-          </div>
-
-          <!-- Address -->
-          <div class="form-group row row-sm">
-            <div class="col-md-3"><label class="form-label">Address</label></div>
-            <div class="col-md-9"><textarea class="form-control" rows="2" formControlName="address"></textarea></div>
-          </div>
-
-          <!-- Qualification -->
-          <div class="form-group row row-sm">
-            <div class="col-md-3"><label class="form-label">Qualification</label></div>
-            <div class="col-md-9"><textarea class="form-control" rows="2" formControlName="qualification"></textarea></div>
-          </div>
-
-          <!-- Nationality -->
-          <div class="form-group row row-sm">
-            <div class="col-md-3"><label class="form-label">Nationality</label></div>
-            <div class="col-md-9"><input type="text" class="form-control" formControlName="nationality"></div>
-          </div>
-
-           <div class="form-group row row-sm">
-            <div class="col-md-3"><label class="form-label">Identity number</label></div>
-            <div class="col-md-9"><input type="text" class="form-control" formControlName="identityNumber"></div>
-          </div>
-
-
-          <!-- Password -->
-          <div class="form-group row row-sm">
-            <div class="col-md-3"><label class="form-label">Password</label></div>
-            <div class="col-md-9"><input type="password" class="form-control" formControlName="password"></div>
-          </div>
-
-          <!-- Confirm Password -->
-          <div class="form-group row row-sm">
-            <div class="col-md-3"><label class="form-label">Confirm Password</label></div>
-            <div class="col-md-9"><input type="password" class="form-control" formControlName="confirmPassword"></div>
-          </div>
-
-          <div class="form-group mt-3">
-            <button type="button" class="btn btn-primary" (click)="onSubmit()">Save Changes</button>
-          </div>
-
-        </form>
-      </div>
-    </div>
+    <app-employee-create-update
+      [isEdit]="true"
+      [employeeId]="employeeId"
+      (formSubmitted)="onProfileUpdated()">
+    </app-employee-create-update>
   </ng-template>
 </ng-container>
 

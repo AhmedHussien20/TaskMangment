@@ -41,6 +41,8 @@ namespace TaskMangment.Application.Common.ApiRequests.Auth
 
         // JWT Token
         public string Token { get; set; }
+        public string? ProfileImage { get; set; } 
+
     }
 
 

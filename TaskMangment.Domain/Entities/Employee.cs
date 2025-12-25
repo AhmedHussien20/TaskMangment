@@ -57,6 +57,9 @@ namespace TaskMangment.Domain.Entities
 
         public ICollection<EmployeeRole> EmployeeRoles { get; set; } = new List<EmployeeRole>();
 
+        //public ICollection<Attachment> Attachments { get; set; } = new List<Attachment>();
+
+
     }
 
 }
