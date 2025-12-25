@@ -1,523 +1,158 @@
-<app-page-header [title]="' Profile '" [title1]="['Pages']" [activeitem]="' Profile '"></app-page-header>
-
-  <!-- Start::row-1 -->
-  <div class="row square row-sm">
+<app-page-header [title]="title | translate" [title1]="breadcrumbs" [activeitem]="activeitem | translate">
+</app-page-header>
+<div class="row square row-sm">
     <div class="col-lg-12 col-md-12">
         <div class="card custom-card">
             <div class="card-body">
                 <div class="panel profile-cover">
-                    <div class="profile-cover__img">
-                        <img [src]="profileImage" alt="Profile Image">
-                        <h3 class="h3">{{ user?.fullName }}</h3>
+                    <div class="profile-cover__img d-flex align-items-center justify-content-start gap-3">
+
+                        <div class="rounded-circle overflow-hidden" style="width: 150px; height: 150px;">
+                            <img [src]="profileImage" alt="Profile Image"
+                                class="img-fluid h-100 w-100 object-fit-cover">
+                        </div>
+
+                        <div>
+                            <h2 class="fw-bold mb-0">{{ user?.fullName }}</h2>
+                            <p class="text-muted mb-0">{{ user?.title || '' }}</p>
+                        </div>
+
                     </div>
-                    <div class="profile-cover__action bg-img"></div>
+
+                    <div class="profile-cover__action "></div>
                     <div class="profile-cover__info">
                         <ul class="nav">
-                            <li><strong>26</strong>Projects</li>
+                            <li><strong>26</strong>{{ 'PROFILE.PROJECTS' | translate }}</li>
                         </ul>
                     </div>
                 </div>
                 <div class="profile-tab tab-menu-heading">
                     <nav ngbNav #nav="ngbNav" class="nav main-nav-line p-3 tabs-menu profile-nav-line">
-                     <ng-container ngbNavItem *ngIf="user">
-  <a href="javascript:;" class="nav-link fw-semibold" ngbNavLink>
-    <i class="bi bi-person-lines-fill me-1"></i> About
-  </a>
-  <ng-template ngbNavContent>
-    <div class="main-content-body tab-pane p-0 border-top-0 active" id="about">
-      <div class="card border shadow-none rounded-10 overflow-hidden">
-        
-        <div class="card-header bg-light border-bottom-0 p-4">
-          <h4 class="fs-16 fw-bold text-uppercase mb-1">Personal Profile</h4>
-        </div>
-
-        <div class="card-body p-4">
-          <div class="mb-4">
-            <h5 class="fs-14 fw-bold text-primary text-uppercase mb-3">
-              <i class="bi bi-info-circle me-2"></i>Bio Data
-            </h5>
-            <div class="bg-light p-3 rounded-3">
-              <p class="mb-1"><strong>Full Name:</strong> {{ user?.fullName }}</p>
-              <p class="mb-0 text-muted">Official registered account for {{ user?.email }}</p>
-            </div>
-          </div>
-
-          <div class="row mb-4">
-            <div class="col-md-6 border-end">
-              <h5 class="fs-14 fw-bold text-primary text-uppercase mb-3">
-                <i class="bi bi-briefcase me-2"></i>Experience
-              </h5>
-              <div class="ps-2">
-                <h6 class="fw-bold mb-1">{{ user?.title || 'No Title Provided' }}</h6>
-                <p class="text-muted small mb-2">{{ user?.qualification || 'Qualification not listed' }}</p>
-                <span class="badge bg-primary-transparent text-primary">ID: {{ user?.userId }}</span>
-              </div>
-            </div>
-            
-            <div class="col-md-6 ps-md-4 mt-3 mt-md-0">
-              <h5 class="fs-14 fw-bold text-primary text-uppercase mb-3">
-                <i class="bi bi-building me-2"></i>Organization
-              </h5>
-              <div class="ps-2">
-                <p class="mb-1"><strong>Department:</strong> {{ user?.departmentId || 'Unassigned' }}</p>
-                <p class="mb-1"><strong>Branch:</strong> {{ user?.branchId || 'Unassigned' }}</p>
-                <p class="text-muted small mb-0">Company Ref: #{{ user?.companyId }}</p>
-              </div>
-            </div>
-          </div>
-
-          <hr class="my-4 opacity-10">
-
-          <div>
-            <h5 class="fs-14 fw-bold text-primary text-uppercase mb-3">
-              <i class="bi bi-envelope-at me-2"></i>Contact Information
-            </h5>
-            <div class="row g-3">
-              <div class="col-sm-4">
-                <div class="d-flex align-items-center p-3 border rounded-3 h-100">
-                  <div class="avatar avatar-md bg-primary-transparent text-primary rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                    <i class="bi bi-telephone-fill"></i>
-                  </div>
-                  <div>
-                    <small class="text-muted d-block">Mobile</small>
-                    <span class="fw-medium">{{ user?.mobile || 'N/A' }}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="col-sm-4">
-                <div class="d-flex align-items-center p-3 border rounded-3 h-100">
-                  <div class="avatar avatar-md bg-success-transparent text-success rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                    <i class="bi bi-envelope-fill"></i>
-                  </div>
-                  <div class="text-truncate">
-                    <small class="text-muted d-block">Email Address</small>
-                    <span class="fw-medium">{{ user?.email }}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="col-sm-4">
-                <div class="d-flex align-items-center p-3 border rounded-3 h-100">
-                  <div class="avatar avatar-md bg-info-transparent text-info rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                    <i class="bi bi-geo-alt-fill"></i>
-                  </div>
-                  <div>
-                    <small class="text-muted d-block">Location</small>
-                    <span class="fw-medium">{{ user?.address || 'Not Provided' }}</span>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-          </div>
-        </div> </div>
-    </div>
-  </ng-template>
-</ng-container>
-
-<!-- Edit Profile Tab -->
-<ng-container ngbNavItem *ngIf="user">
-  <a href="javascript:;" class="nav-link" ngbNavLink>Edit Profile</a>
-  <ng-template ngbNavContent>
-    <app-employee-create-update
-      [isEdit]="true"
-      [employeeId]="employeeId"
-      (formSubmitted)="onProfileUpdated()">
-    </app-employee-create-update>
-  </ng-template>
-</ng-container>
-
-
-                        <ng-container ngbNavItem>
-                            <a href="javascript:;" class="nav-link" ngbNavLink>Timeline</a>
+                        <ng-container ngbNavItem *ngIf="user">
+                            <a href="javascript:;" class="nav-link fw-semibold" ngbNavLink>
+                                <i class="bi bi-person-lines-fill me-1"></i> {{ 'PROFILE.ABOUT' | translate }}
+                            </a>
                             <ng-template ngbNavContent>
-                                <div class="main-content-body  tab-pane border-top-0 p-0" id="timeline">
-                                    <div class="p-4">
-                                        <div class="main-content-body main-content-body-profile">
-                                            <div class="main-profile-body p-0">
-                                                <div class="row row-sm">
-                                                    <div class="col-12">
-                                                        <div class="card mg-b-20 border">
-                                                            <div class="card-header p-4 d-block">
-                                                                <div class="media">
-                                                                    <div class="media-user me-2">
-                                                                        <div class="main-img-user avatar-md"><img alt="" class="rounded-circle" src="./assets/images/faces/6.jpg"></div>
-                                                                    </div>
-                                                                    <div class="media-body">
-                                                                        <h6 class="mb-0 mg-t-2 ms-2">Mintrona Pechon Pechon</h6><span class="text-primary ms-2">just now</span> </div>
-                                                                    <div class="ms-auto">
-                                                                        <div class="dropdown show file-drop" ngbDropdown> <a class="new option-dots2" ngbDropdownToggle data-bs-toggle="dropdown" href="JavaScript:void(0);"><i class="fas fa-ellipsis-v"></i></a>
-                                                                            <div class="dropdown-menu dropdown-menu-end shadow" ngbDropdownMenu> 
-                                                                                <a class="dropdown-item" ngbDropdownItem href="javascript:void(0);">Edit Post</a>
-                                                                                 <a class="dropdown-item" ngbDropdownItem href="javascript:void(0);">Delete Post</a> 
-                                                                                 <a class="dropdown-item" ngbDropdownItem href="javascript:void(0);">Personal Settings</a> </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            <div class="card-body">
-                                                                <p class="mg-t-0">There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected humour, or randomised words which don't look even slightly believable.</p>
-                                                                <div class="row row-sm">
-                                                                    <div class="col"> <img alt="img" class="wd-200 me-4 br-4" src="./assets/images/media/media-4.jpg"> <img alt="img" class="wd-200 br-4 mt-2 mt-sm-0" src="./assets/images/media/media-5.jpg"> </div>
-                                                                </div>
-                                                                <div class="media mg-t-15 profile-footer">
-                                                                    <div class="media-user me-2">
-                                                                        <div class="avatar-list-stacked">
-                                                                            <span class="avatar avatar-sm avatar-rounded">
-                                                                                <img src="./assets/images/faces/1.jpg" alt="img">
-                                                                            </span>
-                                                                            <span class="avatar avatar-sm avatar-rounded">
-                                                                                <img src="./assets/images/faces/3.jpg" alt="img">
-                                                                            </span>
-                                                                            <span class="avatar avatar-sm avatar-rounded">
-                                                                                <img src="./assets/images/faces/2.jpg" alt="img">
-                                                                            </span>
-                                                                            <span class="avatar avatar-sm avatar-rounded">
-                                                                                <img src="./assets/images/faces/10.jpg" alt="img">
-                                                                            </span>
-                                                                            <a class="avatar avatar-sm bg-primary avatar-rounded text-fixed-white" href="javascript:void(0);">
-                                                                                +8
-                                                                            </a>
-                                                                        </div>
-                                                                        <!-- demo-avatar-group -->
-                                                                    </div>
-                                                                    <div class="media-body">
-                                                                        <h6 class="mb-0 mg-t-10">28 people like your photo</h6> </div>
-                                                                    <div class="ms-auto mt-1 mt-sm-0">
-                                                                        <div class="dropdown show" > <a class="new" href="JavaScript:void(0);"><i class="far fa-heart me-3"></i></a> <a class="new" href="JavaScript:void(0);"><i class="far fa-comment me-3"></i></a> <a class="new" href="JavaScript:void(0);"><i class="far fa-share-square"></i></a> </div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <div class="card mg-b-20 border">
-                                                            <div class="card-header p-4 d-block">
-                                                                <div class="media">
-                                                                    <div class="media-user me-2">
-                                                                        <div class="main-img-user avatar-md"><img alt="" class="rounded-circle" src="./assets/images/faces/6.jpg"></div>
-                                                                    </div>
-                                                                    <div class="media-body">
-                                                                        <h6 class="mb-0 ms-2 mg-t-3">Mintrona Pechon Pechon</h6><span class="text-muted ms-2">Sep 26 2019, 10:14am</span> </div>
-                                                                    <div class="ms-auto">
-                                                                        <div class="dropdown show file-drop" ngbDropdown> <a class="new option-dots2" ngbDropdownToggle data-bs-toggle="dropdown" href="JavaScript:void(0);"><i class="fas fa-ellipsis-v"></i></a>
-                                                                            <div class="dropdown-menu dropdown-menu-end shadow" ngbDropdownMenu> 
-                                                                                <a class="dropdown-item" ngbDropdownItem href="javascript:void(0);">Edit Post</a>
-                                                                                 <a class="dropdown-item" ngbDropdownItem href="javascript:void(0);">Delete Post</a> 
-                                                                                 <a class="dropdown-item" ngbDropdownItem href="javascript:void(0);">Personal Settings</a> </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            <div class="card-body h-100">
-                                                                <p class="mg-t-0">There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected humour, or randomised words which don't look even slightly believable.</p>
-                                                                <div class="row row-sm">
-                                                                    <div class="col"> <img alt="img" class="wd-200 mt-2 mt-sm-0 me-4 br-4" src="./assets/images/media/media-9.jpg"> <img alt="img" class="wd-200 mt-2 mt-sm-0 br-4" src="./assets/images/media/media-12.jpg"> </div>
-                                                                </div>
-                                                                <div class="media mg-t-15 profile-footer">
-                                                                    <div class="media-user me-2">
-                                                                        <div class="avatar-list-stacked">
-                                                                            <span class="avatar avatar-sm avatar-rounded">
-                                                                                <img src="./assets/images/faces/1.jpg" alt="img">
-                                                                            </span>
-                                                                            <span class="avatar avatar-sm avatar-rounded">
-                                                                                <img src="./assets/images/faces/3.jpg" alt="img">
-                                                                            </span>
-                                                                            <span class="avatar avatar-sm avatar-rounded">
-                                                                                <img src="./assets/images/faces/2.jpg" alt="img">
-                                                                            </span>
-                                                                            <span class="avatar avatar-sm avatar-rounded">
-                                                                                <img src="./assets/images/faces/10.jpg" alt="img">
-                                                                            </span>
-                                                                            <a class="avatar avatar-sm bg-primary avatar-rounded text-fixed-white" href="javascript:void(0);">
-                                                                                +8
-                                                                            </a>
-                                                                        </div>
-                                                                        <!-- demo-avatar-group -->
-                                                                    </div>
-                                                                    <div class="media-body">
-                                                                        <h6 class="mb-0 mg-t-10">28 people like your photo</h6> </div>
-                                                                    <div class="ms-auto mt-1 mt-sm-0">
-                                                                        <div class="dropdown show"> <a class="new" href="JavaScript:void(0);"><i class="far fa-heart me-3"></i></a> <a class="new" href="JavaScript:void(0);"><i class="far fa-comment me-3"></i></a> <a class="new" href="JavaScript:void(0);"><i class="far fa-share-square"></i></a> </div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <div class="card mg-b-20 border">
-                                                            <div class="card-header p-4 d-block">
-                                                                <div class="media">
-                                                                    <div class="media-user me-2">
-                                                                        <div class="main-img-user avatar-md"><img alt="" class="rounded-circle" src="./assets/images/faces/6.jpg"></div>
-                                                                    </div>
-                                                                    <div class="media-body">
-                                                                        <h6 class="mb-0 ms-2 mg-t-3">Mintrona Pechon Pechon</h6><span class="text-muted ms-2">Sep 26 2019, 10:14am</span> </div>
-                                                                    <div class="ms-auto">
-                                                                        <div class="dropdown show file-drop" ngbDropdown> <a class="new option-dots2" ngbDropdownToggle data-bs-toggle="dropdown" href="JavaScript:void(0);"><i class="fas fa-ellipsis-v"></i></a>
-                                                                            <div class="dropdown-menu dropdown-menu-end shadow" ngbDropdownMenu> 
-                                                                                <a class="dropdown-item" ngbDropdownItem href="javascript:void(0);">Edit Post</a>
-                                                                                 <a class="dropdown-item" ngbDropdownItem href="javascript:void(0);">Delete Post</a> 
-                                                                                 <a class="dropdown-item" ngbDropdownItem href="javascript:void(0);">Personal Settings</a> </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            <div class="card-body h-100">
-                                                                <p class="mg-t-0">There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected humour, or randomised words which don't look even slightly believable.</p>
-                                                                <div class="media mg-t-15 profile-footer">
-                                                                    <div class="media-user me-2">
-                                                                        <div class="avatar-list-stacked">
-                                                                            <span class="avatar avatar-sm avatar-rounded">
-                                                                                <img src="./assets/images/faces/1.jpg" alt="img">
-                                                                            </span>
-                                                                            <span class="avatar avatar-sm avatar-rounded">
-                                                                                <img src="./assets/images/faces/3.jpg" alt="img">
-                                                                            </span>
-                                                                            <span class="avatar avatar-sm avatar-rounded">
-                                                                                <img src="./assets/images/faces/2.jpg" alt="img">
-                                                                            </span>
-                                                                            <span class="avatar avatar-sm avatar-rounded">
-                                                                                <img src="./assets/images/faces/10.jpg" alt="img">
-                                                                            </span>
-                                                                            <a class="avatar avatar-sm bg-primary avatar-rounded text-fixed-white" href="javascript:void(0);">
-                                                                                +8
-                                                                            </a>
-                                                                        </div>
-                                                                        <!-- demo-avatar-group -->
-                                                                    </div>
-                                                                    <div class="media-body">
-                                                                        <h6 class="mb-0 mg-t-10">28 people like your photo</h6> </div>
-                                                                    <div class="ms-auto mt-1 mt-sm-0">
-                                                                        <div class="dropdown show"> <a class="new" href="JavaScript:void(0);"><i class="far fa-heart me-3"></i></a> <a class="new" href="JavaScript:void(0);"><i class="far fa-comment me-3"></i></a> <a class="new" href="JavaScript:void(0);"><i class="far fa-share-square"></i></a> </div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <div class="card border">
-                                                            <div class="card-header p-4 d-block">
-                                                                <div class="media">
-                                                                    <div class="media-user me-2">
-                                                                        <div class="main-img-user avatar-md"><img alt="" class="rounded-circle" src="./assets/images/faces/2.jpg"></div>
-                                                                    </div>
-                                                                    <div class="media-body">
-                                                                        <h6 class="mb-0 ms-2 mg-t-3">Mintrona Pechon Pechon</h6><span class="text-muted ms-2">Sep 26 2019, 10:14am</span> </div>
-                                                                    <div class="ms-auto">
-                                                                        <div class="dropdown show file-drop" ngbDropdown> <a class="new option-dots2" ngbDropdownToggle data-bs-toggle="dropdown" href="JavaScript:void(0);"><i class="fas fa-ellipsis-v"></i></a>
-                                                                            <div class="dropdown-menu dropdown-menu-end shadow" ngbDropdownMenu> 
-                                                                                <a class="dropdown-item" ngbDropdownItem href="javascript:void(0);">Edit Post</a>
-                                                                                 <a class="dropdown-item" ngbDropdownItem href="javascript:void(0);">Delete Post</a> 
-                                                                                 <a class="dropdown-item" ngbDropdownItem href="javascript:void(0);">Personal Settings</a> </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            <div class="card-body h-100">
-                                                                <p class="mg-t-0">There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected humour, or randomised words which don't look even slightly believable.</p>
-                                                                <div class="row row-sm">
-                                                                    <div class="col"> <img alt="img" class="wd-200 me-3 br-4 mt-2 mt-sm-0" src="./assets/images/media/media-9.jpg"> <img alt="img" class="wd-200 br-4 mt-2 mt-sm-0" src="./assets/images/media/media-17.jpg"> </div>
-                                                                </div>
-                                                                <div class="media mg-t-15 profile-footer">
-                                                                    <div class="media-user me-2">
-                                                                        <div class="avatar-list-stacked">
-                                                                            <span class="avatar avatar-sm avatar-rounded">
-                                                                                <img src="./assets/images/faces/1.jpg" alt="img">
-                                                                            </span>
-                                                                            <span class="avatar avatar-sm avatar-rounded">
-                                                                                <img src="./assets/images/faces/3.jpg" alt="img">
-                                                                            </span>
-                                                                            <span class="avatar avatar-sm avatar-rounded">
-                                                                                <img src="./assets/images/faces/2.jpg" alt="img">
-                                                                            </span>
-                                                                            <span class="avatar avatar-sm avatar-rounded">
-                                                                                <img src="./assets/images/faces/10.jpg" alt="img">
-                                                                            </span>
-                                                                            <a class="avatar avatar-sm bg-primary avatar-rounded text-fixed-white" href="javascript:void(0);">
-                                                                                +8
-                                                                            </a>
-                                                                        </div>
-                                                                        <!-- demo-avatar-group -->
-                                                                    </div>
-                                                                    <div class="media-body">
-                                                                        <h6 class="mb-0 mg-t-10">28 people like your photo</h6> </div>
-                                                                    <div class="ms-auto mt-1 mt-sm-0">
-                                                                        <div class="dropdown show"> <a class="new" href="JavaScript:void(0);"><i class="far fa-heart me-3"></i></a> <a class="new" href="JavaScript:void(0);"><i class="far fa-comment me-3"></i></a> <a class="new" href="JavaScript:void(0);"><i class="far fa-share-square"></i></a> </div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
+                                <div class="main-content-body tab-pane p-0 border-top-0 active" id="about">
+                                    <div class="card border shadow-none rounded-10 overflow-hidden">
+
+                                        <div class="card-header bg-light border-bottom-0 p-4">
+                                            <h4 class="fs-16 fw-bold text-uppercase mb-1">{{ 'PROFILE.PERSONAL_PROFILE' | translate }}</h4>
+                                        </div>
+
+                                        <div class="card-body p-4">
+                                            <div class="mb-4">
+                                                <h5 class="fs-14 fw-bold text-primary text-uppercase mb-3">
+                                                    <i class="bi bi-info-circle me-2"></i> {{ 'PROFILE.BIO_DATA' | translate }}
+                                                </h5>
+                                                <div class="bg-light p-3 rounded-3">
+                                                    <p class="mb-1"><strong>{{ 'PROFILE.FULL_NAME' | translate }}:</strong> {{ user?.fullName }}</p>
+                                                    <p class="mb-0 text-muted">{{ 'PROFILE.OFFICIAL_ACCOUNT_FOR' | translate }} {{
+                                                        user?.email }}</p>
+                                                </div>
+                                            </div>
+
+                                            <div class="row mb-4">
+                                                <div class="col-md-6 border-end">
+                                                    <h5 class="fs-14 fw-bold text-primary text-uppercase mb-3">
+                                                        <i class="bi bi-briefcase me-2"></i> {{ 'PROFILE.EXPERIENCE' | translate }}
+                                                    </h5>
+                                                    <div class="ps-2">
+                                                        <h6 class="fw-bold mb-1">{{ user?.title || ('PROFILE.NO_TITLE_PROVIDED' | translate)
+                                                            }}</h6>
+                                                        <p class="text-muted small mb-2">{{ user?.qualification ||
+                                                            ('QUALIFICATION_NOT_LISTED' | translate) }}</p>
+                                                        <span class="badge bg-primary-transparent text-primary">{{ 'PROFILE.ID' | translate }}: {{
+                                                            user?.userId }}</span>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-md-6 ps-md-4 mt-3 mt-md-0">
+                                                    <h5 class="fs-14 fw-bold text-primary text-uppercase mb-3">
+                                                        <i class="bi bi-building me-2"></i> {{ 'PROFILE.ORGANIZATION' | translate }}
+                                                    </h5>
+                                                    <div class="ps-2">
+                                                        <p class="mb-1"><strong>{{ 'PROFILE.DEPARTMENT' | translate }}:</strong> {{
+                                                            user?.departmentId || ('PROFILE.UNASSIGNED' | translate) }}</p>
+                                                        <p class="mb-1"><strong>{{ 'PROFILE.BRANCH' | translate }}:</strong> {{ user?.branchId ||
+                                                            ('PROFILE.UNASSIGNED' | translate) }}</p>
+                                                        <p class="text-muted small mb-0">{{ 'PROFILE.COMPANY_REF' | translate }} #{{
+                                                            user?.companyId }}</p>
                                                     </div>
                                                 </div>
                                             </div>
-                                            <!-- main-profile-body -->
+
+                                            <hr class="my-4 opacity-10">
+
+                                            <div>
+                                                <h5 class="fs-14 fw-bold text-primary text-uppercase mb-3">
+                                                    <i class="bi bi-envelope-at me-2"></i> {{ 'PROFILE.CONTACT_INFORMATION' | translate }}
+                                                </h5>
+                                                <div class="row g-3">
+                                                    <div class="col-sm-4">
+                                                        <div
+                                                            class="d-flex align-items-center p-3 border rounded-3 h-100">
+                                                            <div class="avatar avatar-md bg-primary-transparent text-primary rounded-circle me-3 d-flex align-items-center justify-content-center"
+                                                                style="width: 40px; height: 40px;">
+                                                                <i class="bi bi-telephone-fill"></i>
+                                                            </div>
+                                                            <div>
+                                                                <small class="text-muted d-block">{{ 'PROFILE.MOBILE' | translate }}</small>
+                                                                <span class="fw-medium">{{ user?.mobile || ('PROFILE.N_A' | translate)
+                                                                    }}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-sm-4">
+                                                        <div
+                                                            class="d-flex align-items-center p-3 border rounded-3 h-100">
+                                                            <div class="avatar avatar-md bg-success-transparent text-success rounded-circle me-3 d-flex align-items-center justify-content-center"
+                                                                style="width: 40px; height: 40px;">
+                                                                <i class="bi bi-envelope-fill"></i>
+                                                            </div>
+                                                            <div class="text-truncate">
+                                                                <small class="text-muted d-block">{{ 'PROFILE.EMAIL_ADDRESS' | translate }}</small>
+                                                                <span class="fw-medium">{{ user?.email }}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-sm-4">
+                                                        <div
+                                                            class="d-flex align-items-center p-3 border rounded-3 h-100">
+                                                            <div class="avatar avatar-md bg-info-transparent text-info rounded-circle me-3 d-flex align-items-center justify-content-center"
+                                                                style="width: 40px; height: 40px;">
+                                                                <i class="bi bi-geo-alt-fill"></i>
+                                                            </div>
+                                                            <div>
+                                                                <small class="text-muted d-block">{{ 'PROFILE.LOCATION' | translate }}</small>
+                                                                <span class="fw-medium">{{ user?.address || ('PROFILE.NOT_PROVIDED' | translate)
+                                                                    }}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </ng-template>
                         </ng-container>
-                        <ng-container ngbNavItem>
-                            <a href="javascript:;" class="nav-link"  ngbNavLink>Gallery</a>
+
+                        <!-- Edit Profile Tab -->
+                        <ng-container ngbNavItem *ngIf="user">
+                            <a href="javascript:;" class="nav-link" ngbNavLink>{{ 'PROFILE.EDIT_PROFILE' | translate }}</a>
                             <ng-template ngbNavContent>
-                                <div class="main-content-body p-4  tab-pane " id="gallery">
-                                    <div class="card-body border">
-                                            <spk-gallery [mainClass]="'row'"  [imageData]="imageData" ></spk-gallery>
-                                    </div>
-                                </div>
+                                <app-employee-create-update [isEdit]="true" [employeeId]="employeeId"
+                                    (formSubmitted)="onProfileUpdated()">
+                                </app-employee-create-update>
                             </ng-template>
                         </ng-container>
-                        <ng-container ngbNavItem>
-                            <a href="javascript:;" class="nav-link" ngbNavLink>Friends</a>
-                            <ng-template ngbNavContent>
-                                <div class="main-content-body tab-pane border-0 p-0" id="friends">
-                                    <div class="card-body border-0 pd-b-10">
-                                        <!-- row -->
-                                        <div class="row row-sm">
-                                            @for(user of users;track $index){
-                                                <div class="col-sm-12 col-md-6 col-lg-6 col-xl-3">
-                                                    <spk-profile 
-                                                    [avatar]="user.avatar" 
-                                                    [name]="user.name" 
-                                                    [title]="user.title" 
-                                                    [description]="user.description"></spk-profile>
-                                                    </div>
-                                            }
-                                    
-                                        </div>
-                                    </div>
-                                </div>
-                            </ng-template>
-                        </ng-container>
-                        <ng-container ngbNavItem>
-                            <a href="javascript:;" ngbNavLink>Account Settings</a>
-                            <ng-template ngbNavContent>
-                                <div class="main-content-body tab-pane p-4 border-top-0" id="settings">
-                                    <div class="card-body border" data-select2-id="12">
-                                        <form class="form-horizontal" data-select2-id="11">
-                                            <div class="mb-4 main-content-label">Account</div>
-                                            <div class="form-group ">
-                                                <div class="row row-sm">
-                                                    <div class="col-md-3">
-                                                        <label class="form-label">User Name</label>
-                                                    </div>
-                                                    <div class="col-md-9">
-                                                        <input type="text" class="form-control" placeholder="User Name" value="Sonia Taylor"> </div>
-                                                </div>
-                                            </div>
-                                            <div class="form-group ">
-                                                <div class="row row-sm">
-                                                    <div class="col-md-3">
-                                                        <label class="form-label">Email</label>
-                                                    </div>
-                                                    <div class="col-md-9">
-                                                        <input type="text" class="form-control" placeholder="Email" value="info@SoniaTaylor.in"> </div>
-                                                </div>
-                                            </div>
-                                            <div class="form-group " data-select2-id="108">
-                                                <div class="row" data-select2-id="107">
-                                                    <div class="col-md-3">
-                                                        <label class="form-label">Language</label>
-                                                    </div>
-                                                    <div class="col-md-9" data-select2-id="106">
-                                                        <spk-ng-select 
-                                                        [options]="languages"
-                                                        [mainClass]="'form-control'"
-                                                        [clearable]="true"
-                                                        [multi]="true"
-                                                        [searchable]="true"
-                                                        [placeholder]="'Us English'"
-                                                        [additionalProperties]="{}"
-                                                        (change)="handleSelectChange($event)">
-                                                        </spk-ng-select>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="form-group " data-select2-id="10">
-                                                <div class="row" data-select2-id="9">
-                                                    <div class="col-md-3">
-                                                        <label class="form-label">Timezone</label>
-                                                    </div>
-                                                    <div class="col-md-9" data-select2-id="8">
-                                                        <spk-ng-select 
-                                                        [options]="timeZone"
-                                                        [mainClass]="'form-control'"
-                                                        [clearable]="true"
-                                                        [multi]="true"
-                                                        [searchable]="true"
-                                                        [placeholder]="'Select TimeZone'"
-                                                        [additionalProperties]="{}"
-                                                        (change)="handleSelectChange($event)">
-                                                        </spk-ng-select>
-                                                      
-                                                        
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="form-group ">
-                                                <div class="row row-sm">
-                                                    <div class="col-md-3 col">
-                                                        <label class="form-label">Verification</label>
-                                                    </div>
-                                                    <div class="col-md-9 col">
-                                                        <div class="form-check">
-                                                            <input class="form-check-input" type="checkbox" value="" id="flexCheckDefaul1">
-                                                            <label class="form-check-label" for="flexCheckDefaul1">
-                                                                Email
-                                                            </label>
-                                                        </div>
-                                                        <div class="form-check">
-                                                            <input class="form-check-input" type="checkbox" value="" id="flexCheckDefaul2" checked>
-                                                            <label class="form-check-label" for="flexCheckDefaul2">
-                                                                SMS
-                                                            </label>
-                                                        </div>
-                                                        <div class="form-check">
-                                                            <input class="form-check-input" type="checkbox" value="" id="flexCheckDefaul3">
-                                                            <label class="form-check-label" for="flexCheckDefaul3">
-                                                                Phone
-                                                            </label>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="mb-4 main-content-label">Secuirity Settings</div>
-                                            <div class="form-group mb-0">
-                                                <div class="row row-sm">
-                                                    <div class="col-md-2">
-                                                        <label class="form-label">Login Verification</label>
-                                                    </div>
-                                                    <div class="col-md-10">
-                                                       <a class="" href="javascript:void(0);">Set up Verification</a>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="form-group mb-0">
-                                                <div class="row row-sm">
-                                                    <div class="col-md-2">
-                                                        <label class="form-label">Password Verification</label>
-                                                    </div>
-                                                    <div class="col-md-10">
-                                                        <div class="form-check">
-                                                            <input class="form-check-input" type="checkbox" value="" id="flexCheckDefaul4">
-                                                            <label class="form-check-label" for="flexCheckDefaul4">
-                                                                Require Personal Details
-                                                            </label>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="form-group mb-0">
-                                                <div class="row row-sm">
-                                                    <div class="col-md-2"> </div>
-                                                    <div class="col-md-10 d-inline-flex"> 
-                                                        <a class="me-4" href="javascript:void(0);">Deactivate Account</a> <a class="" href="javascript:void(0);">Change Password</a> 
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                               
-                            </ng-template>
-                        </ng-container>
+
                     </nav>
-                 
+
                 </div>
             </div>
         </div>
@@ -530,8 +165,6 @@
         <div class="card custom-card main-content-body-profile ">
             <div class="tab-content">
                 <div [ngbNavOutlet]="nav"></div>
-
-               
             </div>
         </div>
     </div>

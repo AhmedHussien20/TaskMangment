@@ -8,7 +8,7 @@ export interface Employee {
 }
 
 export interface EmployeeAddEdit {
-  branchId?: number;
+  branchId: number;
   title?: string;
   fullName: string;
   nationality?: string;

@@ -61,26 +61,31 @@ export class GenericFormComponent implements OnInit {
   }
 
   onFileAdded(event: any, field: any) {
-    const files = event.addedFiles ?? [];
-  console.log('Files added:', files);
-    if (field.multiple) {
-      this.formGroup.get(field.name)?.setValue(files);
-    } else {
-      this.formGroup.get(field.name)?.setValue(files[0] ?? null);
-    }
-  }
+  const control = this.formGroup.get(field.name);
+  if (!control) return;
 
-  onFileRemoved(event: any, field: any) {
-    const control = this.formGroup.get(field.name);
-    if (!control) return;
-
-    if (field.multiple) {
-      const files = (control.value || []).filter((f: any) => f !== event);
-      control.setValue(files);
-    } else {
-      control.setValue(null);
-    }
+  if (field.multiple) {
+    const currentFiles: File[] = control.value ?? [];
+    control.setValue([...currentFiles, event]);
+  } else {
+    control.setValue(event);
   }
+  console.log('Attachments value:', control.value);
+}
+
+ onFileRemoved(event: any, field: any) {
+  const control = this.formGroup.get(field.name);
+  if (!control) return;
+
+  if (field.multiple) {
+    const files = (control.value || []).filter((f: File) => f !== event);
+    control.setValue(files);
+  } else {
+    control.setValue(null);
+  }
+}
+
+
 
 
   getDropzoneConfig(field: any): DropzoneConfigInterface {

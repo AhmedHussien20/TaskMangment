@@ -137,7 +137,7 @@ namespace TaskMangment.Infrastructure.Services
             await _employeeRepo.AddAsync(employee);
             await _employeeRepo.SaveChangesAsync();
 
-            if (dto.Image != null)
+            if (dto.Attachments != null)
             {
                 var uploadsRoot = Path.Combine(
                     Directory.GetCurrentDirectory(),
@@ -147,21 +147,21 @@ namespace TaskMangment.Infrastructure.Services
 
                 Directory.CreateDirectory(uploadsRoot);
 
-                var fileName = $"{Guid.NewGuid()}_{dto.Image.FileName}";
+                var fileName = $"{Guid.NewGuid()}_{dto.Attachments.FileName}";
                 var filePath = Path.Combine(uploadsRoot, fileName);
 
                 using (var stream = new FileStream(filePath, FileMode.Create))
                 {
-                    await dto.Image.CopyToAsync(stream);
+                    await dto.Attachments.CopyToAsync(stream);
                 }
 
 
                 var  attachment = new Attachment
                 {
-                    FileName = dto.Image.FileName,
+                    FileName = dto.Attachments.FileName,
                     FilePath = $"uploads/comments/{fileName}",
-                    Size = dto.Image.Length,
-                    ContentType = dto.Image.ContentType,
+                    Size = dto.Attachments.Length,
+                    ContentType = dto.Attachments.ContentType,
                     UploadedBy = employee.Id,
                     UploadedAt = DateTime.UtcNow,
                     ReferenceId = employee.Id,
@@ -223,7 +223,7 @@ namespace TaskMangment.Infrastructure.Services
                 employee.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
             }
 
-            if (dto.Image != null)
+            if (dto.Attachments != null)
             {
                 var oldAttachment = await _attachmentRepo
                     .GetAll(a => a.ReferenceId == employee.Id && a.AttachmentType == AttachmentType.Employee)
@@ -242,20 +242,20 @@ namespace TaskMangment.Infrastructure.Services
                 var uploadsRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "employees");
                 Directory.CreateDirectory(uploadsRoot);
 
-                var fileName = $"{Guid.NewGuid()}_{dto.Image.FileName}";
+                var fileName = $"{Guid.NewGuid()}_{dto.Attachments.FileName}";
                 var filePath = Path.Combine(uploadsRoot, fileName);
 
                 using (var stream = new FileStream(filePath, FileMode.Create))
                 {
-                    await dto.Image.CopyToAsync(stream);
+                    await dto.Attachments.CopyToAsync(stream);
                 }
 
                 var attachment = new Attachment
                 {
-                    FileName = dto.Image.FileName,
+                    FileName = dto.Attachments.FileName,
                     FilePath = $"uploads/employees/{fileName}",
-                    Size = dto.Image.Length,
-                    ContentType = dto.Image.ContentType,
+                    Size = dto.Attachments.Length,
+                    ContentType = dto.Attachments.ContentType,
                     UploadedBy = employee.Id,
                     UploadedAt = DateTime.UtcNow,
                     ReferenceId = employee.Id,

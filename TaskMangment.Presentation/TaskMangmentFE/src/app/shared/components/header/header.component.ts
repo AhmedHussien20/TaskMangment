@@ -31,6 +31,16 @@ interface Item {
 })
 export class HeaderComponent implements OnInit, OnDestroy {
   user: any;
+  defaultAvatar = 'assets/images/user.png';
+
+  get profileImage(): string {
+  if (this.user?.profileImage) {
+    return this.user.profileImage;
+  }
+
+  return this.defaultAvatar;
+}
+
   Selection = [
     { label: 'Choose one', value: 1 },
     { label: 'T-Projects...', value: 2 },

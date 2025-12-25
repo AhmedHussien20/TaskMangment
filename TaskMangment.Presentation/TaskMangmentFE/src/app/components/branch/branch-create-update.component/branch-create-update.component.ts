@@ -169,36 +169,46 @@ export class BranchCreateUpdateComponent implements OnInit {
     });
   }
 
-  loadEmployees() {
-    const req = {
-      searchKey: '',
-      pageIndex: 1,
-      pageSize: 1000,
-      sortColumn: 'Id',
-      sortDirection: 'ASC'
-    };
+ loadEmployees() {
+  const request = {
+    searchKey: '',
+    pageIndex: 1,
+    pageSize: 1000,
+    sortColumn: 'Id',
+    sortDirection: 'ASC'
+  };
 
-    this.employeeService.getAll(req).subscribe(res => {
-      const list = res.data.data;
+  this.employeeService.getAll(request).subscribe(res => {
+    const list = res.data.data;
 
-      const managerField = this.formConfig.find(x => x.name === 'managerId');
-      const responsibleField = this.formConfig.find(x => x.name === 'responsibleId');
+    const managerField = this.formConfig.find(f => f.name === 'managerId');
+    const responsibleField = this.formConfig.find(f => f.name === 'responsibleId');
 
-      if (managerField) {
-        managerField.options = list.map((emp: Employee) => ({
-          label: emp.fullName,
-          value: emp.id
-        }));
-      }
+    if (managerField) {
+      managerField.options = list.map((emp: Employee) => ({
+        label: emp.fullName,
+        value: emp.id
+      }));
+    }
 
-      if (responsibleField) {
-        responsibleField.options = list.map((emp: Employee) => ({
-          label: emp.fullName,
-          value: emp.id
-        }));
-      }
-    });
-  }
+    if (responsibleField) {
+      responsibleField.options = list.map((emp: Employee) => ({
+        label: emp.fullName,
+        value: emp.id
+      }));
+    }
+
+    if (this.isEdit && this.branchId) {
+      this.branchService.getById(this.branchId).subscribe(res => {
+        const branch = res.data;
+        this.formGroup.patchValue({
+          managerId: branch.managerId,
+          responsibleId: branch.responsibleId
+        });
+      });
+    }
+  });
+}
 
   onSubmit(formValue: any) {
     if (this.formGroup.invalid) {

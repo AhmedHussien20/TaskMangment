@@ -412,7 +412,8 @@
     "VALIDATION_ERROR": "يرجى إدخال جميع الحقول المطلوبة بشكل صحيح.",
     "searchKey": "بحث باسم الموظف",
     "CONFIRM_PASSWORD": "تأكيد كلمة المرور",
-    "ROLE": "الدور"
+    "ROLE": "الدور",
+    "ATTACHMENTS" : "صورة الملف الشخصي"
   },
   "STUDENT": {
     "TITLE": "الطلاب",
@@ -565,5 +566,31 @@
     "ADD_SUBJECT": "إضافة مادة",
     "SUBJECT_PLACEHOLDER": "أدخل اسم المادة",
     "NO_SUBJECTS": "لا توجد مواد مضافة بعد"
-  }
+  },
+  "PROFILE" :{
+  "PROFILE": "الملف الشخصي",
+  "PAGES": "الصفحات",
+  "PROJECTS": "المشاريع",
+  "ABOUT": "حول",
+  "PERSONAL_PROFILE": "الملف الشخصي",
+  "BIO_DATA": "البيانات الأساسية",
+  "FULL_NAME": "الاسم الكامل",
+  "OFFICIAL_ACCOUNT_FOR": "الحساب الرسمي لـ",
+  "EXPERIENCE": "الخبرة",
+  "NO_TITLE_PROVIDED": "لا يوجد عنوان",
+  "QUALIFICATION_NOT_LISTED": "المؤهلات غير مدرجة",
+  "ID": "رقم التعريف",
+  "ORGANIZATION": "المنظمة",
+  "DEPARTMENT": "القسم",
+  "BRANCH": "الفرع",
+  "UNASSIGNED": "غير معين",
+  "COMPANY_REF": "رقم الشركة",
+  "CONTACT_INFORMATION": "معلومات الاتصال",
+  "MOBILE": "الهاتف المحمول",
+  "N_A": "غير متوفر",
+  "EMAIL_ADDRESS": "البريد الإلكتروني",
+  "LOCATION": "الموقع",
+  "NOT_PROVIDED": "غير متوفر",
+  "EDIT_PROFILE": "تعديل الملف الشخصي"
+}
 }

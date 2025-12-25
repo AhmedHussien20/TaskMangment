@@ -242,8 +242,8 @@ export class EmployeeCreateUpdateComponent implements OnInit {
     if (!this.employeeId) return;
 
     this.employeeService.getById(this.employeeId).subscribe(res => {
+      if (!res) return;
       const emp = res.data;
-
       this.formGroup.patchValue({
         fullName: emp.fullName,
         branchId: emp.branchId,
@@ -257,7 +257,7 @@ export class EmployeeCreateUpdateComponent implements OnInit {
         email: emp.email,
         
 
-        password: '', // Don't fill password in edit
+        password: '', 
         confirmPassword: '',
         
 
@@ -265,37 +265,27 @@ export class EmployeeCreateUpdateComponent implements OnInit {
     });
   }
 
-loadBranches() {
-  const req = {
-    searchKey: '',
-    pageIndex: 1,
-    pageSize: 500,
-    sortColumn: 'Id',
-    sortDirection: 'ASC'
-  };
+  loadBranches() {
+    const req = {
+      searchKey: '',
+      pageIndex: 1,
+      pageSize: 500,
+      sortColumn: 'Id',
+      sortDirection: 'ASC'
+    };
 
-  this.branchService.getAll(req).subscribe(res => {
-    const list: { id: number, name: string }[] = res.data.data;
+    this.branchService.getAll(req).subscribe(res => {
+      const list: { id: number, name: string }[] = res.data.data;
+      const field = this.formConfig.find(x => x.name === 'branchId');
 
-    const options = list.map(b => ({
-      label: b.name,
-      value: b.id
-    }));
-
-    const field = this.formConfig.find(x => x.name === 'branchId');
-    if (field) {
-      field.options = options;
-    }
-
-    if (this.isEdit && this.employeeId) {
-      const currentValue = this.formGroup.get('branchId')?.value;
-      if (currentValue) {
-        this.formGroup.get('branchId')?.setValue(currentValue);
+      if (field) {
+        field.options = list.map(b => ({
+          label: b.name,
+          value: b.id
+        }));
       }
-    }
-  });
-}
-
+    });
+  }
 
  /* loadRoles() {
     // Assuming you have a RoleService with getAll method
