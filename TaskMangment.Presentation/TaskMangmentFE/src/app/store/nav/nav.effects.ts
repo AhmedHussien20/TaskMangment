@@ -12,224 +12,92 @@ export class NavEffects {
   initializeMenu$: any;
   updateTranslations$: any;
 
-  private MENUITEMS: MenuItem[] = [
-    { headTitle: 'nav.dashboard.header' },
-    {
-      title: 'nav.dashboard.title',
-      path: '/dashboard',
-      type: 'link',
-      icon: 'ti-home',
-      active: false,
-      selected: false,
-      dirchange: false,
-    },
+private MENUITEMS: MenuItem[] = [
 
-    { headTitle: 'nav.applications.header' },
-    {
-      title: 'nav.apps.title',
-      icon: 'ti-write',
-      type: 'sub',
-      active: false,
-      selected: false,
-      dirchange: false,
-      children: [
-        {
-          title: 'nav.apps.area.title',
-          icon: 'ti-write',
-          type: 'sub',
-          path: '/area',
-          active: false,
-          selected: false,
-          dirchange: false,
-          children: [
-            {
-              title: 'nav.apps.area.list',
-              type: 'link',
-              path: '/area/area-list',
-              dirchange: false,
-            }
-             
-          ],
-        },
-        {
-          title: 'nav.apps.branch.title',
-          icon: 'ti-write',
-          type: 'sub',
-          path: '/branch',
-          active: false,
-          selected: false,
-          dirchange: false,
-          children: [
-            {
-              title: 'nav.apps.branch.list',
-              type: 'link',
-              path: '/branch/branch-list',
-              dirchange: false,
-            } 
-          ],
-        },
-        {
-          title: 'nav.apps.department.title',
-          icon: 'ti-write',
-          type: 'sub',
-          active: false,
-          selected: false,
-          dirchange: false,
-          children: [
-            {
-              title: 'nav.apps.department.list',
-              type: 'link',
-               path: '/department/department-list',
-              dirchange: false,
-            } 
-          ],
-        },
-        {
-          title: 'nav.apps.task.title',
-          icon: 'ti-write',
-          type: 'sub',
-          active: false,
-          selected: false,
-          dirchange: false,
-          children: [
-            {
-              title: 'nav.apps.task.list',
-              type: 'link',
-              path: '/task/task-list',
-              dirchange: false,
-            },
-          ],
-        },
-        {
-          title: 'nav.apps.group.title',
-          icon: 'ti-write',
-          type: 'sub',
-          path: '/group',
-          active: false,
-          selected: false,
-          dirchange: false,
-          children: [
-            { title: 'nav.apps.group.list', type: 'link', path: '/group/list', dirchange: false },
-          ],
-        },
-        {
-          title: 'nav.apps.configurations.title',
-          icon: 'ti-write',
-          type: 'sub',
-          path: '/configuration',
-          active: false,
-          selected: false,
-          dirchange: false,
-          children: [
-            {
-              title: 'nav.apps.configurations.onlineOrders',
-              type: 'link',
-              dirchange: false,
-            },
-            {
-              title: 'nav.apps.configurations.expiry',
-              type: 'link',
-              dirchange: false,
-            },
-            {
-              title: 'nav.apps.configurations.externalIntegration',
-              type: 'link',
-              dirchange: false,
-            },
-            {
-              title: 'nav.apps.configurations.moduleAvailability',
-              type: 'link',
-              path: '/configuration/modulesAvailabilityList',
-              dirchange: false,
-            },
-            {
-              title: 'nav.apps.configurations.modules',
-              type: 'link',
-              path: '/configuration/modules',
-              dirchange: false,
-            },
-            {
-              title: 'nav.apps.configurations.branches',
-              type: 'link',
-              path: '/configuration/branches',
-              dirchange: false,
-            },
-            {
-              title: 'nav.apps.configurations.campaigns',
-              type: 'link',
-              dirchange: false,
-            },
-            {
-              title: 'nav.apps.configurations.ads',
-              type: 'link',
-              dirchange: false,
-            },
-            {
-              title: 'nav.apps.configurations.notifications',
-              type: 'link',
-              dirchange: false,
-            },
-          ],
-        },
-      ],
-    },
+  // ================= Dashboard =================
+  { headTitle: 'nav.dashboard.header' },
+  {
+    title: 'nav.dashboard.title',
+    path: '/dashboard',
+    type: 'link',
+    icon: 'ti-home',
+  },
 
-    { headTitle: 'nav.components.header' },
-    {
-      title: 'nav.components.submenus.title',
-      icon: 'ti-panel',
-      type: 'sub',
-      active: false,
-      dirchange: false,
-      children: [
-        {
-          title: 'nav.components.submenus.level1',
-          type: 'empty',
-          dirchange: false,
-        },
-        {
-          title: 'nav.components.submenus.level2.title',
-          type: 'sub',
-          dirchange: false,
-          children: [
-            {
-              title: 'nav.components.submenus.level2.level2_0',
-              type: 'empty',
-              dirchange: false,
-            },
-            {
-              title: 'nav.components.submenus.level2.level2_1',
-              type: 'empty',
-              dirchange: false,
-            },
-            {
-              title: 'nav.components.submenus.level2.level2_2.title',
-              type: 'sub',
-              active: false,
-              dirchange: false,
-              children: [
-                {
-                  title: 'nav.components.submenus.level2.level2_2.level2_2_1',
-                  type: 'empty',
-                  dirchange: false,
-                },
-                {
-                  title: 'nav.components.submenus.level2.level2_2.level2_2_2',
-                  type: 'empty',
-                  dirchange: false,
-                },
-              ],
-            },
-          ],
-        },
-        {
-          title: 'nav.components.submenus.level3',
-          type: 'empty',
-          dirchange: false,
-        },
-      ],
-    },
-  ];
+  // ================= System Management =================
+  { headTitle: 'nav.applications.header' },
+  {
+    title: 'nav.apps.title',
+    icon: 'ti-layout',
+    type: 'sub',
+    children: [
+
+      // ---- Organization ----
+      {
+        title: 'nav.apps.organization.title',
+        icon: 'ti-map',
+        type: 'sub',
+        children: [
+          { title: 'nav.apps.area.list', type: 'link', path: '/area/area-list' },
+          { title: 'nav.apps.branch.list', type: 'link', path: '/branch/branch-list' },
+          { title: 'nav.apps.department.list', type: 'link', path: '/department/department-list' },
+        ],
+      },
+
+      // ---- Users & Permissions ----
+      {
+        title: 'nav.apps.employee.title',
+        icon: 'ti-user',
+        type: 'sub',
+        children: [
+          { title: 'nav.apps.employee.list', type: 'link', path: '/employee/employee-list' },
+          { title: 'nav.apps.role.list', type: 'link', path: '/role/role-list' },
+          { title: 'nav.apps.permission.list', type: 'link', path: '/role/permission-list' },
+        ],
+      },
+
+      // ---- Operations ----
+      {
+        title: 'nav.apps.operations.title',
+        icon: 'ti-clipboard',
+        type: 'sub',
+        children: [
+          { title: 'nav.apps.task.list', type: 'link', path: '/task/task-list' },
+          { title: 'nav.apps.calender.title', type: 'link', path: '/utilities/event-calender' },
+        ],
+      },
+
+      // ---- Education ----
+      {
+        title: 'nav.apps.education.title',
+        icon: 'ti-book',
+        type: 'sub',
+        children: [
+          { title: 'nav.apps.student.list', type: 'link', path: '/student/student-list' },
+          { title: 'nav.apps.course.list', type: 'link', path: '/course/course-list' },
+        ],
+      },
+
+      // ---- Configurations ----
+      {
+        title: 'nav.apps.configurations.title',
+        icon: 'ti-settings',
+        type: 'sub',
+        children: [
+          { title: 'nav.apps.configurations.moduleAvailability', type: 'link', path: '/configuration/modulesAvailabilityList' },
+          { title: 'nav.apps.configurations.modules', type: 'link', path: '/configuration/modules' },
+          { title: 'nav.apps.configurations.branches', type: 'link', path: '/configuration/branches' },
+          { title: 'nav.apps.configurations.onlineOrders', type: 'link' },
+          { title: 'nav.apps.configurations.externalIntegration', type: 'link' },
+          { title: 'nav.apps.configurations.notifications', type: 'link' },
+          { title: 'nav.apps.configurations.campaigns', type: 'link' },
+          { title: 'nav.apps.configurations.ads', type: 'link' },
+        ],
+      },
+    ],
+  },
+
+];
+
 
   constructor(private actions$: Actions, private translate: TranslateService) {
     console.log('NavEffects initialized:', this.actions$);
