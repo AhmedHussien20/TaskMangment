@@ -172,8 +172,7 @@ namespace TaskMangment.Infrastructure.Services
                     UploadedAt = DateTime.UtcNow,
                     ReferenceId = comment.Id,
                     AttachmentType = AttachmentType.Comment
-                    //ReferenceId = taskId,
-                    //AttachmentType = AttachmentType.Task,
+                   
                 };
 
                 await _attachmentRepo.AddAsync(attachment);

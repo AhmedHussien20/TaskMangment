@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Http;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -39,7 +40,9 @@ namespace TaskMangment.Application.DTOs
         public string Email { get; set; }
 
         [MaxLength(500)]
-        public string Password { get; set; } 
+        public string? Password { get; set; }
+        public IFormFile? Image { get; set; }
+
     }
 
     public class EmployeeGetDto

@@ -14,6 +14,8 @@ import { EmployeeService } from 'app/core/services/employee.service';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { ToastrService } from 'ngx-toastr';
+import { GenericFormComponent } from 'app/shared/components/generic-form/generic-form.component';
+import { EmployeeCreateUpdateComponent } from 'app/components/employee/employee-create-update/employee-create-update.component';
 @Component({
   selector: 'app-profile',
   standalone: true,
@@ -22,7 +24,7 @@ import { ToastrService } from 'ngx-toastr';
     NgSelectModule,
     GalleryModule,LightboxModule,RouterModule,
     SpkNgSelectComponent,SpkProfileComponent,SpkGalleryComponent,
-    FormsModule,CommonModule,ReactiveFormsModule],
+    FormsModule,CommonModule,ReactiveFormsModule,EmployeeCreateUpdateComponent],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.scss',
   encapsulation: ViewEncapsulation.None
@@ -30,15 +32,12 @@ import { ToastrService } from 'ngx-toastr';
 })
 export class ProfileComponent {
 
-   user: any;
+  user: any;
   employeeId!: number;
-  formGroup!: FormGroup;
+  defaultAvatar = 'assets/images/user.png';
+
 
   constructor(
-    private authService: AuthService,
-    private employeeService: EmployeeService,
-    private fb: FormBuilder,
-    private toastr: ToastrService
   ) {}
 
   ngOnInit(): void {
@@ -46,76 +45,21 @@ export class ProfileComponent {
     if (userData) {
       this.user = JSON.parse(userData);
       this.employeeId = this.user.userId;
-      this.loadEmployee(this.employeeId);
     }
-
-    this.buildForm();
+  }
+  get profileImage(): string {
+  if (this.user?.profileImage) {
+    return this.user.profileImage;
   }
 
-  buildForm() {
-    this.formGroup = this.fb.group({
-      fullName: ['', Validators.required],
-      branchId: [''],
-      title: [''],
-      nationality: [''],
-      identityNumber: [''],
-      mobile: [''],
-      address: [''],
-      qualification: [''],
-      email: ['', [Validators.required, Validators.email]],
-      password: [''],
-      confirmPassword: ['']
-    }, { validators: this.passwordMatchValidator });
-  }
+  return this.defaultAvatar;
+}
 
-  loadEmployee(id: number) {
-    this.employeeService.getById(id).subscribe(res => {
-      if (res.data) {
-        const emp = res.data;
-        this.formGroup.patchValue({
-          fullName: emp.fullName,
-          branchId: emp.branchId,
-          title: emp.title,
-          nationality: emp.nationality,
-          identityNumber: emp.identityNumber,
-          mobile: emp.mobile,
-          address: emp.address,
-          qualification: emp.qualification,
-          email: emp.email,
-          password: '',
-          confirmPassword: ''
-        });
-      }
-    });
-  }
-
-  passwordMatchValidator(formGroup: FormGroup) {
-    const password = formGroup.get('password')?.value;
-    const confirmPassword = formGroup.get('confirmPassword')?.value;
-
-    if (password !== confirmPassword) {
-      formGroup.get('confirmPassword')?.setErrors({ passwordMismatch: true });
-    } else {
-      formGroup.get('confirmPassword')?.setErrors(null);
+  onProfileUpdated() {
+    const userData = localStorage.getItem('userData');
+    if (userData) {
+      this.user = JSON.parse(userData);
     }
-
-    return null;
-  }
-
-  onSubmit() {
-    if (this.formGroup.invalid) {
-      this.formGroup.markAllAsTouched();
-      this.toastr.error('Please fix the errors in the form.');
-      return;
-    }
-
-    const submitData = { ...this.formGroup.value };
-    delete submitData.confirmPassword;
-    if (!submitData.password) delete submitData.password;
-
-    this.employeeService.update(this.employeeId, submitData).subscribe({
-      next: () => this.toastr.success('Profile updated successfully')
-    });
   }
 
 

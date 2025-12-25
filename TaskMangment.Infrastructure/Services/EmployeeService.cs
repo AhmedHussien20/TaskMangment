@@ -3,6 +3,7 @@ using Azure.Core;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,6 +30,7 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<EmployeeRole> _employeeRoleRepo;
         private readonly IRepository<Branch> _branchRepo;
         private readonly IRepository<Company> _companyRepository;
+        private readonly IRepository<Attachment> _attachmentRepo;
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
 
@@ -39,7 +41,8 @@ namespace TaskMangment.Infrastructure.Services
             IRepository<Branch> branchRepo,
             IRepository<Company> companyRepository,
             IMapper mapper,
-            ICachingService cache)
+            ICachingService cache,
+            IRepository<Attachment> attachmentRepo)
         {
             _employeeRepo = employeeRepo;
             _roleRepo = roleRepo;
@@ -49,6 +52,7 @@ namespace TaskMangment.Infrastructure.Services
 
             _mapper = mapper;
             _cache = cache;
+            _attachmentRepo = attachmentRepo;
         }
 
         public async Task<ApiResponse<PagedResponse<EmployeeGetDto>>> GetAllAsync(EmployeeRequest request)
@@ -118,6 +122,9 @@ namespace TaskMangment.Infrastructure.Services
             if (!await _companyRepository.IsExistAsync(CampanyId))
                 throw new AppException(ErrorCodes.CompanyNotFound, StatusCodes.Status400BadRequest);
 
+            if (string.IsNullOrWhiteSpace(dto.Password))
+                throw new AppException(ErrorCodes.Invalid, StatusCodes.Status400BadRequest);
+
 
             var employee = _mapper.Map<Employee>(dto);
             employee.CompanyId = CampanyId;
@@ -126,7 +133,46 @@ namespace TaskMangment.Infrastructure.Services
 
             var hasher = new PasswordHasher<Employee>();
             employee.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+
             await _employeeRepo.AddAsync(employee);
+            await _employeeRepo.SaveChangesAsync();
+
+            if (dto.Image != null)
+            {
+                var uploadsRoot = Path.Combine(
+                    Directory.GetCurrentDirectory(),
+                    "wwwroot",
+                    "uploads",
+                    "comments");
+
+                Directory.CreateDirectory(uploadsRoot);
+
+                var fileName = $"{Guid.NewGuid()}_{dto.Image.FileName}";
+                var filePath = Path.Combine(uploadsRoot, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await dto.Image.CopyToAsync(stream);
+                }
+
+
+                var  attachment = new Attachment
+                {
+                    FileName = dto.Image.FileName,
+                    FilePath = $"uploads/comments/{fileName}",
+                    Size = dto.Image.Length,
+                    ContentType = dto.Image.ContentType,
+                    UploadedBy = employee.Id,
+                    UploadedAt = DateTime.UtcNow,
+                    ReferenceId = employee.Id,
+                    AttachmentType = AttachmentType.Employee
+                   
+                };
+
+                await _attachmentRepo.AddAsync(attachment);
+                await _attachmentRepo.SaveChangesAsync();
+            }
+
             await _employeeRepo.SaveChangesAsync();
 
 
@@ -161,52 +207,78 @@ namespace TaskMangment.Infrastructure.Services
         {
             if (dto.BranchId.HasValue && !await _branchRepo.IsExistAsync(dto.BranchId.Value))
                 throw new AppException(
-                                    ErrorCodes.BranchNotFound,
-                                    StatusCodes.Status400BadRequest);
+                    ErrorCodes.BranchNotFound,
+                    StatusCodes.Status400BadRequest);
 
             var employee = await _employeeRepo.GetByIDAsync(id);
             if (employee == null)
                 throw new AppException(
-                                    ErrorCodes.EmployeeNotFound,
-                                    StatusCodes.Status400BadRequest);
+                    ErrorCodes.EmployeeNotFound,
+                    StatusCodes.Status400BadRequest);
+
             _mapper.Map(dto, employee);
-            employee.ModifiedDate = DateTime.UtcNow;
 
-            // TODO: Hash password if provided
-            // if(!string.IsNullOrWhiteSpace(dto.Password))
-            //    employee.PasswordHash = HashPassword(dto.Password);
+            if (!string.IsNullOrWhiteSpace(dto.Password))
+            {
+                employee.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+            }
 
+            if (dto.Image != null)
+            {
+                var oldAttachment = await _attachmentRepo
+                    .GetAll(a => a.ReferenceId == employee.Id && a.AttachmentType == AttachmentType.Employee)
+                    .FirstOrDefaultAsync();
 
+                if (oldAttachment != null)
+                {
+                    var oldFilePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", oldAttachment.FilePath);
+                    if (File.Exists(oldFilePath))
+                        File.Delete(oldFilePath);
 
-            // Update roles
-            //var oldRoles = await _employeeRoleRepo.GetAll(er => er.EmployeeId == id).ToListAsync();
-            //_employeeRoleRepo.DeleteRange(oldRoles);
+                    _attachmentRepo.SoftDelete(oldAttachment);
+                    await _attachmentRepo.SaveChangesAsync();
+                }
 
-            //foreach (var roleId in dto.RoleIds)
-            //{
-            //    if (!await _roleRepo.IsExistAsync(roleId))
-            //        return ApiResponse<EmployeeGetDto>.Fail($"Role with ID {roleId} not found");
+                var uploadsRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "employees");
+                Directory.CreateDirectory(uploadsRoot);
 
-            //    await _employeeRoleRepo.AddAsync(new EmployeeRole
-            //    {
-            //        EmployeeId = employee.Id,
-            //        RoleId = roleId
-            //    });
-            //}
+                var fileName = $"{Guid.NewGuid()}_{dto.Image.FileName}";
+                var filePath = Path.Combine(uploadsRoot, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await dto.Image.CopyToAsync(stream);
+                }
+
+                var attachment = new Attachment
+                {
+                    FileName = dto.Image.FileName,
+                    FilePath = $"uploads/employees/{fileName}",
+                    Size = dto.Image.Length,
+                    ContentType = dto.Image.ContentType,
+                    UploadedBy = employee.Id,
+                    UploadedAt = DateTime.UtcNow,
+                    ReferenceId = employee.Id,
+                    AttachmentType = AttachmentType.Employee
+                };
+
+                await _attachmentRepo.AddAsync(attachment);
+            }
+            // -------------------------------------------
 
             await _employeeRepo.SaveChangesAsync();
-           // await _employeeRoleRepo.SaveChangesAsync();
             await _cache.RemoveAsync("employees:");
 
             var fullEmployee = await _employeeRepo.GetAll(e => e.Id == employee.Id)
-                                                             .Include(e => e.Branch)
-                                                             .Include(e => e.EmployeeRoles)
-                                                                 .ThenInclude(er => er.Role)
-                                                             .FirstOrDefaultAsync();
+                .Include(e => e.Branch)
+                .Include(e => e.EmployeeRoles)
+                    .ThenInclude(er => er.Role)
+                .FirstOrDefaultAsync();
 
             var employeeDto = _mapper.Map<EmployeeGetDto>(fullEmployee);
             return ApiResponse<EmployeeGetDto>.Ok(employeeDto, "Employee updated successfully");
         }
+
 
         public async Task<ApiResponse<bool>> DeleteAsync(int id)
         {

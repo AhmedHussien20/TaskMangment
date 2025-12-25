@@ -39,14 +39,14 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Add([FromBody] EmployeeAddEditDto dto)
+        public async Task<IActionResult> Add([FromForm] EmployeeAddEditDto dto)
         {
             var result = await _service.AddAsync(dto, this.CompanyId);
             return Success(result.Data, "Employee added successfully");
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] EmployeeAddEditDto dto)
+        public async Task<IActionResult> Update(int id, [FromForm] EmployeeAddEditDto dto)
         {
             var result = await _service.UpdateAsync(id, dto);
             return Success(result.Data, "Employee updated successfully");

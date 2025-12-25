@@ -25,11 +25,16 @@ public class AuthService : IAuthService
     public async Task<ApiResponse<LoginResponse>> LoginAsync(LoginRequest request)
     {
         var user = await _db.Employees.FirstOrDefaultAsync(u => u.Email == request.Email);
-
+      
         if (user == null)
                 throw new AppException(
                     ErrorCodes.EmailNotFound,
                     StatusCodes.Status404NotFound);
+
+        var profileImage = await _db.Attachments
+          .Where(a => a.ReferenceId == user.Id && a.AttachmentType == AttachmentType.Employee && !a.IsDeleted)
+          .Select(a => a.FilePath)
+          .FirstOrDefaultAsync();
 
         if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
                 throw new AppException(
@@ -44,6 +49,7 @@ public class AuthService : IAuthService
                 Email = user.Email,
                 CompanyId = user.CompanyId,
                 BranchId = user.BranchId,
+
                 DepartmentId = user.DepartmentId,
                 JobId = user.JobId,
                 Title = user.Title,
@@ -53,6 +59,8 @@ public class AuthService : IAuthService
                 Address = user.Address,
                 Qualification = user.Qualification,
                 IsActive = user.IsActive,
+                ProfileImage = profileImage,
+
                 //Roles = roles,
                 //Permissions = permissions,
                 Token = token
