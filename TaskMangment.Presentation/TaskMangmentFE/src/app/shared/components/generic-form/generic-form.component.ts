@@ -62,7 +62,7 @@ export class GenericFormComponent implements OnInit {
 
   onFileAdded(event: any, field: any) {
     const files = event.addedFiles ?? [];
-
+  console.log('Files added:', files);
     if (field.multiple) {
       this.formGroup.get(field.name)?.setValue(files);
     } else {

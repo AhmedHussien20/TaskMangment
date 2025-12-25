@@ -19,6 +19,7 @@ export interface EmployeeAddEdit {
   roleIds: number[];
   email?: string;
   password?: string;
+  attachments?: File; 
 }
 
 export interface EmployeeRequest {

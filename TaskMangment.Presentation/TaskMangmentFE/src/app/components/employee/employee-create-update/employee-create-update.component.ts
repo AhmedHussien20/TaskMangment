@@ -191,7 +191,7 @@ export class EmployeeCreateUpdateComponent implements OnInit {
 
     password: [''],
     confirmPassword: [''],
-      attachments: [null]
+    attachments: [null]
 
   }, {
     validators: this.passwordMatchValidator
@@ -255,8 +255,11 @@ export class EmployeeCreateUpdateComponent implements OnInit {
         qualification: emp.qualification,
         roleIds: emp.roleIds || [],
         email: emp.email,
+        
+
         password: '', // Don't fill password in edit
-        confirmPassword: ''
+        confirmPassword: '',
+        
 
       });
     });
