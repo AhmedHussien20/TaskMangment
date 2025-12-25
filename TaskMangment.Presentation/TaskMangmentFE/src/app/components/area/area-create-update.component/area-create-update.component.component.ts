@@ -40,7 +40,7 @@ export class AreaCreateUpdateComponent implements OnInit {
   breadcrumbs = ['Home', 'Areas'];
   activeitem = 'AREA.create';
 
-  formGroup!: FormGroup; // ← أضف !
+  formGroup!: FormGroup;
 
   formConfig: FormFieldConfig[] = [
     {

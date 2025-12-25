@@ -378,9 +378,6 @@
     
 
 
-
-
-
   },
   "EMPLOYEE": {
     "TITLE": "Employees",
@@ -412,7 +409,8 @@
     "DELETE_FAILED": "Failed to delete employee",
     "VALIDATION_ERROR": "Please fill in all required fields correctly.",
     "searchKey": "Search by employee name",
-    "CONFIRM_PASSWORD": "Confirm Password"
+    "CONFIRM_PASSWORD": "Confirm Password",
+    "ATTACHMENTS" : "Profile image"
   },
   "STUDENT": {
     "TITLE": "Students",
@@ -555,6 +553,31 @@
     "ADD_SUBJECT": "Add Subject",
     "SUBJECT_PLACEHOLDER": "Enter subject name",
     "NO_SUBJECTS": "No subjects added yet"
-
-  }
+  },
+  "PROFILE":{
+  "PROFILE": "Profile",
+  "PAGES": "Pages",
+  "PROJECTS": "Projects",
+  "ABOUT": "About",
+  "PERSONAL_PROFILE": "Personal Profile",
+  "BIO_DATA": "Bio Data",
+  "FULL_NAME": "Full Name",
+  "OFFICIAL_ACCOUNT_FOR": "Official registered account for",
+  "EXPERIENCE": "Experience",
+  "NO_TITLE_PROVIDED": "No Title Provided",
+  "QUALIFICATION_NOT_LISTED": "Qualification not listed",
+  "ID": "ID",
+  "ORGANIZATION": "Organization",
+  "DEPARTMENT": "Department",
+  "BRANCH": "Branch",
+  "UNASSIGNED": "Unassigned",
+  "COMPANY_REF": "Company Ref",
+  "CONTACT_INFORMATION": "Contact Information",
+  "MOBILE": "Mobile",
+  "N_A": "N/A",
+  "EMAIL_ADDRESS": "Email Address",
+  "LOCATION": "Location",
+  "NOT_PROVIDED": "Not Provided",
+  "EDIT_PROFILE": "Edit Profile"
+}
 }
