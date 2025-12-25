@@ -11,3 +11,33 @@ textarea.form-control {
   min-height: 100px;
   line-height: 1.8;
 }
+
+.generic-form {
+
+  label {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  .form-control,
+  .ng-select {
+    font-size: 0.95rem;
+    min-height: 42px;
+  }
+
+  textarea.form-control {
+    min-height: 120px;
+    resize: vertical;
+  }
+
+  .dropzone-container {
+    min-height: 140px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+  }
+
+  .dropzone-container .dz-message {
+    font-weight: 500;
+  }
+}

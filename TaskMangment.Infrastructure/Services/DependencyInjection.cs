@@ -55,7 +55,7 @@ namespace TaskMangment.Infrastructure.Services
             services.AddScoped<ICalenderEventsService, CalendarEventService>();
             services.AddScoped<ITaskDiscountService, TaskDiscountService>();
             services.AddScoped<DataSeeder>();
-
+            services.AddScoped<IOnlineUserService, OnlineUserService>();
 
 
 

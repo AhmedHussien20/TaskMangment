@@ -26,12 +26,12 @@ export class EmployeeService {
   }
 
   // POST /Employee
-  create(model: EmployeeAddEdit): Observable<BaseResponse<any>> {
+  create(model: FormData): Observable<BaseResponse<any>> {
     return this.api.post<BaseResponse<any>>(this.service, '', model);
   }
 
   // PUT /Employee/{id}
-  update(id: number, model: EmployeeAddEdit): Observable<BaseResponse<any>> {
+  update(id: number, model: FormData): Observable<BaseResponse<any>> {
     return this.api.put<BaseResponse<any>>(this.service, `${id}`, model);
   }
 

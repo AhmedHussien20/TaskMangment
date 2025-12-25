@@ -160,8 +160,44 @@ namespace TaskMangment.Infrastructure.Seeding
 
                 يرجى التأكد من إنهاء المهمة في الموعد المحدد أو اتخاذ الإجراء اللازم.
                 " + LayoutFooter
-                }
+                },
+                new EmailTemplate
+                {
+                    Key = "TaskAssignedToExistingTask",
+                    SubjectTemplate = "تم إسناد مهمة إليك: {{TaskTitle}}",
+                    BodyTemplate = LayoutHeader + @"
+                    مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
 
+                    نود إعلامك بأنه تم <strong>إسنادك</strong> إلى مهمة موجودة بالفعل ضمن النظام.<br/><br/>
+
+                    <strong>تفاصيل المهمة:</strong><br/>
+                    <strong>عنوان المهمة:</strong> {{TaskTitle}}<br/>
+                    <strong>الوصف:</strong> {{TaskDescription}}<br/>
+                    <strong>تاريخ الاستحقاق:</strong> {{DueDate}}<br/><br/>
+
+                    يرجى مراجعة تفاصيل المهمة والبدء في تنفيذها في أقرب وقت ممكن.<br/><br/>
+
+                    في حال وجود أي استفسار، يرجى التواصل مع مديرك المباشر.
+                    " + LayoutFooter
+                },
+                new EmailTemplate
+                {
+                    Key = "TaskUnAssignedFromExistingTask",
+                    SubjectTemplate = "تم إلغاء إسنادك من المهمة: {{TaskTitle}}",
+                    BodyTemplate = LayoutHeader + @"
+                    مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
+
+                    نود إعلامك بأنه تم <strong>إلغاء إسنادك</strong> من المهمة التالية:<br/><br/>
+
+                    <strong>تفاصيل المهمة:</strong><br/>
+                    <strong>عنوان المهمة:</strong> {{TaskTitle}}<br/>
+                    <strong>الوصف:</strong> {{TaskDescription}}<br/><br/>
+
+                    لم يعد مطلوبًا منك العمل على هذه المهمة حاليًا.<br/><br/>
+
+                    في حال كان لديك أي استفسار بخصوص هذا التغيير، يرجى التواصل مع مديرك المباشر.
+                    " + LayoutFooter
+                }
             );
 
             context.SaveChanges();
