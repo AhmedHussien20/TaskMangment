@@ -123,7 +123,15 @@ export class EmployeeCreateUpdateComponent implements OnInit {
       validations: { required: !this.isEdit, maxlength: 500 , equalto: 'password' }, 
       defaultValue: '',
       showPassword: false
-    }
+    },
+    {
+    type: 'file',
+    name: 'attachments',
+    label: 'FORM.ATTACHMENTS',
+    multiple: true,
+    accept: 'image/*,.pdf',
+    maxFiles: 5
+  }
   ];
 
   constructor(
@@ -182,7 +190,9 @@ export class EmployeeCreateUpdateComponent implements OnInit {
     ]],
 
     password: [''],
-    confirmPassword: ['']
+    confirmPassword: [''],
+      attachments: [null]
+
   }, {
     validators: this.passwordMatchValidator
   });
@@ -287,40 +297,54 @@ export class EmployeeCreateUpdateComponent implements OnInit {
   
   }*/
 
-  onSubmit(formValue: any) {
-    if (this.formGroup.invalid) {
-      this.formGroup.markAllAsTouched();
-      this.toastr.error(this.translate.instant('FORM.VALIDATION_ERROR'));
-      return;
-    }
+ onSubmit(formValue: any) {
+  if (this.formGroup.invalid) {
+    this.formGroup.markAllAsTouched();
+    this.toastr.error(this.translate.instant('FORM.VALIDATION_ERROR'));
+    return;
+  }
 
-    // Remove password field if empty in edit mode
-      const submitData = { ...this.formGroup.value };
-    delete submitData.confirmPassword;
-    
-    // Remove password field if empty in edit mode
-    if (this.isEdit && !submitData.password) {
-      delete submitData.password;
-    }
+  const formData = new FormData();
 
-    // UPDATE
-    if (this.isEdit && this.employeeId) {
-      this.employeeService.update(this.employeeId, submitData).subscribe({
-        next: () => {
-          this.toastr.success(this.translate.instant('EMPLOYEE.UPDATE_SUCCESS'));
-          this.formSubmitted.emit();
-        }
+  Object.keys(formValue).forEach(key => {
+    if (key !== 'attachments' && formValue[key] !== null && formValue[key] !== undefined) {
+      formData.append(key, formValue[key]);
+    }
+  });
+
+  const files = formValue.attachments;
+  if (files) {
+    if (Array.isArray(files)) {
+      files.forEach((file: File) => {
+        formData.append('attachments', file);
       });
-    }
-
-    // CREATE
-    else {
-      this.employeeService.create(submitData).subscribe({
-        next: () => {
-          this.toastr.success(this.translate.instant('EMPLOYEE.CREATE_SUCCESS'));
-          this.formSubmitted.emit();
-        }
-      });
+    } else {
+      formData.append('attachments', files);
     }
   }
+
+  formData.delete('confirmPassword');
+
+  if (this.isEdit && this.employeeId) {
+    if (!formValue.password) {
+      formData.delete('password');
+    }
+
+    this.employeeService.update(this.employeeId, formData).subscribe({
+      next: () => {
+        this.toastr.success(this.translate.instant('EMPLOYEE.UPDATE_SUCCESS'));
+        this.formSubmitted.emit();
+      }
+    });
+  }
+
+  else {
+    this.employeeService.create(formData).subscribe({
+      next: () => {
+        this.toastr.success(this.translate.instant('EMPLOYEE.CREATE_SUCCESS'));
+        this.formSubmitted.emit();
+      }
+    });
+  }
+} 
 }
