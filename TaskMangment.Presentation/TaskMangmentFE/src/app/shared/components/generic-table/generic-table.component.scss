@@ -109,3 +109,118 @@ tr.row-clickable {
 tr.row-clickable:hover {
   background-color: #f8f9fa;
 }
+.generic-table-container {
+
+  /* ====== HEADER ====== */
+  h5 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  /* ====== FILTERS ====== */
+  .filter-header {
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 8px 12px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    margin-bottom: 6px;
+  }
+
+  .filter-card {
+    padding: 12px;
+    border: 1px solid #eee;
+    border-radius: 6px;
+    background: #fff;
+  }
+
+  .filter-card label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+
+  .filter-card .form-control,
+  .filter-card .form-select {
+    font-size: 0.85rem;
+    min-height: 36px;
+  }
+
+  /* ====== TABLE ====== */
+  table {
+    font-size: 0.88rem;
+  }
+
+  thead th {
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
+    vertical-align: middle;
+    background-color: #f8f9fa;
+  }
+
+  tbody td {
+    vertical-align: middle;
+    padding: 10px 8px;
+  }
+
+  tbody tr {
+    transition: background-color 0.15s ease-in-out;
+  }
+
+  tbody tr:hover {
+    background-color: #f5f7fa;
+  }
+
+  /* ====== BADGES ====== */
+  .badge {
+    font-size: 0.75rem;
+    padding: 5px 8px;
+    font-weight: 500;
+  }
+
+  /* ====== ACTION BUTTONS ====== */
+  .btn-sm {
+    font-size: 0.75rem;
+    padding: 4px 8px;
+  }
+
+  .btn-sm i {
+    font-size: 0.8rem;
+  }
+
+  /* ====== ICON ACTION ====== */
+  td button.btn-outline-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  /* ====== PAGINATION ====== */
+  .pagination {
+    font-size: 0.8rem;
+  }
+
+  .page-link {
+    padding: 4px 8px;
+  }
+
+  /* ====== NO DATA ====== */
+  .text-muted {
+    font-size: 0.85rem;
+  }
+
+  /* ====== CHECKBOX ====== */
+  .form-check-input {
+    transform: scale(0.9);
+  }
+
+  /* ====== COLUMN RESIZER ====== */
+  .col-resizer {
+    width: 5px;
+    cursor: col-resize;
+    height: 100%;
+  }
+}

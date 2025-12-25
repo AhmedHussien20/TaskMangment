@@ -13,9 +13,6 @@
     "DELETE_BUTTON": "نعم، احذف",
     "CANCEL_BUTTON": "إلغاء",
     "DELETE_SUCCESS": "تم الحذف بنجاح"
-
-
-
   },
   "validation": {
     "required": "هذا الحقل مطلوب",
@@ -49,9 +46,28 @@
         "title": "المهام",
         "list": "قائمة المهام"
       },
-      "group": {
-        "title": "المجاميع",
-        "list": "قائمة المجاميع"
+      "employee": {
+        "title": "الموظفين",
+        "list": "قائمة الموظفين"
+      },
+      "role": {
+        "title": "الصلاحيات",
+        "list": "قائمة الصلاحيات"
+      },
+      "permission": {
+        "title": "التصاريح",
+        "list": "قائمة التصاريح"
+      },
+      "calender": {
+        "title": "التقويم"
+      },
+      "student": {
+        "title": " الطلاب",
+        "list": "قائمة الطلاب"
+      },
+      "course": {
+        "title": "الدورات",
+        "list": "قائمة الدورات"
       },
       "configurations": {
         "title": "الإعدادات",
@@ -64,6 +80,15 @@
         "campaigns": "الحملات",
         "ads": "الإعلانات",
         "notifications": "الإشعارات"
+      },
+      "organization": {
+        "title": "الهيكل الإداري"
+      },
+      "operations": {
+        "title": "التشغيل"
+      },
+      "education": {
+        "title": "التعليم"
       }
     },
     "components": {
@@ -164,7 +189,6 @@
     "SELECT": "اختر",
     "PATTERN_INVALID_NUMBER": "ادخل رقم صحيح",
     "PATTERN_INVALID_EMAIL": "ادخل بريد إلكتروني صحيح"
-
   },
   "VALIDATION": {
     "REQUIRED": "هذا الحقل مطلوب",
@@ -248,8 +272,6 @@
     "TASK.STATUS_IN_PROGRESS": "قيد التنفيذ",
     "TASK.STATUS_CLOSED": "مغلقة",
     "TASK.STATUS_ARCHIVED": "مؤرشفة",
-
-   
     "TASK_DETAILS": "تفاصيل المهمة",
     "COMMENT_ALLOW_PERIOD": "فترة السماح للتعليق",
     "MAX_WARNINGS": "الحد الأقصى للتحذيرات",
@@ -264,9 +286,7 @@
     "UPDATE_FAILED": "فشل تعديل المهمة",
     "searchKey": "بحث عن المهام",
     "ID": "الكود",
-
-
-"CLOSE_REQUEST_WARNING_INFO": "ملحوظة هامة: سيتم إرسال طلب الإغلاق إلى جهة التكليف ويجب عليك الاستمرار في التفاعل مع المهمة حتى يتم الرد.",
+    "CLOSE_REQUEST_WARNING_INFO": "ملحوظة هامة: سيتم إرسال طلب الإغلاق إلى جهة التكليف ويجب عليك الاستمرار في التفاعل مع المهمة حتى يتم الرد.",
     "EXTEND_REQUEST_TITLE": "طلب تمديد للمهمة",
     "EXTEND_REQUEST_NOTE": "سيتم إرسال طلب التمديد إلى جهة التكليف ويجب عليك الاستمرار في التفاعل مع المهمة حتى يتم الرد.",
     "EXTEND_REQUEST_PLACEHOLDER": "اذكر بإختصار سبب طلبك لتمديد المهمة",
@@ -359,15 +379,6 @@
     "WARNING_SUCCESS": "تم إرسال التحذير بنجاح",
     "PENALTY_SUCCESS": "تم إرسال الخصم بنجاح",
     "COMMENT_SUCCESS": "تم إضافة التعليق بنجاح"
-    
-
-
-
-
-
-
-
-
   },
   "EMPLOYEE": {
     "LIST_TITLE": "قائمة الموظفين",
@@ -554,6 +565,5 @@
     "ADD_SUBJECT": "إضافة مادة",
     "SUBJECT_PLACEHOLDER": "أدخل اسم المادة",
     "NO_SUBJECTS": "لا توجد مواد مضافة بعد"
-
   }
 }
