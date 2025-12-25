@@ -262,27 +262,37 @@ export class EmployeeCreateUpdateComponent implements OnInit {
     });
   }
 
-  loadBranches() {
-    const req = {
-      searchKey: '',
-      pageIndex: 1,
-      pageSize: 500,
-      sortColumn: 'Id',
-      sortDirection: 'ASC'
-    };
+loadBranches() {
+  const req = {
+    searchKey: '',
+    pageIndex: 1,
+    pageSize: 500,
+    sortColumn: 'Id',
+    sortDirection: 'ASC'
+  };
 
-    this.branchService.getAll(req).subscribe(res => {
-      const list: { id: number, name: string }[] = res.data.data;
-      const field = this.formConfig.find(x => x.name === 'branchId');
+  this.branchService.getAll(req).subscribe(res => {
+    const list: { id: number, name: string }[] = res.data.data;
 
-      if (field) {
-        field.options = list.map(b => ({
-          label: b.name,
-          value: b.id
-        }));
+    const options = list.map(b => ({
+      label: b.name,
+      value: b.id
+    }));
+
+    const field = this.formConfig.find(x => x.name === 'branchId');
+    if (field) {
+      field.options = options;
+    }
+
+    if (this.isEdit && this.employeeId) {
+      const currentValue = this.formGroup.get('branchId')?.value;
+      if (currentValue) {
+        this.formGroup.get('branchId')?.setValue(currentValue);
       }
-    });
-  }
+    }
+  });
+}
+
 
  /* loadRoles() {
     // Assuming you have a RoleService with getAll method
