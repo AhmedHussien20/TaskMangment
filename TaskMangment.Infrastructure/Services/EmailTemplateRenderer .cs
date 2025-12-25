@@ -80,7 +80,9 @@ namespace TaskMangment.Infrastructure.Services
                             .Select(t => new
                             {
                                 t.Title,
-                                t.DueDate
+                                t.DueDate,
+                                t.Description
+
                             })
                             .FirstOrDefaultAsync();
 
@@ -90,7 +92,9 @@ namespace TaskMangment.Infrastructure.Services
                         return new Dictionary<string, string>
                         {
                             ["TaskTitle"] = task.Title,
-                            ["DueDate"] = task.DueDate?.ToString("yyyy-MM-dd") ?? "-"
+                            ["DueDate"] = task.DueDate?.ToString("yyyy-MM-dd") ?? "-",
+                            ["TaskDescription"] = task.Description
+
                         };
                     }
 

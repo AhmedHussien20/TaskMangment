@@ -4,21 +4,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using TaskMangment.Application.Common.ApiRequests.Notification;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Notification;
 using TaskMangment.Application.Interfaces.Services;
-using TaskMangment.Domain.Entities;
 using TaskMangment.Domain.Event;
 
 namespace TaskMangment.Application.Behaviors
 {
-    public class TaskAssignedEventHandler : IEventHandler<TaskAssignedEvent>
+    public class TaskUnAssignedEventHandler : IEventHandler<TaskUnAssignedEvent>
     {
         private readonly INotificationService _notificationService;
         private readonly IStringLocalizer _localizer;
 
-        public TaskAssignedEventHandler(
+        public TaskUnAssignedEventHandler(
             INotificationService notificationService,
             IStringLocalizerFactory factory)
         {
@@ -26,10 +24,10 @@ namespace TaskMangment.Application.Behaviors
             _localizer = factory.Create("TaskNotification", "TaskMangment.API");
         }
 
-        public async Task Handle(TaskAssignedEvent ev)
+        public async Task Handle(TaskUnAssignedEvent ev)
         {
             var messageTemplate = _localizer[
-                NotificationCode.TaskAssignedNotification
+                NotificationCode.TaskUnAssignedNotification
             ];
 
             var message = string.Format(
@@ -37,7 +35,7 @@ namespace TaskMangment.Application.Behaviors
                 ev.TaskTitle
             );
 
-            foreach (var empId in ev.AssignedEmployeeIds)
+            foreach (var empId in ev.UnAssignedEmployeeIds)
             {
                 await _notificationService.SendAsync(
                     empId,
@@ -48,5 +46,4 @@ namespace TaskMangment.Application.Behaviors
             }
         }
     }
-
 }

@@ -163,7 +163,7 @@
     <value>لم يتم تعينه</value>
   </data>
   <data name="ALREADY_REVIEWED" xml:space="preserve">
-    <value>تم تلقيه بالفعل</value>
+    <value>تم تلقي هذا الطلب بالفعل</value>
   </data>
   <data name="COMPANY_NOT_FOUND" xml:space="preserve">
     <value>الشركة غير موجودة</value>
@@ -184,6 +184,6 @@
     <value>موجود بالفعل</value>
   </data>
   <data name="ALREADY_ASSIGNED" xml:space="preserve">
-    <value>تم تعينه بالفعل</value>
+    <value>تم تعين هذا الموظف بالفعل</value>
   </data>
 </root>

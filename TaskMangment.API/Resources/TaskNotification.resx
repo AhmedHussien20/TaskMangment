@@ -132,4 +132,10 @@
   <data name="TASK_CLOSE_REQUEST_NOTIFICATION" xml:space="preserve">
     <value>A new close request on task: {0} from {1}</value>
   </data>
+  <data name="TASK_ASSIGNED_NOTIFICATION" xml:space="preserve">
+    <value>A new task has been assigned to you: {0}</value>
+  </data>
+  <data name="TASK_UNASSIGNED_NOTIFICATION" xml:space="preserve">
+    <value>you have been removed from {0}</value>
+  </data>
 </root>

@@ -2,11 +2,12 @@ import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { TaskPenaltyService } from 'app/core/services/task-penalty.service';
 import { TaskService } from 'app/core/services/task.service';
 import { DiscountAddEditDto } from 'app/core/models/task/task-penalty';
 import { SimpleEmployee } from 'app/core/models/task/task';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-penalty-modal',
@@ -26,7 +27,9 @@ export class PenaltyModalComponent implements OnInit {
     public modal: NgbActiveModal,
     private fb: FormBuilder,
     private penaltyService: TaskPenaltyService,
-    private employeeService: TaskService
+    private employeeService: TaskService,
+    private toastr: ToastrService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -61,12 +64,9 @@ export class PenaltyModalComponent implements OnInit {
 
     this.penaltyService.create(this.taskId, model).subscribe({
       next: () => {
+        this.toastr.success(this.translate.instant('TASK.PENALTY_SUCCESS'));
         this.isSubmitting = false;
         this.modal.close(true);
-      },
-      error: (err) => {
-        console.error('Failed to submit penalty', err);
-        this.isSubmitting = false;
       }
     });
   }

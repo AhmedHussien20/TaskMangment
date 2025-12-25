@@ -8,6 +8,8 @@ namespace TaskMangment.Application.Common.Notification
 {
     public class NotificationCode
     {
+        public const string TaskAssignedNotification = "TASK_ASSIGNED_NOTIFICATION";
+        public const string TaskUnAssignedNotification = "TASK_UNASSIGNED_NOTIFICATION";
         public const string NotFound = "NOT_FOUND";
         public const string TaskExtensionRequestNotification = "TASK_EXTENSION_REQUEST_NOTIFICATION";
         public const string TaskCloseRequestNotification = "TASK_CLOSE_REQUEST_NOTIFICATION";

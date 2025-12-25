@@ -13,6 +13,9 @@ import { SignalRService } from 'app/core/services/signalr.service';
 import { NotificationApiService } from 'app/core/services/notification.service';
 
 interface Item {
+
+   user: any;
+
   id: number;
   name: string;
   type: string;
@@ -27,6 +30,7 @@ interface Item {
   styleUrls: ['./header.component.scss']
 })
 export class HeaderComponent implements OnInit, OnDestroy {
+  user: any;
   Selection = [
     { label: 'Choose one', value: 1 },
     { label: 'T-Projects...', value: 2 },
@@ -35,6 +39,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
     { label: 'Team Building', value: 5 },
   ]
   private offcanvasService = inject(NgbOffcanvas);
+
+  
   open() {
     this.offcanvasService.open(SwitcherComponent, {
       position: 'end',
@@ -67,7 +73,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private translate: TranslationService,
     private signalR: SignalRService,
-    private notificationService: NotificationApiService
+    private notificationService: NotificationApiService,
   ) {
     this.layoutSubscription = layoutService.changeEmitted.subscribe(
       direction => {
@@ -76,6 +82,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
     )
    
   }
+
+  
 
   categories = [
     { id: 1, name: 'IT Projects' },
@@ -317,7 +325,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
   public text!: string;
   public SearchResultEmpty: boolean = false;
 
+  
   ngOnInit(): void {
+    this.user = this.authService.getCurrentUser();
     this.menuitemsSubscribe$ = this.navServices.getMenuItems().subscribe({
       next: (menuItems) => {
         if (menuItems) {

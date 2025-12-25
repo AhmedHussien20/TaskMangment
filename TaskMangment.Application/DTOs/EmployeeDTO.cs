@@ -46,9 +46,16 @@ namespace TaskMangment.Application.DTOs
     {
         public int Id { get; set; }
         public string FullName { get; set; }
+        public string? Title { get; set; }
         public string BranchName { get; set; }
         public string Email { get; set; }
         public string Mobile { get; set; }
+        public string Qualification { get; set; }
+        public string Address { get; set; }
+        public string Nationality { get; set; }
+        public string IdentityNumber { get; set; }
         public List<string> Roles { get; set; } = new();
+
+
     }
 }
