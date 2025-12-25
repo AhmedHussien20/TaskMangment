@@ -40,9 +40,9 @@ namespace TaskMangment.Application.DTOs
         public string Email { get; set; }
 
         [MaxLength(500)]
-        public string Password { get; set; }
+        public string? Password { get; set; }
 
-        public List<IFormFile>? Attachments { get; set; }
+        public IFormFile? Attachments { get; set; }
 
     }
 
