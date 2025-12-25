@@ -43,6 +43,7 @@ namespace TaskMangment.Application.Common.Errors
         public const string AlreadyExists = "ALREADY_EXISTS";
         public const string AlreadyAssigned = "ALREADY_ASSIGNED";
 
+        public const string Unauthorized = "Unauthorized";
     }
 
 }

@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 
 namespace TaskMangment.Application.Interfaces.Services
 {
-    public interface ISignalRNotifier
+    public interface IOnlineUserService
     {
-        Task NotifyAsync(int userId, string message);
+        bool IsUserOnline(int userId);
     }
+
 }

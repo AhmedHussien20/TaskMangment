@@ -3,11 +3,13 @@ import { CommonModule, Location } from '@angular/common';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { NgSelectModule } from '@ng-select/ng-select';
+import { DropzoneComponent, DropzoneConfigInterface, DropzoneModule } from 'ngx-dropzone-wrapper';
+import { FormFieldConfig } from 'app/core/models/form-field-config';
 
 @Component({
   selector: 'app-generic-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslateModule, NgSelectModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslateModule, NgSelectModule, DropzoneModule],
   templateUrl: './generic-form.component.html',
   styleUrls: ['./generic-form.component.scss']
 })
@@ -57,5 +59,53 @@ export class GenericFormComponent implements OnInit {
   onImageError(event: any) {
     event.target.src = 'assets/images/user.png';
   }
+
+  onFileAdded(event: any, field: any) {
+    const files = event.addedFiles ?? [];
+
+    if (field.multiple) {
+      this.formGroup.get(field.name)?.setValue(files);
+    } else {
+      this.formGroup.get(field.name)?.setValue(files[0] ?? null);
+    }
+  }
+
+  onFileRemoved(event: any, field: any) {
+    const control = this.formGroup.get(field.name);
+    if (!control) return;
+
+    if (field.multiple) {
+      const files = (control.value || []).filter((f: any) => f !== event);
+      control.setValue(files);
+    } else {
+      control.setValue(null);
+    }
+  }
+
+
+  getDropzoneConfig(field: any): DropzoneConfigInterface {
+    return {
+      url: 'no-upload',
+      autoProcessQueue: false,
+      clickable: true,
+      maxFiles: field.multiple ? (field.maxFiles ?? 10) : 1,
+      acceptedFiles: field.accept ?? null
+    };
+  }
+
+  get orderedFields(): any[] {
+  if (!this.formConfig) return [];
+
+  const normalFields = this.formConfig.filter(
+    f => f.type !== 'textarea' && f.type !== 'file'
+  );
+
+  const fileFields = this.formConfig.filter(f => f.type === 'file');
+  const textareas = this.formConfig.filter(f => f.type === 'textarea');
+
+  // normal → file → textarea
+  return [...normalFields, ...fileFields, ...textareas];
+}
+
 
 }

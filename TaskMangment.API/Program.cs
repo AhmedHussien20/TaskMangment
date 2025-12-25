@@ -1,14 +1,11 @@
 ﻿using Hangfire;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authentication.JwtBearer; 
 using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Globalization;
-using System.Text;
-using TaskMangment.API.Extensions;
-using TaskMangment.API.Filters;
-using TaskMangment.API.Middlewares;
+using System.Text; 
+using TaskMangment.API.Filters; 
 using TaskMangment.Application.Behaviors;
 using TaskMangment.Application.Behaviors.EmailHandlers;
 using TaskMangment.Application.Common;
@@ -18,13 +15,12 @@ using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Domain.Event;
 using TaskMangment.Hangfire.Jobs;
-using TaskMangment.Infrastructure;
-using TaskMangment.Infrastructure.Caching;
+using TaskMangment.Infrastructure; 
 using TaskMangment.Infrastructure.DataContext;
-using TaskMangment.Infrastructure.Repositories;
-using TaskMangment.Infrastructure.Seeding;
+using TaskMangment.Infrastructure.Repositories; 
 using TaskMangment.Infrastructure.Services;
 using TaskMangment.Infrastructure.SignalR;
+using Serilog;
 
 namespace TaskMangment.API
 {
@@ -101,8 +97,7 @@ namespace TaskMangment.API
             builder.Services.AddSignalR();
 
 
-            builder.Services.AddScoped<IEmailTemplateRenderer, EmailTemplateRenderer>();
-            builder.Services.AddScoped<ISignalRNotifier, SignalRNotifier>();
+            builder.Services.AddScoped<IEmailTemplateRenderer, EmailTemplateRenderer>(); 
             builder.Services.AddScoped<INotificationService, NotificationService>();
             builder.Services.AddScoped<IEmailQueueService, EmailQueueService>();
             builder.Services.AddScoped<ITaskDueTodayEmailJob, TaskDueTodayEmailJob>();
@@ -216,6 +211,25 @@ namespace TaskMangment.API
                 });
             });
 
+            // =======================
+            // Configure Serilog
+            // =======================
+            var logDir = Path.Combine(AppContext.BaseDirectory, "Logs");
+            Directory.CreateDirectory(logDir);
+
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Error()
+                .Enrich.FromLogContext()
+                .WriteTo.File(
+                    path: Path.Combine(logDir, "log-.txt"),
+                    rollingInterval: RollingInterval.Day,
+                    retainedFileCountLimit: 30,
+                    outputTemplate:
+                    "{Timestamp:yyyy-MM-dd HH:mm:ss} [{Level}] {Message}{NewLine}{Exception}"
+                )
+                .CreateLogger();
+
+            builder.Host.UseSerilog();
 
             var app = builder.Build();
 
@@ -251,7 +265,7 @@ namespace TaskMangment.API
 
             app.UseCors("AllowAll"); 
 
-            app.UseMiddleware<ExceptionLogMiddleware>();
+            //app.UseMiddleware<ExceptionLogMiddleware>();
 
             app.UseAuthentication();
             app.UseAuthorization();
@@ -273,6 +287,7 @@ namespace TaskMangment.API
             //    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             //    EmailTemplateSeeder.Seed(db);
             //}
+
             //using (var scope = app.Services.CreateScope())
             //{
             //    var jobClient = scope.ServiceProvider.GetRequiredService<IBackgroundJobClient>();
