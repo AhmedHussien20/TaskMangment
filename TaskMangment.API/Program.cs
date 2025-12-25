@@ -67,6 +67,9 @@ namespace TaskMangment.API
             // Notification sender 
             builder.Services.AddScoped<INotificationSender, NotificationSender>();
             builder.Services.AddScoped<IEventHandler<TaskAssignedEvent>,TaskAssignedEventHandler>();
+            builder.Services.AddScoped<IEventHandler<TaskUnAssignedEvent>, TaskUnAssignedEventHandler>();
+            builder.Services.AddScoped<IEventHandler<TaskUnAssignedEvent>, TaskUnAssignedEmailHandler>();
+
             builder.Services.AddScoped<IEventHandler<TaskExtensionRequestEvent>, TaskExtenstionRequestEventHandler>();
             builder.Services.AddScoped<IEventHandler<TaskCloseRequestEvent>, TaskCloseRequestEventHandler>();
             builder.Services.AddScoped<IEventHandler<TaskCommentAddedEvent>, TaskCommentEventHandler>();
@@ -247,7 +250,7 @@ namespace TaskMangment.API
 
             app.UseCors("AllowAll"); 
 
-            //app.UseMiddleware<ExceptionLogMiddleware>();
+            app.UseMiddleware<ExceptionLogMiddleware>();
 
             app.UseAuthentication();
             app.UseAuthorization();

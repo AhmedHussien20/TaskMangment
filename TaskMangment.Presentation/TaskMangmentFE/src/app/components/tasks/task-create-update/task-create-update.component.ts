@@ -69,7 +69,7 @@ export class TaskCreateUpdateComponent implements OnInit {
     },
     {
       type: 'select',
-      label: 'TASK.Status',
+      label: 'TASK.STATUS',
       name: 'status',
       selectType: 'simple',
       options: [
@@ -92,10 +92,9 @@ export class TaskCreateUpdateComponent implements OnInit {
 
     {
       type: 'input',
-      inputType: 'number',
       label: 'TASK.COMMENT_ALLOW_PERIOD',
       name: 'commentAllowPeriodDays',
-      defaultValue: null
+      defaultValue: 'يومي'
     },
 
     {
@@ -166,7 +165,7 @@ export class TaskCreateUpdateComponent implements OnInit {
       priority: [TaskPriority.Low, Validators.required],
       status: [TaskStatus.New, Validators.required],
       dueDate: [null],
-      commentAllowPeriodDays: [null, [Validators.pattern('^[0-9]+$')]],
+      commentAllowPeriodDays: ['يومي'],
       maxWarnings: [3, [Validators.pattern('^[0-9]+$')]],
       penaltyAtMaxWarnings: [0, [Validators.pattern('^[0-9]+$')]],
       penaltyOnAutoClose: [0, [Validators.pattern('^[0-9]+$')]],

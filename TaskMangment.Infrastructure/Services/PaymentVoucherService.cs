@@ -110,7 +110,10 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<PaymentVoucherGetDto>.Ok(dto);
         }
 
-        public async Task<ApiResponse<PaymentVoucherGetDto>> AddAsync(PaymentVoucherAddEditDto dto, int CompanyId, int CreatedBy)
+        public async Task<ApiResponse<PaymentVoucherGetDto>> AddAsync(
+            PaymentVoucherAddEditDto dto,
+            int CompanyId,
+            int CreatedBy)
         {
             if (dto.BranchId.HasValue && !await _branchRepository.IsExistAsync(dto.BranchId.Value))
                 throw new AppException(ErrorCodes.BranchNotFound, StatusCodes.Status404NotFound);
@@ -124,25 +127,61 @@ namespace TaskMangment.Infrastructure.Services
             var voucher = _mapper.Map<PaymentVoucher>(dto);
             voucher.CompanyId = CompanyId;
             voucher.CreatedByEmployeeId = CreatedBy;
-            //voucher.CreatedDate= DateTime.UtcNow;
 
+            Attachment attachment = new Attachment();
+
+            if (dto.File != null)
+            {
+                var uploadsRoot = Path.Combine(
+                    Directory.GetCurrentDirectory(),
+                    "wwwroot",
+                    "uploads",
+                    "vouchers");
+
+                Directory.CreateDirectory(uploadsRoot);
+
+                var fileName = $"{Guid.NewGuid()}_{dto.File.FileName}";
+                var filePath = Path.Combine(uploadsRoot, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await dto.File.CopyToAsync(stream);
+                }
+
+                attachment = new Attachment
+                {
+                    FileName = dto.File.FileName,
+                    FilePath = $"uploads/vouchers/{fileName}",
+                    Size = dto.File.Length,
+                    UploadedBy = CreatedBy,
+                    ContentType = dto.File.ContentType,
+                    UploadedAt = DateTime.UtcNow,
+                    ReferenceId = voucher.Id, // نفس Comment (لسه ID)
+                    AttachmentType = AttachmentType.Voucher
+                };
+
+                await _attachmentRepo.AddAsync(attachment);
+            }
 
             await _voucherRepo.AddAsync(voucher);
             await _voucherRepo.SaveChangesAsync();
             await _cache.RemoveAsync("vouchers:");
 
-            // Optional: clear cache pattern
-            // await _cache.RemoveByPatternAsync("vouchers-");
             var fullVoucher = await _voucherRepo.GetAll(v => v.Id == voucher.Id)
-                       .Include(v => v.Company)
-       .Include(v => v.Branch)
-       .Include(v => v.CreatedBy)
-      // .Include(v => v.Attachments)
-       .FirstOrDefaultAsync();
+                .Include(v => v.Company)
+                .Include(v => v.Branch)
+                .Include(v => v.CreatedBy)
+               // .Include(c => c.Attachments)
+                .AsNoTracking()
+                .FirstOrDefaultAsync();
 
             var voucherDto = _mapper.Map<PaymentVoucherGetDto>(fullVoucher);
+            voucherDto.AttachmentCount = await _attachmentRepo.CountAsync(a => a.ReferenceId == voucher.Id && a.AttachmentType == AttachmentType.Comment);
 
-            return ApiResponse<PaymentVoucherGetDto>.Ok(voucherDto, "Voucher added successfully");
+
+
+            return ApiResponse<PaymentVoucherGetDto>
+                .Ok(voucherDto, "Voucher added successfully");
         }
 
         public async Task<ApiResponse<PaymentVoucherGetDto>> UpdateAsync(int id, PaymentVoucherAddEditDto dto)

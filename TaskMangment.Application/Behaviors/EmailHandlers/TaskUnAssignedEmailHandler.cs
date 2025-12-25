@@ -10,25 +10,24 @@ using TaskMangment.Domain.Event;
 
 namespace TaskMangment.Application.Behaviors.EmailHandlers
 {
-    public class TaskAssignedEmailHandler: IEventHandler<TaskAssignedEvent>
+    public class TaskUnAssignedEmailHandler : IEventHandler<TaskUnAssignedEvent>
     {
         private readonly IEmailQueueService _emailQueue;
 
-        public TaskAssignedEmailHandler(IEmailQueueService emailQueue)
+        public TaskUnAssignedEmailHandler(IEmailQueueService emailQueue)
         {
             _emailQueue = emailQueue;
         }
 
-        public async Task Handle(TaskAssignedEvent ev)
+        public async Task Handle(TaskUnAssignedEvent ev)
         {
             await _emailQueue.QueueAsync(new EmailQueueRequest
             {
-                TemplateKey = "TaskAssignedToExistingTask",
+                TemplateKey = "TaskUnAssignedFromExistingTask",
                 ReferenceType = ReferenceType.Task,
                 ReferenceId = ev.TaskId,
-                UserIds = ev.AssignedEmployeeIds
+                UserIds = ev.UnAssignedEmployeeIds
             });
         }
     }
-
 }

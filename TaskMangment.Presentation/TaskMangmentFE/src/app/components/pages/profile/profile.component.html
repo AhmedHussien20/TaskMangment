@@ -8,360 +8,180 @@
                 <div class="panel profile-cover">
                     <div class="profile-cover__img">
                         <img src="./assets/images/faces/1.jpg" alt="img">
-                        <h3 class="h3">Sonia Taylor</h3>
-                    </div>
-                    <div class="btn-profile">
-                        <button class="btn rounded-10 btn-danger me-2">
-                            <i class="fa fa-plus me-1"></i>
-                            <span>Follow</span>
-                        </button>
-                        <button class="btn rounded-10 btn-success">
-                            <i class="fa fa-comment me-1"></i>
-                            <span>Message</span>
-                        </button>
+                        <h3 class="h3">{{ user?.fullName }}</h3>
                     </div>
                     <div class="profile-cover__action bg-img"></div>
                     <div class="profile-cover__info">
                         <ul class="nav">
                             <li><strong>26</strong>Projects</li>
-                            <li><strong>33</strong>Followers</li>
-                            <li><strong>136</strong>Following</li>
                         </ul>
                     </div>
                 </div>
                 <div class="profile-tab tab-menu-heading">
                     <nav ngbNav #nav="ngbNav" class="nav main-nav-line p-3 tabs-menu profile-nav-line">
-                        <ng-container ngbNavItem>
-                            <a href="javascript:;"class="nav-link" ngbNavLink>About</a>
-                            <ng-template ngbNavContent>
-                                <div class="main-content-body tab-pane p-4 border-top-0 active" id="about">
-                                    <div class="card-body p-0 border p-0 rounded-10">
-                                        <div class="p-4">
-                                            <h4 class="fs-15 text-uppercase mb-3">BIOdata</h4>
-                                            <p class="m-b-5">Hi I'm Petey Cruiser,has been the industry's standard dummy
-                                                text ever since the 1500s, when an unknown printer took a galley of
-                                                type. Donec pede justo, fringilla vel, aliquet nec, vulputate eget,
-                                                arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo.
-                                                Nullam dictum felis eu pede mollis pretium. Integer tincidunt.Cras
-                                                dapibus. Vivamus elementum semper nisi. Aenean vulputate eleifend
-                                                tellus. Aenean leo ligula, porttitor eu, consequat vitae, eleifend ac,
-                                                enim.</p>
-                                            <div class="m-t-30">
-                                                <h4 class="fs-15 text-uppercase mt-3">Experience</h4>
-                                                <div class=" p-t-10">
-                                                    <h5 class="text-primary m-b-5 fs-14">Lead designer / Developer</h5>
-                                                    <p class="">websitename.com</p>
-                                                    <p><b>2010-2015</b></p>
-                                                    <p class="text-muted fs-13 m-b-0">Lorem Ipsum is simply dummy text
-                                                        of the printing and typesetting industry. Lorem Ipsum has been
-                                                        the industry's standard dummy text ever since the 1500s, when an
-                                                        unknown printer took a galley of type and scrambled it to make a
-                                                        type specimen book.</p>
-                                                </div>
+                      <ng-container ngbNavItem *ngIf="user">
+  <a href="javascript:;" class="nav-link" ngbNavLink>About</a>
+  <ng-template ngbNavContent>
+    <div class="main-content-body tab-pane p-4 border-top-0 active" id="about">
+      <div class="card-body p-0 border p-0 rounded-10">
+        <div class="p-4">
+          <h4 class="fs-15 text-uppercase mb-3">BIOdata</h4>
+          <p class="m-b-5">Hi I'm {{ user?.fullName }}, Email: {{ user?.email }}</p>
 
-                                                <div class="">
-                                                    <h5 class="text-primary m-b-5 fs-14">Senior Graphic Designer</h5>
-                                                    <p class="">coderthemes.com</p>
-                                                    <p><b>2007-2009</b></p>
-                                                    <p class="text-muted fs-13 mb-0">Lorem Ipsum is simply dummy text of
-                                                        the printing and typesetting industry. Lorem Ipsum has been the
-                                                        industry's standard dummy text ever since the 1500s, when an
-                                                        unknown printer took a galley of type and scrambled it to make a
-                                                        type specimen book.</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="border-top"></div>
-                                        <div class="p-4">
-                                            <label class="main-content-label fs-13 mg-b-20">Contact</label>
-                                            <div class="d-sm-flex gap-2">
-                                                <div class="mg-sm-r-20 mg-b-10">
-                                                    <div class="main-profile-contact-list">
-                                                        <div class="media">
-                                                            <div class="media-icon bg-primary-transparent text-primary">
-                                                                <i class="bi bi-telephone-forward"></i>
-                                                            </div>
-                                                            <div class="media-body"> <span>Mobile</span>
-                                                                <div> +245 354 654 </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="mg-sm-r-20 mg-b-10">
-                                                    <div class="main-profile-contact-list">
-                                                        <div class="media">
-                                                            <div class="media-icon bg-success-transparent text-success">
-                                                                <i class="bi bi-lightning-charge"></i>
-                                                            </div>
-                                                            <div class="media-body"> <span>Slack</span>
-                                                                <div> &#64;spruko.w </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="">
-                                                    <div class="main-profile-contact-list">
-                                                        <div class="media">
-                                                            <div class="media-icon bg-info-transparent text-info"> <i
-                                                                    class="bi bi-geo-alt"></i> </div>
-                                                            <div class="media-body"> <span>Current Address</span>
-                                                                <div> San Francisco, CA </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="border-top"></div>
-                                        <div class="p-4">
-                                            <label class="main-content-label fs-13 mg-b-20">Social</label>
-                                            <div class="d-md-flex flex-wrap gap-2">
-                                                <div class="mg-md-r-20 mg-b-10">
-                                                    <div class="main-profile-social-list">
-                                                        <div class="media">
-                                                            <div class="media-icon bg-primary-transparent text-primary">
-                                                                <i class="icon ion-logo-github"></i>
-                                                            </div>
-                                                            <div class="media-body"> <span>Github</span> <a
-                                                                    href="javascript:;">github.com / spruko</a> </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="mg-md-r-20 mg-b-10">
-                                                    <div class="main-profile-social-list">
-                                                        <div class="media">
-                                                            <div class="media-icon bg-success-transparent text-success">
-                                                                <i class="ri  ri-twitter-x-line"></i>
-                                                            </div>
-                                                            <div class="media-body"> <span>Twitter</span> <a
-                                                                    href="javascript:;">twitter.com / spruko.me</a> </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="mg-md-r-20 mg-b-10">
-                                                    <div class="main-profile-social-list">
-                                                        <div class="media">
-                                                            <div class="media-icon bg-info-transparent text-info"> <i
-                                                                    class="bi bi-linkedin"></i> </div>
-                                                            <div class="media-body"> <span>Linkedin</span> <a
-                                                                    href="javascript:;">linkedin.com / in / spruko</a>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="mg-md-r-20 mg-b-10">
-                                                    <div class="main-profile-social-list">
-                                                        <div class="media">
-                                                            <div class="media-icon bg-danger-transparent text-danger">
-                                                                <i class="bi bi-link-45deg"></i>
-                                                            </div>
-                                                            <div class="media-body"> <span>My Portfolio</span> <a
-                                                                    href="javascript:;">spruko.com /</a> </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </ng-template>
-                        </ng-container>
-                        <ng-container ngbNavItem>
-                            <a href="javascript:;" class="nav-link" ngbNavLink>Edit Profile</a>
-                            <ng-template ngbNavContent>
-                                <div class="main-content-body tab-pane p-4 border-top-0" id="edit">
-                                    <div class="card-body border">
-                                        <div class="mb-4 main-content-label">Personal Information</div>
-                                        <form class="form-horizontal">
-                                            <div class="mb-4 main-content-label">Name</div>
-                                            <div class="form-group ">
-                                                <div class="row row-sm">
-                                                    <div class="col-md-3">
-                                                        <label class="form-label">User Name</label>
-                                                    </div>
-                                                    <div class="col-md-9">
-                                                        <input type="text" class="form-control" placeholder="User Name"
-                                                            value="Mack Adamia">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="form-group ">
-                                                <div class="row row-sm">
-                                                    <div class="col-md-3">
-                                                        <label class="form-label">First Name</label>
-                                                    </div>
-                                                    <div class="col-md-9">
-                                                        <input type="text" class="form-control" placeholder="First Name"
-                                                            value="Mack Adamia">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="form-group ">
-                                                <div class="row row-sm">
-                                                    <div class="col-md-3">
-                                                        <label class="form-label">last Name</label>
-                                                    </div>
-                                                    <div class="col-md-9">
-                                                        <input type="text" class="form-control" placeholder="Last Name"
-                                                            value="Mack Adamia">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="form-group ">
-                                                <div class="row row-sm">
-                                                    <div class="col-md-3">
-                                                        <label class="form-label">Nick Name</label>
-                                                    </div>
-                                                    <div class="col-md-9">
-                                                        <input type="text" class="form-control" placeholder="Nick Name"
-                                                            value="Spruha">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="form-group ">
-                                                <div class="row row-sm">
-                                                    <div class="col-md-3">
-                                                        <label class="form-label">Designation</label>
-                                                    </div>
-                                                    <div class="col-md-9">
-                                                        <input type="text" class="form-control"
-                                                            placeholder="Designation" value="Web Designer">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="mb-4 main-content-label">Contact Info</div>
-                                            <div class="form-group ">
-                                                <div class="row row-sm">
-                                                    <div class="col-md-3">
-                                                        <label class="form-label">Email<i>(required)</i></label>
-                                                    </div>
-                                                    <div class="col-md-9">
-                                                        <input type="text" class="form-control" placeholder="Email"
-                                                            value="info&#64;Spruha.in">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="form-group ">
-                                                <div class="row row-sm">
-                                                    <div class="col-md-3">
-                                                        <label class="form-label">Website</label>
-                                                    </div>
-                                                    <div class="col-md-9">
-                                                        <input type="text" class="form-control" placeholder="Website"
-                                                            value="&#64;spruko.w">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="form-group ">
-                                                <div class="row row-sm">
-                                                    <div class="col-md-3">
-                                                        <label class="form-label">Phone</label>
-                                                    </div>
-                                                    <div class="col-md-9">
-                                                        <input type="text" class="form-control"
-                                                            placeholder="phone number" value="+245 354 654">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="form-group ">
-                                                <div class="row row-sm">
-                                                    <div class="col-md-3">
-                                                        <label class="form-label">Address</label>
-                                                    </div>
-                                                    <div class="col-md-9">
-                                                        <textarea class="form-control" name="example-textarea-input"
-                                                            rows="2" placeholder="Address">San Francisco, CA</textarea>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="mb-4 main-content-label">Social Info</div>
-                                            <div class="form-group ">
-                                                <div class="row row-sm">
-                                                    <div class="col-md-3">
-                                                        <label class="form-label">Twitter</label>
-                                                    </div>
-                                                    <div class="col-md-9">
-                                                        <input type="text" class="form-control" placeholder="twitter"
-                                                            value="twitter.com/spruko.me">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="form-group ">
-                                                <div class="row row-sm">
-                                                    <div class="col-md-3">
-                                                        <label class="form-label">Facebook</label>
-                                                    </div>
-                                                    <div class="col-md-9">
-                                                        <input type="text" class="form-control" placeholder="facebook"
-                                                            value="https://www.facebook.com/Spruha">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="form-group ">
-                                                <div class="row row-sm">
-                                                    <div class="col-md-3">
-                                                        <label class="form-label">Google+</label>
-                                                    </div>
-                                                    <div class="col-md-9">
-                                                        <input type="text" class="form-control" placeholder="google"
-                                                            value="spruko.com">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="form-group ">
-                                                <div class="row row-sm">
-                                                    <div class="col-md-3">
-                                                        <label class="form-label">Linked in</label>
-                                                    </div>
-                                                    <div class="col-md-9">
-                                                        <input type="text" class="form-control" placeholder="linkedin"
-                                                            value="linkedin.com/in/spruko">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="form-group ">
-                                                <div class="row row-sm">
-                                                    <div class="col-md-3">
-                                                        <label class="form-label">Github</label>
-                                                    </div>
-                                                    <div class="col-md-9">
-                                                        <input type="text" class="form-control" placeholder="github"
-                                                            value="github.com/sprukos">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="mb-4 main-content-label">About Yourself</div>
-                                            <div class="form-group ">
-                                                <div class="row row-sm">
-                                                    <div class="col-md-3">
-                                                        <label class="form-label">Biographical Info</label>
-                                                    </div>
-                                                    <div class="col-md-9">
-                                                        <textarea class="form-control" name="example-textarea-input"
-                                                            rows="4"
-                                                            placeholder="">pleasure rationally encounter but because pursue consequences that are extremely painful.occur in which toil and pain can procure him some great pleasure..</textarea>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="mb-4 main-content-label">Email Preferences</div>
-                                            <div class="form-group mb-0">
-                                                <div class="row row-sm">
-                                                    <div class="col-md-3">
-                                                        <label class="form-label">Verified User</label>
-                                                    </div>
-                                                    <div class="col-md-9">
-                                                        <div class="custom-controls-stacked">
-                                                            <div class="form-check"> <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault1" checked=""> <label class="form-check-label" for="flexCheckDefault1"> Accept to receive post or page notification emails </label> </div>
-                                                            <div class="form-check"> <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault2" checked=""> <label class="form-check-label" for="flexCheckDefault2"> Accept to receive email sent to multiple recipients </label> </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                            </ng-template>
-                        </ng-container>
+          <div class="m-t-30">
+            <h4 class="fs-15 text-uppercase mt-3">Experience</h4>
+            <div class="p-t-10">
+              <h5 class="text-primary m-b-5 fs-14">{{ user?.title || 'Not Provided' }}</h5>
+              <p>{{ user?.qualification || 'Not Provided' }}</p>
+              <p><b>User ID: {{ user?.userId }}</b></p>
+              <p class="text-muted fs-13 m-b-0">Company ID: {{ user?.companyId }}</p>
+            </div>
+
+            <div>
+              <h5 class="text-primary m-b-5 fs-14">Department</h5>
+              <p>{{ user?.departmentId || 'Not Assigned' }}</p>
+              <p><b>Branch</b></p>
+              <p class="text-muted fs-13 mb-0">{{ user?.branchId || 'Not Assigned' }}</p>
+            </div>
+          </div>
+
+          <div class="border-top"></div>
+          <div class="p-4">
+            <label class="main-content-label fs-13 mg-b-20">Contact</label>
+            <div class="d-sm-flex gap-2">
+              <div class="mg-sm-r-20 mg-b-10">
+                <div class="main-profile-contact-list">
+                  <div class="media">
+                    <div class="media-icon bg-primary-transparent text-primary">
+                      <i class="bi bi-telephone-forward"></i>
+                    </div>
+                    <div class="media-body">
+                      <span>Mobile</span>
+                      <div>{{ user?.mobile || 'Not Provided' }}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mg-sm-r-20 mg-b-10">
+                <div class="main-profile-contact-list">
+                  <div class="media">
+                    <div class="media-icon bg-success-transparent text-success">
+                      <i class="bi bi-lightning-charge"></i>
+                    </div>
+                    <div class="media-body">
+                      <span>Email</span>
+                      <div>{{ user?.email }}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <div class="main-profile-contact-list">
+                  <div class="media">
+                    <div class="media-icon bg-info-transparent text-info">
+                      <i class="bi bi-geo-alt"></i>
+                    </div>
+                    <div class="media-body">
+                      <span>Current Address</span>
+                      <div>{{ user?.address || 'Not Provided' }}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+          <div class="border-top"></div>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+</ng-container>
+
+<!-- Edit Profile Tab -->
+<ng-container ngbNavItem>
+  <a href="javascript:;" class="nav-link" ngbNavLink>Edit Profile</a>
+  <ng-template ngbNavContent>
+    <div class="main-content-body tab-pane p-4 border-top-0" id="edit">
+      <div class="card-body border">
+        <div class="mb-4 main-content-label">Personal Information</div>
+
+        <form [formGroup]="formGroup" class="form-horizontal" *ngIf="formGroup">
+
+          <!-- Name -->
+          <div class="mb-4 main-content-label">Name</div>
+          <div class="form-group row row-sm">
+            <div class="col-md-3"><label class="form-label">User Name</label></div>
+            <div class="col-md-9"><input type="text" class="form-control" formControlName="fullName"></div>
+          </div>
+
+          <!-- Title -->
+          <div class="form-group row row-sm">
+            <div class="col-md-3"><label class="form-label">Title</label></div>
+            <div class="col-md-9"><input type="text" class="form-control" formControlName="title"></div>
+          </div>
+
+          <!-- Email -->
+          <div class="form-group row row-sm">
+            <div class="col-md-3"><label class="form-label">Email</label></div>
+            <div class="col-md-9"><input type="email" class="form-control" formControlName="email"></div>
+          </div>
+
+          <!-- Mobile -->
+          <div class="form-group row row-sm">
+            <div class="col-md-3"><label class="form-label">Phone</label></div>
+            <div class="col-md-9"><input type="text" class="form-control" formControlName="mobile"></div>
+          </div>
+
+          <!-- Address -->
+          <div class="form-group row row-sm">
+            <div class="col-md-3"><label class="form-label">Address</label></div>
+            <div class="col-md-9"><textarea class="form-control" rows="2" formControlName="address"></textarea></div>
+          </div>
+
+          <!-- Qualification -->
+          <div class="form-group row row-sm">
+            <div class="col-md-3"><label class="form-label">Qualification</label></div>
+            <div class="col-md-9"><textarea class="form-control" rows="2" formControlName="qualification"></textarea></div>
+          </div>
+
+          <!-- Nationality -->
+          <div class="form-group row row-sm">
+            <div class="col-md-3"><label class="form-label">Nationality</label></div>
+            <div class="col-md-9"><input type="text" class="form-control" formControlName="nationality"></div>
+          </div>
+
+           <div class="form-group row row-sm">
+            <div class="col-md-3"><label class="form-label">Identity number</label></div>
+            <div class="col-md-9"><input type="text" class="form-control" formControlName="identityNumber"></div>
+          </div>
+
+
+          <!-- Password -->
+          <div class="form-group row row-sm">
+            <div class="col-md-3"><label class="form-label">Password</label></div>
+            <div class="col-md-9"><input type="password" class="form-control" formControlName="password"></div>
+          </div>
+
+          <!-- Confirm Password -->
+          <div class="form-group row row-sm">
+            <div class="col-md-3"><label class="form-label">Confirm Password</label></div>
+            <div class="col-md-9"><input type="password" class="form-control" formControlName="confirmPassword"></div>
+          </div>
+
+          <div class="form-group mt-3">
+            <button type="button" class="btn btn-primary" (click)="onSubmit()">Save Changes</button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </ng-template>
+</ng-container>
+
+
                         <ng-container ngbNavItem>
                             <a href="javascript:;" class="nav-link" ngbNavLink>Timeline</a>
                             <ng-template ngbNavContent>

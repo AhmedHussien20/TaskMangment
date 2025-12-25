@@ -191,11 +191,27 @@ namespace TaskMangment.Infrastructure.Services
 
             var newEmployeeIds = dto.AssignedEmployeeIds ?? new List<int>();
 
+            var reactivatedEmployeeIds = new List<int>();
+
+            var newlyAssignedEmployeeIds = new List<int>();
+            var unAssignedEmployeeIds = new List<int>();
+
+
             foreach (var oldAssignment in existingAssignments)
             {
                 if (!newEmployeeIds.Contains(oldAssignment.EmployeeId))
                 {
                     oldAssignment.IsActive = false;
+                    unAssignedEmployeeIds.Add(oldAssignment.EmployeeId);
+
+                }
+                else
+                {
+                    if (!oldAssignment.IsActive)
+                    {
+                        oldAssignment.IsActive = true;
+                        reactivatedEmployeeIds.Add(oldAssignment.EmployeeId);
+                    }
                 }
             }
 
@@ -206,7 +222,7 @@ namespace TaskMangment.Infrastructure.Services
 
                 if (assignment != null)
                 {
-                    assignment.IsActive = true;
+                    continue;
                 }
                 else
                 {
@@ -216,24 +232,42 @@ namespace TaskMangment.Infrastructure.Services
                         EmployeeId = empId,
                         IsActive = true
                     });
+                    newlyAssignedEmployeeIds.Add(empId);
                 }
             }
-
 
             await _assignmentRepo.SaveChangesAsync();
             await _cache.RemoveAsync("tasks:");
 
+            if (newlyAssignedEmployeeIds.Any())
+            {
+                await _eventDispatcher.PublishAsync(
+                    new TaskAssignedEvent(task.Id, task.Title, newlyAssignedEmployeeIds)
+                );
+            }
+
+            if (reactivatedEmployeeIds.Any())
+            {
+                await _eventDispatcher.PublishAsync(
+                    new TaskAssignedEvent(task.Id, task.Title, reactivatedEmployeeIds)
+                );
+            }
+            if (unAssignedEmployeeIds.Any())
+            {
+                await _eventDispatcher.PublishAsync(new TaskUnAssignedEvent(task.Id, task.Title, unAssignedEmployeeIds));
+            }
+
             var fullTask = await _taskRepo.GetAll(t => t.Id == task.Id)
-      .Include(t => t.Company)
-      .Include(t => t.CreatedBy)
-      .Include(t => t.AssignedBy)
-      .Include(t => t.Assignments)
-          .ThenInclude(a => a.Employee)
-      .Include(t => t.Comments)
-      //.Include(t => t.Attachments)
-      .Include(t => t.CloseRequests)
-      .Include(t => t.ExtensionRequests)
-      .FirstOrDefaultAsync();
+                .Include(t => t.Company)
+                .Include(t => t.CreatedBy)
+                .Include(t => t.AssignedBy)
+                .Include(t => t.Assignments)
+                    .ThenInclude(a => a.Employee)
+                .Include(t => t.Comments)
+                .Include(t => t.CloseRequests)
+                .Include(t => t.ExtensionRequests)
+                .FirstOrDefaultAsync();
+
             var taskDto = _mapper.Map<TaskGetDto>(fullTask);
 
             return ApiResponse<TaskGetDto>.Ok(taskDto, "Task updated successfully");

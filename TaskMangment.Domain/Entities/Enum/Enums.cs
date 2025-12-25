@@ -45,6 +45,7 @@ namespace TaskMangment.Domain.Entities
         EmployeeWarning = 6,
         EmployeeDeduction = 7,
         TaskDueTodayReminder = 8
+
     }
 
 
