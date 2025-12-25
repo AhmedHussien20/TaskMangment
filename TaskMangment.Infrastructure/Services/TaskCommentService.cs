@@ -139,10 +139,11 @@ namespace TaskMangment.Infrastructure.Services
 
             var comment = _mapper.Map<TaskComment>(dto);
             comment.TaskId = taskId;
-            comment.EmployeeId = employeeId; 
-            Attachment attachment = new Attachment();
+            comment.EmployeeId = employeeId;
 
-            // إضافة الملف إن وجد
+            await _commentRepo.AddAsync(comment); 
+            await _commentRepo.SaveChangesAsync();
+
             if (dto.File != null)
             {
                 var uploadsRoot = Path.Combine(
@@ -161,8 +162,7 @@ namespace TaskMangment.Infrastructure.Services
                     await dto.File.CopyToAsync(stream);
                 }
 
-
-                attachment= new Attachment
+                var attachment = new Attachment
                 {
                     FileName = dto.File.FileName,
                     FilePath = $"uploads/comments/{fileName}",
@@ -170,18 +170,13 @@ namespace TaskMangment.Infrastructure.Services
                     UploadedBy = employeeId,
                     ContentType = dto.File.ContentType,
                     UploadedAt = DateTime.UtcNow,
-                    ReferenceId = comment.Id,
-                    AttachmentType = AttachmentType.Comment
-                    //ReferenceId = taskId,
-                    //AttachmentType = AttachmentType.Task,
+                    AttachmentType = AttachmentType.Comment,
+                    ReferenceId = comment.Id
                 };
 
                 await _attachmentRepo.AddAsync(attachment);
+                await _attachmentRepo.SaveChangesAsync();
             }
-
-            await _commentRepo.AddAsync(comment);
-          //  await _attachmentRepo.AddAsync(attachment);
-            await _commentRepo.SaveChangesAsync();
             await _cache.RemoveAsync("taskComments:");
 
             var assignedEmployeeIds = await _taskAssignmentRepo

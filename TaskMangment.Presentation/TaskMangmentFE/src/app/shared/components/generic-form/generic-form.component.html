@@ -8,8 +8,12 @@
           {{ 'FORM.SAVE' | translate }}
         </button>
       </div>
-      <div *ngFor="let field of formConfig; let i = index" class="col-md-4">
-        <label [for]="field.name">{{ field.label | translate}}</label>
+      <div *ngFor="let field of orderedFields" 
+     [ngClass]="{
+       'col-md-4': field.type !== 'file' && field.type !== 'textarea',
+       'col-md-12': field.type === 'file' || field.type === 'textarea'
+     }">
+        <label *ngIf="field.type !== 'file'" [for]="field.name">{{ field.label | translate}}</label>
         <div *ngIf="
             field.type === 'input' ||
             field.type === 'text' ||
@@ -58,24 +62,25 @@
               {{ 'FORM.CHARACTERS' | translate }}
             </div>
 
-             <div *ngIf="formGroup.controls[field.name].errors?.['pattern'] && field.inputType === 'number'" class="input-group">
+            <div *ngIf="formGroup.controls[field.name].errors?.['pattern'] && field.inputType === 'number'"
+              class="input-group">
               {{ 'FORM.PATTERN_INVALID_NUMBER' | translate }}
             </div>
-             <div *ngIf="formGroup.controls[field.name].errors?.['email']">
+            <div *ngIf="formGroup.controls[field.name].errors?.['email']">
               {{ 'FORM.PATTERN_INVALID_EMAIL' | translate }}
             </div>
-            
+
 
 
 
             <!-- Password mismatch message -->
-           <!-- Password mismatch -->
-<div *ngIf="
+            <!-- Password mismatch -->
+            <div *ngIf="
   field.name === 'confirmPassword' &&
   formGroup.controls[field.name]?.errors?.['passwordMismatch']
 ">
-  {{ 'FORM.PASSWORD_MISMATCH' | translate }}
-</div>
+              {{ 'FORM.PASSWORD_MISMATCH' | translate }}
+            </div>
 
           </div>
         </div>
@@ -197,6 +202,28 @@
             </div>
           </div>
         </div>
+
+        <!-- ================= FILE UPLOAD ================= -->
+        <div *ngIf="field.type === 'file'" class="col-md-12">
+
+          <label class="mb-2 d-block">
+            {{ field.label | translate }}
+          </label>
+
+          <dropzone class="dropzone-container" [config]="getDropzoneConfig(field)"
+            (addedFile)="onFileAdded($event, field)" (removedFile)="onFileRemoved($event, field)">
+          </dropzone>
+
+          <!-- Validation -->
+          <div *ngIf="
+    formGroup.get(field.name)?.invalid &&
+    formGroup.get(field.name)?.touched
+  " class="text-danger mt-1">
+            {{ field.label | translate }} {{ 'FORM.IS_REQUIRED' | translate }}
+          </div>
+
+        </div>
+
       </div>
     </form>
   </div>

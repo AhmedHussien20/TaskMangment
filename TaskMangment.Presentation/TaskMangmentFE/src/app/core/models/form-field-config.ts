@@ -19,7 +19,9 @@ export interface FormFieldConfig {
   
   showPassword?: boolean;
 
-  accept?: string; 
+  accept?: string;        
+  maxFiles?: number;      
+  maxFileSizeMB?: number;  
   
   errorMessages?: {
     required?: string;

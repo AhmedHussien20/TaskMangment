@@ -148,7 +148,9 @@
     "SELECT_OPTION": "اختر خيار",
     "VALIDATION_ERROR": "هناك أخطاء في النموذج. يرجى التحقق من الحقول.",
     "ERROR": "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
-    "SELECT": "اختر"
+    "SELECT": "اختر",
+    "ATTACHMENTS": "المرفقات"
+
   },
   "VALIDATION": {
     "REQUIRED": "هذا الحقل مطلوب",
@@ -237,7 +239,6 @@
     "ID": "الكود"
   },
   "EMPLOYEE": {
-    "TITLE": "الموظفين",
     "LIST_TITLE": "قائمة الموظفين",
     "CREATE_TITLE": "إضافة موظف",
     "EDIT_TITLE": "تعديل موظف",

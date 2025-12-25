@@ -30,6 +30,15 @@ public class ExceptionHandlingMiddleware
 
             await WriteError(context, ex.ErrorCode, (int)ex.StatusCode);
         }
+        catch (UnauthorizedAccessException ex)
+        {
+            _logger.LogWarning(ex, "Unauthorized access");
+
+            await WriteError(
+                context,
+                ErrorCodes.Unauthorized,
+                StatusCodes.Status401Unauthorized);
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unhandled exception");
