@@ -40,8 +40,9 @@ namespace TaskMangment.Application.DTOs
         public string Email { get; set; }
 
         [MaxLength(500)]
-        public string? Password { get; set; }
-        public IFormFile? Image { get; set; }
+        public string Password { get; set; }
+
+        public List<IFormFile>? Attachments { get; set; }
 
     }
 
@@ -51,6 +52,7 @@ namespace TaskMangment.Application.DTOs
         public string FullName { get; set; }
         public string? Title { get; set; }
         public string BranchName { get; set; }
+        public string BranchId { get; set; }
         public string Email { get; set; }
         public string Mobile { get; set; }
         public string Qualification { get; set; }

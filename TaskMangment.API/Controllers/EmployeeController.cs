@@ -52,6 +52,7 @@ namespace TaskMangment.API.Controllers
             return Success(result.Data, "Employee updated successfully");
         }
 
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
