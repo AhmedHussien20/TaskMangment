@@ -212,6 +212,11 @@ namespace TaskMangment.API
                 });
             });
 
+            builder.Services.AddControllers(options =>
+            {
+                options.Filters.Add<RoleAuthorizationFilter>();
+            });
+
             // =======================
             // Configure Serilog
             // =======================

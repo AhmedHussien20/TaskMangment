@@ -1,5 +1,5 @@
 import { ChangeDetectorRef, Component, ElementRef, HostListener, OnInit, Renderer2, inject, OnDestroy } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { filter, Subscription } from 'rxjs';
 import { LayoutService } from '../../services/layout.service';
 import { NavService } from '../../services/nav.service';
 import { SwitcherService } from '../../services/switcher.service';
@@ -14,7 +14,7 @@ import { NotificationApiService } from 'app/core/services/notification.service';
 
 interface Item {
 
-   user: any;
+  user: any;
 
   id: number;
   name: string;
@@ -22,6 +22,19 @@ interface Item {
   title: string;
   // Add other properties as needed
 }
+export interface HeaderShortcut {
+  title: string;        // translation key
+  icon: string;         // icon class
+  path: string;
+}
+interface HeaderNotification {
+  id: string;
+  message: string;
+  createdAt: Date;
+  isRead: boolean;
+  link: string;
+}
+
 
 @Component({
   selector: 'app-header',
@@ -32,14 +45,49 @@ interface Item {
 export class HeaderComponent implements OnInit, OnDestroy {
   user: any;
   defaultAvatar = 'assets/images/user.png';
+  notifications: HeaderNotification[] = [];
+
+  notificationCount = 0;
 
   get profileImage(): string {
-  if (this.user?.profileImage) {
-    return this.user.profileImage;
-  }
+    if (this.user?.profileImage) {
+      return this.user.profileImage;
+    }
 
-  return this.defaultAvatar;
-}
+    return this.defaultAvatar;
+  }
+  headerShortcuts: HeaderShortcut[] = [
+    {
+      title: 'nav.apps.task.title',
+      icon: 'ti-check-box',
+      path: '/task/task-list',
+    },
+    {
+      title: 'nav.apps.employee.title',
+      icon: 'ti-user',
+      path: '/employee/employee-list',
+    },
+    {
+      title: 'nav.apps.branch.title',
+      icon: 'ti-map-alt',
+      path: '/branch/branch-list',
+    },
+    {
+      title: 'nav.apps.department.title',
+      icon: 'ti-layers',
+      path: '/department/department-list',
+    },
+    {
+      title: 'nav.apps.calender.title',
+      icon: 'ti-calendar',
+      path: '/utilities/event-calender',
+    },
+    {
+      title: 'nav.apps.student.title',
+      icon: 'ti-id-badge',
+      path: '/student/student-list',
+    },
+  ];
 
   Selection = [
     { label: 'Choose one', value: 1 },
@@ -50,7 +98,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   ]
   private offcanvasService = inject(NgbOffcanvas);
 
-  
+
   open() {
     this.offcanvasService.open(SwitcherComponent, {
       position: 'end',
@@ -59,7 +107,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
     });
   }
   cartItemCount: number = 5;
-  notificationCount: number = 5;
   public isCollapsed = true;
   collapse: any;
   public isSidebar = false;
@@ -90,10 +137,10 @@ export class HeaderComponent implements OnInit, OnDestroy {
         const dir = direction.direction;
       }
     )
-   
+
   }
 
-  
+
 
   categories = [
     { id: 1, name: 'IT Projects' },
@@ -335,7 +382,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   public text!: string;
   public SearchResultEmpty: boolean = false;
 
-  
+
   ngOnInit(): void {
     this.user = this.authService.getCurrentUser();
     this.menuitemsSubscribe$ = this.navServices.getMenuItems().subscribe({
@@ -351,7 +398,29 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.translate.getCurrentLang().subscribe(lang => {
       this.countryFlag = this.mapLangToFlag(lang);
     });
+    this.signalR.notification$
+      .pipe(filter(n => n !== null))
+      .subscribe((n) => {
+
+        const notification: HeaderNotification = {
+          id: crypto.randomUUID(),
+          message: n!.message,
+          createdAt: n!.createdAt,
+          isRead: false,
+          link: n!.link || '/pages/notifications-list'
+        };
+
+        this.notifications.unshift(notification);
+        this.notificationCount = this.notifications.filter(x => !x.isRead).length;
+      });
+
+
   }
+
+removeNotification(id: string) {
+  this.notifications = this.notifications.filter(n => n.id !== id);
+  this.notificationCount = this.notifications.filter(x => !x.isRead).length;
+}
 
   ngOnDestroy() {
     if (this.menuitemsSubscribe$) {
