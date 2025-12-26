@@ -23,7 +23,7 @@ namespace TaskMangment.API.Controllers
             _service = service;
         }
 
-        [HasRole("Admin","CEO")]
+        //[HasRole("Manager","CEO")]
         [HttpGet]
         public async Task<IActionResult> GetAll([FromQuery] AreaRequest request)
         {

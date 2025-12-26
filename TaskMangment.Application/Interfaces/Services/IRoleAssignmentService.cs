@@ -15,6 +15,8 @@ namespace TaskMangment.Application.Interfaces.Services
     {
         Task<ApiResponse<PagedResponse<AssignedEmployeeDto>>> GetAssignedEmployeesPagedAsync(int roleId, RoleAssignmentReguest request);
         Task<ApiResponse<bool>> AssignEmployeesToRoleAsync(int roleId,RoleWithManyEmployeeAssignDto dto);
+        Task<List<string>> GetUserRolesAsync(int userId);
+
 
 
     }

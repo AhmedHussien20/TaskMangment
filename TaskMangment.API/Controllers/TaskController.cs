@@ -1,7 +1,11 @@
 ﻿
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
+using System.Security.Claims;
+using TaskMangment.Application.Authorization;
 using TaskMangment.Application.Common.ApiRequests.Task;
+using TaskMangment.Application.Common.Errors;
+using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.DTOs.TaskDTOs;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Domain.Entities;
@@ -28,7 +32,11 @@ namespace TaskMangment.API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll([FromQuery] TaskRequest request)
         {
-            var result = await _service.GetAllAsync(request, CompanyId);
+            var role = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+            if (string.IsNullOrEmpty(role))
+                throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status400BadRequest);
+
+            var result = await _service.GetAllAsync(request, CompanyId, role, this.CurrentUserId);
 
             if (!result.Success)
                 return Fail(result.Message!);
@@ -44,15 +52,17 @@ namespace TaskMangment.API.Controllers
             var result = await _service.GetByIdAsync(id);
             return Success(result.Data);
         }
-
         [HttpPost]
+        [HasRole("Manager")]
         public async Task<IActionResult> Add([FromBody] TaskAddEditDto dto)
         {
+           
             var result = await _service.AddAsync(dto,this.CurrentUserId, this.CompanyId);
             return Success(result.Data, "Task added successfully");
         }
 
         [HttpPut("{id}")]
+        [HasRole("Manager")]
         public async Task<IActionResult> Update(int id, [FromBody] TaskAddEditDto dto)
         {
             var result = await _service.UpdateAsync(id, dto, this.CurrentUserId);
@@ -60,6 +70,7 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpDelete("{id}")]
+        [HasRole("Manager")]
         public async Task<IActionResult> Delete(int id)
         {
             var result = await _service.DeleteAsync(id);
@@ -67,6 +78,7 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpGet("{taskId}/assigned-employees")]
+        [HasRole("Manager")]
         public async Task<IActionResult> GetAssignedEmployees(int taskId)
         {
             var response = await _service.GetAssignedEmployeesAsync(taskId);
