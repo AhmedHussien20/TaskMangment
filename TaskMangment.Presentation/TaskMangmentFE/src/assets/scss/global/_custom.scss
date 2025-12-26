@@ -564,26 +564,30 @@
     }
   }
 
-  /* ===============================
+/* ===============================
    Arabic Font Fix (GLOBAL)
 ================================ */
 
+html[lang="ar"] {
+  font-family: 'Tajawal', sans-serif;
+  direction: rtl;
+}
+
 html[lang="ar"] body {
-  font-family: 'Cairo', 'Tajawal', sans-serif !important;
-  font-size: 19px;          // 👈 كبر العربي
-  line-height: 1.9;
+  font-size: 18px;      
+  line-height: 1.8;
 }
 
 /* Headings */
-html[lang="ar"] h1 { font-size: 2rem; }
-html[lang="ar"] h2 { font-size: 1.75rem; }
-html[lang="ar"] h3 { font-size: 1.4rem; }
-html[lang="ar"] h4 { font-size: 1.2rem; }
+html[lang="ar"] h1 { font-size: 1.8rem; }
+html[lang="ar"] h2 { font-size: 1.6rem; }
+html[lang="ar"] h3 { font-size: 1.3rem; }
+html[lang="ar"] h4 { font-size: 1.1rem; }
 
 /* Tables */
 html[lang="ar"] table,
 html[lang="ar"] .table {
-  font-size: 15px;
+  font-size: 14px;
 }
 
 /* Forms */
@@ -593,7 +597,7 @@ html[lang="ar"] textarea,
 html[lang="ar"] button,
 html[lang="ar"] .form-control,
 html[lang="ar"] .ng-select {
-  font-size: 15px;
+  font-size: 14px;
 }
 
 
