@@ -34,8 +34,12 @@ import Swal from 'sweetalert2';
 export class CourseListComponent implements OnInit {
 
   title = 'COURSE.LIST_TITLE';
-  breadcrumbs = ['HOME', 'COURSES'];
   activeitem = 'COURSE.LIST_TITLE';
+  breadcrumbs = [
+  'MENU.HOME',
+  'MENU.EDUCATION',
+  'COURSE.LIST_TITLE'
+];
 
   // table columns
   columns = [

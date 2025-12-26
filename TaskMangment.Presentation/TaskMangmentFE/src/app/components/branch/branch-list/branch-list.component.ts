@@ -34,8 +34,12 @@ import Swal from 'sweetalert2';
 export class BranchListComponent implements OnInit {
 
   title = 'BRANCH.LIST_TITLE';
-  breadcrumbs = ['HOME', 'BRANCHES'];
   activeitem = 'BRANCH.LIST_TITLE';
+  breadcrumbs = [
+  'MENU.HOME',
+  'MENU.ORGANIZATION_STRUCTURE',
+  'BRANCH.LIST_TITLE'
+];
 
   // table columns
   columns = [

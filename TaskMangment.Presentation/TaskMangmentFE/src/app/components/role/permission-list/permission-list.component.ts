@@ -29,8 +29,12 @@ templateUrl: './permission-list.component.html'
 export class PermissionListComponent implements OnInit {
 
 title = 'PERMISSION.LIST_TITLE';
-breadcrumbs = ['HOME', 'PERMISSIONS'];
 activeitem = 'PERMISSION.LIST_TITLE';
+breadcrumbs = [
+  'MENU.HOME',
+  'MENU.EMPLOYEES',
+  'PERMISSION.LIST_TITLE'
+];
 
 isEdit = false;
 

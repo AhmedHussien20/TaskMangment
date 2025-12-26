@@ -54,6 +54,16 @@ interface ActivityItem {
   styleUrl: './event-calender.component.scss'
 })
 export class EventCalenderComponent implements OnInit, AfterViewInit {
+
+  title = 'CALENDAR.TITLE';
+  activeitem = 'CALENDAR.TITLE';
+  breadcrumbs = [
+  'MENU.HOME',
+  'MENU.EMPLOYMENT',
+  'CALENDAR.TITLE'
+];
+
+
   @ViewChild('external', { static: false }) external!: ElementRef;
  
   categories = [
@@ -101,7 +111,7 @@ export class EventCalenderComponent implements OnInit, AfterViewInit {
     },
     {
       key: 'Anniversar',
-      labelKey: 'CALENDAR.EVENT_TYPE.ANNIVERSARY',
+      labelKey: 'CALENDAR.EVENT_TYPE.ANNIVERSAR',
       className: 'bg-purple',
       borderClass: 'bg-purple',
       eventType: CalendarEventType.Anniversar

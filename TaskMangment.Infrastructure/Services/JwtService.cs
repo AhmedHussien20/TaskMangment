@@ -29,6 +29,8 @@ namespace TaskMangment.Infrastructure.Services
                 new Claim("FullName", user.FullName ?? ""),
                 new Claim("Email", user.Email ?? ""),
                 new Claim("CompanyId", user.CompanyId.ToString() ?? "")
+
+
             };
 
             var token = new JwtSecurityToken(

@@ -1,7 +1,7 @@
 import { Component, Input, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
-import { GenericTableComponent } from 'app/shared/components/generic-table/generic-table.component'; 
+import { GenericTableComponent, TableColumn } from 'app/shared/components/generic-table/generic-table.component'; 
 import { TaskDetailsRefreshService } from '../../../task-details-refresh.service';
 import { TranslateModule } from '@ngx-translate/core';
 import { DiscountListDto } from 'app/core/models/task/task-penalty';
@@ -21,10 +21,10 @@ export class TaskPenaltiesComponent implements OnInit, OnDestroy {
   rows: DiscountListDto[] = [];
   totalItems = 0;
 
-  columns = [
-    { key: 'createdDate', label: 'TASK.DATE' },
+  columns: TableColumn[] = [
+    { key: 'createdDate', label: 'TASK.DATE', type: 'date'},
     { key: 'reason', label: 'TASK.PENALTY_REASON'},
-    { key: 'amount', label: 'TASK.PENALTY_AMOUNT_LABEL' },
+    { key: 'amount', label: 'TASK.PENALTY_AMOUNT_LABEL'},
     { key: 'employeeName', label: 'TASK.PENALTY_EMPLOYEE_NAME' }
   ];
 

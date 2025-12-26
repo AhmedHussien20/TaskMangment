@@ -21,7 +21,7 @@
 
         <!-- TABLE -->
         <div *ngIf="!isLoading">
-          <app-generic-table [title]="title" [breadcrumbs]="breadcrumbs" [activeitem]="activeitem" [labels]="labels"
+          <app-generic-table [title]="title" [breadcrumbs]="breadcrumbs" [activeitem]="activeitem | translate" [labels]="labels"
             [columns]="columns" [data]="rows" [entries]="entries" [page]="page" [totalItems]="totalItems"
             [showAddButton]="true" [addButtonLabel]="'AREA.addArea' | translate" (addClick)="openAdd(areaModal)"
             [showEditButton]="true" (edit)="openEdit($event, areaModal)" [showFilters]="true" [formUrl]="formUrl"

@@ -33,7 +33,8 @@
       <textarea class="form-control" rows="3" placeholder="{{ 'TASK.PENALTY_REASON' | translate }}" formControlName="reason"></textarea>
       <div class="text-danger small mt-1" *ngIf="form.controls['reason'].touched && form.controls['reason'].invalid">
         <div *ngIf="form.controls['reason'].errors?.['required']">{{ 'TASK.REQUIRED_FIELD' | translate }}</div>
-        <div *ngIf="form.controls['reason'].errors?.['minlength']">{{ 'TASK.MIN_LENGTH' | translate }} 5 {{ 'TASK.CHARACTERS' | translate }}</div>
+        <div *ngIf="form.controls['reason'].errors?.['minlength']">   
+               {{ 'TASK.MIN_LENGTH_TASK_CHARACTERS' | translate }}</div>
       </div>
     </div>
 

@@ -4,6 +4,7 @@ using Pipelines.Sockets.Unofficial.Arenas;
 using TaskMangment.Application.Common.ApiRequests.Auth;
 using TaskMangment.Application.Common.Errors;
 using TaskMangment.Application.Common.Exceptions;
+using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;  
 using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
@@ -14,12 +15,14 @@ public class AuthService : IAuthService
     private readonly AppDbContext _db;
     private readonly IJwtService _jwt;
     private readonly IEmailService _email;
+    private readonly IRepository<RolePermission> _rolePerRepo;
 
-    public AuthService(AppDbContext db, IJwtService jwt, IEmailService email)
+    public AuthService(AppDbContext db, IJwtService jwt, IEmailService email,IRepository<RolePermission> rolePerRepo)
     {
         _db = db;
         _jwt = jwt;
         _email = email;
+        _rolePerRepo = rolePerRepo;
     }
      
     public async Task<ApiResponse<LoginResponse>> LoginAsync(LoginRequest request)
@@ -36,6 +39,20 @@ public class AuthService : IAuthService
           .Select(a => a.FilePath)
           .FirstOrDefaultAsync();
 
+
+        var roles = await _db.EmployeeRoles
+      .Where(er => er.EmployeeId == user.Id && !er.IsDeleted)
+      .Include(er => er.Role)
+      .Select(er => er.RoleId)
+.ToListAsync();
+
+        var permissions = await _rolePerRepo.GetAll(rp =>
+                roles.Contains(rp.RoleId)) 
+            .Include(rp => rp.Permission)
+            .Select(rp => rp.Permission.Code)
+            .Distinct()
+            .ToListAsync();
+
         if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
                 throw new AppException(
                     ErrorCodes.Invalid,
@@ -49,7 +66,6 @@ public class AuthService : IAuthService
                 Email = user.Email,
                 CompanyId = user.CompanyId,
                 BranchId = user.BranchId,
-
                 DepartmentId = user.DepartmentId,
                 JobId = user.JobId,
                 Title = user.Title,
@@ -60,9 +76,8 @@ public class AuthService : IAuthService
                 Qualification = user.Qualification,
                 IsActive = user.IsActive,
                 ProfileImage = profileImage,
-
-                //Roles = roles,
-                //Permissions = permissions,
+                Roles = roles,
+                Permissions = permissions,
                 Token = token
         });
     } 

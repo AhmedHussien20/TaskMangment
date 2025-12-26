@@ -1,6 +1,6 @@
 import { Component, Input, OnInit, OnChanges, SimpleChanges, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { GenericTableComponent } from 'app/shared/components/generic-table/generic-table.component';
+import { GenericTableComponent, TableColumn } from 'app/shared/components/generic-table/generic-table.component';
 import { forkJoin } from 'rxjs';
 import { TaskExtensionRequestService } from 'app/core/services/task-extension-request.service';
 import { TaskCloseRequestService } from 'app/core/services/task-close-request.service';
@@ -23,7 +23,7 @@ export class TaskRequestsComponent implements OnInit, OnChanges, AfterViewInit {
   page = 1;
   entries = 10;
 
-  columns = [
+  columns: TableColumn[] = [
     { key: 'requestNo', label: 'TASK.REQUEST_NUMBER' },
     {
       key: 'type',
@@ -34,7 +34,7 @@ export class TaskRequestsComponent implements OnInit, OnChanges, AfterViewInit {
       }
     },
     { key: 'sender', label: 'TASK.REQUEST_SENDER' },
-    { key: 'createdAt', label: 'TASK.DATE' },
+    { key: 'createdAt', label: 'TASK.DATE', type: 'date' },
     { key: 'comment', label: 'TASK.REQUEST_COMMENT' },
     { key: 'response', label: 'TASK.REQUEST_REPLY' },
     { key: 'responseDate', label: 'TASK.REQUEST_REPLY_DATE' }

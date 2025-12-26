@@ -134,7 +134,7 @@
 
                         <ng-template #normalCell>
                         <ng-container *ngIf="col.type === 'date'; else textCell">
-                           {{ getValue(item, col.key) | date:'dd MMMM yyyy':'':'ar' }}
+                           {{ getValue(item, col.key) | myDate }}
                         </ng-container>
                         </ng-template>
 

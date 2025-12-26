@@ -1,4 +1,17 @@
 {
+
+   "HEADER":{
+    "PROFILE" :"Profile",
+    "SETTINGS" : "Settings",
+    "LOGOUT" : "Logout"
+  },
+  "MENU": {
+    "HOME":"Home",
+    "ORGANIZATION_STRUCTURE" : "Organization structure",
+    "EDUCATION" : "Education",
+    "EMPLOYEES" :"Employees",
+    "EMPLOYMENT": "Employment"
+  },
   "common": {
     "welcome": "Welcome",
     "login": "Login",
@@ -374,7 +387,8 @@
     "REQUEST_SUCCESS": "Request sent successfully",
     "WARNING_SUCCESS": "Warning sent successfully",
     "PENALTY_SUCCESS": "Penalty sent successfully",
-    "COMMENT_SUCCESS": "Comment added successfully"
+    "COMMENT_SUCCESS": "Comment added successfully",
+    "MIN_LENGTH_TASK_CHARACTERS" : "Enter atleast 5 characters"
     
 
 
@@ -466,7 +480,11 @@
     "searchKey": "Search by role name",
     "VALIDATION_ERROR": "Please fill in all required fields correctly",
     "SELECT_EMPLOYEE": "Select Employee",
-    "SEARCH": "Search for roles"
+    "SEARCH": "Search for roles",
+    "ASSIGNEMPLOYEE" : "Employees of role: ",
+    "PERMISSIONROLE" : "Permission of role:",
+    "PERMISSIONS": "Permission of role",
+    "EMPLOYEES": "Employees of role"
   },
   "PERMISSION": {
     "TITLE": "Permissions Management",
@@ -519,7 +537,7 @@
       "BIRTHDAY": "Birthday",
       "HOLIDAY": "Holiday",
       "APPOINTMENT": "Appointment",
-      "ANNIVERSARY": "Anniversary",
+      "ANNIVERSAR": "Anniversary",
       "REMINDER": "Reminder",
       "TASKDEADLINE": "Task Deadline"
     },

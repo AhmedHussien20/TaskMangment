@@ -60,7 +60,5 @@ namespace TaskMangment.Application.DTOs
         public string Nationality { get; set; }
         public string IdentityNumber { get; set; }
         public List<string> Roles { get; set; } = new();
-
-
     }
 }

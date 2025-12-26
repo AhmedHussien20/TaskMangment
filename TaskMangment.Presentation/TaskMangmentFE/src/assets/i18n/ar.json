@@ -1,4 +1,17 @@
 {
+  "HEADER":{
+    "PROFILE" :"الملف الشخصي",
+    "SETTINGS" : "الاعدادات",
+    "LOGOUT" : "تسجيل الخروج"
+  },
+  "MENU": {
+    "HOME":"الرئيسية",
+    "ORGANIZATION_STRUCTURE" : "الهيكل الاداري",
+    "EDUCATION" : "التعليم",
+    "EMPLOYEES" :"الموظفين",
+    "EMPLOYMENT" : "التشغيل"
+
+  },
   "COMMON": {
     "welcome": "مرحباً",
     "login": "تسجيل الدخول",
@@ -378,7 +391,8 @@
     "REQUEST_SUCCESS": "تم إرسال الطلب بنجاح",
     "WARNING_SUCCESS": "تم إرسال التحذير بنجاح",
     "PENALTY_SUCCESS": "تم إرسال الخصم بنجاح",
-    "COMMENT_SUCCESS": "تم إضافة التعليق بنجاح"
+    "COMMENT_SUCCESS": "تم إضافة التعليق بنجاح",
+    "MIN_LENGTH_TASK_CHARACTERS" : "ادخل علي الاقل 5 احرف"
   },
   "EMPLOYEE": {
     "LIST_TITLE": "قائمة الموظفين",
@@ -481,7 +495,10 @@
     "STATUS_NEW": "جديد",
     "STATUS_IN_PROGRESS": "قيد التنفيذ",
     "STATUS_CLOSED": "مغلق",
-    "STATUS_ARCHIVED": "مؤرشف"
+    "STATUS_ARCHIVED": "مؤرشف",
+    "ASSIGNEMPLOYEE" : "المعنيين لدور: ",
+    "PERMISSIONROLE": "الصلاحيات المخصصة لدور:"
+    
   },
   "PERMISSION": {
     "TITLE": "إدارة التصاريح",
@@ -502,7 +519,7 @@
     "DELETE_FAILED": "فشل في حذف التصريح",
     "SELECT_PERMISSIONS": "اختر التصاريح",
     "VALIDATION_ERROR": "يرجى إدخال جميع الحقول المطلوبة بشكل صحيح",
-    "searchKey": "بحث باسم التصريح أو الكود"
+    "SEARCH": "بحث باسم التصريح"
   },
   "CALENDAR": {
     "TITLE": "التقويم",
@@ -532,7 +549,7 @@
       "BIRTHDAY": "عيد ميلاد",
       "HOLIDAY": "إجازة",
       "APPOINTMENT": "موعد",
-      "ANNIVERSARY": "ذكرى سنوية",
+      "ANNIVERSAR": "ذكرى سنوية",
       "REMINDER": "تذكير",
       "TASKDEADLINE": "المهلة النهائية للمهمة"
     },

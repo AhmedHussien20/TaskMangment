@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { RoleAssignmentService } from 'app/core/services/role-assignment.service';
 import { RoleService } from 'app/core/services/role.service';
 import { SearchCriteria } from 'app/models/search-criteria.model';
@@ -23,6 +23,7 @@ export class EmployeeRoleListComponent implements OnInit {
  title = '';
   breadcrumbs: string[] = [];
   activeitem = '';
+
 
   columns: TableColumn[] = [
     { key: 'fullName', label: 'EMPLOYEE.NAME' },
@@ -53,7 +54,8 @@ export class EmployeeRoleListComponent implements OnInit {
     private route: ActivatedRoute,
     private roleAssignmentService: RoleAssignmentService,
     private roleService: RoleService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private translate: TranslateService
 
   ) {}
 
@@ -70,7 +72,7 @@ export class EmployeeRoleListComponent implements OnInit {
       .subscribe(res => {
         this.rows = res.data.data.map((e: any) => ({
           ...e,
-          selected: e.isAssigned // ⭐ مهم
+          selected: e.isAssigned
         }));
         this.totalItems = res.data.totalCount;
       });
@@ -80,15 +82,20 @@ loadRoleInfo() {
       next: (res) => {
         this.roleName = res.data.name;
         
-        this.title = `ROLE.ASSIGN_TO_EMPLOYEE: ${this.roleName}`;
-        this.breadcrumbs = ['HOME', 'ROLES', this.roleName, 'EMPLOYEE'];
-        this.activeitem = `ROLE.ASSIGN_TO_EMPLOYEE: ${this.roleName}`;
-        
+        this.translate.get('ROLE.ASSIGNEMPLOYEE').subscribe(assignText => {
+      this.title = `${assignText}  ${this.roleName}`;
+    });
+    
+    this.translate.get('ROLE.ASSIGN_TO_EMPLOYEE').subscribe(assignToText => {
+      this.activeitem = `${assignToText}  ${this.roleName}`;
+    });
+        this.breadcrumbs = ['MENU.HOME','MENU.EMPLOYEES','ROLE.LIST_TITLE', this.roleName, 'ROLE.ASSIGNEMPLOYEE'];
+ 
         this.loadData();
       },
       error: () => {
         this.title = 'ROLE.ASSIGN_TO_EMPLOYEE';
-        this.breadcrumbs = ['HOME', 'ROLES', 'EMPLOYEE'];
+        this.breadcrumbs = ['MENU.HOME','MENU.EMPLOYEES','ROLE.LIST_TITLE','ROLE.ASSIGNEMPLOYEE'];
         this.activeitem = 'ROLE.ASSIGN_TO_EMPLOYEE';
         this.loadData();
       }

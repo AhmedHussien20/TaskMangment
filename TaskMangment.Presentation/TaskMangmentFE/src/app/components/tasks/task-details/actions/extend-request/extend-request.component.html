@@ -25,13 +25,12 @@
         [placeholder]="'TASK.EXTEND_REQUEST_PLACEHOLDER' | translate">
       </textarea>
 
-      <!-- رسالة الخطأ تظهر مباشرة عند الكتابة -->
       <div class="text-danger small mt-1" *ngIf="form.controls['reason'].touched && form.controls['reason'].invalid">
         <div *ngIf="form.controls['reason'].errors?.['required']">
           {{ 'TASK.REQUIRED_FIELD' | translate }}
         </div>
         <div *ngIf="form.controls['reason'].errors?.['minlength']">
-          {{ 'TASK.MIN_LENGTH' | translate }} 5 {{ 'TASK.CHARACTERS' | translate }}
+        {{ 'TASK.MIN_LENGTH_TASK_CHARACTERS' | translate }}
         </div>
       </div>
     </div>

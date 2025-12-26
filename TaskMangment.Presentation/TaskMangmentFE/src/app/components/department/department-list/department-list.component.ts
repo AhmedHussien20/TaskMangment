@@ -35,8 +35,12 @@ import { ToastrService } from 'ngx-toastr';
 export class DepartmentListComponent implements OnInit {
 
   title = 'DEPARTMENT.LIST_TITLE';
-  breadcrumbs = ['HOME', 'DEPARTMENTS'];
   activeitem = 'DEPARTMENT.LIST_TITLE';
+  breadcrumbs = [
+  'MENU.HOME',
+  'MENU.ORGANIZATION_STRUCTURE',
+  'DEPARTMENT.LIST_TITLE'
+];
 
   columns = [
     { key: 'id', label: 'DEPARTMENT.ID' },

@@ -33,8 +33,13 @@ import { ToastrService } from 'ngx-toastr';
 export class RoleListComponent implements OnInit {
 
   title = 'ROLE.LIST_TITLE';
-  breadcrumbs = ['HOME', 'ROLES'];
   activeitem = 'ROLE.LIST_TITLE';
+  breadcrumbs = [
+  'MENU.HOME',
+  'MENU.EMPLOYEES',
+  'ROLE.LIST_TITLE'
+];
+
   isEdit = false;
   columns = [
     { key: 'id', label: 'ROLE.ID' },

@@ -32,8 +32,12 @@ import { ToastrService } from "ngx-toastr";
 export class TaskListComponent implements OnInit {
 
   title = 'TASK.LIST_TITLE';
-  breadcrumbs = ['HOME', 'TASKS'];
   activeitem = 'TASK.LIST_TITLE';
+  breadcrumbs = [
+  'MENU.HOME',
+  'MENU.EMPLOYMENT',
+  'TASK.LIST_TITLE'
+];
   isLoading = false;
   columns: TableColumn[] = [
     { key: 'id', label: 'TASK.ID' },
