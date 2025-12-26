@@ -5,6 +5,7 @@ using Microsoft.Extensions.Localization;
 using System.Globalization;
 using TaskMangment.API.Middlewares;
 using TaskMangment.Application.ApiRequests.Area;
+using TaskMangment.Application.Authorization;
 using TaskMangment.Application.Common.Errors;
 using TaskMangment.Application.DTOs;
 using TaskMangment.Application.Interfaces.Services;
@@ -21,9 +22,9 @@ namespace TaskMangment.API.Controllers
         {
             _service = service;
         }
-  
 
-    [HttpGet]
+        [HasRole("Admin","CEO")]
+        [HttpGet]
         public async Task<IActionResult> GetAll([FromQuery] AreaRequest request)
         {
             var result = await _service.GetAllAsync(request, this.CompanyId); 
