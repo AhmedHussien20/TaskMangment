@@ -21,6 +21,7 @@ using TaskMangment.Infrastructure.Repositories;
 using TaskMangment.Infrastructure.Services;
 using TaskMangment.Infrastructure.SignalR;
 using Serilog;
+using TaskMangment.Infrastructure.Seeding;
 
 namespace TaskMangment.API
 {
