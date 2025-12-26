@@ -1,15 +1,18 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using TaskMangment.Application.Authorization;
+using TaskMangment.Application.Common.Errors;
+using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Interfaces;
+using TaskMangment.Application.Interfaces.Services;
 
 namespace TaskMangment.API.Filters
 {
     public class RoleAuthorizationFilter : IAsyncAuthorizationFilter
     {
-        private readonly IRoleService _roleService;
+        private readonly IRoleAssignmentService _roleService;
 
-        public RoleAuthorizationFilter(IRoleService roleService)
+        public RoleAuthorizationFilter(IRoleAssignmentService roleService)
         {
             _roleService = roleService;
         }
@@ -31,11 +34,16 @@ namespace TaskMangment.API.Filters
 
             int userId = int.Parse(userIdClaimed.Value);
 
-            //Get the user Role here 
-            //var userRoles = _roleService.
+            var userRoles = await _roleService.GetUserRolesAsync(userId);
 
-            //if(!userRoles.Any(x=>  attr.role.contain(x)))
-            //{context.result = new ForbidResult()}
+            if (!userRoles.Any(r =>
+                    attr.Roles.Contains(r, StringComparer.OrdinalIgnoreCase)))
+            {
+                //context.Result = new ForbidResult();
+            
+                throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status400BadRequest);
+                //return;
+            }
         }
     }
 }

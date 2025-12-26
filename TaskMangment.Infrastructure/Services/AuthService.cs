@@ -39,25 +39,11 @@ public class AuthService : IAuthService
           .Select(a => a.FilePath)
           .FirstOrDefaultAsync();
 
-
-        var roles = await _db.EmployeeRoles
-      .Where(er => er.EmployeeId == user.Id && !er.IsDeleted)
-      .Include(er => er.Role)
-      .Select(er => er.RoleId)
-.ToListAsync();
-
-        var permissions = await _rolePerRepo.GetAll(rp =>
-                roles.Contains(rp.RoleId)) 
-            .Include(rp => rp.Permission)
-            .Select(rp => rp.Permission.Code)
-            .Distinct()
-            .ToListAsync();
-
         if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
                 throw new AppException(
                     ErrorCodes.Invalid,
                     StatusCodes.Status404NotFound);
-        var token = _jwt.GenerateToken(user);
+        var token = await _jwt.GenerateTokenAsync(user);
 
         return ApiResponse<LoginResponse>.Ok(new LoginResponse
         {
@@ -76,8 +62,8 @@ public class AuthService : IAuthService
                 Qualification = user.Qualification,
                 IsActive = user.IsActive,
                 ProfileImage = profileImage,
-                Roles = roles,
-                Permissions = permissions,
+                //Roles = roles,
+                //Permissions = permissions,
                 Token = token
         });
     } 

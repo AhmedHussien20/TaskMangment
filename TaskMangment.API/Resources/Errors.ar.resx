@@ -186,4 +186,7 @@
   <data name="ALREADY_ASSIGNED" xml:space="preserve">
     <value>تم تعين هذا الموظف بالفعل</value>
   </data>
+  <data name="Unauthorized" xml:space="preserve">
+    <value>ليس لديك اذن لاستخدام هذا المصدر</value>
+  </data>
 </root>

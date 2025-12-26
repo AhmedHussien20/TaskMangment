@@ -187,4 +187,7 @@
   <data name="ALREADY_ASSIGNED" xml:space="preserve">
     <value>already assigned</value>
   </data>
+  <data name="Unauthorized" xml:space="preserve">
+    <value>You do not have permission to access this resource.</value>
+  </data>
 </root>

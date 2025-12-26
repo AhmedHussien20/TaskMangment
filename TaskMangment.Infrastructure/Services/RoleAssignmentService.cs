@@ -163,6 +163,22 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<PagedResponse<AssignedEmployeeDto>>.Ok(response);
         }
 
+        public async Task<List<string>> GetUserRolesAsync(int userId)
+        {
+            var roles = await _employeeRoleRepo
+                .GetAll(er =>
+                    er.EmployeeId == userId &&
+                    //er.IsAssigned &&
+                    !er.IsDeleted)
+                .Include(er => er.Role)
+                .Select(er => er.Role.Name)
+                .AsNoTracking()
+                .ToListAsync();
+
+            return roles;
+        }
+
+
 
     }
 }

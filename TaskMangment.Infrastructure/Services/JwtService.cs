@@ -12,26 +12,35 @@ namespace TaskMangment.Infrastructure.Services
     public class JwtService : IJwtService
     {
         private readonly IConfiguration _config;
+        private readonly IRoleAssignmentService _roleService;
 
-        public JwtService(IConfiguration config)
+
+        public JwtService(IConfiguration config, IRoleAssignmentService roleService)
         {
             _config = config;
+            _roleService = roleService;
         }
 
-        public string GenerateToken(Employee user)
+        public async Task<string> GenerateTokenAsync(Employee user)
         {
+            var roles = await _roleService.GetUserRolesAsync(user.Id);
+
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["JWT:Key"]));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-            var claims = new[]
+            var claims = new List<Claim>
             {
                 new Claim("UserId", user.Id.ToString()),
                 new Claim("FullName", user.FullName ?? ""),
                 new Claim("Email", user.Email ?? ""),
                 new Claim("CompanyId", user.CompanyId.ToString() ?? "")
-
-
             };
+
+
+            foreach (var role in roles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role));
+            }
 
             var token = new JwtSecurityToken(
                 issuer: _config["JWT:Issuer"],

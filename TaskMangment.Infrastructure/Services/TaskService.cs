@@ -56,10 +56,10 @@ namespace TaskMangment.Infrastructure.Services
             _emailQueueRepo = emailQueueRepo;
         }
 
-        public async Task<ApiResponse<PagedResponse<TaskGetDto>>> GetAllAsync(TaskRequest request, int CompanyId)
+        public async Task<ApiResponse<PagedResponse<TaskGetDto>>> GetAllAsync(TaskRequest request, int CompanyId, string role, int employeeId)
         {
             string cacheKey =
-                $"tasks:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}:{CompanyId}";
+                $"tasks:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}:{CompanyId}:{role}:{employeeId}";
 
             if (!request.BypassCache)
             {
@@ -74,7 +74,10 @@ namespace TaskMangment.Infrastructure.Services
                 .Include(t => t.AssignedBy)
                 .ApplySearch(request.searchKey);
 
-
+            if (role != "Manager")
+            {
+                query = query.Where(t => t.Assignments.Any(a => a.Employee.Id == employeeId));
+            }
 
             var totalCount = await query.CountAsync();
 
