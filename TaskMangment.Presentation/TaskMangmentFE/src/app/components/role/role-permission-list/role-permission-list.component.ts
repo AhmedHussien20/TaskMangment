@@ -69,12 +69,15 @@ export class RolePermissionListComponent implements OnInit {
       next: (res) => {
         this.roleName = res.data.name;
         
-        //this.title = `ROLE.ASSIGN_PERMISSIONS ${this.roleName}`;
-        const assignText = this.translate.instant('ROLE.ASSIGN_PERMISSIONS');
-        this.title = `${assignText}: ${this.roleName}`;
-        
-        this.breadcrumbs = ['HOME', 'ROLES', this.roleName, 'PERMISSIONS'];
-        this.activeitem = `ROLE.ASSIGN_PERMISSIONS`;
+         this.translate.get('ROLE.PERMISSIONROLE').subscribe(assignText => {
+      this.title = `${assignText}  ${this.roleName}`;
+    });
+    
+    this.translate.get('ROLE.PERMISSIONROLE').subscribe(assignToText => {
+      this.activeitem = `${assignToText}  ${this.roleName}`;
+    });
+        this.breadcrumbs = ['MENU.HOME','MENU.EMPLOYEES','ROLE.LIST_TITLE', this.roleName, 'ROLE.PERMISSIONS'];
+ 
         
         this.loadData();
       },

@@ -3,6 +3,7 @@ import { Component, EventEmitter, Input, Output, OnDestroy } from '@angular/core
 import { FormsModule } from '@angular/forms';
 import { NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
 import { TranslateModule } from '@ngx-translate/core';
+import { MyDatePipe } from 'app/components/utilities/pipline/MyDatePipe';
 import { SearchCriteria } from 'app/core/models/search-criteria.model';
 
 export type ColumnType =
@@ -37,7 +38,7 @@ interface HasId {
   imports: [
     CommonModule,
     FormsModule,
-    NgbPaginationModule, TranslateModule
+    NgbPaginationModule, TranslateModule,MyDatePipe
   ],
   styleUrls: ['./generic-table.component.scss']
 })

@@ -1,7 +1,7 @@
 import { Component, Input, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
-import { GenericTableComponent } from 'app/shared/components/generic-table/generic-table.component';
+import { GenericTableComponent, TableColumn } from 'app/shared/components/generic-table/generic-table.component';
 import { TaskDetailsRefreshService } from '../../../task-details-refresh.service';
 import { TranslateModule } from '@ngx-translate/core';
 import { WarningGetDto} from 'app/core/models/task/task-warning';
@@ -23,8 +23,8 @@ export class TaskWarningsComponent implements OnInit, OnDestroy {
   rows: WarningGetDto[] = [];
   totalItems = 0;
 
-  columns = [
-     { key: 'issuedAt', label: 'TASK.DATE' },
+  columns: TableColumn[] = [
+     { key: 'issuedAt', label: 'TASK.DATE', type: 'date' },
     { key: 'reason', label: 'TASK.WARNING_RESON' },
     { key: 'issuedEmployeeName', label: 'TASK.WARNED_EMPLOYEE' },
     { key: 'issuedByName', label: 'TASK.WARNED_BY' }

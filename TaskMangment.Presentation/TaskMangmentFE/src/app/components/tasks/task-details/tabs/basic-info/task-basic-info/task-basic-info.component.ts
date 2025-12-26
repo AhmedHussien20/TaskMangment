@@ -5,11 +5,10 @@ import { TaskService } from 'app/core/services/task.service';
 import { TaskGet } from 'app/core/models/task/task';
 import { TranslateModule } from '@ngx-translate/core';
 import { MyDatePipe } from 'app/components/utilities/pipline/MyDatePipe';
-import { DatePipe } from '@angular/common';
 @Component({
   selector: 'app-task-basic-info',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule,TranslateModule, MyDatePipe, DatePipe
+  imports: [CommonModule, ReactiveFormsModule,TranslateModule, MyDatePipe
 ],
   templateUrl: './task-basic-info.component.html'
 })

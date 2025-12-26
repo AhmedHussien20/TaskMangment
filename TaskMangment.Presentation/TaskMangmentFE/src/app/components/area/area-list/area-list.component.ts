@@ -36,8 +36,12 @@ declare var bootstrap: any;
 export class AreaListComponent implements OnInit {
 
   title = 'AREA.LIST_TITLE';
-  breadcrumbs = ['HOME', 'AREAS'];
   activeitem = 'AREA.LIST_TITLE';
+  breadcrumbs = [
+  'MENU.HOME',
+  'MENU.ORGANIZATION_STRUCTURE',
+  'AREA.LIST_TITLE'
+];
 
   // Table Columns
   columns = [

@@ -225,6 +225,8 @@ namespace TaskMangment.Infrastructure.Services
                             .Where(d => d.Id == referenceId)
                             .Select(d => new
                             {
+                                TaskNumber = d.Task.Id.ToString(),
+                                TaskTitle = d.Task.Title,
                                 d.Reason,
                                 d.Amount
                             })
@@ -235,8 +237,11 @@ namespace TaskMangment.Infrastructure.Services
 
                         return new Dictionary<string, string>
                         {
+                            ["TaskNumber"] = deduction.TaskNumber,
+                            ["TaskTitle"] = deduction.TaskTitle,
                             ["DeductionReason"] = deduction.Reason,
-                            ["DeductionAmount"] = deduction.Amount.ToString("N2")
+                            ["DeductionAmount"] = deduction.Amount.ToString("N2"),
+
                         };
                     }
 

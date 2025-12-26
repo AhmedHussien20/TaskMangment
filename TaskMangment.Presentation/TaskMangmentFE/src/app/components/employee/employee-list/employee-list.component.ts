@@ -34,8 +34,12 @@ import { ToastrService } from 'ngx-toastr';
 export class EmployeeListComponent implements OnInit {
 
   title = 'EMPLOYEE.LIST_TITLE';
-  breadcrumbs = ['HOME', 'EMPLOYEES'];
   activeitem = 'EMPLOYEE.LIST_TITLE';
+  breadcrumbs = [
+  'MENU.HOME',
+  'MENU.EMPLOYEES',
+  'EMPLOYEE.LIST_TITLE'
+];
 
   // table columns
   columns = [
