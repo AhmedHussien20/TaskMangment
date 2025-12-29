@@ -17,5 +17,7 @@ namespace TaskMangment.Application.Interfaces.Services
         Task<ApiResponse<OfferGetDto>> AddAsync(OfferAddEditDto dto);
         Task<ApiResponse<OfferGetDto>> UpdateAsync(int id, OfferAddEditDto dto);
         Task<ApiResponse<bool>> DeleteAsync(int id);
+        Task<ApiResponse<bool>> AssignOfferToStudentsAsync(int OfferId, OfferAssignStudentsDto dto);
+
     }
 }
