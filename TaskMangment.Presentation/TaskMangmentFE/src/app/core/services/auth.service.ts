@@ -9,6 +9,7 @@ import { login, loginFailure, loginSuccess, logout } from 'app/store/auth/auth.a
 import { BaseResponse } from 'app/models/base.response.model';
 import { selectAuthLoading } from 'app/store/auth/auth.selectors';
 import { Router } from '@angular/router';
+import { AuthUser } from '../models/auth/auth-user';
 
 @Injectable({
   providedIn: 'root',
@@ -59,8 +60,20 @@ export class AuthService {
     this.router.navigate(['/auth/login'], { replaceUrl: true });
   }
 
+  private userKey = 'auth_user';
 
   isAuthenticated(): boolean {
     return !!localStorage.getItem('authToken');
+  }
+  getUser(): AuthUser | null {
+    const u = localStorage.getItem('userData');
+    return u ? JSON.parse(u) : null;
+  }
+  hasPermission(permission: string): boolean {
+    return this.getUser()?.permissions.includes(permission) ?? false;
+  }
+
+  hasMinRoleLevel(level: number): boolean {
+    return (this.getUser()?.roleLevel ?? 0) >= level;
   }
 }

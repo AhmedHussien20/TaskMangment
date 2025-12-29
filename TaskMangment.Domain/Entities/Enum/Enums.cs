@@ -49,5 +49,13 @@ namespace TaskMangment.Domain.Entities
 
     }
 
+    public enum RoleLevelEnum
+    {
+        Employee = 10,
+        TeamLead = 50,
+        Manager = 70,
+        Admin = 100
+    }
+
 
 }

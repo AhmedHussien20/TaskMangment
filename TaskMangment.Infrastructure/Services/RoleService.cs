@@ -42,9 +42,7 @@ namespace TaskMangment.Infrastructure.Services
             _rolePermissionRepo = rolePermissionRepo;
         }
 
-        public async Task<ApiResponse<PagedResponse<RoleGetDto>>> GetAllAsync(
-    RoleRequest request,
-    int companyId)
+        public async Task<ApiResponse<PagedResponse<RoleGetDto>>> GetAllAsync(RoleRequest request,int companyId)
         {
             string cacheKey =
                 $"roles:{companyId}:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";

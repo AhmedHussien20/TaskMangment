@@ -30,17 +30,22 @@ namespace TaskMangment.Infrastructure.Services
 
             var claims = new List<Claim>
             {
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim("UserId", user.Id.ToString()),
-                new Claim("FullName", user.FullName ?? ""),
-                new Claim("Email", user.Email ?? ""),
-                new Claim("CompanyId", user.CompanyId.ToString() ?? "")
+                new Claim("FullName", user.FullName ?? string.Empty),
+                new Claim("Email", user.Email ?? string.Empty),
+                new Claim("CompanyId", user.CompanyId.ToString()),
             };
 
 
+            int roleLevelId = roles.Any()? roles.Max(r => r.Level) : (int)RoleLevelEnum.Employee;
+            claims.Add(new Claim("RoleLevelId", roleLevelId.ToString()));
+
             foreach (var role in roles)
             {
-                claims.Add(new Claim(ClaimTypes.Role, role));
+                claims.Add(new Claim(ClaimTypes.Role, role.Name));
             }
+
 
             var token = new JwtSecurityToken(
                 issuer: _config["JWT:Issuer"],

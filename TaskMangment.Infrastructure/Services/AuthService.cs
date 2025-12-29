@@ -1,72 +1,106 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Pipelines.Sockets.Unofficial.Arenas;
+using System.Linq;
 using TaskMangment.Application.Common.ApiRequests.Auth;
 using TaskMangment.Application.Common.Errors;
 using TaskMangment.Application.Common.Exceptions;
+using TaskMangment.Application.Interfaces;
 using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;  
 using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
 using TaskMangment.Infrastructure.DataContext;
+using TaskMangment.Infrastructure.Services;
 
 public class AuthService : IAuthService
 {
     private readonly AppDbContext _db;
     private readonly IJwtService _jwt;
     private readonly IEmailService _email;
+    private readonly IRoleAssignmentService _roleService;
+    private readonly IRolePermissionService _permissionService;
     private readonly IRepository<RolePermission> _rolePerRepo;
 
-    public AuthService(AppDbContext db, IJwtService jwt, IEmailService email,IRepository<RolePermission> rolePerRepo)
+    public AuthService(AppDbContext db, IJwtService jwt, IEmailService email,IRepository<RolePermission> rolePerRepo, IRoleAssignmentService roleService, IRolePermissionService permissionService)
     {
         _db = db;
         _jwt = jwt;
         _email = email;
         _rolePerRepo = rolePerRepo;
+        _roleService = roleService;
+        _permissionService = permissionService;
     }
-     
+
     public async Task<ApiResponse<LoginResponse>> LoginAsync(LoginRequest request)
     {
-        var user = await _db.Employees.FirstOrDefaultAsync(u => u.Email == request.Email);
-      
-        if (user == null)
-                throw new AppException(
-                    ErrorCodes.EmailNotFound,
-                    StatusCodes.Status404NotFound);
+        var user = await _db.Employees
+            .FirstOrDefaultAsync(u => u.Email == request.Email);
 
-        var profileImage = await _db.Attachments
-          .Where(a => a.ReferenceId == user.Id && a.AttachmentType == AttachmentType.Employee && !a.IsDeleted)
-          .Select(a => a.FilePath)
-          .FirstOrDefaultAsync();
+        if (user == null)
+            throw new AppException(
+                ErrorCodes.EmailNotFound,
+                StatusCodes.Status404NotFound);
 
         if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
-                throw new AppException(
-                    ErrorCodes.Invalid,
-                    StatusCodes.Status404NotFound);
+            throw new AppException(
+                ErrorCodes.Invalid,
+                StatusCodes.Status404NotFound);
+
+        var profileImage = await _db.Attachments
+            .Where(a =>
+                a.ReferenceId == user.Id &&
+                a.AttachmentType == AttachmentType.Employee &&
+                !a.IsDeleted)
+            .Select(a => a.FilePath)
+            .FirstOrDefaultAsync();
+
+        var userRoles = await _roleService.GetUserRolesAsync(user.Id);
+
+        var roles = userRoles
+            .Select(r => r.Name)
+            .Distinct()
+            .ToList();
+
+        int roleLevel = userRoles.Any()
+            ? userRoles.Max(r => r.Level)
+            : (int)RoleLevelEnum.Employee;
+
+        string roleLevelName =
+            Enum.GetName(typeof(RoleLevelEnum), roleLevel) ?? "Employee";
+
+        var permissions = await _permissionService
+                            .GetUserPermissionsAsync(user.Id);
+
         var token = await _jwt.GenerateTokenAsync(user);
 
         return ApiResponse<LoginResponse>.Ok(new LoginResponse
         {
-                UserId = user.Id,
-                FullName = user.FullName,
-                Email = user.Email,
-                CompanyId = user.CompanyId,
-                BranchId = user.BranchId,
-                DepartmentId = user.DepartmentId,
-                JobId = user.JobId,
-                Title = user.Title,
-                Nationality = user.Nationality,
-                IdentityNumber = user.IdentityNumber,
-                Mobile = user.Mobile,
-                Address = user.Address,
-                Qualification = user.Qualification,
-                IsActive = user.IsActive,
-                ProfileImage = profileImage,
-                //Roles = roles,
-                //Permissions = permissions,
-                Token = token
+            UserId = user.Id,
+            FullName = user.FullName,
+            Email = user.Email,
+            CompanyId = user.CompanyId,
+            BranchId = user.BranchId,
+            DepartmentId = user.DepartmentId,
+            JobId = user.JobId,
+            Title = user.Title,
+            Nationality = user.Nationality,
+            IdentityNumber = user.IdentityNumber,
+            Mobile = user.Mobile,
+            Address = user.Address,
+            Qualification = user.Qualification,
+            IsActive = user.IsActive,
+            ProfileImage = profileImage,
+
+            Roles = roles,
+            Permissions = permissions,
+            RoleLevel = roleLevel,
+            RoleLevelName = roleLevelName,
+
+            Token = token
         });
-    } 
+    }
+
 
     public async Task<ApiResponse<bool>> ForgotPasswordAsync(string email)
     {

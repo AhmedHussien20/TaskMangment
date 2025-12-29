@@ -2,6 +2,8 @@ export interface Role {
   id: number;
   name: string;
   description?: string;
+  level:string;
+  levelName:string;
 }
 
 export interface RoleAddEdit {

@@ -1,16 +1,15 @@
 {
-  "HEADER":{
-    "PROFILE" :"الملف الشخصي",
-    "SETTINGS" : "الاعدادات",
-    "LOGOUT" : "تسجيل الخروج"
+  "HEADER": {
+    "PROFILE": "الملف الشخصي",
+    "SETTINGS": "الاعدادات",
+    "LOGOUT": "تسجيل الخروج"
   },
   "MENU": {
-    "HOME":"الرئيسية",
-    "ORGANIZATION_STRUCTURE" : "الهيكل الاداري",
-    "EDUCATION" : "التعليم",
-    "EMPLOYEES" :"الموظفين",
-    "EMPLOYMENT" : "التشغيل"
-
+    "HOME": "الرئيسية",
+    "ORGANIZATION_STRUCTURE": "الهيكل الاداري",
+    "EDUCATION": "التعليم",
+    "EMPLOYEES": "الموظفين",
+    "EMPLOYMENT": "التشغيل"
   },
   "COMMON": {
     "welcome": "مرحباً",
@@ -401,7 +400,7 @@
     "WARNING_SUCCESS": "تم إرسال التحذير بنجاح",
     "PENALTY_SUCCESS": "تم إرسال الخصم بنجاح",
     "COMMENT_SUCCESS": "تم إضافة التعليق بنجاح",
-    "MIN_LENGTH_TASK_CHARACTERS" : "ادخل علي الاقل 5 احرف"
+    "MIN_LENGTH_TASK_CHARACTERS": "ادخل علي الاقل 5 احرف"
   },
   "EMPLOYEE": {
     "LIST_TITLE": "قائمة الموظفين",
@@ -505,9 +504,15 @@
     "STATUS_IN_PROGRESS": "قيد التنفيذ",
     "STATUS_CLOSED": "مغلق",
     "STATUS_ARCHIVED": "مؤرشف",
-    "ASSIGNEMPLOYEE" : "المعنيين لدور: ",
-    "PERMISSIONROLE": "الصلاحيات المخصصة لدور:"
-    
+    "ASSIGNEMPLOYEE": "المعنيين لدور: ",
+    "PERMISSIONROLE": "الصلاحيات المخصصة لدور:",
+    "LEVEL": "المستوى",
+    "LEVELS": {
+      "EMPLOYEE": "موظف",
+      "TEAM_LEAD": "قائد فريق",
+      "MANAGER": "مدير",
+      "ADMIN": "مدير النظام"
+    }
   },
   "PERMISSION": {
     "TITLE": "إدارة التصاريح",

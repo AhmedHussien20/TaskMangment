@@ -19,30 +19,28 @@ namespace TaskMangment.API.Filters
         public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
         {
             var attr = context.ActionDescriptor.EndpointMetadata
-                .OfType<HasRoleAttribute>()
+                .OfType<HasMinRoleLevelAttribute>()
                 .FirstOrDefault();
 
             if (attr == null)
                 return;
 
-            var userIdClaimed = context.HttpContext.User.FindFirst("UserId");
-            if (userIdClaimed == null)
+            var userIdClaim = context.HttpContext.User.FindFirst("UserId");
+            if (userIdClaim == null)
             {
                 context.Result = new UnauthorizedResult();
                 return;
             }
 
-            int userId = int.Parse(userIdClaimed.Value);
+            int userId = int.Parse(userIdClaim.Value);
 
-            var userRoles = await _roleService.GetUserRolesAsync(userId);
+            var userMaxLevel = await _roleService.GetUserMaxRoleLevelAsync(userId);
 
-            if (!userRoles.Any(r =>
-                    attr.Roles.Contains(r, StringComparer.OrdinalIgnoreCase)))
+            if (userMaxLevel < (int)attr.MinLevel)
             {
-                //context.Result = new ForbidResult();
-            
-                throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status400BadRequest);
-                //return;
+                throw new AppException(
+                    ErrorCodes.Unauthorized,
+                    StatusCodes.Status403Forbidden);
             }
         }
     }

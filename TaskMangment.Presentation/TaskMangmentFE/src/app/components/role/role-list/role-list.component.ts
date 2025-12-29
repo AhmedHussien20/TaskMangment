@@ -35,16 +35,39 @@ export class RoleListComponent implements OnInit {
   title = 'ROLE.LIST_TITLE';
   activeitem = 'ROLE.LIST_TITLE';
   breadcrumbs = [
-  'MENU.HOME',
-  'MENU.EMPLOYEES',
-  'ROLE.LIST_TITLE'
-];
+    'MENU.HOME',
+    'MENU.EMPLOYEES',
+    'ROLE.LIST_TITLE'
+  ];
 
   isEdit = false;
   columns = [
     { key: 'id', label: 'ROLE.ID' },
     { key: 'name', label: 'ROLE.NAME' },
     { key: 'description', label: 'ROLE.DESCRIPTION' },
+    {
+      key: 'levelName',
+      label: 'ROLE.LEVEL',
+      type: 'badge' as const,
+      badgeMap: {
+        Employee: {
+          text: 'ROLE.LEVELS.EMPLOYEE',
+          class: 'bg-secondary'
+        },
+        TeamLead: {
+          text: 'ROLE.LEVELS.TEAM_LEAD',
+          class: 'bg-info'
+        },
+        Manager: {
+          text: 'ROLE.LEVELS.MANAGER',
+          class: 'bg-primary'
+        },
+        Admin: {
+          text: 'ROLE.LEVELS.ADMIN',
+          class: 'bg-danger'
+        }
+      }
+    },
     {
       key: 'employeeCount',
       label: 'ROLE.EMPLOYEES',
@@ -170,8 +193,7 @@ export class RoleListComponent implements OnInit {
         'employees'
       ]);
     }
-    else if (event.type === 'permissionCount') 
-    {
+    else if (event.type === 'permissionCount') {
       this.router.navigate([
         '/role',
         event.row.id,
@@ -180,38 +202,38 @@ export class RoleListComponent implements OnInit {
     }
 
   }
-   confirmDelete(roleId: number) {
-      Swal.fire({
-        title: this.translate.instant('COMMON.CONFIRM_DELETE_TITLE'),
-        text: this.translate.instant('COMMON.CONFIRM_DELETE_TEXT'),
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: this.translate.instant('COMMON.DELETE_BUTTON'),
-        cancelButtonText: this.translate.instant('COMMON.CANCEL_BUTTON'),
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#6c757d'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          this.deleteRole(roleId);
-        }
-      });
-    }
-    
-    deleteRole(roleId: number) {
-      this.isLoading = true;
+  confirmDelete(roleId: number) {
+    Swal.fire({
+      title: this.translate.instant('COMMON.CONFIRM_DELETE_TITLE'),
+      text: this.translate.instant('COMMON.CONFIRM_DELETE_TEXT'),
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: this.translate.instant('COMMON.DELETE_BUTTON'),
+      cancelButtonText: this.translate.instant('COMMON.CANCEL_BUTTON'),
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#6c757d'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.deleteRole(roleId);
+      }
+    });
+  }
 
-      this.roleService.delete(roleId).subscribe({
-        next: () => {
+  deleteRole(roleId: number) {
+    this.isLoading = true;
+
+    this.roleService.delete(roleId).subscribe({
+      next: () => {
         this.toastr.success(this.translate.instant('COMMON.DELETE_SUCCESS'));
-    
-    
-          this.isLoading = false;
-          this.loadData();
-        },
-        error: () => {
-          this.isLoading = false;
-        }
-      });
-    }
-  
+
+
+        this.isLoading = false;
+        this.loadData();
+      },
+      error: () => {
+        this.isLoading = false;
+      }
+    });
+  }
+
 }

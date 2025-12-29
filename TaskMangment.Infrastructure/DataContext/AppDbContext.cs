@@ -73,6 +73,7 @@ namespace TaskMangment.Infrastructure.DataContext
         public DbSet<OfferAssignment> OfferAssignments { get; set; }
         public DbSet<PaymentVoucher> PaymentVouchers { get; set; }
         public DbSet<Permission> Permissions { get; set; }
+        public DbSet<RolePermission> RolePermissions { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<Student> Students { get; set; }
         public DbSet<WorkTask> Tasks { get; set; }
@@ -89,6 +90,22 @@ namespace TaskMangment.Infrastructure.DataContext
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+            builder.Entity<RolePermission>(entity =>
+            {
+                entity.ToTable("RolePermission");
+
+                entity.HasKey(rp => rp.Id); 
+
+                entity.HasOne(rp => rp.Role)
+                    .WithMany(r => r.RolePermissions)
+                    .HasForeignKey(rp => rp.RoleId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(rp => rp.Permission)
+                    .WithMany(p => p.RolePermissions)
+                    .HasForeignKey(rp => rp.PermissionId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
 
             builder.Entity<Branch>()
                     .HasMany(b => b.Employees)
