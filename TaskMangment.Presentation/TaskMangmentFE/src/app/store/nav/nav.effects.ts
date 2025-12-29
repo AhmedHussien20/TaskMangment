@@ -31,7 +31,7 @@ private MENUITEMS: MenuItem[] = [
     title: 'nav.apps.title',
     icon: 'ti-layout',
     type: 'sub',
-    minRoleLevel: 50,
+    minRoleLevel: 10,
     children: [
 
       // ---- Organization ----
@@ -95,19 +95,19 @@ private MENUITEMS: MenuItem[] = [
         title: 'nav.apps.operations.title',
         icon: 'ti-clipboard',
         type: 'sub',
-        minRoleLevel: 50,
+        minRoleLevel: 10,
         children: [
           {
             title: 'nav.apps.task.list',
             type: 'link',
             path: '/task/task-list',
-            minRoleLevel: 50
+            minRoleLevel: 10
           },
           {
             title: 'nav.apps.calender.title',
             type: 'link',
             path: '/utilities/event-calender',
-            minRoleLevel: 50
+            minRoleLevel: 10
           },
         ],
       },

@@ -27,7 +27,6 @@ namespace TaskMangment.API.Controllers
 
         
         [HttpGet]
-        [HasMinRoleLevel(RoleLevelEnum.Employee)]
         public async Task<IActionResult> GetAll([FromQuery] TaskRequest request)
         {
             var result = await _service.GetAllAsync(request, CompanyId, this.Role, this.CurrentUserId);
@@ -44,7 +43,6 @@ namespace TaskMangment.API.Controllers
             return Success(result.Data);
         }
         [HttpPost]
-        [HasMinRoleLevel(RoleLevelEnum.Manager)]
         public async Task<IActionResult> Add([FromBody] TaskAddEditDto dto)
         {
            
@@ -53,7 +51,6 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpPut("{id}")]
-        [HasMinRoleLevel(RoleLevelEnum.Manager)]
         public async Task<IActionResult> Update(int id, [FromBody] TaskAddEditDto dto)
         {
             var result = await _service.UpdateAsync(id, dto, this.CurrentUserId);
@@ -61,7 +58,6 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpDelete("{id}")]
-        [HasMinRoleLevel(RoleLevelEnum.Manager)]
         public async Task<IActionResult> Delete(int id)
         {
             var result = await _service.DeleteAsync(id);
@@ -69,7 +65,6 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpGet("{taskId}/assigned-employees")]
-        [HasMinRoleLevel(RoleLevelEnum.Manager)]
         public async Task<IActionResult> GetAssignedEmployees(int taskId)
         {
             var response = await _service.GetAssignedEmployeesAsync(taskId);
