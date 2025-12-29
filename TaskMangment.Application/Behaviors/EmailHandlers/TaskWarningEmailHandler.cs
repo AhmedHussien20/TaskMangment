@@ -25,6 +25,7 @@ namespace TaskMangment.Application.Behaviors.EmailHandlers
             {
                 TemplateKey = "EmployeeWarning",
                 ReferenceType = ReferenceType.EmployeeWarning,
+                RecipientType = RecipientType.Employee,
                 ReferenceId = ev.WarningId,
                 UserIds = new List<int> { ev.IssuedtoId }
             });

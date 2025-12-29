@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using TaskMangment.API.Filters;
 using TaskMangment.Application.Common.ApiRequests.Course;
 using TaskMangment.Application.DTOs;
 using TaskMangment.Application.Interfaces.Services;
+using TaskMangment.Infrastructure.Services;
 
 namespace TaskMangment.API.Controllers
 {
@@ -38,6 +40,14 @@ namespace TaskMangment.API.Controllers
             var result = await _service.GetByIdAsync(id);
             return Success(result.Data);
         }
+
+        [HttpGet("{courseId}/subjects")]
+        public async Task<IActionResult> GetSubjectsByCourse(int courseId)
+        {
+            var subjects = await _service.GetSubjectsByCourseAsync(courseId);
+            return Success(subjects.Data);
+        }
+
 
         [HttpPost]
         public async Task<IActionResult> Add([FromBody] CourseAddEditDto dto)

@@ -88,7 +88,8 @@
       },
       "course": {
         "title": "الدورات",
-        "list": "قائمة الدورات"
+        "list": "قائمة الدورات",
+        "offer_list" : "قائمة العروض"
       },
       "configurations": {
         "title": "الإعدادات",
@@ -413,7 +414,7 @@
     "EMAIL": "البريد الإلكتروني",
     "MOBILE": "الهاتف المحمول",
     "ROLES": "الصلاحيات",
-    "TITLE": "المسمى الوظيفي",
+    "JOB_TITLE": "المسمى الوظيفي",
     "NATIONALITY": "الجنسية",
     "IDENTITY_NUMBER": "رقم الهوية",
     "ADDRESS": "العنوان",
@@ -435,7 +436,7 @@
     "searchKey": "بحث باسم الموظف",
     "CONFIRM_PASSWORD": "تأكيد كلمة المرور",
     "ROLE": "الدور",
-    "ATTACHMENTS": "صورة الملف الشخصي"
+    "PROFILE_PIC": "صورة الملف الشخصي"
   },
   "STUDENT": {
     "TITLE": "الطلاب",
@@ -623,5 +624,23 @@
     "LOCATION": "الموقع",
     "NOT_PROVIDED": "غير متوفر",
     "EDIT_PROFILE": "تعديل الملف الشخصي"
+  },
+   "OFFER": {
+    "ADD": "اضافة عرض",
+    "TITLE": "عنوان العرض",
+    "CREATE": "إنشاء عرض جديد",
+    "UPDATE": "تعديل العرض",
+    "LIST_TITLE": "عروض الدورات",
+    "ID": "رقم",
+    "COURSE": "الدورة",
+    "SUBJECT": "المادة",
+    "START_DATE": "تاريخ البداية",
+    "END_DATE": "تاريخ النهاية",
+    "DESCRIPTION": "الوصف",
+    "ASSIGNED_STUDENTS": "الطلاب المسجلين",
+    "SEARCH": "بحث باسم العرض",
+    "CREATE_SUCCESS": "تم إنشاء العرض بنجاح",
+    "UPDATE_SUCCESS": "تم تحديث العرض بنجاح",
+    "STUDENTS" : "قائمة الطلاب"
   }
 }

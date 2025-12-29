@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using TaskMangment.Application.Common.ApiRequests.Offer;
 using TaskMangment.Application.DTOs;
 using TaskMangment.Application.Interfaces.Services;
-using TaskMangment.Infrastructure.Services;
 
 namespace TaskMangment.API.Controllers
 {
@@ -54,13 +53,6 @@ namespace TaskMangment.API.Controllers
         {
             var result = await _service.DeleteAsync(id);
             return Success(true, "Offer deleted successfully");
-        }
-
-        [HttpPost("{offerId}/assign-students")]
-        public async Task<IActionResult> AssignStudents(int offerId,[FromBody] OfferAssignStudentsDto dto)
-        {
-            var result = await _service.AssignOfferToStudentsAsync(offerId, dto);
-            return Success(true, "Offer assigned to students successfully");
         }
     }
 }

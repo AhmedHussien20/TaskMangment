@@ -25,6 +25,12 @@ export class CourseService {
     return this.api.get<BaseResponse<CourseAddEdit>>(this.service, `${id}`);
   }
 
+  // GET /Course/{courseId}/subjects
+getSubjectsByCourse(courseId: number): Observable<BaseResponse<{ id: number; title: string }[]>> {
+  return this.api.get<BaseResponse<{ id: number; title: string }[]>>(this.service, `${courseId}/subjects`);
+}
+
+
   // POST /Course
   create(model: CourseAddEdit): Observable<BaseResponse<any>> {
     return this.api.post<BaseResponse<any>>(this.service, '', model);

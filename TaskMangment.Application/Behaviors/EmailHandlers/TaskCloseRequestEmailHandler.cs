@@ -25,6 +25,7 @@ namespace TaskMangment.Application.Behaviors.EmailHandlers
             {
                 TemplateKey = "TaskCloseRequest",
                 ReferenceType = ReferenceType.TaskCloseRequest,
+                RecipientType = RecipientType.Employee,
                 ReferenceId = ev.RequestId,
                 UserIds = ev.Recipients
             });

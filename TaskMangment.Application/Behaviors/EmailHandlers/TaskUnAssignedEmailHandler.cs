@@ -25,6 +25,7 @@ namespace TaskMangment.Application.Behaviors.EmailHandlers
             {
                 TemplateKey = "TaskUnAssignedFromExistingTask",
                 ReferenceType = ReferenceType.Task,
+                RecipientType = RecipientType.Employee,
                 ReferenceId = ev.TaskId,
                 UserIds = ev.UnAssignedEmployeeIds
             });

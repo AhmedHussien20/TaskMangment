@@ -127,7 +127,9 @@ namespace TaskMangment.Application.AutoMapper
             CreateMap<Offer, OfferGetDto>()
                 .ForMember(dest => dest.CourseTitle, opt => opt.MapFrom(src => src.Course != null ? src.Course.Title : string.Empty))
                 .ForMember(dest => dest.SubjectTitle, opt => opt.MapFrom(src => src.Subject != null ? src.Subject.Title : string.Empty))
-                .ForMember(dest => dest.AssignedStudents, opt => opt.MapFrom(src => src.Assignments.Select(a => a.Student.FullName)));
+                .ForMember(dest => dest.AssignedStudentsIds, opt => opt.MapFrom(src => src.Assignments.Select(a => a.Student.Id)))
+                 .ForMember(dest => dest.AssignedStudents, opt => opt.MapFrom(src => src.Assignments.Select(a => a.Student.FullName)));
+
 
             CreateMap<AttachmentAddDto, Attachment>()
            .ForMember(dest => dest.FileName, opt => opt.MapFrom(src => src.File.FileName))

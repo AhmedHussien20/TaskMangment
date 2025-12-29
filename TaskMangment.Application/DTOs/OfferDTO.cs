@@ -12,7 +12,7 @@ namespace TaskMangment.Application.DTOs
         [Required, MaxLength(250)]
         public string Title { get; set; }
 
-        [MaxLength(1000)]
+        [MaxLength(2000)]
         public string Description { get; set; }
 
         public DateTime? StartDate { get; set; }
@@ -23,11 +23,7 @@ namespace TaskMangment.Application.DTOs
 
         public int? SubjectId { get; set; }
 
-        //public List<int>? AssignedStudentIds { get; set; } = new List<int>();
-    }
-    public class OfferAssignStudentsDto
-    {
-        public List<int> StudentIds { get; set; } = new();
+        public List<int>? AssignedStudentIds { get; set; } = new List<int>();
     }
 
     public class OfferGetDto
@@ -41,6 +37,12 @@ namespace TaskMangment.Application.DTOs
         public string CourseTitle { get; set; }
         public string SubjectTitle { get; set; }
 
+        public int? CourseId { get; set; }          
+        public int? SubjectId { get; set; }
+
         public List<string> AssignedStudents { get; set; } = new List<string>();
+        public List<int> AssignedStudentsIds { get; set; } = new List<int>();
+
+
     }
 }
