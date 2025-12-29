@@ -14,7 +14,7 @@ namespace TaskMangment.Application.Interfaces.Services
     {
         Task<ApiResponse<bool>> AssignPermissionsToRoleAsync(int roleId, RolePermissionBulkAssignDto dto);
         Task<ApiResponse<PagedResponse<AssignedPermissionDto>>> GetAssignedPermissionsAsync(int roleId, RolePermissionRequest request);
-
+        Task<List<string>> GetUserPermissionsAsync(int userId);
 
     }
 }

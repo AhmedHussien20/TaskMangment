@@ -15,6 +15,7 @@ using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
+using TaskMangment.Infrastructure.DataContext;
 using TaskMangment.Infrastructure.Persistence.Extensions;
 
 namespace TaskMangment.Infrastructure.Services
@@ -24,18 +25,21 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<Role> _roleRepo;
         private readonly IRepository<Permission> _permissionRepo;
         private readonly IRepository<RolePermission> _rolePermRepo;
+        private readonly IRepository<EmployeeRole> _employeeRoleRepo;
         private readonly ICachingService _cache;
-
+        private readonly AppDbContext _context;
         public RolePermissionService(IRepository<Role> roleRepo,
             IRepository<RolePermission> rolePermRepo,
             IRepository<Permission> permissionRepo,
-            ICachingService cache
+            ICachingService cache,
+            AppDbContext context
 )
         {
             _roleRepo = roleRepo;
             _rolePermRepo = rolePermRepo;
             _permissionRepo = permissionRepo;
             _cache = cache;
+            _context = context;
         }
 
         public async Task<ApiResponse<PagedResponse<AssignedPermissionDto>>> GetAssignedPermissionsAsync(int roleId, RolePermissionRequest request)
@@ -143,6 +147,31 @@ namespace TaskMangment.Infrastructure.Services
 
             await _rolePermRepo.SaveChangesAsync();
             return ApiResponse<bool>.Ok(true, "Permissions assigned/unassigned successfully");
+        }
+
+        public async Task<List<string>> GetUserPermissionsAsync(int userId)
+        {
+            var permissions = await _context.EmployeeRoles
+                .Where(er =>
+                    er.EmployeeId == userId &&
+                    !er.IsDeleted)
+                .Select(er => er.RoleId)
+                .Distinct()
+                .Join(
+                    _context.RolePermissions,
+                    roleId => roleId,
+                    rp => rp.RoleId,
+                    (roleId, rp) => rp
+                )
+                .Where(rp =>
+                    !rp.IsDeleted &&
+                    rp.Permission != null &&
+                    !rp.Permission.IsDeleted)
+                .Select(rp => rp.Permission.Code)
+                .Distinct()
+                .ToListAsync();
+
+            return permissions;
         }
 
 

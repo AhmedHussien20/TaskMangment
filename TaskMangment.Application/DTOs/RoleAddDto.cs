@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TaskMangment.Domain.Entities;
 
 namespace TaskMangment.Application.DTOs
 {
@@ -16,6 +17,9 @@ namespace TaskMangment.Application.DTOs
 
         [MaxLength(500)]
         public string? Description { get; set; }
+
+        public int Level { get; set; } = 10;
+
     }
 
     public class RoleGetDto
@@ -24,6 +28,8 @@ namespace TaskMangment.Application.DTOs
         public int? CompanyId { get; set; }
         public string Name { get; set; }
         public string? Description { get; set; }
+        public int Level { get; set; }
+        public string? LevelName { get; set; }
 
         public int EmployeeCount { get; set; }
         public int PermissionCount { get; set; }
@@ -59,6 +65,11 @@ namespace TaskMangment.Application.DTOs
         [Required]
         public List<int> EmployeeIds { get; set; } = new();
     }
+    public class UserRoleDto
+    {
+        public string Name { get; set; } = string.Empty;
+        public int Level { get; set; }
+    }
 
     //public class AssignedEmployeeDto
     //{
@@ -70,10 +81,10 @@ namespace TaskMangment.Application.DTOs
     //    public bool IsAssigned { get; set; }
     //}
 
- 
-    }
 
-    public class AssignedPermissionDto
+}
+
+public class AssignedPermissionDto
     {
         public int PermissionId { get; set; }
         public string Code { get; set; }

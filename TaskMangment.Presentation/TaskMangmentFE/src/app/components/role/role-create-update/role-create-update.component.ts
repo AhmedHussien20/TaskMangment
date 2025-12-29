@@ -7,13 +7,9 @@ import { ToastrService } from 'ngx-toastr';
 import { GenericFormComponent } from 'app/shared/components/generic-form/generic-form.component';
 import { RoleService } from 'app/core/services/role.service';
 import { RoleAddEdit } from 'app/core/models/roles/role';
+import { FormFieldConfig } from 'app/core/models/form-field-config';
 
-interface FormFieldConfig {
-  type: 'input' | 'textarea';
-  label: string;
-  name: string;
-  validations?: any;
-}
+ 
 
 @Component({
   selector: 'app-role-create-update',
@@ -27,6 +23,13 @@ interface FormFieldConfig {
   templateUrl: './role-create-update.component.html'
 })
 export class RoleCreateUpdateComponent implements OnInit {
+roleLevelsOptions = [
+  { value: 10, label: 'ROLE.LEVELS.EMPLOYEE' },
+  { value: 50, label: 'ROLE.LEVELS.TEAM_LEAD' },
+  { value: 70, label: 'ROLE.LEVELS.MANAGER' },
+  { value: 100, label: 'ROLE.LEVELS.ADMIN' }
+];
+
 
   @Input() isEdit = false;
   @Input() roleId: number | null = null;
@@ -39,18 +42,31 @@ export class RoleCreateUpdateComponent implements OnInit {
   formGroup!: FormGroup;
 
   formConfig: FormFieldConfig[] = [
-    {
-      type: 'input',
-      label: 'ROLE.NAME',
-      name: 'name',
-      validations: { required: true, maxlength: 100 }
-    },
-    {
-      type: 'textarea',
-      label: 'ROLE.DESCRIPTION',
-      name: 'description'
+  {
+    type: 'input',
+    label: 'ROLE.NAME',
+    name: 'name',
+    validations: { required: true, maxlength: 100 }
+  },
+  {
+    type: 'textarea',
+    label: 'ROLE.DESCRIPTION',
+    name: 'description'
+  },
+  {
+    type: 'select',
+    label: 'ROLE.LEVEL',
+    name: 'level',
+    placeholder: 'FORM.SELECT',
+    options: this.roleLevelsOptions,
+    selectType: 'simple',
+    validations: { required: true },
+    errorMessages: {
+      required: 'FORM.REQUIRED'
     }
-  ];
+  }
+];
+
 
   constructor(
     private fb: FormBuilder,
@@ -70,22 +86,25 @@ export class RoleCreateUpdateComponent implements OnInit {
   initForm() {
     this.formGroup = this.fb.group({
       name: ['', [Validators.required, Validators.maxLength(100)]],
-      description: ['']
+      description: [''],
+      level: [null, Validators.required]
     });
   }
 
-  loadRole() {
-    if (!this.roleId) return;
+loadRole() {
+  if (!this.roleId) return;
 
-    this.roleService.getById(this.roleId).subscribe(res => {
-      const role = res.data;
+  this.roleService.getById(this.roleId).subscribe(res => {
+    const role = res.data;
 
-      this.formGroup.patchValue({
-        name: role.name,
-        description: role.description
-      });
+    this.formGroup.patchValue({
+      name: role.name,
+      description: role.description,
+      level: role.level   
     });
-  }
+  });
+}
+
 
   onSubmit(formValue: RoleAddEdit) {
     if (this.formGroup.invalid) {

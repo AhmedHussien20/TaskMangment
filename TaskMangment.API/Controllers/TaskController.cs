@@ -1,15 +1,11 @@
 ﻿
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
-using System.Security.Claims;
+using Microsoft.AspNetCore.SignalR; 
 using TaskMangment.Application.Authorization;
-using TaskMangment.Application.Common.ApiRequests.Task;
-using TaskMangment.Application.Common.Errors;
-using TaskMangment.Application.Common.Exceptions;
+using TaskMangment.Application.Common.ApiRequests.Task; 
 using TaskMangment.Application.DTOs.TaskDTOs;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Domain.Entities;
-using TaskMangment.Infrastructure.Services;
 using TaskMangment.Infrastructure.SignalR;
 
 namespace TaskMangment.API.Controllers
@@ -29,20 +25,15 @@ namespace TaskMangment.API.Controllers
             _notificationService= notificationService;
         }
 
+        
         [HttpGet]
+        [HasMinRoleLevel(RoleLevelEnum.Employee)]
         public async Task<IActionResult> GetAll([FromQuery] TaskRequest request)
         {
-            var role = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
-            if (string.IsNullOrEmpty(role))
-                throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status400BadRequest);
-
-            var result = await _service.GetAllAsync(request, CompanyId, role, this.CurrentUserId);
-
+            var result = await _service.GetAllAsync(request, CompanyId, this.Role, this.CurrentUserId);
             if (!result.Success)
                 return Fail(result.Message!);
-
             //SetCacheHeader(600);
-
             return Success(result.Data);
         }
 
@@ -53,7 +44,7 @@ namespace TaskMangment.API.Controllers
             return Success(result.Data);
         }
         [HttpPost]
-        [HasRole("Manager")]
+        [HasMinRoleLevel(RoleLevelEnum.Manager)]
         public async Task<IActionResult> Add([FromBody] TaskAddEditDto dto)
         {
            
@@ -62,7 +53,7 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpPut("{id}")]
-        [HasRole("Manager")]
+        [HasMinRoleLevel(RoleLevelEnum.Manager)]
         public async Task<IActionResult> Update(int id, [FromBody] TaskAddEditDto dto)
         {
             var result = await _service.UpdateAsync(id, dto, this.CurrentUserId);
@@ -70,7 +61,7 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpDelete("{id}")]
-        [HasRole("Manager")]
+        [HasMinRoleLevel(RoleLevelEnum.Manager)]
         public async Task<IActionResult> Delete(int id)
         {
             var result = await _service.DeleteAsync(id);
@@ -78,7 +69,7 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpGet("{taskId}/assigned-employees")]
-        [HasRole("Manager")]
+        [HasMinRoleLevel(RoleLevelEnum.Manager)]
         public async Task<IActionResult> GetAssignedEmployees(int taskId)
         {
             var response = await _service.GetAssignedEmployeesAsync(taskId);

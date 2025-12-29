@@ -34,10 +34,13 @@ namespace TaskMangment.Application.Common.ApiRequests.Auth
         public bool IsActive { get; set; }
 
         // Roles
-        public List<int> Roles { get; set; } = new();
+        public List<string> Roles { get; set; } = new();
 
         // Permissions
         public List<string> Permissions { get; set; } = new();
+
+        public int RoleLevel { get; set; }
+        public string RoleLevelName { get; set; } = string.Empty;
 
         // JWT Token
         public string Token { get; set; }

@@ -163,21 +163,36 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<PagedResponse<AssignedEmployeeDto>>.Ok(response);
         }
 
-        public async Task<List<string>> GetUserRolesAsync(int userId)
+        public async Task<List<UserRoleDto>> GetUserRolesAsync(int userId)
         {
             var roles = await _employeeRoleRepo
                 .GetAll(er =>
                     er.EmployeeId == userId &&
-                    //er.IsAssigned &&
                     !er.IsDeleted)
                 .Include(er => er.Role)
-                .Select(er => er.Role.Name)
                 .AsNoTracking()
+                .Select(er => new UserRoleDto
+                {
+                    Name = er.Role.Name,
+                    Level = er.Role.Level
+                })
                 .ToListAsync();
 
             return roles;
         }
 
+
+        public async Task<int> GetUserMaxRoleLevelAsync(int userId)
+        {
+            return await _employeeRoleRepo
+                .GetAll(er => er.EmployeeId == userId && er.IsAssigned)
+                .Join(_roleRepo.GetAll(),
+                      er => er.RoleId,
+                      r => r.Id,
+                      (er, r) => r.Level)
+                .DefaultIfEmpty(0)
+                .MaxAsync();
+        }
 
 
     }

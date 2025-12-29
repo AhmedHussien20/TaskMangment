@@ -9,4 +9,7 @@ export interface MenuItem {
   dirchange?: boolean;
   menutype?: string;
   children?: MenuItem[];
+  
+  minRoleLevel?: number;
+  requiredPermission?: string;
 }

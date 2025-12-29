@@ -15,7 +15,7 @@ namespace TaskMangment.Domain.Entities
         public string Name { get; set; }
         [MaxLength(500)]
         public string Description { get; set; }
-
+        public int Level { get; set; } = 10;
         public Company Company { get; set; }
         public ICollection<RolePermission> RolePermissions { get; set; } = new List<RolePermission>();
         public ICollection<EmployeeRole> EmployeeRoles { get; set; } = new List<EmployeeRole>();

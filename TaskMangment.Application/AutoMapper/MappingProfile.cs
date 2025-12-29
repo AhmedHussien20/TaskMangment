@@ -31,7 +31,16 @@ namespace TaskMangment.Application.AutoMapper
                 .ForMember(dest => dest.PasswordHash, opt => opt.Ignore());
 
 
-            CreateMap<Role, RoleGetDto>();
+            CreateMap<Role, RoleGetDto>()
+     .ForMember(
+         d => d.LevelName,
+         o => o.MapFrom(s =>
+             Enum.IsDefined(typeof(RoleLevelEnum), s.Level)
+                 ? Enum.GetName(typeof(RoleLevelEnum), s.Level)
+                 : "Custom"
+         )
+     );
+
             CreateMap<RoleAddEditDto, Role>();
             //CreateMap<Role, RoleWithPermissionsDto>();
 
@@ -214,8 +223,7 @@ namespace TaskMangment.Application.AutoMapper
 
             CreateMap<AuditLog,AuditLogDTO>()
                 .ForMember(dest => dest.ChangedBy, opt => opt.MapFrom(src => src.ChangedBy != null ? src.ChangedBy : "System"));
-
-            CreateMap<Role, RoleGetDto>();
+             
             CreateMap<RoleAddEditDto, Role>();
             //CreateMap<Role, RoleWithPermissionsDto>()
             //    .ForMember(dest => dest.Permissions, opt => opt.MapFrom(src => src.RolePermissions.Select(rp => rp.Permission)));
