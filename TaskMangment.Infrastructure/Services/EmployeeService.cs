@@ -19,6 +19,7 @@ using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
+using TaskMangment.Infrastructure.DataContext;
 using TaskMangment.Infrastructure.Persistence.Extensions;
 
 namespace TaskMangment.Infrastructure.Services
@@ -33,6 +34,7 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<Attachment> _attachmentRepo;
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
+        private readonly AppDbContext _db;
 
         public EmployeeService(
             IRepository<Employee> employeeRepo,
@@ -42,7 +44,8 @@ namespace TaskMangment.Infrastructure.Services
             IRepository<Company> companyRepository,
             IMapper mapper,
             ICachingService cache,
-            IRepository<Attachment> attachmentRepo)
+            IRepository<Attachment> attachmentRepo,
+            AppDbContext db)
         {
             _employeeRepo = employeeRepo;
             _roleRepo = roleRepo;
@@ -53,6 +56,7 @@ namespace TaskMangment.Infrastructure.Services
             _mapper = mapper;
             _cache = cache;
             _attachmentRepo = attachmentRepo;
+            _db = db;
         }
 
         public async Task<ApiResponse<PagedResponse<EmployeeGetDto>>> GetAllAsync(EmployeeRequest request)
@@ -67,32 +71,54 @@ namespace TaskMangment.Infrastructure.Services
                     return ApiResponse<PagedResponse<EmployeeGetDto>>.Ok(cached);
             }
 
-            var query = _employeeRepo.GetAll()
+            // 1) Base query (Employees)
+            var empQuery = _employeeRepo.GetAll()
                 .Include(e => e.Branch)
                 .Include(e => e.EmployeeRoles)
                     .ThenInclude(er => er.Role)
-                .ApplySearch(request.searchKey);
+                .ApplySearch(request.searchKey)
+                .AsNoTracking();
 
-            var totalCount = await query.CountAsync();
+            var totalCount = await empQuery.CountAsync();
 
-            query = query.OrderByDynamicSafe(request.SortColumn, request.SortDirection);
+            empQuery = empQuery.OrderByDynamicSafe(request.SortColumn, request.SortDirection);
 
-            var list = await query
+            var employees = await empQuery
                 .Skip((request.PageIndex - 1) * request.PageSize)
                 .Take(request.PageSize)
                 .ToListAsync();
 
-            
-            var dtos = _mapper.Map<ICollection<EmployeeGetDto>>(list);
+            var employeeIds = employees.Select(e => e.Id).ToList();
 
+            var images = await _db.Attachments
+                .Where(a =>
+                    a.AttachmentType == AttachmentType.Employee &&
+                    !a.IsDeleted && 
+                    employeeIds.Contains(a.ReferenceId))
+                .GroupBy(a => a.ReferenceId)
+                .Select(g => new
+                {
+                    EmployeeId = g.Key,
+                    ImageUrl = g.OrderByDescending(x => x.CreatedDate)
+                                .Select(x => x.FilePath)
+                                .FirstOrDefault()
+                })
+                .ToDictionaryAsync(x => x.EmployeeId, x => x.ImageUrl);
+
+            var dtos = _mapper.Map<List<EmployeeGetDto>>(employees);
+
+            foreach (var dto in dtos)
+            {
+                dto.ImageUrl = images.TryGetValue(dto.Id, out var url) ? url : null;
+            }
 
             var response = new PagedResponse<EmployeeGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
 
-            // Save to cache for 10 minutes
             await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
 
             return ApiResponse<PagedResponse<EmployeeGetDto>>.Ok(response);
         }
+
 
         public async Task<ApiResponse<EmployeeGetDto>> GetByIdAsync(int id)
         {

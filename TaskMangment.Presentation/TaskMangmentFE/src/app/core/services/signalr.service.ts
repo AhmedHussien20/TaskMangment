@@ -50,7 +50,7 @@ export class SignalRService {
         link: '/pages/notifications-list'
       };
       console.log('Notification received:', message);
-      this.toastr.info(message, 'Notification');
+      this.toastr.info(message, '');
       this.notificationSubject.next(notification);
     });
 

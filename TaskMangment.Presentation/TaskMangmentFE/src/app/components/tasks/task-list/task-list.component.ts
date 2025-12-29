@@ -12,6 +12,7 @@ import { SearchCriteria } from "app/models/search-criteria.model";
 import { TaskDetailsShellComponent } from "../task-details/task-details-shell/task-details-shell.component";
 import Swal from 'sweetalert2';
 import { ToastrService } from "ngx-toastr";
+import { AuthService } from "app/core/services/auth.service";
 
 
 @Component({
@@ -31,19 +32,28 @@ import { ToastrService } from "ngx-toastr";
 })
 export class TaskListComponent implements OnInit {
 
+  canCreate = false;
+  canEdit = false;
+  canDelete = false;
+
   title = 'TASK.LIST_TITLE';
   activeitem = 'TASK.LIST_TITLE';
   breadcrumbs = [
-  'MENU.HOME',
-  'MENU.EMPLOYMENT',
-  'TASK.LIST_TITLE'
-];
+    'MENU.HOME',
+    'MENU.EMPLOYMENT',
+    'TASK.LIST_TITLE'
+  ];
   isLoading = false;
   columns: TableColumn[] = [
     { key: 'id', label: 'TASK.ID' },
     { key: 'title', label: 'TASK.TITLE' },
     { key: 'assignedByName', label: 'TASK.ASSIGNED_BY' },
-
+    {
+      key: 'assignEmployee',
+      label: 'TASK.ASSIGNED_TO',
+      type: 'assignees',
+      displayField: 'name'
+    },
     {
       key: 'priorityText',
       label: 'TASK.PRIORITY',
@@ -98,11 +108,17 @@ export class TaskListComponent implements OnInit {
     private taskService: TaskService,
     private modalService: NgbModal,
     private toastr: ToastrService,
-    private translate: TranslateService
+    private translate: TranslateService,
+    private auth: AuthService
 
   ) { }
 
   ngOnInit() {
+    const roleLevel = this.auth.getRoleLevel();
+
+    this.canCreate = roleLevel >= 50;
+    this.canEdit = roleLevel >= 70;
+    this.canDelete = roleLevel >= 70;
     this.loadData();
   }
 
@@ -146,12 +162,15 @@ export class TaskListComponent implements OnInit {
   }
 
   openAdd(modal: any) {
+    if (!this.canCreate) return;
     this.isEdit = false;
     this.selectedTaskId = null;
     this.modalService.open(modal, { size: 'lg', centered: true });
   }
 
+
   openEdit(id: number, modal: any) {
+    if (!this.canEdit) return;
     this.isEdit = true;
     this.selectedTaskId = id;
     this.modalService.open(modal, { size: 'lg', centered: true });
@@ -170,25 +189,25 @@ export class TaskListComponent implements OnInit {
       scrollable: true
     });
 
-  modalRef.componentInstance.taskId = taskId;
-  modalRef.componentInstance.readonly = true;
-}
-confirmDelete(taskId: number) {
-  Swal.fire({
-    title: this.translate.instant('COMMON.CONFIRM_DELETE_TITLE'),
-    text: this.translate.instant('COMMON.CONFIRM_DELETE_TEXT'),
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonText: this.translate.instant('COMMON.DELETE_BUTTON'),
-    cancelButtonText: this.translate.instant('COMMON.CANCEL_BUTTON'),
-    confirmButtonColor: '#d33',
-    cancelButtonColor: '#6c757d'
-  }).then((result) => {
-    if (result.isConfirmed) {
-      this.deleteTask(taskId);
-    }
-  });
-}
+    modalRef.componentInstance.taskId = taskId;
+    modalRef.componentInstance.readonly = true;
+  }
+  confirmDelete(taskId: number) {
+    Swal.fire({
+      title: this.translate.instant('COMMON.CONFIRM_DELETE_TITLE'),
+      text: this.translate.instant('COMMON.CONFIRM_DELETE_TEXT'),
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: this.translate.instant('COMMON.DELETE_BUTTON'),
+      cancelButtonText: this.translate.instant('COMMON.CANCEL_BUTTON'),
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#6c757d'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.deleteTask(taskId);
+      }
+    });
+  }
 
   deleteTask(taskId: number) {
     this.isLoading = true;

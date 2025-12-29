@@ -110,38 +110,52 @@
 
 
                     <!-- Columns -->
-                    <td *ngFor="let col of columns">
+                  <td *ngFor="let col of columns" [ngSwitch]="col.type">
 
-                        <!-- BADGE -->
-                        <ng-container *ngIf="col.type === 'badge'; else notBadge">
-                            <span class="badge" [ngClass]="getBadgeClass(col, item)">
-                                {{ getBadgeText(col, item) | translate }}
-                            </span>
-                        </ng-container>
+  <!-- ASSIGNEES -->
+  <ng-container *ngSwitchCase="'assignees'">
+    <div class="assignees-wrapper">
+      <span
+        *ngFor="let emp of getValue(item, col.key)"
+        class="assignee-circle"
+        [ngbTooltip]="emp[col.displayField || 'name']"
+        container="body">
+        {{ getInitials(emp[col.displayField || 'name']) }}
+      </span>
+    </div>
+  </ng-container>
 
-                        <!-- ICON ACTION -->
-                        <ng-template #notBadge>
-                            <ng-container *ngIf="col.type === 'icon-action'; else normalCell">
-                                <button class="btn btn-outline-secondary btn-sm"
-                                    (click)="iconAction.emit({ type: col.key, row: item })">
-                                    <i [class]="col.icon"></i>
-                                    <span class="badge bg-info ms-1">
-                                        {{ getValue(item, col.key) }}
-                                    </span>
-                                </button>
-                            </ng-container>
-                        </ng-template>
+  <!-- BADGE -->
+  <ng-container *ngSwitchCase="'badge'">
+    <span class="badge" [ngClass]="getBadgeClass(col, item)">
+      {{ getBadgeText(col, item) | translate }}
+    </span>
+  </ng-container>
 
-                        <ng-template #normalCell>
-                        <ng-container *ngIf="col.type === 'date'; else textCell">
-                           {{ getValue(item, col.key) | myDate }}
-                        </ng-container>
-                        </ng-template>
+  <!-- ICON ACTION -->
+  <ng-container *ngSwitchCase="'icon-action'">
+    <button
+      class="btn btn-outline-secondary btn-sm"
+      (click)="iconAction.emit({ type: col.key, row: item })">
+      <i [class]="col.icon"></i>
+      <span class="badge bg-info ms-1">
+        {{ getValue(item, col.key) }}
+      </span>
+    </button>
+  </ng-container>
 
-                        <ng-template #textCell>
-                        {{ getValue(item, col.key) }}
-                        </ng-template> 
-                    </td>
+  <!-- DATE -->
+  <ng-container *ngSwitchCase="'date'">
+    {{ getValue(item, col.key) | myDate }}
+  </ng-container>
+
+  <!-- DEFAULT TEXT -->
+  <ng-container *ngSwitchDefault>
+    {{ getValue(item, col.key) }}
+  </ng-container>
+
+</td>
+
 
 
 
@@ -198,13 +212,9 @@
         </div>
     </div>
 
-   <ngb-pagination *ngIf="showPagination"
-    class="d-flex justify-content-end mt-2"
-    [collectionSize]="totalItems"
-    [(page)]="page"
-    [pageSize]="entries"
-    (pageChange)="onPageChangeInternal($event)">
-</ngb-pagination>
+    <ngb-pagination *ngIf="showPagination" class="d-flex justify-content-end mt-2" [collectionSize]="totalItems"
+        [(page)]="page" [pageSize]="entries" (pageChange)="onPageChangeInternal($event)">
+    </ngb-pagination>
 
 
 </div>

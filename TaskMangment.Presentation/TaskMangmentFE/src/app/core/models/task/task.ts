@@ -11,6 +11,14 @@ export enum TaskStatus {
   Archived = 4
 }
 
+export enum CommentAllowPeriod {
+  Daily = 1,
+  Weekly = 7,
+  Monthly = 30
+}
+
+
+
 export interface TaskAddEdit {
   assignedEmployeeIds: number[];
   title: string;

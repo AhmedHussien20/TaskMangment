@@ -12,8 +12,14 @@ export const initialState: NavState = {
 
 export const navReducer = createReducer(
   initialState,
+
   on(NavActions.updateMenuItems, (state, { items }) => ({
     ...state,
     menuItems: items || [],  
+  })),
+
+  on(NavActions.clearMenu, () => ({
+    ...initialState
   }))
+
 );

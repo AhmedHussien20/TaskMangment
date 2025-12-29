@@ -8,7 +8,7 @@ import { EmployeeService } from 'app/core/services/employee.service';
 import { Employee } from 'app/core/models/employee/employee';
 import { ToastrService } from 'ngx-toastr';
 import { FormFieldConfig } from 'app/core/models/form-field-config';
-import { TaskPriority, TaskStatus } from 'app/core/models/task/task';
+import { CommentAllowPeriod, TaskPriority, TaskStatus } from 'app/core/models/task/task';
 
 @Component({
   selector: 'app-task-create-update',
@@ -91,10 +91,15 @@ export class TaskCreateUpdateComponent implements OnInit {
     },
 
     {
-      type: 'input',
+      type: 'select',
       label: 'TASK.COMMENT_ALLOW_PERIOD',
       name: 'commentAllowPeriodDays',
-      defaultValue: 'يومي'
+      selectType: 'simple',
+      options: [
+        { label: 'TASK.DAILY', value: CommentAllowPeriod.Daily },
+        { label: 'TASK.WEEKLY', value: CommentAllowPeriod.Weekly },
+        { label: 'TASK.MONTHLY', value: CommentAllowPeriod.Monthly },
+      ],
     },
 
     {
