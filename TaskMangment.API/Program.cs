@@ -81,6 +81,8 @@ namespace TaskMangment.API
             builder.Services.AddScoped<IEventHandler<TaskPenaltyEvent>, TaskPenaltyEmailHandler>();
             builder.Services.AddScoped<IEventHandler<TaskWarningEvent>, TaskWarningEmailHandler>();
             builder.Services.AddScoped<IEventHandler<TaskCommentAddedEvent>, TaskCommentEmailHandler>();
+            builder.Services.AddScoped<IEventHandler<OfferSentEvent>, OfferSentEmailHandler>();
+
 
 
 

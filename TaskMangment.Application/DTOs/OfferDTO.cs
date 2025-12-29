@@ -23,7 +23,11 @@ namespace TaskMangment.Application.DTOs
 
         public int? SubjectId { get; set; }
 
-        public List<int>? AssignedStudentIds { get; set; } = new List<int>();
+        //public List<int>? AssignedStudentIds { get; set; } = new List<int>();
+    }
+    public class OfferAssignStudentsDto
+    {
+        public List<int> StudentIds { get; set; } = new();
     }
 
     public class OfferGetDto

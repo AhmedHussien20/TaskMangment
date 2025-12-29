@@ -16,6 +16,7 @@ using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
+using TaskMangment.Domain.Event;
 using TaskMangment.Infrastructure.Persistence.Extensions;
 
 namespace TaskMangment.Infrastructure.Services
@@ -26,6 +27,8 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<Student> _studentRepo;
         private readonly IRepository<Course> _courseRepo;
         private readonly IRepository<CourseSubject> _subjectRepo;
+        private readonly IDomainEventDispatcher _eventDispatcher;
+
 
 
         private readonly IMapper _mapper;
@@ -35,7 +38,7 @@ namespace TaskMangment.Infrastructure.Services
             IMapper mapper,
             ICachingService cache,
             IRepository<CourseSubject> subjectRepo,
-            IRepository<Course> courseRepo)
+            IRepository<Course> courseRepo, IDomainEventDispatcher eventDispatcher)
         {
             _offerRepo = offerRepo;
             _studentRepo = studentRepo;
@@ -43,6 +46,7 @@ namespace TaskMangment.Infrastructure.Services
             _cache = cache;
             _subjectRepo = subjectRepo;
             _courseRepo = courseRepo;
+            _eventDispatcher = eventDispatcher;
         }
 
         public async Task<ApiResponse<PagedResponse<OfferGetDto>>> GetAllAsync(OfferRequest request)
@@ -109,64 +113,32 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<OfferGetDto>> AddAsync(OfferAddEditDto dto)
         {
-
-            if (dto.AssignedStudentIds != null && dto.AssignedStudentIds.Any())
-            {
-                var allExist = await _studentRepo
-                    .GetAll(s => dto.AssignedStudentIds.Contains(s.Id))
-                    .CountAsync() == dto.AssignedStudentIds.Count;
-
-                if (!allExist)
-                    throw new AppException(
-                        ErrorCodes.StudentNotFound,
-                        StatusCodes.Status404NotFound
-                    );
-            }
             if (dto.CourseId.HasValue)
             {
                 if (!await _courseRepo.IsExistAsync(dto.CourseId.Value))
-                    throw new AppException(
-                        ErrorCodes.CourseNotFound,
-                        StatusCodes.Status404NotFound);
+                    throw new AppException(ErrorCodes.CourseNotFound, StatusCodes.Status404NotFound);
             }
+
             if (dto.SubjectId.HasValue)
             {
                 if (!await _subjectRepo.IsExistAsync(dto.SubjectId.Value))
-                    throw new AppException(
-                        ErrorCodes.SubjectNotFound,
-                        StatusCodes.Status404NotFound);
+                    throw new AppException(ErrorCodes.SubjectNotFound, StatusCodes.Status404NotFound);
             }
-
 
             var offer = _mapper.Map<Offer>(dto);
-
-            // Assign students
-            foreach (var studentId in dto.AssignedStudentIds)
-            {
-                if (await _studentRepo.IsExistAsync(studentId))
-                {
-                    offer.Assignments.Add(new OfferAssignment
-                    {
-                        StudentId = studentId
-                    });
-                }
-            }
 
             await _offerRepo.AddAsync(offer);
             await _offerRepo.SaveChangesAsync();
             await _cache.RemoveAsync("offers:");
 
-
             var fullOffer = await _offerRepo.GetAll(o => o.Id == offer.Id)
-      .Include(o => o.Course)
-      .Include(o => o.Subject)
-      .Include(o => o.Assignments)
-      .ThenInclude(a => a.Student) 
-      .FirstOrDefaultAsync();
+                .Include(o => o.Course)
+                .Include(o => o.Subject)
+                .FirstOrDefaultAsync();
 
             var offerDto = _mapper.Map<OfferGetDto>(fullOffer);
 
-            return ApiResponse<OfferGetDto>.Ok(offerDto, "Offer added successfully");
+            return ApiResponse<OfferGetDto>.Ok(offerDto, "Offer created successfully");
         }
 
         public async Task<ApiResponse<OfferGetDto>> UpdateAsync(int id, OfferAddEditDto dto)
@@ -175,18 +147,18 @@ namespace TaskMangment.Infrastructure.Services
             if (offer == null)
                 throw new AppException(ErrorCodes.OfferNotFound, StatusCodes.Status400BadRequest);
 
-            if (dto.AssignedStudentIds != null && dto.AssignedStudentIds.Any())
-            {
-                var allExist = await _studentRepo
-                    .GetAll(s => dto.AssignedStudentIds.Contains(s.Id))
-                    .CountAsync() == dto.AssignedStudentIds.Count;
+            //if (dto.AssignedStudentIds != null && dto.AssignedStudentIds.Any())
+            //{
+            //    var allExist = await _studentRepo
+            //        .GetAll(s => dto.AssignedStudentIds.Contains(s.Id))
+            //        .CountAsync() == dto.AssignedStudentIds.Count;
 
-                if (!allExist)
-                    throw new AppException(
-                        ErrorCodes.StudentNotFound,
-                        StatusCodes.Status404NotFound
-                    );
-            }
+            //    if (!allExist)
+            //        throw new AppException(
+            //            ErrorCodes.StudentNotFound,
+            //            StatusCodes.Status404NotFound
+            //        );
+            //}
             if (dto.CourseId.HasValue)
             {
                 if (!await _courseRepo.IsExistAsync(dto.CourseId.Value))
@@ -209,20 +181,20 @@ namespace TaskMangment.Infrastructure.Services
                 .SelectMany(o => o.Assignments)
                 .ToListAsync();
 
-            foreach (var assignment in existingAssignments)
-            {
-                if (!dto.AssignedStudentIds.Contains(assignment.StudentId))
-                    assignment.IsAccepted = false; 
-            }
+            //foreach (var assignment in existingAssignments)
+            //{
+            //    if (!dto.AssignedStudentIds.Contains(assignment.StudentId))
+            //        assignment.IsAccepted = false; 
+            //}
 
-            foreach (var studentId in dto.AssignedStudentIds)
-            {
-                var exists = existingAssignments.Any(a => a.StudentId == studentId);
-                if (!exists)
-                {
-                    offer.Assignments.Add(new OfferAssignment { StudentId = studentId });
-                }
-            }
+            //foreach (var studentId in dto.AssignedStudentIds)
+            //{
+            //    var exists = existingAssignments.Any(a => a.StudentId == studentId);
+            //    if (!exists)
+            //    {
+            //        offer.Assignments.Add(new OfferAssignment { StudentId = studentId });
+            //    }
+            //}
 
             await _offerRepo.SaveChangesAsync();
             await _cache.RemoveAsync("offers:");
@@ -251,5 +223,51 @@ namespace TaskMangment.Infrastructure.Services
 
             return ApiResponse<bool>.Ok(true, "Offer deleted successfully");
         }
+
+        public async Task<ApiResponse<bool>> AssignOfferToStudentsAsync(int OfferId, OfferAssignStudentsDto dto)
+        {
+            var offer = await _offerRepo.GetAll(o => o.Id == OfferId)
+                .Include(o => o.Assignments)
+                .FirstOrDefaultAsync();
+
+
+            if (offer == null)
+                throw new AppException(ErrorCodes.OfferNotFound, StatusCodes.Status404NotFound);
+
+            if (dto.StudentIds == null || !dto.StudentIds.Any())
+                throw new AppException(ErrorCodes.NotFound, StatusCodes.Status400BadRequest);
+
+            if (offer.EndDate.HasValue && offer.EndDate.Value < DateTime.UtcNow)
+                throw new AppException(ErrorCodes.OfferExpired, StatusCodes.Status404NotFound);
+
+
+            var studentsCount = await _studentRepo
+                .GetAll(s => dto.StudentIds.Contains(s.Id))
+                .CountAsync();
+
+            if (studentsCount != dto.StudentIds.Count)
+                throw new AppException(ErrorCodes.StudentNotFound, StatusCodes.Status404NotFound);
+
+            foreach (var studentId in dto.StudentIds)
+            {
+                var alreadyAssigned = offer.Assignments.Any(a => a.StudentId == studentId);
+                if (!alreadyAssigned)
+                {
+                    offer.Assignments.Add(new OfferAssignment
+                    {
+                        StudentId = studentId,
+                        IsAccepted = false
+                    });
+                }
+            }
+
+            await _offerRepo.SaveChangesAsync();
+            await _cache.RemoveAsync("offers:");
+            await _eventDispatcher.PublishAsync(new OfferSentEvent(OfferId, offer.Title, dto.StudentIds));
+
+
+            return ApiResponse<bool>.Ok(true, "Offer assigned to students successfully");
+        }
+
     }
 }

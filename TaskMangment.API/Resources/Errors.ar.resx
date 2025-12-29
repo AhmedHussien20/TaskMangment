@@ -189,4 +189,7 @@
   <data name="Unauthorized" xml:space="preserve">
     <value>ليس لديك اذن لاستخدام هذا المصدر</value>
   </data>
+  <data name="OFFER_EXPIRED" xml:space="preserve">
+    <value>العرض انتهي</value>
+  </data>
 </root>
