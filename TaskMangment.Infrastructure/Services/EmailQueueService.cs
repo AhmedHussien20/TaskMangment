@@ -17,13 +17,17 @@ namespace TaskMangment.Infrastructure.Services
     {
         private readonly AppDbContext _db;
         private readonly IRepository<Employee> _employeeRepo;
+        private readonly IRepository<Student> _studentRepo;
+
 
         public EmailQueueService(
             AppDbContext db,
-            IRepository<Employee> employeeRepo)
+            IRepository<Employee> employeeRepo,
+            IRepository<Student> studentRepo)
         {
             _db = db;
             _employeeRepo = employeeRepo;
+            _studentRepo = studentRepo;
         }
 
         public async Task QueueAsync(EmailQueueRequest request)
@@ -32,14 +36,24 @@ namespace TaskMangment.Infrastructure.Services
             scheduledAt.AddMinutes(5);
             foreach (var userId in request.UserIds)
             {
-                var employee = await _employeeRepo.GetByIDAsync(userId);
-                if (employee == null || string.IsNullOrWhiteSpace(employee.Email))
+                string? email = request.RecipientType switch
+                {
+                    RecipientType.Employee =>
+                        (await _employeeRepo.GetByIDAsync(userId))?.Email,
+
+                    RecipientType.Student =>
+                        (await _studentRepo.GetByIDAsync(userId))?.Email,
+
+                    _ => null
+                };
+
+                if (string.IsNullOrWhiteSpace(email))
                     continue;
 
-                var email = new EmailQueue
+                var emailQueue = new EmailQueue
                 {
                     UserId = userId,
-                    ToEmail = employee.Email,
+                    ToEmail = email,
                     TemplateKey = request.TemplateKey,
                     ReferenceType = request.ReferenceType,
                     ReferenceId = request.ReferenceId,
@@ -47,8 +61,9 @@ namespace TaskMangment.Infrastructure.Services
                     Status = EmailStatus.Pending
                 };
 
-                await _db.EmailQueue.AddAsync(email);
+                await _db.EmailQueue.AddAsync(emailQueue);
             }
+
 
             await _db.SaveChangesAsync();
         }

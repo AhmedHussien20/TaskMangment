@@ -249,6 +249,7 @@ namespace TaskMangment.Infrastructure.Services
                 // Task Due Today Reminder
                 // =========================
                 case ReferenceType.TaskDueTodayReminder:
+                    { 
                     var taskDue = await _db.Tasks
                         .Where(t => t.Id == referenceId)
                         .Select(t => new { t.Title, t.DueDate })
@@ -262,6 +263,38 @@ namespace TaskMangment.Infrastructure.Services
                         ["TaskTitle"] = taskDue.Title,
                         ["DueDate"] = taskDue.DueDate?.ToString("yyyy-MM-dd") ?? "-"
                     };
+                    }
+
+                // =========================
+                //  Offer Assignment
+                // =========================
+                case ReferenceType.CourseOffer:
+                    {
+                        var offerAssignment = await _db.OfferAssignments
+                            .Where(a => a.Id == referenceId)
+                            .Select(a => new
+                            {
+                                StudentName = a.Student.FullName,
+                                OfferTitle = a.Offer.Title,
+                                OfferDescription = a.Offer.Description,
+                                a.Offer.StartDate,
+                                a.Offer.EndDate
+                            })
+                            .FirstOrDefaultAsync();
+
+                        if (offerAssignment == null)
+                            throw new Exception($"Offer assignment with Id {referenceId} not found.");
+
+                        return new Dictionary<string, string>
+                        {
+                            ["StudentName"] = offerAssignment.StudentName,
+                            ["OfferTitle"] = offerAssignment.OfferTitle,
+                            ["OfferDescription"] = offerAssignment.OfferDescription,
+                            ["StartDate"] = offerAssignment.StartDate?.ToString("yyyy-MM-dd") ?? "-",
+                            ["EndDate"] = offerAssignment.EndDate?.ToString("yyyy-MM-dd") ?? "-"
+                        };
+                    }
+
 
                 // =========================
                 default:

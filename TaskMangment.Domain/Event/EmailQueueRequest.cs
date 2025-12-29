@@ -10,6 +10,8 @@ namespace TaskMangment.Domain.Event
     public class EmailQueueRequest
     {
         public string TemplateKey { get; set; } = null!;
+        public RecipientType RecipientType { get; set; }
+
 
         public ReferenceType ReferenceType { get; set; }
         public int ReferenceId { get; set; }

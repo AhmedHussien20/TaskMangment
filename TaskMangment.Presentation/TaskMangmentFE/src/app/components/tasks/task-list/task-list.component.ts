@@ -25,7 +25,7 @@ import { ToastrService } from "ngx-toastr";
     PageHeaderComponent,
     NgbModalModule,
     TaskCreateUpdateComponent,
-    TaskDetailsShellComponent,
+   // TaskDetailsShellComponent,
   ],
   templateUrl: './task-list.component.html'
 })

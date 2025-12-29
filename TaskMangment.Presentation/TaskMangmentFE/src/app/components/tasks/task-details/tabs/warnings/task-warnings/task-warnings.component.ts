@@ -11,7 +11,7 @@ import { MyDatePipe } from 'app/components/utilities/pipline/MyDatePipe';
 @Component({
   selector: 'app-task-warnings',
   standalone: true,
-  imports: [CommonModule, GenericTableComponent, TranslateModule, MyDatePipe],
+  imports: [CommonModule, GenericTableComponent, TranslateModule],
     providers: [MyDatePipe], 
 
   templateUrl: './task-warnings.component.html'

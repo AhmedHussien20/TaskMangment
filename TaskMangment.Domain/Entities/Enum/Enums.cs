@@ -49,6 +49,11 @@ namespace TaskMangment.Domain.Entities
         CourseOffer = 9,
 
     }
+    public enum RecipientType
+    {
+        Employee,
+        Student
+    }
 
     public enum RoleLevelEnum
     {

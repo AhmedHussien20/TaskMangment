@@ -130,7 +130,14 @@ private MENUITEMS: MenuItem[] = [
             type: 'link',
             path: '/course/course-list',
             minRoleLevel: 50
-          },
+          }
+          ,
+          {
+            title: 'nav.apps.course.offer_list',
+            type: 'link',
+            path: '/offer/offer-list',
+            minRoleLevel: 50
+          }
         ],
       },
 

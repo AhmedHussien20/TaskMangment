@@ -9,6 +9,9 @@ export interface FormFieldConfig {
   defaultValue?: any;
 
   options?: any[];
+
+  group?: string; 
+
   
   selectType?: 'simple' | 'employee' | 'custom';
   multiple?: boolean;

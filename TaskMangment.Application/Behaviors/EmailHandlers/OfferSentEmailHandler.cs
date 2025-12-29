@@ -24,6 +24,7 @@ namespace TaskMangment.Application.Behaviors.EmailHandlers
             await _emailQueue.QueueAsync(new EmailQueueRequest
             {
                 TemplateKey = "OfferSent",
+                RecipientType= RecipientType.Student,
                 ReferenceType = ReferenceType.CourseOffer,
                 ReferenceId = ev.OfferId,
                 UserIds = ev.AssignedStudentsIds
