@@ -287,7 +287,83 @@ You have been <strong>unassigned</strong> from the following task:<br/><br/>
 
 You are no longer required to work on this task at this time.
 " + LayoutFooter
-                }
+                },
+// 💼 Offer Sent To Student
+new EmailTemplate
+{
+    Key = "OfferSent",
+    SubjectTemplate = "عرض سعر جديد | New Price Offer",
+    BodyTemplate = LayoutHeader + @"
+مرحبًا <strong>{{StudentName}}</strong>،<br/><br/>
+
+نود إبلاغكم بأنه تم إرسال <strong>عرض سعر جديد</strong> لكم، وفق التفاصيل التالية:<br/><br/>
+
+<table style='width:100%;border-collapse:collapse;font-size:14px'>
+  <tr>
+    <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>عنوان العرض</strong></td>
+    <td style='padding:6px;border:1px solid #ddd'>{{OfferTitle}}</td>
+  </tr>
+  <tr>
+    <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>الوصف</strong></td>
+    <td style='padding:6px;border:1px solid #ddd'>{{OfferDescription}}</td>
+  </tr>
+  <tr>
+    <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>تاريخ البداية</strong></td>
+    <td style='padding:6px;border:1px solid #ddd'>{{StartDate}}</td>
+  </tr>
+  <tr>
+    <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>تاريخ الانتهاء</strong></td>
+    <td style='padding:6px;border:1px solid #ddd'>{{EndDate}}</td>
+  </tr>
+</table>
+
+<br/>
+
+<div style='margin-top:15px;padding:10px;background:#fff3cd;border-right:4px solid #ffc107;color:#856404'>
+<strong>تنويه:</strong> هذا العرض ساري لمدة <strong>أسبوع واحد فقط</strong> من تاريخ الإرسال.
+</div>
+
+<br/>
+
+يرجى مراجعة العرض والتواصل معنا في حال وجود أي استفسارات.<br/><br/>
+
+<hr/>
+
+<strong>Hello {{StudentName}},</strong><br/><br/>
+
+We are pleased to inform you that a <strong>new price offer</strong> has been sent to you with the following details:<br/><br/>
+
+<table style='width:100%;border-collapse:collapse;font-size:14px'>
+  <tr>
+    <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>Offer Title</strong></td>
+    <td style='padding:6px;border:1px solid #ddd'>{{OfferTitle}}</td>
+  </tr>
+  <tr>
+    <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>Description</strong></td>
+    <td style='padding:6px;border:1px solid #ddd'>{{OfferDescription}}</td>
+  </tr>
+  <tr>
+    <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>Start Date</strong></td>
+    <td style='padding:6px;border:1px solid #ddd'>{{StartDate}}</td>
+  </tr>
+  <tr>
+    <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>End Date</strong></td>
+    <td style='padding:6px;border:1px solid #ddd'>{{EndDate}}</td>
+  </tr>
+</table>
+
+<br/>
+
+<div style='margin-top:15px;padding:10px;background:#fff3cd;border-left:4px solid #ffc107;color:#856404'>
+<strong>Note:</strong> This offer is valid for <strong>one week only</strong> from the sending date.
+</div>
+
+<br/>
+
+Please review the offer and contact us if you have any questions.
+" + LayoutFooter
+}
+
 
             );
 
