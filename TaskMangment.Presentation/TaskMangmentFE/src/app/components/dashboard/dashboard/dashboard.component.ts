@@ -14,7 +14,10 @@ import {
   TranslateService,
   TranslateStore,
 } from '@ngx-translate/core';
- 
+import { DashboardService } from 'app/core/services/dashboar.service';
+import { AdminDashboardDto, CompletedTasksTodayDto, EmployeeDashboardDto, InProgressUpdatedTodayDto, PendingCloseRequestDto } from 'app/core/models/dashboard/dashboard.model';
+import { AuthService } from 'app/core/services/auth.service';
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -30,177 +33,290 @@ import {
     CommonModule,
     TranslateModule
   ],
-  providers: [TranslateService, TranslateStore],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
 })
 export class DashboardComponent {
-  constructor(private translate: TranslateService) {
+  isAdmin = false;
+  adminData!: AdminDashboardDto;
+  employeeData!: EmployeeDashboardDto;
+  topDelayedEmployees: any[] = [];
+  todayInProgressTasks: InProgressUpdatedTodayDto[] = [];
+  completedTasksToday: CompletedTasksTodayDto[] = [];
+  pendingCloseRequests: PendingCloseRequestDto[] = [];
+
+  cards: any[] = [];
+  tasks: any[] = [];
+  constructor(private translate: TranslateService, private dashboardService: DashboardService, private authService: AuthService
+  ) {
     console.log('DashboardComponent');
     this.translate.use('ar');
   }
 
-  ngOnInit(): void {}
+  private loadDashboard() {
+    const user = this.authService.getCurrentUser();
+    const userLevel = this.authService.getRoleLevel() ?? 0;
+    if (userLevel >= 50) {
+      this.loadAdminDashboard();
+      this.loadTodayInProgressTasks();
+      this.loadCompletedTasksToday();
+      this.loadPendingCloseRequests();
+    } else {
+      this.loadEmployeeDashboard();
+    }
+  }
+
+  private loadCompletedTasksToday() {
+    this.dashboardService
+      .getAdminCompletedTasksToday()
+      .subscribe(res => {
+        this.completedTasksToday = res.data ?? [];
+      });
+  }
+
+  private loadPendingCloseRequests() {
+    this.dashboardService
+      .getAdminPendingCloseRequests()
+      .subscribe(res => {
+        this.pendingCloseRequests = res.data ?? [];
+      });
+  }
+
+  private loadTodayInProgressTasks() {
+    this.dashboardService
+      .getAdminInProgressUpdatedToday()
+      .subscribe(res => {
+        this.todayInProgressTasks = res.data ?? [];
+      });
+  }
+
+  private loadAdminDashboard() {
+    this.dashboardService.getAdminDashboard().subscribe(res => {
+      this.adminData = res.data;
+      this.topDelayedEmployees = res.data.topDelayedEmployees ?? [];
+      this.cards = [
+        {
+          title: 'DASHBOARD.OVERDUE_TASKS',
+          value: this.adminData.kpis.overdueTasks,
+          svg: `
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
+           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+           class="feather feather-alert-circle text-danger">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+    `
+        },
+        {
+          title: 'DASHBOARD.ACTIVE_TASKS',
+          value: this.adminData.kpis.activeTasks,
+          svg: `
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+           viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+           class="feather feather-activity text-warning">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+      </svg>
+    `
+        },
+        {
+          title: 'DASHBOARD.TOTAL_EMPLOYEES',
+          value: this.adminData.kpis.totalEmployees,
+          svg: `
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+           viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+           class="feather feather-users text-primary">
+        <path d="M17 21v-2a4 4 0 0 0-3-3.87"></path>
+        <path d="M7 21v-2a4 4 0 0 1 3-3.87"></path>
+        <circle cx="12" cy="7" r="4"></circle>
+      </svg>
+    `
+        },
+        {
+          title: 'DASHBOARD.COMPLETED_TASKS',
+          value: this.adminData.kpis.completedTasks,
+          svg: `
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+           viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+           class="feather feather-check-circle text-success">
+        <path d="M9 12l2 2 4-4"></path>
+        <circle cx="12" cy="12" r="10"></circle>
+      </svg>
+    `
+        }
+      ];
+
+      // Chart
+      //this.ChartOptions.series = this.adminData.taskStatusChart.items.map(x => x.count);
+      //this.ChartOptions.labels = this.adminData.taskStatusChart.items.map(x => x.status);
+    });
+  }
+  private loadEmployeeDashboard() {
+    this.dashboardService.getEmployeeDashboard().subscribe(res => {
+      this.employeeData = res.data;
+
+      this.cards = [
+        {
+          title: 'My Active Tasks',
+          value: this.employeeData.kpis.myActiveTasks,
+          percentageClass: 'text-primary'
+        },
+        {
+          title: 'Due Soon',
+          value: this.employeeData.kpis.dueSoonTasks,
+          percentageClass: 'text-warning'
+        },
+        {
+          title: 'My Warnings',
+          value: this.employeeData.kpis.myWarnings,
+          percentageClass: 'text-danger'
+        }
+      ];
+
+      this.tasks = this.employeeData.myTasks.map(t => ({
+        name: t.title,
+        checked: t.status === 'Closed',
+        priority: t.status,
+        status: t.status,
+        comments: `${t.progressPercent}%`
+      }));
+    });
+  }
+
+  ngOnInit(): void { this.translate.use('ar'); this.loadDashboard(); }
   //line Chart
   public ChartOptions = chartData.ChartOptions;
   public ChartOptions1 = chartData.ChartOptions1;
   public ChartOptions2 = chartData.ChartOptions2;
-
- 
-
   //Bar chart
   public barChartOptions = chartData.barChartOptions;
   public barChartType = chartData.barChartType;
   public barChartData = chartData.barChartData;
-  circleOptions = {
-    series: [1854, 250],
-    labels: ['Bitcoin', 'Ethereum'],
-    chart: {
-      height: 73,
-      width: 50,
-      type: 'donut',
-    },
-    dataLabels: {
-      enabled: false,
-    },
 
-    legend: {
-      show: false,
-    },
-    stroke: {
-      show: true,
-      curve: 'smooth',
-      lineCap: 'round',
-      colors: '#fff',
-      width: 0,
-      dashArray: 0,
-    },
-    plotOptions: {
-      pie: {
-        expandOnClick: false,
-        donut: {
-          size: '75%',
-          background: 'transparent',
-          labels: {
-            show: false,
-            name: {
-              show: true,
-              fontSize: '20px',
-              color: '#495057',
-              offsetY: -4,
-            },
-            value: {
-              show: true,
-              fontSize: '18px',
-              color: undefined,
-              offsetY: 8,
-              formatter: function (val: string) {
-                return val + '%';
-              },
-            },
-            total: {
-              show: true,
-              showAlways: true,
-              label: 'Total',
-              fontSize: '22px',
-              fontWeight: 600,
-              color: '#495057',
-            },
-          },
-        },
-      },
-    },
-    colors: ['var(--primary-color)', 'rgba(var(--primary-rgb), 0.2)'],
-  };
-  circleOptions1 = {
-    series: [1754, 544],
-    labels: ['Bitcoin', 'Ethereum'],
-    chart: {
-      height: 73,
-      width: 50,
-      type: 'donut',
-    },
-    dataLabels: {
-      enabled: false,
-    },
+  // circleOptions = {
+  //   series: [1854, 250],
+  //   labels: ['Bitcoin', 'Ethereum'],
+  //   chart: {
+  //     height: 73,
+  //     width: 50,
+  //     type: 'donut',
+  //   },
+  //   dataLabels: {
+  //     enabled: false,
+  //   },
 
-    legend: {
-      show: false,
-    },
-    stroke: {
-      show: true,
-      curve: 'smooth',
-      lineCap: 'round',
-      colors: '#fff',
-      width: 0,
-      dashArray: 0,
-    },
-    plotOptions: {
-      pie: {
-        expandOnClick: false,
-        donut: {
-          size: '75%',
-          background: 'transparent',
-          labels: {
-            show: false,
-            name: {
-              show: true,
-              fontSize: '20px',
-              color: '#495057',
-              offsetY: -4,
-            },
-            value: {
-              show: true,
-              fontSize: '18px',
-              color: undefined,
-              offsetY: 8,
-              // formatter: function (val: string) {
-              //   return val + "%"
-              // }
-            },
-            total: {
-              show: true,
-              showAlways: true,
-              label: 'Total',
-              fontSize: '22px',
-              fontWeight: 600,
-              color: '#495057',
-            },
-          },
-        },
-      },
-    },
-    colors: ['var(--primary-color)', 'rgba(var(--primary-rgb), 0.2)'],
-  };
-  cards = [
-    {
-      svg: `<svg class="text-primary" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24" viewBox="0 0 24 24" width="24"> <g> <rect height="14" opacity=".3" width="14" x="5" y="5"></rect> <g> <rect fill="none" height="24" width="24"></rect> <g> <path d="M19,3H5C3.9,3,3,3.9,3,5v14c0,1.1,0.9,2,2,2h14c1.1,0,2-0.9,2-2V5C21,3.9,20.1,3,19,3z M19,19H5V5h14V19z"></path> <rect height="5" width="2" x="7" y="12"></rect> <rect height="10" width="2" x="15" y="7"></rect> <rect height="3" width="2" x="11" y="14"></rect> <rect height="2" width="2" x="11" y="10"></rect> </g> </g> </g> </svg>`,
-      title: 'Total Revenue',
-      subtitle: 'Previous month vs this month',
-      value: '$5,900.00',
-      percentage: '55% ',
-      percentage1: ' higher',
-      percentageClass: 'text-success',
-    },
-    {
-      svg: `<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24"> <path d="M0 0h24v24H0V0z" fill="none"></path> <path d="M12 4c-4.41 0-8 3.59-8 8 0 1.82.62 3.49 1.64 4.83 1.43-1.74 4.9-2.33 6.36-2.33s4.93.59 6.36 2.33C19.38 15.49 20 13.82 20 12c0-4.41-3.59-8-8-8zm0 9c-1.94 0-3.5-1.56-3.5-3.5S10.06 6 12 6s3.5 1.56 3.5 3.5S13.94 13 12 13z" opacity=".3"></path> <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM7.07 18.28c.43-.9 3.05-1.78 4.93-1.78s4.51.88 4.93 1.78C15.57 19.36 13.86 20 12 20s-3.57-.64-4.93-1.72zm11.29-1.45c-1.43-1.74-4.9-2.33-6.36-2.33s-4.93.59-6.36 2.33C4.62 15.49 4 13.82 4 12c0-4.41 3.59-8 8-8s8 3.59 8 8c0 1.82-.62 3.49-1.64 4.83zM12 6c-1.94 0-3.5 1.56-3.5 3.5S10.06 13 12 13s3.5-1.56 3.5-3.5S13.94 6 12 6zm0 5c-.83 0-1.5-.67-1.5-1.5S11.17 8 12 8s1.5.67 1.5 1.5S12.83 11 12 11z"></path> </svg>`,
-      title: 'New Employees',
-      subtitle: 'Employees joined this month',
-      value: '15',
-      percentage: '5%',
-      percentage1: 'Increased',
-      percentageClass: 'text-success',
-    },
-    {
-      svg: `<svg class="text-primary" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24"> <path d="M0 0h24v24H0V0z" fill="none"></path> <path d="M12 4c-4.41 0-8 3.59-8 8s3.59 8 8 8 8-3.59 8-8-3.59-8-8-8zm1.23 13.33V19H10.9v-1.69c-1.5-.31-2.77-1.28-2.86-2.97h1.71c.09.92.72 1.64 2.32 1.64 1.71 0 2.1-.86 2.1-1.39 0-.73-.39-1.41-2.34-1.87-2.17-.53-3.66-1.42-3.66-3.21 0-1.51 1.22-2.48 2.72-2.81V5h2.34v1.71c1.63.39 2.44 1.63 2.49 2.97h-1.71c-.04-.97-.56-1.64-1.94-1.64-1.31 0-2.1.59-2.1 1.43 0 .73.57 1.22 2.34 1.67 1.77.46 3.66 1.22 3.66 3.42-.01 1.6-1.21 2.48-2.74 2.77z" opacity=".3"></path> <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.31-8.86c-1.77-.45-2.34-.94-2.34-1.67 0-.84.79-1.43 2.1-1.43 1.38 0 1.9.66 1.94 1.64h1.71c-.05-1.34-.87-2.57-2.49-2.97V5H10.9v1.69c-1.51.32-2.72 1.3-2.72 2.81 0 1.79 1.49 2.69 3.66 3.21 1.95.46 2.34 1.15 2.34 1.87 0 .53-.39 1.39-2.1 1.39-1.6 0-2.23-.72-2.32-1.64H8.04c.1 1.7 1.36 2.66 2.86 2.97V19h2.34v-1.67c1.52-.29 2.72-1.16 2.73-2.77-.01-2.2-1.9-2.96-3.66-3.42z"></path> </svg>`,
-      title: 'Total Expenses',
-      subtitle: 'Previous month vs this month',
-      value: '$8,500',
-      percentage: '12% ',
-      percentage1: 'Decreased',
-      percentageClass: 'text-danger',
-    },
-  ];
+  //   legend: {
+  //     show: false,
+  //   },
+  //   stroke: {
+  //     show: true,
+  //     curve: 'smooth',
+  //     lineCap: 'round',
+  //     colors: '#fff',
+  //     width: 0,
+  //     dashArray: 0,
+  //   },
+  //   plotOptions: {
+  //     pie: {
+  //       expandOnClick: false,
+  //       donut: {
+  //         size: '75%',
+  //         background: 'transparent',
+  //         labels: {
+  //           show: false,
+  //           name: {
+  //             show: true,
+  //             fontSize: '20px',
+  //             color: '#495057',
+  //             offsetY: -4,
+  //           },
+  //           value: {
+  //             show: true,
+  //             fontSize: '18px',
+  //             color: undefined,
+  //             offsetY: 8,
+  //             formatter: function (val: string) {
+  //               return val + '%';
+  //             },
+  //           },
+  //           total: {
+  //             show: true,
+  //             showAlways: true,
+  //             label: 'Total',
+  //             fontSize: '22px',
+  //             fontWeight: 600,
+  //             color: '#495057',
+  //           },
+  //         },
+  //       },
+  //     },
+  //   },
+  //   colors: ['var(--primary-color)', 'rgba(var(--primary-rgb), 0.2)'],
+  // };
+  // circleOptions1 = {
+  //   series: [1754, 544],
+  //   labels: ['Bitcoin', 'Ethereum'],
+  //   chart: {
+  //     height: 73,
+  //     width: 50,
+  //     type: 'donut',
+  //   },
+  //   dataLabels: {
+  //     enabled: false,
+  //   },
+
+  //   legend: {
+  //     show: false,
+  //   },
+  //   stroke: {
+  //     show: true,
+  //     curve: 'smooth',
+  //     lineCap: 'round',
+  //     colors: '#fff',
+  //     width: 0,
+  //     dashArray: 0,
+  //   },
+  //   plotOptions: {
+  //     pie: {
+  //       expandOnClick: false,
+  //       donut: {
+  //         size: '75%',
+  //         background: 'transparent',
+  //         labels: {
+  //           show: false,
+  //           name: {
+  //             show: true,
+  //             fontSize: '20px',
+  //             color: '#495057',
+  //             offsetY: -4,
+  //           },
+  //           value: {
+  //             show: true,
+  //             fontSize: '18px',
+  //             color: undefined,
+  //             offsetY: 8,
+  //             // formatter: function (val: string) {
+  //             //   return val + "%"
+  //             // }
+  //           },
+  //           total: {
+  //             show: true,
+  //             showAlways: true,
+  //             label: 'Total',
+  //             fontSize: '22px',
+  //             fontWeight: 600,
+  //             color: '#495057',
+  //           },
+  //         },
+  //       },
+  //     },
+  //   },
+  //   colors: ['var(--primary-color)', 'rgba(var(--primary-rgb), 0.2)'],
+  // };
+
   transactions = [
     {
       avatar: './assets/images/faces/5.jpg',
@@ -257,66 +373,5 @@ export class DashboardComponent {
     { header: 'Priority', field: 'Priority', tableHeadColumn: 'wd-lg-20p' },
     { header: 'Status', field: 'Status', tableHeadColumn: 'wd-lg-20p' },
   ];
-  tasks = [
-    {
-      name: 'Evaluating the design',
-      checked: true,
-      avatars: [
-        './assets/images/faces/1.jpg',
-        './assets/images/faces/2.jpg',
-        './assets/images/faces/3.jpg',
-        './assets/images/faces/4.jpg',
-      ],
-      comments: 18,
-      priority: 'High',
-      priorityClass: 'text-primary',
-      status: 'Completed',
-      statusClass: 'bg-primary-transparent',
-    },
-    {
-      name: 'Generate ideas for design',
-      checked: false,
-      avatars: [
-        './assets/images/faces/5.jpg',
-        './assets/images/faces/6.jpg',
-        './assets/images/faces/7.jpg',
-        './assets/images/faces/8.jpg',
-      ],
-      comments: 34,
-      priority: 'Normal',
-      priorityClass: 'text-secondary',
-      status: 'Pending',
-      statusClass: 'bg-warning-transparent',
-    },
-    {
-      name: 'Define the problem',
-      checked: true,
-      avatars: [
-        './assets/images/faces/11.jpg',
-        './assets/images/faces/12.jpg',
-        './assets/images/faces/9.jpg',
-        './assets/images/faces/10.jpg',
-      ],
-      comments: 25,
-      priority: 'Low',
-      priorityClass: 'text-warning',
-      status: 'Completed',
-      statusClass: 'bg-primary-transparent',
-    },
-    {
-      name: 'Empathize with users',
-      checked: false,
-      avatars: [
-        './assets/images/faces/7.jpg',
-        './assets/images/faces/9.jpg',
-        './assets/images/faces/11.jpg',
-        './assets/images/faces/12.jpg',
-      ],
-      comments: 37,
-      priority: 'High',
-      priorityClass: 'text-primary',
-      status: 'Rejected',
-      statusClass: 'bg-danger-transparent',
-    },
-  ];
+
 }

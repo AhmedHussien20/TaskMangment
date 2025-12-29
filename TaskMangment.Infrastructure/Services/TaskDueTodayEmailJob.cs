@@ -32,7 +32,7 @@ namespace TaskMangment.Infrastructure.Services
                 .Where(t =>
                     t.DueDate != null &&
                     t.DueDate.Value.Date == today &&
-                    t.Status != Domain.Entities.TaskStatus.Closed)
+                    t.Status != WorkTaskStatus.Closed)
                 .Select(t => new
                 {
                     t.Id,

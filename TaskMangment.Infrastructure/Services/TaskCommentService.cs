@@ -129,7 +129,7 @@ namespace TaskMangment.Infrastructure.Services
 
 
             var assignment = await _taskAssignmentRepo
-                .GetAll(a => a.TaskId == taskId && a.EmployeeId == employeeId && a.IsActive)
+                .GetAll(a => a.TaskId == taskId && (a.EmployeeId == employeeId || a.CreatedBy == employeeId) && a.IsActive)
                 .FirstOrDefaultAsync();
 
 

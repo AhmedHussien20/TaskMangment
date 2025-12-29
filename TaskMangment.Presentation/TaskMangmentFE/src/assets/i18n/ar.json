@@ -4,6 +4,23 @@
     "SETTINGS": "الاعدادات",
     "LOGOUT": "تسجيل الخروج"
   },
+  "DASHBOARD": {
+    "WELCOME": "مرحبًا بك في لوحة التحكم",
+    "HOME": "الرئيسية",
+    "TOTAL_EMPLOYEES": "إجمالي الموظفين",
+    "ACTIVE_TASKS": "المهام النشطة",
+    "OVERDUE_TASKS": "المهام المتأخرة",
+    "COMPLETED_TASKS": "المهام المكتملة",
+    "TOP_DELAYED_EMPLOYEES": "أكثر الموظفين تأخرًا",
+    "TOP_DELAYED_EMPLOYEES_DESC": "الموظفون الذين لديهم أكبر عدد من المهام المتأخرة",
+    "TODAY_INPROGRESS_TASKS": "المهام قيد التنفيذ التي تم تحديثها اليوم",
+    "TODAY_INPROGRESS_DESC": "آخر المهام التي تم تعديلها اليوم وحالتها قيد التنفيذ",
+    "COMPLETED_TODAY": "المهام المكتملة اليوم",
+    "COMPLETED_TODAY_DESC": "أكثر الموظفين إنجازًا للمهام اليوم",
+    "TASKS": "مهام",
+    "NO_COMPLETED_TODAY": "لا توجد مهام مكتملة اليوم",
+    "NO_TASKS_TODAY": "لا توجد مهام محدثة اليوم"
+  },
   "MENU": {
     "HOME": "الرئيسية",
     "ORGANIZATION_STRUCTURE": "الهيكل الاداري",
@@ -268,6 +285,8 @@
     "ID": "الكود"
   },
   "TASK": {
+    "UPDATED_BY": "تم التحديث بواسطة",
+    "UPDATED_AT": "وقت التحديث",
     "LIST_TITLE": "المهام",
     "ADD": "إضافة مهمة",
     "EDIT": "تعديل مهمة",
@@ -400,7 +419,11 @@
     "WARNING_SUCCESS": "تم إرسال التحذير بنجاح",
     "PENALTY_SUCCESS": "تم إرسال الخصم بنجاح",
     "COMMENT_SUCCESS": "تم إضافة التعليق بنجاح",
-    "MIN_LENGTH_TASK_CHARACTERS": "ادخل علي الاقل 5 احرف"
+    "MIN_LENGTH_TASK_CHARACTERS": "ادخل علي الاقل 5 احرف",
+    "DAILY": "يومى",
+    "MONTHLY": "شهرى",
+    "WEEKLY": "أسبوعى",
+    "ASSIGNED_TO": "مسؤلية"
   },
   "EMPLOYEE": {
     "LIST_TITLE": "قائمة الموظفين",

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace TaskMangment.Domain.Entities
 {
     public enum TaskPriority : byte { Low = 1, Medium = 2, High = 3 }
-    public enum TaskStatus : byte { New = 1, InProgress = 2, Closed = 3, Archived = 4 }
+    public enum WorkTaskStatus : byte { New = 1, InProgress = 2, Closed = 3, Archived = 4 }
     public enum ExtensionRequestStatus : byte { Pending = 1, Approved = 2, Rejected = 3 }
     public enum CloseRequestStatus : byte { Pending = 1, Approved = 2, Rejected = 3 }
 
@@ -55,6 +55,13 @@ namespace TaskMangment.Domain.Entities
         TeamLead = 50,
         Manager = 70,
         Admin = 100
+    }
+
+    public enum CommentAllowPeriod
+    {
+        Daily = 1,      
+        Weekly = 7,    
+        Monthly = 30  
     }
 
 

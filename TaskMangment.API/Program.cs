@@ -22,6 +22,9 @@ using TaskMangment.Infrastructure.Services;
 using TaskMangment.Infrastructure.SignalR;
 using Serilog;
 using TaskMangment.Infrastructure.Seeding;
+using TaskMangment.Application.Dashboards.Employee;
+using TaskMangment.Application.Dashboards.Admin;
+using TaskMangment.Infrastructure.Services.TaskMangment.Infrastructure.Services.Dashboard;
 
 namespace TaskMangment.API
 {
@@ -102,6 +105,8 @@ namespace TaskMangment.API
             builder.Services.AddScoped<INotificationService, NotificationService>();
             builder.Services.AddScoped<IEmailQueueService, EmailQueueService>();
             builder.Services.AddScoped<ITaskDueTodayEmailJob, TaskDueTodayEmailJob>();
+            builder.Services.AddScoped<IEmployeeDashboardService, EmployeeDashboardService>();
+            builder.Services.AddScoped<IAdminDashboardService, AdminDashboardService>();
 
 
 
@@ -288,11 +293,11 @@ namespace TaskMangment.API
             //    await seeder.SeedAsync();
             //}
 
-            using (var scope = app.Services.CreateScope())
-            {
-                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                EmailTemplateSeeder.Seed(db);
-            }
+            //using (var scope = app.Services.CreateScope())
+            //{
+            //    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            //    EmailTemplateSeeder.Seed(db);
+            //}
 
             //using (var scope = app.Services.CreateScope())
             //{

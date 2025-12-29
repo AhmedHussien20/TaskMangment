@@ -10,7 +10,7 @@ import { BaseResponse } from 'app/models/base.response.model';
 import { selectAuthLoading } from 'app/store/auth/auth.selectors';
 import { Router } from '@angular/router';
 import { AuthUser } from '../models/auth/auth-user';
-
+import * as NavActions from '../../store/nav/nav.actions';
 @Injectable({
   providedIn: 'root',
 })
@@ -29,13 +29,18 @@ export class AuthService {
     const user = localStorage.getItem('userData');
     return user ? JSON.parse(user) : null;
   }
+
   login(userCode: string, password: string): Observable<BaseResponse<User & { token: string }>> {
     this.store.dispatch(login({ userCode, password }));
+    
+
     return this.authRepository.login(userCode, password).pipe(
       map(response => {
         if (response.data !== null) {
           localStorage.setItem('authToken', response.data.token);
           localStorage.setItem('userData', JSON.stringify(response.data));
+    this.store.dispatch(NavActions.initializeMenu());
+
           this.store.dispatch(loginSuccess({ token: response.data.token }));
           return response;
         } else {
@@ -57,6 +62,9 @@ export class AuthService {
   logout() {
     localStorage.removeItem('authToken');
     localStorage.removeItem('userData');
+    
+    this.store.dispatch(NavActions.clearMenu());  
+
     this.router.navigate(['/auth/login'], { replaceUrl: true });
   }
 
@@ -75,5 +83,9 @@ export class AuthService {
 
   hasMinRoleLevel(level: number): boolean {
     return (this.getUser()?.roleLevel ?? 0) >= level;
+  }
+
+  getRoleLevel(): number {
+    return this.getUser()?.roleLevel ?? 0;
   }
 }

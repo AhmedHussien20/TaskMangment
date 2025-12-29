@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿ 
 using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TaskMangment.Domain.Entities;
 
 namespace TaskMangment.Domain.Entities
 {
@@ -17,7 +12,7 @@ namespace TaskMangment.Domain.Entities
         [Required, MaxLength(300)] public string Title { get; set; }
         public string Description { get; set; }
 
-        public int? CommentAllowPeriodDays { get; set; }
+        public CommentAllowPeriod? CommentAllowPeriodDays { get; set; }
         public int MaxWarnings { get; set; } = 3;
         [Column(TypeName = "decimal(18,2)")] public decimal PenaltyAtMaxWarnings { get; set; } = 0;
         [Column(TypeName = "decimal(18,2)")] public decimal PenaltyOnAutoClose { get; set; } = 0;
@@ -25,7 +20,7 @@ namespace TaskMangment.Domain.Entities
         public TaskPriority Priority { get; set; } = TaskPriority.Low;
         public DateTime? DueDate { get; set; }
         public int? AssignedByEmployeeId { get; set; }
-        public TaskStatus Status { get; set; } = TaskStatus.New;
+        public WorkTaskStatus  Status { get; set; } = WorkTaskStatus.New;
         //public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         [ForeignKey(nameof(CompanyId))] public Company Company { get; set; }

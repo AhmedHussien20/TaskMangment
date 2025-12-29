@@ -1,22 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
+using TaskMangment.Application.Common.ApiRequests.Task;
+using TaskMangment.Application.Common.Responses;
+using TaskMangment.Application.DTOs.TaskDTOs;
+using TaskMangment.Application.Interfaces.IRepository;
+using TaskMangment.Application.Interfaces.Services;
+using TaskMangment.Application.Responses;
+using TaskMangment.Domain.Entities;
+using TaskMangment.Infrastructure.Persistence.Extensions;
 
 namespace TaskMangment.Infrastructure.Services
 {
-    using AutoMapper;
-    using Microsoft.EntityFrameworkCore;
-    using TaskMangment.Application.Common.ApiRequests.Task;
-    using TaskMangment.Application.Common.Responses;
-    using TaskMangment.Application.DTOs.TaskDTOs;
-    using TaskMangment.Application.Interfaces.IRepository;
-    using TaskMangment.Application.Interfaces.Services;
-    using TaskMangment.Application.Responses;
-    using TaskMangment.Domain.Entities;
-    using TaskMangment.Infrastructure.Persistence.Extensions;
-
     public class TaskAssignmentService : ITaskAssignmentService
     {
         private readonly IRepository<TaskAssignment> _assignmentRepo;

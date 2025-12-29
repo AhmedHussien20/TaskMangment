@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgbPaginationModule, NgbTooltipModule } from '@ng-bootstrap/ng-bootstrap';
 import { TranslateModule } from '@ngx-translate/core';
 import { MyDatePipe } from 'app/components/utilities/pipline/MyDatePipe';
 import { SearchCriteria } from 'app/core/models/search-criteria.model';
@@ -12,7 +12,8 @@ export type ColumnType =
   | 'icon'
   | 'badge'
   | 'custom'
-  | 'date';
+  | 'date'
+  | 'assignees';
 
 export interface BadgeConfig {
   text: string;
@@ -25,6 +26,7 @@ export interface TableColumn {
   type?: ColumnType;
   badgeMap?: Record<string, BadgeConfig>;
   icon?: string;
+  displayField?: string;
 }
 
 
@@ -38,7 +40,7 @@ interface HasId {
   imports: [
     CommonModule,
     FormsModule,
-    NgbPaginationModule, TranslateModule,MyDatePipe
+    NgbPaginationModule, TranslateModule, MyDatePipe,NgbTooltipModule
   ],
   styleUrls: ['./generic-table.component.scss']
 })
@@ -130,7 +132,17 @@ export class GenericTableComponent<T> implements OnDestroy {
     const value = this.getValue(item, col.key);
     return col.badgeMap[value]?.class ?? '';
   }
+  
+getInitials(name: string): string {
+  if (!name) return '';
 
+  return name
+    .split(' ')
+    .map(x => x[0])
+    .join('')
+    .substring(0, 2)
+    .toUpperCase();
+}
 
   getInputType(key: string): 'text' | 'dropdown' | 'date' | 'number' {
     const filterTypes = (this.searchCriteria?.filterTypes || {}) as any;
@@ -151,8 +163,8 @@ export class GenericTableComponent<T> implements OnDestroy {
   }
 
   viewDetails(id: number) {
-  this.details.emit(id);
-}
+    this.details.emit(id);
+  }
 
 
   getItemId(item: T): any {

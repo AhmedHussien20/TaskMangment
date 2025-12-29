@@ -13,150 +13,150 @@ export class NavEffects {
   initializeMenu$: any;
   updateTranslations$: any;
 
-private MENUITEMS: MenuItem[] = [
+  private MENUITEMS: MenuItem[] = [
 
-  // ================= Dashboard =================
-  { headTitle: 'nav.dashboard.header', minRoleLevel: 10 },
-  {
-    title: 'nav.dashboard.title',
-    path: '/dashboard',
-    type: 'link',
-    icon: 'ti-home',
-    minRoleLevel: 10
-  },
+    // ================= Dashboard =================
+    { headTitle: 'nav.dashboard.header', minRoleLevel: 10 },
+    {
+      title: 'nav.dashboard.title',
+      path: '/dashboard',
+      type: 'link',
+      icon: 'ti-home',
+      minRoleLevel: 10
+    },
 
-  // ================= System Management =================
-  { headTitle: 'nav.apps.organization.title', minRoleLevel: 50 },
-  {
-    title: 'nav.apps.title',
-    icon: 'ti-layout',
-    type: 'sub',
-    minRoleLevel: 10,
-    children: [
+    // ================= System Management =================
+    { headTitle: 'nav.apps.organization.title', minRoleLevel: 50 },
+    {
+      title: 'nav.apps.title',
+      icon: 'ti-layout',
+      type: 'sub',
+      minRoleLevel: 10,
+      children: [
 
-      // ---- Organization ----
-      {
-        title: 'nav.apps.organization.title',
-        icon: 'ti-map',
-        type: 'sub',
-        minRoleLevel: 50,
-        children: [
-          {
-            title: 'nav.apps.area.list',
-            type: 'link',
-            path: '/area/area-list',
-            minRoleLevel: 50
-          },
-          {
-            title: 'nav.apps.branch.list',
-            type: 'link',
-            path: '/branch/branch-list',
-            minRoleLevel: 50
-          },
-          {
-            title: 'nav.apps.department.list',
-            type: 'link',
-            path: '/department/department-list',
-            minRoleLevel: 50
-          },
-        ],
-      },
+        // ---- Organization ----
+        {
+          title: 'nav.apps.organization.title',
+          icon: 'ti-map',
+          type: 'sub',
+          minRoleLevel: 50,
+          children: [
+            {
+              title: 'nav.apps.area.list',
+              type: 'link',
+              path: '/area/area-list',
+              minRoleLevel: 50
+            },
+            {
+              title: 'nav.apps.branch.list',
+              type: 'link',
+              path: '/branch/branch-list',
+              minRoleLevel: 50
+            },
+            {
+              title: 'nav.apps.department.list',
+              type: 'link',
+              path: '/department/department-list',
+              minRoleLevel: 50
+            },
+          ],
+        },
 
-      // ---- Users & Permissions ----
-      {
-        title: 'nav.apps.employee.title',
-        icon: 'ti-user',
-        type: 'sub',
-        minRoleLevel: 70,
-        children: [
-          {
-            title: 'nav.apps.employee.list',
-            type: 'link',
-            path: '/employee/employee-list',
-            minRoleLevel: 70
-          },
-          {
-            title: 'nav.apps.role.list',
-            type: 'link',
-            path: '/role/role-list',
-            minRoleLevel: 100
-          },
-          {
-            title: 'nav.apps.permission.list',
-            type: 'link',
-            path: '/role/permission-list',
-            minRoleLevel: 100
-          },
-        ],
-      },
+        // ---- Users & Permissions ----
+        {
+          title: 'nav.apps.employee.title',
+          icon: 'ti-user',
+          type: 'sub',
+          minRoleLevel: 70,
+          children: [
+            {
+              title: 'nav.apps.employee.list',
+              type: 'link',
+              path: '/employee/employee-list',
+              minRoleLevel: 70
+            },
+            {
+              title: 'nav.apps.role.list',
+              type: 'link',
+              path: '/role/role-list',
+              minRoleLevel: 100
+            },
+            {
+              title: 'nav.apps.permission.list',
+              type: 'link',
+              path: '/role/permission-list',
+              minRoleLevel: 100
+            },
+          ],
+        },
 
-      // ---- Operations ----
-      {
-        title: 'nav.apps.operations.title',
-        icon: 'ti-clipboard',
-        type: 'sub',
-        minRoleLevel: 10,
-        children: [
-          {
-            title: 'nav.apps.task.list',
-            type: 'link',
-            path: '/task/task-list',
-            minRoleLevel: 10
-          },
-          {
-            title: 'nav.apps.calender.title',
-            type: 'link',
-            path: '/utilities/event-calender',
-            minRoleLevel: 10
-          },
-        ],
-      },
+        // ---- Operations ----
+        {
+          title: 'nav.apps.operations.title',
+          icon: 'ti-clipboard',
+          type: 'sub',
+          minRoleLevel: 10,
+          children: [
+            {
+              title: 'nav.apps.task.list',
+              type: 'link',
+              path: '/task/task-list',
+              minRoleLevel: 10
+            },
+            {
+              title: 'nav.apps.calender.title',
+              type: 'link',
+              path: '/utilities/event-calender',
+              minRoleLevel: 10
+            },
+          ],
+        },
 
-      // ---- Education ----
-      {
-        title: 'nav.apps.education.title',
-        icon: 'ti-book',
-        type: 'sub',
-        minRoleLevel: 50,
-        children: [
-          {
-            title: 'nav.apps.student.list',
-            type: 'link',
-            path: '/student/student-list',
-            minRoleLevel: 50
-          },
-          {
-            title: 'nav.apps.course.list',
-            type: 'link',
-            path: '/course/course-list',
-            minRoleLevel: 50
-          },
-        ],
-      },
+        // ---- Education ----
+        {
+          title: 'nav.apps.education.title',
+          icon: 'ti-book',
+          type: 'sub',
+          minRoleLevel: 50,
+          children: [
+            {
+              title: 'nav.apps.student.list',
+              type: 'link',
+              path: '/student/student-list',
+              minRoleLevel: 50
+            },
+            {
+              title: 'nav.apps.course.list',
+              type: 'link',
+              path: '/course/course-list',
+              minRoleLevel: 50
+            },
+          ],
+        },
 
-    ],
-  },
+      ],
+    },
 
-];
+  ];
 
 
-     // ---- Configurations ----
-      // {
-      //   title: 'nav.apps.configurations.title',
-      //   icon: 'ti-settings',
-      //   type: 'sub',
-      //   children: [
-      //     { title: 'nav.apps.configurations.moduleAvailability', type: 'link', path: '/configuration/modulesAvailabilityList' },
-      //     { title: 'nav.apps.configurations.modules', type: 'link', path: '/configuration/modules' },
-      //     { title: 'nav.apps.configurations.branches', type: 'link', path: '/configuration/branches' },
-      //     { title: 'nav.apps.configurations.onlineOrders', type: 'link' },
-      //     { title: 'nav.apps.configurations.externalIntegration', type: 'link' },
-      //     { title: 'nav.apps.configurations.notifications', type: 'link' },
-      //     { title: 'nav.apps.configurations.campaigns', type: 'link' },
-      //     { title: 'nav.apps.configurations.ads', type: 'link' },
-      //   ],
-      // },
-  constructor(private actions$: Actions, private translate: TranslateService,private auth: AuthService) {
+  // ---- Configurations ----
+  // {
+  //   title: 'nav.apps.configurations.title',
+  //   icon: 'ti-settings',
+  //   type: 'sub',
+  //   children: [
+  //     { title: 'nav.apps.configurations.moduleAvailability', type: 'link', path: '/configuration/modulesAvailabilityList' },
+  //     { title: 'nav.apps.configurations.modules', type: 'link', path: '/configuration/modules' },
+  //     { title: 'nav.apps.configurations.branches', type: 'link', path: '/configuration/branches' },
+  //     { title: 'nav.apps.configurations.onlineOrders', type: 'link' },
+  //     { title: 'nav.apps.configurations.externalIntegration', type: 'link' },
+  //     { title: 'nav.apps.configurations.notifications', type: 'link' },
+  //     { title: 'nav.apps.configurations.campaigns', type: 'link' },
+  //     { title: 'nav.apps.configurations.ads', type: 'link' },
+  //   ],
+  // },
+  constructor(private actions$: Actions, private translate: TranslateService, private auth: AuthService) {
     console.log('NavEffects initialized:', this.actions$);
 
     this.initializeEffects();
@@ -164,75 +164,74 @@ private MENUITEMS: MenuItem[] = [
 
   private initializeEffects() {
 
-  this.initializeMenu$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(NavActions.initializeMenu),
-      switchMap(() => {
+    this.initializeMenu$ = createEffect(() =>
+      this.actions$.pipe(
+        ofType(NavActions.initializeMenu),
+        switchMap(() => {
+          const menuCopy = JSON.parse(JSON.stringify(this.MENUITEMS));
+          const filteredMenu = this.filterMenuByAccess(menuCopy);
 
-        const filteredMenu = this.filterMenuByAccess(this.MENUITEMS);
-
-        return forkJoin(
-          filteredMenu.map(item => this.translateMenuItem(item))
-        );
-      }),
-      map(translatedMenu =>
-        NavActions.updateMenuItems({ items: translatedMenu })
+          return forkJoin(
+            filteredMenu.map(item => this.translateMenuItem(item))
+          );
+        }),
+        map(items => NavActions.updateMenuItems({ items }))
       )
-    )
-  );
+    );
 
-  this.updateTranslations$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(NavActions.updateMenuTranslations),
-      switchMap(() => {
 
-        const filteredMenu = this.filterMenuByAccess(this.MENUITEMS);
-
-        return forkJoin(
-          filteredMenu.map(item => this.translateMenuItem(item))
-        );
-      }),
-      map(translatedMenu =>
-        NavActions.updateMenuItems({ items: translatedMenu })
+    this.updateTranslations$ = createEffect(() =>
+      this.actions$.pipe(
+        ofType(NavActions.updateMenuTranslations),
+        switchMap(() => {
+          const menuCopy = JSON.parse(JSON.stringify(this.MENUITEMS));
+          const filteredMenu = this.filterMenuByAccess(menuCopy);
+          return forkJoin(
+            filteredMenu.map(item => this.translateMenuItem(item))
+          );
+        }),
+        map(translatedMenu =>
+          NavActions.updateMenuItems({ items: translatedMenu })
+        )
       )
-    )
-  );
+    );
 
-}
+  }
 
 
   private filterMenuByAccess(items: MenuItem[]): MenuItem[] {
-  return items
-    .filter(item => this.canShow(item))
-    .map(item => ({
-      ...item,
-      children: item.children
-        ? this.filterMenuByAccess(item.children)
-        : undefined
-    }))
-    .filter(item =>
-      item.type !== 'sub' ||
-      (item.children && item.children.length > 0)
-    );
-}
-
-private canShow(item: MenuItem): boolean {
-  const user = this.auth.getUser(); 
-  if (!user) return true;
-
-  if (item.minRoleLevel && user.roleLevel < item.minRoleLevel) {
-    return false;
+    return items
+      .filter(item => this.canShow(item))
+      .map(item => ({
+        ...item,
+        children: item.children
+          ? this.filterMenuByAccess(item.children)
+          : undefined
+      }))
+      .filter(item =>
+        item.type !== 'sub' ||
+        (item.children && item.children.length > 0)
+      );
   }
 
-  if (
-    item.requiredPermission &&
-    !user.permissions.includes(item.requiredPermission)
-  ) {
-    return false;
+  private canShow(item: MenuItem): boolean {
+    const user = this.auth.getUser();
+    if (!user) return false;
+
+    if (item.minRoleLevel !== undefined && user.roleLevel < item.minRoleLevel) {
+      return false;
+    }
+
+    if (
+      item.requiredPermission &&
+      (!user.permissions || !user.permissions.includes(item.requiredPermission))
+    ) {
+      return false;
+    }
+
+    return true;
   }
 
-  return true;
-}
 
 
   private translateMenuItem(item: MenuItem): Observable<MenuItem> {

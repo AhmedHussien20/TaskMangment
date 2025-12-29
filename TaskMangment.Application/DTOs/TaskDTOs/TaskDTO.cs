@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TaskMangment.Domain.Entities;
-using TaskStatus = TaskMangment.Domain.Entities.TaskStatus;
+﻿ 
+using System.ComponentModel.DataAnnotations; 
+using TaskMangment.Domain.Entities; 
 
 namespace TaskMangment.Application.DTOs.TaskDTOs
 {
@@ -30,7 +25,7 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
         public bool IsShared { get; set; } = false;
 
         public TaskPriority Priority { get; set; } = TaskPriority.Low;
-        public TaskStatus Status { get; set; } = TaskStatus.New;
+        public WorkTaskStatus Status { get; set; } = WorkTaskStatus.New;
 
 
         public DateTime? DueDate { get; set; }
@@ -46,7 +41,7 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
         public string AssignedByName { get; set; }  
         public List<TaskEmployeeAssignmentDto> AssignEmployee { get; set; } = new(); 
         public TaskPriority Priority { get; set; }   
-        public TaskStatus Status { get; set; }    
+        public WorkTaskStatus Status { get; set; }    
         public DateTime? DueDate { get; set; }
 
         public string PriorityText => Priority.ToString();
