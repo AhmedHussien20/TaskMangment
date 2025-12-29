@@ -290,11 +290,11 @@ namespace TaskMangment.API
             //    await seeder.SeedAsync();
             //}
 
-            //using (var scope = app.Services.CreateScope())
-            //{
-            //    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            //    EmailTemplateSeeder.Seed(db);
-            //}
+            using (var scope = app.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                EmailTemplateSeeder.Seed(db);
+            }
 
             //using (var scope = app.Services.CreateScope())
             //{
