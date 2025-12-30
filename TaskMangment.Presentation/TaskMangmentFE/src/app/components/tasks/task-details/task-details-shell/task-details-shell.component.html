@@ -27,12 +27,12 @@
         <i class="bi bi-clock-history"></i>
       </button>
 
-      <button class="btn btn-light" ngbTooltip="إضافة تحذير" container="body" placement="bottom"
+      <button class="btn btn-light" *ngIf="showAdminPages" ngbTooltip="إضافة تحذير" container="body"  placement="bottom"
         (click)="openAction('warning')">
         <i class="bi bi-exclamation-triangle"></i>
       </button>
 
-      <button class="btn btn-light" ngbTooltip="تسجيل جزاء" container="body" placement="bottom"
+      <button class="btn btn-light" *ngIf="showAdminPages" ngbTooltip="تسجيل جزاء" container="body"  placement="bottom"
         (click)="openAction('penalty')">
         <i class="bi bi-cash-coin"></i>
       </button>

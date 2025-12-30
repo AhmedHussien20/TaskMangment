@@ -75,9 +75,25 @@ namespace TaskMangment.Infrastructure.Services
                 .Include(t => t.AssignedBy)
                 .ApplySearch(request.searchKey);
 
+           
+
+            if (request.StatusId.HasValue)
+            {
+                query = query.Where(t => (int)t.Status == request.StatusId.Value);
+            }
+
             if (role != "Manager")
             {
                 query = query.Where(t => t.Assignments.Any(a => a.Employee.Id == employeeId));
+            }
+            else
+            {
+                if (request.EmployeeIds != null && request.EmployeeIds.Any())
+                {
+                    query = query.Where(t =>
+                        t.Assignments.Any(a => request.EmployeeIds.Contains(a.EmployeeId))
+                    );
+                }
             }
 
             var totalCount = await query.CountAsync();

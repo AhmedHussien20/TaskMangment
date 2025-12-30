@@ -132,3 +132,23 @@
 .app-name {
   color: #fff;
 }
+
+.shortcut-disabled {
+  opacity: 0.4;
+  pointer-events: none;
+  filter: grayscale(100%);
+}
+
+.disabled-shortcut {
+  cursor: not-allowed;
+}
+
+.shortcut-card {
+  transition: all 0.2s ease;
+}
+
+.shortcut-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+}
+
