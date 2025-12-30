@@ -30,7 +30,7 @@ export class OfferCreateUpdateComponent implements OnInit {
 
   formConfig: FormFieldConfig[] = [
     {
-      type: 'input',
+     type: 'input',
       label: 'OFFER.TITLE',
       name: 'title',
       validations: { required: true, minlength: 3, maxlength: 200 },
@@ -77,13 +77,69 @@ export class OfferCreateUpdateComponent implements OnInit {
   validations: { required: true },
   defaultValue: []
 }
-,
-    {
+
+    ,{
+  type: 'input',
+  label: 'OFFER.PAYMENT_METHOD',
+  name: 'paymentMethod',
+  validations: { required: true },
+  defaultValue: ''
+},
+{
+  type: 'input',
+  inputType : 'number',
+  label: 'OFFER.PRICE',
+  name: 'price',
+  validations: { required: true },
+  defaultValue: null
+},
+{
+  type: 'input',
+  inputType : 'number',
+  label: 'OFFER.INTEREST_RATE',
+  name: 'interestRate',
+  defaultValue: null
+},
+{
+  type: 'input',
+  inputType : 'number',
+  label: 'OFFER.DISCOUNT_RATE',
+  name: 'discountRate',
+  defaultValue: null
+},
+{
+  type: 'input',
+  inputType : 'number',
+  label: 'OFFER.INSTALLMENT_VALUE',
+  name: 'installmentValue',
+  defaultValue: null
+},
+{
+  type: 'input',
+  inputType : 'number',
+  label: 'OFFER.NET_AMOUNT',
+  name: 'netAmount',
+  defaultValue: null
+},
+{
+  type: 'input',
+  label: 'OFFER.OFFER_OWNER',
+  name: 'offerOwner',
+  defaultValue: ''
+},
+{
+  type: 'input',
+  label: 'OFFER.SPECIALIZATION',
+  name: 'specialization',
+  defaultValue: ''
+},
+ {
       type: 'textarea',
       label: 'OFFER.DESCRIPTION',
       name: 'description',
       defaultValue: ''
     }
+
   ];
 
   constructor(

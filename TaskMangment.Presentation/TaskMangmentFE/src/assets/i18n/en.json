@@ -612,7 +612,17 @@
     "SEARCH": "Search by offer name",
     "CREATE_SUCCESS": "Offer created successfully",
     "UPDATE_SUCCESS": "Offer updated successfully",
-    "STUDENTS" : "Students list"
+    "STUDENTS" : "Students list",
+    "PAYMENT_METHOD" : "Payment Method",
+"PRICE" : "Required Price",
+"INTEREST_RATE" : "Interest Rate",
+"DISCOUNT_RATE" : "Discount Rate",
+"INSTALLMENT_VALUE" : "Installment Value",
+"NET_AMOUNT" : "Net Amount Due",
+"OFFER_OWNER" : "Offer Owner",
+"SPECIALIZATION" : "Required Specialization",
+"NOTES" : "Notes"
+
   }
 
 }

@@ -12,7 +12,7 @@ namespace TaskMangment.Domain.Entities
     {
         [Required] public int BranchId { get; set; }
         [Required, MaxLength(200)] public string Name { get; set; }
-        public int? ManagerEmployeeId { get; set; } // optional FK to Employee
+        public int? ManagerEmployeeId { get; set; } 
 
         // Navigation
         [ForeignKey(nameof(BranchId))] public Branch Branch { get; set; }

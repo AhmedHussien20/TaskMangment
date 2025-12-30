@@ -37,8 +37,11 @@ namespace TaskMangment.Application.DTOs
         public int Id { get; set; }
         public string Name { get; set; }
         public string AreaName { get; set; }
+        public int AreaId { get; set; }
         public string ManagerName { get; set; }
         public string ResponsibleName { get; set; }
+        public int ManagerID { get; set; }
+        public int ResponsibleID { get; set; }
         public string Address { get; set; }
         public string Phone { get; set; }
         public string Mobile { get; set; }

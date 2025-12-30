@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using TaskMangment.Application.DTOs;
 using TaskMangment.Application.Interfaces.Services;
@@ -31,16 +32,31 @@ namespace TaskMangment.Infrastructure.Services
             var data = await LoadDataAsync(referenceType, referenceId);
             if (userId.HasValue)
             {
-                var userName = await _db.Employees
-                    .Where(e => e.Id == userId.Value)
-                    .Select(e => e.FullName)
-                    .FirstOrDefaultAsync();
+                if (referenceType != ReferenceType.CourseOffer)
+                {
+                    var userName = await _db.Employees
+                        .Where(e => e.Id == userId.Value)
+                        .Select(e => e.FullName)
+                        .FirstOrDefaultAsync();
 
-                data["UserName"] = string.IsNullOrWhiteSpace(userName) ? "مستخدم" : userName;
+                    data["UserName"] = string.IsNullOrWhiteSpace(userName) ? "مستخدم" : userName;
+                }
+                else 
+                {
+                    var studentName = await _db.OfferAssignments
+                        .Where(a => a.OfferId == referenceId && a.StudentId == userId.Value)
+                        .Select(a => a.Student.FullName)
+                        .FirstOrDefaultAsync();
+
+                    data["StudentName"] = string.IsNullOrWhiteSpace(studentName) ? "طالب" : studentName;
+                }
             }
             else
             {
-                data["UserName"] = "مستخدم";
+                if (referenceType != ReferenceType.CourseOffer)
+                    data["UserName"] = "مستخدم";
+                else
+                    data["StudentName"] = "طالب";
             }
 
             return new RenderedEmail
@@ -270,30 +286,46 @@ namespace TaskMangment.Infrastructure.Services
                 // =========================
                 case ReferenceType.CourseOffer:
                     {
-                        var offerAssignment = await _db.OfferAssignments
+                        var offer = await _db.Offers
                             .Where(a => a.Id == referenceId)
                             .Select(a => new
                             {
-                                StudentName = a.Student.FullName,
-                                OfferTitle = a.Offer.Title,
-                                OfferDescription = a.Offer.Description,
-                                a.Offer.StartDate,
-                                a.Offer.EndDate
+                                a.Title,
+                                a.Description,
+                                a.StartDate,
+                                a.EndDate,
+                                a.Body, 
+                                SubjectName = a.Subject.Title,
+                                CourseName = a.Course.Title
                             })
                             .FirstOrDefaultAsync();
 
-                        if (offerAssignment == null)
-                            throw new Exception($"Offer assignment with Id {referenceId} not found.");
+                        if (offer == null)
+                            throw new Exception($"Offer with Id {referenceId} not found.");
+
+                        var bodyDict = string.IsNullOrEmpty(offer.Body)
+                            ? new Dictionary<string, string>()
+                            : JsonSerializer.Deserialize<Dictionary<string, string>>(offer.Body);
 
                         return new Dictionary<string, string>
                         {
-                            ["StudentName"] = offerAssignment.StudentName,
-                            ["OfferTitle"] = offerAssignment.OfferTitle,
-                            ["OfferDescription"] = offerAssignment.OfferDescription,
-                            ["StartDate"] = offerAssignment.StartDate?.ToString("yyyy-MM-dd") ?? "-",
-                            ["EndDate"] = offerAssignment.EndDate?.ToString("yyyy-MM-dd") ?? "-"
+                            ["OfferTitle"] = offer.Title,
+                            ["OfferDescription"] = offer.Description,
+                            ["SubjectName"] = offer.SubjectName ?? "-",
+                            ["CourseName"] = offer.CourseName ?? "-",
+                            ["StartDate"] = offer.StartDate?.ToString("yyyy-MM-dd") ?? "-",
+                            ["EndDate"] = offer.EndDate?.ToString("yyyy-MM-dd") ?? "-",
+                            ["PaymentMethod"] = bodyDict?.GetValueOrDefault("PaymentMethod") ?? "-",
+                            ["Price"] = bodyDict?.GetValueOrDefault("Price") ?? "-",
+                            ["InterestRate"] = bodyDict?.GetValueOrDefault("InterestRate") ?? "-",
+                            ["DiscountRate"] = bodyDict?.GetValueOrDefault("DiscountRate") ?? "-",
+                            ["InstallmentValue"] = bodyDict?.GetValueOrDefault("InstallmentValue") ?? "-",
+                            ["NetAmount"] = bodyDict?.GetValueOrDefault("NetAmount") ?? "-",
+                            ["OfferOwner"] = bodyDict?.GetValueOrDefault("OfferOwner") ?? "-",
+                            ["Specialization"] = bodyDict?.GetValueOrDefault("Specialization") ?? "-",
                         };
                     }
+
 
 
                 // =========================

@@ -9,6 +9,9 @@ export interface BranchGetDto {
   email?: string;
   managerName?: string;
   responsibleName?: string;
+  areaId?: number;
+  managerID?: number;
+  responsibleID?: number;
 }
 
 export interface BranchAddEditDto {

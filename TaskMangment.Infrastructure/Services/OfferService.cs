@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using TaskMangment.Application.Common.ApiRequests.Offer;
 using TaskMangment.Application.Common.Errors;
@@ -83,6 +84,22 @@ namespace TaskMangment.Infrastructure.Services
                 dto.AssignedStudents = offer.Assignments.Select(a => a.Student.FullName).ToList();
                 dto.CourseTitle = offer.Course?.Title;
                 dto.SubjectTitle = offer.Subject?.Title;
+
+                if (!string.IsNullOrWhiteSpace(offer.Body))
+                {
+                    var body = JsonSerializer.Deserialize<Dictionary<string, string>>(offer.Body);
+                    if (body != null)
+                    {
+                        dto.PaymentMethod = body.GetValueOrDefault("PaymentMethod");
+                        dto.Price = body.GetValueOrDefault("Price");
+                        dto.InterestRate = body.GetValueOrDefault("InterestRate");
+                        dto.DiscountRate = body.GetValueOrDefault("DiscountRate");
+                        dto.InstallmentValue = body.GetValueOrDefault("InstallmentValue");
+                        dto.NetAmount = body.GetValueOrDefault("NetAmount");
+                        dto.OfferOwner = body.GetValueOrDefault("OfferOwner");
+                        dto.Specialization = body.GetValueOrDefault("Specialization");
+                    }
+                }
             }
 
             var response = new PagedResponse<OfferGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
@@ -101,20 +118,35 @@ namespace TaskMangment.Infrastructure.Services
                 .FirstOrDefaultAsync();
 
             if (offer == null)
-                throw new AppException(ErrorCodes.OfferNotFound,StatusCodes.Status400BadRequest);
+                throw new AppException(ErrorCodes.OfferNotFound, StatusCodes.Status400BadRequest);
 
             var dto = _mapper.Map<OfferGetDto>(offer);
             dto.AssignedStudents = offer.Assignments.Select(a => a.Student.FullName).ToList();
-            dto.AssignedStudentsIds = offer.Assignments.Select(a => a.StudentId).ToList();  
+            dto.AssignedStudentsIds = offer.Assignments.Select(a => a.StudentId).ToList();
             dto.CourseId = offer.Course?.Id;
             dto.SubjectId = offer.Subject?.Id;
 
+            if (!string.IsNullOrWhiteSpace(offer.Body))
+            {
+                var body = JsonSerializer.Deserialize<Dictionary<string, string>>(offer.Body);
+                if (body != null)
+                {
+                    dto.PaymentMethod = body.GetValueOrDefault("PaymentMethod");
+                    dto.Price = body.GetValueOrDefault("Price");
+                    dto.InterestRate = body.GetValueOrDefault("InterestRate");
+                    dto.DiscountRate = body.GetValueOrDefault("DiscountRate");
+                    dto.InstallmentValue = body.GetValueOrDefault("InstallmentValue");
+                    dto.NetAmount = body.GetValueOrDefault("NetAmount");
+                    dto.OfferOwner = body.GetValueOrDefault("OfferOwner");
+                    dto.Specialization = body.GetValueOrDefault("Specialization");
+                }
+            }
 
             return ApiResponse<OfferGetDto>.Ok(dto);
         }
 
         public async Task<ApiResponse<OfferGetDto>> AddAsync(OfferAddEditDto dto)
-        {
+         {
 
             if (dto.AssignedStudentIds != null && dto.AssignedStudentIds.Any())
             {
@@ -146,7 +178,20 @@ namespace TaskMangment.Infrastructure.Services
 
             var offer = _mapper.Map<Offer>(dto);
 
-            // Assign students
+            var bodyObj = new
+            {
+                dto.PaymentMethod,
+                dto.Price,
+                dto.InterestRate,
+                dto.DiscountRate,
+                dto.InstallmentValue,
+                dto.NetAmount,
+                dto.OfferOwner,
+                dto.Specialization,
+            };
+            offer.Body = JsonSerializer.Serialize(bodyObj);
+
+
             foreach (var studentId in dto.AssignedStudentIds)
             {
                 if (await _studentRepo.IsExistAsync(studentId))
@@ -156,6 +201,7 @@ namespace TaskMangment.Infrastructure.Services
                         StudentId = studentId
                     });
                 }
+
             }
 
             await _offerRepo.AddAsync(offer);
@@ -173,6 +219,22 @@ namespace TaskMangment.Infrastructure.Services
       .FirstOrDefaultAsync();
 
             var offerDto = _mapper.Map<OfferGetDto>(fullOffer);
+
+            if (!string.IsNullOrWhiteSpace(fullOffer.Body))
+            {
+                var body = JsonSerializer.Deserialize<Dictionary<string, string>>(fullOffer.Body);
+                if (body != null)
+                {
+                    offerDto.PaymentMethod = body.GetValueOrDefault("PaymentMethod");
+                    offerDto.Price = body.GetValueOrDefault("Price");
+                    offerDto.InterestRate = body.GetValueOrDefault("InterestRate");
+                    offerDto.DiscountRate = body.GetValueOrDefault("DiscountRate");
+                    offerDto.InstallmentValue = body.GetValueOrDefault("InstallmentValue");
+                    offerDto.NetAmount = body.GetValueOrDefault("NetAmount");
+                    offerDto.OfferOwner = body.GetValueOrDefault("OfferOwner");
+                    offerDto.Specialization = body.GetValueOrDefault("Specialization");
+                }
+            }
 
             return ApiResponse<OfferGetDto>.Ok(offerDto, "Offer added successfully");
         }
@@ -195,22 +257,39 @@ namespace TaskMangment.Infrastructure.Services
                         StatusCodes.Status404NotFound
                     );
             }
+
             if (dto.CourseId.HasValue)
             {
                 if (!await _courseRepo.IsExistAsync(dto.CourseId.Value))
                     throw new AppException(
                         ErrorCodes.CourseNotFound,
-                        StatusCodes.Status404NotFound);
+                        StatusCodes.Status404NotFound
+                    );
             }
+
             if (dto.SubjectId.HasValue)
             {
                 if (!await _subjectRepo.IsExistAsync(dto.SubjectId.Value))
                     throw new AppException(
                         ErrorCodes.SubjectNotFound,
-                        StatusCodes.Status404NotFound);
+                        StatusCodes.Status404NotFound
+                    );
             }
 
             _mapper.Map(dto, offer);
+
+            var bodyObj = new
+            {
+                dto.PaymentMethod,
+                dto.Price,
+                dto.InterestRate,
+                dto.DiscountRate,
+                dto.InstallmentValue,
+                dto.NetAmount,
+                dto.OfferOwner,
+                dto.Specialization,
+            };
+            offer.Body = JsonSerializer.Serialize(bodyObj);
 
             var existingAssignments = await _offerRepo.GetAll(o => o.Id == id)
                 .Include(o => o.Assignments)
@@ -220,7 +299,7 @@ namespace TaskMangment.Infrastructure.Services
             foreach (var assignment in existingAssignments)
             {
                 if (!dto.AssignedStudentIds.Contains(assignment.StudentId))
-                    assignment.IsAccepted = false; 
+                    assignment.IsAccepted = false;
             }
 
             foreach (var studentId in dto.AssignedStudentIds)
@@ -236,13 +315,29 @@ namespace TaskMangment.Infrastructure.Services
             await _cache.RemoveAsync("offers:");
 
             var fullOffer = await _offerRepo.GetAll(o => o.Id == offer.Id)
-      .Include(o => o.Course)
-      .Include(o => o.Subject)
-      .Include(o => o.Assignments)
-      .ThenInclude(a => a.Student) 
-      .FirstOrDefaultAsync();
+                .Include(o => o.Course)
+                .Include(o => o.Subject)
+                .Include(o => o.Assignments)
+                .ThenInclude(a => a.Student)
+                .FirstOrDefaultAsync();
 
             var offerDto = _mapper.Map<OfferGetDto>(fullOffer);
+
+            if (!string.IsNullOrWhiteSpace(fullOffer.Body))
+            {
+                var body = JsonSerializer.Deserialize<Dictionary<string, string>>(fullOffer.Body);
+                if (body != null)
+                {
+                    offerDto.PaymentMethod = body.GetValueOrDefault("PaymentMethod");
+                    offerDto.Price = body.GetValueOrDefault("Price");
+                    offerDto.InterestRate = body.GetValueOrDefault("InterestRate");
+                    offerDto.DiscountRate = body.GetValueOrDefault("DiscountRate");
+                    offerDto.InstallmentValue = body.GetValueOrDefault("InstallmentValue");
+                    offerDto.NetAmount = body.GetValueOrDefault("NetAmount");
+                    offerDto.OfferOwner = body.GetValueOrDefault("OfferOwner");
+                    offerDto.Specialization = body.GetValueOrDefault("Specialization");
+                }
+            }
 
             return ApiResponse<OfferGetDto>.Ok(offerDto, "Offer updated successfully");
         }
