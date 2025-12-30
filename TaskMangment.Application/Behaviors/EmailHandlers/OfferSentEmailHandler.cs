@@ -10,24 +10,24 @@ using TaskMangment.Domain.Event;
 
 namespace TaskMangment.Application.Behaviors.EmailHandlers
 {
-    public class TaskCloseRequestEmailHandler : IEventHandler<TaskCloseRequestEvent>
+    public class OfferSentEmailHandler : IEventHandler<OfferSentEvent>
     {
         private readonly IEmailQueueService _emailQueue;
 
-        public TaskCloseRequestEmailHandler(IEmailQueueService emailQueue)
+        public OfferSentEmailHandler(IEmailQueueService emailQueue)
         {
             _emailQueue = emailQueue;
         }
 
-        public async Task Handle(TaskCloseRequestEvent ev)
+        public async Task Handle(OfferSentEvent ev)
         {
             await _emailQueue.QueueAsync(new EmailQueueRequest
             {
-                TemplateKey = "TaskCloseRequest",
-                ReferenceType = ReferenceType.TaskCloseRequest,
-                RecipientType = RecipientType.Employee,
-                ReferenceId = ev.RequestId,
-                UserIds = ev.Recipients
+                TemplateKey = "OfferSent",
+                RecipientType= RecipientType.Student,
+                ReferenceType = ReferenceType.CourseOffer,
+                ReferenceId = ev.OfferId,
+                UserIds = ev.AssignedStudentsIds
             });
         }
     }

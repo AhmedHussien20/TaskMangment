@@ -16,6 +16,7 @@ using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
+using TaskMangment.Domain.Event;
 using TaskMangment.Infrastructure.Persistence.Extensions;
 
 namespace TaskMangment.Infrastructure.Services
@@ -26,6 +27,8 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<Student> _studentRepo;
         private readonly IRepository<Course> _courseRepo;
         private readonly IRepository<CourseSubject> _subjectRepo;
+        private readonly IDomainEventDispatcher _eventDispatcher;
+
 
 
         private readonly IMapper _mapper;
@@ -35,7 +38,7 @@ namespace TaskMangment.Infrastructure.Services
             IMapper mapper,
             ICachingService cache,
             IRepository<CourseSubject> subjectRepo,
-            IRepository<Course> courseRepo)
+            IRepository<Course> courseRepo, IDomainEventDispatcher eventDispatcher)
         {
             _offerRepo = offerRepo;
             _studentRepo = studentRepo;
@@ -43,6 +46,7 @@ namespace TaskMangment.Infrastructure.Services
             _cache = cache;
             _subjectRepo = subjectRepo;
             _courseRepo = courseRepo;
+            _eventDispatcher = eventDispatcher;
         }
 
         public async Task<ApiResponse<PagedResponse<OfferGetDto>>> GetAllAsync(OfferRequest request)
@@ -101,8 +105,10 @@ namespace TaskMangment.Infrastructure.Services
 
             var dto = _mapper.Map<OfferGetDto>(offer);
             dto.AssignedStudents = offer.Assignments.Select(a => a.Student.FullName).ToList();
-            dto.CourseTitle = offer.Course?.Title;
-            dto.SubjectTitle = offer.Subject?.Title;
+            dto.AssignedStudentsIds = offer.Assignments.Select(a => a.StudentId).ToList();  
+            dto.CourseId = offer.Course?.Id;
+            dto.SubjectId = offer.Subject?.Id;
+
 
             return ApiResponse<OfferGetDto>.Ok(dto);
         }
@@ -155,6 +161,8 @@ namespace TaskMangment.Infrastructure.Services
             await _offerRepo.AddAsync(offer);
             await _offerRepo.SaveChangesAsync();
             await _cache.RemoveAsync("offers:");
+
+            await _eventDispatcher.PublishAsync(new OfferSentEvent(offer.Id, offer.Title, dto.AssignedStudentIds));
 
 
             var fullOffer = await _offerRepo.GetAll(o => o.Id == offer.Id)

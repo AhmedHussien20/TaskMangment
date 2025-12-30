@@ -26,7 +26,7 @@ import { AuthService } from "app/core/services/auth.service";
     PageHeaderComponent,
     NgbModalModule,
     TaskCreateUpdateComponent,
-    TaskDetailsShellComponent,
+   // TaskDetailsShellComponent,
   ],
   templateUrl: './task-list.component.html'
 })

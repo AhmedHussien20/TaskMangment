@@ -25,6 +25,7 @@ namespace TaskMangment.Application.Behaviors.EmailHandlers
             {
                 TemplateKey = "TaskCommentAdded",
                 ReferenceType = ReferenceType.TaskComment,
+                RecipientType = RecipientType.Employee,
                 ReferenceId = ev.CommentId,
                 UserIds = ev.Recipients
             });

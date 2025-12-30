@@ -81,6 +81,20 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<PagedResponse<CourseGetDto>>.Ok(response);
         }
 
+        public async Task<ApiResponse<ICollection<CourseSubjectDto>>> GetSubjectsByCourseAsync(int courseId)
+        {
+            var subjects = await _subjectRepository
+                .GetAll(s => s.CourseId == courseId)
+                .Select(s => new CourseSubjectDto
+                {
+                    Id = s.Id,
+                    Title = s.Title
+                })
+                .ToListAsync();
+
+            return ApiResponse<ICollection<CourseSubjectDto>>.Ok(subjects);
+        }
+
         public async Task<ApiResponse<CourseGetDto>> GetByIdAsync(int id)
         {
             var course = await _courseRepository.GetAll(c => c.Id == id)

@@ -32,6 +32,7 @@ namespace TaskMangment.Application.Common.Errors
 
         public const string CourseNotFound = "COURSE_NOT_FOUND";
         public const string OfferNotFound = "OFFER_NOT_FOUND";
+        public const string OfferExpired = "OFFER_EXPIRED";
         public const string StudentNotFound = "STUDENT_NOT_FOUND";
         public const string SubjectNotFound = "SUBJECT_NOT_FOUND";
 

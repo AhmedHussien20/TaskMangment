@@ -53,7 +53,7 @@ export class EmployeeCreateUpdateComponent implements OnInit {
     },
     { 
       type: 'input', 
-      label: 'EMPLOYEE.TITLE', 
+      label: 'EMPLOYEE.JOB_TITLE', 
       name: 'title', 
       defaultValue: '' 
     },
@@ -127,7 +127,7 @@ export class EmployeeCreateUpdateComponent implements OnInit {
     {
     type: 'file',
     name: 'attachments',
-    label: 'FORM.ATTACHMENTS',
+    label: 'EMPLOYEE.PROFILE_PIC',
     multiple: true,
     accept: 'image/*,.pdf',
     maxFiles: 5
