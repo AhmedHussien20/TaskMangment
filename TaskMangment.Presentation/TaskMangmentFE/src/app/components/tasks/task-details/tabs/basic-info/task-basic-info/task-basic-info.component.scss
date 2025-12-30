@@ -1,0 +1,52 @@
+.task-details-wrapper {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* الجدول */
+.task-details-table {
+  width: 100%;
+  table-layout: fixed; /* 🔥 ده سر تقليل المسافة */
+}
+
+/* العنوان */
+.task-details-table th {
+  width: 30%;                /* ✨ تحكم في المسافة */
+  text-align: right;
+  white-space: nowrap;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  background: #f9fafb;
+}
+
+/* القيمة */
+.task-details-table td {
+  width: 70%;
+  padding: 10px 12px;
+  font-size: 14px;
+  color: #111827;
+}
+
+.money-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 16px;
+  background: #ecfdf5;
+  color: #065f46;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.money-badge.danger {
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.money-badge .currency {
+  font-size: 11px;
+  opacity: 0.8;
+}

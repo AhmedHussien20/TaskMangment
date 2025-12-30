@@ -18,6 +18,7 @@ export type ColumnType =
 export interface BadgeConfig {
   text: string;
   class: string;
+  icon?: string; 
 }
 
 export interface TableColumn {

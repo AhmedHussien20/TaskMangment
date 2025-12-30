@@ -23,22 +23,31 @@ export class TaskRequestsComponent implements OnInit, OnChanges, AfterViewInit {
   page = 1;
   entries = 10;
 
-  columns: TableColumn[] = [
-    { key: 'requestNo', label: 'TASK.REQUEST_NUMBER' },
-    {
-      key: 'type',
-      label: 'TASK.REQUEST_TYPE',
-      badgeMap: {
-        close: { text: 'TASK.REQUEST_TYPE_CLOSE', class: 'bg-danger' },
-        extend: { text: 'TASK.REQUEST_TYPE_EXTEND', class: 'bg-warning' }
+columns: TableColumn[] = [
+  { key: 'requestNo', label: 'TASK.REQUEST_NUMBER' },
+  {
+    key: 'type',
+    label: 'TASK.REQUEST_TYPE',
+    type: 'badge',   // 👈 مهم
+    badgeMap: {
+      close: {
+        text: 'TASK.REQUEST_TYPE_CLOSE',
+        class: 'bg-danger',
+        icon: 'bi bi-x-circle'
+      },
+      extend: {
+        text: 'TASK.REQUEST_TYPE_EXTEND',
+        class: 'bg-warning',
+        icon: 'bi bi-arrow-repeat'
       }
-    },
-    { key: 'sender', label: 'TASK.REQUEST_SENDER' },
-    { key: 'createdAt', label: 'TASK.DATE', type: 'date' },
-    { key: 'comment', label: 'TASK.REQUEST_COMMENT' },
-    { key: 'response', label: 'TASK.REQUEST_REPLY' },
-    { key: 'responseDate', label: 'TASK.REQUEST_REPLY_DATE' }
-  ];
+    }
+  },
+  { key: 'sender', label: 'TASK.REQUEST_SENDER' },
+  { key: 'createdAt', label: 'TASK.DATE', type: 'date' },
+  { key: 'comment', label: 'TASK.REQUEST_COMMENT' },
+  { key: 'response', label: 'TASK.REQUEST_REPLY' },
+  { key: 'responseDate', label: 'TASK.REQUEST_REPLY_DATE' }
+];
 
   private initialized = false;
 

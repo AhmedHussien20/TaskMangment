@@ -13,138 +13,129 @@ export class NavEffects {
   initializeMenu$: any;
   updateTranslations$: any;
 
-  private MENUITEMS: MenuItem[] = [
+private MENUITEMS: MenuItem[] = [
 
-    // ================= Dashboard =================
-    { headTitle: 'nav.dashboard.header', minRoleLevel: 10 },
-    {
-      title: 'nav.dashboard.title',
-      path: '/dashboard',
-      type: 'link',
-      icon: 'ti-home',
-      minRoleLevel: 10
-    },
+  // ================= Dashboard =================
+  { headTitle: 'nav.dashboard.header', minRoleLevel: 10 },
+  {
+    title: 'nav.dashboard.title',
+    path: '/dashboard',
+    type: 'link',
+    icon: 'ti-home',
+    minRoleLevel: 10
+  },
 
-    // ================= System Management =================
-    { headTitle: 'nav.apps.organization.title', minRoleLevel: 50 },
-    {
-      title: 'nav.apps.title',
-      icon: 'ti-layout',
-      type: 'sub',
-      minRoleLevel: 10,
-      children: [
-
-        // ---- Organization ----
-        {
-          title: 'nav.apps.organization.title',
-          icon: 'ti-map',
-          type: 'sub',
-          minRoleLevel: 50,
-          children: [
-            {
-              title: 'nav.apps.area.list',
-              type: 'link',
-              path: '/area/area-list',
-              minRoleLevel: 50
-            },
-            {
-              title: 'nav.apps.branch.list',
-              type: 'link',
-              path: '/branch/branch-list',
-              minRoleLevel: 50
-            },
-            {
-              title: 'nav.apps.department.list',
-              type: 'link',
-              path: '/department/department-list',
-              minRoleLevel: 50
-            },
-          ],
-        },
-
-        // ---- Users & Permissions ----
-        {
-          title: 'nav.apps.employee.title',
-          icon: 'ti-user',
-          type: 'sub',
-          minRoleLevel: 70,
-          children: [
-            {
-              title: 'nav.apps.employee.list',
-              type: 'link',
-              path: '/employee/employee-list',
-              minRoleLevel: 70
-            },
-            {
-              title: 'nav.apps.role.list',
-              type: 'link',
-              path: '/role/role-list',
-              minRoleLevel: 100
-            },
-            {
-              title: 'nav.apps.permission.list',
-              type: 'link',
-              path: '/role/permission-list',
-              minRoleLevel: 100
-            },
-          ],
-        },
-
-        // ---- Operations ----
-        {
-          title: 'nav.apps.operations.title',
-          icon: 'ti-clipboard',
-          type: 'sub',
-          minRoleLevel: 10,
-          children: [
-            {
-              title: 'nav.apps.task.list',
-              type: 'link',
-              path: '/task/task-list',
-              minRoleLevel: 10
-            },
-            {
-              title: 'nav.apps.calender.title',
-              type: 'link',
-              path: '/utilities/event-calender',
-              minRoleLevel: 10
-            },
-          ],
-        },
-
-      // ---- Education ----
+  // ================= Organization =================
+  { headTitle: 'nav.apps.organization.title', minRoleLevel: 50 },
+  {
+    title: 'nav.apps.organization.title',
+    icon: 'ti-map',
+    type: 'sub',
+    minRoleLevel: 50,
+    children: [
       {
-        title: 'nav.apps.education.title',
-        icon: 'ti-book',
-        type: 'sub',
-        minRoleLevel: 50,
-        children: [
-          {
-            title: 'nav.apps.student.list',
-            type: 'link',
-            path: '/student/student-list',
-            minRoleLevel: 50
-          },
-          {
-            title: 'nav.apps.course.list',
-            type: 'link',
-            path: '/course/course-list',
-            minRoleLevel: 50
-          }
-          ,
-          {
-            title: 'nav.apps.course.offer_list',
-            type: 'link',
-            path: '/offer/offer-list',
-            minRoleLevel: 50
-          }
-        ],
+        title: 'nav.apps.area.list',
+        path: '/area/area-list',
+        type: 'link',
+        minRoleLevel: 50
       },
+      {
+        title: 'nav.apps.branch.list',
+        path: '/branch/branch-list',
+        type: 'link',
+        minRoleLevel: 50
+      },
+      {
+        title: 'nav.apps.department.list',
+        path: '/department/department-list',
+        type: 'link',
+        minRoleLevel: 50
+      }
+    ]
+  },
 
-      ],
-    },
+  // ================= Users =================
+  { headTitle: 'nav.apps.employee.header', minRoleLevel: 70 },
+  {
+    title: 'nav.apps.employee.title',
+    icon: 'ti-user',
+    type: 'sub',
+    minRoleLevel: 70,
+    children: [
+      {
+        title: 'nav.apps.employee.list',
+        path: '/employee/employee-list',
+        type: 'link',
+        minRoleLevel: 70
+      },
+      {
+        title: 'nav.apps.role.list',
+        path: '/role/role-list',
+        type: 'link',
+        minRoleLevel: 100
+      },
+      {
+        title: 'nav.apps.permission.list',
+        path: '/role/permission-list',
+        type: 'link',
+        minRoleLevel: 100
+      }
+    ]
+  },
 
-  ];
+  // ================= Operations =================
+  { headTitle: 'nav.apps.operations.header', minRoleLevel: 10 },
+  {
+    title: 'nav.apps.operations.title',
+    icon: 'ti-clipboard',
+    type: 'sub',
+    minRoleLevel: 10,
+    children: [
+      {
+        title: 'nav.apps.task.list',
+        path: '/task/task-list',
+        type: 'link',
+        minRoleLevel: 10
+      },
+      {
+        title: 'nav.apps.calender.title',
+        path: '/utilities/event-calender',
+        type: 'link',
+        minRoleLevel: 10
+      }
+    ]
+  },
+
+  // ================= Education =================
+  { headTitle: 'nav.apps.education.header', minRoleLevel: 50 },
+  {
+    title: 'nav.apps.education.title',
+    icon: 'ti-book',
+    type: 'sub',
+    minRoleLevel: 50,
+    children: [
+      {
+        title: 'nav.apps.student.list',
+        path: '/student/student-list',
+        type: 'link',
+        minRoleLevel: 50
+      },
+      {
+        title: 'nav.apps.course.list',
+        path: '/course/course-list',
+        type: 'link',
+        minRoleLevel: 50
+      },
+      {
+        title: 'nav.apps.course.offer_list',
+        path: '/offer/offer-list',
+        type: 'link',
+        minRoleLevel: 50
+      }
+    ]
+  }
+];
+
 
 
   // ---- Configurations ----

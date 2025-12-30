@@ -13,6 +13,7 @@ import { TaskDetailsShellComponent } from "../task-details/task-details-shell/ta
 import Swal from 'sweetalert2';
 import { ToastrService } from "ngx-toastr";
 import { AuthService } from "app/core/services/auth.service";
+import { SpkDashboardComponent } from "app/@spk/reusable-dashboard/spk-dashboard/spk-dashboard.component";
 
 
 @Component({
@@ -26,7 +27,8 @@ import { AuthService } from "app/core/services/auth.service";
     PageHeaderComponent,
     NgbModalModule,
     TaskCreateUpdateComponent,
-   // TaskDetailsShellComponent,
+    SpkDashboardComponent
+    // TaskDetailsShellComponent,
   ],
   templateUrl: './task-list.component.html'
 })
@@ -35,6 +37,12 @@ export class TaskListComponent implements OnInit {
   canCreate = false;
   canEdit = false;
   canDelete = false;
+  summary!: {
+    myTasks: number;
+    createdByMe: number;
+    inProgressTasks: number;
+    newTasks: number;
+  };
 
   title = 'TASK.LIST_TITLE';
   activeitem = 'TASK.LIST_TITLE';
@@ -123,18 +131,97 @@ export class TaskListComponent implements OnInit {
   }
 
   loadData() {
+    this.isLoading = true;
+
     this.taskService.getAll(this.searchCriteria).subscribe({
       next: (res: any) => {
-        this.rows = res.data.data;
-        this.totalItems = res.data.totalCount;
-        this.page = res.data.pageIndex;
-        this.entries = res.data.pageSize;
+
+        const payload = res;          
+        const pageData = payload.data;     
+
+        this.rows = pageData.data ?? [];
+        this.totalItems = pageData.totalCount ?? 0;
+        this.page = pageData.pageIndex ?? 1;
+        this.entries = pageData.pageSize ?? 10;
+
+        this.summary = pageData.summary;
+console.log(this.summary);
+        this.buildSummaryCards();
+
         this.isLoading = false;
       },
       error: () => {
         this.isLoading = false;
       }
     });
+  }
+
+  cards: any[] = [];
+  private buildSummaryCards() {
+    if (!this.summary) {
+    this.cards = [];
+    return;
+  }
+
+    this.cards = [
+      {
+        title: 'TASK.MY_TASKS',
+        value: this.summary.myTasks,
+        svg: `
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+             viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+             class="feather feather-list text-primary">
+          <line x1="8" y1="6" x2="21" y2="6"></line>
+          <line x1="8" y1="12" x2="21" y2="12"></line>
+          <line x1="8" y1="18" x2="21" y2="18"></line>
+          <line x1="3" y1="6" x2="3" y2="6"></line>
+          <line x1="3" y1="12" x2="3" y2="12"></line>
+          <line x1="3" y1="18" x2="3" y2="18"></line>
+        </svg>
+      `
+      },
+      {
+        title: 'TASK.CREATED_BY_ME',
+        value: this.summary.createdByMe,
+        svg: `
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+             viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+             class="feather feather-user-check text-success">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="8.5" cy="7" r="4"></circle>
+          <polyline points="17 11 19 13 23 9"></polyline>
+        </svg>
+      `
+      },
+      {
+        title: 'TASK.IN_PROGRESS_TASKS',
+        value: this.summary.inProgressTasks,
+        svg: `
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+             viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+             class="feather feather-activity text-warning">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+        </svg>
+      `
+      },
+      {
+        title: 'TASK.NEW_TASKS',
+        value: this.summary.newTasks,
+        svg: `
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+             viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+             class="feather feather-plus-circle text-info">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="16"></line>
+          <line x1="8" y1="12" x2="16" y2="12"></line>
+        </svg>
+      `
+      }
+    ];
   }
 
   onPageChange(page: number) {

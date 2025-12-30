@@ -21,8 +21,17 @@ export class TaskEmployeesComponent implements OnInit, OnDestroy {
   columns = [
     { key: 'employeeName', label: 'EMPLOYEE.NAME' },
     { key: 'role', label: 'EMPLOYEE.ROLE' },
-    { key: 'status', label: 'TASK.STATUS' }
+    {
+      key: 'status',
+      label: 'TASK.STATUS',
+      type: 'badge'as const,
+      badgeMap: {
+        Active: { text: 'TASK.ACTIVE', class: 'bg-success' },
+        Inactive: { text: 'TASK.INACTIVE', class: 'bg-secondary' },
+      }
+    }
   ];
+
 
   totalItems = 0;
   private sub!: Subscription;
@@ -30,7 +39,7 @@ export class TaskEmployeesComponent implements OnInit, OnDestroy {
   constructor(
     private refreshService: TaskDetailsRefreshService,
     private taskService: TaskService
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.loadEmployees();

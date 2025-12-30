@@ -100,20 +100,30 @@ export const appConfig: ApplicationConfig = {
         ),
 
         // TRANSLATE
-        TranslateService,
-        TranslateStore,
-        {
-            provide: TranslateLoader,
-            useFactory: HttpLoaderFactory,
-            deps: [HttpClient],
-        },
-        { provide: TranslateCompiler, useClass: TranslateDefaultParser },
-        { provide: TranslateParser, useClass: TranslateDefaultParser },
-        { provide: MissingTranslationHandler, useClass: FakeMissingTranslationHandler },
-        { provide: USE_DEFAULT_LANG, useValue: true },
-        { provide: DEFAULT_LANGUAGE, useValue: 'ar' },
-        { provide: ISOLATE_TRANSLATE_SERVICE, useValue: false },
-        { provide: USE_EXTEND, useValue: true },
+        // TranslateService,
+        // TranslateStore,
+        // {
+        //     provide: TranslateLoader,
+        //     useFactory: HttpLoaderFactory,
+        //     deps: [HttpClient],
+        // },
+        // { provide: TranslateCompiler, useClass: TranslateDefaultParser },
+        // { provide: TranslateParser, useClass: TranslateDefaultParser },
+        // { provide: MissingTranslationHandler, useClass: FakeMissingTranslationHandler },
+        // { provide: USE_DEFAULT_LANG, useValue: true },
+        // { provide: DEFAULT_LANGUAGE, useValue: 'ar' },
+        // { provide: ISOLATE_TRANSLATE_SERVICE, useValue: false },
+        // { provide: USE_EXTEND, useValue: true },
+        importProvidersFrom(
+            TranslateModule.forRoot({
+                defaultLanguage: 'ar',
+                loader: {
+                    provide: TranslateLoader,
+                    useFactory: HttpLoaderFactory,
+                    deps: [HttpClient]
+                }
+            })
+        ),
 
         importProvidersFrom(
             TranslateModule.forRoot({
