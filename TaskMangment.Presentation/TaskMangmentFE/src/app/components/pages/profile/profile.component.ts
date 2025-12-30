@@ -25,8 +25,11 @@ import { TranslateModule } from '@ngx-translate/core';
 })
 export class ProfileComponent {
   title = 'PROFILE.PROFILE';
-  breadcrumbs = ['HOME'];
-  activeitem = 'PROFILE.PROFILE';
+ activeitem = 'PROFILE.PROFILE';
+  breadcrumbs = [
+    'MENU.HOME',
+    'PROFILE.PROFILE',
+  ];
 
   user: any;
   employeeId!: number;

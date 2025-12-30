@@ -128,7 +128,7 @@
                                 [ngClass]="getBadgeClass(col, item)">
 
                                 <i *ngIf="col.badgeMap?.[getValue(item, col.key)]?.icon"
-                                    [class]="col.badgeMap[getValue(item, col.key)].icon">
+                                    [class]="col.badgeMap?.[getValue(item, col.key)]?.icon">
                                 </i>
 
                                 {{ getBadgeText(col, item) | translate }}

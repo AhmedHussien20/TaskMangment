@@ -141,8 +141,8 @@ export class BranchCreateUpdateComponent implements OnInit {
         fax: b.fax,
         email: b.email,
         areaId: b.areaId,
-        managerId: b.managerId,
-        responsibleId: b.responsibleId
+        managerId: b.managerID,
+        responsibleId: b.responsibleID
       });
     });
   }
@@ -202,8 +202,9 @@ export class BranchCreateUpdateComponent implements OnInit {
       this.branchService.getById(this.branchId).subscribe(res => {
         const branch = res.data;
         this.formGroup.patchValue({
-          managerId: branch.managerId,
-          responsibleId: branch.responsibleId
+          managerId: branch.managerID,
+          responsibleId: branch.responsibleID,
+          areaId: branch.areaId
         });
       });
     }
@@ -217,7 +218,6 @@ export class BranchCreateUpdateComponent implements OnInit {
       return;
     }
 
-    // UPDATE
     if (this.isEdit && this.branchId) {
       this.branchService.update(this.branchId, this.formGroup.value).subscribe({
         next: () => {

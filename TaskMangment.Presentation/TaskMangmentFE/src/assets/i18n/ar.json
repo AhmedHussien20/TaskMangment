@@ -679,6 +679,17 @@
     "SEARCH": "بحث باسم العرض",
     "CREATE_SUCCESS": "تم إنشاء العرض بنجاح",
     "UPDATE_SUCCESS": "تم تحديث العرض بنجاح",
-    "STUDENTS": "قائمة الطلاب"
+    "STUDENTS": "قائمة الطلاب",
+    "PAYMENT_METHOD" : "طريقة الدفع",
+    "PRICE" : "السعر المطلوب",
+    "INTEREST_RATE" : "نسبة الفائدة",
+    "DISCOUNT_RATE" : "نسبة الخصم",
+    "INSTALLMENT_VALUE" : "نسبة القسط",
+    "NET_AMOUNT" : "صافي المبلغ المطلوب",
+    "OFFER_OWNER" : "اسم مقدم العرض",
+    "SPECIALIZATION" : "التخصص المطلوب",
+    "NOTES" : "ملاحظات"
+
+
   }
 }

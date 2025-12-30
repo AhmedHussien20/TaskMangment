@@ -22,6 +22,7 @@ namespace TaskMangment.Application.DTOs
         public int Id { get; set; }              
         public string Name { get; set; }       
         public string BranchName { get; set; }  
+        public int BranchId { get; set; }
         public string AreaName { get; set; }     
         public string ManagerName { get; set; }  
         public int EmployeeCount { get; set; }  

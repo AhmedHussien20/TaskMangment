@@ -24,6 +24,15 @@ namespace TaskMangment.Application.DTOs
         public int? SubjectId { get; set; }
 
         public List<int>? AssignedStudentIds { get; set; } = new List<int>();
+
+        public string PaymentMethod { get; set; }
+        public string Price { get; set; }
+        public string InterestRate { get; set; }
+        public string DiscountRate { get; set; }
+        public string InstallmentValue { get; set; }
+        public string NetAmount { get; set; }
+        public string? OfferOwner { get; set; }
+        public string? Specialization { get; set; }
     }
 
     public class OfferGetDto
@@ -43,6 +52,16 @@ namespace TaskMangment.Application.DTOs
         public List<string> AssignedStudents { get; set; } = new List<string>();
         public List<int> AssignedStudentsIds { get; set; } = new List<int>();
 
+        public string? PaymentMethod { get; set; }
+        public string? Price { get; set; }
+        public string? InterestRate { get; set; }
+        public string? DiscountRate { get; set; }
+        public string? InstallmentValue { get; set; }
+        public string? NetAmount { get; set; }
+        public string? OfferOwner { get; set; }
+        public string? Specialization { get; set; }
 
     }
+
+    
 }

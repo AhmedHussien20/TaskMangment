@@ -125,16 +125,7 @@ export const appConfig: ApplicationConfig = {
             })
         ),
 
-        importProvidersFrom(
-            TranslateModule.forRoot({
-                defaultLanguage: 'ar',
-                loader: {
-                    provide: TranslateLoader,
-                    useFactory: HttpLoaderFactory,
-                    deps: [HttpClient]
-                }
-            })
-        ),
+       
 
         // STORE
         provideStore(),

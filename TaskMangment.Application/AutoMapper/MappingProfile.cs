@@ -23,6 +23,7 @@ namespace TaskMangment.Application.AutoMapper
     .ForMember(dest => dest.ResponsibleName, opt => opt.MapFrom(src => src.Responsible != null ? src.Responsible.FullName : string.Empty))
     .ForMember(dest => dest.AreaName, opt => opt.MapFrom(src => src.Area != null ? src.Area.Name : string.Empty));
 
+
             CreateMap<BranchAddEditDto, Branch>();
             CreateMap<Employee, EmployeeGetDto>()
                 .ForMember(dest => dest.BranchName, opt => opt.MapFrom(src => src.Branch != null ? src.Branch.Name : null))
