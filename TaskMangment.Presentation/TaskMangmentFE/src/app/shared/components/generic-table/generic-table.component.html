@@ -110,51 +110,65 @@
 
 
                     <!-- Columns -->
-                  <td *ngFor="let col of columns" [ngSwitch]="col.type">
+                    <td *ngFor="let col of columns" [ngSwitch]="col.type">
 
-  <!-- ASSIGNEES -->
-  <ng-container *ngSwitchCase="'assignees'">
-    <div class="assignees-wrapper">
-      <span
-        *ngFor="let emp of getValue(item, col.key)"
-        class="assignee-circle"
-        [ngbTooltip]="emp[col.displayField || 'name']"
-        container="body">
-        {{ getInitials(emp[col.displayField || 'name']) }}
-      </span>
-    </div>
-  </ng-container>
+                        <!-- ASSIGNEES -->
+                        <ng-container *ngSwitchCase="'assignees'">
+                            <div class="assignees-wrapper">
+                                <span *ngFor="let emp of getValue(item, col.key)" class="assignee-circle"
+                                    [ngbTooltip]="emp[col.displayField || 'name']" container="body">
+                                    {{ getInitials(emp[col.displayField || 'name']) }}
+                                </span>
+                            </div>
+                        </ng-container>
 
-  <!-- BADGE -->
-  <ng-container *ngSwitchCase="'badge'">
-    <span class="badge" [ngClass]="getBadgeClass(col, item)">
-      {{ getBadgeText(col, item) | translate }}
-    </span>
-  </ng-container>
+                        <!-- BADGE -->
+                        <ng-container *ngSwitchCase="'badge'">
+                            <span class="badge d-inline-flex align-items-center gap-1"
+                                [ngClass]="getBadgeClass(col, item)">
 
-  <!-- ICON ACTION -->
-  <ng-container *ngSwitchCase="'icon-action'">
-    <button
-      class="btn btn-outline-secondary btn-sm"
-      (click)="iconAction.emit({ type: col.key, row: item })">
-      <i [class]="col.icon"></i>
-      <span class="badge bg-info ms-1">
-        {{ getValue(item, col.key) }}
-      </span>
-    </button>
-  </ng-container>
+                                <i *ngIf="col.badgeMap?.[getValue(item, col.key)]?.icon"
+                                    [class]="col.badgeMap[getValue(item, col.key)].icon">
+                                </i>
 
-  <!-- DATE -->
-  <ng-container *ngSwitchCase="'date'">
-    {{ getValue(item, col.key) | myDate }}
-  </ng-container>
+                                {{ getBadgeText(col, item) | translate }}
+                            </span>
+                        </ng-container>
 
-  <!-- DEFAULT TEXT -->
-  <ng-container *ngSwitchDefault>
-    {{ getValue(item, col.key) }}
-  </ng-container>
 
-</td>
+                        <!-- ICON ACTION -->
+                        <ng-container *ngSwitchCase="'icon-action'">
+                            <button class="btn btn-outline-secondary btn-sm"
+                                (click)="iconAction.emit({ type: col.key, row: item })">
+                                <i [class]="col.icon"></i>
+                                <span class="badge bg-info ms-1">
+                                    {{ getValue(item, col.key) }}
+                                </span>
+                            </button>
+                        </ng-container>
+
+                        <!-- DATE -->
+                        <ng-container *ngSwitchCase="'date'">
+                            {{ getValue(item, col.key) | myDate }}
+                        </ng-container>
+
+                        <!-- CUSTOM (AMOUNT WITH SAR) -->
+                        <ng-container *ngSwitchCase="'custom'">
+                            <span class="amount-chip">
+                                <span class="amount-value">
+                                    {{ getValue(item, col.key) | number:'1.0-2' }}
+                                </span>
+                                <span class="amount-currency">SAR</span>
+                            </span>
+                        </ng-container>
+
+
+                        <!-- DEFAULT TEXT -->
+                        <ng-container *ngSwitchDefault>
+                            {{ getValue(item, col.key) }}
+                        </ng-container>
+
+                    </td>
 
 
 

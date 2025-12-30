@@ -1,44 +1,64 @@
- 
-<div *ngIf="readonly" class="table-responsive">
-  <table class="table table-bordered align-middle">
+<div *ngIf="readonly" class="task-details-wrapper">
+
+  <table class="table task-details-table">
     <tbody>
+
       <tr>
-        <th>{{ "TASK.TASK_NUMBER" | translate }}</th>
-        <td>{{ taskInfo?.id }}</td>
+        <th>{{ 'TASK.TASK_NUMBER' | translate }}</th>
+        <td>#{{ taskInfo?.id }}</td>
       </tr>
+
       <tr>
-        <th>{{ "TASK.TITLE" | translate }}</th>
+        <th>{{ 'TASK.TITLE' | translate }}</th>
         <td>{{ taskInfo?.title }}</td>
       </tr>
+
       <tr>
-        <th>{{ "TASK.DESCRIPTION" | translate }}</th>
+        <th>{{ 'TASK.DESCRIPTION' | translate }}</th>
         <td>{{ taskInfo?.description }}</td>
       </tr>
+
       <tr>
-        <th>{{ "TASK.COMMENT_ALLOW_PERIOD" | translate }}</th>
-        <td>{{ taskInfo?.commentAllowPeriodDays }}</td>
+        <th>{{ 'TASK.COMMENT_ALLOW_PERIOD' | translate }}</th>
+        <td>{{ taskInfo?.commentAllowPeriodDays }} يوم</td>
       </tr>
+
       <tr>
-        <th>{{ "TASK.MAX_WARNINGS" | translate }}</th>
+        <th>{{ 'TASK.MAX_WARNINGS' | translate }}</th>
         <td>{{ taskInfo?.maxWarnings }}</td>
       </tr>
+
       <tr>
-        <th>{{ "TASK.PENALTY_AT_MAX_WARNINGS" | translate }}</th>
-        <td>{{ taskInfo?.penaltyAtMaxWarnings }}</td>
+        <th>{{ 'TASK.PENALTY_AT_MAX_WARNINGS' | translate }}</th>
+        <td>
+          <span class="money-badge">
+            {{ taskInfo?.penaltyAtMaxWarnings }}
+            <span class="currency">SAR</span>
+          </span>
+        </td>
       </tr>
+
       <tr>
-        <th>{{ "TASK.PENALTY_ON_AUTO_CLOSE" | translate }}</th>
-        <td>{{ taskInfo?.penaltyOnAutoClose }}</td>
+        <th>{{ 'TASK.PENALTY_ON_AUTO_CLOSE' | translate }}</th>
+        <td>
+          <span class="money-badge danger">
+            {{ taskInfo?.penaltyOnAutoClose }}
+            <span class="currency">SAR</span>
+          </span>
+        </td>
       </tr>
-      
+
       <tr>
-        <th>{{ "TASK.DUE_DATE" | translate }}</th>
-        <td>{{ taskInfo?.dueDate | myDate}}</td>
+        <th>{{ 'TASK.DUE_DATE' | translate }}</th>
+        <td>{{ taskInfo?.dueDate | myDate }}</td>
       </tr>
+
       <tr>
-        <th>{{ "TASK.ASSIGNED_BY" | translate }}</th>
-        <td>{{ taskInfo?.assignedByName }}</td>
+        <th>{{ 'TASK.ASSIGNED_BY' | translate }}</th>
+        <td class="fw-semibold">{{ taskInfo?.assignedByName }}</td>
       </tr>
+
     </tbody>
   </table>
+
 </div>

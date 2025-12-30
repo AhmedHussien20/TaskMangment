@@ -12,6 +12,7 @@ using TaskMangment.Application.Common.Errors;
 using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Responses;
+using TaskMangment.Application.DTOs;
 using TaskMangment.Application.DTOs.TaskDTOs;
 using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
@@ -58,15 +59,15 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<PagedResponse<TaskGetDto>>> GetAllAsync(TaskRequest request, int CompanyId, string role, int employeeId)
         {
-            string cacheKey =
-                $"tasks:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}:{CompanyId}:{role}:{employeeId}";
+            //string cacheKey =
+            //    $"tasks:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}:{CompanyId}:{role}:{employeeId}";
 
-            if (!request.BypassCache)
-            {
-                var cached = await _cache.GetAsync<PagedResponse<TaskGetDto>>(cacheKey);
-                if (cached != null)
-                    return ApiResponse<PagedResponse<TaskGetDto>>.Ok(cached);
-            }
+            //if (!request.BypassCache)
+            //{
+            //    var cached = await _cache.GetAsync<PagedResponse<TaskGetDto>>(cacheKey);
+            //    if (cached != null)
+            //        return ApiResponse<PagedResponse<TaskGetDto>>.Ok(cached);
+            //}
 
             var query = _taskRepo.GetAll()
                 .Include(t => t.CreatedBy)
@@ -106,10 +107,26 @@ namespace TaskMangment.Infrastructure.Services
                 dto.AssignedByName = task.AssignedBy?.FullName;
             }
 
+            var summary = new TaskSummaryDto
+            {
+                MyTasks = await _taskRepo.CountAsync(t =>
+                    t.Assignments.Any(a => a.EmployeeId == employeeId)),
 
-            var response = new PagedResponse<TaskGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
+                CreatedByMe = await _taskRepo.CountAsync(t =>
+                    t.CreatedByEmployeeId == employeeId),
 
-            await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
+                InProgressTasks = await _taskRepo.CountAsync(t =>
+                    t.Status == WorkTaskStatus.InProgress &&
+                    t.Assignments.Any(a => a.EmployeeId == employeeId)),
+
+                NewTasks = await _taskRepo.CountAsync(t =>
+                    t.Status == WorkTaskStatus.New &&
+                    t.Assignments.Any(a => a.EmployeeId == employeeId))
+            };
+
+            var response = new PagedResponse<TaskGetDto>(dtos, totalCount, request.PageIndex, request.PageSize, summary);
+
+           // await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
 
             return ApiResponse<PagedResponse<TaskGetDto>>.Ok(response);
         }

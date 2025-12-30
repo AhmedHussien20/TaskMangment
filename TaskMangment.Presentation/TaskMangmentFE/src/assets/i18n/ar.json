@@ -66,6 +66,8 @@
       "title": "اختصارات سريعة"
     },
     "apps": {
+      "name": "إدارة المهام",
+      "shortName": "م.م",
       "title": "التطبيقات",
       "area": {
         "title": "المناطق",
@@ -85,6 +87,7 @@
         "list": "قائمة المهام"
       },
       "employee": {
+        "header": "المستخدمون",
         "title": "الموظفين",
         "list": "قائمة الموظفين"
       },
@@ -106,7 +109,7 @@
       "course": {
         "title": "الدورات",
         "list": "قائمة الدورات",
-        "offer_list" : "قائمة العروض"
+        "offer_list": "قائمة العروض"
       },
       "configurations": {
         "title": "الإعدادات",
@@ -124,9 +127,11 @@
         "title": "الهيكل الإداري"
       },
       "operations": {
+        "header": "التشغيل",
         "title": "التشغيل"
       },
       "education": {
+        "header": "التعليم",
         "title": "التعليم"
       }
     },
@@ -286,6 +291,16 @@
     "ID": "الكود"
   },
   "TASK": {
+    "ACTION_COMMENT": "تعليق",
+    "ACTION_CLOSE": "إغلاق",
+    "ACTION_EXTEND": "تمديد",
+    "ACTION_WARNING": "تحذير",
+    "ACTION_PENALTY": "جزاء",
+    "INACTIVE": "غير نشط",
+    "NEW_TASKS": "المهام الجديدة",
+    "IN_PROGRESS_TASKS": "المهام قيد التنفيذ",
+    "CREATED_BY_ME": "المهام التي أنشأتها",
+    "MY_TASKS": "مهامي",
     "UPDATED_BY": "تم التحديث بواسطة",
     "UPDATED_AT": "وقت التحديث",
     "LIST_TITLE": "المهام",
@@ -648,7 +663,7 @@
     "NOT_PROVIDED": "غير متوفر",
     "EDIT_PROFILE": "تعديل الملف الشخصي"
   },
-   "OFFER": {
+  "OFFER": {
     "ADD": "اضافة عرض",
     "TITLE": "عنوان العرض",
     "CREATE": "إنشاء عرض جديد",
@@ -664,6 +679,6 @@
     "SEARCH": "بحث باسم العرض",
     "CREATE_SUCCESS": "تم إنشاء العرض بنجاح",
     "UPDATE_SUCCESS": "تم تحديث العرض بنجاح",
-    "STUDENTS" : "قائمة الطلاب"
+    "STUDENTS": "قائمة الطلاب"
   }
 }

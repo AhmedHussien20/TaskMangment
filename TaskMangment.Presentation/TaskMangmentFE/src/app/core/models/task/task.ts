@@ -54,13 +54,21 @@ export interface TaskGet {
   penaltyOnAutoClose?: number;
 }
 
+export interface TaskSummary {
+  myTasks: number;
+  createdByMe: number;
+  inProgressTasks: number;
+  newTasks: number;
+}
 
 export interface TaskPagedResponse {
   data: TaskGet[];
   totalCount: number;
   pageIndex: number;
   pageSize: number;
+  summary?: TaskSummary; 
 }
+
 
 
 export interface TaskAssignedEmployee {
