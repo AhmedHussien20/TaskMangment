@@ -26,6 +26,8 @@ export interface HeaderShortcut {
   title: string;        // translation key
   icon: string;         // icon class
   path: string;
+  alwaysEnabled?: boolean;
+
 }
 interface HeaderNotification {
   id: string;
@@ -56,38 +58,52 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
     return this.defaultAvatar;
   }
+
+  roleLevel = 0;
+
+  canAccessShortcut(item: HeaderShortcut): boolean {
+
+    if (this.roleLevel >= 50) return true;
+
+    return item.alwaysEnabled === true;
+  }
+
+
   headerShortcuts: HeaderShortcut[] = [
     {
       title: 'nav.apps.task.title',
       icon: 'ti-check-box',
       path: '/task/task-list',
+      alwaysEnabled: true
     },
     {
       title: 'nav.apps.employee.title',
       icon: 'ti-user',
-      path: '/employee/employee-list',
+      path: '/employee/employee-list'
     },
     {
       title: 'nav.apps.branch.title',
       icon: 'ti-map-alt',
-      path: '/branch/branch-list',
+      path: '/branch/branch-list'
     },
     {
       title: 'nav.apps.department.title',
       icon: 'ti-layers',
-      path: '/department/department-list',
+      path: '/department/department-list'
     },
     {
       title: 'nav.apps.calender.title',
       icon: 'ti-calendar',
       path: '/utilities/event-calender',
+      alwaysEnabled: true
     },
     {
       title: 'nav.apps.student.title',
       icon: 'ti-id-badge',
-      path: '/student/student-list',
-    },
+      path: '/student/student-list'
+    }
   ];
+  ;
 
   Selection = [
     { label: 'Choose one', value: 1 },
@@ -385,6 +401,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.user = this.authService.getCurrentUser();
+    this.roleLevel = this.authService.getRoleLevel();
     this.menuitemsSubscribe$ = this.navServices.getMenuItems().subscribe({
       next: (menuItems) => {
         if (menuItems) {
@@ -417,10 +434,10 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   }
 
-removeNotification(id: string) {
-  this.notifications = this.notifications.filter(n => n.id !== id);
-  this.notificationCount = this.notifications.filter(x => !x.isRead).length;
-}
+  removeNotification(id: string) {
+    this.notifications = this.notifications.filter(n => n.id !== id);
+    this.notificationCount = this.notifications.filter(x => !x.isRead).length;
+  }
 
   ngOnDestroy() {
     if (this.menuitemsSubscribe$) {

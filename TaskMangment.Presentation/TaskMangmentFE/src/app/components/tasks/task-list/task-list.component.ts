@@ -14,6 +14,7 @@ import Swal from 'sweetalert2';
 import { ToastrService } from "ngx-toastr";
 import { AuthService } from "app/core/services/auth.service";
 import { SpkDashboardComponent } from "app/@spk/reusable-dashboard/spk-dashboard/spk-dashboard.component";
+import { EmployeeService } from "app/core/services/employee.service";
 
 
 @Component({
@@ -37,12 +38,16 @@ export class TaskListComponent implements OnInit {
   canCreate = false;
   canEdit = false;
   canDelete = false;
+  showEmployeeFilter = false;
+
   summary!: {
     myTasks: number;
     createdByMe: number;
     inProgressTasks: number;
     newTasks: number;
   };
+  employees: { id: number; name: string }[] = [];
+  status: { id: number; name: string }[] = [];
 
   title = 'TASK.LIST_TITLE';
   activeitem = 'TASK.LIST_TITLE';
@@ -93,21 +98,33 @@ export class TaskListComponent implements OnInit {
 
   page = 1;
   entries = 10;
+  statusOptions = [
+    { id: 1, name: 'TASK.STATUS_NEW' },
+    { id: 2, name: 'TASK.STATUS_IN_PROGRESS' },
+    { id: 3, name: 'TASK.STATUS_CLOSED' }
+  ];
 
 
   searchCriteria: SearchCriteria = {
     searchKey: '',
+    employeeIds: [] as number[],
+    statusId: null,
     pageIndex: this.page,
     pageSize: this.entries,
     sortColumn: 'Id',
     sortDirection: 'ASC',
     filterTypes: {
       searchKey: 'text',
+      employeeIds: 'dropdown',
+      statusId: 'dropdown'
     }
   };
 
+
   labels = {
-    searchKey: 'TASK.searchKey'
+    searchKey: 'TASK.searchKey',
+    employeeIds: 'TASK.employee',
+    statusId: 'TASK.STATUS'
   };
   isEdit = false;
   selectedTaskId: number | null = null;
@@ -117,27 +134,50 @@ export class TaskListComponent implements OnInit {
     private modalService: NgbModal,
     private toastr: ToastrService,
     private translate: TranslateService,
-    private auth: AuthService
+    private auth: AuthService,
+    private employeeService: EmployeeService
 
   ) { }
 
   ngOnInit() {
     const roleLevel = this.auth.getRoleLevel();
-
+    this.showEmployeeFilter = roleLevel >= 50;
+    if (this.showEmployeeFilter) {
+      this.loadEmployees();
+    }
+    
+    this.status = this.statusOptions;
     this.canCreate = roleLevel >= 50;
     this.canEdit = roleLevel >= 70;
     this.canDelete = roleLevel >= 70;
     this.loadData();
   }
 
+  loadEmployees() {
+    const request = {
+      searchKey: '',
+      pageIndex: 1,
+      pageSize: 1000,
+      sortColumn: 'Id',
+      sortDirection: 'ASC'
+    };
+
+    this.employeeService.getAll(request).subscribe(res => {
+      console.log(res);
+      this.employees = res.data.data.map((e: any) => ({
+        id: e.id,
+        name: e.fullName
+      }));
+    });
+  }
+
   loadData() {
     this.isLoading = true;
-
     this.taskService.getAll(this.searchCriteria).subscribe({
       next: (res: any) => {
 
-        const payload = res;          
-        const pageData = payload.data;     
+        const payload = res;
+        const pageData = payload.data;
 
         this.rows = pageData.data ?? [];
         this.totalItems = pageData.totalCount ?? 0;
@@ -145,7 +185,7 @@ export class TaskListComponent implements OnInit {
         this.entries = pageData.pageSize ?? 10;
 
         this.summary = pageData.summary;
-console.log(this.summary);
+        console.log(this.summary);
         this.buildSummaryCards();
 
         this.isLoading = false;
@@ -159,9 +199,9 @@ console.log(this.summary);
   cards: any[] = [];
   private buildSummaryCards() {
     if (!this.summary) {
-    this.cards = [];
-    return;
-  }
+      this.cards = [];
+      return;
+    }
 
     this.cards = [
       {

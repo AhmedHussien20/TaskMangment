@@ -27,22 +27,36 @@
         <div class="filter-card" *ngIf="filtersOpen">
             <div class="filter-grid">
 
-                <div class="filter-item" *ngFor="let key of objectKeys(searchCriteria?.filterTypes)">
+                <div class="filter-item" *ngFor="let key of objectKeys(searchCriteria?.filterTypes)"
+                    [hidden]="key === 'employeeIds' && !showEmployeeFilter">
+
                     <label>{{ getLabel(key) | translate }}</label>
 
                     <ng-container [ngSwitch]="getInputType(key)">
 
+                        <!-- TEXT -->
                         <input *ngSwitchCase="'text'" class="form-control" [(ngModel)]="searchCriteria[key]" />
 
+                        <!-- NUMBER -->
                         <input *ngSwitchCase="'number'" type="number" class="form-control"
                             [(ngModel)]="searchCriteria[key]" />
 
-                        <select *ngSwitchCase="'dropdown'" class="form-select" [(ngModel)]="searchCriteria[key]">
-                            <option *ngFor="let opt of getDropdownOptions(key)" [value]="opt.id">
-                                {{ opt.name | translate }}
-                            </option>
-                        </select>
+                        <!-- DROPDOWN -->
+                        <ng-select *ngSwitchCase="'dropdown'" [items]="getDropdownOptions(key)" bindValue="id"
+                            [(ngModel)]="searchCriteria[key]" [multiple]="isMultiSelect(key)"
+                            [closeOnSelect]="!isMultiSelect(key)" [clearable]="true">
 
+                            <ng-template ng-option-tmp let-item="item">
+                                {{ item.name | translate }}
+                            </ng-template>
+
+                            <ng-template ng-label-tmp let-item="item">
+                                {{ item.name | translate }}
+                            </ng-template>
+
+                        </ng-select>
+
+                        <!-- DATE -->
                         <input *ngSwitchCase="'date'" type="date" class="form-control"
                             [(ngModel)]="searchCriteria[key]" />
 
@@ -63,6 +77,7 @@
                 </button>
             </div>
         </div>
+
     </div>
 
     <!-- ================= TABLE ================= -->
