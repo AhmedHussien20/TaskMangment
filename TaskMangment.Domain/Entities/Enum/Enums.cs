@@ -45,8 +45,14 @@ namespace TaskMangment.Domain.Entities
 
         EmployeeWarning = 6,
         EmployeeDeduction = 7,
-        TaskDueTodayReminder = 8
+        TaskDueTodayReminder = 8,
+        CourseOffer = 9,
 
+    }
+    public enum RecipientType
+    {
+        Employee,
+        Student
     }
 
     public enum RoleLevelEnum

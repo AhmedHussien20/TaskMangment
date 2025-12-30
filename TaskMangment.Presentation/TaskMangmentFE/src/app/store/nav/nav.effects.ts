@@ -112,27 +112,34 @@ export class NavEffects {
           ],
         },
 
-        // ---- Education ----
-        {
-          title: 'nav.apps.education.title',
-          icon: 'ti-book',
-          type: 'sub',
-          minRoleLevel: 50,
-          children: [
-            {
-              title: 'nav.apps.student.list',
-              type: 'link',
-              path: '/student/student-list',
-              minRoleLevel: 50
-            },
-            {
-              title: 'nav.apps.course.list',
-              type: 'link',
-              path: '/course/course-list',
-              minRoleLevel: 50
-            },
-          ],
-        },
+      // ---- Education ----
+      {
+        title: 'nav.apps.education.title',
+        icon: 'ti-book',
+        type: 'sub',
+        minRoleLevel: 50,
+        children: [
+          {
+            title: 'nav.apps.student.list',
+            type: 'link',
+            path: '/student/student-list',
+            minRoleLevel: 50
+          },
+          {
+            title: 'nav.apps.course.list',
+            type: 'link',
+            path: '/course/course-list',
+            minRoleLevel: 50
+          }
+          ,
+          {
+            title: 'nav.apps.course.offer_list',
+            type: 'link',
+            path: '/offer/offer-list',
+            minRoleLevel: 50
+          }
+        ],
+      },
 
       ],
     },

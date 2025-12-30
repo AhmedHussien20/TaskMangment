@@ -25,9 +25,6 @@
     "DELETE_SUCCESS": "deleted successfully",
     "DELETE_FAILED": "Failed to delete"
 
-
-
-
   },
   "validation": {
     "required": "This field is required",
@@ -405,7 +402,7 @@
     "EMAIL": "Email",
     "MOBILE": "Mobile",
     "ROLES": "Roles",
-    "TITLE": "Job Title",
+    "JOB_TITLE": "Job Title",
     "NATIONALITY": "Nationality",
     "IDENTITY_NUMBER": "Identity Number",
     "ADDRESS": "Address",
@@ -424,7 +421,7 @@
     "VALIDATION_ERROR": "Please fill in all required fields correctly.",
     "searchKey": "Search by employee name",
     "CONFIRM_PASSWORD": "Confirm Password",
-    "ATTACHMENTS" : "Profile image"
+    "PROFILE_PIC" : "Profile image"
   },
   "STUDENT": {
     "TITLE": "Students",
@@ -597,5 +594,25 @@
   "LOCATION": "Location",
   "NOT_PROVIDED": "Not Provided",
   "EDIT_PROFILE": "Edit Profile"
-}
+
+},
+ "OFFER": {
+    "ADD": "Add offer",
+    "TITLE": "Offer title",
+    "CREATE": "Create New Offer",
+    "UPDATE": "Update Offer",
+    "LIST_TITLE": "Course Offers",
+    "ID": "ID",
+    "COURSE": "Course",
+    "SUBJECT": "Subject",
+    "START_DATE": "Start Date",
+    "END_DATE": "End Date",
+    "DESCRIPTION": "Description",
+    "ASSIGNED_STUDENTS": "Assigned Students",
+    "SEARCH": "Search by offer name",
+    "CREATE_SUCCESS": "Offer created successfully",
+    "UPDATE_SUCCESS": "Offer updated successfully",
+    "STUDENTS" : "Students list"
+  }
+
 }

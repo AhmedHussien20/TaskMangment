@@ -25,6 +25,7 @@ namespace TaskMangment.Application.Behaviors.EmailHandlers
             {
                 TemplateKey = "EmployeeDeduction",
                 ReferenceType = ReferenceType.EmployeeDeduction,
+                RecipientType = RecipientType.Employee,
                 ReferenceId = ev.DiscountId,
                 UserIds = new List<int> { ev.IssuedtoId }
             });
