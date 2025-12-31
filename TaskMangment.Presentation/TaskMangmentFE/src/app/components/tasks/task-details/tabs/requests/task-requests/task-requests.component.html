@@ -6,12 +6,11 @@
     [entries]="entries"
     [totalItems]="totalItems"
     [showAddButton]="false"
-    [showEditButton]="true"
     [showDetailsButton]="false"
     [showFilters]="false"
     [showPagination]="false"
-    (edit)="openReviewModal($event, reviewModal)"
-    (pageChange)="onPageChange($event)">
+    (pageChange)="onPageChange($event)"
+    (iconAction)="onAction($event,reviewModal)">
   </app-generic-table>
 
   <div *ngIf="!isLoading && !rows.length" class="text-center text-muted mt-4">
@@ -32,7 +31,7 @@
       <option [ngValue]="ExtensionRequestStatus.Rejected">Rejected</option>
     </select>
 
-    <div *ngIf="reviewModel.status === ExtensionRequestStatus.Approved" class="mt-2">
+    <div *ngIf="requestType === 'extend' && reviewModel.status === ExtensionRequestStatus.Approved" class="mt-2">
       <label>New Due Date</label>
       <input type="date" class="form-control" [(ngModel)]="reviewModel.newDueDate" />
     </div>
