@@ -165,22 +165,32 @@ namespace TaskMangment.Infrastructure.Services
         }
 
 
-        public async Task<ApiResponse<TaskCloseRequestDetailsDto>> ReviewAsync(int id, bool approved, int reviewerId)
+        public async Task<ApiResponse<TaskCloseRequestDetailsDto>> ReviewAsync(int id, CloseRequestStatus status, int reviewerId)
         {
-            var request = await _requestRepo.GetByIDAsync(id);
+            var request = await _requestRepo
+                .GetAll(r => r.Id == id)
+                .Include(r => r.TaskAssignment)
+                .ThenInclude(a => a.Task)
+                .FirstOrDefaultAsync();
+
             if (request == null)
                 throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
 
             if (request.Status != CloseRequestStatus.Pending)
                 throw new AppException(ErrorCodes.AlreadyReviewed, StatusCodes.Status400BadRequest);
 
-            request.Status = approved
-                ? CloseRequestStatus.Approved
-                : CloseRequestStatus.Rejected;
+            if (status == CloseRequestStatus.Approved)
+            {
+                request.Status = CloseRequestStatus.Approved;
 
+                request.TaskAssignment.Task.Status = WorkTaskStatus.Closed;
+            }
+            else
+            {
+                request.Status = CloseRequestStatus.Rejected;
+            }
             request.ReviewedByEmployeeId = reviewerId;
             request.ReviewedAt = DateTime.UtcNow;
-            //request.ModifiedDate = DateTime.UtcNow;
 
 
             await _requestRepo.SaveChangesAsync();

@@ -66,4 +66,12 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
         public string Status { get; set; } = "Active";
     }
 
+    public class TaskRequestsDto
+    {
+        public int TaskId { get; set; }
+        public List<TaskExtensionRequestDetailsDto> ExtensionRequests { get; set; } = new();
+        public List<TaskCloseRequestDetailsDto> CloseRequests { get; set; } = new();
+    }
+
+
 }

@@ -165,11 +165,11 @@ export class TaskCreateUpdateComponent implements OnInit {
         Validators.minLength(3),
         Validators.maxLength(100)
       ]],
-      description: [''],
+      description: ['',Validators.required],
       assignedEmployeeIds: [[], Validators.required],
       priority: [TaskPriority.Low, Validators.required],
       status: [TaskStatus.New, Validators.required],
-      dueDate: [null],
+      dueDate: [null, Validators.required],
       commentAllowPeriodDays: ['يومي'],
       maxWarnings: [3, [Validators.pattern('^[0-9]+$')]],
       penaltyAtMaxWarnings: [0, [Validators.pattern('^[0-9]+$')]],

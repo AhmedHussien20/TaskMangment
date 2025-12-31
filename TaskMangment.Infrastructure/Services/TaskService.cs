@@ -39,6 +39,9 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
         private readonly AppDbContext _context;
+        private readonly IRepository<TaskExtensionRequest> _extensionRequestRepo;
+        private readonly IRepository<TaskCloseRequest> _closeRequestRepo;
+
 
         public TaskService(
              IRepository<WorkTask> taskRepo,
@@ -49,7 +52,10 @@ namespace TaskMangment.Infrastructure.Services
             ICachingService cache ,
             IDomainEventDispatcher eventDispatcher,
             IRepository<EmailQueue> emailQueueRepo,
-            AppDbContext context)
+            AppDbContext context,
+            IRepository<TaskExtensionRequest> extensionRequestRepo,
+           IRepository<TaskCloseRequest> closeRequestRepo
+)
         {
             _taskRepo = taskRepo;
             _employeeRepo = employeeRepo;
@@ -60,6 +66,8 @@ namespace TaskMangment.Infrastructure.Services
             _eventDispatcher = eventDispatcher;
             _emailQueueRepo = emailQueueRepo;
             _context = context;
+            _closeRequestRepo = closeRequestRepo;
+            _extensionRequestRepo = extensionRequestRepo;
         }
 
         public async Task<ApiResponse<PagedResponse<TaskGetDto>>> GetAllAsync(TaskRequest request, int CompanyId, string role, int employeeId)
@@ -410,5 +418,38 @@ namespace TaskMangment.Infrastructure.Services
                 .AsNoTracking()
                 .ToListAsync();
         }
+
+        public async Task<ApiResponse<TaskRequestsDto>> GetTaskRequestsAsync(int taskId)
+        {
+            var task = await _taskRepo.GetByIDAsync(taskId);
+            if (task == null)
+                throw new AppException(ErrorCodes.TaskNotFound, StatusCodes.Status404NotFound);
+
+            var extensionRequests = await _extensionRequestRepo.GetAll(r => r.TaskId == taskId)
+                .Include(r => r.RequestedBy)
+                .Include(r => r.ReviewedBy)
+                .AsNoTracking()
+                .ToListAsync();
+
+            var extensionDtos = _mapper.Map<List<TaskExtensionRequestDetailsDto>>(extensionRequests);
+
+            var closeRequests = await _closeRequestRepo.GetAll(r => r.TaskId == taskId)
+                .Include(r => r.RequestedBy)
+                .Include(r => r.ReviewedBy)
+                .AsNoTracking()
+                .ToListAsync();
+
+            var closeDtos = _mapper.Map<List<TaskCloseRequestDetailsDto>>(closeRequests);
+
+            var result = new TaskRequestsDto
+            {
+                TaskId = taskId,
+                ExtensionRequests = extensionDtos,
+                CloseRequests = closeDtos
+            };
+
+            return ApiResponse<TaskRequestsDto>.Ok(result);
+        }
+
     }
 }

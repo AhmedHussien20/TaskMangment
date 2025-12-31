@@ -18,6 +18,7 @@ export interface TaskCloseRequestGet {
   reviewedAt?: string;
   reviewedByName?: string;
   requestedByName?: string;
+  closeRequestText : string
 }
 
 export interface TaskCloseRequestPagedResponse {

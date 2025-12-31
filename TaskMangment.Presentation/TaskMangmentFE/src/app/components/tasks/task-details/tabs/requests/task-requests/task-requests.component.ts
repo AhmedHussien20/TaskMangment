@@ -6,9 +6,12 @@ import { TaskExtensionRequestService } from 'app/core/services/task-extension-re
 import { TaskCloseRequestService } from 'app/core/services/task-close-request.service';
 import { BaseResponse } from 'app/models/base.response.model';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { ExtensionRequestStatus, TaskExtensionReviewDto } from 'app/core/models/task/task-extension-request';
+import { ExtensionRequestStatus, TaskExtensionRequestGet, TaskExtensionReviewDto } from 'app/core/models/task/task-extension-request';
 import { FormsModule } from '@angular/forms';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { ToastrService } from 'ngx-toastr';
+import { CloseRequestStatus, TaskCloseRequestGet } from 'app/core/models/task/task-close-request';
+import { TaskService } from 'app/core/services/task.service';
 
 
 @Component({
@@ -32,6 +35,8 @@ export class TaskRequestsComponent implements OnInit, OnChanges, AfterViewInit {
   ExtensionRequestStatus = ExtensionRequestStatus;
   selectedRequestId: number | null = null;
   showReviewModal = false;
+  CloseRequestStatus = CloseRequestStatus;
+  selectedCloseStatus: CloseRequestStatus | null = null;
 
 
   columns: TableColumn[] = [
@@ -57,7 +62,7 @@ export class TaskRequestsComponent implements OnInit, OnChanges, AfterViewInit {
     { key: 'createdAt', label: 'TASK.DATE', type: 'date' },
     { key: 'comment', label: 'TASK.REQUEST_COMMENT' },
     { key: 'response', label: 'TASK.REQUEST_REPLY' },
-    { key: 'responseDate', label: 'TASK.REQUEST_REPLY_DATE' },
+    { key: 'responseDate',label: 'TASK.REQUEST_REPLY_DATE' , type: 'date'},
     { key: 'review', label: 'TABLE.ACTIONS', type: 'icon-action', icon: 'bi bi-pencil-square' },
 
   ];
@@ -69,6 +74,8 @@ export class TaskRequestsComponent implements OnInit, OnChanges, AfterViewInit {
     private closeService: TaskCloseRequestService,
     private translate: TranslateService,
     private modalService: NgbModal,
+    private toastr: ToastrService,
+    private taskService: TaskService
 
   ) { }
 
@@ -98,101 +105,79 @@ export class TaskRequestsComponent implements OnInit, OnChanges, AfterViewInit {
     }, 0);
   }
 
-  loadRequests(): void {
-    if (!this.taskId) {
-      console.error('Cannot load requests: taskId is undefined');
-      return;
-    }
-
-    console.log('Loading requests for taskId:', this.taskId);
-    this.isLoading = true;
-
-    const requestPayload = {
-      taskId: this.taskId,
-      pageIndex: this.page,
-      pageSize: this.entries,
-      sortColumn: 'RequestedAt',
-      sortDirection: 'desc',
-      searchKey: ''
-    };
-
-    console.log('Request payload:', requestPayload);
-
-    forkJoin({
-      extensions: this.extensionService.getAll(requestPayload) as any,
-      closes: this.closeService.getAll(requestPayload) as any
-    }).subscribe({
-      next: (res: any) => {
-
-        const extensionResponse: BaseResponse<any> = res.extensions;
-        const closeResponse: BaseResponse<any> = res.closes;
-
-        const extensionData = extensionResponse?.success ?
-          (extensionResponse.data?.data || []) : [];
-
-        const closeData = closeResponse?.success ?
-          (closeResponse.data?.data || []) : [];
-
-
-
-        const extensionRows = extensionData.map((x: any) => ({
-          requestNo: Number(x.id),
-          type: 'extend',
-          sender: typeof x.requestedByName === 'string' ? x.requestedByName : x.requestedByName?.name || '',
-          createdAt: x.requestedAt,
-          comment: x.reason || '',
-          response: this.translate.instant(this.getStatusText(x.extendRequestText)),
-          responseDate: x.reviewedAt || null
-        }));
-
-        const closeRows = closeData.map((x: any) => ({
-          requestNo: Number(x.id),
-          type: 'close',
-          sender: typeof x.requestedByName === 'string' ? x.requestedByName : x.requestedByName?.name || '',
-          createdAt: x.requestedAt,
-          comment: x.message || x.reason || '',
-          response: this.translate.instant(this.getStatusText(x.closeRequestText)),
-          responseDate: x.reviewedAt || null
-        }));
-
-        this.rows = [...extensionRows, ...closeRows]
-          .filter(item => item.createdAt)
-          .sort((a, b) => {
-            const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-            const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-
-            return dateB - dateA;
-          });
-
-        this.totalItems = this.rows.length;
-        this.isLoading = false;
-
-        console.log('Rows loaded:', this.rows.length, 'items');
-        if (this.rows.length > 0) {
-          console.log('Sample rows:', this.rows);
-        }
-      },
-      error: (error) => {
-        console.error('Error loading requests:', error);
-        this.isLoading = false;
-      }
-    });
+ loadRequests(): void {
+  if (!this.taskId) {
+    console.error('Cannot load requests: taskId is undefined');
+    return;
   }
+
+  console.log('Loading requests for taskId:', this.taskId);
+  this.isLoading = true;
+
+  this.taskService.getTaskRequests(this.taskId).subscribe({
+    next: (res) => {
+      if (!res.success || !res.data) {
+        this.rows = [];
+        this.totalItems = 0;
+        this.isLoading = false;
+        return;
+      }
+
+      // Extension Requests
+     // Extension Requests
+// Extension Requests
+const extensionRows = res.data.extensionRequests.map((x: TaskExtensionRequestGet) => ({
+  requestNo: x.id,
+  type: 'extend',
+  sender: x.requestedByName || '',
+  createdAt: x.requestedAt,
+  comment: x.reason || '',
+  response: this.translate.instant(this.getStatusText(x.extendRequestText)), 
+  responseDate: x.reviewedAt || null
+}));
+
+const closeRows = res.data.closeRequests.map((x: TaskCloseRequestGet) => ({
+  requestNo: x.id,
+  type: 'close',
+  sender: x.requestedByName || '',
+  createdAt: x.requestedAt,
+  comment: x.message || '',
+  response: this.translate.instant(this.getStatusText(x.closeRequestText)), // استخدم closeRequestText
+  responseDate: x.reviewedAt || null
+}));
+
+      this.rows = [...extensionRows, ...closeRows]
+        .filter(item => item.createdAt)
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+      this.totalItems = this.rows.length;
+      this.isLoading = false;
+
+      console.log('Rows loaded:', this.rows.length, 'items');
+    },
+    error: (err) => {
+      console.error('Error loading requests:', err);
+      this.isLoading = false;
+    }
+  });
+}
+
+
 
   private getStatusText(status: string): string {
-    if (!status) return 'TASK.REQUEST_STATUS_UNKNOWN';
-
-    switch (status) {
-      case 'Pending':
-        return 'TASK.REQUEST_STATUS_PENDING';
-      case 'Approved':
-        return 'TASK.REQUEST_STATUS_APPROVED';
-      case 'Rejected':
-        return 'TASK.REQUEST_STATUS_REJECTED';
-      default:
-        return status;
-    }
+  switch (status) {
+    case 'Pending':
+      return 'TASK.REQUEST_STATUS_PENDING';
+    case 'Approved':
+      return 'TASK.REQUEST_STATUS_APPROVED';
+    case 'Rejected':
+      return 'TASK.REQUEST_STATUS_REJECTED';
+    default:
+      return 'TASK.REQUEST_STATUS_UNKNOWN';
   }
+}
+
+
 
 
   refresh(): void {
@@ -208,12 +193,23 @@ export class TaskRequestsComponent implements OnInit, OnChanges, AfterViewInit {
 
 
 
-  openReviewModal(requestNo: number, modal:any,requestType:'extend' | 'close') {
-    this.selectedRequestId = requestNo;
-    this.requestType = requestType;
-    this.reviewModel = { status: ExtensionRequestStatus.Pending};
-    this.modalService.open(modal, { size: 'lg', centered: true });
+ openReviewModal(
+  requestNo: number,
+  modal: any,
+  requestType: 'extend' | 'close',
+  reviewedAt?: string
+) {
+  if (reviewedAt) {
+    this.toastr.warning(this.translate.instant('TASK.ALREADY_REVIEWED'));
+    return;
   }
+
+  this.selectedRequestId = requestNo;
+  this.requestType = requestType;
+  this.reviewModel = { status: ExtensionRequestStatus.Pending };
+  this.selectedCloseStatus = null;
+  this.modalService.open(modal, { size: 'lg', centered: true });
+}
 
 
 
@@ -228,24 +224,30 @@ export class TaskRequestsComponent implements OnInit, OnChanges, AfterViewInit {
 
     this.extensionService.review(this.selectedRequestId, this.reviewModel).subscribe({
       next: () => {
+        this.toastr.success(this.translate.instant('TASK.SAVED_SUCCESS'));
         this.modalService.dismissAll();
         this.refresh();
-      },
-      error: (err) => {
-        console.error(err);
-        alert('Failed to review request');
       }
     });
   }
+submitCloseReview(status: CloseRequestStatus | null) {
+  if (!this.selectedRequestId || !status) return;
 
-  onAction(event: { type: string; row: any },model:any) {
-    console.log(event.type,event.row)
-    //if (event.type !== 'reviewe') return;
-    const requesType = event.row.type;
-    const requestId = event.row.requestNo;
-    this.openReviewModal(requestId,model, requesType);
+  this.closeService.review(this.selectedRequestId, status)
+    .subscribe(() => {
+      this.toastr.success(this.translate.instant('TASK.SAVED_SUCCESS'));
+      this.modalService.dismissAll();
+      this.refresh();
+    });
+}
 
-  }
+
+ onAction(event: { type: string; row: any }, modal: any) {
+  const requestId = event.row.requestNo;
+  const requestType = event.row.type;
+  const reviewedAt = event.row.responseDate || null; 
+  this.openReviewModal(requestId, modal, requestType, reviewedAt);
+}
 
 
 }

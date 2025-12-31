@@ -1,3 +1,6 @@
+import { TaskCloseRequestGet } from "./task-close-request";
+import { TaskExtensionRequestGet } from "./task-extension-request";
+
 export enum TaskPriority {
   Low = 1,
   Medium = 2,
@@ -81,4 +84,10 @@ export interface TaskAssignedEmployee {
 export interface SimpleEmployee {
   id: number;
   fullName: string;
+}
+
+export interface TaskRequests {
+  taskId: number;
+  extensionRequests: TaskExtensionRequestGet[];
+  closeRequests: TaskCloseRequestGet[];
 }
