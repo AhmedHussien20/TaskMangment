@@ -14,7 +14,7 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 @Component({
   selector: 'app-task-requests',
   standalone: true,
-  imports: [CommonModule, GenericTableComponent, TranslateModule,FormsModule],
+  imports: [CommonModule, GenericTableComponent, TranslateModule, FormsModule],
   templateUrl: './task-requests.component.html'
 })
 export class TaskRequestsComponent implements OnInit, OnChanges, AfterViewInit {
@@ -28,47 +28,49 @@ export class TaskRequestsComponent implements OnInit, OnChanges, AfterViewInit {
   entries = 10;
 
   reviewModel: TaskExtensionReviewDto = { status: ExtensionRequestStatus.Pending };
-ExtensionRequestStatus = ExtensionRequestStatus;
-selectedRequestId: number | null = null;
-showReviewModal = false;
+  requestType: 'extend' | 'close' = 'extend';
+  ExtensionRequestStatus = ExtensionRequestStatus;
+  selectedRequestId: number | null = null;
+  showReviewModal = false;
 
 
-columns: TableColumn[] = [
-  { key: 'requestNo', label: 'TASK.REQUEST_NUMBER' },
-  {
-    key: 'type',
-    label: 'TASK.REQUEST_TYPE',
-    type: 'badge',  
-    badgeMap: {
-      close: {
-        text: 'TASK.REQUEST_TYPE_CLOSE',
-        class: 'bg-danger',
-        icon: 'bi bi-x-circle'
-      },
-      extend: {
-        text: 'TASK.REQUEST_TYPE_EXTEND',
-        class: 'bg-warning',
-        icon: 'bi bi-arrow-repeat'
+  columns: TableColumn[] = [
+    { key: 'requestNo', label: 'TASK.REQUEST_NUMBER' },
+    {
+      key: 'type',
+      label: 'TASK.REQUEST_TYPE',
+      type: 'badge',
+      badgeMap: {
+        close: {
+          text: 'TASK.REQUEST_TYPE_CLOSE',
+          class: 'bg-danger',
+          icon: 'bi bi-x-circle'
+        },
+        extend: {
+          text: 'TASK.REQUEST_TYPE_EXTEND',
+          class: 'bg-warning',
+          icon: 'bi bi-arrow-repeat'
+        }
       }
-    }
-  },
-  { key: 'sender', label: 'TASK.REQUEST_SENDER' },
-  { key: 'createdAt', label: 'TASK.DATE', type: 'date' },
-  { key: 'comment', label: 'TASK.REQUEST_COMMENT' },
-  { key: 'response', label: 'TASK.REQUEST_REPLY' },
-  { key: 'responseDate', label: 'TASK.REQUEST_REPLY_DATE' },
-  
-];
+    },
+    { key: 'sender', label: 'TASK.REQUEST_SENDER' },
+    { key: 'createdAt', label: 'TASK.DATE', type: 'date' },
+    { key: 'comment', label: 'TASK.REQUEST_COMMENT' },
+    { key: 'response', label: 'TASK.REQUEST_REPLY' },
+    { key: 'responseDate', label: 'TASK.REQUEST_REPLY_DATE' },
+    { key: 'review', label: 'TABLE.ACTIONS', type: 'icon-action', icon: 'bi bi-pencil-square' },
+
+  ];
 
   private initialized = false;
 
   constructor(
     private extensionService: TaskExtensionRequestService,
     private closeService: TaskCloseRequestService,
-    private translate : TranslateService,
+    private translate: TranslateService,
     private modalService: NgbModal,
 
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     console.log('TaskRequestsComponent ngOnInit, taskId:', this.taskId);
@@ -76,7 +78,7 @@ columns: TableColumn[] = [
 
   ngOnChanges(changes: SimpleChanges): void {
     console.log('TaskRequestsComponent ngOnChanges, taskId:', this.taskId);
-    
+
     if (changes['taskId'] && this.taskId && this.initialized) {
       console.log('Task ID changed, reloading...');
       this.page = 1;
@@ -86,7 +88,7 @@ columns: TableColumn[] = [
 
   ngAfterViewInit(): void {
     console.log('TaskRequestsComponent ngAfterViewInit');
-    
+
     setTimeout(() => {
       this.initialized = true;
       if (this.taskId) {
@@ -121,50 +123,50 @@ columns: TableColumn[] = [
       closes: this.closeService.getAll(requestPayload) as any
     }).subscribe({
       next: (res: any) => {
-        
+
         const extensionResponse: BaseResponse<any> = res.extensions;
         const closeResponse: BaseResponse<any> = res.closes;
-        
-        const extensionData = extensionResponse?.success ? 
-          (extensionResponse.data?.data || []) : [];
-        
-        const closeData = closeResponse?.success ? 
-          (closeResponse.data?.data || []) : [];
-        
-      
-        
-        const extensionRows = extensionData.map((x: any) => ({
-  requestNo: Number(x.id),
-  type: 'extend',
-  sender: typeof x.requestedByName === 'string' ? x.requestedByName : x.requestedByName?.name || '',
-  createdAt: x.requestedAt,
-  comment: x.reason || '',
-  response: this.translate.instant(this.getStatusText(x.extendRequestText)),
-  responseDate: x.reviewedAt || null
-}));
 
-const closeRows = closeData.map((x: any) => ({
-  requestNo: Number(x.id),
-  type: 'close',
-  sender: typeof x.requestedByName === 'string' ? x.requestedByName : x.requestedByName?.name || '',
-  createdAt: x.requestedAt,
-  comment: x.message || x.reason || '',
-  response: this.translate.instant(this.getStatusText(x.closeRequestText)),
-  responseDate: x.reviewedAt || null
-}));
+        const extensionData = extensionResponse?.success ?
+          (extensionResponse.data?.data || []) : [];
+
+        const closeData = closeResponse?.success ?
+          (closeResponse.data?.data || []) : [];
+
+
+
+        const extensionRows = extensionData.map((x: any) => ({
+          requestNo: Number(x.id),
+          type: 'extend',
+          sender: typeof x.requestedByName === 'string' ? x.requestedByName : x.requestedByName?.name || '',
+          createdAt: x.requestedAt,
+          comment: x.reason || '',
+          response: this.translate.instant(this.getStatusText(x.extendRequestText)),
+          responseDate: x.reviewedAt || null
+        }));
+
+        const closeRows = closeData.map((x: any) => ({
+          requestNo: Number(x.id),
+          type: 'close',
+          sender: typeof x.requestedByName === 'string' ? x.requestedByName : x.requestedByName?.name || '',
+          createdAt: x.requestedAt,
+          comment: x.message || x.reason || '',
+          response: this.translate.instant(this.getStatusText(x.closeRequestText)),
+          responseDate: x.reviewedAt || null
+        }));
 
         this.rows = [...extensionRows, ...closeRows]
           .filter(item => item.createdAt)
           .sort((a, b) => {
             const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
             const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-            
+
             return dateB - dateA;
           });
 
         this.totalItems = this.rows.length;
         this.isLoading = false;
-        
+
         console.log('Rows loaded:', this.rows.length, 'items');
         if (this.rows.length > 0) {
           console.log('Sample rows:', this.rows);
@@ -178,19 +180,19 @@ const closeRows = closeData.map((x: any) => ({
   }
 
   private getStatusText(status: string): string {
-  if (!status) return 'TASK.REQUEST_STATUS_UNKNOWN';
+    if (!status) return 'TASK.REQUEST_STATUS_UNKNOWN';
 
-  switch (status) {
-    case 'Pending':
-      return 'TASK.REQUEST_STATUS_PENDING';
-    case 'Approved':
-      return 'TASK.REQUEST_STATUS_APPROVED';
-    case 'Rejected':
-      return 'TASK.REQUEST_STATUS_REJECTED';
-    default:
-      return status;
+    switch (status) {
+      case 'Pending':
+        return 'TASK.REQUEST_STATUS_PENDING';
+      case 'Approved':
+        return 'TASK.REQUEST_STATUS_APPROVED';
+      case 'Rejected':
+        return 'TASK.REQUEST_STATUS_REJECTED';
+      default:
+        return status;
+    }
   }
-}
 
 
   refresh(): void {
@@ -204,37 +206,46 @@ const closeRows = closeData.map((x: any) => ({
     this.loadRequests();
   }
 
-  
-
- openReviewModal(id: number, modal: any) {
-  const row = this.rows.find(r => r.id === id);
-  if (!row || row.type !== 'extend') return;
-
-  this.selectedRequestId = row.id;   
-  this.reviewModel = { status: ExtensionRequestStatus.Pending };
-  this.modalService.open(modal, { size: 'lg', centered: true });
-}
 
 
-
-submitReview() {
-console.log('submitReview clicked', this.selectedRequestId, this.reviewModel);
-  if (!this.selectedRequestId || !this.reviewModel.status) return;
-
-  if (this.reviewModel.status === ExtensionRequestStatus.Approved && !this.reviewModel.newDueDate) {
-    alert('Please select a new due date');
-    return;
+  openReviewModal(requestNo: number, modal:any,requestType:'extend' | 'close') {
+    this.selectedRequestId = requestNo;
+    this.requestType = requestType;
+    this.reviewModel = { status: ExtensionRequestStatus.Pending};
+    this.modalService.open(modal, { size: 'lg', centered: true });
   }
 
-  this.extensionService.review(this.selectedRequestId, this.reviewModel).subscribe({
-    next: () => {
-      this.modalService.dismissAll();
-      this.refresh(); 
-    },
-    error: (err) => {
-      console.error(err);
-      alert('Failed to review request');
+
+
+  submitReview() {
+    console.log('submitReview clicked', this.selectedRequestId, this.reviewModel);
+    if (!this.selectedRequestId || !this.reviewModel.status) return;
+
+    if (this.reviewModel.status === ExtensionRequestStatus.Approved && !this.reviewModel.newDueDate) {
+      alert('Please select a new due date');
+      return;
     }
-  });
-}
+
+    this.extensionService.review(this.selectedRequestId, this.reviewModel).subscribe({
+      next: () => {
+        this.modalService.dismissAll();
+        this.refresh();
+      },
+      error: (err) => {
+        console.error(err);
+        alert('Failed to review request');
+      }
+    });
+  }
+
+  onAction(event: { type: string; row: any },model:any) {
+    console.log(event.type,event.row)
+    //if (event.type !== 'reviewe') return;
+    const requesType = event.row.type;
+    const requestId = event.row.requestNo;
+    this.openReviewModal(requestId,model, requesType);
+
+  }
+
+
 }
