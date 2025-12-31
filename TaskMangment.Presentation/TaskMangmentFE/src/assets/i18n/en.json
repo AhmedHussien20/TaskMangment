@@ -386,7 +386,12 @@
     "WARNING_SUCCESS": "Warning sent successfully",
     "PENALTY_SUCCESS": "Penalty sent successfully",
     "COMMENT_SUCCESS": "Comment added successfully",
-    "MIN_LENGTH_TASK_CHARACTERS" : "Enter atleast 5 characters"
+    "MIN_LENGTH_TASK_CHARACTERS" : "Enter atleast 5 characters",
+    "SELECT" : "Select",
+    "STATUS_APPROVED" : "approved",
+    "STATUS_REJECTED" : "reject",
+    "REVIEW_CLOSE" : "Review close rrequest",
+    "REVIEW_EXTENSION" : "review extenstion request"
     
 
 

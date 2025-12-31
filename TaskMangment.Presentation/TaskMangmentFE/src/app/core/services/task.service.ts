@@ -1,5 +1,5 @@
 import { Injectable } from "@angular/core";
-import { TaskAddEdit, TaskAssignedEmployee, TaskGet, TaskPagedResponse } from "../models/task/task";
+import { TaskAddEdit, TaskAssignedEmployee, TaskGet, TaskPagedResponse, TaskRequests } from "../models/task/task";
 import { ApiService } from "./api.service";
 import { BaseResponse } from 'app/models/base.response.model'; 
 import { Observable } from "rxjs";
@@ -57,6 +57,10 @@ private buildQuery(req: any): string {
 
    getAssignedEmployees(taskId: number): Observable<BaseResponse<TaskAssignedEmployee[]>> {
     return this.api.get<BaseResponse<TaskAssignedEmployee[]>>(this.service, `${taskId}/assigned-employees`);
+  }
+
+   getTaskRequests(taskId: number): Observable<BaseResponse<TaskRequests>> {
+    return this.api.get<BaseResponse<TaskRequests>>(this.service, `${taskId}/requests`);
   }
 }
 

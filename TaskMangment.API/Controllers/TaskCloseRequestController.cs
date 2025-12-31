@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using TaskMangment.Application.Common.ApiRequests.Task;
 using TaskMangment.Application.DTOs.TaskDTOs;
 using TaskMangment.Application.Interfaces.Services;
+using TaskMangment.Domain.Entities;
 
 namespace TaskMangment.API.Controllers
 {
@@ -43,10 +44,10 @@ namespace TaskMangment.API.Controllers
             return Success(result.Data, "Close request added successfully");
         }
 
-        [HttpPut("{id}/review")]
-        public async Task<IActionResult> Review(int id, [FromQuery] bool approved)
+        [HttpPatch("review/{id}")]
+        public async Task<IActionResult> Review(int id, [FromBody] CloseRequestStatus status)
         {
-            var result = await _service.ReviewAsync(id, approved, this.CurrentUserId);
+            var result = await _service.ReviewAsync(id, status, this.CurrentUserId);
             return Success(true, "Close request reviewed successfully");
         }
     }

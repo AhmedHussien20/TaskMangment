@@ -441,7 +441,12 @@
     "DAILY": "يومى",
     "MONTHLY": "شهرى",
     "WEEKLY": "أسبوعى",
-    "ASSIGNED_TO": "مسؤلية"
+    "ASSIGNED_TO": "مسؤلية",
+    "SELECT" : "اختر",
+    "STATUS_APPROVED" : "قبول",
+    "STATUS_REJECTED" : "رفض",
+    "REVIEW_CLOSE" : "مراجعة طلب الغلق",
+    "REVIEW_EXTENSION" : "مراجعة طلب التمديد"
   },
   "EMPLOYEE": {
     "LIST_TITLE": "قائمة الموظفين",

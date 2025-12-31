@@ -47,4 +47,9 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
         public string? RequestedByName { get; set; }
 
     }
+
+    public class TaskCloseReviewDto
+    {
+        public CloseRequestStatus Status { get; set; }
+    }
 }

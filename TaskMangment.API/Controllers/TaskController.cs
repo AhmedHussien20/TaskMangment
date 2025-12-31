@@ -70,5 +70,16 @@ namespace TaskMangment.API.Controllers
             var response = await _service.GetAssignedEmployeesAsync(taskId);
             return Success(response.Data);
         }
+
+        [HttpGet("{taskId}/requests")]
+        public async Task<IActionResult> GetTaskRequests(int taskId)
+        {
+            var result = await _service.GetTaskRequestsAsync(taskId);
+            if (!result.Success)
+                return Fail(result.Message!);
+
+            return Success(result.Data);
+        }
+
     }
 }

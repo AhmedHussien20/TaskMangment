@@ -18,6 +18,7 @@ export interface TaskExtensionRequestGet {
   requestedByName?: string;
 reviewedAt?: string | null;
   reviewedByName?: string;
+  extendRequestText: string
 }
 
 export interface TaskExtensionRequestPagedResponse {

@@ -1,5 +1,6 @@
 import { Injectable } from "@angular/core";
 import {
+  CloseRequestStatus,
   TaskCloseRequestAdd,
   TaskCloseRequestGet,
   TaskCloseRequestPagedResponse
@@ -28,9 +29,9 @@ export class TaskCloseRequestService {
     return this.api.post(this.service, `${taskId}`, model);
   }
 
-  review(id: number, approved: boolean) {
-    return this.api.put(this.service, `review/${id}?approved=${approved}`, {});
-  }
+  review(id: number, status: CloseRequestStatus) {
+      return this.api.patch(this.service,`review/${id}`,status);
+    }
 
   private buildQuery(req: any): string {
     return [
