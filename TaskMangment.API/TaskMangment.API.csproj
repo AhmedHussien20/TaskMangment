@@ -28,6 +28,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="QuestPDF" Version="2025.12.1" />
     <PackageReference Include="Serilog" Version="4.3.0" />
     <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
     <PackageReference Include="Serilog.Enrichers.Environment" Version="3.0.1" />
@@ -43,6 +44,10 @@
     <ProjectReference Include="..\TaskMangment.Hangfire\TaskMangment.Hangfire.csproj" />
     <ProjectReference Include="..\TaskMangment.Infrastructure\TaskMangment.Infrastructure.csproj" />
     <ProjectReference Include="..\TaskMangment.Utilities\TaskMangment.Utilities.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Reports\Fonts\" />
   </ItemGroup>
 
 </Project>

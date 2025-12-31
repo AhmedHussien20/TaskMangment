@@ -25,6 +25,7 @@ using TaskMangment.Infrastructure.Seeding;
 using TaskMangment.Application.Dashboards.Employee;
 using TaskMangment.Application.Dashboards.Admin;
 using TaskMangment.Infrastructure.Services.TaskMangment.Infrastructure.Services.Dashboard;
+using QuestPDF.Infrastructure;
 
 namespace TaskMangment.API
 {
@@ -110,6 +111,7 @@ namespace TaskMangment.API
             builder.Services.AddScoped<IEmployeeDashboardService, EmployeeDashboardService>();
             builder.Services.AddScoped<IAdminDashboardService, AdminDashboardService>();
 
+            QuestPDF.Settings.License = LicenseType.Community;
 
 
             builder.Services.AddScoped<ProcessPendingEmailsJob>();
