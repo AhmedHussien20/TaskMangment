@@ -9,5 +9,7 @@ namespace TaskMangment.Application.Common.ApiRequests.Task
 {
     public class TaskRequest: BaseApiRequest
     {
+        public List<int>? EmployeeIds { get; set; }
+        public int? StatusId { get; set; }
     }
 }

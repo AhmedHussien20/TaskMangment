@@ -291,6 +291,7 @@
     "ID": "الكود"
   },
   "TASK": {
+    "employee":"الموظف",
     "ACTION_COMMENT": "تعليق",
     "ACTION_CLOSE": "إغلاق",
     "ACTION_EXTEND": "تمديد",

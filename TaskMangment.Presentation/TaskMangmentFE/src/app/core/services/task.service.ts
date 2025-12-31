@@ -32,15 +32,28 @@ export class TaskService {
     return this.api.delete(this.service, `${id}`);
   }
 
-  private buildQuery(req: any): string {
-    return [
-      `searchKey=${req.searchKey || ''}`,
-      `PageIndex=${req.pageIndex}`,
-      `PageSize=${req.pageSize}`,
-      `SortColumn=${req.sortColumn}`,
-      `SortDirection=${req.sortDirection}`
-    ].join('&');
+private buildQuery(req: any): string {
+  const params: string[] = [];
+
+  params.push(`searchKey=${encodeURIComponent(req.searchKey || '')}`);
+  params.push(`PageIndex=${req.pageIndex}`);
+  params.push(`PageSize=${req.pageSize}`);
+  params.push(`SortColumn=${req.sortColumn}`);
+  params.push(`SortDirection=${req.sortDirection}`);
+
+  if (Array.isArray(req.employeeIds) && req.employeeIds.length > 0) {
+    req.employeeIds.forEach((id: number) => {
+      params.push(`employeeIds=${id}`);
+    });
   }
+
+  if (req.statusId) {
+    params.push(`statusId=${req.statusId}`);
+  }
+
+  return params.join('&');
+}
+
 
    getAssignedEmployees(taskId: number): Observable<BaseResponse<TaskAssignedEmployee[]>> {
     return this.api.get<BaseResponse<TaskAssignedEmployee[]>>(this.service, `${taskId}/assigned-employees`);

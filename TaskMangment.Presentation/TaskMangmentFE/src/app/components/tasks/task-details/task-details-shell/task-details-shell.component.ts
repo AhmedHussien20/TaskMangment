@@ -12,6 +12,8 @@ import { CloseRequestModalComponent } from '../actions/close-request/close-reque
 import { ExtendRequestComponent } from '../actions/extend-request/extend-request.component';
 import { TaskService } from 'app/core/services/task.service';
 import { TaskGet } from 'app/core/models/task/task';
+import { AuthService } from 'app/core/services/auth.service';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-task-details-shell',
@@ -21,24 +23,28 @@ import { TaskGet } from 'app/core/models/task/task';
     TaskTabsComponent,
     PageHeaderComponent,
     TranslateModule,
-    NgbTooltipModule
+    NgbTooltipModule,
+    CommonModule
   ]
 })
 export class TaskDetailsShellComponent implements OnInit {
 
   @Input() taskId!: number; 
   readonly = false;
+  showAdminPages = true;
 
   constructor(
     private route: ActivatedRoute, private modal: NgbModal, private refreshService: TaskDetailsRefreshService,
-    private taskService: TaskService,    public modall: NgbActiveModal,
+    private taskService: TaskService,    public modall: NgbActiveModal,private auth: AuthService
      ) { }
 
   
   taskInfo: TaskGet | null = null;
 
   ngOnInit(): void {
-
+    const roleLevel = this.auth.getRoleLevel();
+    this.showAdminPages = roleLevel >= 50;
+    console.log(this.showAdminPages);
     if (this.taskId) {
       this.loadTask();
     }
