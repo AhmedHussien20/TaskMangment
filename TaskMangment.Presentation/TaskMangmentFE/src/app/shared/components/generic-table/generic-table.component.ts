@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { NgbPaginationModule, NgbTooltipModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgSelectModule } from '@ng-select/ng-select';
 import { TranslateModule } from '@ngx-translate/core';
 import { MyDatePipe } from 'app/components/utilities/pipline/MyDatePipe';
 import { SearchCriteria } from 'app/core/models/search-criteria.model';
@@ -18,7 +19,7 @@ export type ColumnType =
 export interface BadgeConfig {
   text: string;
   class: string;
-  icon?: string; 
+  icon?: string;
 }
 
 export interface TableColumn {
@@ -41,7 +42,7 @@ interface HasId {
   imports: [
     CommonModule,
     FormsModule,
-    NgbPaginationModule, TranslateModule, MyDatePipe,NgbTooltipModule
+    NgbPaginationModule, TranslateModule, MyDatePipe, NgbTooltipModule, NgSelectModule
   ],
   styleUrls: ['./generic-table.component.scss']
 })
@@ -75,7 +76,7 @@ export class GenericTableComponent<T> implements OnDestroy {
   @Input() searchCriteria!: SearchCriteria<T>;
   @Input() labels: { [key: string]: string } = {};
   @Input() statusOptions: { id: number; name: string }[] = [];
-
+  @Input() employeeOptions: { id: number; name: string }[] = [];
   // callback من الـ parent (زى Expiry)
   @Input() onSearch?: (criteria: SearchCriteria<T>) => void;
   @Input() onAddClick?: () => void;
@@ -88,6 +89,7 @@ export class GenericTableComponent<T> implements OnDestroy {
   @Output() edit = new EventEmitter<number>();
   @Output() delete = new EventEmitter<number>();
   @Input() rowClickable: boolean = false;
+  @Input() showEmployeeFilter: boolean = true;
 
   // ---------- UI State ----------
   loading: boolean = false;             // لو حبيت تستخدمه بعدين
@@ -133,17 +135,17 @@ export class GenericTableComponent<T> implements OnDestroy {
     const value = this.getValue(item, col.key);
     return col.badgeMap[value]?.class ?? '';
   }
-  
-getInitials(name: string): string {
-  if (!name) return '';
 
-  return name
-    .split(' ')
-    .map(x => x[0])
-    .join('')
-    .substring(0, 2)
-    .toUpperCase();
-}
+  getInitials(name: string): string {
+    if (!name) return '';
+
+    return name
+      .split(' ')
+      .map(x => x[0])
+      .join('')
+      .substring(0, 2)
+      .toUpperCase();
+  }
 
   getInputType(key: string): 'text' | 'dropdown' | 'date' | 'number' {
     const filterTypes = (this.searchCriteria?.filterTypes || {}) as any;
@@ -151,8 +153,16 @@ getInitials(name: string): string {
   }
 
   getDropdownOptions(key: string) {
-    if (key === 'statusId') return this.statusOptions;
-    return [];
+    switch (key) {
+      case 'statusId':
+        return this.statusOptions;
+
+      case 'employeeIds':
+        return this.employeeOptions;
+
+      default:
+        return [];
+    }
   }
 
   // ---------- Filters ----------
@@ -166,6 +176,14 @@ getInitials(name: string): string {
   viewDetails(id: number) {
     this.details.emit(id);
   }
+
+  isMultiSelect(key: string): boolean {
+    if (key === 'employeeIds') return true;   // multi
+    if (key === 'statusId') return false;     // single
+    return false;
+  }
+
+
 
 
   getItemId(item: T): any {
@@ -194,7 +212,7 @@ getInitials(name: string): string {
       if (type === 'text' || type === 'number') {
         (this.searchCriteria as any)[key] = '';
       } else if (type === 'dropdown' || type === 'radio') {
-        (this.searchCriteria as any)[key] = 0;
+        (this.searchCriteria as any)[key] = this.isMultiSelect(key) ? [] : 0;
       } else if (type === 'date') {
         (this.searchCriteria as any)[key] = null;
       }
