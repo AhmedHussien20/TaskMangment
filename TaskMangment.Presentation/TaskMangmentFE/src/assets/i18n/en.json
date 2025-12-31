@@ -258,6 +258,7 @@
     "PRIORITY_LOW": "low",
     "PRIORITY_MEDIUM": "medium",
     "PRIORITY_HIGH": "high",
+    "CREATED_AT": "create at",
     "DUE_DATE": "Due Date",
     "STATUS": "Status",
     "STATUS_NEW": "New",

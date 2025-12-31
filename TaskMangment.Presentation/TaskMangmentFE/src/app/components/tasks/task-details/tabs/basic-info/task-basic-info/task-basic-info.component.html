@@ -47,6 +47,10 @@
           </span>
         </td>
       </tr>
+     <tr>
+        <th>{{ 'TASK.CREATED_AT' | translate }}</th>
+        <td>{{ taskInfo?.createdDate | myDate }}</td>
+      </tr>
 
       <tr>
         <th>{{ 'TASK.DUE_DATE' | translate }}</th>

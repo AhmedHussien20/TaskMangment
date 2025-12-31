@@ -185,38 +185,50 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<TaskExtensionRequestDetailsDto>.Ok(resultDto, "Extension request added successfully");
         }
 
-        public async Task<ApiResponse<TaskExtensionRequestDetailsDto>> ReviewAsync(int id, bool approved, int reviewerId)
+        public async Task<ApiResponse<TaskExtensionRequestDetailsDto>> ReviewAsync(int id,TaskExtensionReviewDto dto,int reviewerId)
         {
-            var request = await _requestRepo.GetByIDAsync(id);
+            var request = await _requestRepo
+                .GetAll(r => r.Id == id)
+                .Include(r => r.TaskAssignment)
+                .ThenInclude(a => a.Task)
+                .FirstOrDefaultAsync();
+
             if (request == null)
                 throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
 
             if (request.Status != ExtensionRequestStatus.Pending)
-                throw new AppException(ErrorCodes.AlreadyReviewed, StatusCodes.Status404NotFound);
+                throw new AppException(ErrorCodes.AlreadyReviewed, StatusCodes.Status400BadRequest);
 
+            if (dto.Status == ExtensionRequestStatus.Approved)
+            {
+                if (!dto.NewDueDate.HasValue || dto.NewDueDate < request.TaskAssignment.Task.DueDate)
+                    throw new AppException(ErrorCodes.InvalidDate,StatusCodes.Status400BadRequest);
 
-            request.Status = approved
-                ? Domain.Entities.ExtensionRequestStatus.Approved
-                : Domain.Entities.ExtensionRequestStatus.Rejected;
+                request.Status = ExtensionRequestStatus.Approved;
+
+                request.TaskAssignment.Task.DueDate = dto.NewDueDate.Value;
+            }
+            else
+            {
+                request.Status = ExtensionRequestStatus.Rejected;
+            }
 
             request.ReviewedByEmployeeId = reviewerId;
             request.ReviewedAt = DateTime.UtcNow;
+
             await _requestRepo.SaveChangesAsync();
             await _cache.RemoveAsync("taskExtensionRequests:");
 
             var updatedRequest = await _requestRepo.GetAll(r => r.Id == id)
-                                                     .Include(r => r.RequestedBy)
-                                                     .Include(r => r.ReviewedBy)
-                                                    .Include(r => r.TaskAssignment)
-                                                    .ThenInclude(a => a.Employee)
-                                                    .Include(r => r.TaskAssignment)
-                                                 .ThenInclude(a => a.Task)
-                                                    .AsNoTracking()
-                                                    .FirstOrDefaultAsync();
+                .Include(r => r.RequestedBy)
+                .Include(r => r.ReviewedBy)
+                .Include(r => r.TaskAssignment)
+                .ThenInclude(a => a.Task)
+                .AsNoTracking()
+                .FirstOrDefaultAsync();
 
             var resultDto = _mapper.Map<TaskExtensionRequestDetailsDto>(updatedRequest);
             resultDto.TaskTitle = updatedRequest.TaskAssignment.Task?.Title;
-
 
             return ApiResponse<TaskExtensionRequestDetailsDto>.Ok(resultDto, "Request reviewed successfully");
         }

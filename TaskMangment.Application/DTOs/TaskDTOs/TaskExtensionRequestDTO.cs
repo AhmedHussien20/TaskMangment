@@ -51,4 +51,10 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
 
 
     }
+    public class TaskExtensionReviewDto
+    {
+        public ExtensionRequestStatus Status { get; set; }
+        public DateTime? NewDueDate { get; set; }
+    }
+
 }

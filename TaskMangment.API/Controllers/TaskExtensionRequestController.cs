@@ -43,10 +43,10 @@ namespace TaskMangment.API.Controllers
             return Success(result.Data, "Extension request added successfully");
         }
 
-        [HttpPut("{id}/review")]
-        public async Task<IActionResult> Review(int id, [FromQuery] bool approved)
+        [HttpPatch("{id}/review")]
+        public async Task<IActionResult> Review(int id, [FromBody] TaskExtensionReviewDto dto)
         {
-            var result = await _service.ReviewAsync(id, approved, this.CurrentUserId);
+            var result = await _service.ReviewAsync(id, dto, this.CurrentUserId);
             return Success(result.Data, "Extension request reviewed successfully");
         }
     }

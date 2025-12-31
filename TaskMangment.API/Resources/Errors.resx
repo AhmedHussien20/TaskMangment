@@ -193,4 +193,7 @@
   <data name="OFFER_EXPIRED" xml:space="preserve">
     <value>offer is expired</value>
   </data>
+  <data name="INVALID_DATE" xml:space="preserve">
+    <value>Enter the right date</value>
+  </data>
 </root>
