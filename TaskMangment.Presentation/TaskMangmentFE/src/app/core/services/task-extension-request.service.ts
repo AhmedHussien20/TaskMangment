@@ -2,7 +2,8 @@ import { Injectable } from "@angular/core";
 import {
   TaskExtensionRequestAdd,
   TaskExtensionRequestGet,
-  TaskExtensionRequestPagedResponse
+  TaskExtensionRequestPagedResponse,
+  TaskExtensionReviewDto
 } from "../models/task/task-extension-request";
 import { ApiService } from "./api.service";
 import { BaseResponse } from "app/models/base.response.model";
@@ -28,8 +29,8 @@ export class TaskExtensionRequestService {
     return this.api.post(this.service, `${taskId}`, model);
   }
 
-  review(id: number, approved: boolean) {
-    return this.api.put(this.service, `review/${id}?approved=${approved}`, {});
+  review(id: number, dto: TaskExtensionReviewDto) {
+    return this.api.patch(this.service,`review/${id}`,dto);
   }
 
   private buildQuery(req: any): string {

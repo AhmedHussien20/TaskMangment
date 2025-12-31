@@ -1,20 +1,44 @@
 <div class="table-responsive" style="max-height:400px; overflow:auto;">
-<app-generic-table
-  [columns]="columns"
-  [data]="rows"
-  [page]="page"
-  [entries]="entries"
-  [totalItems]="totalItems"
-  [showAddButton]="false"
-  [showEditButton]="false"
-  [showDetailsButton]="false"
-  [showFilters]="false"
-  [showPagination]="false"
-  (pageChange)="onPageChange($event)">
-</app-generic-table>
+  <app-generic-table
+    [columns]="columns"
+    [data]="rows"
+    [page]="page"
+    [entries]="entries"
+    [totalItems]="totalItems"
+    [showAddButton]="false"
+    [showEditButton]="true"
+    [showDetailsButton]="false"
+    [showFilters]="false"
+    [showPagination]="false"
+    (edit)="openReviewModal($event, reviewModal)"
+    (pageChange)="onPageChange($event)">
+  </app-generic-table>
 
-<div *ngIf="!isLoading && !rows.length" class="text-center text-muted mt-4">
-  {{ 'TASK.NO_REQUESTS' | translate }}
+  <div *ngIf="!isLoading && !rows.length" class="text-center text-muted mt-4">
+    {{ 'TASK.NO_REQUESTS' | translate }}
+  </div>
 </div>
 
-</div>
+<ng-template #reviewModal let-modal>
+  <div class="modal-header">
+    <h6 class="modal-title">{{ 'TASK.REVIEW_EXTENSION' | translate }}</h6>
+    <button class="btn-close" (click)="modal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    <label>Status</label>
+    <select class="form-select" [(ngModel)]="reviewModel.status">
+      <option [ngValue]="null" disabled>Select status</option>
+      <option [ngValue]="ExtensionRequestStatus.Approved">Approved</option>
+      <option [ngValue]="ExtensionRequestStatus.Rejected">Rejected</option>
+    </select>
+
+    <div *ngIf="reviewModel.status === ExtensionRequestStatus.Approved" class="mt-2">
+      <label>New Due Date</label>
+      <input type="date" class="form-control" [(ngModel)]="reviewModel.newDueDate" />
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-secondary" (click)="modal.dismiss()">{{ 'CANCEL' | translate }}</button>
+    <button class="btn btn-primary" (click)="submitReview()">{{ 'SAVE' | translate }}</button>
+  </div>
+</ng-template>

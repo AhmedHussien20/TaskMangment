@@ -331,6 +331,11 @@ namespace TaskMangment.API
                 job => job.ExecuteAsync(),
                 Cron.Minutely()  
             );
+            RecurringJob.AddOrUpdate<ArchiveOverdueTasksJob>(
+                "archive-overdue-tasks",
+                job => job.ExecuteAsync(),
+                Cron.Minutely()             
+);
 
 
             app.Run();

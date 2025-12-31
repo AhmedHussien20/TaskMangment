@@ -192,4 +192,7 @@
   <data name="OFFER_EXPIRED" xml:space="preserve">
     <value>العرض انتهي</value>
   </data>
+  <data name="INVALID_DATE" xml:space="preserve">
+    <value>ادخل التاريخ الصحيح</value>
+  </data>
 </root>

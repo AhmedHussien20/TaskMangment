@@ -169,12 +169,46 @@ export class OfferCreateUpdateComponent implements OnInit {
   }
 
   initForm() {
-    const group: any = {};
-    this.formConfig.forEach(f => {
-      group[f.name] = [f.defaultValue, f.validations ? Object.values(f.validations).includes(true) ? Validators.required : [] : []];
-    });
-    this.formGroup = this.fb.group(group);
-  }
+  this.formGroup = this.fb.group({
+    title: ['', [
+      Validators.required,
+      Validators.minLength(3),
+      Validators.maxLength(200)
+    ]],
+
+    courseId: [null, Validators.required],
+
+    subjectId: [null, Validators.required],
+
+    startDate: ['', Validators.required],
+
+    endDate: [null],
+
+    assignedStudentIds: [[], Validators.required],
+
+    paymentMethod: ['', Validators.required],
+
+    price: [null, [
+      Validators.required,
+      Validators.pattern('^[0-9]+(\\.[0-9]+)?$')
+    ]],
+
+    interestRate: [null, Validators.pattern('^[0-9]+(\\.[0-9]+)?%?$')],
+
+    discountRate: [null, Validators.pattern('^[0-9]+(\\.[0-9]+)?%?$')],
+
+    installmentValue: [null, Validators.pattern('^[0-9]+(\\.[0-9]+)?%?$')],
+
+    netAmount: [null, Validators.pattern('^[0-9]+(\\.[0-9]+)?%?$')],
+
+    offerOwner: [''],
+
+    specialization: [''],
+
+    description: ['']
+  });
+}
+
 
   loadOffer() {
   if (!this.offerId) return;
