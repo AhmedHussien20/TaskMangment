@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using TaskMangment.Application.Common.ApiRequests.Task;
 using TaskMangment.Application.Common.Responses;
 using TaskMangment.Application.DTOs.TaskDTOs;
+using TaskMangment.Application.ReportDTOs;
 using TaskMangment.Application.Responses;
 
 namespace TaskMangment.Application.Interfaces.Services
@@ -18,6 +19,8 @@ namespace TaskMangment.Application.Interfaces.Services
         Task<ApiResponse<TaskGetDto>> UpdateAsync(int id, TaskAddEditDto dto, int modifierUser);
         Task<ApiResponse<bool>> DeleteAsync(int id);
         Task<ApiResponse<List<TaskAssignmentDto>>> GetAssignedEmployeesAsync(int taskId);
-
+        Task<List<TaskReportDto>> GetTasksForReportAsync(int? assignedUserId = null,int? status = null,DateTime? fromDate = null,DateTime? toDate = null);
+       
+  
     }
 }

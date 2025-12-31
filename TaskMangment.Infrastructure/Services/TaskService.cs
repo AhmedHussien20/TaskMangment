@@ -16,9 +16,11 @@ using TaskMangment.Application.DTOs;
 using TaskMangment.Application.DTOs.TaskDTOs;
 using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
+using TaskMangment.Application.ReportDTOs;
 using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
 using TaskMangment.Domain.Event;
+using TaskMangment.Infrastructure.DataContext;
 using TaskMangment.Infrastructure.Persistence.Extensions;
 using TaskMangment.Infrastructure.SignalR;
 
@@ -36,6 +38,7 @@ namespace TaskMangment.Infrastructure.Services
 
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
+        private readonly AppDbContext _context;
 
         public TaskService(
              IRepository<WorkTask> taskRepo,
@@ -45,7 +48,8 @@ namespace TaskMangment.Infrastructure.Services
             IMapper mapper, 
             ICachingService cache ,
             IDomainEventDispatcher eventDispatcher,
-            IRepository<EmailQueue> emailQueueRepo)
+            IRepository<EmailQueue> emailQueueRepo,
+            AppDbContext context)
         {
             _taskRepo = taskRepo;
             _employeeRepo = employeeRepo;
@@ -55,6 +59,7 @@ namespace TaskMangment.Infrastructure.Services
             _cache = cache;
             _eventDispatcher = eventDispatcher;
             _emailQueueRepo = emailQueueRepo;
+            _context = context;
         }
 
         public async Task<ApiResponse<PagedResponse<TaskGetDto>>> GetAllAsync(TaskRequest request, int CompanyId, string role, int employeeId)
@@ -358,5 +363,52 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<List<TaskAssignmentDto>>.Ok(dtos);
         }
 
+
+        public async Task<List<TaskReportDto>> GetTasksForReportAsync(
+       int? assignedUserId = null,
+       int? status = null,
+       DateTime? fromDate = null,
+       DateTime? toDate = null)
+        {
+            IQueryable<WorkTask> query = _context.Tasks
+                .Include(t => t.Assignments)
+                    .ThenInclude(a => a.Employee);
+
+            if (assignedUserId.HasValue)
+            {
+                query = query.Where(t =>
+                    t.Assignments.Any(a => a.EmployeeId == assignedUserId));
+            }
+
+            if (status.HasValue)
+            {
+                query = query.Where(t => (int)t.Status == status.Value);
+            }
+
+            if (fromDate.HasValue)
+            {
+                query = query.Where(t => t.CreatedDate >= fromDate.Value);
+            }
+
+            if (toDate.HasValue)
+            {
+                query = query.Where(t => t.CreatedDate <= toDate.Value);
+            }
+
+            return await query
+                .OrderByDescending(t => t.CreatedDate)
+                .Select(t => new TaskReportDto
+                {
+                    Title = t.Title,
+                    Status = t.Status.ToString(),
+                    Priority = t.Priority.ToString(),
+                    AssignedTo = t.Assignments
+                        .Select(a => a.Employee.FullName)
+                        .FirstOrDefault() ?? "غير مسند",
+                    DueDate = t.DueDate
+                })
+                .AsNoTracking()
+                .ToListAsync();
+        }
     }
 }
