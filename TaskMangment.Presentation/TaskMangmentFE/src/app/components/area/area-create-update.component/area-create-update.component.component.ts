@@ -160,16 +160,10 @@ export class AreaCreateUpdateComponent implements OnInit {
     if (this.isEdit && this.areaId) {
       this.areaService.update(this.areaId, this.formGroup.value).subscribe({
         next: (response) => {
+          this.toastr.success(this.translate.instant('AREA.CREATE_SUCCESS'));
           this.formSubmitted.emit();
 
-          this.toastr.success(
-            this.translate.instant('AREA.UPDATE_SUCCESS'),
-            this.translate.instant('FORM.SUCCESS'),
-            {
-              timeOut: 3000,
-              positionClass: 'toast-top-right',
-            }
-          );
+        
         },
       });
     }
@@ -178,16 +172,10 @@ export class AreaCreateUpdateComponent implements OnInit {
     else {
       this.areaService.create(this.formGroup.value).subscribe({
         next: (response) => {
+          this.toastr.success(this.translate.instant('AREA.UPDATED_SUCCESS'));
           this.formSubmitted.emit();
 
-          this.toastr.success(
-            this.translate.instant('AREA.CREATE_SUCCESS'),
-            this.translate.instant('FORM.SUCCESS'),
-            {
-              timeOut: 3000,
-              positionClass: 'toast-top-right',
-            }
-          );
+          
         },
       });
     }

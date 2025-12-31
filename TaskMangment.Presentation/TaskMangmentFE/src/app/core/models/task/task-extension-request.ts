@@ -26,3 +26,9 @@ export interface TaskExtensionRequestPagedResponse {
   pageIndex: number;
   pageSize: number;
 }
+
+export interface TaskExtensionReviewDto {
+  status?: ExtensionRequestStatus;
+  newDueDate?: string;   
+}
+
