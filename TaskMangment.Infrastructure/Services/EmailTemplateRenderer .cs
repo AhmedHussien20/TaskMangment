@@ -29,19 +29,12 @@ namespace TaskMangment.Infrastructure.Services
             if (template == null)
                 throw new Exception($"Email template '{templateKey}' not found.");
 
+
+            //course offer is the only key that need student name so if the key is anything else use employee normaly
             var data = await LoadDataAsync(referenceType, referenceId);
             if (userId.HasValue)
             {
-                if (referenceType != ReferenceType.CourseOffer)
-                {
-                    var userName = await _db.Employees
-                        .Where(e => e.Id == userId.Value)
-                        .Select(e => e.FullName)
-                        .FirstOrDefaultAsync();
-
-                    data["UserName"] = string.IsNullOrWhiteSpace(userName) ? "مستخدم" : userName;
-                }
-                else 
+                if (referenceType == ReferenceType.CourseOffer)
                 {
                     var studentName = await _db.OfferAssignments
                         .Where(a => a.OfferId == referenceId && a.StudentId == userId.Value)
@@ -50,13 +43,22 @@ namespace TaskMangment.Infrastructure.Services
 
                     data["StudentName"] = string.IsNullOrWhiteSpace(studentName) ? "طالب" : studentName;
                 }
+                else 
+                {
+                    var userName = await _db.Employees
+                        .Where(e => e.Id == userId.Value)
+                        .Select(e => e.FullName)
+                        .FirstOrDefaultAsync();
+
+                    data["UserName"] = string.IsNullOrWhiteSpace(userName) ? "مستخدم" : userName;
+                }
             }
             else
             {
-                if (referenceType != ReferenceType.CourseOffer)
-                    data["UserName"] = "مستخدم";
-                else
+                if (referenceType == ReferenceType.CourseOffer)
                     data["StudentName"] = "طالب";
+                else
+                    data["UserName"] = "مستخدم";
             }
 
             return new RenderedEmail

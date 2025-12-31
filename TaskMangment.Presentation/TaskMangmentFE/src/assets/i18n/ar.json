@@ -184,8 +184,8 @@
     "searchKey": " كلمة البحث",
     "ADD": "إضافة",
     "EDIT": "تعديل",
-    "CREATE_SUCCESS": "تم إنشاء العنصر بنجاح",
-    "UPDATE_SUCCESS": "تم تحديث العنصر بنجاح"
+    "CREATE_SUCCESS": "تم إنشاء المنطقة بنجاح",
+    "UPDATE_SUCCESS": "تم تحديث المنطقة بنجاح"
   },
   "TABLE": {
     "SEARCH": "بحث",
@@ -313,6 +313,7 @@
     "PRIORITY_LOW": "منخفضة",
     "PRIORITY_MEDIUM": "متوسطة",
     "PRIORITY_HIGH": "عالية",
+    "CREATED_AT":"تاريخ الانشاء",
     "DUE_DATE": "تاريخ الانتهاء",
     "STATUS": "الحالة",
     "STATUS_NEW": "جديدة",

@@ -37,7 +37,7 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
         public string Description { get; set; }
 
         public bool IsShared { get; set; }        
-        public DateTime CreatedAt { get; set; }     
+        public DateTime CreatedDate { get; set; }     
         public string AssignedByName { get; set; }  
         public List<TaskEmployeeAssignmentDto> AssignEmployee { get; set; } = new(); 
         public TaskPriority Priority { get; set; }   
