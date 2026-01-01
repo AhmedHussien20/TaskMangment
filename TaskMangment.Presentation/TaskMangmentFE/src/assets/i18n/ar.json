@@ -446,7 +446,8 @@
     "STATUS_APPROVED" : "قبول",
     "STATUS_REJECTED" : "رفض",
     "REVIEW_CLOSE" : "مراجعة طلب الغلق",
-    "REVIEW_EXTENSION" : "مراجعة طلب التمديد"
+    "REVIEW_EXTENSION" : "مراجعة طلب التمديد",
+    "ALREADY_REVIEWED" : "تم مراجعة الطلب بالفعل"
   },
   "EMPLOYEE": {
     "LIST_TITLE": "قائمة الموظفين",

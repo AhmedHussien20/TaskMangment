@@ -16,5 +16,9 @@ namespace TaskMangment.Application.Common.Notification
         public const string TaskCommentNotification = "TASK_COMMENT_NOTIFICATION";
         public const string TaskWarningNotification = "TASK_WARNING_NOTIFICATION";
         public const string TaskPenaltyNotification = "TASK_PENALTY_NOTIFICATION";
+        public const string CloseApprove = "CLOSEAPPROVED";
+        public const string ExtendApprove = "EXTENDAPPROVED";
+
+
     }
 }

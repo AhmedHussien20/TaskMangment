@@ -138,4 +138,11 @@
   <data name="TASK_UNASSIGNED_NOTIFICATION" xml:space="preserve">
     <value>you have been removed from {0}</value>
   </data>
+  <data name="EXTENDAPPROVED" xml:space="preserve">
+    <value>Task "{0}" has been extended from {1} to {2}.
+</value>
+  </data>
+  <data name="CLOSEAPPROVED" xml:space="preserve">
+    <value>the task {0} has been closed according to request</value>
+  </data>
 </root>

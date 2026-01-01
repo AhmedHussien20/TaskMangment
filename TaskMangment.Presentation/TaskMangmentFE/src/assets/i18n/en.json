@@ -391,7 +391,8 @@
     "STATUS_APPROVED" : "approved",
     "STATUS_REJECTED" : "reject",
     "REVIEW_CLOSE" : "Review close rrequest",
-    "REVIEW_EXTENSION" : "review extenstion request"
+    "REVIEW_EXTENSION" : "review extenstion request",
+    "ALREADY_REVIEWED" : "request already reviewed"
     
 
 
