@@ -12,6 +12,7 @@ namespace TaskMangment.Application.DTOs
         public int CreatedByMe { get; set; }
         public int InProgressTasks { get; set; }
         public int NewTasks { get; set; }
+        public int ArchiveTasks { get; set; }
     }
 
 }

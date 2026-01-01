@@ -45,6 +45,7 @@ export class TaskListComponent implements OnInit {
     createdByMe: number;
     inProgressTasks: number;
     newTasks: number;
+    archiveTasks: number
   };
   employees: { id: number; name: string }[] = [];
   status: { id: number; name: string }[] = [];
@@ -101,7 +102,8 @@ export class TaskListComponent implements OnInit {
   statusOptions = [
     { id: 1, name: 'TASK.STATUS_NEW' },
     { id: 2, name: 'TASK.STATUS_IN_PROGRESS' },
-    { id: 3, name: 'TASK.STATUS_CLOSED' }
+    { id: 3, name: 'TASK.STATUS_CLOSED' },
+    { id: 4, name: 'TASK.STATUS_ARCHIVED' }
   ];
 
 
@@ -145,7 +147,7 @@ export class TaskListComponent implements OnInit {
     if (this.showEmployeeFilter) {
       this.loadEmployees();
     }
-    
+
     this.status = this.statusOptions;
     this.canCreate = roleLevel >= 50;
     this.canEdit = roleLevel >= 70;
@@ -260,7 +262,22 @@ export class TaskListComponent implements OnInit {
           <line x1="8" y1="12" x2="16" y2="12"></line>
         </svg>
       `
+      },
+      {
+        title: 'TASK.ARCHIVED_TASKS',
+        value: this.summary.archiveTasks,
+        svg: `
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                  viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  class="feather feather-archive text-dark">
+                <polyline points="21 8 21 21 3 21 3 8"></polyline>
+                <rect x="1" y="3" width="22" height="5"></rect>
+                <line x1="10" y1="12" x2="14" y2="12"></line>
+              </svg>
+            `
       }
+
     ];
   }
 
