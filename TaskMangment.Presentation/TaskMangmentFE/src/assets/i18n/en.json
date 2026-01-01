@@ -433,9 +433,10 @@
     "STATUS_REJECTED" : "reject",
     "REVIEW_CLOSE" : "Review close rrequest",
     "REVIEW_EXTENSION" : "review extenstion request",
-    "ALREADY_REVIEWED" : "request already reviewed"
-    
-
+    "ALREADY_REVIEWED" : "request already reviewed",
+    "ACTIVE" : "Active",
+    "ENTER_NEW_DATE" : "Enter new date",
+    "NEW_DATE" : "New date"
 
   },
   "EMPLOYEE": {

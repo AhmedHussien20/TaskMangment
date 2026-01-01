@@ -5,11 +5,12 @@ import { TaskDetailsRefreshService } from '../../../task-details-refresh.service
 import { TaskCommentService } from 'app/core/services/task-comment.service';
 import { TaskCommentGetDto } from 'app/core/models/task/task-comment';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { MyDatePipe } from 'app/components/utilities/pipline/MyDatePipe';
 
 @Component({
   selector: 'app-task-comments',
   standalone: true,
-  imports: [CommonModule, TranslateModule],
+  imports: [CommonModule, TranslateModule, MyDatePipe],
   templateUrl: './task-comments.component.html'
 })
 export class TaskCommentsComponent implements OnInit, OnDestroy {

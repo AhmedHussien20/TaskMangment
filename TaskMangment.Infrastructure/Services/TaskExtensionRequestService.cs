@@ -212,21 +212,21 @@ namespace TaskMangment.Infrastructure.Services
                 request.NewDueDate = dto.NewDueDate.Value;
                 task.DueDate = dto.NewDueDate.Value;
 
-  //              var assignedEmployeeIds = await _taskAssignmentRepo
-  //      .GetAll(a => a.TaskId == task.Id && a.IsActive)
-  //.Select(a => a.EmployeeId)
-  //.ToListAsync();
+                var assignedEmployeeIds = await _taskAssignmentRepo
+        .GetAll(a => a.TaskId == task.Id && a.IsActive)
+  .Select(a => a.EmployeeId)
+  .ToListAsync();
 
-  //              await _eventDispatcher.PublishAsync(
-  //                  new TaskExtendApproveEvent(
-  //                      request.Id,
-  //                      task.Id,
-  //                      task.Title,
-  //                      oldDueDate,
-  //                      task.DueDate,
-  //                      assignedEmployeeIds
-  //                  )
-  //              );
+                await _eventDispatcher.PublishAsync(
+                    new TaskExtendApproveEvent(
+                        request.Id,
+                        task.Id,
+                        task.Title,
+                        oldDueDate,
+                        task.DueDate,
+                        assignedEmployeeIds
+                    )
+                );
             }
 
             else

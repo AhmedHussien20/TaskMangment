@@ -335,6 +335,7 @@ namespace TaskMangment.Infrastructure.Services
                 case ReferenceType.TaskExtensionRequestApproved:
                     {
                         var request = await _db.TaskExtensionRequests
+                            //.Include(r => r.Task)
                             .Where(r => r.Id == referenceId)
                             .Select(r => new
                             {

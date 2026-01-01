@@ -187,18 +187,19 @@ namespace TaskMangment.Infrastructure.Services
                 var task = request.TaskAssignment.Task;
                 task.Status = WorkTaskStatus.Closed;
 
-                //var assignedEmployeeIds = await _taskAssignmentRepo
-                //    .GetAll(a => a.TaskId == task.Id && a.IsActive)
-                //    .Select(a => a.EmployeeId)
-                //    .ToListAsync();
+                var assignedEmployeeIds = await _taskAssignmentRepo
+                    .GetAll(a => a.TaskId == task.Id && a.IsActive)
+                    .Select(a => a.EmployeeId)
+                    .ToListAsync();
 
-                //await _eventDispatcher.PublishAsync(
-                //    new TaskCloseApproveEvent(
-                //        task.Id,
-                //        task.Title,
-                //        assignedEmployeeIds
-                //    )
-                //);
+                await _eventDispatcher.PublishAsync(
+                    new TaskCloseApproveEvent(
+                        request.Id,
+                        task.Id,
+                        task.Title,
+                        assignedEmployeeIds
+                    )
+                );
             }
             else
             {

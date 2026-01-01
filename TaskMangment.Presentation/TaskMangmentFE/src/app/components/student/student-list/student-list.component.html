@@ -28,7 +28,7 @@
             [showAddButton]="true" [addButtonLabel]="'STUDENT.ADD' | translate" (addClick)="openAdd(studentModal)"
             [showEditButton]="true" (edit)="openEdit($event, studentModal)" [showFilters]="true"
             [searchCriteria]="searchCriteria" [onSearch]="applyFilters.bind(this)" (pageChange)="onPageChange($event)"
-            (entriesChange)="onEntriesChange($event)">
+            (entriesChange)="onEntriesChange($event)" [showDeleteButton]="true" (delete)="confirmDelete($event)">
           </app-generic-table>
 
         </div>

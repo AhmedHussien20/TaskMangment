@@ -76,7 +76,7 @@ export class StudentCreateUpdateComponent implements OnInit {
     this.formGroup = this.fb.group({
       fullName: ['', Validators.required],
       email: ['', [Validators.email,Validators.required]],
-      mobile: ['',Validators.pattern('^\\+?[0-9]+$')]
+      mobile: ['',[Validators.pattern('^\\+?[0-9]+$'),Validators.required]]
     });
   }
 
