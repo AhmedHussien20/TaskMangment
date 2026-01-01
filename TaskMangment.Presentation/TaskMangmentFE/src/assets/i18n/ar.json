@@ -446,7 +446,8 @@
     "STATUS_APPROVED" : "قبول",
     "STATUS_REJECTED" : "رفض",
     "REVIEW_CLOSE" : "مراجعة طلب الغلق",
-    "REVIEW_EXTENSION" : "مراجعة طلب التمديد"
+    "REVIEW_EXTENSION" : "مراجعة طلب التمديد",
+    "ARCHIVED_TASKS":"مهام مؤرشفة"
   },
   "EMPLOYEE": {
     "LIST_TITLE": "قائمة الموظفين",
@@ -696,7 +697,5 @@
     "OFFER_OWNER" : "اسم مقدم العرض",
     "SPECIALIZATION" : "التخصص المطلوب",
     "NOTES" : "ملاحظات"
-
-
   }
 }

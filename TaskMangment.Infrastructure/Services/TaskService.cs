@@ -150,6 +150,9 @@ namespace TaskMangment.Infrastructure.Services
 
                 NewTasks = await _taskRepo.CountAsync(t =>
                     t.Status == WorkTaskStatus.New &&
+                    t.Assignments.Any(a => a.EmployeeId == employeeId)),
+                ArchiveTasks = await _taskRepo.CountAsync(t =>
+                    t.Status == WorkTaskStatus.Archived &&
                     t.Assignments.Any(a => a.EmployeeId == employeeId))
             };
 
