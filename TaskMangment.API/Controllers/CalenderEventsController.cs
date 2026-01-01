@@ -21,12 +21,12 @@ namespace TaskMangment.API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll([FromQuery] CalendarEventRequest request)
         {
-            var result = await _service.GetAllAsync(request);
+            var result = await _service.GetAllAsync(request, this.CurrentUserId);
 
             if (!result.Success)
                 return Fail(result.Message!);
 
-            SetCacheHeader(600);
+            //SetCacheHeader(600);
 
             return Success(result.Data);
         }

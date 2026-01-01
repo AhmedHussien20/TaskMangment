@@ -35,17 +35,17 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<PagedResponse<StudentGetDto>>> GetAllAsync(StudentRequest request)
         {
-            string cacheKey = $"students:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
+            //string cacheKey = $"students:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
 
-            if (!request.BypassCache)
-            {
-                var cached = await _cache.GetAsync<PagedResponse<StudentGetDto>>(cacheKey);
-                if (cached != null)
-                    return ApiResponse<PagedResponse<StudentGetDto>>.Ok(cached);
-            }
+            //if (!request.BypassCache)
+            //{
+            //    var cached = await _cache.GetAsync<PagedResponse<StudentGetDto>>(cacheKey);
+            //    if (cached != null)
+            //        return ApiResponse<PagedResponse<StudentGetDto>>.Ok(cached);
+            //}
 
             var query = _studentRepository.GetAll()
-                .Include(s => s.OfferAssignments)
+                .Include(s => s.OfferAssignments.Where(oa => !oa.IsDeleted && !oa.Offer.IsDeleted))
                 .ApplySearch(request.searchKey);
 
             var totalCount = await query.CountAsync();
@@ -67,7 +67,7 @@ namespace TaskMangment.Infrastructure.Services
 
             var response = new PagedResponse<StudentGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
 
-            await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
+            //await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
 
             return ApiResponse<PagedResponse<StudentGetDto>>.Ok(response);
         }
@@ -75,7 +75,7 @@ namespace TaskMangment.Infrastructure.Services
         public async Task<ApiResponse<StudentGetDto>> GetByIdAsync(int id)
         {
             var student = await _studentRepository.GetAll(s => s.Id == id)
-                .Include(s => s.OfferAssignments)
+        .Include(s => s.OfferAssignments.Where(oa => !oa.IsDeleted && !oa.Offer.IsDeleted))
                 .AsNoTracking()
                 .FirstOrDefaultAsync();
 

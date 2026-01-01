@@ -25,7 +25,7 @@ namespace TaskMangment.API.Controllers
                 return Fail(result.Message!);
 
             // Optional: Cache header
-            SetCacheHeader(600);
+            //SetCacheHeader(600);
 
             return Success(result.Data);
         }

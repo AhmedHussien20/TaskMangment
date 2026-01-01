@@ -167,26 +167,24 @@ namespace TaskMangment.Infrastructure.Services
         {
             var task = await _taskRepo.GetAll(t => t.Id == id)
                 .Include(t => t.CreatedBy)
-                .Include(t => t.Assignments)
-                .ThenInclude(a => a.Employee)
                 .Include(t => t.AssignedBy)
+                .Include(t => t.Assignments)
+                    .ThenInclude(a => a.Employee)
                 .AsNoTracking()
                 .FirstOrDefaultAsync();
 
             if (task == null)
                 throw new AppException(ErrorCodes.TaskNotFound, StatusCodes.Status400BadRequest);
 
-            var fullTask = await _taskRepo.GetAll(t => t.Id == task.Id)
-                .Include(t => t.CreatedBy)
-                .Include(t => t.AssignedBy)
-                .Include(t => t.Assignments).ThenInclude(a => a.Employee)
-                .AsNoTracking()
-                .FirstOrDefaultAsync();
+            task.Assignments = task.Assignments
+                .Where(a => a.Employee.IsActive)
+                .ToList();
 
-            var taskDto = _mapper.Map<TaskGetDto>(fullTask); ;
+            var taskDto = _mapper.Map<TaskGetDto>(task);
 
             return ApiResponse<TaskGetDto>.Ok(taskDto);
         }
+
 
         public async Task<ApiResponse<TaskGetDto>> AddAsync(TaskAddEditDto dto, int createdUser, int companyId)
         {

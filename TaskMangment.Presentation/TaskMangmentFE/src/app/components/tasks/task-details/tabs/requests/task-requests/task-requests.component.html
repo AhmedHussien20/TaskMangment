@@ -26,19 +26,19 @@
     <label>{{'TASK.STATUS' | translate}}</label>
 
     <!-- Extend -->
-    <select *ngIf="requestType === 'extend'" class="form-select" [(ngModel)]="reviewModel.status">
+    <select *ngIf="requestType === 'extend'" class="form-select" [(ngModel)]="reviewModel.status" required>
       <option [ngValue]="null" disabled>{{'TASK.SELECT' | translate}}</option>
       <option [ngValue]="ExtensionRequestStatus.Approved">{{'TASK.STATUS_APPROVED'| translate}}</option>
       <option [ngValue]="ExtensionRequestStatus.Rejected">{{'TASK.STATUS_REJECTED'| translate}}</option>
     </select>
 
     <div *ngIf="requestType === 'extend' && reviewModel.status === ExtensionRequestStatus.Approved" class="mt-2">
-      <label>{{'TASK.NEW_DATE'}}</label>
-      <input type="date" class="form-control" [(ngModel)]="reviewModel.newDueDate" />
+      <label>{{'TASK.NEW_DATE' | translate}}</label>
+      <input type="date" class="form-control" [(ngModel)]="reviewModel.newDueDate"/>
     </div>
 
     <!-- Close -->
-    <select *ngIf="requestType === 'close'" class="form-select" [(ngModel)]="selectedCloseStatus">
+    <select *ngIf="requestType === 'close'" class="form-select" [(ngModel)]="selectedCloseStatus" required>
       <option [ngValue]="null" disabled>{{'TASK.SELECT' | translate}}</option>
       <option [ngValue]="CloseRequestStatus.Approved">{{'TASK.STATUS_APPROVED'| translate}}</option>
       <option [ngValue]="CloseRequestStatus.Rejected">{{'TASK.STATUS_REJECTED'| translate}}</option>
@@ -48,7 +48,7 @@
   <div class="modal-footer">
     <button class="btn btn-secondary" (click)="modal.dismiss()">{{ 'FORM.CANCEL' | translate }}</button>
     
-   <button
+  <button
   class="btn btn-primary"
   *ngIf="requestType === 'extend'"
   (click)="submitReview()"

@@ -140,19 +140,9 @@ export class AreaCreateUpdateComponent implements OnInit {
 
 
   onSubmit(formData: any) {
-
     if (this.formGroup.invalid) {
       this.formGroup.markAllAsTouched();
-
-      this.toastr.error(
-        this.translate.instant('FORM.VALIDATION_ERROR'),
-        this.translate.instant('FORM.ERROR'),
-        {
-          timeOut: 3000,
-          positionClass: 'toast-top-right',
-        }
-      );
-
+      this.toastr.error(this.translate.instant('FORM.VALIDATION_ERROR'));
       return;
     }
 
@@ -160,10 +150,8 @@ export class AreaCreateUpdateComponent implements OnInit {
     if (this.isEdit && this.areaId) {
       this.areaService.update(this.areaId, this.formGroup.value).subscribe({
         next: (response) => {
-          this.toastr.success(this.translate.instant('AREA.CREATE_SUCCESS'));
+          this.toastr.success(this.translate.instant('AREA.UPDATED_SUCCESS'));
           this.formSubmitted.emit();
-
-        
         },
       });
     }
@@ -172,7 +160,7 @@ export class AreaCreateUpdateComponent implements OnInit {
     else {
       this.areaService.create(this.formGroup.value).subscribe({
         next: (response) => {
-          this.toastr.success(this.translate.instant('AREA.UPDATED_SUCCESS'));
+          this.toastr.success(this.translate.instant('AREA.CREATE_SUCCESS'));
           this.formSubmitted.emit();
         },
       });

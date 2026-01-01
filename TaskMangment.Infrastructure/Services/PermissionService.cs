@@ -58,15 +58,15 @@ namespace TaskMangment.Infrastructure.Services
         public async Task<ApiResponse<PagedResponse<PermissionGetDto>>> GetAllAsync(PermissionRequest request)
         {
           
-            string cacheKey =
-                $"permissions:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
+            //string cacheKey =
+            //    $"permissions:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
 
-            if (!request.BypassCache)
-            {
-                var cached = await _cache.GetAsync<PagedResponse<PermissionGetDto>>(cacheKey);
-                if (cached != null)
-                    return ApiResponse<PagedResponse<PermissionGetDto>>.Ok(cached);
-            }
+            //if (!request.BypassCache)
+            //{
+            //    var cached = await _cache.GetAsync<PagedResponse<PermissionGetDto>>(cacheKey);
+            //    if (cached != null)
+            //        return ApiResponse<PagedResponse<PermissionGetDto>>.Ok(cached);
+            //}
 
             var query = _permissionRepo.GetAll().ApplySearch(request.searchKey);
             ;
@@ -85,7 +85,7 @@ namespace TaskMangment.Infrastructure.Services
 
             var response = new PagedResponse<PermissionGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
 
-            await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
+            //await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
 
             return ApiResponse<PagedResponse<PermissionGetDto>>.Ok(response);
         }

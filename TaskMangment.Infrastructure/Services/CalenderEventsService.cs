@@ -32,21 +32,13 @@ namespace TaskMangment.Infrastructure.Services
             _cache = cache;
             _mapper = mapper;
         }
-       
 
-        public async Task<ApiResponse<PagedResponse<CalendarEventGetDto>>> GetAllAsync(CalendarEventRequest request)
+
+        public async Task<ApiResponse<PagedResponse<CalendarEventGetDto>>> GetAllAsync(CalendarEventRequest request,int currentEmployeeId)
         {
-            string cacheKey =
-                $"events:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.searchKey}";
-            request.BypassCache = true;
-            if (!request.BypassCache)
-            {
-                var cached = await _cache.GetAsync<PagedResponse<CalendarEventGetDto>>(cacheKey);
-                if (cached != null)
-                    return ApiResponse<PagedResponse<CalendarEventGetDto>>.Ok(cached);
-            }
+            
 
-            var query = _eventRepo.GetAll()
+            var query = _eventRepo.GetAll(e => e.CreatedByEmployeeId == currentEmployeeId)
                 .Include(e => e.RelatedTask)
                 .ApplySearch(request.searchKey);
 
@@ -63,10 +55,9 @@ namespace TaskMangment.Infrastructure.Services
 
             var response = new PagedResponse<CalendarEventGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
 
-            await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
-
             return ApiResponse<PagedResponse<CalendarEventGetDto>>.Ok(response);
         }
+
         public async Task<ApiResponse<CalendarEventGetDto>> GetByIdAsync(int id)
         {
             var ev = await _eventRepo.GetAll(e => e.Id == id)

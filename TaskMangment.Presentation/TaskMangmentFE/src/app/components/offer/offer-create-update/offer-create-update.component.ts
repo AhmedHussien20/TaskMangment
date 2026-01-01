@@ -193,13 +193,13 @@ export class OfferCreateUpdateComponent implements OnInit {
       Validators.pattern('^[0-9]+(\\.[0-9]+)?$')
     ]],
 
-    interestRate: [null, Validators.pattern('^[0-9]+(\\.[0-9]+)?%?$')],
+    interestRate: [null, [Validators.pattern('^[0-9]+(\\.[0-9]+)?%?$'),Validators.required]],
 
-    discountRate: [null, Validators.pattern('^[0-9]+(\\.[0-9]+)?%?$')],
+    discountRate: [null,  [Validators.pattern('^[0-9]+(\\.[0-9]+)?%?$'),Validators.required]],
 
-    installmentValue: [null, Validators.pattern('^[0-9]+(\\.[0-9]+)?%?$')],
+    installmentValue: [null,  [Validators.pattern('^[0-9]+(\\.[0-9]+)?%?$'),Validators.required]],
 
-    netAmount: [null, Validators.pattern('^[0-9]+(\\.[0-9]+)?%?$')],
+    netAmount: [null,  [Validators.pattern('^[0-9]+(\\.[0-9]+)?%?$'),Validators.required]],
 
     offerOwner: [''],
 

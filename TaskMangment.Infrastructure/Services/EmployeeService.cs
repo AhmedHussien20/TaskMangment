@@ -68,15 +68,15 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<PagedResponse<EmployeeGetDto>>> GetAllAsync(EmployeeRequest request)
         {
-            string cacheKey =
-                $"employees:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
+            //string cacheKey =
+            //    $"employees:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
 
-            if (!request.BypassCache)
-            {
-                var cached = await _cache.GetAsync<PagedResponse<EmployeeGetDto>>(cacheKey);
-                if (cached != null)
-                    return ApiResponse<PagedResponse<EmployeeGetDto>>.Ok(cached);
-            }
+            //if (!request.BypassCache)
+            //{
+            //    var cached = await _cache.GetAsync<PagedResponse<EmployeeGetDto>>(cacheKey);
+            //    if (cached != null)
+            //        return ApiResponse<PagedResponse<EmployeeGetDto>>.Ok(cached);
+            //}
 
             // 1) Base query (Employees)
             var empQuery = _employeeRepo.GetAll()
@@ -121,7 +121,7 @@ namespace TaskMangment.Infrastructure.Services
 
             var response = new PagedResponse<EmployeeGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
 
-            await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
+           // await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
 
             return ApiResponse<PagedResponse<EmployeeGetDto>>.Ok(response);
         }
