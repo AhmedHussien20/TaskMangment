@@ -8,8 +8,7 @@
           {{ 'FORM.SAVE' | translate }}
         </button>
       </div>
-      <div *ngFor="let field of orderedFields" 
-     [ngClass]="{
+      <div *ngFor="let field of orderedFields" [ngClass]="{
        'col-md-4': field.type !== 'file' && field.type !== 'textarea',
        'col-md-12': field.type === 'file' || field.type === 'textarea'
      }">
@@ -23,26 +22,35 @@
           <div *ngIf="field.prefix" class="input-group-text">
             {{ field.prefix | translate}}
           </div>
-          <input [type]="field.type === 'password' && field.showPassword ? 'text' : field.type" class="form-control"
-            [id]="field.name" [formControlName]="field.name"
-            [placeholder]="field.placeholder ? (field.placeholder | translate) : (field.label | translate)"
-            [readOnly]="field.disabled" [disabled]="field.disabled" autocomplete="new-password" [ngClass]="{
-              'is-invalid':
-                formGroup.controls[field.name].invalid &&
-                (formGroup.controls[field.name].dirty ||
-                  formGroup.controls[field.name].touched)
-            }" />
+          <input
+  [type]="field.inputType === 'password' && field.showPassword ? 'text' : field.inputType"
+  class="form-control"
+  [id]="field.name"
+  [formControlName]="field.name"
+  [placeholder]="field.placeholder ? (field.placeholder | translate) : (field.label | translate)"
+  [readOnly]="field.disabled"
+  [disabled]="field.disabled"
+  autocomplete="new-password"
+  [ngClass]="{
+    'is-invalid':
+      formGroup.controls[field.name].invalid &&
+      (formGroup.controls[field.name].dirty ||
+        formGroup.controls[field.name].touched)
+  }"
+/>
+
           <button *ngIf="field.name === 'password'" type="button" class="btn btn-outline-secondary"
             (click)="onGeneratePassword(field.name)">
             {{ 'FORM.GENERATE' | translate }}
           </button>
-          <button *ngIf="field.type === 'password'" type="button" class="btn btn-outline-secondary"
-            (click)="field.showPassword = !field.showPassword">
-            <i [class]="field.showPassword ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
-            <span class="visually-hidden">
-              {{ field.showPassword ? ('FORM.HIDE_PASSWORD' | translate) : ('FORM.SHOW_PASSWORD' | translate) }}
-            </span>
-          </button>
+          <button
+  *ngIf="field.inputType === 'password'"
+  type="button"
+  class="btn btn-outline-secondary"
+  (click)="field.showPassword = !field.showPassword">
+  <i [class]="field.showPassword ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
+</button>
+
           <div *ngIf="
               formGroup.controls[field.name].invalid &&
               (formGroup.controls[field.name].dirty ||
