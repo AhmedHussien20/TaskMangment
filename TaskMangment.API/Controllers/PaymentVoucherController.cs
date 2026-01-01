@@ -21,7 +21,7 @@ namespace TaskMangment.API.Controllers
         {
             var result = await _service.GetAllAsync(request);
             if (!result.Success) return Fail(result.Message!);
-            SetCacheHeader(600);
+            //SetCacheHeader(600);
             return Success(result.Data);
         }
 

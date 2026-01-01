@@ -8,6 +8,7 @@ namespace TaskMangment.Domain.Event
 {
     public class TaskExtendApproveEvent
     {
+        public int RequestId { get; }
         public int TaskId { get; }
         public string TaskTitle { get; }
 
@@ -15,8 +16,9 @@ namespace TaskMangment.Domain.Event
         public DateTime? NewDueDate { get; }
         public List<int> AssignedEmployeeIds { get; }
 
-        public TaskExtendApproveEvent(int taskId, string taskTitle, DateTime? oldDueDate, DateTime? newDueDate, List<int> assignedEmployeeIds)
+        public TaskExtendApproveEvent(int requestId,int taskId, string taskTitle, DateTime? oldDueDate, DateTime? newDueDate, List<int> assignedEmployeeIds)
         {
+            RequestId = requestId;
             TaskId = taskId;
             TaskTitle = taskTitle;
             NewDueDate = newDueDate;

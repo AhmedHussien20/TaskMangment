@@ -29,7 +29,7 @@ namespace TaskMangment.API.Controllers
             if (!result.Success)
                 return Fail(result.Message!);
 
-            SetCacheHeader(600);
+           // SetCacheHeader(600);
 
             return Success(result.Data);
         }

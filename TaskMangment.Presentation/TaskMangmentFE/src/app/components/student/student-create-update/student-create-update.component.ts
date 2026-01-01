@@ -50,6 +50,7 @@ export class StudentCreateUpdateComponent implements OnInit {
     },
     { 
       type: 'input', 
+      inputType: 'number',
       label: 'STUDENT.MOBILE', 
       name: 'mobile', 
       validations: { maxlength: 50 }, 
@@ -74,8 +75,8 @@ export class StudentCreateUpdateComponent implements OnInit {
   initForm() {
     this.formGroup = this.fb.group({
       fullName: ['', Validators.required],
-      email: ['', Validators.email],
-      mobile: ['']
+      email: ['', [Validators.email,Validators.required]],
+      mobile: ['',Validators.pattern('^\\+?[0-9]+$')]
     });
   }
 

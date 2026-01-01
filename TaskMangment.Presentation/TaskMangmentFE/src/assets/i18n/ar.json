@@ -447,8 +447,7 @@
     "STATUS_REJECTED" : "رفض",
     "REVIEW_CLOSE" : "مراجعة طلب الغلق",
     "REVIEW_EXTENSION" : "مراجعة طلب التمديد",
-    "ARCHIVED_TASKS":"مهام مؤرشفة"
-    "REVIEW_EXTENSION" : "مراجعة طلب التمديد",
+    "ARCHIVED_TASKS":"مهام مؤرشفة",
     "ALREADY_REVIEWED" : "تم مراجعة الطلب بالفعل"
   },
   "EMPLOYEE": {

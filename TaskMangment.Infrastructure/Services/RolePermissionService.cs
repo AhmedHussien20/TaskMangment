@@ -48,14 +48,14 @@ namespace TaskMangment.Infrastructure.Services
                 throw new AppException(ErrorCodes.RoleNotFound, StatusCodes.Status400BadRequest);
           
 
-            string cacheKey = $"assignedPermissions:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
+            //string cacheKey = $"assignedPermissions:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
 
-            if (!request.BypassCache)
-            {
-                var cached = await _cache.GetAsync<PagedResponse<AssignedPermissionDto>>(cacheKey);
-                if (cached != null)
-                    return ApiResponse<PagedResponse<AssignedPermissionDto>>.Ok(cached);
-            }
+            //if (!request.BypassCache)
+            //{
+            //    var cached = await _cache.GetAsync<PagedResponse<AssignedPermissionDto>>(cacheKey);
+            //    if (cached != null)
+            //        return ApiResponse<PagedResponse<AssignedPermissionDto>>.Ok(cached);
+            //}
 
             var query = _permissionRepo.GetAll().AsQueryable();
 
@@ -87,7 +87,7 @@ namespace TaskMangment.Infrastructure.Services
 
             var response = new PagedResponse<AssignedPermissionDto>(dtos, totalCount, request.PageIndex, request.PageSize);
 
-            await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
+            //await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
 
             return ApiResponse<PagedResponse<AssignedPermissionDto>>.Ok(response);
         }

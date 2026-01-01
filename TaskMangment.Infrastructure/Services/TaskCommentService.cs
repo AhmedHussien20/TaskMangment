@@ -59,14 +59,14 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<PagedResponse<TaskCommentGetDto>>> GetAllAsync(TaskCommentRequest request)
         {
-            string cacheKey = $"taskComments:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}:{request.TaskId}";
+            //string cacheKey = $"taskComments:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}:{request.TaskId}";
 
-            if (!request.BypassCache)
-            {
-                var cached = await _cache.GetAsync<PagedResponse<TaskCommentGetDto>>(cacheKey);
-                if (cached != null)
-                    return ApiResponse<PagedResponse<TaskCommentGetDto>>.Ok(cached);
-            }
+            //if (!request.BypassCache)
+            //{
+            //    var cached = await _cache.GetAsync<PagedResponse<TaskCommentGetDto>>(cacheKey);
+            //    if (cached != null)
+            //        return ApiResponse<PagedResponse<TaskCommentGetDto>>.Ok(cached);
+            //}
 
             var task = await _taskRepo.GetByIDAsync(request.TaskId);
             if (task == null)
@@ -98,7 +98,7 @@ namespace TaskMangment.Infrastructure.Services
             }
 
             var response = new PagedResponse<TaskCommentGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
-            await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(8));
+            //await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(8));
 
             return ApiResponse<PagedResponse<TaskCommentGetDto>>.Ok(response);
         }
