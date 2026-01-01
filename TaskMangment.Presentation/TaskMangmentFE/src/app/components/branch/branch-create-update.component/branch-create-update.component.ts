@@ -102,12 +102,12 @@ export class BranchCreateUpdateComponent implements OnInit {
 
     phone: ['', [
       Validators.maxLength(50),
-      Validators.pattern('^[0-9]+$')
+Validators.pattern('^\\+?[0-9]+$')
     ]],
 
     mobile: ['', [
       Validators.maxLength(50),
-      Validators.pattern('^[0-9]+$')
+Validators.pattern('^\\+?[0-9]+$')
     ]],
 
     fax: ['', Validators.maxLength(50)],
@@ -120,9 +120,9 @@ export class BranchCreateUpdateComponent implements OnInit {
 
     areaId: [null, Validators.required],
 
-    managerId: [null],
+    managerId: [null,Validators.required],
 
-    responsibleId: [null],
+    responsibleId: [null,Validators.required],
   });
 }
 
@@ -186,15 +186,19 @@ export class BranchCreateUpdateComponent implements OnInit {
 
     if (managerField) {
       managerField.options = list.map((emp: Employee) => ({
-        label: emp.fullName,
-        value: emp.id
+          label: emp.fullName,
+          value: emp.id,
+          mobile: emp.mobile,
+          email: emp.email
       }));
     }
 
     if (responsibleField) {
       responsibleField.options = list.map((emp: Employee) => ({
-        label: emp.fullName,
-        value: emp.id
+       label: emp.fullName,
+          value: emp.id,
+          mobile: emp.mobile,
+          email: emp.email
       }));
     }
 

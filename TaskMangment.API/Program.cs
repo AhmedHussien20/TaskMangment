@@ -87,6 +87,10 @@ namespace TaskMangment.API
                 builder.Services.AddScoped<IEventHandler<TaskWarningEvent>, TaskWarningEmailHandler>();
                 builder.Services.AddScoped<IEventHandler<TaskCommentAddedEvent>, TaskCommentEmailHandler>();
                 builder.Services.AddScoped<IEventHandler<OfferSentEvent>, OfferSentEmailHandler>();
+                builder.Services.AddScoped<IEventHandler<TaskCloseApproveEvent>, TaskCloseApproveEventHandler>();
+                builder.Services.AddScoped<IEventHandler<TaskCloseApproveEvent>, TaskCloseApproveEmailHandler>();
+                builder.Services.AddScoped<IEventHandler<TaskExtendApproveEvent>, TaskExtendApproveEventHandler>();
+                builder.Services.AddScoped<IEventHandler<TaskExtendApproveEvent>, TaskExtendApproveEmailHandler>();
 
 
 
@@ -94,7 +98,8 @@ namespace TaskMangment.API
 
 
 
-                builder.Services.AddScoped<AuditLogAttribute>();
+
+            builder.Services.AddScoped<AuditLogAttribute>();
                 builder.Services.AddHttpContextAccessor();
                 builder.Services.AddHttpContextAccessor();
                 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();

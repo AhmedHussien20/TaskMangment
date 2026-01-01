@@ -130,12 +130,12 @@ export class RolePermissionListComponent implements OnInit {
       .bulkAssignPermissions(this.roleId, assignments)
       .subscribe({
         next: () => {
-          this.toastr.success('ROLE.PERMISSIONS_ASSIGNED_SUCCESS', 'Success');
+          this.toastr.success(this.translate.instant('ROLE.PERMISSIONS_ASSIGNED_SUCCESS'));
           this.loadData();
         },
         error: (error) => {
           console.error('Error saving assignments:', error);
-          this.toastr.error('ROLE.PERMISSIONS_ASSIGNED_FAILED', 'Error');
+          this.toastr.success(this.translate.instant('ROLE.PERMISSIONS_ASSIGNED_FAILED'));
         }
       });
   }
@@ -159,11 +159,11 @@ export class RolePermissionListComponent implements OnInit {
       .bulkAssignPermissions(this.roleId, payload.assignments)
       .subscribe({
            next: () => {
-          this.toastr.success('ROLE.PERMISSIONS_ASSIGNED_SUCCESS', 'Success');
+          this.toastr.success(this.translate.instant('ROLE.PERMISSIONS_ASSIGNED_SUCCESS'));
         },
         error: () => {
           perm.isAssigned = !checked;
-          this.toastr.error('ROLE.PERMISSIONS_ASSIGNED_FAILED', 'Error');
+          this.toastr.success(this.translate.instant('ROLE.PERMISSIONS_ASSIGNED_FAILED'));
 
         }
       });

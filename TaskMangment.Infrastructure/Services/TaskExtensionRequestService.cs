@@ -53,14 +53,14 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<PagedResponse<TaskExtensionRequestListDto>>> GetAllAsync(TaskExtensionRequestRequest request)
         {
-            string cacheKey = $"taskExtensionRequests:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}:{request.TaskId}";
+            //string cacheKey = $"taskExtensionRequests:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}:{request.TaskId}";
 
-            if (!request.BypassCache)
-            {
-                var cached = await _cache.GetAsync<PagedResponse<TaskExtensionRequestListDto>>(cacheKey);
-                if (cached != null)
-                    return ApiResponse<PagedResponse<TaskExtensionRequestListDto>>.Ok(cached);
-            }
+            //if (!request.BypassCache)
+            //{
+            //    var cached = await _cache.GetAsync<PagedResponse<TaskExtensionRequestListDto>>(cacheKey);
+            //    if (cached != null)
+            //        return ApiResponse<PagedResponse<TaskExtensionRequestListDto>>.Ok(cached);
+            //}
 
             var task = await _taskRepo.GetByIDAsync(request.TaskId);
             if (task == null)
@@ -91,7 +91,7 @@ namespace TaskMangment.Infrastructure.Services
 
             var response = new PagedResponse<TaskExtensionRequestListDto>(dtos, totalCount, request.PageIndex, request.PageSize);
 
-            await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
+           // await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
 
             return ApiResponse<PagedResponse<TaskExtensionRequestListDto>>.Ok(response);
         }
@@ -193,6 +193,7 @@ namespace TaskMangment.Infrastructure.Services
                 .ThenInclude(a => a.Task)
                 .FirstOrDefaultAsync();
 
+
             if (request == null)
                 throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
 
@@ -202,12 +203,32 @@ namespace TaskMangment.Infrastructure.Services
             if (dto.Status == ExtensionRequestStatus.Approved)
             {
                 if (!dto.NewDueDate.HasValue || dto.NewDueDate < request.TaskAssignment.Task.DueDate)
-                    throw new AppException(ErrorCodes.InvalidDate,StatusCodes.Status400BadRequest);
+                    throw new AppException(ErrorCodes.InvalidDate, StatusCodes.Status400BadRequest);
+
+                var task = request.TaskAssignment.Task;
+                var oldDueDate = task.DueDate;
 
                 request.Status = ExtensionRequestStatus.Approved;
+                request.NewDueDate = dto.NewDueDate.Value;
+                task.DueDate = dto.NewDueDate.Value;
 
-                request.TaskAssignment.Task.DueDate = dto.NewDueDate.Value;
+                var assignedEmployeeIds = await _taskAssignmentRepo
+        .GetAll(a => a.TaskId == task.Id && a.IsActive)
+  .Select(a => a.EmployeeId)
+  .ToListAsync();
+
+                await _eventDispatcher.PublishAsync(
+                    new TaskExtendApproveEvent(
+                        request.Id,
+                        task.Id,
+                        task.Title,
+                        oldDueDate,
+                        task.DueDate,
+                        assignedEmployeeIds
+                    )
+                );
             }
+
             else
             {
                 request.Status = ExtensionRequestStatus.Rejected;

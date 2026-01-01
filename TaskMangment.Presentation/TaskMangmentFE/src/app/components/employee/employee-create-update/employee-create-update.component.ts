@@ -163,27 +163,31 @@ export class EmployeeCreateUpdateComponent implements OnInit {
     branchId: [null],
 
     title: ['', [
+      Validators.required,
       Validators.minLength(3),
       Validators.maxLength(50)
     ]],
 
-    nationality: ['', Validators.maxLength(100)],
+    nationality: ['', [Validators.required,Validators.maxLength(200)]],
 
     identityNumber: ['', [
+      Validators.required,
       Validators.maxLength(100),
       Validators.pattern('^[0-9]+$')
     ]],
 
     mobile: ['', [
+      Validators.required,
       Validators.maxLength(50),
       Validators.pattern('^[0-9]+$')
     ]],
 
     address: ['', Validators.maxLength(500)],
 
-    qualification: ['', Validators.maxLength(200)],
+    qualification: ['', [Validators.required,Validators.maxLength(200)]],
 
     email: ['', [
+      Validators.required,
       Validators.email,
       Validators.maxLength(200),
        Validators.email

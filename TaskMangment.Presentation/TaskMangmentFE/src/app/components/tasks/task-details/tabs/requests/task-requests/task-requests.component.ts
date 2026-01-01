@@ -206,7 +206,7 @@ const closeRows = res.data.closeRequests.map((x: TaskCloseRequestGet) => ({
 
   this.selectedRequestId = requestNo;
   this.requestType = requestType;
-  this.reviewModel = { status: ExtensionRequestStatus.Pending };
+  this.reviewModel = { status: null };
   this.selectedCloseStatus = null;
   this.modalService.open(modal, { size: 'lg', centered: true });
 }
@@ -214,14 +214,10 @@ const closeRows = res.data.closeRequests.map((x: TaskCloseRequestGet) => ({
 
 
   submitReview() {
-    console.log('submitReview clicked', this.selectedRequestId, this.reviewModel);
     if (!this.selectedRequestId || !this.reviewModel.status) return;
-
     if (this.reviewModel.status === ExtensionRequestStatus.Approved && !this.reviewModel.newDueDate) {
-      alert('Please select a new due date');
-      return;
-    }
-
+        this.toastr.warning(this.translate.instant('TASK.ENTER_NEW_DATE'));
+      return;}
     this.extensionService.review(this.selectedRequestId, this.reviewModel).subscribe({
       next: () => {
         this.toastr.success(this.translate.instant('TASK.SAVED_SUCCESS'));
@@ -232,7 +228,6 @@ const closeRows = res.data.closeRequests.map((x: TaskCloseRequestGet) => ({
   }
 submitCloseReview(status: CloseRequestStatus | null) {
   if (!this.selectedRequestId || !status) return;
-
   this.closeService.review(this.selectedRequestId, status)
     .subscribe(() => {
       this.toastr.success(this.translate.instant('TASK.SAVED_SUCCESS'));

@@ -49,15 +49,15 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<PagedResponse<BranchGetDto>>> GetAllAsync(BranchRequest request)
         {
-            string cacheKey =
-                $"branches:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
+            //string cacheKey =
+            //    $"branches:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
 
-            if (!request.BypassCache)
-            {
-                var cached = await _cache.GetAsync<PagedResponse<BranchGetDto>>(cacheKey);
-                if (cached != null)
-                    return ApiResponse<PagedResponse<BranchGetDto>>.Ok(cached);
-            }
+            //if (!request.BypassCache)
+            //{
+            //    var cached = await _cache.GetAsync<PagedResponse<BranchGetDto>>(cacheKey);
+            //    if (cached != null)
+            //        return ApiResponse<PagedResponse<BranchGetDto>>.Ok(cached);
+            //}
 
             var query = _branchRepository.GetAll()
                 .Include(b => b.Manager)
@@ -77,7 +77,7 @@ namespace TaskMangment.Infrastructure.Services
 
             var response = new PagedResponse<BranchGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
 
-            await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
+            //await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
 
             return ApiResponse<PagedResponse<BranchGetDto>>.Ok(response);
         }

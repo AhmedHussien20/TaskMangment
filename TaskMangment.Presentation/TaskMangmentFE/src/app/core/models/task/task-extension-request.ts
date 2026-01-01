@@ -29,7 +29,7 @@ export interface TaskExtensionRequestPagedResponse {
 }
 
 export interface TaskExtensionReviewDto {
-  status?: ExtensionRequestStatus;
+  status?: ExtensionRequestStatus | null;
   newDueDate?: string;   
 }
 

@@ -48,6 +48,9 @@ namespace TaskMangment.Domain.Entities
         TaskDueTodayReminder = 8,
         CourseOffer = 9,
 
+        TaskExtensionRequestApproved = 10,
+        TaskCloseRequestApproved = 11,
+
     }
     public enum RecipientType
     {

@@ -52,14 +52,14 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<PagedResponse<OfferGetDto>>> GetAllAsync(OfferRequest request)
         {
-            string cacheKey = $"offers:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
+            //string cacheKey = $"offers:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
 
-            if (!request.BypassCache)
-            {
-                var cached = await _cache.GetAsync<PagedResponse<OfferGetDto>>(cacheKey);
-                if (cached != null)
-                    return ApiResponse<PagedResponse<OfferGetDto>>.Ok(cached);
-            }
+            //if (!request.BypassCache)
+            //{
+            //    var cached = await _cache.GetAsync<PagedResponse<OfferGetDto>>(cacheKey);
+            //    if (cached != null)
+            //        return ApiResponse<PagedResponse<OfferGetDto>>.Ok(cached);
+            //}
 
             var query = _offerRepo.GetAll()
                 .Include(o => o.Course)
@@ -103,7 +103,7 @@ namespace TaskMangment.Infrastructure.Services
             }
 
             var response = new PagedResponse<OfferGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
-            await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
+            //await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
 
             return ApiResponse<PagedResponse<OfferGetDto>>.Ok(response);
         }

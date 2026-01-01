@@ -138,4 +138,11 @@
   <data name="TASK_UNASSIGNED_NOTIFICATION" xml:space="preserve">
     <value>تم ازالتك من المهمة : {0}</value>
   </data>
+  <data name="EXTENDAPPROVED" xml:space="preserve">
+    <value>تم تمديد مهمة "{0}" من تاريخ {1} إلى تاريخ {2} بناءً على طلب .
+</value>
+  </data>
+  <data name="CLOSEAPPROVED" xml:space="preserve">
+    <value>تم غلق مهمة {0} وفقا لطلب</value>
+  </data>
 </root>

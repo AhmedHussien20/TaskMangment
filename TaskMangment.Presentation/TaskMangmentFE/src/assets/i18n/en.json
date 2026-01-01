@@ -432,12 +432,17 @@
     "MONTHLY": "Monthly",
     "WEEKLY": "Weekly",
     "ASSIGNED_TO": "Assigned To",
+    "ARCHIVED_TASKS": "Archived Tasks",
     "SELECT": "Select",
     "STATUS_APPROVED": "Approved",
     "STATUS_REJECTED": "Rejected",
     "REVIEW_CLOSE": "Review Close Request",
     "REVIEW_EXTENSION": "Review Extension Request",
-    "ARCHIVED_TASKS": "Archived Tasks"
+    "ARCHIVED_TASKS": "Archived Tasks",
+    "ALREADY_REVIEWED": "request already reviewed",
+    "ACTIVE": "Active",
+    "ENTER_NEW_DATE": "Enter new date",
+    "NEW_DATE": "New date"
   },
   "EMPLOYEE": {
     "LIST_TITLE": "Employee List",
