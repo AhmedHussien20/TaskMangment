@@ -53,14 +53,14 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<PagedResponse<PaymentVoucherGetDto>>> GetAllAsync(PaymentVoucherRequest request)
         {
-            string cacheKey = $"vouchers:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
+            //string cacheKey = $"vouchers:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
 
-            if (!request.BypassCache)
-            {
-                var cached = await _cache.GetAsync<PagedResponse<PaymentVoucherGetDto>>(cacheKey);
-                if (cached != null)
-                    return ApiResponse<PagedResponse<PaymentVoucherGetDto>>.Ok(cached);
-            }
+            //if (!request.BypassCache)
+            //{
+            //    var cached = await _cache.GetAsync<PagedResponse<PaymentVoucherGetDto>>(cacheKey);
+            //    if (cached != null)
+            //        return ApiResponse<PagedResponse<PaymentVoucherGetDto>>.Ok(cached);
+            //}
 
             var query = _voucherRepo.GetAll()
                 .Include(v => v.Company)
@@ -87,7 +87,7 @@ namespace TaskMangment.Infrastructure.Services
 
             var response = new PagedResponse<PaymentVoucherGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
 
-            await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
+            //await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
 
             return ApiResponse<PagedResponse<PaymentVoucherGetDto>>.Ok(response);
         }

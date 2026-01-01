@@ -102,12 +102,12 @@ export class BranchCreateUpdateComponent implements OnInit {
 
     phone: ['', [
       Validators.maxLength(50),
-      Validators.pattern('^[0-9]+$')
+Validators.pattern('^\\+?[0-9]+$')
     ]],
 
     mobile: ['', [
       Validators.maxLength(50),
-      Validators.pattern('^[0-9]+$')
+Validators.pattern('^\\+?[0-9]+$')
     ]],
 
     fax: ['', Validators.maxLength(50)],

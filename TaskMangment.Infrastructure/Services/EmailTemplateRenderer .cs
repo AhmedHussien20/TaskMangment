@@ -263,6 +263,7 @@ namespace TaskMangment.Infrastructure.Services
                         };
                     }
 
+
                 // =========================
                 // Task Due Today Reminder
                 // =========================
@@ -328,6 +329,54 @@ namespace TaskMangment.Infrastructure.Services
                         };
                     }
 
+                // =========================
+                // ✅ Task Extension Approved
+                // =========================
+                case ReferenceType.TaskExtensionRequestApproved:
+                    {
+                        var request = await _db.TaskExtensionRequests
+                            .Where(r => r.Id == referenceId)
+                            .Select(r => new
+                            {
+                                TaskTitle = r.Task.Title,
+                                OldDueDate = r.Task.DueDate,
+                                NewDueDate = r.NewDueDate
+                            })
+                            .FirstOrDefaultAsync();
+
+
+                        if (request == null)
+                            throw new Exception($"Task extension request with Id {referenceId} not found.");
+
+                        return new Dictionary<string, string>
+                        {
+                            ["TaskTitle"] = request.TaskTitle,
+                            ["OldDueDate"] = request.OldDueDate?.ToString("yyyy-MM-dd") ?? "-",
+                            ["NewDueDate"] = request.NewDueDate.ToString("yyyy-MM-dd") ?? "-"
+                        };
+                    }
+
+                // =========================
+                // ✅ Task Close Approved
+                // =========================
+                case ReferenceType.TaskCloseRequestApproved:
+                    {
+                        var request = await _db.TaskCloseRequests
+                            .Where(r => r.Id == referenceId)
+                            .Select(r => new
+                            {
+                                TaskTitle = r.Task.Title,
+                            })
+                            .FirstOrDefaultAsync();
+
+                        if (request == null)
+                            throw new Exception($"Task close request with Id {referenceId} not found.");
+
+                        return new Dictionary<string, string>
+                        {
+                            ["TaskTitle"] = request.TaskTitle,
+                        };
+                    }
 
 
                 // =========================

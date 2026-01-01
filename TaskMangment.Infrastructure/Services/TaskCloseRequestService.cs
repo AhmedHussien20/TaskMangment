@@ -54,14 +54,14 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<PagedResponse<TaskCloseRequestListDto>>> GetAllAsync(TaskCloseRequestRequest request)
         {
-            string cacheKey = $"taskCloseRequests:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}:{request.TaskId}";
+            //string cacheKey = $"taskCloseRequests:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}:{request.TaskId}";
 
-            if (!request.BypassCache)
-            {
-                var cached = await _cache.GetAsync<PagedResponse<TaskCloseRequestListDto>>(cacheKey);
-                if (cached != null)
-                    return ApiResponse<PagedResponse<TaskCloseRequestListDto>>.Ok(cached);
-            }
+            //if (!request.BypassCache)
+            //{
+            //    var cached = await _cache.GetAsync<PagedResponse<TaskCloseRequestListDto>>(cacheKey);
+            //    if (cached != null)
+            //        return ApiResponse<PagedResponse<TaskCloseRequestListDto>>.Ok(cached);
+            //}
 
             var task = await _taskRepo.GetByIDAsync(request.TaskId);
             if (task == null)
@@ -86,7 +86,7 @@ namespace TaskMangment.Infrastructure.Services
 
             var response = new PagedResponse<TaskCloseRequestListDto>(dtos, totalCount, request.PageIndex, request.PageSize);
 
-            await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
+            //await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
 
             return ApiResponse<PagedResponse<TaskCloseRequestListDto>>.Ok(response);
         }
@@ -183,7 +183,22 @@ namespace TaskMangment.Infrastructure.Services
             {
                 request.Status = CloseRequestStatus.Approved;
 
-                request.TaskAssignment.Task.Status = WorkTaskStatus.Closed;
+
+                var task = request.TaskAssignment.Task;
+                task.Status = WorkTaskStatus.Closed;
+
+                //var assignedEmployeeIds = await _taskAssignmentRepo
+                //    .GetAll(a => a.TaskId == task.Id && a.IsActive)
+                //    .Select(a => a.EmployeeId)
+                //    .ToListAsync();
+
+                //await _eventDispatcher.PublishAsync(
+                //    new TaskCloseApproveEvent(
+                //        task.Id,
+                //        task.Title,
+                //        assignedEmployeeIds
+                //    )
+                //);
             }
             else
             {

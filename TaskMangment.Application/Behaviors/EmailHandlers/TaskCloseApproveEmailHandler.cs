@@ -23,8 +23,8 @@ namespace TaskMangment.Application.Behaviors.EmailHandlers
         {
             await _emailQueue.QueueAsync(new EmailQueueRequest
             {
-                TemplateKey = "TaskAssignedToExistingTask",
-                ReferenceType = ReferenceType.Task,
+                TemplateKey = "TaskCloseApproved",
+                ReferenceType = ReferenceType.TaskCloseRequestApproved,
                 RecipientType = RecipientType.Employee,
                 ReferenceId = ev.TaskId,
                 UserIds = ev.AssignedEmployeeIds

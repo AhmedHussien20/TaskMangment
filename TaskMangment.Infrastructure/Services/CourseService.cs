@@ -41,14 +41,14 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<PagedResponse<CourseGetDto>>> GetAllAsync(CourseRequest request)
         {
-            string cacheKey = $"courses:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
+            //string cacheKey = $"courses:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
 
-            if (!request.BypassCache)
-            {
-                var cached = await _cache.GetAsync<PagedResponse<CourseGetDto>>(cacheKey);
-                if (cached != null)
-                    return ApiResponse<PagedResponse<CourseGetDto>>.Ok(cached);
-            }
+            //if (!request.BypassCache)
+            //{
+            //    var cached = await _cache.GetAsync<PagedResponse<CourseGetDto>>(cacheKey);
+            //    if (cached != null)
+            //        return ApiResponse<PagedResponse<CourseGetDto>>.Ok(cached);
+            //}
 
             var query = _courseRepository.GetAll()
                 .Include(c => c.Subjects)
@@ -76,7 +76,7 @@ namespace TaskMangment.Infrastructure.Services
 
             var response = new PagedResponse<CourseGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
 
-            await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
+            //await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
 
             return ApiResponse<PagedResponse<CourseGetDto>>.Ok(response);
         }

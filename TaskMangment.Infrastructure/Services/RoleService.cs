@@ -44,15 +44,15 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<PagedResponse<RoleGetDto>>> GetAllAsync(RoleRequest request,int companyId)
         {
-            string cacheKey =
-                $"roles:{companyId}:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
+            //string cacheKey =
+            //    $"roles:{companyId}:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
 
-            if (!request.BypassCache)
-            {
-                var cached = await _cache.GetAsync<PagedResponse<RoleGetDto>>(cacheKey);
-                if (cached != null)
-                    return ApiResponse<PagedResponse<RoleGetDto>>.Ok(cached);
-            }
+            //if (!request.BypassCache)
+            //{
+            //    var cached = await _cache.GetAsync<PagedResponse<RoleGetDto>>(cacheKey);
+            //    if (cached != null)
+            //        return ApiResponse<PagedResponse<RoleGetDto>>.Ok(cached);
+            //}
 
             // Base query
             var query = _roleRepo
@@ -109,7 +109,7 @@ namespace TaskMangment.Infrastructure.Services
                 request.PageIndex,
                 request.PageSize);
 
-            await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
+            //await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
 
             return ApiResponse<PagedResponse<RoleGetDto>>.Ok(response);
         }

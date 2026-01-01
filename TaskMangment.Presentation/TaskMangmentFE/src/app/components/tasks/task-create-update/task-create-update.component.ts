@@ -100,6 +100,7 @@ export class TaskCreateUpdateComponent implements OnInit {
         { label: 'TASK.WEEKLY', value: CommentAllowPeriod.Weekly },
         { label: 'TASK.MONTHLY', value: CommentAllowPeriod.Monthly },
       ],
+      defaultValue: CommentAllowPeriod.Daily
     },
 
     {

@@ -88,9 +88,9 @@ namespace TaskMangment.API
                 builder.Services.AddScoped<IEventHandler<TaskCommentAddedEvent>, TaskCommentEmailHandler>();
                 builder.Services.AddScoped<IEventHandler<OfferSentEvent>, OfferSentEmailHandler>();
                 builder.Services.AddScoped<IEventHandler<TaskCloseApproveEvent>, TaskCloseApproveEventHandler>();
-                //builder.Services.AddScoped<IEventHandler<TaskCloseApproveEvent>, TaskCloseApproveEmailHandler>();
+                builder.Services.AddScoped<IEventHandler<TaskCloseApproveEvent>, TaskCloseApproveEmailHandler>();
                 builder.Services.AddScoped<IEventHandler<TaskExtendApproveEvent>, TaskExtendApproveEventHandler>();
-                //builder.Services.AddScoped<IEventHandler<TaskExtendApproveEvent>, TaskExtendApproveEmailHandler>();
+                builder.Services.AddScoped<IEventHandler<TaskExtendApproveEvent>, TaskExtendApproveEmailHandler>();
 
 
 

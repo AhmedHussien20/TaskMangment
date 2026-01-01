@@ -23,10 +23,10 @@ namespace TaskMangment.Application.Behaviors.EmailHandlers
         {
             await _emailQueue.QueueAsync(new EmailQueueRequest
             {
-                TemplateKey = "TaskCloseRequest",
-                ReferenceType = ReferenceType.TaskCloseRequest,
+                TemplateKey = "TaskExtensionApproved",
+                ReferenceType = ReferenceType.TaskExtensionRequestApproved,
                 RecipientType = RecipientType.Employee,
-                ReferenceId = ev.TaskId,
+                ReferenceId = ev.RequestId,
                 UserIds = ev.AssignedEmployeeIds
             });
         }

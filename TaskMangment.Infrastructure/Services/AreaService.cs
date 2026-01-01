@@ -43,14 +43,14 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<PagedResponse<AreaGetDto>>> GetAllAsync(AreaRequest request, int CompanyId)
         {
-            string cacheKey = $"areas:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}:{CompanyId}";
+            //string cacheKey = $"areas:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}:{CompanyId}";
 
-            if (!request.BypassCache)
-            {
-                var cached = await _cache.GetAsync<PagedResponse<AreaGetDto>>(cacheKey);
-                if (cached != null)
-                    return ApiResponse<PagedResponse<AreaGetDto>>.Ok(cached);
-            }
+            //if (!request.BypassCache)
+            //{
+            //    var cached = await _cache.GetAsync<PagedResponse<AreaGetDto>>(cacheKey);
+            //    if (cached != null)
+            //        return ApiResponse<PagedResponse<AreaGetDto>>.Ok(cached);
+            //}
 
             var query = _areaRepository.GetAll()
                 .Include(a => a.Manager)
@@ -87,7 +87,7 @@ namespace TaskMangment.Infrastructure.Services
             var response = new PagedResponse<AreaGetDto>(
                 dtoList, totalCount, request.PageIndex, request.PageSize);
              
-            await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
+            //await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
 
             return ApiResponse<PagedResponse<AreaGetDto>>.Ok(response);
         }
