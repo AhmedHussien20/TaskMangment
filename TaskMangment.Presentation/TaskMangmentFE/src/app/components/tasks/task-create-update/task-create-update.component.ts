@@ -171,7 +171,7 @@ export class TaskCreateUpdateComponent implements OnInit {
       priority: [TaskPriority.Low, Validators.required],
       status: [TaskStatus.New, Validators.required],
       dueDate: [null, Validators.required],
-      commentAllowPeriodDays: ['يومي'],
+      commentAllowPeriodDays: [''],
       maxWarnings: [3, [Validators.pattern('^[0-9]+$')]],
       penaltyAtMaxWarnings: [0, [Validators.pattern('^[0-9]+$')]],
       penaltyOnAutoClose: [0, [Validators.pattern('^[0-9]+$')]],
@@ -236,10 +236,7 @@ export class TaskCreateUpdateComponent implements OnInit {
   onSubmit(formData: any) {
     if (this.formGroup.invalid) {
       this.formGroup.markAllAsTouched();
-      this.toastr.error(
-        this.translate.instant('FORM.VALIDATION_ERROR'),
-        this.translate.instant('FORM.ERROR')
-      );
+      this.toastr.error(this.translate.instant('FORM.VALIDATION_ERROR'));
       return;
     }
 

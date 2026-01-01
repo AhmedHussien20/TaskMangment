@@ -133,7 +133,7 @@ key = 0;
 openAdd(modal: any) {
   this.isEdit = false;
   this.selectedBranchId = null;
-  this.key++; // force rebuild
+  this.key++;
   this.open(modal);
 }
 

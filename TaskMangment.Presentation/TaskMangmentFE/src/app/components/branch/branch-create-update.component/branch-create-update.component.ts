@@ -120,9 +120,9 @@ Validators.pattern('^\\+?[0-9]+$')
 
     areaId: [null, Validators.required],
 
-    managerId: [null],
+    managerId: [null,Validators.required],
 
-    responsibleId: [null],
+    responsibleId: [null,Validators.required],
   });
 }
 
@@ -186,15 +186,19 @@ Validators.pattern('^\\+?[0-9]+$')
 
     if (managerField) {
       managerField.options = list.map((emp: Employee) => ({
-        label: emp.fullName,
-        value: emp.id
+          label: emp.fullName,
+          value: emp.id,
+          mobile: emp.mobile,
+          email: emp.email
       }));
     }
 
     if (responsibleField) {
       responsibleField.options = list.map((emp: Employee) => ({
-        label: emp.fullName,
-        value: emp.id
+       label: emp.fullName,
+          value: emp.id,
+          mobile: emp.mobile,
+          email: emp.email
       }));
     }
 

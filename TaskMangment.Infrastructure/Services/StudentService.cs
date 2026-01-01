@@ -45,7 +45,7 @@ namespace TaskMangment.Infrastructure.Services
             //}
 
             var query = _studentRepository.GetAll()
-                .Include(s => s.OfferAssignments)
+                .Include(s => s.OfferAssignments.Where(oa => !oa.IsDeleted && !oa.Offer.IsDeleted))
                 .ApplySearch(request.searchKey);
 
             var totalCount = await query.CountAsync();
@@ -75,7 +75,7 @@ namespace TaskMangment.Infrastructure.Services
         public async Task<ApiResponse<StudentGetDto>> GetByIdAsync(int id)
         {
             var student = await _studentRepository.GetAll(s => s.Id == id)
-                .Include(s => s.OfferAssignments)
+        .Include(s => s.OfferAssignments.Where(oa => !oa.IsDeleted && !oa.Offer.IsDeleted))
                 .AsNoTracking()
                 .FirstOrDefaultAsync();
 

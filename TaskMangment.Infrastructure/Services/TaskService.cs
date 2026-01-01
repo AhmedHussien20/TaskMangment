@@ -176,7 +176,6 @@ namespace TaskMangment.Infrastructure.Services
             if (task == null)
                 throw new AppException(ErrorCodes.TaskNotFound, StatusCodes.Status400BadRequest);
 
-            // تصفية Assignments بحيث يظهر فقط الموظفين النشطين
             task.Assignments = task.Assignments
                 .Where(a => a.Employee.IsActive)
                 .ToList();

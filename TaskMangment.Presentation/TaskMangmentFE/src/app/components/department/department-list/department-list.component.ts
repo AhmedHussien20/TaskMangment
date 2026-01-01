@@ -125,15 +125,18 @@ export class DepartmentListComponent implements OnInit {
     this.page = 1;
     this.loadData();
   }
-
+key = 0;
   openAdd(modal: any) {
     this.isEdit = false;
     this.selectedDeptId = null;
+    this.key++; 
     this.open(modal);
   }
 
   openEdit(id: number, modal: any) {
     this.isEdit = true;
+    this.selectedDeptId = id;
+    this.key++;
     this.selectedDeptId = id;
     this.open(modal);
   }

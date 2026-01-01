@@ -127,7 +127,7 @@ loadRoleInfo() {
       .bulkAssignEmployees(this.roleId, assignments)
       .subscribe({
         next: () => {
-          this.toastr.success('ROLE.ASSIGNED_TO_EMPLOYEE_SUCCESS', 'Success');
+          this.toastr.success(this.translate.instant('ROLE.ASSIGNED_TO_EMPLOYEE_SUCCESS'));
           this.loadData();
         },
        
@@ -153,7 +153,7 @@ loadRoleInfo() {
     .bulkAssignEmployees(this.roleId, payload.assignments)
      .subscribe({
            next: () => {
-          this.toastr.success('ROLE.ASSIGNED_TO_EMPLOYEE_SUCCESS', 'Success');
+          this.toastr.success(this.translate.instant('ROLE.ASSIGNED_TO_EMPLOYEE_SUCCESS'));
         },
         error: () => {
           emp.isAssigned = !checked;

@@ -185,7 +185,7 @@
     "ADD": "إضافة",
     "EDIT": "تعديل",
     "CREATE_SUCCESS": "تم إنشاء المنطقة بنجاح",
-    "UPDATE_SUCCESS": "تم تحديث المنطقة بنجاح"
+    "UPDATED_SUCCESS": "تم تحديث المنطقة بنجاح"
   },
   "TABLE": {
     "SEARCH": "بحث",
@@ -448,7 +448,10 @@
     "REVIEW_CLOSE" : "مراجعة طلب الغلق",
     "REVIEW_EXTENSION" : "مراجعة طلب التمديد",
     "ARCHIVED_TASKS":"مهام مؤرشفة",
-    "ALREADY_REVIEWED" : "تم مراجعة الطلب بالفعل"
+    "ALREADY_REVIEWED" : "تم مراجعة الطلب بالفعل",
+    "ACTIVE" : "نشط" ,
+    "ENTER_NEW_DATE" : "ادخل تاريخ جديد",
+    "NEW_DATE" : "التاريخ الجديد"
   },
   "EMPLOYEE": {
     "LIST_TITLE": "قائمة الموظفين",

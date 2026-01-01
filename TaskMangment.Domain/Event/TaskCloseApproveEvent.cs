@@ -8,12 +8,14 @@ namespace TaskMangment.Domain.Event
 {
     public class TaskCloseApproveEvent
     {
+        public int RequestId { get; }
         public int TaskId { get; }
         public string TaskTitle { get; }
         public List<int> AssignedEmployeeIds { get; }
 
-        public TaskCloseApproveEvent(int taskId, string taskTitle, List<int> assignedEmployeeIds)
+        public TaskCloseApproveEvent(int requestId, int taskId, string taskTitle, List<int> assignedEmployeeIds)
         {
+            RequestId = requestId;
             TaskId = taskId;
             TaskTitle = taskTitle;
             AssignedEmployeeIds = assignedEmployeeIds;
