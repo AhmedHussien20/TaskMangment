@@ -36,7 +36,7 @@ export class TaskCommentsComponent implements OnInit, OnDestroy {
       pageIndex: 1,
       pageSize: 10,
       sortColumn: 'CreatedDate',
-      sortDirection: 'desc'
+      sortDirection: 'DESC'
     };
 
     this.commentService.getAll(request).subscribe({

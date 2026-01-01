@@ -7,9 +7,20 @@ using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Infrastructure.Services;
 using Hangfire.Dashboard;
 using TaskMangment.Hangfire;
+using TaskMangment.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
+
+builder.Configuration.AddEnvironmentVariables();
+
+builder.Services.AddOptions();
+
+builder.Services.Configure<EmailSettings>(
+                  builder.Configuration.GetSection("EmailSettings")
+              );
+
+builder.Services.Configure<BlobStorageService>(builder.Configuration.GetSection("Blob"));
 // =======================
 // Services
 // =======================

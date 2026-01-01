@@ -76,7 +76,7 @@ export class OfferSentComponent implements OnInit {
       pageIndex: 1,
       pageSize: 500,
       sortColumn: 'Id',
-      sortDirection: 'ASC'
+      sortDirection: 'DESC'
     };
 
 
@@ -98,7 +98,7 @@ loadStudents() {
     pageIndex: 1,
     pageSize: 1000,
     sortColumn: 'Id',
-    sortDirection: 'ASC'
+    sortDirection: 'DESC'
   };
 
   this.studentService.getAll(request).subscribe(res => {

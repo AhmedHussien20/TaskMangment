@@ -271,7 +271,7 @@ loadBranches() {
     pageIndex: 1,
     pageSize: 500,
     sortColumn: 'Id',
-    sortDirection: 'ASC'
+    sortDirection: 'DESC'
   };
 
   this.branchService.getAll(req).subscribe(res => {

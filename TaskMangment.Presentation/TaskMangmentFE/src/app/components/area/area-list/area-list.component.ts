@@ -68,7 +68,7 @@ export class AreaListComponent implements OnInit {
     pageSize: this.entries,
 
     sortColumn: 'Id',
-    sortDirection: 'ASC',
+    sortDirection: 'DESC',
 
     filterTypes: {
       searchKey: 'text',

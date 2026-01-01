@@ -214,7 +214,7 @@ export class TaskCreateUpdateComponent implements OnInit {
       pageIndex: 1,
       pageSize: 1000,
       sortColumn: 'Id',
-      sortDirection: 'ASC'
+      sortDirection: 'DESC'
     };
 
     this.employeeService.getAll(request).subscribe(res => {

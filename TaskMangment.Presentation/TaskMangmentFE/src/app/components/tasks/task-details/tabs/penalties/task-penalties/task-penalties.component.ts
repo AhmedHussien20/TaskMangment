@@ -51,7 +51,7 @@ export class TaskPenaltiesComponent implements OnInit, OnDestroy {
       pageIndex,
       pageSize,
       sortColumn: 'CreatedDate',
-      sortDirection: 'desc'
+      sortDirection: 'DESC'
     };
 
     this.penaltyService.getAll(request).subscribe({

@@ -63,7 +63,7 @@ export class StudentListComponent implements OnInit {
     pageIndex: this.page,
     pageSize: this.entries,
     sortColumn: 'Id',
-    sortDirection: 'ASC',
+    sortDirection: 'DESC',
     filterTypes: {
       searchKey: 'text',
     }
