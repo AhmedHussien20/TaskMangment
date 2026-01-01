@@ -26,7 +26,7 @@ export class SignalRService {
     if (this.isStarted) return;
 
     this.hubConnection = new signalR.HubConnectionBuilder()
-      .withUrl(`https://taskmangmentapi-bzh2erdwazfea9g8.westeurope-01.azurewebsites.net/notifications?userId=${userId}`)
+      .withUrl(`https://localhost:7115/notifications?userId=${userId}`)
       .withAutomaticReconnect()
       .build();
 
