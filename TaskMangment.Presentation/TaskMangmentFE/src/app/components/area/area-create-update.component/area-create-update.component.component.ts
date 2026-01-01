@@ -89,7 +89,7 @@ export class AreaCreateUpdateComponent implements OnInit {
   initForm() {
     this.formGroup = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100)]],
-      address: ['', Validators.maxLength(200)],
+      address: ['', [Validators.required, Validators.maxLength(200)]],
       managerName: ['', Validators.maxLength(100)],
       managerEmployeeId: [null, Validators.required]
 
@@ -174,8 +174,6 @@ export class AreaCreateUpdateComponent implements OnInit {
         next: (response) => {
           this.toastr.success(this.translate.instant('AREA.UPDATED_SUCCESS'));
           this.formSubmitted.emit();
-
-          
         },
       });
     }

@@ -19,7 +19,11 @@
     "COMPLETED_TODAY_DESC": "أكثر الموظفين إنجازًا للمهام اليوم",
     "TASKS": "مهام",
     "NO_COMPLETED_TODAY": "لا توجد مهام مكتملة اليوم",
-    "NO_TASKS_TODAY": "لا توجد مهام محدثة اليوم"
+    "NO_TASKS_TODAY": "لا توجد مهام محدثة اليوم",
+    "DUE_SOON": "مهام أوشكت على الانتهاء",
+    "MY_WARNINGS": "تحذيراتي",
+    "TASK_PROGRESS": "نسبة الإنجاز",
+    "MY_ACTIVE_TASKS": "مهامي النشطة"
   },
   "MENU": {
     "HOME": "الرئيسية",
@@ -291,7 +295,7 @@
     "ID": "الكود"
   },
   "TASK": {
-    "employee":"الموظف",
+    "employee": "الموظف",
     "ACTION_COMMENT": "تعليق",
     "ACTION_CLOSE": "إغلاق",
     "ACTION_EXTEND": "تمديد",
@@ -314,7 +318,7 @@
     "PRIORITY_LOW": "منخفضة",
     "PRIORITY_MEDIUM": "متوسطة",
     "PRIORITY_HIGH": "عالية",
-    "CREATED_AT":"تاريخ الانشاء",
+    "CREATED_AT": "تاريخ الانشاء",
     "DUE_DATE": "تاريخ الانتهاء",
     "STATUS": "الحالة",
     "STATUS_NEW": "جديدة",
@@ -442,12 +446,13 @@
     "MONTHLY": "شهرى",
     "WEEKLY": "أسبوعى",
     "ASSIGNED_TO": "مسؤلية",
-    "SELECT" : "اختر",
-    "STATUS_APPROVED" : "قبول",
-    "STATUS_REJECTED" : "رفض",
-    "REVIEW_CLOSE" : "مراجعة طلب الغلق",
-    "REVIEW_EXTENSION" : "مراجعة طلب التمديد",
-    "ARCHIVED_TASKS":"مهام مؤرشفة"
+    "SELECT": "اختر",
+    "STATUS_APPROVED": "قبول",
+    "STATUS_REJECTED": "رفض",
+    "REVIEW_CLOSE": "مراجعة طلب الغلق",
+    "REVIEW_EXTENSION": "مراجعة طلب التمديد",
+    "ARCHIVED_TASKS": "مهام مؤرشفة",
+    "MY_ACTIVE_TASKS": "مهامي النشطة"
   },
   "EMPLOYEE": {
     "LIST_TITLE": "قائمة الموظفين",
@@ -688,14 +693,14 @@
     "CREATE_SUCCESS": "تم إنشاء العرض بنجاح",
     "UPDATE_SUCCESS": "تم تحديث العرض بنجاح",
     "STUDENTS": "قائمة الطلاب",
-    "PAYMENT_METHOD" : "طريقة الدفع",
-    "PRICE" : "السعر المطلوب",
-    "INTEREST_RATE" : "نسبة الفائدة",
-    "DISCOUNT_RATE" : "نسبة الخصم",
-    "INSTALLMENT_VALUE" : "نسبة القسط",
-    "NET_AMOUNT" : "صافي المبلغ المطلوب",
-    "OFFER_OWNER" : "اسم مقدم العرض",
-    "SPECIALIZATION" : "التخصص المطلوب",
-    "NOTES" : "ملاحظات"
+    "PAYMENT_METHOD": "طريقة الدفع",
+    "PRICE": "السعر المطلوب",
+    "INTEREST_RATE": "نسبة الفائدة",
+    "DISCOUNT_RATE": "نسبة الخصم",
+    "INSTALLMENT_VALUE": "نسبة القسط",
+    "NET_AMOUNT": "صافي المبلغ المطلوب",
+    "OFFER_OWNER": "اسم مقدم العرض",
+    "SPECIALIZATION": "التخصص المطلوب",
+    "NOTES": "ملاحظات"
   }
 }

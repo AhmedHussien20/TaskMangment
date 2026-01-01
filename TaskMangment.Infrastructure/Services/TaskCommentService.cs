@@ -34,6 +34,7 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
         private readonly IDomainEventDispatcher _eventDispatcher;
+        private readonly IBlobStorageService _blobStorageService;
 
 
         public TaskCommentService(
@@ -44,7 +45,8 @@ namespace TaskMangment.Infrastructure.Services
             IRepository<WorkTask> taskRepo,
             IRepository<TaskAssignment> taskAssignmentRepo,
             IDomainEventDispatcher eventDispatcher,
-            IRepository<Employee> employeeRepo
+            IRepository<Employee> employeeRepo,
+            IBlobStorageService blobStorageService
             )
         {
             _commentRepo = commentRepo;
@@ -55,6 +57,8 @@ namespace TaskMangment.Infrastructure.Services
             _taskAssignmentRepo = taskAssignmentRepo;
             _eventDispatcher = eventDispatcher;
             _employeeRepo = employeeRepo;
+            _blobStorageService = blobStorageService;
+
         }
 
         public async Task<ApiResponse<PagedResponse<TaskCommentGetDto>>> GetAllAsync(TaskCommentRequest request)
@@ -146,32 +150,29 @@ namespace TaskMangment.Infrastructure.Services
 
             if (dto.File != null)
             {
-                var uploadsRoot = Path.Combine(
-                    Directory.GetCurrentDirectory(),
-                    "wwwroot",
-                    "uploads",
-                    "comments");
+                using var stream = dto.File.OpenReadStream();
 
-                Directory.CreateDirectory(uploadsRoot);
+                var blobUrl = await _blobStorageService.UploadAsync(
+                    stream,
+                    dto.File.FileName,
+                    dto.File.ContentType,
+                    folder: "attachments"
+                );
 
-                var fileName = $"{Guid.NewGuid()}_{dto.File.FileName}";
-                var filePath = Path.Combine(uploadsRoot, fileName);
-
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    await dto.File.CopyToAsync(stream);
-                }
-
+                var fileName=$"{Guid.NewGuid()}_{dto.File.FileName}";
                 var attachment = new Attachment
                 {
                     FileName = dto.File.FileName,
-                    FilePath = $"uploads/comments/{fileName}",
+                    FilePath = blobUrl,
                     Size = dto.File.Length,
                     UploadedBy = employeeId,
                     ContentType = dto.File.ContentType,
                     UploadedAt = DateTime.UtcNow,
                     AttachmentType = AttachmentType.Comment,
-                    ReferenceId = comment.Id
+                    ReferenceId = comment.Id,
+                    BlobUrl = blobUrl,
+                    BlobUploadedAt = DateTime.UtcNow,
+                    IsUploadedToBlob=true
                 };
 
                 await _attachmentRepo.AddAsync(attachment);

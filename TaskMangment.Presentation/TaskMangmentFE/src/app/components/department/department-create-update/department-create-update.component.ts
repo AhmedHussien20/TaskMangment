@@ -37,9 +37,29 @@ export class DepartmentCreateUpdateComponent implements OnInit {
   activeitem = 'DEPARTMENT.CREATE';
 
   formConfig: FormFieldConfig[] = [
-    { type: 'select', label: 'DEPARTMENT.BRANCH', name: 'branchId', options: [], validations: { required: true }},
-    { type: 'input', label: 'DEPARTMENT.NAME', name: 'name', validations: { required: true, maxlength: 200 }},
-    { type: 'select', label: 'DEPARTMENT.MANAGER',selectType: 'employee',name: 'managerEmployeeId', options: []}
+    {
+      type: 'select',
+      label: 'DEPARTMENT.BRANCH',
+      name: 'branchId',
+      options: [], 
+      validations: { required: true },
+      defaultValue: ''
+    },
+    {
+      type: 'input',
+      label: 'DEPARTMENT.NAME',
+      name: 'name',
+      validations: { required: true, minlength: 3, maxlength: 200 }
+    },
+    {
+      type: 'select',
+      label: 'DEPARTMENT.MANAGER',
+      selectType: 'employee',
+      name: 'managerEmployeeId',
+      options: [],
+      validations: { required: true },
+      defaultValue: null
+    }
   ];
 
   constructor(
@@ -49,29 +69,35 @@ export class DepartmentCreateUpdateComponent implements OnInit {
     private employeeService: EmployeeService,
     private toastr: ToastrService,
     private translate: TranslateService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.initForm();
     this.loadBranches();
     this.loadEmployees();
-    if (this.isEdit && this.departmentId) this.loadDepartment();
+    if (this.isEdit && this.departmentId) 
+      this.loadDepartment();
   }
 
   initForm() {
     this.formGroup = this.fb.group({
+      name: ['', [
+        Validators.required,
+        Validators.maxLength(200)
+      ]],
       branchId: [null, Validators.required],
-      name: ['', Validators.required],
-      managerEmployeeId: [null]
+
+      managerEmployeeId: [null, Validators.required]
     });
   }
+
 
   loadBranches() {
     this.branchService.getAll({ searchKey: '', pageIndex: 1, pageSize: 1000, sortColumn: 'Id', sortDirection: 'ASC' })
       .subscribe(res => {
         const list = res.data.data;
         const field = this.formConfig.find(f => f.name === 'branchId');
-        if (field) field.options = list.map((b:any) => ({ label: b.name, value: b.id }));
+        if (field) field.options = list.map((b: any) => ({ label: b.name, value: b.id }));
       });
   }
 
@@ -80,7 +106,7 @@ export class DepartmentCreateUpdateComponent implements OnInit {
       .subscribe(res => {
         const list = res.data.data;
         const field = this.formConfig.find(f => f.name === 'managerEmployeeId');
-        if (field) field.options = list.map((e:Employee) => ({ label: e.fullName, value: e.id }));
+        if (field) field.options = list.map((e: Employee) => ({ label: e.fullName, value: e.id }));
       });
   }
 
@@ -92,9 +118,19 @@ export class DepartmentCreateUpdateComponent implements OnInit {
   }
 
   onSubmit(formValue: any) {
+    debugger
     if (this.formGroup.invalid) {
       this.formGroup.markAllAsTouched();
-      this.toastr.error(this.translate.instant('FORM.VALIDATION_ERROR'));
+
+      this.toastr.error(
+        this.translate.instant('FORM.VALIDATION_ERROR'),
+        this.translate.instant('FORM.ERROR'),
+        {
+          timeOut: 3000,
+          positionClass: 'toast-top-right',
+        }
+      );
+
       return;
     }
 
