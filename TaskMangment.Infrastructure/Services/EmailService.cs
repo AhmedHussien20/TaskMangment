@@ -7,6 +7,7 @@ using System.Net;
 using System.Net.Mail;
 using System.Text;
 using System.Threading.Tasks;
+using TaskMangment.Application.Common.Exceptions;
 
 namespace TaskMangment.Infrastructure.Services
 {
@@ -37,6 +38,10 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task SendEmailAsync(string to, string subject, string body)
         {
+            if (string.IsNullOrEmpty(_settings.From))
+            {
+                throw new AppException("Email Setting Not Found",500);
+            }
             using var client = new SmtpClient(_settings.Host, _settings.Port)
             {
                 EnableSsl = _settings.EnableSSL,

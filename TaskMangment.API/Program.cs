@@ -249,13 +249,15 @@ namespace TaskMangment.API
 
                 var app = builder.Build();
 
-                // ------------------------------
-                // PIPELINE
-                // ------------------------------
+                app.UseRouting();
 
-                //if (app.Environment.IsDevelopment())
-                //{
-                    app.UseSwagger();
+            // ------------------------------
+            // PIPELINE
+            // ------------------------------
+
+            //if (app.Environment.IsDevelopment())
+            //{
+            app.UseSwagger();
                     app.UseSwaggerUI();
                 //}
 
@@ -313,7 +315,6 @@ namespace TaskMangment.API
                 //    );
                 //}
                // app.UseHangfireDashboard("/hangfire");
-                app.UseRouting();
     //            RecurringJob.AddOrUpdate<ProcessPendingEmailsJob>(
     //                "process-pending-emails",
     //                j => j.ExecuteAsync(),

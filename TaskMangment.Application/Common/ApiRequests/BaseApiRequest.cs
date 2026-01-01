@@ -14,7 +14,7 @@
         }
 
         public string SortColumn { get; set; } = "Id";
-        public string SortDirection { get; set; } = "ASC";
+        public string SortDirection { get; set; } = "DESC";
 
         public bool BypassCache { get; set; } = false;
     }

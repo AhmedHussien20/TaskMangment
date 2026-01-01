@@ -42,7 +42,7 @@ export class EmployeeRoleListComponent implements OnInit {
     pageIndex: 1,
     pageSize: 20,
     sortColumn: '',
-    sortDirection: 'ASC',
+    sortDirection: 'DESC',
     filterTypes: {
       searchKey: 'text'
     }

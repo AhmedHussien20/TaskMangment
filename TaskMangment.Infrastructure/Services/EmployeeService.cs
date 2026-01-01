@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Azure.Core;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -35,6 +36,7 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
         private readonly AppDbContext _db;
+        private readonly IWebHostEnvironment _env;
 
         public EmployeeService(
             IRepository<Employee> employeeRepo,
@@ -45,7 +47,8 @@ namespace TaskMangment.Infrastructure.Services
             IMapper mapper,
             ICachingService cache,
             IRepository<Attachment> attachmentRepo,
-            AppDbContext db)
+            AppDbContext db,
+            IWebHostEnvironment env)
         {
             _employeeRepo = employeeRepo;
             _roleRepo = roleRepo;
@@ -166,10 +169,9 @@ namespace TaskMangment.Infrastructure.Services
             if (dto.Attachments != null)
             {
                 var uploadsRoot = Path.Combine(
-                    Directory.GetCurrentDirectory(),
-                    "wwwroot",
-                    "uploads",
-                    "comments");
+                                    _env.WebRootPath,    
+                                    "uploads",
+                                    "comments");
 
                 Directory.CreateDirectory(uploadsRoot);
 

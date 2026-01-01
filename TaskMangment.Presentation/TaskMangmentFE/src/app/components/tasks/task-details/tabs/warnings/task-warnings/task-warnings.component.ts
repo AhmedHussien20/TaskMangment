@@ -52,7 +52,7 @@ export class TaskWarningsComponent implements OnInit, OnDestroy {
       pageIndex,
       pageSize,
       sortColumn: 'IssuedAt',
-      sortDirection: 'desc'
+      sortDirection: 'DESC'
     };
 
     this.warningService.getAll(request).subscribe({

@@ -153,7 +153,7 @@ export class BranchCreateUpdateComponent implements OnInit {
       pageIndex: 1,
       pageSize: 500,
       sortColumn: 'Id',
-      sortDirection: 'ASC'
+      sortDirection: 'DESC'
     };
 
     this.areaService.getAll(req).subscribe(res => {
@@ -175,7 +175,7 @@ export class BranchCreateUpdateComponent implements OnInit {
     pageIndex: 1,
     pageSize: 1000,
     sortColumn: 'Id',
-    sortDirection: 'ASC'
+    sortDirection: 'DESC'
   };
 
   this.employeeService.getAll(request).subscribe(res => {
