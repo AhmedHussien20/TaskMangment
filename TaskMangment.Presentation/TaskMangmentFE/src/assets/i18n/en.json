@@ -19,7 +19,12 @@
     "COMPLETED_TODAY_DESC": "Top employees who completed tasks today",
     "TASKS": "Tasks",
     "NO_COMPLETED_TODAY": "No tasks completed today",
-    "NO_TASKS_TODAY": "No tasks updated today"
+    "NO_TASKS_TODAY": "No tasks updated today",
+    "MY_ACTIVE_TASKS": "My Active Tasks",
+    "DUE_SOON": "Due Soon",
+    "MY_WARNINGS": "My Warnings",
+    "MY_TASKS": "My Tasks",
+    "TASK_PROGRESS": "Progress"
   },
   "MENU": {
     "HOME": "Home",
@@ -432,7 +437,7 @@
     "STATUS_REJECTED": "Rejected",
     "REVIEW_CLOSE": "Review Close Request",
     "REVIEW_EXTENSION": "Review Extension Request",
-    "ARCHIVED_TASKS":"Archived Tasks"
+    "ARCHIVED_TASKS": "Archived Tasks"
   },
   "EMPLOYEE": {
     "LIST_TITLE": "Employee List",

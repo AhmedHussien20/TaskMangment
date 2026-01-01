@@ -8,6 +8,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Mail;
 using System.Text;
 using System.Threading.Tasks;
 using TaskMangment.Application.Common.ApiRequests.Employee;
@@ -22,6 +23,7 @@ using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
 using TaskMangment.Infrastructure.DataContext;
 using TaskMangment.Infrastructure.Persistence.Extensions;
+using Attachment = TaskMangment.Domain.Entities.Attachment;
 
 namespace TaskMangment.Infrastructure.Services
 {
@@ -37,6 +39,7 @@ namespace TaskMangment.Infrastructure.Services
         private readonly ICachingService _cache;
         private readonly AppDbContext _db;
         private readonly IWebHostEnvironment _env;
+        private readonly IBlobStorageService _blobStorageService;
 
         public EmployeeService(
             IRepository<Employee> employeeRepo,
@@ -47,6 +50,7 @@ namespace TaskMangment.Infrastructure.Services
             IMapper mapper,
             ICachingService cache,
             IRepository<Attachment> attachmentRepo,
+            IBlobStorageService blobStorageService,
             AppDbContext db,
             IWebHostEnvironment env)
         {
@@ -55,7 +59,7 @@ namespace TaskMangment.Infrastructure.Services
             _employeeRoleRepo = employeeRoleRepo;
             _branchRepo = branchRepo;
             _companyRepository = companyRepository;
-
+            _blobStorageService = blobStorageService;
             _mapper = mapper;
             _cache = cache;
             _attachmentRepo = attachmentRepo;
@@ -168,37 +172,31 @@ namespace TaskMangment.Infrastructure.Services
 
             if (dto.Attachments != null)
             {
-                var uploadsRoot = Path.Combine(
-                                    _env.WebRootPath,    
-                                    "uploads",
-                                    "comments");
-
-                Directory.CreateDirectory(uploadsRoot);
-
-                var fileName = $"{Guid.NewGuid()}_{dto.Attachments.FileName}";
-                var filePath = Path.Combine(uploadsRoot, fileName);
-
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    await dto.Attachments.CopyToAsync(stream);
-                }
-
-
-                var  attachment = new Attachment
-                {
-                    FileName = dto.Attachments.FileName,
-                    FilePath = $"uploads/comments/{fileName}",
-                    Size = dto.Attachments.Length,
-                    ContentType = dto.Attachments.ContentType,
-                    UploadedBy = employee.Id,
-                    UploadedAt = DateTime.UtcNow,
-                    ReferenceId = employee.Id,
-                    AttachmentType = AttachmentType.Employee
-                   
-                };
-
-                await _attachmentRepo.AddAsync(attachment);
-                await _attachmentRepo.SaveChangesAsync();
+                
+                    using var stream = dto.Attachments.OpenReadStream();
+                    var blobUrl = await _blobStorageService.UploadAsync(
+                        stream,
+                        dto.Attachments.FileName,
+                        dto.Attachments.ContentType,
+                        folder: "attachments"
+                    );
+                    var fileName = $"{Guid.NewGuid()}_{dto.Attachments.FileName}";
+                    var attachment = new Attachment
+                    {
+                        FileName = dto.Attachments.FileName,
+                        FilePath = blobUrl,
+                        Size = dto.Attachments.Length,
+                        UploadedBy = employee.Id,
+                        ContentType = dto.Attachments.ContentType,
+                        UploadedAt = DateTime.UtcNow,
+                        AttachmentType = AttachmentType.Employee,
+                        ReferenceId = employee.Id,
+                        BlobUrl = blobUrl,
+                        BlobUploadedAt = DateTime.UtcNow,
+                        IsUploadedToBlob = true
+                    };
+                    await _attachmentRepo.AddAsync(attachment);
+                    await _attachmentRepo.SaveChangesAsync(); 
             }
 
             await _employeeRepo.SaveChangesAsync();
@@ -256,41 +254,45 @@ namespace TaskMangment.Infrastructure.Services
                 var oldAttachment = await _attachmentRepo
                     .GetAll(a => a.ReferenceId == employee.Id && a.AttachmentType == AttachmentType.Employee)
                     .FirstOrDefaultAsync();
-
-                if (oldAttachment != null)
+                using var stream = dto.Attachments.OpenReadStream();
+                var blobUrl = await _blobStorageService.UploadAsync(
+                    stream,
+                    dto.Attachments.FileName,
+                    dto.Attachments.ContentType,
+                    folder: "attachments"
+                );
+                var fileName = $"{Guid.NewGuid()}_{dto.Attachments.FileName}";
+                if (oldAttachment != null) 
                 {
-                    var oldFilePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", oldAttachment.FilePath);
-                    if (File.Exists(oldFilePath))
-                        File.Delete(oldFilePath);
+                    oldAttachment.BlobUrl=blobUrl;
+                    oldAttachment.BlobUploadedAt=DateTime.UtcNow;
+                    oldAttachment.FilePath= blobUrl;
+                    oldAttachment.FileName=fileName;
 
-                    _attachmentRepo.SoftDelete(oldAttachment);
                     await _attachmentRepo.SaveChangesAsync();
                 }
-
-                var uploadsRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "employees");
-                Directory.CreateDirectory(uploadsRoot);
-
-                var fileName = $"{Guid.NewGuid()}_{dto.Attachments.FileName}";
-                var filePath = Path.Combine(uploadsRoot, fileName);
-
-                using (var stream = new FileStream(filePath, FileMode.Create))
+                else
                 {
-                    await dto.Attachments.CopyToAsync(stream);
+                    var attachment = new Attachment
+                    {
+                        FileName = dto.Attachments.FileName,
+                        FilePath = blobUrl,
+                        Size = dto.Attachments.Length,
+                        UploadedBy = employee.Id,
+                        ContentType = dto.Attachments.ContentType,
+                        UploadedAt = DateTime.UtcNow,
+                        AttachmentType = AttachmentType.Employee,
+                        ReferenceId = employee.Id,
+                        BlobUrl = blobUrl,
+                        BlobUploadedAt = DateTime.UtcNow,
+                        IsUploadedToBlob = true
+                    };
+                    await _attachmentRepo.AddAsync(attachment);
+                    await _attachmentRepo.SaveChangesAsync();
                 }
-
-                var attachment = new Attachment
-                {
-                    FileName = dto.Attachments.FileName,
-                    FilePath = $"uploads/employees/{fileName}",
-                    Size = dto.Attachments.Length,
-                    ContentType = dto.Attachments.ContentType,
-                    UploadedBy = employee.Id,
-                    UploadedAt = DateTime.UtcNow,
-                    ReferenceId = employee.Id,
-                    AttachmentType = AttachmentType.Employee
-                };
-
-                await _attachmentRepo.AddAsync(attachment);
+                   
+                  
+                
             }
             // -------------------------------------------
 

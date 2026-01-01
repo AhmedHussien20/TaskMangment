@@ -28,7 +28,7 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<Company> _companyRepo;
         private readonly IRepository<Employee> _employeeRepository;
         private readonly IRepository<Branch> _branchRepository;
-
+        private readonly IBlobStorageService _blobStorageService;
         private readonly IMapper _mapper;
 
         private readonly ICachingService _cache;
@@ -40,6 +40,7 @@ namespace TaskMangment.Infrastructure.Services
             ICachingService cache,
             IRepository<Company> companyRepo,
             IRepository<Employee> employeeRepository,
+            IBlobStorageService blobStorageService,
             IRepository<Branch> branchRepository)
         {
             _voucherRepo = voucherRepo;
@@ -49,6 +50,7 @@ namespace TaskMangment.Infrastructure.Services
             _companyRepo = companyRepo;
             _employeeRepository = employeeRepository;
             _branchRepository = branchRepository;
+            _blobStorageService = blobStorageService;
         }
 
         public async Task<ApiResponse<PagedResponse<PaymentVoucherGetDto>>> GetAllAsync(PaymentVoucherRequest request)
@@ -128,39 +130,34 @@ namespace TaskMangment.Infrastructure.Services
             voucher.CompanyId = CompanyId;
             voucher.CreatedByEmployeeId = CreatedBy;
 
-            Attachment attachment = new Attachment();
 
             if (dto.File != null)
             {
-                var uploadsRoot = Path.Combine(
-                    Directory.GetCurrentDirectory(),
-                    "wwwroot",
-                    "uploads",
-                    "vouchers");
-
-                Directory.CreateDirectory(uploadsRoot);
-
+                using var stream = dto.File.OpenReadStream();
+                var blobUrl = await _blobStorageService.UploadAsync(
+                    stream,
+                    dto.File.FileName,
+                    dto.File.ContentType,
+                    folder: "attachments"
+                );
                 var fileName = $"{Guid.NewGuid()}_{dto.File.FileName}";
-                var filePath = Path.Combine(uploadsRoot, fileName);
-
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    await dto.File.CopyToAsync(stream);
-                }
-
-                attachment = new Attachment
+                var attachment = new Attachment
                 {
                     FileName = dto.File.FileName,
-                    FilePath = $"uploads/vouchers/{fileName}",
+                    FilePath = blobUrl,
                     Size = dto.File.Length,
                     UploadedBy = CreatedBy,
                     ContentType = dto.File.ContentType,
                     UploadedAt = DateTime.UtcNow,
-                    ReferenceId = voucher.Id, // نفس Comment (لسه ID)
-                    AttachmentType = AttachmentType.Voucher
+                    AttachmentType = AttachmentType.Voucher,
+                    ReferenceId = voucher.Id,
+                    BlobUrl = blobUrl,
+                    BlobUploadedAt = DateTime.UtcNow,
+                    IsUploadedToBlob = true
                 };
-
                 await _attachmentRepo.AddAsync(attachment);
+                await _attachmentRepo.SaveChangesAsync();
+                 
             }
 
             await _voucherRepo.AddAsync(voucher);
