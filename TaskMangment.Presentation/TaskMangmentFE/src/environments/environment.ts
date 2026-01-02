@@ -3,8 +3,8 @@
 // The list of file replacements can be found in `angular.json`.
 export const environment = {
   production: false,
-  //apiUrl: 'https://localhost:7115/api',
-  apiUrl: 'https://taskmangmentapi-bzh2erdwazfea9g8.westeurope-01.azurewebsites.net/api',
+  apiUrl: 'https://localhost:7115/api',
+  //apiUrl: 'https://taskmangmentapi-bzh2erdwazfea9g8.westeurope-01.azurewebsites.net/api',
   firebase: {
     apiKey: '************************************',
     authDomain: '**********************************************',

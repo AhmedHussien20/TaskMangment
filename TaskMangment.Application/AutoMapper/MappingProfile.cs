@@ -152,6 +152,14 @@ namespace TaskMangment.Application.AutoMapper
           .ForMember(d => d.EmployeeName, o => o.MapFrom(s => s.Employee.FullName));
 
 
+            CreateMap<TaskPercentage, TaskPercentageGetDto>()
+               .ForMember(dest => dest.TaskTitle, opt => opt.MapFrom(src => src.Task.Title))
+               .ForMember(d => d.EmployeeName, o => o.MapFrom(s => s.Employee.FullName));
+
+            CreateMap<TaskPercentageAddEditDto, TaskPercentage>();
+             
+
+
             CreateMap<TaskExtensionRequest, TaskExtensionRequestListDto>()
                 .ForMember(dest => dest.RequestedByName, opt => opt.MapFrom(src => src.RequestedBy.FullName))
                 .ForMember(dest => dest.TaskTitle, opt => opt.MapFrom(src => src.Task.Title))

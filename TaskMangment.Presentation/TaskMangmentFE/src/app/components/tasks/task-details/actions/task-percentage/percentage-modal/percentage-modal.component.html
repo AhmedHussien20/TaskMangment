@@ -1,0 +1,46 @@
+<form [formGroup]="form">
+
+  <div class="modal-header">
+    <h6 class="modal-title">{{ 'TASK.ADD_PERCENTAGE' | translate }}</h6>
+    <button class="btn-close" (click)="modal.dismiss()"></button>
+  </div>
+
+  <div class="modal-body">
+ <div class="alert alert-warning">
+      {{ 'TASK.ACHIEVEMENT_INFO' | translate }}
+    </div>
+
+    <label class="form-label">
+      {{ 'TASK.CLOSE_REQUEST_TITLE' | translate }}
+    </label>
+    <input
+      type="text"
+      class="form-control"
+      formControlName="achievementPercent"
+      placeholder="{{ 'TASK.PERCENTAGE_PLACEHOLDER' | translate }}">
+
+    <div class="text-danger small mt-1" *ngIf="form.controls['achievementPercent'].touched && form.controls['achievementPercent'].invalid">
+      <div *ngIf="form.controls['achievementPercent'].errors?.['required']">
+        {{ 'TASK.REQUIRED_FIELD' | translate }}
+      </div>
+      <div *ngIf="form.controls['achievementPercent'].errors?.['pattern']">
+    {{ 'TASK.INVALID_PERCENT' | translate }}
+  </div>
+    </div>
+
+  </div>
+
+  <div class="modal-footer">
+    <button class="btn btn-secondary" (click)="modal.dismiss()">
+      {{ 'FORM.CANCEL' | translate }}
+    </button>
+
+    <button
+      class="btn btn-danger"
+      [disabled]="form.invalid || isSubmitting"
+      (click)="submit()">
+      {{ 'TASK.SUBMIT_PERCENTAGE' | translate }}
+    </button>
+  </div>
+
+</form>

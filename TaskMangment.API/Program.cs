@@ -92,6 +92,9 @@ namespace TaskMangment.API
                 builder.Services.AddScoped<IEventHandler<TaskExtendApproveEvent>, TaskExtendApproveEventHandler>();
                 builder.Services.AddScoped<IEventHandler<TaskExtendApproveEvent>, TaskExtendApproveEmailHandler>();
 
+            builder.Services.AddScoped<IEventHandler<TaskAchievePercentEvent>, TaskAchievePercentEmailHandler>();
+            builder.Services.AddScoped<IEventHandler<TaskAchievePercentEvent>, TaskAchievePercentEventHandler>();
+
 
 
 

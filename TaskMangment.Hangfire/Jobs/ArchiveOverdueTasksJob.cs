@@ -30,6 +30,18 @@ namespace TaskMangment.Hangfire.Jobs
 
             foreach (var task in overdueTasks)
             {
+                var approvedExtension = await _db.TaskExtensionRequests
+                    .Where(r => r.TaskId == task.Id
+                         && r.Status == ExtensionRequestStatus.Approved
+                         && r.NewDueDate > DateTime.UtcNow)
+                    .FirstOrDefaultAsync();
+
+
+                if (approvedExtension != null)
+                {
+                    continue;
+                }
+
                 task.Status = WorkTaskStatus.Archived;
             }
 

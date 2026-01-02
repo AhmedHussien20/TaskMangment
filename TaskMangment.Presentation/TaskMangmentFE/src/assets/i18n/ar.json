@@ -473,8 +473,16 @@
   "NO_CLOSE_REQUESTS": "لا توجد طلبات إغلاق أو إعادة فتح",
   "NO_ACTIVITY_DATA": "لا توجد بيانات نشاط متاحة",
   "REQUESTED_EXTENSION": "طلب تمديد",
-  "REOPEN_REQUEST": "طلب إعادة فتح"
-
+  "REOPEN_REQUEST": "طلب إعادة فتح",
+    "PERCENTAGE_UPDATES": "تحديثات النسبة المئوية",
+    "NO_DATA": "لا توجد بيانات",
+    "ACHIEVEMENT": "الإنجاز",
+    "ADD_PERCENTAGE" : "اضف نسبة انجاز",
+    "PERCENTAGE_PLACEHOLDER": "اضف نسبة انجازك للمهمة",
+    "SUBMIT_PERCENTAGE": "ارسال النسبة",
+    "ACHIEVEMENT_INFO" : "سيتم ارسال نسبة انجازك الي الجهة المعنية" ,
+    "PERCENTAGE_SUCCESS" : "تم ارسال النسبة بنجاح",
+    "INVALID_PERCENT" : "ادخل نسبة مئوية صحيحة"
   },
 
 

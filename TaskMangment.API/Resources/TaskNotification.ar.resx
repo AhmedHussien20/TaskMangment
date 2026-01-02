@@ -145,4 +145,7 @@
   <data name="CLOSEAPPROVED" xml:space="preserve">
     <value>تم غلق مهمة {0} وفقا لطلب</value>
   </data>
+  <data name="TASKACHIEVEMENT" xml:space="preserve">
+    <value>قام {0} بانجاز {1} من مهمة {2}</value>
+  </data>
 </root>

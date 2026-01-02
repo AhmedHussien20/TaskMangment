@@ -3,6 +3,7 @@ import { TaskCloseRequestGet } from "./task-close-request";
 import { TaskCommentGetDto } from "./task-comment";
 import { WarningGetDto } from "./task-warning";
 import { DiscountGetDto } from "./task-penalty";
+import { TaskPercentageGetDto } from "./task-percentage";
 
 export interface TaskActivitySummary {
   taskId: number;
@@ -21,4 +22,7 @@ export interface TaskActivitySummary {
 
   closeRequestsCount: number;
   lastCloseRequest?: TaskCloseRequestGet;
+
+  percentageCount: number;
+  lastPercentage?: TaskPercentageGetDto
 }

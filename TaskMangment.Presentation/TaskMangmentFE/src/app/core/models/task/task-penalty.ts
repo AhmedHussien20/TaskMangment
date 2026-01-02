@@ -7,6 +7,7 @@ export interface DiscountAddEditDto {
 
 export interface DiscountGetDto {
   employeeName: string;
+  taskId: number;
   taskTitle?: string;
   reason: string;
   amount: number;

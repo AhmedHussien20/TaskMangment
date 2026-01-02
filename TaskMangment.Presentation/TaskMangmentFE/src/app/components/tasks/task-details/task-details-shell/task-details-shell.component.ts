@@ -14,6 +14,7 @@ import { TaskService } from 'app/core/services/task.service';
 import { TaskGet } from 'app/core/models/task/task';
 import { AuthService } from 'app/core/services/auth.service';
 import { CommonModule } from '@angular/common';
+import { PercentageModalComponent } from '../actions/task-percentage/percentage-modal/percentage-modal.component';
 
 @Component({
   selector: 'app-task-details-shell',
@@ -95,6 +96,27 @@ export class TaskDetailsShellComponent implements OnInit {
         () => { }
       );
     } 
+
+
+
+     if (action === 'percent') {
+      const ref = this.modal.open(PercentageModalComponent, {
+        size: 'lg',
+        backdrop: 'static'
+      });
+
+      ref.componentInstance.taskId = this.taskId;
+
+      ref.result.then(
+        (success) => {
+          if (success) {
+            this.refreshService.trigger('percent');
+          }
+        },
+        () => { }
+      );
+    }
+
     if (action === 'penalty') {
       const ref = this.modal.open(PenaltyModalComponent, { size: 'lg' });
       ref.componentInstance.taskId = this.taskId;
