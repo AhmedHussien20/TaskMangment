@@ -27,7 +27,7 @@ import { AuthService } from 'app/core/services/auth.service';
     NgSelectModule,
     NgCircleProgressModule,
     NgApexchartsModule,
-    SpkApexChartsComponent,
+   //SpkApexChartsComponent,
     SpkDashboardComponent,
     SpkReusableTablesComponent,
     CommonModule,
