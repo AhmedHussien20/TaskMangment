@@ -13,7 +13,7 @@ namespace TaskMangment.Infrastructure.DataContext
         {
             var basePath = Directory.GetCurrentDirectory();
 
-            if (!File.Exists(Path.Combine(basePath, "appsettings.Azure.json")))
+            if (!File.Exists(Path.Combine(basePath, "appsettings.json")))
             {
                 basePath = Directory.GetParent(basePath)
                                     ?.Parent?
@@ -23,7 +23,7 @@ namespace TaskMangment.Infrastructure.DataContext
 
             var config = new ConfigurationBuilder()
                 .SetBasePath(basePath)
-                .AddJsonFile("appsettings.Azure.json", optional: false)
+                .AddJsonFile("appsettings.json", optional: false)
                 .Build();
 
             var connectionString =
