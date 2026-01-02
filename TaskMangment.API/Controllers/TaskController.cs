@@ -6,6 +6,7 @@ using TaskMangment.Application.Common.ApiRequests.Task;
 using TaskMangment.Application.DTOs.TaskDTOs;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Domain.Entities;
+using TaskMangment.Infrastructure.Services;
 using TaskMangment.Infrastructure.SignalR;
 
 namespace TaskMangment.API.Controllers
@@ -79,6 +80,13 @@ namespace TaskMangment.API.Controllers
                 return Fail(result.Message!);
 
             return Success(result.Data);
+        }
+
+        [HttpGet("{taskId}/activity-summary")]
+        public async Task<IActionResult> GetTaskActivitySummary(int taskId)
+        {
+            var result = await _service.GetTaskActivitySummaryAsync(taskId);
+            return Ok(result);
         }
 
     }

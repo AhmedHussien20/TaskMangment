@@ -1,20 +1,141 @@
-<ul class="list-group list-group-flush">
+<div class="task-audit">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h6 class="mb-0">
+      <i class="bi bi-activity me-2"></i>
+      {{ 'TASK.ACTIVITY_SUMMARY' | translate }}
+    </h6>
+  </div>
 
-  <li *ngFor="let item of items" class="list-group-item">
-    <div class="d-flex align-items-start gap-3">
-      <i [class]="icon(item.type)" style="font-size: 1.2rem;"></i>
-
-      <div class="flex-grow-1">
-        <div class="fw-semibold">{{ item.message }}</div>
-        <div class="text-muted small">
-          {{ item.user }} • {{ item.date | date:'medium' }}
-        </div>
-      </div>
+  <div *ngIf="isLoading" class="text-center py-4">
+    <div class="spinner-border spinner-border-sm" role="status">
+      <span class="visually-hidden">Loading...</span>
     </div>
-  </li>
+    <small class="text-muted d-block mt-2">{{ 'COMMON.LOADING' | translate }}</small>
+  </div>
 
-  <li *ngIf="items.length === 0" class="list-group-item text-muted text-center">
-    {{ 'AUDIT.NO_DATA' | translate }}
-  </li>
+  <div *ngIf="!isLoading && summary" class="card border-0 shadow-sm">
+    <div class="activity-scroll-container" style="max-height: 400px; overflow-y: auto;">
 
-</ul>
+      <!-- Comments -->
+      <ng-container *ngIf="summary.commentsCount > 0">
+        <div class="p-3 border-bottom">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-chat-dots text-primary"></i>
+              <span class="fw-semibold">{{ 'TASK.COMMENTS' | translate }}</span>
+            </div>
+            <span class="badge bg-primary rounded-pill">{{ summary.commentsCount }}</span>
+          </div>
+          <div *ngIf="summary.lastComment" class="small text-muted">
+            <div class="mb-1">{{ 'TASK.LAST_COMMENT' | translate }}</div>
+            <div class="fw-medium text-truncate">{{ summary.lastComment.commentText }}</div>
+            <div class="d-flex justify-content-between mt-2">
+              <span>{{ summary.lastComment.employeeName || summary.lastComment.createdByName }}</span>
+              <span>{{ summary.lastComment.createdDate | myDate:'d MMMM y':true }}</span>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- Warnings -->
+      <ng-container *ngIf="summary.warningsCount > 0">
+        <div class="p-3 border-bottom">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-exclamation-triangle text-warning"></i>
+              <span class="fw-semibold">{{ 'TASK.WARNINGS' | translate }}</span>
+            </div>
+            <span class="badge bg-warning rounded-pill">{{ summary.warningsCount }}</span>
+          </div>
+          <div *ngIf="summary.lastWarning" class="small text-muted">
+            <div class="mb-1">{{ 'TASK.LAST_WARNING' | translate }}</div>
+            <div class="fw-medium text-truncate">{{ summary.lastWarning.reason }}</div>
+            <div class="d-flex justify-content-between mt-2">
+              <span>{{ summary.lastWarning.issuedByName }}</span>
+              <span>{{ summary.lastWarning.issuedAt | myDate:'d MMMM y':true }}</span>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- Penalties -->
+      <ng-container *ngIf="summary.penaltysCount > 0">
+        <div class="p-3 border-bottom">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-cash-coin text-danger"></i>
+              <span class="fw-semibold">{{ 'TASK.PENALTIES' | translate }}</span>
+            </div>
+            <span class="badge bg-danger rounded-pill">{{ summary.penaltysCount }}</span>
+          </div>
+          <div *ngIf="summary.lastPenalty" class="small text-muted">
+            <div class="mb-1">{{ 'TASK.LAST_PENALTY' | translate }}</div>
+            <div class="fw-medium">
+              {{ summary.lastPenalty.amount }} - {{ summary.lastPenalty.reason }}
+            </div>
+            <div class="d-flex justify-content-between mt-2">
+              <span>{{ summary.lastPenalty.employeeName }}</span>
+              <span>{{ summary.lastPenalty.createdDate | myDate:'d MMMM y':true }}</span>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- Extension Requests -->
+      <ng-container *ngIf="summary.extensionRequestsCount > 0">
+        <div class="p-3 border-bottom">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-clock-history text-info"></i>
+              <span class="fw-semibold">{{ 'TASK.EXTENSION_REQUESTS' | translate }}</span>
+            </div>
+            <span class="badge bg-info rounded-pill">{{ summary.extensionRequestsCount }}</span>
+          </div>
+          <div *ngIf="summary.lastExtensionRequest" class="small text-muted">
+            <div class="mb-1">{{ 'TASK.LAST_EXTENSION_REQUEST' | translate }}</div>
+            <div class="fw-medium">{{ summary.lastExtensionRequest.reason }}</div>
+            <div class="d-flex justify-content-between mt-2">
+              <span>{{ summary.lastExtensionRequest.requestedByName }}</span>
+              <span>{{ summary.lastExtensionRequest.requestedAt | myDate:'d MMMM y':true }}</span>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- Close Requests -->
+      <ng-container *ngIf="summary.closeRequestsCount > 0">
+        <div class="p-3">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-x-circle text-secondary"></i>
+              <span class="fw-semibold">{{ 'TASK.CLOSE_REQUESTS' | translate }}</span>
+            </div>
+            <span class="badge bg-secondary rounded-pill">{{ summary.closeRequestsCount }}</span>
+          </div>
+          <div *ngIf="summary.lastCloseRequest" class="small text-muted">
+            <div class="mb-1">{{ 'TASK.LAST_CLOSE_REQUEST' | translate }}</div>
+            <div class="fw-medium">{{ summary.lastCloseRequest.message }}</div>
+            <div class="d-flex justify-content-between mt-2">
+              <span>{{ summary.lastCloseRequest.requestedByName }}</span>
+              <span>{{ summary.lastCloseRequest.requestedAt | myDate:'d MMMM y':true }}</span>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+
+    </div>
+  </div>
+
+  <div *ngIf="!isLoading && (!summary || (
+    summary.commentsCount === 0 &&
+    summary.warningsCount === 0 &&
+    summary.penaltysCount === 0 &&
+    summary.extensionRequestsCount === 0 &&
+    summary.closeRequestsCount === 0
+  ))" class="card border-0 shadow-sm">
+    <div class="card-body text-center text-muted py-4">
+      <i class="bi bi-activity display-6 d-block mb-2 opacity-50"></i>
+      {{ 'TASK.NO_ACTIVITY_DATA' | translate }}
+    </div>
+  </div>
+</div>
