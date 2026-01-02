@@ -45,7 +45,8 @@
     "CONFIRM_DELETE_TEXT": "هل أنت متأكد من الحذف؟",
     "DELETE_BUTTON": "نعم، احذف",
     "CANCEL_BUTTON": "إلغاء",
-    "DELETE_SUCCESS": "تم الحذف بنجاح"
+    "DELETE_SUCCESS": "تم الحذف بنجاح",
+    "LOADING" :"جاري التحميل"
   },
   "validation": {
     "required": "هذا الحقل مطلوب",
@@ -456,8 +457,27 @@
     "ACTIVE": "نشط",
     "ENTER_NEW_DATE": "ادخل تاريخ جديد",
     "NEW_DATE": "التاريخ الجديد",
-    "MY_ACTIVE_TASKS": "مهامي النشطة"
+    "MY_ACTIVE_TASKS": "مهامي النشطة",
+
+    "ACTIVITY_SUMMARY": "ملخص النشاط",
+  "EXTENSION_REQUESTS": "طلبات التمديد",
+  "CLOSE_REQUESTS": "طلبات الإغلاق",
+  "LAST_COMMENT": "آخر تعليق",
+  "LAST_WARNING": "آخر إنذار",
+  "LAST_PENALTY": "آخر جزاء",
+  "LAST_EXTENSION_REQUEST": "آخر طلب تمديد",
+  "LAST_CLOSE_REQUEST": "آخر طلب إغلاق / إعادة فتح",
+  "NO_WARNINGS": "لا توجد إنذارات حتى الآن",
+  "NO_PENALTIES": "لا توجد جزاءات حتى الآن",
+  "NO_EXTENSION_REQUESTS": "لا توجد طلبات تمديد",
+  "NO_CLOSE_REQUESTS": "لا توجد طلبات إغلاق أو إعادة فتح",
+  "NO_ACTIVITY_DATA": "لا توجد بيانات نشاط متاحة",
+  "REQUESTED_EXTENSION": "طلب تمديد",
+  "REOPEN_REQUEST": "طلب إعادة فتح"
+
   },
+
+
   "EMPLOYEE": {
     "LIST_TITLE": "قائمة الموظفين",
     "CREATE_TITLE": "إضافة موظف",

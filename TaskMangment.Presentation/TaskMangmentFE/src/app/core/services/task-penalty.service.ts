@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { ApiService } from './api.service';
 import { Observable } from 'rxjs';
-import { DiscountListDto, DiscountPagedResponse, DiscountAddEditDto } from '../models/task/task-penalty';
+import { DiscountGetDto, DiscountPagedResponse, DiscountAddEditDto } from '../models/task/task-penalty';
 import { BaseResponse } from '../models/base.response';
 
 @Injectable({ providedIn: 'root' })
@@ -17,16 +17,16 @@ export class TaskPenaltyService {
   }
 
   
-  getById(id: number): Observable<BaseResponse<DiscountListDto>> {
-      return this.api.get<BaseResponse<DiscountListDto>>(this.service, `${id}`);
+  getById(id: number): Observable<BaseResponse<DiscountGetDto>> {
+      return this.api.get<BaseResponse<DiscountGetDto>>(this.service, `${id}`);
     }
   
-    create(taskId: number, model: DiscountAddEditDto): Observable<BaseResponse<DiscountListDto>> {
-      return this.api.post<BaseResponse<DiscountListDto>>(this.service, `${taskId}`, model);
+    create(taskId: number, model: DiscountAddEditDto): Observable<BaseResponse<DiscountGetDto>> {
+      return this.api.post<BaseResponse<DiscountGetDto>>(this.service, `${taskId}`, model);
     }
   
-    update(id: number, model: DiscountAddEditDto): Observable<BaseResponse<DiscountListDto>> {
-      return this.api.put<BaseResponse<DiscountListDto>>(this.service, `${id}`, model);
+    update(id: number, model: DiscountAddEditDto): Observable<BaseResponse<DiscountGetDto>> {
+      return this.api.put<BaseResponse<DiscountGetDto>>(this.service, `${id}`, model);
     }
   
     delete(id: number): Observable<BaseResponse<boolean>> {

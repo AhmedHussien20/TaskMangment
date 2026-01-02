@@ -33,16 +33,5 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
 
     }
 
-    public class WarningListDto
-    {
-        public int Id { get; set; }
-
-        public int TaskId { get; set; }
-        public string TaskTitle { get; set; }
-
-        public string Reason { get; set; }
-        public DateTime IssuedAt { get; set; }
-        public string IssuedEmployeeName { get; set; }
-        public string IssuedByName { get; set; }
-    }
+   
 }

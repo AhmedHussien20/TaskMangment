@@ -81,6 +81,7 @@ namespace TaskMangment.Infrastructure.DataContext
         public DbSet<TaskCloseRequest> TaskCloseRequests { get; set; }
         public DbSet<TaskComment> TaskComments { get; set; }
         public DbSet<TaskExtensionRequest> TaskExtensionRequests { get; set; }
+        public DbSet<TaskPercentage> TaskPercentages { get; set; }
         public DbSet<Warning> Warnings { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<EmailQueue> EmailQueue { get; set; }
