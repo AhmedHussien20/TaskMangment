@@ -196,7 +196,7 @@ namespace TaskMangment.Application.AutoMapper
                 .ForMember(dest => dest.IssuedEmployeeName, opt => opt.MapFrom(src => src.Issued.FullName));
 
 
-            CreateMap<Warning, WarningListDto>()
+            CreateMap<Warning, WarningGetDto>()
                 .ForMember(dest => dest.IssuedByName, opt => opt.MapFrom(src => src.IssuedBy.FullName))
                  .ForMember(dest => dest.TaskTitle, opt => opt.MapFrom(src => src.TaskAssignment.Task.Title))
                 .ForMember(dest => dest.IssuedEmployeeName, opt => opt.MapFrom(src => src.Issued.FullName));
@@ -216,11 +216,11 @@ namespace TaskMangment.Application.AutoMapper
 
 
             CreateMap<DiscountAddEditDto, Discount>();
-            CreateMap<Discount, DiscountListDto>()
+            CreateMap<Discount, DiscountGetDto>()
                 .ForMember(dest => dest.EmployeeName, opt => opt.MapFrom(src => src.Employee.FullName))
                 .ForMember(dest => dest.TaskTitle, opt => opt.MapFrom(src => src.Task != null ? src.Task.Title : null));
 
-            CreateMap<Discount, DiscountListDto>()
+            CreateMap<Discount, DiscountGetDto>()
                 .ForMember(dest => dest.EmployeeName, opt => opt.MapFrom(src => src.Employee.FullName))
                 .ForMember(dest => dest.TaskTitle, opt => opt.MapFrom(src => src.Task != null ? src.Task.Title : null));
 

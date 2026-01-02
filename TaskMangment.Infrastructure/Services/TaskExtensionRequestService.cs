@@ -210,7 +210,7 @@ namespace TaskMangment.Infrastructure.Services
 
                 request.Status = ExtensionRequestStatus.Approved;
                 request.NewDueDate = dto.NewDueDate.Value;
-                task.DueDate = dto.NewDueDate.Value;
+               // task.DueDate = dto.NewDueDate.Value;
 
                 var assignedEmployeeIds = await _taskAssignmentRepo
         .GetAll(a => a.TaskId == task.Id && a.IsActive)
@@ -222,8 +222,8 @@ namespace TaskMangment.Infrastructure.Services
                         request.Id,
                         task.Id,
                         task.Title,
-                        oldDueDate,
                         task.DueDate,
+                        dto.NewDueDate,
                         assignedEmployeeIds
                     )
                 );

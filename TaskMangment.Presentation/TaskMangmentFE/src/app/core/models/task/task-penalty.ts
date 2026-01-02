@@ -5,7 +5,7 @@ export interface DiscountAddEditDto {
 }
 
 
-export interface DiscountListDto {
+export interface DiscountGetDto {
   employeeName: string;
   taskTitle?: string;
   reason: string;
@@ -14,7 +14,7 @@ CreatedDate: string;
 }
 
 export interface DiscountPagedResponse {
-  data: DiscountListDto[];
+  data: DiscountGetDto[];
   totalCount: number;
   pageIndex: number;
   pageSize: number;

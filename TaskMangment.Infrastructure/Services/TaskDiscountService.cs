@@ -48,7 +48,7 @@ namespace TaskMangment.Infrastructure.Services
             _eventDispatcher = eventDispatcher;
         }
 
-        public async Task<ApiResponse<PagedResponse<DiscountListDto>>> GetAllAsync(TaskDiscountRequest request)
+        public async Task<ApiResponse<PagedResponse<DiscountGetDto>>> GetAllAsync(TaskDiscountRequest request)
         {
             //string cacheKey = $"discounts:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}:{request.TaskId}";
 
@@ -78,16 +78,16 @@ namespace TaskMangment.Infrastructure.Services
                 .Take(request.PageSize)
                 .ToListAsync();
 
-            var dtos = _mapper.Map<ICollection<DiscountListDto>>(list);
+            var dtos = _mapper.Map<ICollection<DiscountGetDto>>(list);
 
-            var response = new PagedResponse<DiscountListDto>(dtos, totalCount, request.PageIndex, request.PageSize);
+            var response = new PagedResponse<DiscountGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
 
            // await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
 
-            return ApiResponse<PagedResponse<DiscountListDto>>.Ok(response);
+            return ApiResponse<PagedResponse<DiscountGetDto>>.Ok(response);
         }
 
-        public async Task<ApiResponse<DiscountListDto>> GetByIdAsync(int id)
+        public async Task<ApiResponse<DiscountGetDto>> GetByIdAsync(int id)
         {
             var discount = await _discountRepo.GetAll(x => x.Id == id)
                 .Include(x => x.Employee)
@@ -97,14 +97,14 @@ namespace TaskMangment.Infrastructure.Services
                 .FirstOrDefaultAsync();
 
             if (discount == null)
-                return ApiResponse<DiscountListDto>.Fail("Discount not found");
+                return ApiResponse<DiscountGetDto>.Fail("Discount not found");
 
-            var dto = _mapper.Map<DiscountListDto>(discount);
+            var dto = _mapper.Map<DiscountGetDto>(discount);
 
-            return ApiResponse<DiscountListDto>.Ok(dto);
+            return ApiResponse<DiscountGetDto>.Ok(dto);
         }
 
-        public async Task<ApiResponse<DiscountListDto>> AddAsync(int createdByEmployeeId, int TaskID, DiscountAddEditDto dto)
+        public async Task<ApiResponse<DiscountGetDto>> AddAsync(int createdByEmployeeId, int TaskID, DiscountAddEditDto dto)
         {
             var task = await _taskRepo.GetByIDAsync(TaskID);
             if (task == null)
@@ -137,13 +137,13 @@ namespace TaskMangment.Infrastructure.Services
       .Include(d => d.Employee)
       .Include(d => d.Task)
       .FirstOrDefaultAsync();
-            var discountdto = _mapper.Map<DiscountListDto>(fullDiscount);
+            var discountdto = _mapper.Map<DiscountGetDto>(fullDiscount);
 
 
-            return ApiResponse<DiscountListDto>.Ok(discountdto, "Discount added successfully");
+            return ApiResponse<DiscountGetDto>.Ok(discountdto, "Discount added successfully");
         }
 
-        public async Task<ApiResponse<DiscountListDto>> UpdateAsync(int id,int TaskID, DiscountAddEditDto dto, int ModifiedByEmployeeId)
+        public async Task<ApiResponse<DiscountGetDto>> UpdateAsync(int id,int TaskID, DiscountAddEditDto dto, int ModifiedByEmployeeId)
         {
             var discount = await _discountRepo.GetByIDAsync(id);
             if (discount == null)
@@ -156,7 +156,7 @@ namespace TaskMangment.Infrastructure.Services
                 throw new AppException(ErrorCodes.TaskNotFound, StatusCodes.Status404NotFound);
 
             if (!await _employeeRepo.IsExistAsync(ModifiedByEmployeeId))
-                return ApiResponse<DiscountListDto>.Fail("ModifiedByEmployee not found");
+                return ApiResponse<DiscountGetDto>.Fail("ModifiedByEmployee not found");
 
 
             _mapper.Map(dto, discount);
@@ -172,9 +172,9 @@ namespace TaskMangment.Infrastructure.Services
                 .Include(d => d.Employee)
                 .Include(d => d.Task)
                 .FirstOrDefaultAsync();
-            var discountdto = _mapper.Map<DiscountListDto>(fullDiscount);
+            var discountdto = _mapper.Map<DiscountGetDto>(fullDiscount);
 
-            return ApiResponse<DiscountListDto>.Ok(discountdto, "Discount updated successfully");
+            return ApiResponse<DiscountGetDto>.Ok(discountdto, "Discount updated successfully");
         }
 
         public async Task<ApiResponse<bool>> DeleteAsync(int id)

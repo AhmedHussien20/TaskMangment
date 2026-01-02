@@ -41,6 +41,11 @@ namespace TaskMangment.Infrastructure.Services
         private readonly AppDbContext _context;
         private readonly IRepository<TaskExtensionRequest> _extensionRequestRepo;
         private readonly IRepository<TaskCloseRequest> _closeRequestRepo;
+        private readonly IRepository<Warning> _warningRepo;
+        private readonly IRepository<Discount> _penaltyRepo;
+        private readonly IRepository<TaskComment> _commentRepo;
+        private readonly IRepository<Attachment> _attachmentRepo;
+
 
 
         public TaskService(
@@ -54,7 +59,12 @@ namespace TaskMangment.Infrastructure.Services
             IRepository<EmailQueue> emailQueueRepo,
             AppDbContext context,
             IRepository<TaskExtensionRequest> extensionRequestRepo,
-           IRepository<TaskCloseRequest> closeRequestRepo
+           IRepository<TaskCloseRequest> closeRequestRepo,
+           IRepository<Warning> warningRepo,
+           IRepository<Discount> penaltyRepo,
+           IRepository<TaskComment> commentRepo,
+           IRepository<Attachment> attachmentRepo
+
 )
         {
             _taskRepo = taskRepo;
@@ -68,6 +78,11 @@ namespace TaskMangment.Infrastructure.Services
             _context = context;
             _closeRequestRepo = closeRequestRepo;
             _extensionRequestRepo = extensionRequestRepo;
+            _warningRepo = warningRepo;
+            _penaltyRepo = penaltyRepo;
+            _commentRepo = commentRepo;
+            _attachmentRepo = attachmentRepo;
+
         }
 
         public async Task<ApiResponse<PagedResponse<TaskGetDto>>> GetAllAsync(TaskRequest request, int CompanyId, string role, int employeeId)
@@ -450,6 +465,145 @@ namespace TaskMangment.Infrastructure.Services
             };
 
             return ApiResponse<TaskRequestsDto>.Ok(result);
+        }
+
+
+        public async Task<ApiResponse<TaskActivitySummaryDTO>> GetTaskActivitySummaryAsync(int taskId)
+        {
+            if (!await _taskRepo.IsExistAsync(taskId))
+                throw new AppException(ErrorCodes.TaskNotFound, StatusCodes.Status404NotFound);
+
+
+            ///////////////////comment///////////
+            var commentsQuery = _commentRepo.GetAll(c => c.TaskId == taskId);
+            var commentsCount = await commentsQuery.CountAsync();
+
+            TaskCommentGetDto? lastCommentDto = null;
+            if (commentsCount > 0)
+            {
+                var lastComment = await commentsQuery
+                    .Include(c => c.Employee)
+                    .Include(c => c.Task)
+                    .OrderByDescending(c => c.CreatedDate)
+                    .FirstOrDefaultAsync();
+
+                if (lastComment != null)
+                {
+                    lastCommentDto = _mapper.Map<TaskCommentGetDto>(lastComment);
+                    lastCommentDto.AttachmentCount = await _attachmentRepo.CountAsync(a =>
+                        a.ReferenceId == lastComment.Id &&
+                        a.AttachmentType == AttachmentType.Comment);
+
+                    lastCommentDto.EmployeeName = lastComment.Employee?.FullName;
+                    lastCommentDto.TaskTitle = lastComment.Task?.Title;
+                }
+            }
+
+            // ================= WARNINGS / DISCOUNTS =================
+            var warningsQuery = _warningRepo.GetAll(d => d.TaskId == taskId);
+
+            var warningsCount = await warningsQuery.CountAsync();
+
+            WarningGetDto? lastWarningDto = null;
+            if (warningsCount > 0)
+            {
+                var lastWarning = await warningsQuery
+                    .Include(d => d.Issued)
+                    .Include(d => d.IssuedBy)
+                    .Include(d => d.Task)
+                    .OrderByDescending(d => d.CreatedDate)
+                    .FirstOrDefaultAsync();
+
+                if (lastWarning != null)
+                    lastWarningDto = _mapper.Map<WarningGetDto>(lastWarning);
+            }
+
+
+
+
+            var PenaltysQuery = _penaltyRepo.GetAll(d => d.TaskId == taskId);
+
+            var PenaltysCount = await PenaltysQuery.CountAsync();
+
+            DiscountGetDto? LastPenaltyDto = null;
+            if (PenaltysCount > 0)
+            {
+                var LastPenalty = await PenaltysQuery
+                    .Include(d => d.Employee)
+                    .Include(d => d.Task)
+                    .OrderByDescending(d => d.CreatedDate)
+                    .FirstOrDefaultAsync();
+
+                if (LastPenalty != null)
+                    LastPenaltyDto = _mapper.Map<DiscountGetDto>(LastPenalty);
+            }
+
+            // ================= EXTENSION REQUESTS =================
+            var extensionQuery = _extensionRequestRepo.GetAll(r => r.TaskId == taskId);
+
+            var extensionCount = await extensionQuery.CountAsync();
+
+            TaskExtensionRequestDetailsDto? lastExtensionDto = null;
+            if (extensionCount > 0)
+            {
+                var lastExtension = await extensionQuery
+                    .Include(r => r.RequestedBy)
+                    .Include(r => r.ReviewedBy)
+                    .Include(r => r.TaskAssignment)
+                        .ThenInclude(a => a.Employee)
+                    .Include(r => r.TaskAssignment)
+                        .ThenInclude(a => a.Task)
+                    .OrderByDescending(r => r.RequestedAt)
+                    .FirstOrDefaultAsync();
+
+                if (lastExtension != null)
+                    lastExtensionDto = _mapper.Map<TaskExtensionRequestDetailsDto>(lastExtension);
+            }
+
+            // ================= CLOSE REQUESTS =================
+            var closeQuery = _closeRequestRepo.GetAll(r => r.TaskId == taskId);
+
+            var closeCount = await closeQuery.CountAsync();
+
+            TaskCloseRequestDetailsDto? lastCloseDto = null;
+            if (closeCount > 0)
+            {
+                var lastClose = await closeQuery
+                    .Include(r => r.RequestedBy)
+                    .Include(r => r.ReviewedBy)
+                    .Include(r => r.TaskAssignment)
+                        .ThenInclude(a => a.Employee)
+                    .Include(r => r.TaskAssignment)
+                        .ThenInclude(a => a.Task)
+                    .OrderByDescending(r => r.RequestedAt)
+                    .FirstOrDefaultAsync();
+
+                if (lastClose != null)
+                    lastCloseDto = _mapper.Map<TaskCloseRequestDetailsDto>(lastClose);
+            }
+
+            // ================= RESULT =================
+            var result = new TaskActivitySummaryDTO
+            {
+                TaskId = taskId,
+
+                CommentsCount = commentsCount,
+                LastComment = lastCommentDto,
+
+                WarningsCount = warningsCount,
+                LastWarning = lastWarningDto,
+
+                PenaltysCount = PenaltysCount,
+                LastPenalty = LastPenaltyDto,
+
+                ExtensionRequestsCount = extensionCount,
+                LastExtensionRequest = lastExtensionDto,
+
+                CloseRequestsCount = closeCount,
+                LastCloseRequest = lastCloseDto
+            };
+
+            return ApiResponse<TaskActivitySummaryDTO>.Ok(result);
         }
 
     }
