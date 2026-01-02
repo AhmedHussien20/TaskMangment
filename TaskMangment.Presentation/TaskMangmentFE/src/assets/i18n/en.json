@@ -46,7 +46,8 @@
     "CONFIRM_DELETE_TEXT": "Are you sure you want to delete?",
     "DELETE_BUTTON": "Yes, Delete",
     "CANCEL_BUTTON": "Cancel",
-    "DELETE_SUCCESS": "Deleted successfully"
+    "DELETE_SUCCESS": "Deleted successfully",
+    "LOADING" :"Loading"
   },
   "validation": {
     "required": "This field is required",
@@ -432,7 +433,6 @@
     "MONTHLY": "Monthly",
     "WEEKLY": "Weekly",
     "ASSIGNED_TO": "Assigned To",
-    "ARCHIVED_TASKS": "Archived Tasks",
     "SELECT": "Select",
     "STATUS_APPROVED": "Approved",
     "STATUS_REJECTED": "Rejected",
@@ -442,7 +442,23 @@
     "ALREADY_REVIEWED": "request already reviewed",
     "ACTIVE": "Active",
     "ENTER_NEW_DATE": "Enter new date",
-    "NEW_DATE": "New date"
+    "NEW_DATE": "New date",
+
+    "ACTIVITY_SUMMARY": "Activity Summary",
+    "EXTENSION_REQUESTS": "Extension Requests",
+    "CLOSE_REQUESTS": "Close Requests",
+    "LAST_COMMENT": "Last Comment",
+    "LAST_WARNING": "Last Warning",
+    "LAST_PENALTY": "Last Penalty",
+    "LAST_EXTENSION_REQUEST": "Last Extension Request",
+    "LAST_CLOSE_REQUEST": "Last Close/Reopen Request",
+    "NO_WARNINGS": "No warnings yet",
+    "NO_PENALTIES": "No penalties yet",
+    "NO_EXTENSION_REQUESTS": "No extension requests",
+    "NO_CLOSE_REQUESTS": "No close/reopen requests",
+    "NO_ACTIVITY_DATA": "No activity data available",
+    "REQUESTED_EXTENSION": "Requested extension",
+    "REOPEN_REQUEST": "Reopen Request"
   },
   "EMPLOYEE": {
     "LIST_TITLE": "Employee List",

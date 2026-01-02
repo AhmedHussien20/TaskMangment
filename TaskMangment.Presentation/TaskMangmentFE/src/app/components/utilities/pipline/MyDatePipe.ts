@@ -10,7 +10,7 @@ function toArabicNumbers(input: string): string {
 @Pipe({
   name: 'myDate',
   standalone: true,
-  pure: false 
+  pure: false
 })
 export class MyDatePipe implements PipeTransform {
 
@@ -18,13 +18,20 @@ export class MyDatePipe implements PipeTransform {
 
   transform(
     value: Date | string | number | null | undefined,
-    format: string = 'd MMMM y'
+    format: string = 'd MMMM y',
+    includeTime: boolean = false
   ): string {
     if (!value) return '';
 
     const lang = this.translate.currentLang || 'ar';
 
-    const formatted = formatDate(value, format, lang);
+    let finalFormat = format;
+
+    if (includeTime) {
+      finalFormat = `${format} HH:mm`;
+    }
+
+    const formatted = formatDate(value, finalFormat, lang);
 
     if (lang.startsWith('ar')) {
       return toArabicNumbers(formatted);

@@ -3,6 +3,7 @@ import { TaskAddEdit, TaskAssignedEmployee, TaskGet, TaskPagedResponse, TaskRequ
 import { ApiService } from "./api.service";
 import { BaseResponse } from 'app/models/base.response.model'; 
 import { Observable } from "rxjs";
+import { TaskActivitySummary } from "../models/task/task-activity-summary";
 
 @Injectable({ providedIn: 'root' })
 export class TaskService {
@@ -62,5 +63,10 @@ private buildQuery(req: any): string {
    getTaskRequests(taskId: number): Observable<BaseResponse<TaskRequests>> {
     return this.api.get<BaseResponse<TaskRequests>>(this.service, `${taskId}/requests`);
   }
+
+  getTaskActivitySummary(taskId: number) {
+  return this.api.get<BaseResponse<TaskActivitySummary>>(this.service,`${taskId}/activity-summary`);
+  }
+
 }
 

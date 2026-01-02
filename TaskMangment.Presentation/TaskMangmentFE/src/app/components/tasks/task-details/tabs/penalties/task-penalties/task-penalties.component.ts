@@ -4,7 +4,7 @@ import { Subscription } from 'rxjs';
 import { GenericTableComponent, TableColumn } from 'app/shared/components/generic-table/generic-table.component';
 import { TaskDetailsRefreshService } from '../../../task-details-refresh.service';
 import { TranslateModule } from '@ngx-translate/core';
-import { DiscountListDto } from 'app/core/models/task/task-penalty';
+import { DiscountGetDto } from 'app/core/models/task/task-penalty';
 import { TaskPenaltyService } from 'app/core/services/task-penalty.service';
 
 @Component({
@@ -18,7 +18,7 @@ export class TaskPenaltiesComponent implements OnInit, OnDestroy {
   @Input() taskId!: number;
   @Input() readonly = false;
 
-  rows: DiscountListDto[] = [];
+  rows: DiscountGetDto[] = [];
   totalItems = 0;
 
   columns: TableColumn[] = [

@@ -21,6 +21,8 @@ namespace TaskMangment.Application.Interfaces.Services
         Task<ApiResponse<List<TaskAssignmentDto>>> GetAssignedEmployeesAsync(int taskId);
         Task<List<TaskReportDto>> GetTasksForReportAsync(int? assignedUserId = null,int? status = null,DateTime? fromDate = null,DateTime? toDate = null);
         Task<ApiResponse<TaskRequestsDto>> GetTaskRequestsAsync(int taskId);
+        Task<ApiResponse<TaskActivitySummaryDTO>> GetTaskActivitySummaryAsync(int taskId);
+
 
 
 

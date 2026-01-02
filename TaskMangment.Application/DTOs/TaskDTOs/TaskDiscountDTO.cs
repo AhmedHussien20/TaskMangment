@@ -20,7 +20,7 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
 
     }
 
-    public class DiscountListDto
+    public class DiscountGetDto
     {
         public int TaskId { get; set; }
         public string EmployeeName { get; set; }

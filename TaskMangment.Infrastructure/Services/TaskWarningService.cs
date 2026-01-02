@@ -51,7 +51,7 @@ namespace TaskMangment.Infrastructure.Services
             _eventDispatcher = eventDispatcher;
         }
 
-        public async Task<ApiResponse<PagedResponse<WarningListDto>>> GetAllAsync(WarningRequest request)
+        public async Task<ApiResponse<PagedResponse<WarningGetDto>>> GetAllAsync(WarningRequest request)
         {
             //string cacheKey = $"warnings:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}:{request.TaskId}";
 
@@ -82,13 +82,13 @@ namespace TaskMangment.Infrastructure.Services
                 .Take(request.PageSize)
                 .ToListAsync();
 
-            var dtos = _mapper.Map<ICollection<WarningListDto>>(list);
+            var dtos = _mapper.Map<ICollection<WarningGetDto>>(list);
 
-            var response = new PagedResponse<WarningListDto>(dtos, totalCount, request.PageIndex, request.PageSize);
+            var response = new PagedResponse<WarningGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
 
             //await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
 
-            return ApiResponse<PagedResponse<WarningListDto>>.Ok(response);
+            return ApiResponse<PagedResponse<WarningGetDto>>.Ok(response);
         }
 
         public async Task<ApiResponse<WarningGetDto>> GetByIdAsync(int id)

@@ -13,10 +13,10 @@ namespace TaskMangment.Application.Interfaces.Services
 {
     public interface ITaskDiscountService
     {
-        Task<ApiResponse<PagedResponse<DiscountListDto>>> GetAllAsync(TaskDiscountRequest request);
-        Task<ApiResponse<DiscountListDto>> GetByIdAsync(int id);
-        Task<ApiResponse<DiscountListDto>> AddAsync(int createdByEmployeeId,int TaskID, DiscountAddEditDto dto);
-        Task<ApiResponse<DiscountListDto>> UpdateAsync(int id, int TaskID, DiscountAddEditDto dto, int ModifiedByEmployeeId );
+        Task<ApiResponse<PagedResponse<DiscountGetDto>>> GetAllAsync(TaskDiscountRequest request);
+        Task<ApiResponse<DiscountGetDto>> GetByIdAsync(int id);
+        Task<ApiResponse<DiscountGetDto>> AddAsync(int createdByEmployeeId,int TaskID, DiscountAddEditDto dto);
+        Task<ApiResponse<DiscountGetDto>> UpdateAsync(int id, int TaskID, DiscountAddEditDto dto, int ModifiedByEmployeeId );
         Task<ApiResponse<bool>> DeleteAsync(int id);
     }
 }
