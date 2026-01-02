@@ -458,7 +458,17 @@
     "NO_CLOSE_REQUESTS": "No close/reopen requests",
     "NO_ACTIVITY_DATA": "No activity data available",
     "REQUESTED_EXTENSION": "Requested extension",
-    "REOPEN_REQUEST": "Reopen Request"
+    "REOPEN_REQUEST": "Reopen Request",
+    "PERCENTAGE_UPDATES": "Percentage Updates",
+    "NO_DATA": "No data available",
+    "ACHIEVEMENT": "Achievement",
+    "ADD_PERCENTAGE" : "Add Achievement percentage",
+    "PERCENTAGE_PLACEHOLDER" : "Add Achievement percentage for task",
+    "SUBMIT_PERCENTAGE" : "submit percentage",
+    "ACHIEVEMENT_INFO" : "Your achievement percentage will be sent to the concerned authority.",
+    "PERCENTAGE_SUCCESS" : "Percentage sent successfully",
+    "INVALID_PERCENT" : "Enter true percentage"
+    
   },
   "EMPLOYEE": {
     "LIST_TITLE": "Employee List",

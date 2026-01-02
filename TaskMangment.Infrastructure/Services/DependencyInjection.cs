@@ -56,6 +56,7 @@ namespace TaskMangment.Infrastructure.Services
             services.AddScoped<ITaskDiscountService, TaskDiscountService>();
             services.AddScoped<DataSeeder>();
             services.AddScoped<IOnlineUserService, OnlineUserService>();
+            services.AddScoped<ITaskPercentageService, TaskPercentageService>();
 
 
 

@@ -45,6 +45,7 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<Discount> _penaltyRepo;
         private readonly IRepository<TaskComment> _commentRepo;
         private readonly IRepository<Attachment> _attachmentRepo;
+        private readonly IRepository<TaskPercentage> _percentRepo;
 
 
 
@@ -63,7 +64,8 @@ namespace TaskMangment.Infrastructure.Services
            IRepository<Warning> warningRepo,
            IRepository<Discount> penaltyRepo,
            IRepository<TaskComment> commentRepo,
-           IRepository<Attachment> attachmentRepo
+           IRepository<Attachment> attachmentRepo,
+           IRepository<TaskPercentage> percentRepo
 
 )
         {
@@ -82,6 +84,7 @@ namespace TaskMangment.Infrastructure.Services
             _penaltyRepo = penaltyRepo;
             _commentRepo = commentRepo;
             _attachmentRepo = attachmentRepo;
+            _percentRepo = percentRepo;
 
         }
 
@@ -582,6 +585,26 @@ namespace TaskMangment.Infrastructure.Services
                     lastCloseDto = _mapper.Map<TaskCloseRequestDetailsDto>(lastClose);
             }
 
+
+
+            var percentQuery = _percentRepo.GetAll(c => c.TaskId == taskId);
+            var PercentCount = await percentQuery.CountAsync();
+
+            TaskPercentageGetDto? lastPercentDto = null;
+            if (PercentCount > 0)
+            {
+                var lastPercent = await percentQuery
+                    .Include(c => c.Employee)
+                    .Include(c => c.Task)
+                    .OrderByDescending(c => c.CreatedDate)
+                    .FirstOrDefaultAsync();
+
+                if (lastPercent != null)
+                    lastPercentDto = _mapper.Map<TaskPercentageGetDto>(lastPercent);
+
+
+            }
+
             // ================= RESULT =================
             var result = new TaskActivitySummaryDTO
             {
@@ -600,7 +623,10 @@ namespace TaskMangment.Infrastructure.Services
                 LastExtensionRequest = lastExtensionDto,
 
                 CloseRequestsCount = closeCount,
-                LastCloseRequest = lastCloseDto
+                LastCloseRequest = lastCloseDto,
+
+                PercentageCount = PercentCount,
+                LastPercentage = lastPercentDto
             };
 
             return ApiResponse<TaskActivitySummaryDTO>.Ok(result);

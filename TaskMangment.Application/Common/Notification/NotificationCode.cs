@@ -18,6 +18,7 @@ namespace TaskMangment.Application.Common.Notification
         public const string TaskPenaltyNotification = "TASK_PENALTY_NOTIFICATION";
         public const string CloseApprove = "CLOSEAPPROVED";
         public const string ExtendApprove = "EXTENDAPPROVED";
+        public const string TaskAchievement = "TASKACHIEVEMENT";
 
 
     }

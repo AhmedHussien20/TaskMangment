@@ -26,6 +26,10 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
         public int CloseRequestsCount { get; set; }
         public TaskCloseRequestDetailsDto? LastCloseRequest { get; set; }
 
+
+        public int PercentageCount { get; set; }
+        public TaskPercentageGetDto? LastPercentage { get; set; }
+
     }
 
 }

@@ -164,6 +164,34 @@ namespace TaskMangment.Infrastructure.Services
                         };
                     }
 
+
+
+                // =========================
+                //  Task Achievement
+                // =========================
+                case ReferenceType.TaskAchieve:
+                    {
+                        var Percent = await _db.TaskPercentages
+                            .Where(c => c.Id == referenceId)
+                            .Select(c => new
+                            {
+                                TaskTitle = c.Task.Title,
+                                EmployeeName = c.Employee.FullName,
+                                Percent = c.AchievementPercent
+                            })
+                            .FirstOrDefaultAsync();
+
+                        if (Percent == null)
+                            throw new Exception($"Task Percent with Id {referenceId} not found.");
+
+                        return new Dictionary<string, string>
+                        {
+                            ["TaskTitle"] = Percent.TaskTitle,
+                            ["EmployeeName"] = Percent.EmployeeName,
+                            ["Percent"] = Percent.Percent
+                        };
+                    }
+
                 // =========================
                 //  Task Extension Request
                 // =========================

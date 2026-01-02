@@ -145,4 +145,7 @@
   <data name="CLOSEAPPROVED" xml:space="preserve">
     <value>the task {0} has been closed according to request</value>
   </data>
+  <data name="TASKACHIEVEMENT" xml:space="preserve">
+    <value>{0} achieved {1} from task: {2}</value>
+  </data>
 </root>
