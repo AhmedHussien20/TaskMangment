@@ -391,16 +391,9 @@ namespace TaskMangment.Infrastructure.Services
         }
 
 
-        public async Task<List<TaskReportDto>> GetTasksForReportAsync(
-       int? assignedUserId = null,
-       int? status = null,
-       DateTime? fromDate = null,
-       DateTime? toDate = null)
+        public async Task<List<TaskReportDto>> GetTasksForReportAsync(int? assignedUserId = null, int? status = null,DateTime? fromDate = null,DateTime? toDate = null)
         {
-            IQueryable<WorkTask> query = _context.Tasks
-                .Include(t => t.Assignments)
-                    .ThenInclude(a => a.Employee);
-
+            IQueryable<WorkTask> query = _context.Tasks.Include(t => t.Assignments) .ThenInclude(a => a.Employee);
             if (assignedUserId.HasValue)
             {
                 query = query.Where(t =>
