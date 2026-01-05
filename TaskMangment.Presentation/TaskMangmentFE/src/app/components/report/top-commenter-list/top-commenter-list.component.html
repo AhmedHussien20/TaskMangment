@@ -1,0 +1,53 @@
+<app-page-header [title]="title | translate" [title1]="breadcrumbs" [activeitem]="activeitem | translate">
+</app-page-header>
+
+<div class="row row-sm">
+  <div class="col-md-12 col-lg-12">
+    <div class="card custom-card">
+      <div class="card-header border-bottom-0">
+  <div class="d-flex justify-content-center align-items-end gap-3">
+
+    <div class="d-flex flex-column">
+      <label class="form-label small">{{ 'REPORTS.FROM' | translate }}</label>
+      <input type="date" [(ngModel)]="fromDate" class="form-control form-control-sm">
+    </div>
+
+    <div class="d-flex flex-column">
+      <label class="form-label small">{{ 'REPORTS.TO' | translate }}</label>
+      <input type="date" [(ngModel)]="toDate" class="form-control form-control-sm">
+    </div>
+
+    <div class="d-flex align-items-end">
+      <button class="btn btn-primary btn-sm" (click)="onFilterApply()">
+        {{ 'COMMON.APPLY' | translate }}
+      </button>
+    </div>
+
+  </div>
+</div>
+
+
+      <div class="card-body pt-2">
+        <div *ngIf="isLoading" class="text-center my-3">
+          <div class="spinner-border" role="status">
+            <span class="visually-hidden">{{ 'TABLE.LOADING' | translate }}</span>
+          </div>
+        </div>
+
+        <div *ngIf="!isLoading">
+          <app-generic-table
+            [title]="title"
+            [columns]="columns"
+            [data]="rows"
+            [entries]="entries"
+            [page]="page"
+            [showFilters]="false"
+            [showPagination]="false"
+            [showExportPdf]="true"
+            (exportPdfClick)="onExportPdf()">
+          </app-generic-table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

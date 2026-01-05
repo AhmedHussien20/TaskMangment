@@ -29,4 +29,9 @@ patch<T>(service: string, endpoint: string, body: any) {
   return this.http.patch<T>(`${this.baseUrl}/${service}/${endpoint}`, body);
 }
 
+getBlob(service: string, endpoint: string): Observable<Blob> {
+  return this.http.get<Blob>(`${this.baseUrl}/${service}/${endpoint}`, { responseType: 'blob' as 'json' });
+}
+
+
 }
