@@ -47,7 +47,9 @@ interface HasId {
   styleUrls: ['./generic-table.component.scss']
 })
 export class GenericTableComponent<T> implements OnDestroy {
-
+  @Output() exportPdfClick = new EventEmitter<void>();
+  @Input() showExportPdf: boolean = false;
+  
   @Input() formUrl: string = '';
   @Input() breadcrumbs: string[] = [];
   @Input() activeitem: string = '';
@@ -364,6 +366,8 @@ export class GenericTableComponent<T> implements OnDestroy {
     const value = (item as any)[this.checkboxKey];
     return value === true;
   }
-
+ exportPdf() {
+    this.exportPdfClick.emit();
+  }
 
 }

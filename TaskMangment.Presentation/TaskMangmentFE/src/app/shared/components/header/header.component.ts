@@ -13,7 +13,6 @@ import { SignalRService } from 'app/core/services/signalr.service';
 import { NotificationApiService } from 'app/core/services/notification.service';
 
 interface Item {
-
   user: any;
 
   id: number;
