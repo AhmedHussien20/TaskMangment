@@ -13,7 +13,7 @@
         }
     </div>
     <div class="col-sm-12 col-lg-12 col-xl-8">
-        <div class="row row-sm">
+        <div class="row row-sm" *ngIf="isAdmin">
             <div class="col-12 col-xl-6">
                 <div class="card custom-card overflow-hidden">
                     <div class="card-body">
@@ -110,7 +110,7 @@
             <!-- col end -->
         </div><!-- Row end -->
     </div><!-- col end -->
-    <div class="col-sm-12 col-lg-12 col-xl-4 mt-xl-4">
+    <div class="col-sm-12 col-lg-12 col-xl-4 mt-xl-4" *ngIf="isAdmin">
         <div class="card custom-card card-dashboard-calendar">
 
             <label class="main-content-label mb-2 pt-1">
