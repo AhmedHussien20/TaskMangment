@@ -133,7 +133,19 @@ private MENUITEMS: MenuItem[] = [
         minRoleLevel: 50
       }
     ]
-  }
+  },
+
+  { headTitle: 'nav.apps.reports.header', minRoleLevel: 10 },
+  {
+    title: 'nav.apps.reports.title',
+    icon: 'ti-bar-chart',
+    type: 'sub',
+    minRoleLevel: 10,
+    children: [
+     
+    ]
+  },
+
 ];
 
 

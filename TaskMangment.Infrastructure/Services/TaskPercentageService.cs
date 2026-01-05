@@ -110,10 +110,11 @@ namespace TaskMangment.Infrastructure.Services
             await _repo.SaveChangesAsync();
             await _cache.RemoveAsync("taskPercentages:");
 
-            var assignedEmployeeIds = await _taskAssignmentRepo.
-                GetAll(a => a.TaskId == taskId && a.IsActive)
-                .Select(a => a.EmployeeId)
-                .ToListAsync();
+            var assignedEmployeeIds = await _taskAssignmentRepo
+    .GetAll(a => a.TaskId == taskId && a.IsActive)
+    .Where(a => !employeeId.HasValue || a.EmployeeId != employeeId.Value)
+    .Select(a => a.EmployeeId)
+    .ToListAsync();
 
             string employeeName = null;
             if (employeeId.HasValue)
