@@ -29,7 +29,16 @@ export class TaskPenaltiesComponent implements OnInit, OnDestroy {
       label: 'TASK.PENALTY_AMOUNT_LABEL',
       type: 'custom'
     },
-    { key: 'employeeName', label: 'TASK.PENALTY_EMPLOYEE_NAME' }
+    { key: 'employeeName', label: 'TASK.PENALTY_EMPLOYEE_NAME' },
+{
+  key: 'autoDiscount',
+  label: 'TASK.PENALTY_TYPE',
+  type: 'badge',
+  badgeMap: {
+    true: { text: 'TASK.STATUS_AUTODISCOUNT', class: 'bg-warning' },
+    false: { text: 'TASK.STATUS_DISCOUNT', class: 'bg-success' }
+  }
+}
   ];
 
   private sub!: Subscription;
@@ -68,4 +77,6 @@ export class TaskPenaltiesComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.sub?.unsubscribe();
   }
+
+
 }

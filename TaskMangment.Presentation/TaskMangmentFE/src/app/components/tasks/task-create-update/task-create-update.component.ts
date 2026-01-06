@@ -126,7 +126,13 @@ export class TaskCreateUpdateComponent implements OnInit {
       name: 'penaltyOnAutoClose',
       defaultValue: 0
     },
-
+    {
+      type: 'input',
+      inputType: 'number',
+      label: 'TASK.PENALTY_ON_STOP_COMMENT',
+      name: 'penaltyOnStopComment',
+      defaultValue: 0
+    },
     {
       type: 'checkbox',
       label: 'TASK.IS_SHARED',
@@ -175,6 +181,7 @@ export class TaskCreateUpdateComponent implements OnInit {
       maxWarnings: [3, [Validators.pattern('^[0-9]+$')]],
       penaltyAtMaxWarnings: [0, [Validators.pattern('^[0-9]+$')]],
       penaltyOnAutoClose: [0, [Validators.pattern('^[0-9]+$')]],
+      penaltyOnStopComment : [0, [Validators.pattern('^[0-9]+$')]],
       isShared: [false]
     });
 

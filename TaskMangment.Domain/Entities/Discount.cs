@@ -16,6 +16,9 @@ namespace TaskMangment.Domain.Entities
         [MaxLength(1000)] public string Reason { get; set; }
         [Column(TypeName = "decimal(18,2)")] public decimal Amount { get; set; }
         public int? CreatedByEmployeeId { get; set; }
+
+        public DiscountType discountType { get; set; }
+        public bool AutoDiscount { get; set; } = true;
        // public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         [ForeignKey(nameof(EmployeeId))] public Employee Employee { get; set; }
