@@ -9,7 +9,19 @@ namespace TaskMangment.Domain.Entities
 {
     public class LeaveType : BaseEntity
     {
-        [Required, MaxLength(200)] public string Name { get; set; }
-        public string Description { get; set; }
+        [Required]
+        [MaxLength(200)]
+        public string NameAr { get; set; }
+
+        [Required]
+        [MaxLength(200)]
+        public string NameEn { get; set; }
+
+        public bool IsPaid { get; set; }
+
+        public int? MaxDaysPerYear { get; set; }  
+
+        public ICollection<Leave> Leaves { get; set; }
     }
+
 }

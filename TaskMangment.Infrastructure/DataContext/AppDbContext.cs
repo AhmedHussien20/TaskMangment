@@ -68,7 +68,7 @@ namespace TaskMangment.Infrastructure.DataContext
         public DbSet<EmployeeRole> EmployeeRoles { get; set; }
         public DbSet<Job> Jobs { get; set; }
         public DbSet<Leave> Leaves { get; set; }
-        public DbSet<LeaveType> leaveTypes { get; set; }
+        public DbSet<LeaveType> LeaveTypes { get; set; }
         public DbSet<Offer> Offers { get; set; }
         public DbSet<OfferAssignment> OfferAssignments { get; set; }
         public DbSet<PaymentVoucher> PaymentVouchers { get; set; }
