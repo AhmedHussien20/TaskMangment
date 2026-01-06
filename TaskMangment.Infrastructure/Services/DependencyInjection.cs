@@ -5,14 +5,21 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TaskMangment.Application.AutoMapper;
+using TaskMangment.Application.Behaviors.EmailHandlers;
+using TaskMangment.Application.Behaviors;
+using TaskMangment.Application.Common;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Interfaces;
 using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
+using TaskMangment.Domain.Event;
 using TaskMangment.Infrastructure.Caching;
 using TaskMangment.Infrastructure.Repositories;
 using TaskMangment.Infrastructure.Seeding;
 using TaskMangment.Utilities.Localization;
+using TaskMangment.Application.Dashboards.Admin;
+using TaskMangment.Application.Dashboards.Employee;
+using TaskMangment.Infrastructure.Services.TaskMangment.Infrastructure.Services.Dashboard;
 
 namespace TaskMangment.Infrastructure.Services
 {
@@ -58,8 +65,66 @@ namespace TaskMangment.Infrastructure.Services
             services.AddScoped<IOnlineUserService, OnlineUserService>();
             services.AddScoped<ITaskPercentageService, TaskPercentageService>();
             services.AddScoped<IReportService, ReportService>();
+            // ------------------------------
+            // SERVICES
+            // ------------------------------
+            services.AddScoped<IPermissionService, PermissionService>();
+            services.AddScoped<IRoleService, RoleService>();
+            services.AddScoped<IWhatsAppService, WhatsAppService>();
+            services.AddScoped<INotificationRepository, NotificationRepository>();
+            services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IJwtService, JwtService>();
+            // Domain Events
+            services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
+
+            // Notification sender 
+            services.AddScoped<INotificationSender, NotificationSender>();
+            services.AddScoped<IEventHandler<TaskUnAssignedEvent>, TaskUnAssignedEventHandler>();
+            services.AddScoped<IEventHandler<TaskUnAssignedEvent>, TaskUnAssignedEmailHandler>();
+
+            services.AddScoped<IEventHandler<TaskExtensionRequestEvent>, TaskExtenstionRequestEventHandler>();
+            services.AddScoped<IEventHandler<TaskCloseRequestEvent>, TaskCloseRequestEventHandler>();
+            services.AddScoped<IEventHandler<TaskCommentAddedEvent>, TaskCommentEventHandler>();
+            services.AddScoped<IEventHandler<TaskPenaltyEvent>, TaskPenaltyEventHandler>();
+            services.AddScoped<IEventHandler<TaskAssignedEvent>, TaskAssignedEventHandler>();
+            services.AddScoped<IEventHandler<TaskAssignedEvent>, TaskAssignedEmailHandler>();
+            // services.AddScoped<IEventHandler<TaskRequestAddedEvent>, TaskRequestEmailHandler>();
+
+            services.AddScoped<IEventHandler<TaskWarningEvent>, TaskWarningEventHandler>();
+            services.AddScoped<IEventHandler<TaskExtensionRequestEvent>, TaskExtenstionRequestEmailHandler>();
+            services.AddScoped<IEventHandler<TaskCloseRequestEvent>, TaskCloseRequestEmailHandler>();
+            services.AddScoped<IEventHandler<TaskPenaltyEvent>, TaskPenaltyEmailHandler>();
+            services.AddScoped<IEventHandler<TaskWarningEvent>, TaskWarningEmailHandler>();
+            services.AddScoped<IEventHandler<TaskCommentAddedEvent>, TaskCommentEmailHandler>();
+            services.AddScoped<IEventHandler<OfferSentEvent>, OfferSentEmailHandler>();
+            services.AddScoped<IEventHandler<TaskCloseApproveEvent>, TaskCloseApproveEventHandler>();
+            services.AddScoped<IEventHandler<TaskCloseApproveEvent>, TaskCloseApproveEmailHandler>();
+            services.AddScoped<IEventHandler<TaskExtendApproveEvent>, TaskExtendApproveEventHandler>();
+            services.AddScoped<IEventHandler<TaskExtendApproveEvent>, TaskExtendApproveEmailHandler>();
+
+            services.AddScoped<IEventHandler<TaskAchievePercentEvent>, TaskAchievePercentEmailHandler>();
+            services.AddScoped<IEventHandler<TaskAchievePercentEvent>, TaskAchievePercentEventHandler>();
+
+            services.AddScoped<ILeaveService, LeaveService>();
+            services.AddScoped<ILeaveTypeService, LeaveTypeService>();
+            services.AddHttpContextAccessor();
+            services.AddHttpContextAccessor();
+            services.AddScoped<ICurrentUserService, CurrentUserService>();
+            services.AddScoped<IBlobStorageService, BlobStorageService>();
+            services.AddScoped<AttachmentBlobMigrationJob>();
+
+            // SignalR
+            services.AddSignalR();
 
 
+            services.AddScoped<IEmailTemplateRenderer, EmailTemplateRenderer>();
+            services.AddScoped<INotificationService, NotificationService>();
+            services.AddScoped<IEmailQueueService, EmailQueueService>();
+            services.AddScoped<ITaskDueTodayEmailJob, TaskDueTodayEmailJob>();
+            services.AddScoped<IEmployeeDashboardService, EmployeeDashboardService>();
+            services.AddScoped<IAdminDashboardService, AdminDashboardService>();
+
+        
 
 
 

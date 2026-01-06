@@ -10,11 +10,12 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
 {
     public class TaskCommentAddEditDto
     {
-        [MinLength(2, ErrorMessage = "Comment must be at least 2 characters")]
+        //[MinLength(2, ErrorMessage = "Comment must be at least 2 characters")]
         public string? CommentText { get; set; }
         public IFormFile? File { get; set; }
 
     }
+ 
     public class TaskCommentGetDto
     {
         public int Id { get; set; }
