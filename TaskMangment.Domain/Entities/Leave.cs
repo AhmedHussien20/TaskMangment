@@ -11,14 +11,18 @@ namespace TaskMangment.Domain.Entities
     public class Leave : BaseEntity
     {
         
-        [Required] public int EmployeeId { get; set; }
-        [Required] public int LeaveTypeId { get; set; }
+        [Required] 
+        public int EmployeeId { get; set; }
+        [Required] 
+        public int LeaveTypeId { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
         public string Notes { get; set; }
 
-        [ForeignKey(nameof(EmployeeId))] public Employee Employee { get; set; }
-        [ForeignKey(nameof(LeaveTypeId))] public LeaveType LeaveType { get; set; }
+        [ForeignKey(nameof(EmployeeId))] 
+        public Employee Employee { get; set; }
+        [ForeignKey(nameof(LeaveTypeId))] 
+        public LeaveType LeaveType { get; set; }
     }
 
 }
