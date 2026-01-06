@@ -47,6 +47,8 @@ namespace TaskMangment.Application.Common.Errors
         public const string InvalidDate = "INVALID_DATE";
 
         public const string Unauthorized = "Unauthorized";
+
+        public const string InvalidOperation = "INVALID_OPERATION";
     }
 
 }

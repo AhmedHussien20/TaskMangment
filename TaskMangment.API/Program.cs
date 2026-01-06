@@ -54,45 +54,6 @@ namespace TaskMangment.API
 
                 builder.Services.AddDI();
 
-                // ------------------------------
-                // SERVICES
-                // ------------------------------
-                builder.Services.AddScoped<IPermissionService, PermissionService>();
-                builder.Services.AddScoped<IRoleService, RoleService>();
-                builder.Services.AddScoped<IWhatsAppService, WhatsAppService>();
-                builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
-                builder.Services.AddScoped<IAuthService, AuthService>();
-                builder.Services.AddScoped<IJwtService, JwtService>();
-                // Domain Events
-                builder.Services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
-
-                // Notification sender 
-                builder.Services.AddScoped<INotificationSender, NotificationSender>(); 
-                builder.Services.AddScoped<IEventHandler<TaskUnAssignedEvent>, TaskUnAssignedEventHandler>();
-                builder.Services.AddScoped<IEventHandler<TaskUnAssignedEvent>, TaskUnAssignedEmailHandler>();
-
-                builder.Services.AddScoped<IEventHandler<TaskExtensionRequestEvent>, TaskExtenstionRequestEventHandler>();
-                builder.Services.AddScoped<IEventHandler<TaskCloseRequestEvent>, TaskCloseRequestEventHandler>();
-                builder.Services.AddScoped<IEventHandler<TaskCommentAddedEvent>, TaskCommentEventHandler>();
-                builder.Services.AddScoped<IEventHandler<TaskPenaltyEvent>, TaskPenaltyEventHandler>();
-                builder.Services.AddScoped<IEventHandler<TaskAssignedEvent>, TaskAssignedEventHandler>();
-                builder.Services.AddScoped<IEventHandler<TaskAssignedEvent>, TaskAssignedEmailHandler>();
-                // builder.Services.AddScoped<IEventHandler<TaskRequestAddedEvent>, TaskRequestEmailHandler>();
-
-                builder.Services.AddScoped<IEventHandler<TaskWarningEvent>, TaskWarningEventHandler>();
-                builder.Services.AddScoped<IEventHandler<TaskExtensionRequestEvent>, TaskExtenstionRequestEmailHandler>();
-                builder.Services.AddScoped<IEventHandler<TaskCloseRequestEvent>, TaskCloseRequestEmailHandler>();
-                builder.Services.AddScoped<IEventHandler<TaskPenaltyEvent>, TaskPenaltyEmailHandler>();
-                builder.Services.AddScoped<IEventHandler<TaskWarningEvent>, TaskWarningEmailHandler>();
-                builder.Services.AddScoped<IEventHandler<TaskCommentAddedEvent>, TaskCommentEmailHandler>();
-                builder.Services.AddScoped<IEventHandler<OfferSentEvent>, OfferSentEmailHandler>();
-                builder.Services.AddScoped<IEventHandler<TaskCloseApproveEvent>, TaskCloseApproveEventHandler>();
-                builder.Services.AddScoped<IEventHandler<TaskCloseApproveEvent>, TaskCloseApproveEmailHandler>();
-                builder.Services.AddScoped<IEventHandler<TaskExtendApproveEvent>, TaskExtendApproveEventHandler>();
-                builder.Services.AddScoped<IEventHandler<TaskExtendApproveEvent>, TaskExtendApproveEmailHandler>();
-
-            builder.Services.AddScoped<IEventHandler<TaskAchievePercentEvent>, TaskAchievePercentEmailHandler>();
-            builder.Services.AddScoped<IEventHandler<TaskAchievePercentEvent>, TaskAchievePercentEventHandler>();
 
 
 
@@ -102,22 +63,17 @@ namespace TaskMangment.API
 
 
             builder.Services.AddScoped<AuditLogAttribute>();
-                builder.Services.AddHttpContextAccessor();
-                builder.Services.AddHttpContextAccessor();
-                builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
-                builder.Services.AddScoped<IBlobStorageService, BlobStorageService>();
-                builder.Services.AddScoped<AttachmentBlobMigrationJob>();
+                //builder.Services.AddHttpContextAccessor();
+                //builder.Services.AddHttpContextAccessor();
+                //builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+                //builder.Services.AddScoped<IBlobStorageService, BlobStorageService>();
+                //builder.Services.AddScoped<AttachmentBlobMigrationJob>();
 
                 // SignalR
                 builder.Services.AddSignalR();
 
 
-                builder.Services.AddScoped<IEmailTemplateRenderer, EmailTemplateRenderer>();
-                builder.Services.AddScoped<INotificationService, NotificationService>();
-                builder.Services.AddScoped<IEmailQueueService, EmailQueueService>();
-                builder.Services.AddScoped<ITaskDueTodayEmailJob, TaskDueTodayEmailJob>();
-                builder.Services.AddScoped<IEmployeeDashboardService, EmployeeDashboardService>();
-                builder.Services.AddScoped<IAdminDashboardService, AdminDashboardService>();
+               
 
                 QuestPDF.Settings.License = LicenseType.Community;
 
@@ -315,6 +271,12 @@ namespace TaskMangment.API
 
             //using (var scope = app.Services.CreateScope())
             //{
+            //    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            //    LeaveTypeSeeder.Seed(db);
+            //}
+
+            //using (var scope = app.Services.CreateScope())
+            //{
             //    var jobClient = scope.ServiceProvider.GetRequiredService<IBackgroundJobClient>();
 
             //    jobClient.Enqueue<ProcessPendingEmailsJob>(
@@ -346,9 +308,9 @@ namespace TaskMangment.API
             //                Cron.Minutely()
             //);
 
-//            RecurringJob.AddOrUpdate<PenaltyForMissingCommentsJob>(
-//                job => job.ExecuteAsync(),"0 8 * * *",TimeZoneInfo.FindSystemTimeZoneById("Arab Standard Time")
-//);
+            //RecurringJob.AddOrUpdate<PenaltyForMissingCommentsJob>(
+            //                job => job.ExecuteAsync(),"0 8 * * *",TimeZoneInfo.FindSystemTimeZoneById("Arab Standard Time")
+            //);
 
 
 
