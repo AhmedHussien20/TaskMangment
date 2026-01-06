@@ -115,6 +115,13 @@ export class EventCalenderComponent implements OnInit, AfterViewInit {
       className: 'bg-purple',
       borderClass: 'bg-purple',
       eventType: CalendarEventType.Anniversar
+    },
+    {
+      key: 'Comment',
+      labelKey: 'CALENDAR.EVENT_TYPE.COMMENT',
+      className: 'bg-secondary',
+      borderClass: 'bg-secondary',
+      eventType: CalendarEventType.Comment
     }
   ];
 
@@ -252,6 +259,8 @@ export class EventCalenderComponent implements OnInit, AfterViewInit {
         return 'bg-warning-transparent';
       case CalendarEventType.Anniversar:
         return 'bg-purple-transparent';
+      case CalendarEventType.Comment:
+        return 'bg-secondary-transparent';
       default:
         return 'bg-primary-transparent';
     }

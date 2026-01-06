@@ -23,6 +23,6 @@ namespace TaskMangment.Domain.Entities.Enum
 
         Anniversar = 7,
 
-        comment = 8,
+        Comment = 8,
     }
 }

@@ -1,16 +1,20 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TaskMangment.Domain.Entities;
 using TaskMangment.Infrastructure.DataContext;
+using TaskMangment.Application.Common.Interfaces;
+using TaskMangment.Domain.Event;
 
 namespace TaskMangment.Hangfire.Jobs
 {
     public class PenaltyForMissingCommentsJob
     {
         private readonly AppDbContext _db;
+        private readonly IDomainEventDispatcher _eventDispatcher;
 
-        public PenaltyForMissingCommentsJob(AppDbContext db)
+        public PenaltyForMissingCommentsJob(AppDbContext db, IDomainEventDispatcher eventDispatcher)
         {
             _db = db;
+            _eventDispatcher = eventDispatcher;
         }
 
         public async Task ExecuteAsync()
@@ -25,6 +29,8 @@ namespace TaskMangment.Hangfire.Jobs
 
             foreach (var task in tasksWithCommentPeriod)
             {
+                var discountsToPublish = new List<Discount>();
+
                 foreach (var assignment in task.Assignments)
                 {
                     var employeeId = assignment.EmployeeId;
@@ -38,7 +44,7 @@ namespace TaskMangment.Hangfire.Jobs
                     var shouldHaveComment = lastComment == null || lastComment.CreatedDate.Date.AddDays(periodDays) <= yesterday;
 
                     if (!shouldHaveComment)
-                        continue; 
+                        continue;
 
                     var hasLeave = await _db.Leaves
                         .Where(l => l.EmployeeId == employeeId &&
@@ -47,7 +53,7 @@ namespace TaskMangment.Hangfire.Jobs
                         .AnyAsync();
 
                     if (hasLeave)
-                        continue; 
+                        continue;
 
                     if (task.PenaltyOnStopComment > 0)
                     {
@@ -64,11 +70,23 @@ namespace TaskMangment.Hangfire.Jobs
                         };
 
                         await _db.Discounts.AddAsync(discount);
+                        discountsToPublish.Add(discount);
                     }
                 }
-            }
 
-            await _db.SaveChangesAsync();
+                await _db.SaveChangesAsync();
+
+                foreach (var discount in discountsToPublish)
+                {
+                    await _eventDispatcher.PublishAsync(
+                        new TaskPenaltyEvent(
+                            discount.Id,
+                            task.Id,
+                            task.Assignments.FirstOrDefault(a => a.EmployeeId == discount.EmployeeId)?.Employee?.FullName ?? "",
+                            discount.EmployeeId,
+                            task.Title));
+                }
+            }
         }
     }
 }
