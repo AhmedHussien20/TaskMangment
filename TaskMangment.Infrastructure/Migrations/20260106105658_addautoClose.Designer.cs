@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TaskMangment.Infrastructure.DataContext;
 
@@ -11,9 +12,11 @@ using TaskMangment.Infrastructure.DataContext;
 namespace TaskMangment.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260106105658_addautoClose")]
+    partial class addautoClose
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -720,9 +723,6 @@ namespace TaskMangment.Infrastructure.Migrations
 
                     b.Property<int?>("TaskId")
                         .HasColumnType("int");
-
-                    b.Property<byte>("discountType")
-                        .HasColumnType("tinyint");
 
                     b.HasKey("Id");
 
@@ -2026,9 +2026,6 @@ namespace TaskMangment.Infrastructure.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("PenaltyOnAutoClose")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("PenaltyOnStopComment")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<byte>("Priority")

@@ -16,6 +16,8 @@ namespace TaskMangment.Domain.Entities
         public int MaxWarnings { get; set; } = 3;
         [Column(TypeName = "decimal(18,2)")] public decimal PenaltyAtMaxWarnings { get; set; } = 0;
         [Column(TypeName = "decimal(18,2)")] public decimal PenaltyOnAutoClose { get; set; } = 0;
+        [Column(TypeName = "decimal(18,2)")] public decimal PenaltyOnStopComment { get; set; } = 0;
+
         public bool IsShared { get; set; } = false;
         public TaskPriority Priority { get; set; } = TaskPriority.Low;
         public DateTime? DueDate { get; set; }

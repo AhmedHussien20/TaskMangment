@@ -45,7 +45,8 @@ export class TaskListComponent implements OnInit {
     createdByMe: number;
     inProgressTasks: number;
     newTasks: number;
-    archiveTasks: number
+    archiveTasks: number;
+   // autoClose : number;
   };
   employees: { id: number; name: string }[] = [];
   status: { id: number; name: string }[] = [];
@@ -86,7 +87,8 @@ export class TaskListComponent implements OnInit {
         New: { text: 'TASK.STATUS_NEW', class: 'bg-secondary' },
         InProgress: { text: 'TASK.STATUS_IN_PROGRESS', class: 'bg-info' },
         Closed: { text: 'TASK.STATUS_CLOSED', class: 'bg-success' },
-        Archived: { text: 'TASK.STATUS_ARCHIVED', class: 'bg-dark' }
+        Archived: { text: 'TASK.STATUS_ARCHIVED', class: 'bg-dark' },
+        AutoClose: {text: 'TASK.STATUS_AUTOCLOSE',class: 'bg-warning' },
       }
     },
 
@@ -103,7 +105,8 @@ export class TaskListComponent implements OnInit {
     { id: 1, name: 'TASK.STATUS_NEW' },
     { id: 2, name: 'TASK.STATUS_IN_PROGRESS' },
     { id: 3, name: 'TASK.STATUS_CLOSED' },
-    { id: 4, name: 'TASK.STATUS_ARCHIVED' }
+    { id: 4, name: 'TASK.STATUS_ARCHIVED' },
+    { id: 5, name:'TASK.STATUS_AUTOCLOSE'},
   ];
 
 
