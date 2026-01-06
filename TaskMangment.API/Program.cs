@@ -315,6 +315,12 @@ namespace TaskMangment.API
 
             //using (var scope = app.Services.CreateScope())
             //{
+            //    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            //    LeaveTypeSeeder.Seed(db);
+            //}
+
+            //using (var scope = app.Services.CreateScope())
+            //{
             //    var jobClient = scope.ServiceProvider.GetRequiredService<IBackgroundJobClient>();
 
             //    jobClient.Enqueue<ProcessPendingEmailsJob>(
@@ -346,9 +352,9 @@ namespace TaskMangment.API
             //                Cron.Minutely()
             //);
 
-//            RecurringJob.AddOrUpdate<PenaltyForMissingCommentsJob>(
-//                job => job.ExecuteAsync(),"0 8 * * *",TimeZoneInfo.FindSystemTimeZoneById("Arab Standard Time")
-//);
+            //RecurringJob.AddOrUpdate<PenaltyForMissingCommentsJob>(
+            //                job => job.ExecuteAsync(),"0 8 * * *",TimeZoneInfo.FindSystemTimeZoneById("Arab Standard Time")
+            //);
 
 
 
