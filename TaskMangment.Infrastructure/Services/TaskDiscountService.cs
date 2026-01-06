@@ -2,12 +2,14 @@
 using Azure.Core;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Localization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TaskMangment.Application.Common.ApiRequests.Task;
+using TaskMangment.Application.Common.DiscountTypes;
 using TaskMangment.Application.Common.Errors;
 using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Common.Interfaces;
@@ -19,8 +21,6 @@ using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
 using TaskMangment.Domain.Event;
 using TaskMangment.Infrastructure.Persistence.Extensions;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
-
 namespace TaskMangment.Infrastructure.Services
 {
     public class TaskDiscountService : ITaskDiscountService
@@ -31,6 +31,8 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
         private readonly IDomainEventDispatcher _eventDispatcher;
+        private readonly IStringLocalizer<TaskDiscountService> _localizer;
+
 
         public TaskDiscountService(
             IRepository<Discount> discountRepo,
@@ -38,7 +40,9 @@ namespace TaskMangment.Infrastructure.Services
             IRepository<WorkTask> taskRepo,
             IMapper mapper,
             ICachingService cache,
-            IDomainEventDispatcher eventDispatcher)
+            IDomainEventDispatcher eventDispatcher,
+            IStringLocalizer<TaskDiscountService> localizer
+)
         {
             _discountRepo = discountRepo;
             _employeeRepo = employeeRepo;
@@ -46,6 +50,7 @@ namespace TaskMangment.Infrastructure.Services
             _mapper = mapper;
             _cache = cache;
             _eventDispatcher = eventDispatcher;
+            _localizer = localizer;
         }
 
         public async Task<ApiResponse<PagedResponse<DiscountGetDto>>> GetAllAsync(TaskDiscountRequest request)
@@ -78,6 +83,20 @@ namespace TaskMangment.Infrastructure.Services
                 .Take(request.PageSize)
                 .ToListAsync();
 
+            foreach (var item in list)
+            {
+                if (!item.AutoDiscount)
+                    continue;
+                switch (item.discountType)
+                {
+                    case DiscountType.AutoCloseTaskDiscount:
+                        item.Reason = _localizer[DiscountTypes.AutoCloseTaskDiscount]; break;
+                    case DiscountType.MaxWarningDiscount:
+                        item.Reason = _localizer[DiscountTypes.MaxwarningTaskDiscount]; break;
+                    case DiscountType.StopCommentDiscount:
+                        item.Reason = _localizer[DiscountTypes.StopCommentTaskDiscount]; break;
+                }
+            }
             var dtos = _mapper.Map<ICollection<DiscountGetDto>>(list);
 
             var response = new PagedResponse<DiscountGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
@@ -117,6 +136,8 @@ namespace TaskMangment.Infrastructure.Services
             var discount = _mapper.Map<Discount>(dto);
             discount.TaskId = TaskID;
             discount.CreatedByEmployeeId = createdByEmployeeId;
+            discount.AutoDiscount = false;
+            discount.discountType = DiscountType.ManualDiscount;
             //discount.CreatedDate = DateTime.UtcNow;
 
             await _discountRepo.AddAsync(discount);

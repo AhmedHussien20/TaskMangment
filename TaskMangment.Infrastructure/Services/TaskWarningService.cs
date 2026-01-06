@@ -31,6 +31,7 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
         private readonly IDomainEventDispatcher _eventDispatcher;
+        private readonly IRepository<Discount> _discountRepo;
 
 
         public TaskWarningService(
@@ -40,7 +41,8 @@ namespace TaskMangment.Infrastructure.Services
             IMapper mapper,
             ICachingService cache,
             IRepository<WorkTask> taskRepo,
-            IDomainEventDispatcher eventDispatcher)
+            IDomainEventDispatcher eventDispatcher,
+            IRepository<Discount> discountRepo)
         {
             _warningRepo = warningRepo;
             _employeeRepo = employeeRepo;
@@ -49,6 +51,7 @@ namespace TaskMangment.Infrastructure.Services
             _cache = cache;
             _taskRepo = taskRepo;
             _eventDispatcher = eventDispatcher;
+            _discountRepo = discountRepo;
         }
 
         public async Task<ApiResponse<PagedResponse<WarningGetDto>>> GetAllAsync(WarningRequest request)
@@ -105,7 +108,7 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<WarningGetDto>.Ok(dto);
         }
 
-        public async Task<ApiResponse<WarningGetDto>> AddAsync(WarningAddEditDto dto,int taskId,int employeeId)
+        public async Task<ApiResponse<WarningGetDto>> AddAsync(WarningAddEditDto dto, int taskId, int employeeId)
         {
             var task = await _taskRepo.GetByIDAsync(taskId);
             if (task == null)
@@ -130,18 +133,49 @@ namespace TaskMangment.Infrastructure.Services
             //warning.CreatedDate = DateTime.UtcNow;
 
             await _warningRepo.AddAsync(warning);
+
+
+            var warningCount = await _warningRepo.GetAll(w =>
+        w.TaskId == taskId &&
+        w.IssuedEmployeeId == dto.IssuedEmployeeId
+    ).CountAsync() + 1;
+
+            Discount? discount = null;
+            if (warningCount >= task.MaxWarnings)
+            {
+                discount = new Discount
+                {
+                    TaskId = taskId,
+                    EmployeeId = dto.IssuedEmployeeId,
+                    Amount = task.PenaltyAtMaxWarnings,
+                    Reason = "Max warning discount",
+                    AutoDiscount = true,
+                    CreatedDate = DateTime.UtcNow,
+                    discountType= DiscountType.MaxWarningDiscount
+                   
+                };
+                await _discountRepo.AddAsync(discount);
+
+            }
+
             await _warningRepo.SaveChangesAsync();
 
-            await _cache.RemoveAsync("warnings:");
+                await _cache.RemoveAsync("warnings:");
 
 
-            var employeeName = await _employeeRepo.GetAll(e => e.Id == employeeId).Select(e => e.FullName).FirstOrDefaultAsync();
+                var employeeName = await _employeeRepo.GetAll(e => e.Id == employeeId).Select(e => e.FullName).FirstOrDefaultAsync();
 
-            await _eventDispatcher.PublishAsync(
-                new TaskWarningEvent(warning.Id, taskId, employeeName, dto.IssuedEmployeeId, task.Title)
-            );
+                await _eventDispatcher.PublishAsync(
+                    new TaskWarningEvent(warning.Id, taskId, employeeName, dto.IssuedEmployeeId, task.Title)
+                );
 
-            // تحميل البيانات للـ response
+            if (discount != null)
+            {
+                await _eventDispatcher.PublishAsync(
+                    new TaskPenaltyEvent(discount.Id, taskId, employeeName, dto.IssuedEmployeeId, task.Title)
+                );
+            }
+
             var savedWarning = await _warningRepo.GetAll(w => w.Id == warning.Id)
                 .Include(w => w.IssuedBy)
                 .Include(w => w.Issued)
@@ -150,16 +184,15 @@ namespace TaskMangment.Infrastructure.Services
                 .AsNoTracking()
                 .FirstOrDefaultAsync();
 
-            var warningDto = _mapper.Map<WarningGetDto>(savedWarning);
-            warningDto.TaskTitle = savedWarning.TaskAssignment.Task?.Title;
-            warningDto.IssuedEmployeeName = savedWarning.Issued?.FullName;
-            warningDto.IssuedByName = savedWarning.IssuedBy?.FullName;
+                var warningDto = _mapper.Map<WarningGetDto>(savedWarning);
+                warningDto.TaskTitle = savedWarning.TaskAssignment.Task?.Title;
+                warningDto.IssuedEmployeeName = savedWarning.Issued?.FullName;
+                warningDto.IssuedByName = savedWarning.IssuedBy?.FullName;
 
-            return ApiResponse<WarningGetDto>.Ok(
-                warningDto,
-                "Warning added successfully"
-            );
-        }
+                return ApiResponse<WarningGetDto>.Ok(warningDto, "Warning added successfully");
+            }
+        
+        
 
         public async Task<ApiResponse<WarningGetDto>> UpdateAsync(int id, WarningAddEditDto dto)
         {

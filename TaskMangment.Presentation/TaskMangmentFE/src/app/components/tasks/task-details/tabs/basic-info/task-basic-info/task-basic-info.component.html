@@ -47,6 +47,17 @@
           </span>
         </td>
       </tr>
+
+      <tr>
+        <th>{{ 'TASK.PENALTY_ON_STOP_COMMENT' | translate }}</th>
+        <td>
+          <span class="money-badge">
+            {{ taskInfo?.penaltyOnStopComment }}
+            <span class="currency">SAR</span>
+          </span>
+        </td>
+      </tr>
+
      <tr>
         <th>{{ 'TASK.CREATED_AT' | translate }}</th>
         <td>{{ taskInfo?.createdDate | myDate }}</td>

@@ -28,6 +28,7 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
         public string Reason { get; set; }
         public decimal Amount { get; set; }
         public DateTime CreatedDate { get; set; }
+        public bool AutoDiscount { get; set; }
     }
 
    

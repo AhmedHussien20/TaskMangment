@@ -302,53 +302,58 @@ namespace TaskMangment.API
                 // API Controllers
                 app.MapControllers();
 
-                //using (var scope = app.Services.CreateScope())
-                //{
-                //    var seeder = scope.ServiceProvider.GetRequiredService<DataSeeder>();
-                //    await seeder.SeedAsync();
-                //}
+            //using (var scope = app.Services.CreateScope())
+            //{
+            //    var seeder = scope.ServiceProvider.GetRequiredService<DataSeeder>();
+            //    await seeder.SeedAsync();
+            //}
 
-                //using (var scope = app.Services.CreateScope())
-                //{
-                //    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                //    EmailTemplateSeeder.Seed(db);
-                //}
+            //using (var scope = app.Services.CreateScope())
+            //{
+            //    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            //    EmailTemplateSeeder.Seed(db);
+            //}
 
-                //using (var scope = app.Services.CreateScope())
-                //{
-                //    var jobClient = scope.ServiceProvider.GetRequiredService<IBackgroundJobClient>();
+            //using (var scope = app.Services.CreateScope())
+            //{
+            //    var jobClient = scope.ServiceProvider.GetRequiredService<IBackgroundJobClient>();
 
-                //    jobClient.Enqueue<ProcessPendingEmailsJob>(
-                //        j => j.ExecuteAsync()
-                //    );
-                //}
-               // app.UseHangfireDashboard("/hangfire");
-    //            RecurringJob.AddOrUpdate<ProcessPendingEmailsJob>(
-    //                "process-pending-emails",
-    //                j => j.ExecuteAsync(),
-    //                Cron.Minutely
-    //            );
+            //    jobClient.Enqueue<ProcessPendingEmailsJob>(
+            //        j => j.ExecuteAsync()
+            //    );
+            //}
+            // app.UseHangfireDashboard("/hangfire");
+            //            RecurringJob.AddOrUpdate<ProcessPendingEmailsJob>(
+            //                "process-pending-emails",
+            //                j => j.ExecuteAsync(),
+            //                Cron.Minutely
+            //            );
 
-    //            RecurringJob.AddOrUpdate<ITaskDueTodayEmailJob>(
-    //                "task-due-today-email-job",
-    //                job => job.ExecuteAsync(),
-    //                Cron.Daily(8)
-    //             );
-
-
-    //            RecurringJob.AddOrUpdate<AttachmentBlobMigrationJob>(
-    //                "attachment-blob-migration",
-    //                job => job.ExecuteAsync(),
-    //                Cron.Minutely()
-    //            );
-    //            RecurringJob.AddOrUpdate<ArchiveOverdueTasksJob>(
-    //                "archive-overdue-tasks",
-    //                job => job.ExecuteAsync(),
-    //                Cron.Minutely()
-    //);
+            //            RecurringJob.AddOrUpdate<ITaskDueTodayEmailJob>(
+            //                "task-due-today-email-job",
+            //                job => job.ExecuteAsync(),
+            //                Cron.Daily(8)
+            //             );
 
 
-                app.Run();
+            //            RecurringJob.AddOrUpdate<AttachmentBlobMigrationJob>(
+            //                "attachment-blob-migration",
+            //                job => job.ExecuteAsync(),
+            //                Cron.Minutely()
+            //            );
+            //            RecurringJob.AddOrUpdate<ArchiveOverdueTasksJob>(
+            //                "archive-overdue-tasks",
+            //                job => job.ExecuteAsync(),
+            //                Cron.Minutely()
+            //);
+
+//            RecurringJob.AddOrUpdate<PenaltyForMissingCommentsJob>(
+//                job => job.ExecuteAsync(),"0 8 * * *",TimeZoneInfo.FindSystemTimeZoneById("Arab Standard Time")
+//);
+
+
+
+            app.Run();
              
         }
     }
