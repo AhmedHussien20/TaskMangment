@@ -95,8 +95,19 @@ RecurringJob.AddOrUpdate<AttachmentBlobMigrationJob>(
     Cron.Minutely);
 
 RecurringJob.AddOrUpdate<PenaltyForMissingCommentsJob>(
-                job => job.ExecuteAsync(), "0 8 * * *", TimeZoneInfo.FindSystemTimeZoneById("Arab Standard Time")
+      "penalty-missing-comments",
+    job => job.ExecuteAsync(),
+    Cron.Minutely 
 );
+
+RecurringJob.AddOrUpdate<ArchiveOverdueTasksJob>(
+               "archive-overdue-tasks",
+               job => job.ExecuteAsync(),
+               Cron.Minutely()
+               );
+
+
+
 app.Run();
 
  
