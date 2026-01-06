@@ -4,7 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Domain.Entities;
+using TaskMangment.Domain.Event;
 using TaskMangment.Infrastructure.DataContext;
 
 namespace TaskMangment.Hangfire.Jobs
@@ -12,10 +14,13 @@ namespace TaskMangment.Hangfire.Jobs
     public class ArchiveOverdueTasksJob
     {
         private readonly AppDbContext _db;
+        private readonly IDomainEventDispatcher _eventDispatcher;
 
-        public ArchiveOverdueTasksJob(AppDbContext db)
+
+        public ArchiveOverdueTasksJob(AppDbContext db, IDomainEventDispatcher eventDispatcher)
         {
             _db = db;
+            _eventDispatcher = eventDispatcher;
         }
 
         public async Task ExecuteAsync()
@@ -38,13 +43,12 @@ namespace TaskMangment.Hangfire.Jobs
                          && r.NewDueDate > DateTime.UtcNow)
                     .FirstOrDefaultAsync();
 
-
                 if (approvedExtension != null)
-                {
                     continue;
-                }
 
                 task.Status = WorkTaskStatus.AutoClose;
+
+                var discountsToPublish = new List<Discount>();
 
                 foreach (var assignment in task.Assignments)
                 {
@@ -54,17 +58,16 @@ namespace TaskMangment.Hangfire.Jobs
                         EmployeeId = assignment.EmployeeId,
                         Reason = "add discount on auto close task",
                         Amount = task.PenaltyOnAutoClose,
-                        CreatedByEmployeeId = 0, 
+                        CreatedByEmployeeId = 0,
                         AutoDiscount = true,
                         CreatedDate = DateTime.UtcNow,
                         discountType = DiscountType.AutoCloseTaskDiscount
-                        
                     };
 
                     await _db.Discounts.AddAsync(discount);
+                    discountsToPublish.Add(discount);
                 }
 
-                //add check on manager on comment and warning
                 if (task.CreatedByEmployeeId.HasValue)
                 {
                     var creatorId = task.CreatedByEmployeeId.Value;
@@ -82,7 +85,7 @@ namespace TaskMangment.Hangfire.Jobs
                         w.TaskId == task.Id &&
                         w.CreatedBy == creatorId);
 
-                    var managerDidSomething = creatorCommented || creatorAddedPenalty ||creatorAddedWarning;
+                    var managerDidSomething = creatorCommented || creatorAddedPenalty || creatorAddedWarning;
 
                     if (!managerDidSomething)
                     {
@@ -99,12 +102,24 @@ namespace TaskMangment.Hangfire.Jobs
                         };
 
                         await _db.Discounts.AddAsync(managerDiscount);
+                        discountsToPublish.Add(managerDiscount);
                     }
                 }
 
+                await _db.SaveChangesAsync();
+
+                foreach (var discount in discountsToPublish)
+                {
+                    await _eventDispatcher.PublishAsync(
+                        new TaskPenaltyEvent(
+                            discount.Id,
+                            task.Id,
+                            task.Assignments.FirstOrDefault(a => a.EmployeeId == discount.EmployeeId)?.Employee?.FullName ?? "",
+                            discount.EmployeeId,
+                            task.Title));
+                }
             }
 
-            await _db.SaveChangesAsync();
         }
     }
 }

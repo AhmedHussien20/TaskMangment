@@ -638,7 +638,8 @@
       "APPOINTMENT": "Appointment",
       "ANNIVERSAR": "Anniversary",
       "REMINDER": "Reminder",
-      "TASKDEADLINE": "Task Deadline"
+      "TASKDEADLINE": "Task Deadline",
+      "COMMENT" : "Event of comment"
     },
     "15MIN": "15 Minutes",
     "30MIN": "30 Minutes",
