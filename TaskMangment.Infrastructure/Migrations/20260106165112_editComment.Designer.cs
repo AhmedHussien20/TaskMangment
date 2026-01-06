@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TaskMangment.Infrastructure.DataContext;
 
@@ -11,9 +12,11 @@ using TaskMangment.Infrastructure.DataContext;
 namespace TaskMangment.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260106165112_editComment")]
+    partial class editComment
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1077,12 +1080,6 @@ namespace TaskMangment.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime?>("ApprovedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("ApprovedById")
-                        .HasColumnType("int");
-
                     b.Property<int?>("CreatedBy")
                         .HasColumnType("int");
 
@@ -1114,20 +1111,13 @@ namespace TaskMangment.Infrastructure.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Notes")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("RejectionReason")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("ApprovedById");
 
                     b.HasIndex("EmployeeId");
 
@@ -1156,14 +1146,12 @@ namespace TaskMangment.Infrastructure.Migrations
                     b.Property<DateTime?>("DeletedDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
-
-                    b.Property<bool>("IsPaid")
-                        .HasColumnType("bit");
-
-                    b.Property<int?>("MaxDaysPerYear")
-                        .HasColumnType("int");
 
                     b.Property<int?>("ModifiedBy")
                         .HasColumnType("int");
@@ -1171,19 +1159,14 @@ namespace TaskMangment.Infrastructure.Migrations
                     b.Property<DateTime?>("ModifiedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("NameAr")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("NameEn")
+                    b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("LeaveTypes");
+                    b.ToTable("leaveTypes");
                 });
 
             modelBuilder.Entity("TaskMangment.Domain.Entities.Notification", b =>
@@ -2296,10 +2279,6 @@ namespace TaskMangment.Infrastructure.Migrations
 
             modelBuilder.Entity("TaskMangment.Domain.Entities.Leave", b =>
                 {
-                    b.HasOne("TaskMangment.Domain.Entities.Employee", "ApprovedBy")
-                        .WithMany()
-                        .HasForeignKey("ApprovedById");
-
                     b.HasOne("TaskMangment.Domain.Entities.Employee", "Employee")
                         .WithMany()
                         .HasForeignKey("EmployeeId")
@@ -2307,12 +2286,10 @@ namespace TaskMangment.Infrastructure.Migrations
                         .IsRequired();
 
                     b.HasOne("TaskMangment.Domain.Entities.LeaveType", "LeaveType")
-                        .WithMany("Leaves")
+                        .WithMany()
                         .HasForeignKey("LeaveTypeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("ApprovedBy");
 
                     b.Navigation("Employee");
 
@@ -2610,11 +2587,6 @@ namespace TaskMangment.Infrastructure.Migrations
             modelBuilder.Entity("TaskMangment.Domain.Entities.Job", b =>
                 {
                     b.Navigation("Employees");
-                });
-
-            modelBuilder.Entity("TaskMangment.Domain.Entities.LeaveType", b =>
-                {
-                    b.Navigation("Leaves");
                 });
 
             modelBuilder.Entity("TaskMangment.Domain.Entities.Offer", b =>

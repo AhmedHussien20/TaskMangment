@@ -32,7 +32,22 @@
         (change)="onFileChange($event)" 
         multiple>
     </div>
+    
+ <div class="row">
+      <div class="col-md-6 mb-3">
+        <label class="form-label">
+          {{ 'CALENDAR.START_DATE' | translate }} *
+        </label>
+        <input type="datetime-local" class="form-control" formControlName="startDate" />
+      </div>
 
+      <div class="col-md-6 mb-3">
+        <label class="form-label">
+          {{ 'CALENDAR.END_DATE' | translate }}
+        </label>
+        <input type="datetime-local" class="form-control" formControlName="endDate" />
+      </div>
+    </div>
   </div>
 
   <div class="modal-footer">

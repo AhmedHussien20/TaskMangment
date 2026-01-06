@@ -5,6 +5,8 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { TaskCommentService } from 'app/core/services/task-comment.service';
 import { ToastrService } from 'ngx-toastr';
+import { CalendarEventService } from 'app/core/services/calendar-events.service';
+import { CalendarEventType } from 'app/core/models/event/calendar';
 
 @Component({
   selector: 'app-comment-modal',
@@ -25,43 +27,96 @@ export class CommentModalComponent implements OnInit {
     private fb: FormBuilder,
     private commentService: TaskCommentService,
     private toastr: ToastrService,
-    private translate: TranslateService
+    private translate: TranslateService,
+    private calendarService: CalendarEventService,
   ) {}
 
   ngOnInit(): void {
     this.form = this.fb.group({
-      comment: ['', [Validators.required, Validators.minLength(5)]]
+      comment: ['', [Validators.required, Validators.minLength(5)]],
+       startDate: [null],  
+       endDate: [null]
     });
   }
 
   onFileChange(event: any) {
-    if (event.target.files && event.target.files.length > 0) {
-      this.files = Array.from(event.target.files);
-    }
+  if (event.target.files && event.target.files.length > 0) {
+    this.files = Array.from(event.target.files);
+  } else {
+    this.files = [];
   }
 
-  submit(): void {
-    if (this.form.invalid || this.isSubmitting) return;
+  const commentControl = this.form.get('comment');
 
-    const formData = new FormData();
-    formData.append('CommentText', this.form.value.comment.trim());
+  if (!commentControl) return;
 
-    this.files.forEach((file) => {
-      formData.append('File', file);
-    });
+  if (this.files.length > 0) {
+    commentControl.clearValidators();
+  } else {
+    commentControl.setValidators([
+      Validators.required,
+      Validators.minLength(5)
+    ]);
+  }
 
-    this.isSubmitting = true;
+  commentControl.updateValueAndValidity();
+}
 
-    this.commentService.create(this.taskId, formData).subscribe({
-      next: () => {
+submit(): void {
+  if (this.form.invalid || this.isSubmitting) return;
+
+  const formData = new FormData();
+
+  // Comment text
+  const commentText = this.form.value.comment?.trim() || '';
+  formData.append('CommentText', commentText);
+
+  // Attachments
+  this.files.forEach((file) => {
+    formData.append('File', file);
+  });
+
+  this.isSubmitting = true;
+
+  // إنشاء التعليق
+  this.commentService.create(this.taskId, formData).subscribe({
+    next: () => {
+      // نعمل event بس لو المستخدم حدد تاريخ على الأقل
+      if (this.form.value.startDate) {
+        const eventPayload = {
+          title: 'Comment',
+          description: commentText,
+          startDate: new Date(this.form.value.startDate).toISOString(),
+          endDate: this.form.value.endDate ? new Date(this.form.value.endDate).toISOString() : null,
+          allDay: false,
+          eventType: CalendarEventType.Comment,
+          reminder: 15
+        };
+
+        this.calendarService.create(eventPayload).subscribe({
+          next: () => {
+            this.toastr.success(this.translate.instant('TASK.COMMENT_SUCCESS'));
+            this.isSubmitting = false;
+            this.modal.close(true);
+          },
+          error: () => {
+            this.isSubmitting = false;
+            this.toastr.error(this.translate.instant('TASK.COMMENT_EVENT_ERROR'));
+          }
+        });
+      } else {
+        // لو مفيش startDate → نغلق المودال بعد التعليق فقط
         this.toastr.success(this.translate.instant('TASK.COMMENT_SUCCESS'));
         this.isSubmitting = false;
         this.modal.close(true);
-      },
-      error: () => {
-        this.isSubmitting = false;
       }
+    },
+    error: () => {
+      this.isSubmitting = false;
+      this.toastr.error(this.translate.instant('TASK.COMMENT_ERROR'));
+    }
+  });
+}
 
-    });
-  }
+
 }
