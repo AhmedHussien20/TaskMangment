@@ -242,6 +242,9 @@ namespace TaskMangment.Application.AutoMapper
             CreateMap<PermissionAddDto, Permission>();
             CreateMap<Permission, PermissionGetDto>();
 
+            CreateMap<LeaveType, LeaveTypeGetDto>().ReverseMap();
+            CreateMap<LeaveTypeAddEditDto, LeaveType>();
+
         }
     }
 }
