@@ -35,12 +35,9 @@ namespace TaskMangment.API.Controllers
 
 
         [HttpGet("top-commenters/pdf")]
-        public async Task<IActionResult> GetTopCommentersPdf(
-    DateTime? fromDate,
-    DateTime? toDate)
+        public async Task<IActionResult> GetTopCommentersPdf(DateTime? fromDate,DateTime? toDate)
         {
-            var data = await _reportService
-                .GetTopEmployeesByCommentsAsync(fromDate, toDate);
+            var data = await _reportService.GetTopEmployeesByCommentsAsync(fromDate, toDate);
 
             var report = new EmployeeCommentsPdfReport(data);
             var pdf = report.GeneratePdf();
@@ -50,12 +47,9 @@ namespace TaskMangment.API.Controllers
 
 
         [HttpGet("most-assigned/pdf")]
-        public async Task<IActionResult> GetMostAssignedEmployeesPdf(
-    DateTime? fromDate,
-    DateTime? toDate)
+        public async Task<IActionResult> GetMostAssignedEmployeesPdf(DateTime? fromDate,DateTime? toDate)
         {
-            var data = await _reportService
-                .GetMostAssignedEmployeesAsync(fromDate, toDate);
+            var data = await _reportService.GetMostAssignedEmployeesAsync(fromDate, toDate);
 
             var report = new MostAssignedEmployeesPdfReport(data);
             var pdf = report.GeneratePdf();
@@ -64,9 +58,7 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpGet("on-time-completion/pdf")]
-        public async Task<IActionResult> GetOnTimeCompletionPdf(
-    DateTime? fromDate,
-    DateTime? toDate)
+        public async Task<IActionResult> GetOnTimeCompletionPdf(DateTime? fromDate,DateTime? toDate)
         {
             var data = await _reportService
                 .GetOnTimeCompletionReportAsync(fromDate, toDate);
@@ -78,13 +70,9 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpGet("archived-tasks/pdf")]
-        public async Task<IActionResult> GetArchivedTasksPdf(
-    DateTime? fromDate,
-    DateTime? toDate)
+        public async Task<IActionResult> GetArchivedTasksPdf(DateTime? fromDate,DateTime? toDate)
         {
-            var data = await _reportService
-                .GetMostArchivedEmployeesAsync(fromDate, toDate);
-
+            var data = await _reportService.GetMostArchivedEmployeesAsync(fromDate, toDate);
             var report = new ArchivedTasksPdfReport(data);
             var pdf = report.GeneratePdf();
 

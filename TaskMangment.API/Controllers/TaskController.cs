@@ -17,12 +17,10 @@ namespace TaskMangment.API.Controllers
     {
         private readonly ITaskService _service;
         private readonly INotificationService _notificationService;
-        private readonly IHubContext<NotificationHub> _hub;
 
-        public TaskController(ITaskService service, IHubContext<NotificationHub> hub, INotificationService notificationService)
+        public TaskController(ITaskService service, INotificationService notificationService)
         {
             _service = service;
-            _hub = hub;
             _notificationService= notificationService;
         }
 

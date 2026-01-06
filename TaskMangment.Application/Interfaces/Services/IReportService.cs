@@ -9,21 +9,11 @@ namespace TaskMangment.Application.Interfaces.Services
 {
     public interface IReportService
     {
-        Task<List<EmployeeCommentsReportDto>> GetTopEmployeesByCommentsAsync(
-            DateTime? fromDate = null,
-            DateTime? toDate = null);
-
-        Task<List<EmployeeAssignmentsReportDto>> GetMostAssignedEmployeesAsync(
-        DateTime? fromDate = null,
-        DateTime? toDate = null);
-
-        Task<List<EmployeeOnTimeReportDto>> GetOnTimeCompletionReportAsync(
-       DateTime? fromDate = null,
-       DateTime? toDate = null);
-
-
-        Task<List<EmployeeArchivedTasksReportDto>> GetMostArchivedEmployeesAsync(
-      DateTime? fromDate = null,
-      DateTime? toDate = null);
+        Task<List<EmployeeCommentsReportDto>> GetTopEmployeesByCommentsAsync( DateTime? fromDate = null,DateTime? toDate = null);
+        Task<List<EmployeeAssignmentsReportDto>> GetMostAssignedEmployeesAsync(DateTime? fromDate = null, DateTime? toDate = null);
+        Task<List<EmployeeOnTimeReportDto>> GetOnTimeCompletionReportAsync(DateTime? fromDate = null,DateTime? toDate = null);
+        Task<List<EmployeeArchivedTasksReportDto>> GetMostArchivedEmployeesAsync( DateTime? fromDate = null,DateTime? toDate = null);
+     
+      
     }
 }

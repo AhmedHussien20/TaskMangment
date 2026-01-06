@@ -20,13 +20,9 @@ namespace TaskMangment.Infrastructure.Services
             _context = context;
         }
 
-        public async Task<List<EmployeeCommentsReportDto>> GetTopEmployeesByCommentsAsync(
-            DateTime? fromDate = null,
-            DateTime? toDate = null)
+        public async Task<List<EmployeeCommentsReportDto>> GetTopEmployeesByCommentsAsync(DateTime? fromDate = null, DateTime? toDate = null)
         {
-            var query = _context.TaskComments
-                .Include(c => c.Employee)
-                .AsQueryable();
+            var query = _context.TaskComments.Include(c => c.Employee).AsQueryable();
 
             if (fromDate.HasValue)
                 query = query.Where(c => c.CreatedDate >= fromDate.Value);
@@ -37,31 +33,23 @@ namespace TaskMangment.Infrastructure.Services
             if (!fromDate.HasValue && !toDate.HasValue)
                 return new List<EmployeeCommentsReportDto>();
 
-            return await query
-                .GroupBy(c => new
+            return await query.GroupBy(c => new
                 {
                     c.EmployeeId,
                     c.Employee.FullName
-                })
-                .Select(g => new EmployeeCommentsReportDto
+                }).Select(g => new EmployeeCommentsReportDto
                 {
                     EmployeeName = g.Key.FullName,
                     CommentsCount = g.Count()
-                })
-                .OrderByDescending(x => x.CommentsCount)
+                }) .OrderByDescending(x => x.CommentsCount)
                 .AsNoTracking()
                 .ToListAsync();
         }
 
 
-        public async Task<List<EmployeeAssignmentsReportDto>> GetMostAssignedEmployeesAsync(
-    DateTime? fromDate = null,
-    DateTime? toDate = null)
+        public async Task<List<EmployeeAssignmentsReportDto>> GetMostAssignedEmployeesAsync(DateTime? fromDate = null,DateTime? toDate = null)
         {
-            var query = _context.TaskAssignments
-                .Include(a => a.Employee)
-                .Include(a => a.Task)
-                .AsQueryable();
+            var query = _context.TaskAssignments.Include(a => a.Employee).Include(a => a.Task).AsQueryable();
 
             if (fromDate.HasValue)
                 query = query.Where(a => a.Task.CreatedDate >= fromDate.Value);
@@ -77,27 +65,18 @@ namespace TaskMangment.Infrastructure.Services
                 {
                     a.EmployeeId,
                     a.Employee.FullName
-                })
-                .Select(g => new EmployeeAssignmentsReportDto
+                }).Select(g => new EmployeeAssignmentsReportDto
                 {
                     EmployeeName = g.Key.FullName,
                     TasksCount = g.Count()
-                })
-                .OrderByDescending(x => x.TasksCount)
-                .AsNoTracking()
-                .ToListAsync();
+                }).OrderByDescending(x => x.TasksCount) .AsNoTracking().ToListAsync();
         }
 
 
 
-        public async Task<List<EmployeeOnTimeReportDto>> GetOnTimeCompletionReportAsync(
-     DateTime? fromDate = null,
-     DateTime? toDate = null)
+        public async Task<List<EmployeeOnTimeReportDto>> GetOnTimeCompletionReportAsync(DateTime? fromDate = null,DateTime? toDate = null)
         {
-            var query = _context.TaskAssignments
-                .Include(a => a.Employee)
-                .Include(a => a.Task)
-                .AsQueryable();
+            var query = _context.TaskAssignments.Include(a => a.Employee).Include(a => a.Task).AsQueryable();
 
             if (fromDate.HasValue)
                 query = query.Where(a => a.Task.CreatedDate >= fromDate.Value);
@@ -134,9 +113,7 @@ namespace TaskMangment.Infrastructure.Services
         }
 
 
-        public async Task<List<EmployeeArchivedTasksReportDto>> GetMostArchivedEmployeesAsync(
-    DateTime? fromDate = null,
-    DateTime? toDate = null)
+        public async Task<List<EmployeeArchivedTasksReportDto>> GetMostArchivedEmployeesAsync(DateTime? fromDate = null, DateTime? toDate = null)
         {
             var query = _context.TaskAssignments
                 .Include(a => a.Employee)
