@@ -1,0 +1,16 @@
+.task-audit {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.task-audit-content {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.modal-body {
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+}

@@ -14,8 +14,7 @@
     <small class="text-muted d-block mt-2">{{ 'COMMON.LOADING' | translate }}</small>
   </div>
 
-  <div *ngIf="!isLoading && items.length > 0" class="overflow-auto" style="max-height: 700px;">
-    
+  <div *ngIf="!isLoading && items.length > 0" class="task-audit-content">
     <div *ngIf="commentItems.length > 0" class="mb-4">
       <div class="d-flex align-items-center justify-content-between mb-2 px-1">
         <div class="d-flex align-items-center gap-2">
@@ -23,7 +22,7 @@
           <h6 class="mb-0">
             {{ 'TASK.COMMENTS' | translate }}
           </h6>
-            <span class="badge bg-primary rounded-pill ms-2">{{ counts['comment'] }}</span>
+          <span class="badge bg-primary rounded-pill ms-2">{{ counts['comment'] }}</span>
         </div>
       </div>
       <ul class="list-group list-group-flush">
@@ -32,10 +31,10 @@
             <i class="bi bi-chat-dots text-primary" style="font-size: 1.2rem;"></i>
             <div class="flex-grow-1">
               <div class="fw-semibold">{{ item.message }}</div>
-             <div class="text-muted small">
-  <div>{{ item.user }}</div>
-  <div>{{ item.date | myDate:'d MMMM y':true }}</div>
-</div>
+              <div class="text-muted small">
+                <div>{{ item.user }}</div>
+                <div>{{ item.date | myDate:'d MMMM y':true }}</div>
+              </div>
             </div>
           </div>
         </li>
@@ -51,7 +50,7 @@
           <h6 class="mb-0">
             {{ 'TASK.WARNINGS' | translate }}
           </h6>
-           <span class="badge bg-warning rounded-pill ms-2">{{ counts['warning'] }}</span>
+          <span class="badge bg-warning rounded-pill ms-2">{{ counts['warning'] }}</span>
         </div>
       </div>
       <ul class="list-group list-group-flush">
@@ -61,9 +60,9 @@
             <div class="flex-grow-1">
               <div class="fw-semibold">{{ item.message }}</div>
               <div class="text-muted small">
-  <div>{{ item.user }}</div>
-  <div>{{ item.date | myDate:'d MMMM y':true }}</div>
-</div>
+                <div>{{ item.user }}</div>
+                <div>{{ item.date | myDate:'d MMMM y':true }}</div>
+              </div>
             </div>
           </div>
         </li>
@@ -89,9 +88,9 @@
             <div class="flex-grow-1">
               <div class="fw-semibold">{{ item.message }}</div>
               <div class="text-muted small">
-  <div>{{ item.user }}</div>
-  <div>{{ item.date | myDate:'d MMMM y':true }}</div>
-</div>
+                <div>{{ item.user }}</div>
+                <div>{{ item.date | myDate:'d MMMM y':true }}</div>
+              </div>
             </div>
           </div>
         </li>
@@ -107,7 +106,7 @@
           <h6 class="mb-0">
             {{ 'TASK.EXTENSION_REQUESTS' | translate }}
           </h6>
-            <span class="badge bg-info rounded-pill ms-2">{{ counts['extension'] }}</span>
+          <span class="badge bg-info rounded-pill ms-2">{{ counts['extension'] }}</span>
         </div>
       </div>
       <ul class="list-group list-group-flush">
@@ -117,9 +116,9 @@
             <div class="flex-grow-1">
               <div class="fw-semibold">{{ item.message }}</div>
               <div class="text-muted small">
-  <div>{{ item.user }}</div>
-  <div>{{ item.date | myDate:'d MMMM y':true }}</div>
-</div>
+                <div>{{ item.user }}</div>
+                <div>{{ item.date | myDate:'d MMMM y':true }}</div>
+              </div>
             </div>
           </div>
         </li>
@@ -134,7 +133,7 @@
           <h6 class="mb-0">
             {{ 'TASK.PERCENTAGE_UPDATES' | translate }}
           </h6>
-            <span class="badge bg-success rounded-pill ms-2">{{ counts['percentage'] }}</span>
+          <span class="badge bg-success rounded-pill ms-2">{{ counts['percentage'] }}</span>
         </div>
       </div>
       <ul class="list-group list-group-flush">
@@ -144,9 +143,9 @@
             <div class="flex-grow-1">
               <div class="fw-semibold">{{ item.message }}</div>
               <div class="text-muted small">
-  <div>{{ item.user }}</div>
-  <div>{{ item.date | myDate:'d MMMM y':true }}</div>
-</div>
+                <div>{{ item.user }}</div>
+                <div>{{ item.date | myDate:'d MMMM y':true }}</div>
+              </div>
             </div>
           </div>
         </li>
@@ -180,14 +179,14 @@
       </ul>
     </div>
 
-    
+
 
   </div>
 
   <div *ngIf="!isLoading && items.length === 0" class="card border-0 shadow-sm">
     <div class="card-body text-center text-muted py-4">
       <i class="bi bi-activity display-6 d-block mb-2 opacity-50"></i>
-      {{ 'AUDIT.NO_DATA' | translate }}
+      {{ 'TASK.NO_DATA' | translate }}
     </div>
   </div>
 

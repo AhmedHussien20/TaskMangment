@@ -67,8 +67,7 @@ namespace TaskMangment.API
                 builder.Services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
 
                 // Notification sender 
-                builder.Services.AddScoped<INotificationSender, NotificationSender>();
-                builder.Services.AddScoped<IEventHandler<TaskAssignedEvent>, TaskAssignedEventHandler>();
+                builder.Services.AddScoped<INotificationSender, NotificationSender>(); 
                 builder.Services.AddScoped<IEventHandler<TaskUnAssignedEvent>, TaskUnAssignedEventHandler>();
                 builder.Services.AddScoped<IEventHandler<TaskUnAssignedEvent>, TaskUnAssignedEmailHandler>();
 

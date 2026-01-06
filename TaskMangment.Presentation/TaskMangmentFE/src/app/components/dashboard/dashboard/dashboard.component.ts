@@ -18,6 +18,7 @@ import { DashboardService } from 'app/core/services/dashboar.service';
 import { AdminDashboardDto, CompletedTasksTodayDto, EmployeeDashboardDto, InProgressUpdatedTodayDto, PendingCloseRequestDto } from 'app/core/models/dashboard/dashboard.model';
 import { AuthService } from 'app/core/services/auth.service';
 
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -27,7 +28,7 @@ import { AuthService } from 'app/core/services/auth.service';
     NgSelectModule,
     NgCircleProgressModule,
     NgApexchartsModule,
-   //SpkApexChartsComponent,
+    //SpkApexChartsComponent,
     SpkDashboardComponent,
     SpkReusableTablesComponent,
     CommonModule,
@@ -52,7 +53,6 @@ export class DashboardComponent {
     console.log('DashboardComponent');
     this.translate.use('ar');
   }
-
   private loadDashboard() {
     const user = this.authService.getCurrentUser();
     const userLevel = this.authService.getRoleLevel() ?? 0;
@@ -61,6 +61,7 @@ export class DashboardComponent {
       this.loadTodayInProgressTasks();
       this.loadCompletedTasksToday();
       this.loadPendingCloseRequests();
+      this.isAdmin = true;
     } else {
       this.loadEmployeeDashboard();
     }
@@ -154,15 +155,15 @@ export class DashboardComponent {
       //this.ChartOptions.labels = this.adminData.taskStatusChart.items.map(x => x.status);
     });
   }
- private loadEmployeeDashboard(): void {
-  this.dashboardService.getEmployeeDashboard().subscribe(res => {
-    this.employeeData = res.data;
+  private loadEmployeeDashboard(): void {
+    this.dashboardService.getEmployeeDashboard().subscribe(res => {
+      this.employeeData = res.data;
 
-    this.cards = [
-      {
-        title: 'DASHBOARD.MY_ACTIVE_TASKS',
-        value: this.employeeData.kpis.myActiveTasks,
-        svg: `
+      this.cards = [
+        {
+          title: 'DASHBOARD.MY_ACTIVE_TASKS',
+          value: this.employeeData.kpis.myActiveTasks,
+          svg: `
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                fill="none" stroke="currentColor" stroke-width="2"
                stroke-linecap="round" stroke-linejoin="round"
@@ -175,11 +176,11 @@ export class DashboardComponent {
             <line x1="3" y1="18" x2="3.01" y2="18"></line>
           </svg>
         `
-      },
-      {
-        title: 'DASHBOARD.DUE_SOON',
-        value: this.employeeData.kpis.dueSoonTasks,
-        svg: `
+        },
+        {
+          title: 'DASHBOARD.DUE_SOON',
+          value: this.employeeData.kpis.dueSoonTasks,
+          svg: `
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                fill="none" stroke="currentColor" stroke-width="2"
                stroke-linecap="round" stroke-linejoin="round"
@@ -188,11 +189,11 @@ export class DashboardComponent {
             <polyline points="12 6 12 12 16 14"></polyline>
           </svg>
         `
-      },
-      {
-        title: 'DASHBOARD.MY_WARNINGS',
-        value: this.employeeData.kpis.myWarnings,
-        svg: `
+        },
+        {
+          title: 'DASHBOARD.MY_WARNINGS',
+          value: this.employeeData.kpis.myWarnings,
+          svg: `
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                fill="none" stroke="currentColor" stroke-width="2"
                stroke-linecap="round" stroke-linejoin="round"
@@ -202,17 +203,17 @@ export class DashboardComponent {
             <line x1="12" y1="17" x2="12.01" y2="17"></line>
           </svg>
         `
-      }
-    ];
+        }
+      ];
 
-    this.tasks = this.employeeData.myTasks.map(t => ({
-      name: t.title,
-      checked: t.status === 'Closed',
-      status: t.status,
-      comments: `${t.progressPercent}%`
-    }));
-  });
-}
+      this.tasks = this.employeeData.myTasks.map(t => ({
+        name: t.title,
+        checked: t.status === 'Closed',
+        status: t.status,
+        comments: `${t.progressPercent}%`
+      }));
+    });
+  }
 
 
   ngOnInit(): void { this.translate.use('ar'); this.loadDashboard(); }
