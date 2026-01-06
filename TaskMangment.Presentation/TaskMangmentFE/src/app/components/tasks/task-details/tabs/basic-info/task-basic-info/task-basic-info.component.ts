@@ -38,6 +38,7 @@ export class TaskBasicInfoComponent implements OnChanges {
       maxWarnings: [0],
       penaltyAtMaxWarnings: [0],
       penaltyOnAutoClose: [0],
+      penaltyOnStopComment: [0],
       createdDate:[null],
       dueDate: [null],
       assignedByName: ['']
@@ -58,6 +59,7 @@ export class TaskBasicInfoComponent implements OnChanges {
             maxWarnings: this.taskInfo.maxWarnings,
             penaltyAtMaxWarnings: this.taskInfo.penaltyAtMaxWarnings,
             penaltyOnAutoClose: this.taskInfo.penaltyOnAutoClose,
+            penaltyOnStopComment: this.taskInfo.penaltyOnStopComment,
             createdDate:this.taskInfo.createdDate,
             dueDate: this.taskInfo.dueDate,
             assignedByName: this.taskInfo.assignedByName

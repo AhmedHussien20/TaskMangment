@@ -217,6 +217,12 @@ namespace TaskMangment.Infrastructure.Services
   .Select(a => a.EmployeeId)
   .ToListAsync();
 
+                if (task.AssignedByEmployeeId.HasValue && !assignedEmployeeIds.Contains(task.AssignedByEmployeeId.Value))
+                {
+                    assignedEmployeeIds.Add(task.AssignedByEmployeeId.Value);
+                }
+                assignedEmployeeIds.Remove(reviewerId);
+
                 await _eventDispatcher.PublishAsync(
                     new TaskExtendApproveEvent(
                         request.Id,

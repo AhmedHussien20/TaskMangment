@@ -17,7 +17,8 @@ export enum CalendarEventType {
   Holiday = 4,
   Reminder = 5,
   Birthday = 6,
-  Anniversar = 7
+  Anniversar = 7,
+  comment = 8
 }
 export interface CalendarEventGetDto {
   title: string;

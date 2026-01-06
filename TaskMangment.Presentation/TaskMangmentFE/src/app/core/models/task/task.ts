@@ -11,7 +11,8 @@ export enum TaskStatus {
   New = 1,
   InProgress = 2,
   Closed = 3,
-  Archived = 4
+  Archived = 4,
+  AutoClose = 5
 }
 
 export enum CommentAllowPeriod {
@@ -30,6 +31,7 @@ export interface TaskAddEdit {
   maxWarnings: number;
   penaltyAtMaxWarnings: number;
   penaltyOnAutoClose: number;
+  penaltyOnStopComment? : number;
   isShared: boolean;
   priority: TaskPriority;
   dueDate?: string;
@@ -55,6 +57,7 @@ export interface TaskGet {
   maxWarnings?: number;
   penaltyAtMaxWarnings?: number;
   penaltyOnAutoClose?: number;
+  penaltyOnStopComment? : number;
 }
 
 export interface TaskSummary {

@@ -191,25 +191,38 @@
           </div>
         </div>
 
-        <!-- Date Picker -->
-        <div *ngIf="field.type === 'date'">
-          <input type="date" class="form-control" [id]="field.name" [formControlName]="field.name"
-            [readOnly]="field.disabled" [disabled]="field.disabled" [ngClass]="{
-              'is-invalid':
-                formGroup.controls[field.name].invalid &&
-                (formGroup.controls[field.name].dirty ||
-                  formGroup.controls[field.name].touched)
-            }" />
-          <div *ngIf="
-              formGroup.controls[field.name].invalid &&
-              (formGroup.controls[field.name].dirty ||
-                formGroup.controls[field.name].touched)
-            " class="invalid-feedback">
-            <div *ngIf="formGroup.controls[field.name].errors?.['required']">
-              {{ field.label | translate }} {{ 'FORM.IS_REQUIRED' | translate }}
-            </div>
-          </div>
-        </div>
+      <mat-form-field
+  *ngIf="field.type === 'date'"
+  appearance="outline"
+  class="w-100">
+
+  <mat-label>{{ field.label | translate }}</mat-label>
+  <input
+    matInput
+    [id]="field.name"
+    [formControlName]="field.name"
+    [matDatepicker]="picker"
+    [readonly]="field.disabled"
+    [disabled]="field.disabled"
+    [ngClass]="{'is-invalid':
+        formGroup.get(field.name)?.invalid &&
+        (formGroup.get(field.name)?.dirty ||
+         formGroup.get(field.name)?.touched)}" />
+
+  <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+  <mat-datepicker #picker></mat-datepicker>
+  <mat-error *ngIf="
+    formGroup.get(field.name)?.invalid &&
+    (formGroup.get(field.name)?.dirty ||
+     formGroup.get(field.name)?.touched)
+  ">
+    <span *ngIf="formGroup.get(field.name)?.errors?.['required']">
+      {{ field.label | translate }} {{ 'FORM.IS_REQUIRED' | translate }}
+    </span>
+  </mat-error>
+
+</mat-form-field>
+
 
         <!-- ================= FILE UPLOAD ================= -->
         <div *ngIf="field.type === 'file'" class="col-md-12">

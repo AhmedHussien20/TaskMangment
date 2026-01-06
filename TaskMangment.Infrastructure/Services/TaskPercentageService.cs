@@ -96,7 +96,7 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<TaskPercentageGetDto>.Ok(dto);
         }
 
-        public async Task<ApiResponse<TaskPercentageGetDto>> AddAsync(int taskId, int? employeeId, TaskPercentageAddEditDto dto)
+        public async Task<ApiResponse<TaskPercentageGetDto>> AddAsync(int taskId, int employeeId, TaskPercentageAddEditDto dto)
         {
             var task = await _taskRepo.GetByIDAsync(taskId);
             if (task == null)
@@ -111,17 +111,23 @@ namespace TaskMangment.Infrastructure.Services
             await _cache.RemoveAsync("taskPercentages:");
 
             var assignedEmployeeIds = await _taskAssignmentRepo
-    .GetAll(a => a.TaskId == taskId && a.IsActive)
-    .Where(a => !employeeId.HasValue || a.EmployeeId != employeeId.Value)
-    .Select(a => a.EmployeeId)
-    .ToListAsync();
+      .GetAll(a => a.TaskId == taskId && a.IsActive)
+      .Where(a => a.EmployeeId != employeeId)
+      .Select(a => a.EmployeeId)
+      .ToListAsync();
 
-            string employeeName = null;
-            if (employeeId.HasValue)
+
+            var employee = await _employeeRepo.GetByIDAsync(employeeId);
+            string employeeName = employee?.FullName;
+
+
+
+            if (task.AssignedByEmployeeId.HasValue && !assignedEmployeeIds.Contains(task.AssignedByEmployeeId.Value))
             {
-                var employee = await _employeeRepo.GetByIDAsync(employeeId.Value);
-                employeeName = employee?.FullName;
+                assignedEmployeeIds.Add(task.AssignedByEmployeeId.Value);
             }
+            assignedEmployeeIds.Remove(employeeId);
+
             await _eventDispatcher.PublishAsync(new TaskAchievePercentEvent(entity.Id,dto.AchievementPercent, task.Id,task.Title, employeeName, assignedEmployeeIds));
 
             var saved = await _repo.GetAll()

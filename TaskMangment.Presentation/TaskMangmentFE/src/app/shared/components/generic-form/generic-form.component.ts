@@ -5,11 +5,16 @@ import { TranslateModule } from '@ngx-translate/core';
 import { NgSelectModule } from '@ng-select/ng-select';
 import { DropzoneComponent, DropzoneConfigInterface, DropzoneModule } from 'ngx-dropzone-wrapper';
 import { FormFieldConfig } from 'app/core/models/form-field-config';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatInputModule } from '@angular/material/input';
+import { MatFormFieldModule } from '@angular/material/form-field';
 
 @Component({
   selector: 'app-generic-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslateModule, NgSelectModule, DropzoneModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslateModule, NgSelectModule, DropzoneModule,MatDatepickerModule,MatInputModule,MatFormFieldModule
+  
+  ],
   templateUrl: './generic-form.component.html',
   styleUrls: ['./generic-form.component.scss']
 })

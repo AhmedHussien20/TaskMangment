@@ -11,7 +11,8 @@ export interface DiscountGetDto {
   taskTitle?: string;
   reason: string;
   amount: number;
-CreatedDate: string;
+ CreatedDate: string;
+ autoDiscount: boolean;
 }
 
 export interface DiscountPagedResponse {

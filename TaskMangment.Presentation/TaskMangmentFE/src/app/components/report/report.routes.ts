@@ -4,25 +4,25 @@ import { TranslateModule } from '@ngx-translate/core';
 
 export const ReportRoutes: Routes = [
   {
-    path: 'Commenter-list',
+    path: 'top-commenter-list',
     loadComponent: () =>
       import('./top-commenter-list/top-commenter-list.component')
         .then(m => m.TopCommenterListComponent)
   },
   {
-    path: 'Assigned-employee-list',
+    path: 'most-assigned-list',
     loadComponent: () =>
       import('./most-assigned-list/most-assigned-list.component')
         .then(m => m.MostAssignedListComponent)
   },
   {
-    path: 'Ontime-completion-list',
+    path: 'on-time-completion-list',
     loadComponent: () =>
       import('./on-time-completion-list/on-time-completion-list.component')
         .then(m => m.OnTimeCompletionListComponent)
   },
   {
-    path: 'Archived-tasks-list',
+    path: 'archived-tasks-list',
     loadComponent: () =>
       import('./archived-tasks-list/archived-tasks-list.component')
         .then(m => m.ArchivedTasksListComponent)
