@@ -8,6 +8,9 @@ using TaskMangment.Infrastructure.Services;
 using Hangfire.Dashboard;
 using TaskMangment.Hangfire;
 using TaskMangment.Infrastructure;
+using TaskMangment.Application.Common.Interfaces;
+using TaskMangment.Application.Common;
+using Microsoft.Extensions.Localization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,7 +22,7 @@ builder.Services.AddOptions();
 builder.Services.Configure<EmailSettings>(
                   builder.Configuration.GetSection("EmailSettings")
               );
-
+ builder.Services.AddDI();
 builder.Services.Configure<BlobStorageService>(builder.Configuration.GetSection("Blob"));
 // =======================
 // Services
@@ -27,7 +30,9 @@ builder.Services.Configure<BlobStorageService>(builder.Configuration.GetSection(
 builder.Services.AddScoped<ICurrentUserService, HangfireCurrentUserService>();
 builder.Services.AddScoped<IEmailTemplateRenderer, EmailTemplateRenderer>();
 builder.Services.AddScoped<IBlobStorageService, BlobStorageService>();
-
+builder.Services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
+ builder.Services.AddLocalization(option => option.ResourcesPath = "Resources");
+IStringLocalizer<TaskDiscountService> localizer = null;
 // =======================
 // Database
 // =======================
@@ -89,6 +94,9 @@ RecurringJob.AddOrUpdate<AttachmentBlobMigrationJob>(
     job => job.ExecuteAsync(),
     Cron.Minutely);
 
+RecurringJob.AddOrUpdate<PenaltyForMissingCommentsJob>(
+                job => job.ExecuteAsync(), "0 8 * * *", TimeZoneInfo.FindSystemTimeZoneById("Arab Standard Time")
+);
 app.Run();
 
  
