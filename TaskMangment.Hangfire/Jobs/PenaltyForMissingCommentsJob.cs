@@ -26,6 +26,11 @@ namespace TaskMangment.Hangfire.Jobs
                 .Include(t => t.Assignments)
                     .ThenInclude(a => a.Employee)
                 .Where(t => t.CommentAllowPeriodDays != null)
+                .Where(t =>
+                    t.Status != WorkTaskStatus.Closed &&
+                    t.Status != WorkTaskStatus.AutoClose &&
+                    t.Status != WorkTaskStatus.Archived)
+
                 .ToListAsync();
 
             var discountsToPublish = new List<(Discount discount, string employeeName, int taskId, string taskTitle)>();
@@ -55,13 +60,23 @@ namespace TaskMangment.Hangfire.Jobs
 
                     if (task.PenaltyOnStopComment <= 0) continue;
 
+                    var alreadyDiscounted = await _db.Discounts.AnyAsync(d =>
+                        d.TaskId == task.Id &&
+                        d.EmployeeId == employeeId &&
+                        d.discountType == DiscountType.StopCommentDiscount &&
+                        d.AutoDiscount &&
+                        d.CreatedDate.Date == today);
+
+                    if (alreadyDiscounted)
+                        continue;
+
                     var discount = new Discount
                     {
                         TaskId = task.Id,
                         EmployeeId = employeeId,
                         Amount = task.PenaltyOnStopComment,
                         Reason = "Penalty for not commenting",
-                        CreatedByEmployeeId = 0,
+                        //CreatedByEmployeeId = 0,
                         AutoDiscount = true,
                         CreatedDate = DateTime.UtcNow,
                         discountType = DiscountType.StopCommentDiscount
