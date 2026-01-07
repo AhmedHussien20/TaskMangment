@@ -22,7 +22,7 @@ namespace TaskMangment.Application.Behaviors
         {
             _notificationService = notificationService;
 
-            _localizer = factory.Create("TaskNotification", "TaskMangment.API");
+            _localizer = factory.Create("TaskNotification", typeof(TaskPenaltyEventHandler).Assembly.GetName().Name);
         }
 
         public async Task Handle(TaskPenaltyEvent ev)

@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http; 
 using Microsoft.EntityFrameworkCore;
 using TaskMangment.Application.ApiRequests;
+using TaskMangment.Application.Common.ApiRequests.Leave;
 using TaskMangment.Application.Common.Errors;
 using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Common.Interfaces;
@@ -12,6 +13,7 @@ using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
 using TaskMangment.Domain.Event;
+using TaskMangment.Infrastructure.Persistence.Extensions;
 
 namespace TaskMangment.Infrastructure.Services
 {
@@ -80,17 +82,26 @@ namespace TaskMangment.Infrastructure.Services
 
             return ApiResponse<LeaveGetDto>.Ok(result, "Leave request submitted");
         }
-         
-        public async Task<ApiResponse<PagedResponse<LeaveGetDto>>> GetMyRequestsAsync(int employeeId, BaseApiRequest request)
+
+        public async Task<ApiResponse<PagedResponse<LeaveGetDto>>> GetMyRequestsAsync(LeaveRequest request, string role, int employeeId)
         {
-            IQueryable<Leave> query = _leaveRepo.GetAll(l => l.EmployeeId == employeeId)
-                             .Include(l => l.LeaveType)
-                             .Include(l => l.Employee);
+            IQueryable<Leave> query = _leaveRepo.GetAll()
+                .Include(l => l.Employee)
+                .Include(l => l.LeaveType);
+
+            if (role != "Manager")
+            {
+                query = query.Where(l => l.EmployeeId == employeeId);
+            }
+
+            if (role == "Manager" && request.EmployeeIds != null && request.EmployeeIds.Any())
+            {
+                query = query.Where(l => request.EmployeeIds.Contains(l.EmployeeId));
+            }
 
             var totalCount = await query.CountAsync();
 
-            query = query.OrderByDescending(l => l.CreatedDate);
-
+            query = query.OrderByDynamicSafe(request.SortColumn ?? "CreatedDate", request.SortDirection ?? "DESC");
 
             var list = await query
                 .Skip((request.PageIndex - 1) * request.PageSize)
@@ -99,13 +110,13 @@ namespace TaskMangment.Infrastructure.Services
 
             var dtos = _mapper.Map<ICollection<LeaveGetDto>>(list);
 
-            var response = new PagedResponse<LeaveGetDto>(
-                dtos, totalCount, request.PageIndex, request.PageSize);
+            var response = new PagedResponse<LeaveGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
 
             return ApiResponse<PagedResponse<LeaveGetDto>>.Ok(response);
         }
-         
-        public async Task<ApiResponse<PagedResponse<LeaveGetDto>>> GetPendingForApprovalAsync(int managerId, BaseApiRequest request)
+
+
+        public async Task<ApiResponse<PagedResponse<LeaveGetDto>>> GetPendingForApprovalAsync(int managerId, LeaveRequest request)
         {
 
             IQueryable<Leave> query = _leaveRepo.GetAll(l => l.Status == LeaveStatus.Pending)
@@ -173,6 +184,25 @@ namespace TaskMangment.Infrastructure.Services
 
             return ApiResponse<bool>.Ok(true, "Leave rejected");
         }
+
+        // =========================
+        // Get Leave By Id
+        // =========================
+        public async Task<ApiResponse<LeaveGetDto>> GetByIdAsync(int leaveId)
+        {
+            var leave = await _leaveRepo.GetAll(l => l.Id == leaveId)
+                                        .Include(l => l.Employee)
+                                        .Include(l => l.LeaveType)
+                                        .FirstOrDefaultAsync();
+
+            if (leave == null)
+                throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
+
+            var dto = _mapper.Map<LeaveGetDto>(leave);
+
+            return ApiResponse<LeaveGetDto>.Ok(dto);
+        }
+
     }
 
 }

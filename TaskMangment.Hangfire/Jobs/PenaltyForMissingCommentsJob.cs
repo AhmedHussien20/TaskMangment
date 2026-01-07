@@ -25,12 +25,12 @@ namespace TaskMangment.Hangfire.Jobs
             var tasks = await _db.Tasks
                 .Include(t => t.Assignments)
                     .ThenInclude(a => a.Employee)
-                .Where(t => t.CommentAllowPeriodDays != null)
+                .Where(t => t.CommentAllowPeriodDays != null && t.DueDate > yesterday)
                 .Where(t =>
                     t.Status != WorkTaskStatus.Closed &&
                     t.Status != WorkTaskStatus.AutoClose &&
                     t.Status != WorkTaskStatus.Archived)
-
+                //add duedate check
                 .ToListAsync();
 
             var discountsToPublish = new List<(Discount discount, string employeeName, int taskId, string taskTitle)>();
@@ -54,7 +54,8 @@ namespace TaskMangment.Hangfire.Jobs
                     var hasLeave = await _db.Leaves
                         .Where(l => l.EmployeeId == employeeId &&
                                     l.StartDate.Date <= yesterday &&
-                                    l.EndDate.Date >= yesterday)
+                                    l.EndDate.Date >= yesterday&&
+                                    l.Status == LeaveStatus.Approved)
                         .AnyAsync();
                     if (hasLeave) continue;
 
