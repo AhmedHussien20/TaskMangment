@@ -58,7 +58,7 @@ namespace TaskMangment.Hangfire.Jobs
                         EmployeeId = assignment.EmployeeId,
                         Reason = "add discount on auto close task",
                         Amount = task.PenaltyOnAutoClose,
-                        CreatedByEmployeeId = 0,
+                        //CreatedByEmployeeId = 0,
                         AutoDiscount = true,
                         CreatedDate = DateTime.UtcNow,
                         discountType = DiscountType.AutoCloseTaskDiscount
