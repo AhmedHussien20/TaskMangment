@@ -35,352 +35,437 @@ namespace TaskMangment.Infrastructure.Seeding
 
             context.EmailTemplates.AddRange(
 
-            //                // 🟢 Task Assigned
-            //                new EmailTemplate
-            //                {
-            //                    Key = "TaskAssigned",
-            //                    SubjectTemplate = "تم إسناد مهمة جديدة | New Task Assigned",
-            //                    BodyTemplate = LayoutHeader + @"
-            //مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
-            //تم إسناد مهمة جديدة إليك.<br/><br/>
-
-            //<strong>عنوان المهمة:</strong> {{TaskTitle}}<br/>
-            //<strong>تاريخ الاستحقاق:</strong> {{DueDate}}<br/><br/>
-
-            //يرجى الدخول إلى النظام لمتابعة تفاصيل المهمة.<br/><br/>
-
-            //<hr/>
-
-            //<strong>Hello {{UserName}},</strong><br/><br/>
-            //A new task has been assigned to you.<br/><br/>
-
-            //<strong>Task Title:</strong> {{TaskTitle}}<br/>
-            //<strong>Due Date:</strong> {{DueDate}}<br/><br/>
-
-            //Please log in to the system to view task details.
-            //" + LayoutFooter
-            //                },
-
-            //                // 💬 Task Comment Added
-            //                new EmailTemplate
-            //                {
-            //                    Key = "TaskCommentAdded",
-            //                    SubjectTemplate = "تعليق جديد على المهمة | New Task Comment",
-            //                    BodyTemplate = LayoutHeader + @"
-            //مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
-            //تمت إضافة تعليق جديد على المهمة:<br/><br/>
-
-            //<strong>{{TaskTitle}}</strong><br/>
-            //<div style='background:#f8f9fa;padding:10px;border-right:4px solid #0d6efd'>
-            //{{CommentText}}
-            //</div><br/>
-
-            //<hr/>
-
-            //<strong>Hello {{UserName}},</strong><br/><br/>
-            //A new comment has been added to the following task:<br/><br/>
-
-            //<strong>{{TaskTitle}}</strong><br/>
-            //<div style='background:#f8f9fa;padding:10px;border-left:4px solid #0d6efd'>
-            //{{CommentText}}
-            //</div>
-            //" + LayoutFooter
-            //                },
-
-            //                // 📅 Event Reminder
-            //                new EmailTemplate
-            //                {
-            //                    Key = "EventReminder",
-            //                    SubjectTemplate = "تذكير بموعد حدث | Event Reminder",
-            //                    BodyTemplate = LayoutHeader + @"
-            //مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
-            //هذا تذكير بموعد الحدث التالي:<br/><br/>
-
-            //<strong>اسم الحدث:</strong> {{EventTitle}}<br/>
-            //<strong>التاريخ والوقت:</strong> {{EventDate}}<br/><br/>
-
-            //<hr/>
-
-            //<strong>Hello {{UserName}},</strong><br/><br/>
-            //This is a reminder for the following event:<br/><br/>
-
-            //<strong>Event Title:</strong> {{EventTitle}}<br/>
-            //<strong>Date & Time:</strong> {{EventDate}}
-            //" + LayoutFooter
-            //                },
-
-            //                // ⏳ Task Extension Request
-            //                new EmailTemplate
-            //                {
-            //                    Key = "TaskExtensionRequest",
-            //                    SubjectTemplate = "طلب تمديد موعد المهمة | Task Extension Request",
-            //                    BodyTemplate = LayoutHeader + @"
-            //مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
-            //تم تقديم طلب لتمديد موعد المهمة التالية:<br/><br/>
-
-            //<strong>عنوان المهمة:</strong> {{TaskTitle}}<br/>
-            //<strong>سبب الطلب:</strong> {{ExtensionReason}}<br/><br/>
-
-            //<hr/>
-
-            //<strong>Hello {{UserName}},</strong><br/><br/>
-            //A request has been submitted to extend the deadline of the following task:<br/><br/>
-
-            //<strong>Task Title:</strong> {{TaskTitle}}<br/>
-            //<strong>Reason:</strong> {{ExtensionReason}}
-            //" + LayoutFooter
-            //                },
-
-            //                // ✅ Task Close Request
-            //                new EmailTemplate
-            //                {
-            //                    Key = "TaskCloseRequest",
-            //                    SubjectTemplate = "طلب إغلاق المهمة | Task Close Request",
-            //                    BodyTemplate = LayoutHeader + @"
-            //مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
-            //تم تقديم طلب لإغلاق المهمة التالية:<br/><br/>
+           //                // 🟢 Task Assigned
+           //                new EmailTemplate
+           //                {
+           //                    Key = "TaskAssigned",
+           //                    SubjectTemplate = "تم إسناد مهمة جديدة | New Task Assigned",
+           //                    BodyTemplate = LayoutHeader + @"
+           //مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
+           //تم إسناد مهمة جديدة إليك.<br/><br/>
+
+           //<strong>عنوان المهمة:</strong> {{TaskTitle}}<br/>
+           //<strong>تاريخ الاستحقاق:</strong> {{DueDate}}<br/><br/>
+
+           //يرجى الدخول إلى النظام لمتابعة تفاصيل المهمة.<br/><br/>
+
+           //<hr/>
+
+           //<strong>Hello {{UserName}},</strong><br/><br/>
+           //A new task has been assigned to you.<br/><br/>
+
+           //<strong>Task Title:</strong> {{TaskTitle}}<br/>
+           //<strong>Due Date:</strong> {{DueDate}}<br/><br/>
+
+           //Please log in to the system to view task details.
+           //" + LayoutFooter
+           //                },
+
+           //                // 💬 Task Comment Added
+           //                new EmailTemplate
+           //                {
+           //                    Key = "TaskCommentAdded",
+           //                    SubjectTemplate = "تعليق جديد على المهمة | New Task Comment",
+           //                    BodyTemplate = LayoutHeader + @"
+           //مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
+           //تمت إضافة تعليق جديد على المهمة:<br/><br/>
+
+           //<strong>{{TaskTitle}}</strong><br/>
+           //<div style='background:#f8f9fa;padding:10px;border-right:4px solid #0d6efd'>
+           //{{CommentText}}
+           //</div><br/>
+
+           //<hr/>
+
+           //<strong>Hello {{UserName}},</strong><br/><br/>
+           //A new comment has been added to the following task:<br/><br/>
+
+           //<strong>{{TaskTitle}}</strong><br/>
+           //<div style='background:#f8f9fa;padding:10px;border-left:4px solid #0d6efd'>
+           //{{CommentText}}
+           //</div>
+           //" + LayoutFooter
+           //                },
+
+           //                // 📅 Event Reminder
+           //                new EmailTemplate
+           //                {
+           //                    Key = "EventReminder",
+           //                    SubjectTemplate = "تذكير بموعد حدث | Event Reminder",
+           //                    BodyTemplate = LayoutHeader + @"
+           //مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
+           //هذا تذكير بموعد الحدث التالي:<br/><br/>
+
+           //<strong>اسم الحدث:</strong> {{EventTitle}}<br/>
+           //<strong>التاريخ والوقت:</strong> {{EventDate}}<br/><br/>
+
+           //<hr/>
+
+           //<strong>Hello {{UserName}},</strong><br/><br/>
+           //This is a reminder for the following event:<br/><br/>
+
+           //<strong>Event Title:</strong> {{EventTitle}}<br/>
+           //<strong>Date & Time:</strong> {{EventDate}}
+           //" + LayoutFooter
+           //                },
+
+           //                // ⏳ Task Extension Request
+           //                new EmailTemplate
+           //                {
+           //                    Key = "TaskExtensionRequest",
+           //                    SubjectTemplate = "طلب تمديد موعد المهمة | Task Extension Request",
+           //                    BodyTemplate = LayoutHeader + @"
+           //مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
+           //تم تقديم طلب لتمديد موعد المهمة التالية:<br/><br/>
+
+           //<strong>عنوان المهمة:</strong> {{TaskTitle}}<br/>
+           //<strong>سبب الطلب:</strong> {{ExtensionReason}}<br/><br/>
+
+           //<hr/>
+
+           //<strong>Hello {{UserName}},</strong><br/><br/>
+           //A request has been submitted to extend the deadline of the following task:<br/><br/>
+
+           //<strong>Task Title:</strong> {{TaskTitle}}<br/>
+           //<strong>Reason:</strong> {{ExtensionReason}}
+           //" + LayoutFooter
+           //                },
+
+           //                // ✅ Task Close Request
+           //                new EmailTemplate
+           //                {
+           //                    Key = "TaskCloseRequest",
+           //                    SubjectTemplate = "طلب إغلاق المهمة | Task Close Request",
+           //                    BodyTemplate = LayoutHeader + @"
+           //مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
+           //تم تقديم طلب لإغلاق المهمة التالية:<br/><br/>
 
-            //<strong>عنوان المهمة:</strong> {{TaskTitle}}<br/>
-            //<strong>ملاحظات الإغلاق:</strong> {{CloseNotes}}<br/><br/>
-
-            //<hr/>
-
-            //<strong>Hello {{UserName}},</strong><br/><br/>
-            //A request has been submitted to close the following task:<br/><br/>
+           //<strong>عنوان المهمة:</strong> {{TaskTitle}}<br/>
+           //<strong>ملاحظات الإغلاق:</strong> {{CloseNotes}}<br/><br/>
+
+           //<hr/>
+
+           //<strong>Hello {{UserName}},</strong><br/><br/>
+           //A request has been submitted to close the following task:<br/><br/>
 
-            //<strong>Task Title:</strong> {{TaskTitle}}<br/>
-            //<strong>Close Notes:</strong> {{CloseNotes}}
-            //" + LayoutFooter
-            //                },
+           //<strong>Task Title:</strong> {{TaskTitle}}<br/>
+           //<strong>Close Notes:</strong> {{CloseNotes}}
+           //" + LayoutFooter
+           //                },
 
-            //                // ⚠️ Warning
-            //                new EmailTemplate
-            //                {
-            //                    Key = "EmployeeWarning",
-            //                    SubjectTemplate = "تحذير إداري | Administrative Warning",
-            //                    BodyTemplate = LayoutHeader + @"
-            //مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
-            //نود تنبيهكم بوجود ملاحظة تتعلق بالأداء الوظيفي:<br/><br/>
+           //                // ⚠️ Warning
+           //                new EmailTemplate
+           //                {
+           //                    Key = "EmployeeWarning",
+           //                    SubjectTemplate = "تحذير إداري | Administrative Warning",
+           //                    BodyTemplate = LayoutHeader + @"
+           //مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
+           //نود تنبيهكم بوجود ملاحظة تتعلق بالأداء الوظيفي:<br/><br/>
 
-            //<div style='background:#fff3cd;padding:10px;border-right:4px solid #ffc107'>
-            //{{WarningReason}}
-            //</div><br/>
-
-            //<hr/>
+           //<div style='background:#fff3cd;padding:10px;border-right:4px solid #ffc107'>
+           //{{WarningReason}}
+           //</div><br/>
+
+           //<hr/>
 
-            //<strong>Hello {{UserName}},</strong><br/><br/>
-            //This is an administrative warning regarding the following issue:<br/><br/>
+           //<strong>Hello {{UserName}},</strong><br/><br/>
+           //This is an administrative warning regarding the following issue:<br/><br/>
 
-            //<div style='background:#fff3cd;padding:10px;border-left:4px solid #ffc107'>
-            //{{WarningReason}}
-            //</div>
-            //" + LayoutFooter
-            //                },
+           //<div style='background:#fff3cd;padding:10px;border-left:4px solid #ffc107'>
+           //{{WarningReason}}
+           //</div>
+           //" + LayoutFooter
+           //                },
 
-            //                // 💸 Employee Deduction (عدم الإنجاز)
-            //                new EmailTemplate
-            //                {
-            //                    Key = "EmployeeDeduction",
-            //                    SubjectTemplate = "إشعار بخصم إداري تلقائي | Automated Deduction Notice",
-            //                    BodyTemplate = LayoutHeader + @"
-            //مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
-            //نحيطكم علمًا بأنه قد تم <strong>تطبيق خصم إداري تلقائي</strong>، وذلك لعدم إنجاز المهمة في الموعد المحدد، وفقًا للتفاصيل التالية:<br/><br/>
+           //                // 💸 Employee Deduction (عدم الإنجاز)
+           //                new EmailTemplate
+           //                {
+           //                    Key = "EmployeeDeduction",
+           //                    SubjectTemplate = "إشعار بخصم إداري تلقائي | Automated Deduction Notice",
+           //                    BodyTemplate = LayoutHeader + @"
+           //مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
+           //نحيطكم علمًا بأنه قد تم <strong>تطبيق خصم إداري تلقائي</strong>، وذلك لعدم إنجاز المهمة في الموعد المحدد، وفقًا للتفاصيل التالية:<br/><br/>
 
-            //<strong>رقم المهمة:</strong> {{TaskNumber}}<br/>
-            //<strong>عنوان المهمة:</strong> {{TaskTitle}}<br/>
-            //<strong>قيمة الخصم:</strong> {{DeductionAmount}}<br/><br/>
+           //<strong>رقم المهمة:</strong> {{TaskNumber}}<br/>
+           //<strong>عنوان المهمة:</strong> {{TaskTitle}}<br/>
+           //<strong>قيمة الخصم:</strong> {{DeductionAmount}}<br/><br/>
 
-            //يرجى العلم أن هذا الإجراء تم <strong>آليًا من خلال النظام</strong> ولا يمكن الرد على هذا البريد الإلكتروني.<br/><br/>
+           //يرجى العلم أن هذا الإجراء تم <strong>آليًا من خلال النظام</strong> ولا يمكن الرد على هذا البريد الإلكتروني.<br/><br/>
 
-            //<hr/>
+           //<hr/>
 
-            //<strong>Hello {{UserName}},</strong><br/><br/>
-            //An <strong>automatic administrative deduction</strong> has been applied due to failure to complete the assigned task within the specified deadline:<br/><br/>
+           //<strong>Hello {{UserName}},</strong><br/><br/>
+           //An <strong>automatic administrative deduction</strong> has been applied due to failure to complete the assigned task within the specified deadline:<br/><br/>
 
-            //<strong>Task Number:</strong> {{TaskNumber}}<br/>
-            //<strong>Task Title:</strong> {{TaskTitle}}<br/>
-            //<strong>Deduction Amount:</strong> {{DeductionAmount}}<br/><br/>
+           //<strong>Task Number:</strong> {{TaskNumber}}<br/>
+           //<strong>Task Title:</strong> {{TaskTitle}}<br/>
+           //<strong>Deduction Amount:</strong> {{DeductionAmount}}<br/><br/>
 
-            //This action was automatically generated by the system and this email is not monitored for replies.
-            //" + LayoutFooter
-            //                },
-            //                new EmailTemplate
-            //                {
-            //                    Key = "TaskDueTodayReminder",
-            //                    SubjectTemplate = "تذكير هام: موعد انتهاء المهمة اليوم | Task Due Today",
-            //                    BodyTemplate = LayoutHeader + @"
-            //مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
+           //This action was automatically generated by the system and this email is not monitored for replies.
+           //" + LayoutFooter
+           //                },
+           //                new EmailTemplate
+           //                {
+           //                    Key = "TaskDueTodayReminder",
+           //                    SubjectTemplate = "تذكير هام: موعد انتهاء المهمة اليوم | Task Due Today",
+           //                    BodyTemplate = LayoutHeader + @"
+           //مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
 
-            //نود تذكيرك بأن موعد انتهاء المهمة التالية هو <strong>اليوم</strong>.<br/><br/>
+           //نود تذكيرك بأن موعد انتهاء المهمة التالية هو <strong>اليوم</strong>.<br/><br/>
 
-            //<strong>عنوان المهمة:</strong> {{TaskTitle}}<br/>
-            //<strong>تاريخ الاستحقاق:</strong> {{DueDate}}<br/><br/>
+           //<strong>عنوان المهمة:</strong> {{TaskTitle}}<br/>
+           //<strong>تاريخ الاستحقاق:</strong> {{DueDate}}<br/><br/>
 
-            //يرجى التأكد من إنهاء المهمة في الموعد المحدد أو اتخاذ الإجراء اللازم.<br/><br/>
+           //يرجى التأكد من إنهاء المهمة في الموعد المحدد أو اتخاذ الإجراء اللازم.<br/><br/>
 
-            //<hr/>
+           //<hr/>
 
-            //<strong>Hello {{UserName}},</strong><br/><br/>
+           //<strong>Hello {{UserName}},</strong><br/><br/>
 
-            //This is a reminder that the due date for the following task is <strong>today</strong>.<br/><br/>
+           //This is a reminder that the due date for the following task is <strong>today</strong>.<br/><br/>
 
-            //<strong>Task Title:</strong> {{TaskTitle}}<br/>
-            //<strong>Due Date:</strong> {{DueDate}}<br/><br/>
+           //<strong>Task Title:</strong> {{TaskTitle}}<br/>
+           //<strong>Due Date:</strong> {{DueDate}}<br/><br/>
 
-            //Please ensure the task is completed on time or take the necessary action.
-            //" + LayoutFooter
-            //                },
-            //                new EmailTemplate
-            //                {
-            //                    Key = "TaskAssignedToExistingTask",
-            //                    SubjectTemplate = "تم إسنادك إلى مهمة | Assigned to Existing Task",
-            //                    BodyTemplate = LayoutHeader + @"
-            //مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
+           //Please ensure the task is completed on time or take the necessary action.
+           //" + LayoutFooter
+           //                },
+           //                new EmailTemplate
+           //                {
+           //                    Key = "TaskAssignedToExistingTask",
+           //                    SubjectTemplate = "تم إسنادك إلى مهمة | Assigned to Existing Task",
+           //                    BodyTemplate = LayoutHeader + @"
+           //مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
 
-            //نود إعلامك بأنه تم <strong>إسنادك</strong> إلى مهمة موجودة بالفعل ضمن النظام.<br/><br/>
+           //نود إعلامك بأنه تم <strong>إسنادك</strong> إلى مهمة موجودة بالفعل ضمن النظام.<br/><br/>
 
-            //<strong>تفاصيل المهمة:</strong><br/>
-            //<strong>عنوان المهمة:</strong> {{TaskTitle}}<br/>
-            //<strong>الوصف:</strong> {{TaskDescription}}<br/>
-            //<strong>تاريخ الاستحقاق:</strong> {{DueDate}}<br/><br/>
+           //<strong>تفاصيل المهمة:</strong><br/>
+           //<strong>عنوان المهمة:</strong> {{TaskTitle}}<br/>
+           //<strong>الوصف:</strong> {{TaskDescription}}<br/>
+           //<strong>تاريخ الاستحقاق:</strong> {{DueDate}}<br/><br/>
 
-            //يرجى مراجعة تفاصيل المهمة والبدء في تنفيذها في أقرب وقت ممكن.<br/><br/>
+           //يرجى مراجعة تفاصيل المهمة والبدء في تنفيذها في أقرب وقت ممكن.<br/><br/>
 
-            //<hr/>
+           //<hr/>
 
-            //<strong>Hello {{UserName}},</strong>،<br/><br/>
+           //<strong>Hello {{UserName}},</strong>،<br/><br/>
 
-            //You have been <strong>assigned</strong> to an existing task in the system.<br/><br/>
+           //You have been <strong>assigned</strong> to an existing task in the system.<br/><br/>
 
-            //<strong>Task Details:</strong><br/>
-            //<strong>Task Title:</strong> {{TaskTitle}}<br/>
-            //<strong>Description:</strong> {{TaskDescription}}<br/>
-            //<strong>Due Date:</strong> {{DueDate}}<br/><br/>
+           //<strong>Task Details:</strong><br/>
+           //<strong>Task Title:</strong> {{TaskTitle}}<br/>
+           //<strong>Description:</strong> {{TaskDescription}}<br/>
+           //<strong>Due Date:</strong> {{DueDate}}<br/><br/>
 
-            //Please review the task details and start working on it as soon as possible.
-            //" + LayoutFooter
-            //                },
-            //                new EmailTemplate
-            //                {
-            //                    Key = "TaskUnAssignedFromExistingTask",
-            //                    SubjectTemplate = "تم إلغاء إسنادك من المهمة | Unassigned from Task",
-            //                    BodyTemplate = LayoutHeader + @"
-            //مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
+           //Please review the task details and start working on it as soon as possible.
+           //" + LayoutFooter
+           //                },
+           //                new EmailTemplate
+           //                {
+           //                    Key = "TaskUnAssignedFromExistingTask",
+           //                    SubjectTemplate = "تم إلغاء إسنادك من المهمة | Unassigned from Task",
+           //                    BodyTemplate = LayoutHeader + @"
+           //مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
 
-            //نود إعلامك بأنه تم <strong>إلغاء إسنادك</strong> من المهمة التالية:<br/><br/>
+           //نود إعلامك بأنه تم <strong>إلغاء إسنادك</strong> من المهمة التالية:<br/><br/>
 
-            //<strong>تفاصيل المهمة:</strong><br/>
-            //<strong>عنوان المهمة:</strong> {{TaskTitle}}<br/>
-            //<strong>الوصف:</strong> {{TaskDescription}}<br/><br/>
+           //<strong>تفاصيل المهمة:</strong><br/>
+           //<strong>عنوان المهمة:</strong> {{TaskTitle}}<br/>
+           //<strong>الوصف:</strong> {{TaskDescription}}<br/><br/>
 
-            //لم يعد مطلوبًا منك العمل على هذه المهمة حاليًا.<br/><br/>
+           //لم يعد مطلوبًا منك العمل على هذه المهمة حاليًا.<br/><br/>
 
-            //<hr/>
+           //<hr/>
 
-            //<strong>Hello {{UserName}},</strong><br/><br/>
+           //<strong>Hello {{UserName}},</strong><br/><br/>
 
-            //You have been <strong>unassigned</strong> from the following task:<br/><br/>
+           //You have been <strong>unassigned</strong> from the following task:<br/><br/>
 
-            //<strong>Task Details:</strong><br/>
-            //<strong>Task Title:</strong> {{TaskTitle}}<br/>
-            //<strong>Description:</strong> {{TaskDescription}}<br/><br/>
+           //<strong>Task Details:</strong><br/>
+           //<strong>Task Title:</strong> {{TaskTitle}}<br/>
+           //<strong>Description:</strong> {{TaskDescription}}<br/><br/>
 
-            //You are no longer required to work on this task at this time.
-            //" + LayoutFooter
-            //                },
+           //You are no longer required to work on this task at this time.
+           //" + LayoutFooter
+           //                },
 
 
 
 
 
-            ////////////Extension request approved/////
-            //                new EmailTemplate
-            //                {
-            //                    Key = "TaskExtensionApproved",
-            //                    SubjectTemplate = "تمت الموافقة على تمديد المهمة | Task Extension Approved",
-            //                    BodyTemplate = LayoutHeader + @"
-            //مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
+           ////////////Extension request approved/////
+           //                new EmailTemplate
+           //                {
+           //                    Key = "TaskExtensionApproved",
+           //                    SubjectTemplate = "تمت الموافقة على تمديد المهمة | Task Extension Approved",
+           //                    BodyTemplate = LayoutHeader + @"
+           //مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
 
-            //نود إعلامك بأنه تمت الموافقة على طلب تمديد المهمة.<br/><br/>
+           //نود إعلامك بأنه تمت الموافقة على طلب تمديد المهمة.<br/><br/>
 
-            //<strong>عنوان المهمة:</strong> {{TaskTitle}}<br/>
-            //<strong>تاريخ الاستحقاق السابق:</strong> {{OldDueDate}}<br/>
-            //<strong>تاريخ الاستحقاق الجديد:</strong> {{NewDueDate}}<br/><br/>
+           //<strong>عنوان المهمة:</strong> {{TaskTitle}}<br/>
+           //<strong>تاريخ الاستحقاق السابق:</strong> {{OldDueDate}}<br/>
+           //<strong>تاريخ الاستحقاق الجديد:</strong> {{NewDueDate}}<br/><br/>
 
-            //يرجى متابعة المهمة وفقًا للتاريخ الجديد.<br/><br/>
+           //يرجى متابعة المهمة وفقًا للتاريخ الجديد.<br/><br/>
 
-            //<hr/>
+           //<hr/>
 
-            //<strong>Hello {{UserName}},</strong><br/><br/>
+           //<strong>Hello {{UserName}},</strong><br/><br/>
 
-            //We would like to inform you that your task extension request has been approved.<br/><br/>
+           //We would like to inform you that your task extension request has been approved.<br/><br/>
 
-            //<strong>Task Title:</strong> {{TaskTitle}}<br/>
-            //<strong>Previous Due Date:</strong> {{OldDueDate}}<br/>
-            //<strong>New Due Date:</strong> {{NewDueDate}}<br/><br/>
+           //<strong>Task Title:</strong> {{TaskTitle}}<br/>
+           //<strong>Previous Due Date:</strong> {{OldDueDate}}<br/>
+           //<strong>New Due Date:</strong> {{NewDueDate}}<br/><br/>
 
-            //Please proceed with the task according to the updated due date.
-            //" + LayoutFooter
-            //                },
+           //Please proceed with the task according to the updated due date.
+           //" + LayoutFooter
+           //                },
 
 
 
-            //                new EmailTemplate
-            //                {
-            //                    Key = "TaskCloseApproved",
-            //                    SubjectTemplate = "تمت الموافقة على إغلاق المهمة | Task Closure Approved",
-            //                    BodyTemplate = LayoutHeader + @"
-            //مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
+           //                new EmailTemplate
+           //                {
+           //                    Key = "TaskCloseApproved",
+           //                    SubjectTemplate = "تمت الموافقة على إغلاق المهمة | Task Closure Approved",
+           //                    BodyTemplate = LayoutHeader + @"
+           //مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
 
-            //نود إعلامك بأنه تمت الموافقة على طلب إغلاق المهمة.<br/><br/>
+           //نود إعلامك بأنه تمت الموافقة على طلب إغلاق المهمة.<br/><br/>
 
-            //<strong>عنوان المهمة:</strong> {{TaskTitle}}<br/>
+           //<strong>عنوان المهمة:</strong> {{TaskTitle}}<br/>
 
-            //شكرًا لالتزامك وإنجازك للمهمة.<br/><br/>
+           //شكرًا لالتزامك وإنجازك للمهمة.<br/><br/>
 
-            //<hr/>
+           //<hr/>
 
-            //<strong>Hello {{UserName}},</strong><br/><br/>
+           //<strong>Hello {{UserName}},</strong><br/><br/>
 
-            //We are pleased to inform you that your task closure request has been approved.<br/><br/>
+           //We are pleased to inform you that your task closure request has been approved.<br/><br/>
 
-            //<strong>Task Title:</strong> {{TaskTitle}}<br/>
+           //<strong>Task Title:</strong> {{TaskTitle}}<br/>
 
-            //Thank you for completing the task successfully.
-            //" + LayoutFooter
-            //                }
+           //Thank you for completing the task successfully.
+           //" + LayoutFooter
+           //                }
 
 
 
+           //                new EmailTemplate
+           //                {
+           //                    Key = "LeaveRequestCreated",
+           //                    SubjectTemplate = "طلب إجازة جديد | New Leave Request",
+           //                    BodyTemplate = LayoutHeader + @"
+           //مرحبًا،<br/><br/>
 
+           //تم تقديم <strong>طلب إجازة جديد</strong> من الموظف:<br/><br/>
 
+           //<strong>اسم الموظف:</strong> {{EmployeeName}}<br/>
+           //<strong>نوع الإجازة:</strong> {{LeaveType}}<br/>
+           //<strong>من:</strong> {{StartDate}}<br/>
+           //<strong>إلى:</strong> {{EndDate}}<br/><br/>
 
+           //يرجى مراجعة الطلب من النظام.<br/><br/>
 
+           //<hr/>
 
+           //<strong>Hello,</strong><br/><br/>
 
-                              //Task Achievement
-                          new EmailTemplate
-                          {
-                              Key = "TaskAchievement",
-                              SubjectTemplate = "إضافة نسبة إنجاز على المهمة | Task Achievement Added",
-                              BodyTemplate = LayoutHeader + @"
+           //A <strong>new leave request</strong> has been submitted:<br/><br/>
+
+           //<strong>Employee:</strong> {{EmployeeName}}<br/>
+           //<strong>Leave Type:</strong> {{LeaveType}}<br/>
+           //<strong>From:</strong> {{StartDate}}<br/>
+           //<strong>To:</strong> {{EndDate}}<br/>
+           //" + LayoutFooter
+           //                }
+
+           new EmailTemplate
+           {
+               Key = "LeaveApproved",
+               SubjectTemplate = "تمت الموافقة على طلب الإجازة | Leave Approved",
+               BodyTemplate = LayoutHeader + @"
 مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
 
-قام الموظف <strong>{{EmployeeName}}</strong> بإضافة نسبة إنجاز جديدة على المهمة التالية:<br/><br/>
+نود إعلامك بأنه تم <strong>الموافقة</strong> على طلب الإجازة الخاص بك.<br/><br/>
 
-<strong>المهمة:</strong> {{TaskTitle}}<br/>
-<strong>نسبة الإنجاز:</strong> {{Percent}}<br/><br/>
+<strong>نوع الإجازة:</strong> {{LeaveType}}<br/>
+<strong>من:</strong> {{StartDate}}<br/>
+<strong>إلى:</strong> {{EndDate}}<br/>
+<strong>تمت الموافقة بواسطة:</strong> {{ApprovedBy}}<br/><br/>
 
 <hr/>
 
 <strong>Hello {{UserName}},</strong><br/><br/>
 
-Employee <strong>{{EmployeeName}}</strong> has added a new achievement rate to the following task:<br/><br/>
+We are pleased to inform you that your <strong>leave request has been approved</strong>.<br/><br/>
 
-<strong>Task:</strong> {{TaskTitle}}<br/>
-<strong>Achievement Rate:</strong> {{Percent}}<br/><br/>
+<strong>Leave Type:</strong> {{LeaveType}}<br/>
+<strong>From:</strong> {{StartDate}}<br/>
+<strong>To:</strong> {{EndDate}}<br/>
+<strong>Approved By:</strong> {{ApprovedBy}}<br/><br/>
+
 " + LayoutFooter
-                          }
+           },
+
+           new EmailTemplate
+           {
+               Key = "LeaveRejected",
+               SubjectTemplate = "تم رفض طلب الإجازة | Leave Rejected",
+               BodyTemplate = LayoutHeader + @"
+مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
+
+نأسف لإبلاغك بأنه تم <strong>رفض</strong> طلب الإجازة الخاص بك.<br/><br/>
+
+<strong>نوع الإجازة:</strong> {{LeaveType}}<br/>
+<strong>من:</strong> {{StartDate}}<br/>
+<strong>إلى:</strong> {{EndDate}}<br/>
+<strong>سبب الرفض:</strong> {{RejectReason}}<br/>
+<strong>تم الرفض بواسطة:</strong> {{RejectedBy}}<br/><br/>
+
+<hr/>
+
+<strong>Hello {{UserName}},</strong><br/><br/>
+
+We regret to inform you that your <strong>leave request has been rejected</strong>.<br/><br/>
+
+<strong>Leave Type:</strong> {{LeaveType}}<br/>
+<strong>From:</strong> {{StartDate}}<br/>
+<strong>To:</strong> {{EndDate}}<br/>
+<strong>Reject Reason:</strong> {{RejectReason}}<br/>
+<strong>Rejected By:</strong> {{RejectedBy}}<br/><br/>
+
+" + LayoutFooter
+           }
+
+
+
+
+
+            //Task Achievement
+            //                          new EmailTemplate
+            //                          {
+            //                              Key = "TaskAchievement",
+            //                              SubjectTemplate = "إضافة نسبة إنجاز على المهمة | Task Achievement Added",
+            //                              BodyTemplate = LayoutHeader + @"
+            //مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
+
+            //قام الموظف <strong>{{EmployeeName}}</strong> بإضافة نسبة إنجاز جديدة على المهمة التالية:<br/><br/>
+
+            //<strong>المهمة:</strong> {{TaskTitle}}<br/>
+            //<strong>نسبة الإنجاز:</strong> {{Percent}}<br/><br/>
+
+            //<hr/>
+
+            //<strong>Hello {{UserName}},</strong><br/><br/>
+
+            //Employee <strong>{{EmployeeName}}</strong> has added a new achievement rate to the following task:<br/><br/>
+
+            //<strong>Task:</strong> {{TaskTitle}}<br/>
+            //<strong>Achievement Rate:</strong> {{Percent}}<br/><br/>
+            //" + LayoutFooter
+            //                          }
 
 
 
