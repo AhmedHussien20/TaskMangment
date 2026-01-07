@@ -84,27 +84,27 @@ app.UseHangfireDashboard("/hangfire", new DashboardOptions
 // =======================
 // Jobs
 // =======================
-RecurringJob.AddOrUpdate<ProcessPendingEmailsJob>(
-    "process-pending-emails",
-    job => job.ExecuteAsync(),
-    Cron.Minutely);
+//RecurringJob.AddOrUpdate<ProcessPendingEmailsJob>(
+//    "process-pending-emails",
+//    job => job.ExecuteAsync(),
+//    Cron.Minutely);
 
-RecurringJob.AddOrUpdate<AttachmentBlobMigrationJob>(
-    "attachment-blob-migration",
-    job => job.ExecuteAsync(),
-    Cron.Minutely);
+//RecurringJob.AddOrUpdate<AttachmentBlobMigrationJob>(
+//    "attachment-blob-migration",
+//    job => job.ExecuteAsync(),
+//    Cron.Minutely);
 
-RecurringJob.AddOrUpdate<PenaltyForMissingCommentsJob>(
-      "penalty-missing-comments",
-    job => job.ExecuteAsync(),
-    Cron.Hourly
-);
+//RecurringJob.AddOrUpdate<PenaltyForMissingCommentsJob>(
+//      "penalty-missing-comments",
+//    job => job.ExecuteAsync(),
+//    Cron.Hourly
+//);
 
-RecurringJob.AddOrUpdate<ArchiveOverdueTasksJob>(
-               "archive-overdue-tasks",
-               job => job.ExecuteAsync(),
-               Cron.Hourly
-               );
+//RecurringJob.AddOrUpdate<ArchiveOverdueTasksJob>(
+//               "archive-overdue-tasks",
+//               job => job.ExecuteAsync(),
+//               Cron.Hourly
+//               );
 
 
 
