@@ -32,6 +32,7 @@ builder.Services.AddScoped<IEmailTemplateRenderer, EmailTemplateRenderer>();
 builder.Services.AddScoped<IBlobStorageService, BlobStorageService>();
 builder.Services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
 
+
 builder.Services.AddLocalization(option => option.ResourcesPath = "Resources");
 IStringLocalizer<TaskDiscountService> localizer = null;
 // =======================

@@ -1,0 +1,84 @@
+<app-page-header
+  [title]="title | translate"
+  [title1]="breadcrumbs"
+  [activeitem]="activeitem | translate">
+</app-page-header>
+
+<div class="row row-sm">
+  <div class="col-md-12 col-lg-12">
+    <div class="card custom-card">
+      <div class="card-body pt-2">
+
+        <div *ngIf="isLoading" class="text-center my-3">
+          <div class="spinner-border" role="status">
+            <span class="visually-hidden">{{ 'TABLE.LOADING' | translate }}</span>
+          </div>
+        </div>
+
+        <div *ngIf="!isLoading">
+          <app-generic-table
+            [title]="title"
+            [breadcrumbs]="breadcrumbs"
+            [columns]="columns"
+            [data]="rows"
+            [entries]="entries"
+            [page]="page"
+            [labels]="labels"
+            [totalItems]="totalItems"
+            [showAddButton]="canCreate"
+            [showDetailsButton]="true"
+            [showFilters]="true"
+            [searchCriteria]="searchCriteria"
+            [onSearch]="applyFilters.bind(this)"
+            (pageChange)="onPageChange($event)"
+            (addClick)="openAdd(leaveModal)"
+            (details)="openDetailsModal($event)"
+            [addButtonLabel]="'LEAVE.ADD' | translate">
+          </app-generic-table>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<ng-template #leaveModal let-modal>
+  <div class="modal-header">
+    <h6 class="modal-title">
+      {{ isEdit ? ('LEAVE.EDIT' | translate) : ('LEAVE.ADD' | translate) }}
+    </h6>
+    <button class="btn-close" (click)="modal.dismiss()"></button>
+  </div>
+
+  <div class="modal-body">
+    <app-leave-create-update
+     
+      (formSubmitted)="onFormSubmitted()">
+    </app-leave-create-update>
+  </div>
+</ng-template>
+
+<ng-template #detailsModal let-modal>
+  <div class="modal-header">
+    <h6 class="modal-title">{{ 'LEAVE.DETAILS' | translate }}</h6>
+    <button class="btn-close" (click)="modal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    <div *ngIf="selectedLeave">
+      <p><strong>{{ 'LEAVE.EMPLOYEE' | translate }}:</strong> {{ selectedLeave.employeeName }}</p>
+      <p><strong>{{ 'LEAVE.TYPE' | translate }}:</strong> {{ selectedLeave.leaveTypeName }}</p>
+      <p><strong>{{ 'LEAVE.START_DATE' | translate }}:</strong> {{ selectedLeave.startDate | date }}</p>
+      <p><strong>{{ 'LEAVE.END_DATE' | translate }}:</strong> {{ selectedLeave.endDate | date }}</p>
+      <p><strong>{{ 'LEAVE.STATUS' | translate }}:</strong> {{ selectedLeave.statusName }}</p>
+
+      <div class="mt-3" *ngIf="canEdit && selectedLeave.statusName === 'Pending'">
+        <button class="btn btn-success me-2" (click)="approveLeave(selectedLeave.id, modal)">
+          {{ 'LEAVE.APPROVE' | translate }}
+        </button>
+        <button class="btn btn-danger" (click)="rejectLeave(selectedLeave.id, modal)">
+          {{ 'LEAVE.REJECT' | translate }}
+        </button>
+      </div>
+    </div>
+  </div>
+</ng-template>

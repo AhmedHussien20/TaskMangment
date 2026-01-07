@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using TaskMangment.Application.ApiRequests;
 using TaskMangment.Application.Authorization;
+using TaskMangment.Application.Common.ApiRequests.Leave;
 using TaskMangment.Application.DTOs;
 using TaskMangment.Application.Interfaces.Services;
 
@@ -25,15 +26,21 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpGet("my")]
-        public async Task<IActionResult> MyRequests([FromQuery] BaseApiRequest request)
+        public async Task<IActionResult> MyRequests([FromQuery] LeaveRequest request)
         {
-            var result = await _service.GetMyRequestsAsync(this.CurrentUserId, request);
+            var result = await _service.GetMyRequestsAsync(request, this.Role, this.CurrentUserId);
+            return Success(result.Data);
+        }
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(int id)
+        {
+            var result = await _service.GetByIdAsync(id);
             return Success(result.Data);
         }
 
         [HttpGet("pending")]
         [HasRole("Manager")]
-        public async Task<IActionResult> Pending([FromQuery] BaseApiRequest request)
+        public async Task<IActionResult> Pending([FromQuery] LeaveRequest request)
         {
             var result = await _service.GetPendingForApprovalAsync(this.CurrentUserId, request);
             return Success(result.Data);

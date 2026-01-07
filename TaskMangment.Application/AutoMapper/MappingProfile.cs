@@ -245,6 +245,21 @@ namespace TaskMangment.Application.AutoMapper
             CreateMap<LeaveType, LeaveTypeGetDto>().ReverseMap();
             CreateMap<LeaveTypeAddEditDto, LeaveType>();
 
+            CreateMap<Leave, LeaveGetDto>()
+               .ForMember(dest => dest.EmployeeName,
+                   opt => opt.MapFrom(src => src.Employee.FullName))
+
+               .ForMember(dest => dest.LeaveTypeName,
+                   opt => opt.MapFrom(src => src.LeaveType.NameAr))
+
+               .ForMember(dest => dest.Status,
+                   opt => opt.MapFrom(src => src.Status))
+
+               .ForMember(dest => dest.RejectionReason,
+                   opt => opt.MapFrom(src => src.RejectionReason));
+
+
+
         }
     }
 }

@@ -52,6 +52,16 @@ namespace TaskMangment.Hangfire.Jobs
 
                 foreach (var assignment in task.Assignments)
                 {
+
+                    var alreadyDiscounted = await _db.Discounts.AnyAsync(d =>
+                          d.TaskId == task.Id &&
+                          d.EmployeeId == assignment.EmployeeId &&
+                          d.discountType == DiscountType.AutoCloseTaskDiscount &&
+                          d.AutoDiscount);
+
+                    if (alreadyDiscounted)
+                        continue;
+
                     var discount = new Discount
                     {
                         TaskId = task.Id,
@@ -89,6 +99,14 @@ namespace TaskMangment.Hangfire.Jobs
 
                     if (!managerDidSomething)
                     {
+                        var alreadyDiscounted = await _db.Discounts.AnyAsync(d =>
+                        d.TaskId == task.Id &&
+                      //  d.EmployeeId == task.CreatedByEmployeeId &&
+                        d.discountType == DiscountType.AutoCloseTaskDiscount &&
+                        d.AutoDiscount);
+
+                        if (alreadyDiscounted)
+                            continue;
                         var managerDiscount = new Discount
                         {
                             TaskId = task.Id,
@@ -110,14 +128,21 @@ namespace TaskMangment.Hangfire.Jobs
 
                 foreach (var discount in discountsToPublish)
                 {
-                    await _eventDispatcher.PublishAsync(
-                        new TaskPenaltyEvent(
-                            discount.Id,
-                            task.Id,
-                            task.Assignments.FirstOrDefault(a => a.EmployeeId == discount.EmployeeId)?.Employee?.FullName ?? "",
-                            discount.EmployeeId,
-                            task.Title));
-                }
+                    try
+                    {
+                        await _eventDispatcher.PublishAsync(
+                            new TaskPenaltyEvent(
+                                discount.Id,
+                                task.Id,
+                                task.Assignments.FirstOrDefault(a => a.EmployeeId == discount.EmployeeId)?.Employee?.FullName ?? "",
+                                discount.EmployeeId,
+                                task.Title));
+                    }
+                    catch (Exception ex) 
+                    {
+
+                    }
+                    }
             }
 
         }
