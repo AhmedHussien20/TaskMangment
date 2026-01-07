@@ -22,19 +22,26 @@ namespace TaskMangment.Hangfire.Jobs
             var today = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime.UtcNow, "Arab Standard Time").Date;
             var yesterday = today.AddDays(-1);
 
-            var tasksWithCommentPeriod = await _db.Tasks
+            var tasks = await _db.Tasks
                 .Include(t => t.Assignments)
+                    .ThenInclude(a => a.Employee)
                 .Where(t => t.CommentAllowPeriodDays != null)
+                .Where(t =>
+                    t.Status != WorkTaskStatus.Closed &&
+                    t.Status != WorkTaskStatus.AutoClose &&
+                    t.Status != WorkTaskStatus.Archived)
+
                 .ToListAsync();
 
-            foreach (var task in tasksWithCommentPeriod)
+            var discountsToPublish = new List<(Discount discount, string employeeName, int taskId, string taskTitle)>();
+
+            foreach (var task in tasks)
             {
-                var discountsToPublish = new List<Discount>();
+                var periodDays = (int)task.CommentAllowPeriodDays!.Value;
 
                 foreach (var assignment in task.Assignments)
                 {
                     var employeeId = assignment.EmployeeId;
-                    var periodDays = (int)task.CommentAllowPeriodDays!.Value;
 
                     var lastComment = await _db.TaskComments
                         .Where(c => c.TaskId == task.Id && c.EmployeeId == employeeId)
@@ -42,51 +49,54 @@ namespace TaskMangment.Hangfire.Jobs
                         .FirstOrDefaultAsync();
 
                     var shouldHaveComment = lastComment == null || lastComment.CreatedDate.Date.AddDays(periodDays) <= yesterday;
-
-                    if (!shouldHaveComment)
-                        continue;
+                    if (!shouldHaveComment) continue;
 
                     var hasLeave = await _db.Leaves
                         .Where(l => l.EmployeeId == employeeId &&
                                     l.StartDate.Date <= yesterday &&
                                     l.EndDate.Date >= yesterday)
                         .AnyAsync();
+                    if (hasLeave) continue;
 
-                    if (hasLeave)
+                    if (task.PenaltyOnStopComment <= 0) continue;
+
+                    var alreadyDiscounted = await _db.Discounts.AnyAsync(d =>
+                        d.TaskId == task.Id &&
+                        d.EmployeeId == employeeId &&
+                        d.discountType == DiscountType.StopCommentDiscount &&
+                        d.AutoDiscount &&
+                        d.CreatedDate.Date == today);
+
+                    if (alreadyDiscounted)
                         continue;
 
-                    if (task.PenaltyOnStopComment > 0)
+                    var discount = new Discount
                     {
-                        var discount = new Discount
-                        {
-                            TaskId = task.Id,
-                            EmployeeId = employeeId,
-                            Amount = task.PenaltyOnStopComment,
-                            Reason = "discount on not commenting",
-                            CreatedByEmployeeId = 0,
-                            AutoDiscount = true,
-                            CreatedDate = DateTime.UtcNow,
-                            discountType = DiscountType.StopCommentDiscount
-                        };
+                        TaskId = task.Id,
+                        EmployeeId = employeeId,
+                        Amount = task.PenaltyOnStopComment,
+                        Reason = "Penalty for not commenting",
+                        //CreatedByEmployeeId = 0,
+                        AutoDiscount = true,
+                        CreatedDate = DateTime.UtcNow,
+                        discountType = DiscountType.StopCommentDiscount
+                    };
 
-                        await _db.Discounts.AddAsync(discount);
-                        discountsToPublish.Add(discount);
-                    }
-                }
+                    await _db.Discounts.AddAsync(discount);
 
-                await _db.SaveChangesAsync();
-
-                foreach (var discount in discountsToPublish)
-                {
-                    await _eventDispatcher.PublishAsync(
-                        new TaskPenaltyEvent(
-                            discount.Id,
-                            task.Id,
-                            task.Assignments.FirstOrDefault(a => a.EmployeeId == discount.EmployeeId)?.Employee?.FullName ?? "",
-                            discount.EmployeeId,
-                            task.Title));
+                    discountsToPublish.Add((discount, assignment.Employee?.FullName ?? "", task.Id, task.Title));
                 }
             }
+
+            await _db.SaveChangesAsync();
+
+            foreach (var (discount, employeeName, taskId, taskTitle) in discountsToPublish)
+            {
+                await _eventDispatcher.PublishAsync(
+                    new TaskPenaltyEvent(discount.Id, taskId, employeeName, discount.EmployeeId, taskTitle)
+                );
+            }
         }
+
     }
 }

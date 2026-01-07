@@ -33,7 +33,7 @@ export class CommentModalComponent implements OnInit {
 
   ngOnInit(): void {
     this.form = this.fb.group({
-      comment: ['', [Validators.required, Validators.minLength(5)]],
+      comment: [null],
        startDate: [null],  
        endDate: [null]
     });
@@ -81,7 +81,6 @@ submit(): void {
   // إنشاء التعليق
   this.commentService.create(this.taskId, formData).subscribe({
     next: () => {
-      // نعمل event بس لو المستخدم حدد تاريخ على الأقل
       if (this.form.value.startDate) {
         const eventPayload = {
           title: 'Comment',
