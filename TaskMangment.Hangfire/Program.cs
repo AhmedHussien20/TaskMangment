@@ -31,7 +31,8 @@ builder.Services.AddScoped<ICurrentUserService, HangfireCurrentUserService>();
 builder.Services.AddScoped<IEmailTemplateRenderer, EmailTemplateRenderer>();
 builder.Services.AddScoped<IBlobStorageService, BlobStorageService>();
 builder.Services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
- builder.Services.AddLocalization(option => option.ResourcesPath = "Resources");
+
+builder.Services.AddLocalization(option => option.ResourcesPath = "Resources");
 IStringLocalizer<TaskDiscountService> localizer = null;
 // =======================
 // Database
@@ -65,7 +66,6 @@ builder.Services.AddHangfireServer();
 // =======================
 // DI
 // =======================
-builder.Services.AddDI();
 
 var app = builder.Build();
 
@@ -97,13 +97,13 @@ RecurringJob.AddOrUpdate<AttachmentBlobMigrationJob>(
 RecurringJob.AddOrUpdate<PenaltyForMissingCommentsJob>(
       "penalty-missing-comments",
     job => job.ExecuteAsync(),
-    Cron.Minutely 
+    Cron.Hourly
 );
 
 RecurringJob.AddOrUpdate<ArchiveOverdueTasksJob>(
                "archive-overdue-tasks",
                job => job.ExecuteAsync(),
-               Cron.Minutely()
+               Cron.Hourly
                );
 
 

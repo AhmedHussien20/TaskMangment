@@ -36,7 +36,7 @@ namespace TaskMangment.Hangfire.Jobs
             if (!overdueTasks.Any()) return;
 
             foreach (var task in overdueTasks)
-            {
+            { 
                 var approvedExtension = await _db.TaskExtensionRequests
                     .Where(r => r.TaskId == task.Id
                          && r.Status == ExtensionRequestStatus.Approved
@@ -95,7 +95,7 @@ namespace TaskMangment.Hangfire.Jobs
                             EmployeeId = creatorId,
                             Reason = "manager negligence on overdue task",
                             Amount = task.PenaltyOnAutoClose,
-                            CreatedByEmployeeId = 0,
+                            //CreatedByEmployeeId = 0,
                             AutoDiscount = true,
                             CreatedDate = DateTime.UtcNow,
                             discountType = DiscountType.AutoCloseTaskDiscount
