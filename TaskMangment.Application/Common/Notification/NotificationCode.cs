@@ -19,7 +19,8 @@ namespace TaskMangment.Application.Common.Notification
         public const string CloseApprove = "CLOSEAPPROVED";
         public const string ExtendApprove = "EXTENDAPPROVED";
         public const string TaskAchievement = "TASKACHIEVEMENT";
-
-
+        public const string LeaveRequestCreated = "LEAVEREQUESTCREATED";
+        public const string LeaveApprovedNotification = "LEAVE_APPROVED_NOTIFICATION";
+        public const string LeaveRejectedNotification = "LEAVE_REJECTED_NOTIFICATION";
     }
 }

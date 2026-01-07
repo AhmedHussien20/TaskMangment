@@ -4,12 +4,14 @@ using Microsoft.EntityFrameworkCore;
 using TaskMangment.Application.ApiRequests;
 using TaskMangment.Application.Common.Errors;
 using TaskMangment.Application.Common.Exceptions;
+using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Responses;
 using TaskMangment.Application.DTOs;
 using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
+using TaskMangment.Domain.Event;
 
 namespace TaskMangment.Infrastructure.Services
 {
@@ -19,17 +21,20 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<Employee> _employeeRepo;
         private readonly IRepository<LeaveType> _leaveTypeRepo;
         private readonly IMapper _mapper;
+        private readonly IDomainEventDispatcher _eventDispatcher;
 
         public LeaveService(
             IRepository<Leave> leaveRepo,
             IRepository<Employee> employeeRepo,
             IRepository<LeaveType> leaveTypeRepo,
-            IMapper mapper)
+            IMapper mapper,
+            IDomainEventDispatcher eventDispatcher)
         {
             _leaveRepo = leaveRepo;
             _employeeRepo = employeeRepo;
             _leaveTypeRepo = leaveTypeRepo;
             _mapper = mapper;
+            _eventDispatcher = eventDispatcher;
         }
          
         public async Task<ApiResponse<LeaveGetDto>> CreateAsync(LeaveAddDto dto, int employeeId)
@@ -52,6 +57,7 @@ namespace TaskMangment.Infrastructure.Services
                 Notes = dto.Notes,
                 Status = LeaveStatus.Pending
             };
+          
 
             await _leaveRepo.AddAsync(leave);
             await _leaveRepo.SaveChangesAsync();
@@ -61,6 +67,15 @@ namespace TaskMangment.Infrastructure.Services
                 .Include(l => l.LeaveType)
                 .FirstAsync();
 
+            await _eventDispatcher.PublishAsync(new LeaveEvent(
+                                                  leave.Id,
+                                                  employeeId,
+                                                  full.Employee.FullName,
+                                                  full.LeaveType.NameAr,
+                                                  leave.StartDate,
+                                                  leave.EndDate
+                                                ));
+
             var result = _mapper.Map<LeaveGetDto>(full);
 
             return ApiResponse<LeaveGetDto>.Ok(result, "Leave request submitted");
@@ -68,13 +83,14 @@ namespace TaskMangment.Infrastructure.Services
          
         public async Task<ApiResponse<PagedResponse<LeaveGetDto>>> GetMyRequestsAsync(int employeeId, BaseApiRequest request)
         {
-            var query = _leaveRepo.GetAll(l => l.EmployeeId == employeeId)
-                .Include(l => l.LeaveType)
-                .Include(l => l.Employee);
+            IQueryable<Leave> query = _leaveRepo.GetAll(l => l.EmployeeId == employeeId)
+                             .Include(l => l.LeaveType)
+                             .Include(l => l.Employee);
 
             var totalCount = await query.CountAsync();
 
-            //query = query.OrderByDescending(l => l.CreatedDate);
+            query = query.OrderByDescending(l => l.CreatedDate);
+
 
             var list = await query
                 .Skip((request.PageIndex - 1) * request.PageSize)
@@ -92,13 +108,13 @@ namespace TaskMangment.Infrastructure.Services
         public async Task<ApiResponse<PagedResponse<LeaveGetDto>>> GetPendingForApprovalAsync(int managerId, BaseApiRequest request)
         {
 
-            var query = _leaveRepo.GetAll(l => l.Status == LeaveStatus.Pending)
+            IQueryable<Leave> query = _leaveRepo.GetAll(l => l.Status == LeaveStatus.Pending)
                 .Include(l => l.Employee)
                 .Include(l => l.LeaveType);
 
             var totalCount = await query.CountAsync();
 
-            //query = query.OrderBy(l => l.CreatedDate);
+            query = query.OrderBy(l => l.CreatedDate);
 
             var list = await query
                 .Skip((request.PageIndex - 1) * request.PageSize)

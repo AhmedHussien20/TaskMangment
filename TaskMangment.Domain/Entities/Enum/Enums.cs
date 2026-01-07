@@ -52,6 +52,7 @@ namespace TaskMangment.Domain.Entities
         TaskExtensionRequestApproved = 10,
         TaskCloseRequestApproved = 11,
         TaskAchieve = 12,
+        Leave = 13
 
     }
     public enum RecipientType
