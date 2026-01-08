@@ -25,10 +25,10 @@ namespace TaskMangment.API.Controllers
             return Success(result.Data);
         }
 
-        [HttpGet("my")]
-        public async Task<IActionResult> MyRequests([FromQuery] LeaveRequest request)
+        [HttpGet]
+        public async Task<IActionResult> LeaveRequests([FromQuery] LeaveRequest request)
         {
-            var result = await _service.GetMyRequestsAsync(request, this.Role, this.CurrentUserId);
+            var result = await _service.GetLeaveRequestsAsync(request, this.Role, this.CurrentUserId);
             return Success(result.Data);
         }
         [HttpGet("{id}")]
@@ -56,9 +56,9 @@ namespace TaskMangment.API.Controllers
 
         [HttpPost("{id}/reject")]
         [HasRole("Manager")]
-        public async Task<IActionResult> Reject(int id, [FromBody] string reason)
+        public async Task<IActionResult> Reject(int id, [FromBody] RejectLeaveDto rejectLeaveDto)
         {
-            var result = await _service.RejectAsync(id, this.CurrentUserId, reason);
+            var result = await _service.RejectAsync(id, this.CurrentUserId, rejectLeaveDto);
             return Success(true);
         }
     }

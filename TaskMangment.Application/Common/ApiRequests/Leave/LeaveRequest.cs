@@ -10,5 +10,7 @@ namespace TaskMangment.Application.Common.ApiRequests.Leave
     public class LeaveRequest : BaseApiRequest
     {
         public List<int>? EmployeeIds { get; set; }
+        public int? StatusId { get; set; }
+
     }
 }

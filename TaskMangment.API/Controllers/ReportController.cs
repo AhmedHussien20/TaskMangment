@@ -4,6 +4,7 @@ using TaskMangment.API.Reports.Task;
 using TaskMangment.Application.DTOs.ReportsDTO;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Application.Responses;
+using TaskMangment.Domain.Entities;
 using TaskMangment.Infrastructure.Services;
 using TaskMangment.Infrastructure.SignalR;
 
@@ -77,6 +78,17 @@ namespace TaskMangment.API.Controllers
             var pdf = report.GeneratePdf();
 
             return File(pdf, "application/pdf", "archived-tasks-report.pdf");
+        }
+
+
+        [HttpGet("task-discounts/pdf")]
+        public async Task<IActionResult> GetTaskDiscountsPdf([FromQuery] TaskDiscountReportFilterDto filter)
+        {
+            var data = await _reportService.GetTaskDiscountReportAsync(filter);
+            var report = new TaskDiscountsPdfReport(data);
+            var pdf = report.GeneratePdf();
+
+            return File(pdf, "application/pdf", "task-discounts-report.pdf");
         }
 
 

@@ -1,17 +1,22 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { NgbModal, NgbModalModule, NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
-import { Router } from '@angular/router';
+import {
+  NgbModal,
+  NgbModalModule,
+  NgbPaginationModule,
+} from '@ng-bootstrap/ng-bootstrap';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ToastrService } from 'ngx-toastr';
-import Swal from 'sweetalert2';
 
 import { LeaveService } from 'app/core/services/leave.service';
 import { LeaveGetDto } from 'app/core/models/leave/leave';
 import { SearchCriteria } from 'app/core/models/search-criteria.model';
 import { PageHeaderComponent } from 'app/shared/components/page-header/page-header.component';
-import { GenericTableComponent, TableColumn } from 'app/shared/components/generic-table/generic-table.component';
+import {
+  GenericTableComponent,
+  TableColumn,
+} from 'app/shared/components/generic-table/generic-table.component';
 import { AuthService } from 'app/core/services/auth.service';
 import { LeaveCreateUpdateComponent } from '../leave-create-update/leave-create-update.component';
 
@@ -26,73 +31,108 @@ import { LeaveCreateUpdateComponent } from '../leave-create-update/leave-create-
     PageHeaderComponent,
     GenericTableComponent,
     TranslateModule,
-    LeaveCreateUpdateComponent
+    LeaveCreateUpdateComponent,
   ],
   templateUrl: './leave-list.component.html',
-  styleUrls: ['./leave-list.component.scss']
+  styleUrls: ['./leave-list.component.scss'],
 })
 export class LeaveListComponent implements OnInit {
-
   canCreate = false;
   canEdit = false;
   canDelete = false;
+  status: { id: number; name: string }[] = [];
 
   title = 'LEAVE.LIST_TITLE';
   activeitem = 'LEAVE.LIST_TITLE';
-  breadcrumbs = [
-    'MENU.HOME',
-    'MENU.HR',
-    'LEAVE.LIST_TITLE'
-  ];
+  breadcrumbs = ['MENU.HOME', 'MENU.LEAVES', 'LEAVE.LIST_TITLE'];
 
   columns: TableColumn[] = [
     { key: 'id', label: 'LEAVE.ID' },
     { key: 'employeeName', label: 'LEAVE.EMPLOYEE' },
     { key: 'leaveTypeName', label: 'LEAVE.TYPE' },
-    { key: 'startDate', label: 'LEAVE.START_DATE' },
-    { key: 'endDate', label: 'LEAVE.END_DATE' },
-    { key: 'statusName', label: 'LEAVE.STATUS' }
+    { key: 'startDate', label: 'LEAVE.START_DATE', type: 'date' },
+    { key: 'endDate', label: 'LEAVE.END_DATE', type: 'date' },
+    {
+      key: 'statusName',
+      label: 'LEAVE.STATUS',
+      type: 'badge',
+      badgeMap: {
+        Pending: {
+          text: 'LEAVE.PENDING',
+          class: 'bg-warning',
+        },
+        Approved: {
+          text: 'LEAVE.APPROVED',
+          class: 'bg-success',
+        },
+        Rejected: {
+          text: 'LEAVE.REJECTED',
+          class: 'bg-danger',
+        },
+      },
+    },
   ];
 
+  
+  reviewModel = {
+    status: null as 'Approved' | 'Rejected' | null,
+    rejectReason: '',
+  };
+ 
   rows: LeaveGetDto[] = [];
   totalItems = 0;
 
+ 
   page = 1;
   entries = 10;
 
-  searchCriteria: SearchCriteria = {
-    searchKey: '',
-    pageIndex: this.page,
-    pageSize: this.entries,
-    sortColumn: 'Id',
-    sortDirection: 'DESC',
-    filterTypes: { searchKey: 'text' }
-  };
+  statusOptions = [
+    { id: 1, name: 'LEAVE.PENDING' },
+    { id: 2, name: 'LEAVE.APPROVED' },
+    { id: 3, name: 'LEAVE.REJECTED' },
+   
+  ];
 
-  labels = { searchKey: 'LEAVE.SEARCH' };
-  isLoading = false;
+  searchCriteria: SearchCriteria = {
+     searchKey: '',
+     statusId: null,
+     pageIndex: this.page,
+     pageSize: this.entries,
+     sortColumn: 'Id',
+     sortDirection: 'DESC',
+     filterTypes: {
+       searchKey: 'text',
+       statusId: 'dropdown'
+     }
+   };
+ 
+ 
+   labels = {
+     searchKey: 'LEAVE.SEARCH',
+     statusId: 'LEAVE.STATUS'
+   };  
+   isLoading = false;
 
   // MODALS
   isEdit = false;
   selectedLeaveId: number | null = null;
   selectedLeave: LeaveGetDto | null = null;
-@ViewChild('detailsModal') detailsModal: any;
-
-
+  @ViewChild('detailsModal') detailsModal: any;
+  
 
   constructor(
     private leaveService: LeaveService,
     private modalService: NgbModal,
     private toastr: ToastrService,
     private translate: TranslateService,
-    private auth: AuthService,
-    private router: Router
+    private auth: AuthService
   ) {}
 
   ngOnInit(): void {
     const roleLevel = this.auth.getRoleLevel();
 
-    this.canCreate = roleLevel >= 50;
+    this.status = this.statusOptions;
+    this.canCreate = roleLevel >= 10;
     this.canEdit = roleLevel >= 70;
     this.canDelete = roleLevel >= 70;
 
@@ -101,7 +141,7 @@ export class LeaveListComponent implements OnInit {
 
   loadData() {
     this.isLoading = true;
-    this.leaveService.getMyRequests(this.searchCriteria).subscribe({
+    this.leaveService.LeaveRequests(this.searchCriteria).subscribe({
       next: (res: any) => {
         const pageData = res.data;
 
@@ -110,15 +150,31 @@ export class LeaveListComponent implements OnInit {
         this.page = pageData.pageIndex ?? 1;
         this.entries = pageData.pageSize ?? 10;
 
-       
-
         this.isLoading = false;
       },
-      error: () => { this.isLoading = false; }
+      error: () => {
+        this.isLoading = false;
+      },
     });
   }
+loadPendingLeaves() {
+  this.isLoading = true;
+  this.leaveService.getPending(this.searchCriteria).subscribe({
+    next: (res: any) => {
+      const pageData = res.data;
 
- 
+      this.rows = pageData.data ?? [];
+      this.totalItems = pageData.totalCount ?? 0;
+      this.page = pageData.pageIndex ?? 1;
+      this.entries = pageData.pageSize ?? 10;
+
+      this.isLoading = false;
+    },
+    error: () => {
+      this.isLoading = false;
+    }
+  });
+}
 
   onPageChange(page: number) {
     this.page = page;
@@ -134,16 +190,26 @@ export class LeaveListComponent implements OnInit {
     this.loadData();
   }
 
-  applyFilters(filters: any) {
-    this.searchCriteria = { ...this.searchCriteria, ...filters, pageIndex: 1 };
+   applyFilters(filters: any) {
+    this.searchCriteria = {
+      ...this.searchCriteria,
+      ...filters,
+      pageIndex: 1
+    };
+
     this.page = 1;
     this.loadData();
   }
 
   openAdd(modal: any) {
-    if (!this.canCreate) return;
     this.isEdit = false;
     this.selectedLeaveId = null;
+    this.modalService.open(modal, { size: 'lg', centered: true });
+  }
+
+  openEdit(id: number, modal: any) {
+    this.isEdit = true;
+    this.selectedLeaveId = id;
     this.modalService.open(modal, { size: 'lg', centered: true });
   }
 
@@ -151,42 +217,51 @@ export class LeaveListComponent implements OnInit {
     this.modalService.dismissAll();
     this.loadData();
   }
-openDetailsModal(id: number) {
-  this.isLoading = true;
-  this.leaveService.getById(id).subscribe({
-    next: (res: any) => {
-      this.selectedLeave = res.data;
-      this.isLoading = false;
-      this.modalService.open(this.detailsModal, { size: 'md', centered: true });
-    },
-    error: () => { this.isLoading = false; }
-  });
-}
+  openDetailsModal(id: number) {
+    this.reviewModel = {
+      status: null,
+      rejectReason: '',
+    };
 
-approveLeave(id: number, modal?: any) {
-  this.leaveService.approve(id).subscribe(() => {
-    this.toastr.success(this.translate.instant('LEAVE.APPROVED'));
-    if (modal) modal.close();
-    this.loadData();
-  });
-}
+    this.leaveService.getById(id).subscribe({
+      next: (res: any) => {
+        this.selectedLeave = res.data;
+        this.isLoading = false;
+        this.modalService.open(this.detailsModal, {
+          size: 'lg',
+          centered: true,
+        });
+      },
+      error: () => (this.isLoading = false),
+    });
+  }
 
-rejectLeave(id: number, modal?: any) {
-  Swal.fire({
-    title: this.translate.instant('LEAVE.REJECT_TITLE'),
-    input: 'textarea',
-    showCancelButton: true,
-    confirmButtonText: this.translate.instant('COMMON.CONFIRM'),
-    cancelButtonText: this.translate.instant('COMMON.CANCEL')
-  }).then(result => {
-    if (result.isConfirmed && result.value) {
-      this.leaveService.reject(id, result.value).subscribe(() => {
-        this.toastr.success(this.translate.instant('LEAVE.REJECTED'));
-        if (modal) modal.close();
+  confirmReview(modal: any) {
+    if (!this.selectedLeave || !this.reviewModel.status) return;
+
+    if (this.reviewModel.status === 'Approved') {
+      this.leaveService.approve(this.selectedLeave.id).subscribe(() => {
+        this.toastr.success(this.translate.instant('LEAVE.APPROVED_SUCCESS'));
+        modal.close();
         this.loadData();
       });
     }
-  });
-}
 
+    if (this.reviewModel.status === 'Rejected') {
+      if (!this.reviewModel.rejectReason) {
+        this.toastr.error(
+          this.translate.instant('LEAVE.REJECT_REASON_REQUIRED')
+        );
+        return;
+      }
+
+      this.leaveService
+        .reject(this.selectedLeave.id, this.reviewModel.rejectReason)
+        .subscribe(() => {
+          this.toastr.success(this.translate.instant('LEAVE.REJECTED_SUCCESS'));
+          modal.close();
+          this.loadData();
+        });
+    }
+  }
 }

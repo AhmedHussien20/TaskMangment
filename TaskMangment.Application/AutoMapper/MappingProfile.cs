@@ -252,6 +252,9 @@ namespace TaskMangment.Application.AutoMapper
                .ForMember(dest => dest.LeaveTypeName,
                    opt => opt.MapFrom(src => src.LeaveType.NameAr))
 
+               .ForMember(dest => dest.LeaveTypeId,
+                   opt => opt.MapFrom(src => src.LeaveType.Id))
+
                .ForMember(dest => dest.Status,
                    opt => opt.MapFrom(src => src.Status))
 
