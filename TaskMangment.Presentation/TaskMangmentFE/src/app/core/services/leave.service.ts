@@ -11,44 +11,54 @@ export class LeaveService {
 
   constructor(private api: ApiService) {}
 
-  /** Create leave request */
   create(model: LeaveAddDto): Observable<BaseResponse<any>> {
     return this.api.post<BaseResponse<any>>(this.service, '', model);
   }
 
-  /** Logged-in employee leaves */
-  getMyRequests(request: any): Observable<LeavePagedResponse> {
+  LeaveRequests(request: any): Observable<LeavePagedResponse> {
     const query = this.buildQuery(request);
-    return this.api.get<LeavePagedResponse>(this.service, `my?${query}`);
+    return this.api.get<LeavePagedResponse>(this.service, `?${query}`);
   }
 
   getById(id: number): Observable<BaseResponse<LeaveGetDto>> {
       return this.api.get<BaseResponse<LeaveGetDto>>(this.service, `${id}`);
     }
 
-  /** Manager: pending approval */
   getPending(request: any): Observable<LeavePagedResponse> {
     const query = this.buildQuery(request);
     return this.api.get<LeavePagedResponse>(this.service, `pending?${query}`);
   }
 
-  /** Manager: approve */
   approve(id: number): Observable<BaseResponse<boolean>> {
     return this.api.post<BaseResponse<boolean>>(this.service, `${id}/approve`, {});
   }
 
-  /** Manager: reject */
   reject(id: number, reason: string): Observable<BaseResponse<boolean>> {
-    return this.api.post<BaseResponse<boolean>>(this.service, `${id}/reject`, reason);
-  }
+  return this.api.post<BaseResponse<boolean>>(this.service,`${id}/reject`, {reason: reason}
+);
+}
 
-  private buildQuery(req: any): string {
-    return [
-      `searchKey=${req.searchKey || ''}`,
-      `PageIndex=${req.pageIndex}`,
-      `PageSize=${req.pageSize}`,
-      `SortColumn=${req.sortColumn || ''}`,
-      `SortDirection=${req.sortDirection || ''}`
-    ].join('&');
+
+ private buildQuery(req: any): string {
+  const params = [];
+  
+  if (req.searchKey) {
+    params.push(`searchKey=${encodeURIComponent(req.searchKey)}`);
   }
+  
+  if (req.statusId) {
+    params.push(`statusId=${req.statusId}`);
+  }
+  
+  params.push(`PageIndex=${req.pageIndex || 1}`);
+  params.push(`PageSize=${req.pageSize || 10}`);
+  
+  if (req.sortColumn) {
+    params.push(`SortColumn=${req.sortColumn}`);
+  }
+  if (req.sortDirection) {
+    params.push(`SortDirection=${req.sortDirection}`);
+  }  
+  return params.join('&');
+}
 }

@@ -31,7 +31,8 @@
     "EDUCATION": "التعليم",
     "EMPLOYEES": "الموظفين",
     "EMPLOYMENT": "التشغيل",
-    "REPORTS" : "التقارير"
+    "REPORTS" : "التقارير",
+    "LEAVES" : "الاجازات"
   },
   "COMMON": {
     "welcome": "مرحباً",
@@ -145,6 +146,13 @@
       {
         "header" : "التقارير",
         "title": "التقارير"
+      },
+      "leaves" : 
+      {
+        "header" : "الاجازات",
+        "title" :"الاجازات",
+        "leaves_type" : "انواع الاجازات",
+        "Leaves_requests" : "الاجازات المقدمة"
       }
     },
     "components": {
@@ -761,8 +769,60 @@
     "MOST_ASSIGNED" : " أكثر الموظفين تكليفًا بالمهام",
     "TASKS_COUNT" : "أجمالى المهام",
     "ON_TIME_COMPLETION" : "أفضل الموظفين التزامًا بالمواعيد",
-    "ON_TIME_COUNT":"عدد المهام المنتهية فى الوقت"
+    "ON_TIME_COUNT":"عدد المهام المنتهية فى الوقت",
+    "STATUS" : "حالة المهمة",
+    "SELECT_EMPLOYEE" :"اختر الموظف",
+    "TASK" : "المهمة" ,
+    "CLOSED_DATE" : "تاريخ الإغلاق",
+    "MANUAL_DISCOUNT" : "إجمالي الحسومات اليدوية",
+    "AUTO_DISCOUNT" : "إجمالي الخصومات الإلكترونية",
+    "ASSIGNED_BY" : "جهة التكليف",
+    "EVALUATION" : "التقييم",
+    "TASK_DISCOUNTS" : "خصومات المهام الواردة", 
+    "EMPLOYEE" : "حسابات الموظفين",
+    "DISCOUNT_FROM" : "تاريخ الخصم من",
+    "DISCOUNT_TO" : "تاريخ الخصم الي"
+
 
     
+
+  },
+  "LEAVE" : 
+  {
+    "ID" : "الكود",
+    "TYPE" : "نوع الاجازة",
+    "START_DATE" :"تاريخ البدء",
+    "END_DATE" :"تاريخ الانتهاء",
+    "STATUS" :"الحالة",
+    "APPROVED" :  "الموافقة",
+    "APPROVED_SUCCESS" : "تمت الموافقة بنجاح",
+    "REJECTED_SUCCESS" : "تم الرفض بنجاح",
+    "REJECT" : "رفض",
+    "REJECT_REASON" : "سبب الرفض",
+    "ADD" : "اضافة طلب اجازة",
+    "EMPLOYEE" : "اسم الموظف",
+    "DETAILS" : "تفاصيل الطلب",
+    "NOTES" : "ملاحظات",
+    "REVIEW_STATUS" : "اختر الحالة",
+    "REJECT_REASON_REQUIRED" : "سبب الرفض مطلوب",
+    "PENDING" : "معلق",
+    "REJECTED" : "مرفوض",
+    "LIST_TITLE" : "قائمة تقديم الاجازات" ,
+    "SEARCH" : "بحث"
+
+
+  },
+  "LEAVE_TYPE" : 
+  {
+    "ADD" : "اضافة نوع اجازة",
+    "ID" :"الكود",
+    "NAME_AR" : "اسم الاجازة باللغة العربية",
+    "NAME_EN" : "اسم الاجازة باللغة الانجليزية",
+    "IS_PAID" : "مدفوعة الاجر" ,
+    "MAX_DAYS" : "الحد الاقصي للايام",
+    "PAID_NO" : "لا",
+    "PAID_YES" : "نعم",
+    "title" : "قائمة الاجازات"
   }
+
 }

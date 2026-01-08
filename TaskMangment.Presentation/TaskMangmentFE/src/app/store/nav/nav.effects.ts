@@ -142,7 +142,30 @@ private MENUITEMS: MenuItem[] = [
     type: 'sub',
     minRoleLevel: 10,
     children: [
-     
+     {
+      }
+    ]
+  },
+
+  { headTitle: 'nav.apps.leaves.header', minRoleLevel: 10 },
+  {
+    title: 'nav.apps.leaves.title',
+    icon: 'ti-calendar',
+    type: 'sub',
+    minRoleLevel: 10,
+    children: [
+      {
+        title: 'nav.apps.leaves.leaves_type',
+        path: '/leave/leave-type-list',
+        type: 'link',
+        minRoleLevel: 50
+      },
+      {
+        title: 'nav.apps.leaves.Leaves_requests',
+        path: '/leave/leave-list',
+        type: 'link',
+        minRoleLevel: 10
+      },
     ]
   },
 

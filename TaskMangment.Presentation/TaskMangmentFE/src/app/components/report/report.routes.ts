@@ -27,6 +27,14 @@ export const ReportRoutes: Routes = [
       import('./archived-tasks-list/archived-tasks-list.component')
         .then(m => m.ArchivedTasksListComponent)
   }
+  ,
+  {
+    path: 'tasks-discount-list',
+    loadComponent: () =>
+      import('./tasks-discoun-report/tasks-discoun-report.component')
+        .then(m => m.TasksDiscountReportComponent)
+  }
+
 ];
 
 @NgModule({

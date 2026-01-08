@@ -148,6 +148,74 @@ namespace TaskMangment.Infrastructure.Services
             return result;
         }
 
+        public async Task<List<TaskDiscountReportDto>> GetTaskDiscountReportAsync(TaskDiscountReportFilterDto dto)
+        {
+            var employee = await _context.Employees
+       .Where(e => e.Id == dto.EmployeeId)
+       .Select(e => new { e.FullName })
+       .FirstOrDefaultAsync();
+
+
+            var query = _context.TaskAssignments
+                .Include(a => a.Task)
+                .Include(a => a.Task.AssignedBy)
+                .AsQueryable();
+
+            // ===== Mandatory Filters =====
+
+            query = query.Where(a => a.EmployeeId == dto.EmployeeId);
+            query = query.Where(a => a.Task.DueDate >= dto.FromDate);
+
+
+            // ===== Optional Filters =====
+
+            if (dto.Status.HasValue)
+                query = query.Where(a => a.Task.Status == dto.Status.Value);
+
+            if (dto.ToDate.HasValue)
+                query = query.Where(a => a.Task.DueDate <= dto.ToDate.Value);
+
+            query = query.Where(a => a.Task.Status != WorkTaskStatus.New);
+
+            // ===== Projection =====
+
+            var result = await query
+                .Select(a => new TaskDiscountReportDto
+                {
+                    TaskId = a.TaskId,
+                    Title = a.Task.Title,
+                    AssignedBy = a.Task.AssignedBy.FullName,
+                    ClosedDate = a.Task.DueDate,
+
+                    Status = a.Task.Status == WorkTaskStatus.Archived ? "مورشف" :
+                  a.Task.Status == WorkTaskStatus.Closed ? "مغلقة" :
+                  a.Task.Status == WorkTaskStatus.AutoClose ? "مغلق تلقائي" :
+                  a.Task.Status == WorkTaskStatus.InProgress ? "قيد التنفيذ" : "غير محدد",
+
+                    AutoDiscount = _context.Discounts
+                        .Where(d => d.TaskId == a.TaskId && d.AutoDiscount)
+                        .Sum(d => (decimal?)d.Amount) ?? 0,
+
+                    ManualDiscount = _context.Discounts
+                        .Where(d => d.TaskId == a.TaskId && !d.AutoDiscount)
+                        .Sum(d => (decimal?)d.Amount) ?? 0,
+
+                    Evaluation =
+                        a.Task.Status == WorkTaskStatus.Archived ? "جيد" :
+                        a.Task.Status == WorkTaskStatus.Closed ? "جيد" :
+                        a.Task.Status == WorkTaskStatus.AutoClose ? "سيئ" :
+                        "قيد التنفيذ",
+
+                   EmployeeName = employee != null ? employee.FullName : "غير معروف"
+
+                })
+                .AsNoTracking()
+                .ToListAsync();
+
+            return result;
+        }
+
+
 
     }
 

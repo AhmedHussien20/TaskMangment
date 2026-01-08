@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using TaskMangment.Application.DTOs.ReportsDTO;
 using TaskMangment.Application.Interfaces.Services;
+using TaskMangment.Domain.Entities;
 
 namespace TaskMangment.API.Controllers
 {
@@ -50,5 +52,15 @@ namespace TaskMangment.API.Controllers
             var data = await _reportService.GetMostArchivedEmployeesAsync(fromDate, toDate);
             return Success(data);
         }
+
+
+        [HttpGet("task-discounts")]
+        public async Task<IActionResult> GetTaskDiscounts(
+            [FromQuery] TaskDiscountReportFilterDto filter)
+        {
+            var data = await _reportService.GetTaskDiscountReportAsync(filter);
+            return Success(data);
+        }
+
     }
 }

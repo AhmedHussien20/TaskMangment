@@ -15,11 +15,13 @@ export interface LeaveGetDto {
   id: number;
   employeeName: string;
   leaveTypeName: string;
+  leaveTypeId : number;
   startDate: string;
   endDate: string;
   status: LeaveStatus;
   statusName: string;
   rejectionReason?: string | null;
+  notes?: string | null;
 }
 
 export interface LeavePagedResponse {

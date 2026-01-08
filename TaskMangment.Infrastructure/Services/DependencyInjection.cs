@@ -88,6 +88,15 @@ namespace TaskMangment.Infrastructure.Services
             services.AddScoped<IEventHandler<TaskPenaltyEvent>, TaskPenaltyEventHandler>();
             services.AddScoped<IEventHandler<TaskAssignedEvent>, TaskAssignedEventHandler>();
             services.AddScoped<IEventHandler<TaskAssignedEvent>, TaskAssignedEmailHandler>();
+
+            services.AddScoped<IEventHandler<LeaveRejectedEvent>, LeaveRejectedEmailHandler>();
+            services.AddScoped<IEventHandler<LeaveRejectedEvent>, LeaveRejectedEventHandler>();
+
+            services.AddScoped<IEventHandler<LeaveApprovedEvent>, LeaveApprovedEventHandler>();
+            services.AddScoped<IEventHandler<LeaveApprovedEvent>, LeaveApprovedEmailHandler>();
+
+
+
             // services.AddScoped<IEventHandler<TaskRequestAddedEvent>, TaskRequestEmailHandler>();
 
             services.AddScoped<IEventHandler<TaskWarningEvent>, TaskWarningEventHandler>();
@@ -112,6 +121,7 @@ namespace TaskMangment.Infrastructure.Services
             services.AddScoped<ICurrentUserService, CurrentUserService>();
             services.AddScoped<IBlobStorageService, BlobStorageService>();
             services.AddScoped<AttachmentBlobMigrationJob>();
+
 
             // SignalR
             services.AddSignalR();

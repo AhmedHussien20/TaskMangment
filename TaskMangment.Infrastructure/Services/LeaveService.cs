@@ -83,11 +83,18 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<LeaveGetDto>.Ok(result, "Leave request submitted");
         }
 
-        public async Task<ApiResponse<PagedResponse<LeaveGetDto>>> GetMyRequestsAsync(LeaveRequest request, string role, int employeeId)
+        public async Task<ApiResponse<PagedResponse<LeaveGetDto>>> GetLeaveRequestsAsync(LeaveRequest request, string role, int employeeId)
         {
             IQueryable<Leave> query = _leaveRepo.GetAll()
                 .Include(l => l.Employee)
                 .Include(l => l.LeaveType);
+
+
+            if (request.StatusId.HasValue)
+            {
+                query = query.Where(l => l.Status == (LeaveStatus)request.StatusId.Value);
+            }
+
 
             if (role != "Manager")
             {
@@ -145,7 +152,11 @@ namespace TaskMangment.Infrastructure.Services
         // =========================
         public async Task<ApiResponse<bool>> ApproveAsync(int leaveId, int managerId)
         {
-            var leave = await _leaveRepo.GetByIDAsync(leaveId);
+            var leave = await _leaveRepo.GetAll(l => l.Id == leaveId)
+                                         .Include(l => l.Employee)   
+                                         .Include(l => l.ApprovedBy) 
+                                         .Include(l => l.LeaveType) 
+                                         .FirstOrDefaultAsync();
 
             if (leave == null)
                 throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
@@ -159,29 +170,52 @@ namespace TaskMangment.Infrastructure.Services
 
             await _leaveRepo.SaveChangesAsync();
 
+            await _eventDispatcher.PublishAsync(new LeaveApprovedEvent(
+                leave.Id,
+                leave.EmployeeId,
+                leave.Employee.FullName,
+                leave.ApprovedBy.FullName,
+                leave.LeaveType.NameAr,
+                leave.StartDate,
+                leave.EndDate
+ ));
+
+
             return ApiResponse<bool>.Ok(true, "Leave approved");
         }
 
         // =========================
         // Reject
         // =========================
-        public async Task<ApiResponse<bool>> RejectAsync(int leaveId, int managerId, string reason)
+        public async Task<ApiResponse<bool>> RejectAsync(int leaveId, int managerId, RejectLeaveDto rejectLeaveDto)
         {
-            var leave = await _leaveRepo.GetByIDAsync(leaveId);
-
+            var leave = await _leaveRepo.GetAll(l => l.Id == leaveId)
+                                                    .Include(l => l.Employee)
+                                                    .Include(l => l.ApprovedBy)
+                                                    .Include(l => l.LeaveType)
+                                                    .FirstOrDefaultAsync();
             if (leave == null)
                 throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
 
-            if (string.IsNullOrWhiteSpace(reason))
+            if (string.IsNullOrWhiteSpace(rejectLeaveDto.reason))
                 throw new AppException(ErrorCodes.Invalid, StatusCodes.Status400BadRequest);
 
             leave.Status = LeaveStatus.Rejected;
-            leave.RejectionReason = reason;
+            leave.RejectionReason = rejectLeaveDto.reason;
             leave.ApprovedById = managerId;
             leave.ApprovedAt = DateTime.UtcNow;
 
             await _leaveRepo.SaveChangesAsync();
-
+            await _eventDispatcher.PublishAsync(new LeaveRejectedEvent(
+                  leave.Id,
+                  leave.EmployeeId,
+                  leave.Employee.FullName,
+                  leave.ApprovedBy.FullName,      
+                  leave.LeaveType.NameAr,
+                  leave.RejectionReason,
+                  leave.StartDate,
+                  leave.EndDate
+   ));
             return ApiResponse<bool>.Ok(true, "Leave rejected");
         }
 

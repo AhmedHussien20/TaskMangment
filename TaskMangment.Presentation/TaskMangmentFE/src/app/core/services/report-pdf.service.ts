@@ -28,11 +28,17 @@ export class ReportPdfService {
     const query = this.buildQuery({ fromDate, toDate });
     return this.api.getBlob(this.service, `archived-tasks/pdf${query}`);
   }
+ getTaskDiscountsPdf(employeeId: number,fromDate?: string,toDate?: string,status?: string): Observable<Blob> {
+    const query = this.buildQuery({ employeeId,fromDate, toDate, status });
+    return this.api.getBlob(this.service, `task-discounts/pdf${query}`);
+  }
 
-  private buildQuery(params: { fromDate?: string; toDate?: string }): string {
+  private buildQuery(params: { fromDate?: string; toDate?: string, status?: string; employeeId?: number}): string {
     const q: string[] = [];
     if (params.fromDate) q.push(`fromDate=${encodeURIComponent(params.fromDate)}`);
     if (params.toDate) q.push(`toDate=${encodeURIComponent(params.toDate)}`);
+    if (params.status) q.push(`status=${encodeURIComponent(params.status)}`);
+    if (params.employeeId !== undefined) q.push(`employeeId=${params.employeeId}`);
     return q.length ? `?${q.join('&')}` : '';
   }
 }
