@@ -1,0 +1,140 @@
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { ToastrService } from 'ngx-toastr';
+
+import { GenericTableComponent, TableColumn } from 'app/shared/components/generic-table/generic-table.component';
+import { PageHeaderComponent } from 'app/shared/components/page-header/page-header.component';
+import { ReportListService } from 'app/core/services/report-list.service';
+import { ReportPdfService } from 'app/core/services/report-pdf.service';
+import { SimpleEmployee } from 'app/core/models/task/task';
+import { EmployeeService } from 'app/core/services/employee.service';
+import { TaskMovementReportDto, TaskMovementType } from 'app/core/models/reports/reports';
+
+@Component({
+  selector: 'app-task-today-activity-report',
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    NgbPaginationModule,
+    TranslateModule,
+    GenericTableComponent,
+    PageHeaderComponent
+  ],
+  templateUrl: './task-today-activity-report.component.html',
+})
+export class TaskTodayActivityReportComponent implements OnInit {
+
+  title = 'REPORTS.TASK_MOVEMENT_TITLE';
+  activeitem = 'REPORTS.TASK_MOVEMENT_TITLE';
+  breadcrumbs = ['MENU.HOME', 'MENU.REPORTS', 'REPORTS.TASK_MOVEMENT_TITLE'];
+
+  columns: TableColumn[] = [
+    { key: 'taskTitleWithId', label: 'REPORTS.TASK' },
+    { key: 'assignedBy', label: 'REPORTS.ASSIGNED_BY' },
+    { key: 'commentedBy', label: 'REPORTS.COMMENTED_BY' },
+    { key: 'comment', label: 'REPORTS.COMMENT' },
+    { key: 'commentDate', label: 'REPORTS.COMMENT_DATE', type: 'date' }
+  ];
+
+  rows: TaskMovementReportDto[] = [];
+  totalItems = 0;
+
+  page = 1;
+  entries = 10;
+
+  employees: SimpleEmployee[] = [];
+  selectedEmployeeId?: number;
+
+  movementType: TaskMovementType = TaskMovementType.Outgoing; // Default: صادرة
+  reportTitle?: string;
+
+  isLoading = false;
+
+  movementOptions = [
+    { label: 'REPORTS.OUTGOING', value: TaskMovementType.Outgoing },
+    { label: 'REPORTS.INCOMING', value: TaskMovementType.Incoming }
+  ];
+
+  constructor(
+    private reportService: ReportListService,
+    private reportPdfService: ReportPdfService,
+    private toastr: ToastrService,
+    private translate: TranslateService,
+    private employeeService: EmployeeService
+  ) {}
+
+  ngOnInit(): void {
+    this.loadEmployees();
+    this.loadData();
+  }
+
+  loadData(): void {
+    if (!this.selectedEmployeeId) return;
+
+    this.isLoading = true;
+
+    this.reportService.getMovementReports(this.selectedEmployeeId, this.movementType, this.reportTitle)
+      .subscribe({
+        next: (res) => {
+          this.rows = res.data;
+          this.totalItems = this.rows.length;
+          this.isLoading = false;
+        },
+        error: () => {
+          this.isLoading = false;
+          this.toastr.error(this.translate.instant('COMMON.ERROR_LOADING_DATA'));
+        }
+      });
+  }
+
+  loadEmployees(): void {
+    const request = { searchKey: '', pageIndex: 1, pageSize: 1000, sortColumn: 'Id', sortDirection: 'DESC' };
+    this.employeeService.getAll(request).subscribe({
+      next: (res) => {
+        this.employees = res.data.data.map((e: any) => ({ id: e.id, fullName: e.fullName }));
+      },
+      error: () => {
+        this.toastr.error(this.translate.instant('COMMON.ERROR_LOADING_DATA'));
+      }
+    });
+  }
+
+  onFilterApply(): void {
+    this.page = 1;
+    this.loadData();
+  }
+
+  onPageChange(page: number): void {
+    this.page = page;
+  }
+
+  onEntriesChange(entries: number): void {
+    this.entries = entries;
+    this.page = 1;
+  }
+
+  onExportPdf(): void {
+    if (!this.selectedEmployeeId) return;
+
+    this.reportPdfService.getTaskMovementReportsPdf(this.selectedEmployeeId, this.movementType, this.reportTitle)
+      .subscribe({
+        next: (blob) => {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'task-movement-report.pdf';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+        },
+        error: () => {
+          this.toastr.error(this.translate.instant('COMMON.ERROR_LOADING_DATA'));
+        }
+      });
+  }
+}

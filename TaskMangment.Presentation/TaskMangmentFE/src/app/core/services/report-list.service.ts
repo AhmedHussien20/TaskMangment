@@ -2,7 +2,7 @@ import { Injectable } from "@angular/core";
 import { ApiService } from "./api.service";
 import { Observable } from "rxjs";
 import { ApiResponse } from "../models/event/calendar";
-import { EmployeeArchivedTasksReportDto, EmployeeAssignmentsReportDto, EmployeeCommentsReportDto, EmployeeOnTimeReportDto, TaskDiscountReportDto } from "../models/reports/reports";
+import { EmployeeArchivedTasksReportDto, EmployeeAssignmentsReportDto, EmployeeCommentsReportDto, EmployeeOnTimeReportDto, TaskActivityReportDto, TaskDiscountReportDto, TaskMovementReportDto, TasksClosingSoonDto } from "../models/reports/reports";
 
 @Injectable({ providedIn: 'root' })
 export class ReportListService {
@@ -30,18 +30,34 @@ export class ReportListService {
     const query = this.buildQuery({ fromDate, toDate });
     return this.api.get<ApiResponse<EmployeeArchivedTasksReportDto[]>>(this.service, `archived-tasks${query}`);
   }
-  getTaskDiscounts(employeeId: number, fromDate: string, toDate?: string, status?: string): Observable<ApiResponse<TaskDiscountReportDto[]>> {
-  const query = this.buildQuery({ employeeId, fromDate, toDate, status });
+  getTaskDiscounts(employeeId: number,movementType: number, fromDate: string, toDate?: string, status?: string): Observable<ApiResponse<TaskDiscountReportDto[]>> {
+  const query = this.buildQuery({ employeeId,movementType, fromDate, toDate, status });
   return this.api.get<ApiResponse<TaskDiscountReportDto[]>>(this.service, `task-discounts${query}`);
+}
+getTaskActivities(fromDate: string, toDate: string): Observable<ApiResponse<TaskActivityReportDto[]>> {
+    const query = this.buildQuery({ fromDate, toDate });
+    return this.api.get<ApiResponse<TaskActivityReportDto[]>>(this.service, `task-activities${query}`);
+  }
+  
+  getMovementReports(employeeId: number, movementType: number, reportTitle?: string): Observable<ApiResponse<TaskMovementReportDto[]>> {
+  const query = this.buildQuery({ employeeId, movementType, reportTitle });
+  return this.api.get<ApiResponse<TaskMovementReportDto[]>>(this.service, `task-movements${query}`);
+}
+
+ getClosedSoonReports(employeeId: number): Observable<ApiResponse<TasksClosingSoonDto[]>> {
+  const query = this.buildQuery({ employeeId});
+  return this.api.get<ApiResponse<TasksClosingSoonDto[]>>(this.service, `closing-soon-tasks${query}`);
 }
 
 
- private buildQuery(params: { fromDate?: string; toDate?: string; status?: string; employeeId?: number }): string {
+ private buildQuery(params: { fromDate?: string; toDate?: string; status?: string; employeeId?: number; movementType?: number; reportTitle?: string  }): string {
   const q: string[] = [];
   if (params.fromDate) q.push(`fromDate=${encodeURIComponent(params.fromDate)}`);
   if (params.toDate) q.push(`toDate=${encodeURIComponent(params.toDate)}`);
   if (params.status) q.push(`status=${encodeURIComponent(params.status)}`);
   if (params.employeeId !== undefined) q.push(`employeeId=${params.employeeId}`);
+  if (params.movementType !== undefined) q.push(`movementType=${params.movementType}`);
+  if (params.reportTitle) q.push(`reportTitle=${encodeURIComponent(params.reportTitle)}`);
   return q.length ? `?${q.join('&')}` : '';
 }
 
