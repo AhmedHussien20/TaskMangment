@@ -770,7 +770,24 @@
     "TASK_DISCOUNTS": "Task Discounts",
     "EMPLOYEE": "Employee Accounts",
     "DISCOUNT_FROM": "Discount From",
-    "DISCOUNT_TO": "Discount To"
+    "DISCOUNT_TO": "Discount To",
+    "TOP_COMMENTER": "Top Commenters",
+    "ON_TIME": "On-Time Tasks",
+    "ARCHIVED": "Archived Tasks",
+    "TASKS_DISCOUNT": "Task Discounts (Incoming/Outgoing)",
+
+    "TASK_ACTIVITY_REPORT" : "Report of tasks activities",
+    "COMMENT" : "Comment",
+    "COMMENT_DATE" : "Comment date",
+    "COMMENTED_BY" : "Commented by",
+    "TASK_MOVEMENT_TITLE": "Today's Task Movements (Incoming/Outgoing)",
+    "MOVEMENT_TYPE": "Task Type",
+    "REPORT_TITLE": "Report Title",
+    "OUTGOING": "Outgoing",
+    "INCOMING": "Incoming",
+    "TASKS_CLOSING_SOON" : "Closed soon tasks" 
+
+
   },
   "LEAVE": {
     "ID": "ID",

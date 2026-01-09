@@ -55,12 +55,38 @@ namespace TaskMangment.API.Controllers
 
 
         [HttpGet("task-discounts")]
-        public async Task<IActionResult> GetTaskDiscounts(
-            [FromQuery] TaskDiscountReportFilterDto filter)
+        public async Task<IActionResult> GetTaskDiscounts([FromQuery] TaskDiscountReportFilterDto filter) 
         {
+            //filter.MovementType = movementType; 
             var data = await _reportService.GetTaskDiscountReportAsync(filter);
             return Success(data);
         }
+
+
+        [HttpGet("task-activities")]
+        public async Task<IActionResult> GetTaskActivities(DateTime? fromDate,DateTime? toDate)
+        {
+            var data = await _reportService.GetTaskActivityReportAsync(fromDate, toDate);
+            return Success(data);
+        }
+
+        [HttpGet("task-movements")]
+        public async Task<IActionResult> GetTaskMovements([FromQuery] TaskMovementReportFilterDto filter)
+        {
+            var data = await _reportService.GetTaskMovementReportAsync(filter);
+            return Success(data);
+        }
+        [HttpGet("closing-soon-tasks")]
+        public async Task<IActionResult> GetClosingSoonTasks([FromQuery] int employeeId)
+        {
+            var now = DateTime.UtcNow;
+            var next3Days = now.AddHours(72); 
+
+            var tasks = await _reportService.GetTasksClosingSoonAsync(employeeId, now, next3Days);
+
+            return Success(tasks);
+        }
+
 
     }
 }

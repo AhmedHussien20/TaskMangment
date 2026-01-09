@@ -85,12 +85,52 @@ namespace TaskMangment.API.Controllers
         public async Task<IActionResult> GetTaskDiscountsPdf([FromQuery] TaskDiscountReportFilterDto filter)
         {
             var data = await _reportService.GetTaskDiscountReportAsync(filter);
-            var report = new TaskDiscountsPdfReport(data);
+
+
+            var report = new TaskDiscountsMovementPdfReport(data, filter.MovementType);
             var pdf = report.GeneratePdf();
 
             return File(pdf, "application/pdf", "task-discounts-report.pdf");
         }
 
+        [HttpGet("task-activities/pdf")]
+        public async Task<IActionResult> GetTaskActivitiesPdf(DateTime? fromDate, DateTime? toDate)
+        {
+            var data = await _reportService.GetTaskActivityReportAsync(fromDate, toDate);
+
+            var report = new TaskActivityPdfReport(data); 
+            var pdf = report.GeneratePdf();
+
+            return File(pdf, "application/pdf", "task-activities-report.pdf");
+        }
+
+        [HttpGet("task-movements/pdf")]
+        public async Task<IActionResult> GetTaskMovementsPdf(
+    [FromQuery] TaskMovementReportFilterDto filter)
+        {
+            var data = await _reportService.GetTaskMovementReportAsync(filter);
+
+            
+
+            var report = new TaskMovementPdfReport(data, filter.MovementType);
+            var pdf = report.GeneratePdf();
+
+            return File(pdf, "application/pdf", "task-movements-report.pdf");
+        }
+
+        [HttpGet("closing-soon-tasks/pdf")]
+        public async Task<IActionResult> GetClosingSoonTasksPdf(int employeeId)
+        {
+            var now = DateTime.UtcNow;
+            var next3Days = now.AddHours(72);
+
+            var tasks = await _reportService.GetTasksClosingSoonAsync(employeeId, now, next3Days);
+
+            var report = new ClosingSoonTasksPdfReport(tasks);
+            var pdf = report.GeneratePdf();
+
+            return File(pdf, "application/pdf", "closing-soon-tasks-report.pdf");
+        }
 
 
     }

@@ -773,14 +773,25 @@
     "AUTO_DISCOUNT": "إجمالي الخصومات الإلكترونية",
     "ASSIGNED_BY": "جهة التكليف",
     "EVALUATION": "التقييم",
-    "TASK_DISCOUNTS": "خصومات المهام الواردة",
     "EMPLOYEE": "حسابات الموظفين",
     "DISCOUNT_FROM": "تاريخ الخصم من",
     "DISCOUNT_TO": "تاريخ الخصم الي",
     "TOP_COMMENTER": "أكثر الموظفين تعليقًا",
     "ON_TIME": "المهام المنتهية في وقتها",
     "ARCHIVED": "المهام المؤرشفة",
-    "TASKS_DISCOUNT": "خصومات المهام"
+    "TASKS_DISCOUNT": "خصومات المهام(الصادرة/الواردة)",
+
+    "TASK_ACTIVITY_REPORT" : "تقرير عن حركات المهام",
+    "COMMENT" : "التعليق",
+    "COMMENT_DATE" : "تاريخ التعليق",
+    "COMMENTED_BY" : "التعليق بواسطة",
+    "TASK_MOVEMENT_TITLE" : "حركات المهام (الواردة/ الصادرة) لليوم",
+    "MOVEMENT_TYPE" : "نوع المهمة" ,
+    "REPORT_TITLE" : "عنوان التقرير" ,
+    "OUTGOING" : "الصادرة" ,
+    "INCOMING" : "الواردة",
+    "TASKS_CLOSING_SOON" : "المهام المغلقة قريباً" 
+    
   },
   "LEAVE" : 
   {

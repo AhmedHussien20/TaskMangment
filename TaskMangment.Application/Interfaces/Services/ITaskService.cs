@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using TaskMangment.Application.Common.ApiRequests.Task;
 using TaskMangment.Application.Common.Responses;
+using TaskMangment.Application.DTOs.ReportsDTO;
 using TaskMangment.Application.DTOs.TaskDTOs;
 using TaskMangment.Application.ReportDTOs;
 using TaskMangment.Application.Responses;

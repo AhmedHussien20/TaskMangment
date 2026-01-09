@@ -1,0 +1,151 @@
+// task-closed-soon-report.component.ts
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { ToastrService } from 'ngx-toastr';
+
+import { GenericTableComponent, TableColumn } from 'app/shared/components/generic-table/generic-table.component';
+import { PageHeaderComponent } from 'app/shared/components/page-header/page-header.component';
+import { ReportListService } from 'app/core/services/report-list.service';
+import { ReportPdfService } from 'app/core/services/report-pdf.service';
+import { SimpleEmployee } from 'app/core/models/task/task';
+import { EmployeeService } from 'app/core/services/employee.service';
+import { TasksClosingSoonDto } from 'app/core/models/reports/reports';
+
+@Component({
+  selector: 'app-task-closed-soon-report',
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    NgbPaginationModule,
+    TranslateModule,
+    GenericTableComponent,
+    PageHeaderComponent
+  ],
+  templateUrl: './task-closed-soon-report.component.html',
+})
+export class TaskClosedSoonReportComponent implements OnInit {
+
+  title = 'REPORTS.TASKS_CLOSING_SOON';
+  activeitem = 'REPORTS.TASKS_CLOSING_SOON_TITLE';
+  breadcrumbs = ['MENU.HOME', 'MENU.REPORTS', 'REPORTS.TASKS_CLOSING_SOON'];
+
+  columns: TableColumn[] = [
+    { key: 'taskIdTitle', label: 'REPORTS.TASK' },
+    { key: 'assignedBy', label: 'REPORTS.ASSIGNED_BY' },
+    { key: 'closedDate', label: 'REPORTS.CLOSED_DATE', type: 'date' }
+    
+  ];
+
+  employees: SimpleEmployee[] = [];
+  selectedEmployeeId?: number;
+
+  rows: TasksClosingSoonDto[] = [];
+  totalItems = 0;
+
+  page = 1;
+  entries = 10;
+
+  fromDate?: string;
+  toDate?: string;
+
+  isLoading = false;
+
+  constructor(
+    private reportService: ReportListService,
+    private reportPdfService: ReportPdfService,
+    private toastr: ToastrService,
+    private translate: TranslateService,
+    private employeeService: EmployeeService
+  ) {}
+
+  ngOnInit(): void {
+    this.loadEmployees();
+    this.loadData();
+  }
+
+  loadData(): void {
+    if (!this.selectedEmployeeId) return;
+
+    this.isLoading = true;
+    this.reportService.getClosedSoonReports(this.selectedEmployeeId).subscribe({
+      next: (res) => {
+        this.rows = res.data.map(t => ({
+          ...t,
+          taskIdTitle: `[${t.taskId}] ${t.title}`
+        }));
+        this.totalItems = this.rows.length;
+        this.isLoading = false;
+      },
+      error: () => {
+        this.isLoading = false;
+        this.toastr.error(
+          this.translate.instant('COMMON.ERROR_LOADING_DATA')
+        );
+      }
+    });
+  }
+
+  loadEmployees(): void {
+    const request = {
+      searchKey: '',
+      pageIndex: 1,
+      pageSize: 1000,
+      sortColumn: 'Id',
+      sortDirection: 'DESC'
+    };
+
+    this.employeeService.getAll(request).subscribe({
+      next: (res) => {
+        this.employees = res.data.data.map((e: any) => ({
+          id: e.id,
+          fullName: e.fullName
+        }));
+      },
+      error: () => {
+        this.toastr.error(
+          this.translate.instant('COMMON.ERROR_LOADING_DATA')
+        );
+      }
+    });
+  }
+
+  onFilterApply(): void {
+    this.page = 1;
+    this.loadData();
+  }
+
+  onPageChange(page: number): void {
+    this.page = page;
+  }
+
+  onEntriesChange(entries: number): void {
+    this.entries = entries;
+    this.page = 1;
+  }
+
+  onExportPdf(): void {
+    if (!this.selectedEmployeeId) return;
+
+    this.reportPdfService.getTaskClosedSoonReportsPdf(this.selectedEmployeeId).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'tasks-closing-soon-report.pdf';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      },
+      error: () => {
+        this.toastr.error(
+          this.translate.instant('COMMON.ERROR_LOADING_DATA')
+        );
+      }
+    });
+  }
+}

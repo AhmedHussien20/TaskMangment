@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { SpkDashboardComponent } from 'app/@spk/reusable-dashboard/spk-dashboard/spk-dashboard.component';
+import { PageHeaderComponent } from 'app/shared/components/page-header/page-header.component';
 
 interface ReportTile {
   title: string;
@@ -13,12 +14,15 @@ interface ReportTile {
 @Component({
   selector: 'app-reports-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule, TranslateModule, SpkDashboardComponent],
+  imports: [CommonModule, RouterModule, TranslateModule, SpkDashboardComponent,PageHeaderComponent],
   templateUrl: './reports-dashboard.component.html',
   styleUrls: ['./reports-dashboard.component.css']
 })
 export class ReportsDashboardComponent {
 
+  title = 'MENU.REPORTS';
+  activeitem = 'MENU.REPORTS';
+  breadcrumbs = ['MENU.HOME', 'MENU.REPORTS'];
   isLoading = false;
  REPORT_ICON_SVG = `
 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
@@ -62,11 +66,32 @@ export class ReportsDashboardComponent {
     url: '/report/archived-tasks-list'
   },
   {
-    title: 'REPORTS.DISCOUNT',
+    title: 'REPORTS.TASKS_DISCOUNT',
     value: '',
      svg: this.REPORT_ICON_SVG,
     clickable: true,
     url: '/report/tasks-discount-list'
+  },
+  {
+    title: 'REPORTS.TASK_ACTIVITY_REPORT',
+    value: '',
+     svg: this.REPORT_ICON_SVG,
+    clickable: true,
+    url: '/report/tasks-comment-activity-list'
+  },
+   {
+    title: 'REPORTS.TASK_MOVEMENT_TITLE',
+    value: '',
+     svg: this.REPORT_ICON_SVG,
+    clickable: true,
+    url: '/report/tasks-today-activity-list'
+  },
+  {
+    title: 'REPORTS.TASKS_CLOSING_SOON',
+    value: '',
+     svg: this.REPORT_ICON_SVG,
+    clickable: true,
+    url: '/report/tasks-closed-soon-list'
   }
 ];
 

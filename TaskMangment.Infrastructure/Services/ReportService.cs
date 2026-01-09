@@ -150,34 +150,31 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<List<TaskDiscountReportDto>> GetTaskDiscountReportAsync(TaskDiscountReportFilterDto dto)
         {
-            var employee = await _context.Employees
-       .Where(e => e.Id == dto.EmployeeId)
-       .Select(e => new { e.FullName })
-       .FirstOrDefaultAsync();
-
-
-            var query = _context.TaskAssignments
+            IQueryable<TaskAssignment> query = _context.TaskAssignments
                 .Include(a => a.Task)
                 .Include(a => a.Task.AssignedBy)
+                .Include(a => a.Employee) 
                 .AsQueryable();
 
-            // ===== Mandatory Filters =====
+            if (dto.MovementType == TaskMovementType.Incoming)
+            {
+                // خصومات الواردة → خصومات على الموظف
+                query = query.Where(a => a.EmployeeId == dto.EmployeeId);
+            }
+            else
+            {
+                // خصومات الصادرة → خصومات قام الموظف بمنحها
+                query = query.Where(a => a.Task.AssignedByEmployeeId == dto.EmployeeId);
+            }
 
-            query = query.Where(a => a.EmployeeId == dto.EmployeeId);
             query = query.Where(a => a.Task.DueDate >= dto.FromDate);
-
-
-            // ===== Optional Filters =====
+            if (dto.ToDate.HasValue)
+                query = query.Where(a => a.Task.DueDate <= dto.ToDate.Value);
 
             if (dto.Status.HasValue)
                 query = query.Where(a => a.Task.Status == dto.Status.Value);
 
-            if (dto.ToDate.HasValue)
-                query = query.Where(a => a.Task.DueDate <= dto.ToDate.Value);
-
             query = query.Where(a => a.Task.Status != WorkTaskStatus.New);
-
-            // ===== Projection =====
 
             var result = await query
                 .Select(a => new TaskDiscountReportDto
@@ -186,29 +183,53 @@ namespace TaskMangment.Infrastructure.Services
                     Title = a.Task.Title,
                     AssignedBy = a.Task.AssignedBy.FullName,
                     ClosedDate = a.Task.DueDate,
-
                     Status = a.Task.Status == WorkTaskStatus.Archived ? "مورشف" :
-                  a.Task.Status == WorkTaskStatus.Closed ? "مغلقة" :
-                  a.Task.Status == WorkTaskStatus.AutoClose ? "مغلق تلقائي" :
-                  a.Task.Status == WorkTaskStatus.InProgress ? "قيد التنفيذ" : "غير محدد",
-
-                    AutoDiscount = _context.Discounts
-                        .Where(d => d.TaskId == a.TaskId && d.AutoDiscount)
-                        .Sum(d => (decimal?)d.Amount) ?? 0,
-
-                    ManualDiscount = _context.Discounts
-                        .Where(d => d.TaskId == a.TaskId && !d.AutoDiscount)
-                        .Sum(d => (decimal?)d.Amount) ?? 0,
-
-                    Evaluation =
-                        a.Task.Status == WorkTaskStatus.Archived ? "جيد" :
-                        a.Task.Status == WorkTaskStatus.Closed ? "جيد" :
-                        a.Task.Status == WorkTaskStatus.AutoClose ? "سيئ" :
-                        "قيد التنفيذ",
-
-                   EmployeeName = employee != null ? employee.FullName : "غير معروف"
-
+                             a.Task.Status == WorkTaskStatus.Closed ? "مغلقة" :
+                             a.Task.Status == WorkTaskStatus.AutoClose ? "مغلق تلقائي" :
+                             a.Task.Status == WorkTaskStatus.InProgress ? "قيد التنفيذ" : "غير محدد",
+                    AutoDiscount = _context.Discounts.Where(d => d.TaskId == a.TaskId && d.AutoDiscount).Sum(d => (decimal?)d.Amount) ?? 0,
+                    ManualDiscount = _context.Discounts.Where(d => d.TaskId == a.TaskId && !d.AutoDiscount).Sum(d => (decimal?)d.Amount) ?? 0,
+                    Evaluation = a.Task.Status == WorkTaskStatus.Archived ? "جيد" :
+                                 a.Task.Status == WorkTaskStatus.Closed ? "جيد" :
+                                 a.Task.Status == WorkTaskStatus.AutoClose ? "سيئ" :
+                                 "قيد التنفيذ",
+                    EmployeeName = a.Employee != null ? a.Employee.FullName : "غير معروف"
                 })
+                .OrderBy(r => r.EmployeeName)
+                .ThenBy(r => r.ClosedDate)
+                .AsNoTracking()
+                .ToListAsync();
+
+            return result;
+        }
+
+        public async Task<List<TaskActivityReportDto>> GetTaskActivityReportAsync(DateTime? fromDate = null, DateTime? toDate = null)
+        {
+            var query = _context.TaskComments
+                .Include(c => c.Employee)
+                .Include(c => c.Task)
+                .ThenInclude(t => t.AssignedBy)
+                .AsQueryable(); 
+
+            if (fromDate.HasValue)
+                query = query.Where(c => c.CreatedDate >= fromDate.Value);
+
+            if (toDate.HasValue)
+                query = query.Where(c => c.CreatedDate <= toDate.Value);
+            if (!fromDate.HasValue && !toDate.HasValue)
+
+                return new List<TaskActivityReportDto>();
+
+            var result = await query
+                .Select(c => new TaskActivityReportDto
+                {
+                    TaskTitleWithId = $"[{c.Task.Id}] {c.Task.Title}",
+                    AssignedBy = c.Task.AssignedBy != null ? c.Task.AssignedBy.FullName : "غير معروف",
+                    Comment = c.CommentText,
+                    CommentDate = c.CreatedDate,
+                    CommentedBy = c.Employee != null ? c.Employee.FullName : "غير معروف"
+                })
+                .OrderBy(c => c.CommentDate)
                 .AsNoTracking()
                 .ToListAsync();
 
@@ -216,6 +237,88 @@ namespace TaskMangment.Infrastructure.Services
         }
 
 
+        public async Task<List<TaskMovementReportDto>> GetTaskMovementReportAsync(TaskMovementReportFilterDto dto)
+        {
+            var todayStart = DateTime.Today;
+            var todayEnd = todayStart.AddDays(1);
+
+            var query = _context.TaskComments
+                .Include(c => c.Employee)
+                .Include(c => c.Task)
+                .ThenInclude(t => t.AssignedBy)
+                .AsQueryable();
+
+            query = query.Where(c =>
+                c.CreatedDate >= todayStart && c.CreatedDate < todayEnd);
+
+            // ===== صادرة =====
+            if (dto.MovementType == TaskMovementType.Outgoing)
+            {
+                query = query.Where(c =>
+                    c.Task.AssignedByEmployeeId == dto.EmployeeId);
+            }
+
+            // ===== واردة =====
+            else if (dto.MovementType == TaskMovementType.Incoming)
+            {
+                // الموظف = اللي علّق
+                query = query.Where(c =>
+                    c.EmployeeId == dto.EmployeeId);
+            }
+
+            var result = await query
+                .Select(c => new TaskMovementReportDto
+                {
+                    ReportTitle = dto.ReportTitle,
+
+                    TaskTitleWithId = $"[{c.Task.Id}] {c.Task.Title}",
+                    MovementType = dto.MovementType,
+
+                    AssignedBy = c.Task.AssignedBy != null
+                        ? c.Task.AssignedBy.FullName
+                        : "غير معروف",
+
+                    CommentedBy = c.Employee != null
+                        ? c.Employee.FullName
+                        : "غير معروف",
+
+                    Comment = c.CommentText,
+                    CommentDate = c.CreatedDate
+                })
+                .OrderBy(x => x.CommentDate)
+                .AsNoTracking()
+                .ToListAsync();
+
+            return result;
+        }
+
+        public async Task<List<TasksClosingSoonDto>> GetTasksClosingSoonAsync(int employeeId, DateTime fromDate, DateTime toDate)
+        {
+            var query = _context.TaskAssignments
+                .Include(a => a.Task)
+                .Include(a => a.Task.AssignedBy)
+                .Include(a => a.Employee)
+                .Where(a => a.EmployeeId == employeeId &&
+                 (a.Task.Status == WorkTaskStatus.New || a.Task.Status == WorkTaskStatus.InProgress) &&
+                 a.Task.DueDate >= fromDate &&
+                 a.Task.DueDate <= toDate);
+
+            var result = await query
+                .Select(a => new TasksClosingSoonDto
+                {
+                    TaskId = a.TaskId,
+                    Title = a.Task.Title,
+                    Status = a.Task.Status,
+                    AssignedBy = a.Task.AssignedBy != null ? a.Task.AssignedBy.FullName : "غير معروف",
+                    ClosedDate = a.Task.DueDate,
+                    EmployeeName = a.Employee != null ? a.Employee.FullName : "غير معروف"
+                })
+                .OrderBy(t => t.ClosedDate)
+                .AsNoTracking()
+                .ToListAsync();
+
+            return result;
+        }
 
     }
 

@@ -25,13 +25,12 @@ namespace TaskMangment.Application.DTOs.ReportsDTO
     public class TaskDiscountReportFilterDto
     {
         public int EmployeeId { get; set; }
-
         public WorkTaskStatus? Status { get; set; }
-
         public DateTime FromDate { get; set; }
-
         public DateTime? ToDate { get; set; }
-    }
 
+        public TaskMovementType MovementType { get; set; }
+    }
+   
 
 }
