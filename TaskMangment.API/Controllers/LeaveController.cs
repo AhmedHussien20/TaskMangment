@@ -50,7 +50,7 @@ namespace TaskMangment.API.Controllers
         [HasRole("Manager")]
         public async Task<IActionResult> Approve(int id)
         {
-            var result = await _service.ApproveAsync(id, this.CurrentUserId);
+            var result = await _service.ApproveAsync(id, this.CurrentUserId, this.CurrentUserFullName);
             return Success(true);
         }
 

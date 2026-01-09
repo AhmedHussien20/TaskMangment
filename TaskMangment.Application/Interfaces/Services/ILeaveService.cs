@@ -14,7 +14,7 @@ namespace TaskMangment.Application.Interfaces.Services
 
         Task<ApiResponse<PagedResponse<LeaveGetDto>>> GetPendingForApprovalAsync(int managerId, LeaveRequest request);
 
-        Task<ApiResponse<bool>> ApproveAsync(int leaveId, int managerId);
+        Task<ApiResponse<bool>> ApproveAsync(int leaveId, int managerId, string managerFullName);
 
         Task<ApiResponse<bool>> RejectAsync(int leaveId, int managerId, RejectLeaveDto rejectLeaveDto);
     }

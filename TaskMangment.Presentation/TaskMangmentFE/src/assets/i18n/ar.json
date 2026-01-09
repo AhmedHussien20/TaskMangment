@@ -501,7 +501,7 @@
     "ADD_PERCENTAGE" : "اضف نسبة انجاز",
     "PERCENTAGE_PLACEHOLDER": "اضف نسبة انجازك للمهمة",
     "SUBMIT_PERCENTAGE": "ارسال النسبة",
-    "ACHIEVEMENT_INFO" : "سيتم ارسال نسبة انجازك الي الجهة المعنية" ,
+    "ACHIEVEMENT_INFO" : "ملاحظة هامة: تحديد نسبة إنجاز العمل خاصة لكل فرد مكلف، وتحديدها يسهل من تقييم مدرائك فاحرص عليها." ,
     "PERCENTAGE_SUCCESS" : "تم ارسال النسبة بنجاح",
     "INVALID_PERCENT" : "ادخل نسبة مئوية صحيحة"
   },
@@ -808,8 +808,8 @@
     "PENDING" : "معلق",
     "REJECTED" : "مرفوض",
     "LIST_TITLE" : "قائمة تقديم الاجازات" ,
-    "SEARCH" : "بحث"
-
+    "SEARCH" : "بحث",
+    "CREATE_SUCCESS" : "تم ارسال الطلب بنجاح"
 
   },
   "LEAVE_TYPE" : 
@@ -822,7 +822,9 @@
     "MAX_DAYS" : "الحد الاقصي للايام",
     "PAID_NO" : "لا",
     "PAID_YES" : "نعم",
-    "title" : "قائمة الاجازات"
+    "title" : "قائمة الاجازات",
+    "CREATE_SUCCESS" : "تم اضافة اجازة بنجاح",
+    "UPDATE_SUCCESS" :"تم تحديث الاجازة بنجاح"
   }
 
 }

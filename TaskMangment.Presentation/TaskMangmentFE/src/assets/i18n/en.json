@@ -31,7 +31,9 @@
     "ORGANIZATION_STRUCTURE": "Organization Structure",
     "EDUCATION": "Education",
     "EMPLOYEES": "Employees",
-    "EMPLOYMENT": "Operations"
+    "EMPLOYMENT": "Operations",
+    "REPORTS" : "Reports",
+    "LEAVES" : "Leaves"
   },
   "COMMON": {
     "welcome": "Welcome",
@@ -47,7 +49,8 @@
     "DELETE_BUTTON": "Yes, Delete",
     "CANCEL_BUTTON": "Cancel",
     "DELETE_SUCCESS": "Deleted successfully",
-    "LOADING" :"Loading"
+    "LOADING" :"Loading",
+    "APPLY" : "Apply"
   },
   "validation": {
     "required": "This field is required",
@@ -139,6 +142,18 @@
       "education": {
         "header": "Education",
         "title": "Education"
+      },
+      "reports": 
+      {
+        "header" : "Reports",
+        "title": "Reports"
+      },
+      "leaves" : 
+      {
+        "header" : "Leaves",
+        "title" :"Leaves",
+        "leaves_type" : "Leaves types",
+        "Leaves_requests" : "Leaves request"
       }
     },
     "components": {
@@ -215,7 +230,10 @@
     "SELECT_ACTIVE_STATUS": "Select Active Status",
     "FILTERS": "Filters",
     "EXPORT": "Export",
-    "NO_DATA": "No data available"
+    "NO_DATA": "No data available",
+    "EXPORT_PDF" : "Export PDF",
+    "EXPORT_EXCEL" : "Export EXCEL"
+
   },
   "FORM": {
     "BACK": "Back",
@@ -724,5 +742,69 @@
     "OFFER_OWNER": "Offer Owner Name",
     "SPECIALIZATION": "Required Specialization",
     "NOTES": "Notes"
+  },
+  
+  "REPORTS": {
+    "TOP_COMMENTERS": "Top Commenters",
+    "EMPLOYEE_NAME": "Employee Name",
+    "COMMENTS_COUNT": "Comments Count",
+    "FROM": "From",
+    "TO": "To",
+    "EMPLOYEE_ARCHIVED_TASKS": "Employees with Most Archived Tasks",
+    "ARCHIVEED_TASKS_COUNT": "Archived Tasks Count",
+    "MOST_ASSIGNED": "Most Assigned Employees",
+    "TASKS_COUNT": "Total Tasks",
+    "ON_TIME_COMPLETION": "Employees with Best On-Time Completion",
+    "ON_TIME_COUNT": "On-Time Completed Tasks Count",
+    "STATUS": "Task Status",
+    "SELECT_EMPLOYEE": "Select Employee",
+    "TASK": "Task",
+    "CLOSED_DATE": "Closed Date",
+    "MANUAL_DISCOUNT": "Total Manual Discounts",
+    "AUTO_DISCOUNT": "Total Automatic Discounts",
+    "ASSIGNED_BY": "Assigned By",
+    "EVALUATION": "Evaluation",
+    "TASK_DISCOUNTS": "Task Discounts",
+    "EMPLOYEE": "Employee Accounts",
+    "DISCOUNT_FROM": "Discount From",
+    "DISCOUNT_TO": "Discount To"
+  },
+  "LEAVE": {
+    "ID": "ID",
+    "TYPE": "Leave Type",
+    "START_DATE": "Start Date",
+    "END_DATE": "End Date",
+    "STATUS": "Status",
+    "APPROVED": "Approved",
+    "APPROVED_SUCCESS": "Approval Successful",
+    "REJECTED_SUCCESS": "Rejection Successful",
+    "REJECT": "Reject",
+    "REJECT_REASON": "Rejection Reason",
+    "ADD": "Add Leave Request",
+    "EMPLOYEE": "Employee Name",
+    "DETAILS": "Request Details",
+    "NOTES": "Notes",
+    "REVIEW_STATUS": "Select Status",
+    "REJECT_REASON_REQUIRED": "Rejection Reason is Required",
+    "PENDING": "Pending",
+    "REJECTED": "Rejected",
+    "LIST_TITLE": "Leave Requests List",
+    "SEARCH": "Search",
+    "CREATE_SUCCESS" : "Request sent successfully"
+  },
+  "LEAVE_TYPE": {
+    "ADD": "Add Leave Type",
+    "ID": "ID",
+    "NAME_AR": "Leave Name (Arabic)",
+    "NAME_EN": "Leave Name (English)",
+    "IS_PAID": "Paid",
+    "MAX_DAYS": "Maximum Days",
+    "PAID_NO": "No",
+    "PAID_YES": "Yes",
+    "title": "Leave Types List",
+    "CREATE_SUCCESS" : "Leave created successfully",
+    "UPDATE_SUCCESS" :"Leave updated successfully"
   }
+
+
 }
