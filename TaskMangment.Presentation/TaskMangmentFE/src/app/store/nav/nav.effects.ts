@@ -143,7 +143,11 @@ private MENUITEMS: MenuItem[] = [
     minRoleLevel: 10,
     children: [
      {
-      }
+      title: 'nav.apps.reports.dashboard',
+      path: '/reports',
+      type: 'link',
+      minRoleLevel: 10
+    }
     ]
   },
 

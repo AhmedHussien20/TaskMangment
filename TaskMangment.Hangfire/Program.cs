@@ -10,7 +10,11 @@ using TaskMangment.Hangfire;
 using TaskMangment.Infrastructure;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common;
-using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Localization; 
+using Microsoft.AspNetCore.Localization;
+using System.Globalization;
+using TaskMangment.Utilities.Localization.Resources;
+using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,8 +37,9 @@ builder.Services.AddScoped<IBlobStorageService, BlobStorageService>();
 builder.Services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
 
 
-builder.Services.AddLocalization(option => option.ResourcesPath = "Resources");
-IStringLocalizer<TaskDiscountService> localizer = null;
+builder.Services.AddLocalization();
+
+
 // =======================
 // Database
 // =======================
@@ -69,7 +74,25 @@ builder.Services.AddHangfireServer();
 // =======================
 
 var app = builder.Build();
+var defaultCulture = new CultureInfo("ar");
 
+CultureInfo.DefaultThreadCurrentCulture = defaultCulture;
+CultureInfo.DefaultThreadCurrentUICulture = defaultCulture;
+
+var supportedCultures = new[]
+{
+    new CultureInfo("ar"),
+    new CultureInfo("en")
+};
+
+Console.WriteLine("Current UI Culture = " + CultureInfo.CurrentUICulture.Name);
+
+app.UseRequestLocalization(new RequestLocalizationOptions
+{
+    DefaultRequestCulture = new RequestCulture("ar"),
+    SupportedCultures = supportedCultures,
+    SupportedUICultures = supportedCultures
+});
 // =======================
 // Middleware
 // =======================
@@ -106,7 +129,11 @@ app.UseHangfireDashboard("/hangfire", new DashboardOptions
 //               job => job.ExecuteAsync(),
 //               Cron.Hourly
 //               );
-
+RecurringJob.AddOrUpdate<TaskDueTodayEmailsProcessorJob>(
+               "task-due-today-email-job",
+               job => job.ExecuteAsync(),
+               Cron.Minutely
+               );
 
 
 app.Run();
