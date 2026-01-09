@@ -22,34 +22,24 @@
           <div *ngIf="field.prefix" class="input-group-text">
             {{ field.prefix | translate}}
           </div>
-          <input
-  [type]="field.inputType === 'password' && field.showPassword ? 'text' : field.inputType"
-  class="form-control"
-  [id]="field.name"
-  [formControlName]="field.name"
-  [placeholder]="field.placeholder ? (field.placeholder | translate) : (field.label | translate)"
-  [readOnly]="field.disabled"
-  [disabled]="field.disabled"
-  autocomplete="new-password"
-  [ngClass]="{
+          <input [type]="field.inputType === 'password' && field.showPassword ? 'text' : field.inputType"
+            class="form-control" [id]="field.name" [formControlName]="field.name"
+            [placeholder]="field.placeholder ? (field.placeholder | translate) : (field.label | translate)"
+            [readOnly]="field.disabled" [disabled]="field.disabled" autocomplete="new-password" [ngClass]="{
     'is-invalid':
       formGroup.controls[field.name].invalid &&
       (formGroup.controls[field.name].dirty ||
         formGroup.controls[field.name].touched)
-  }"
-/>
+  }" />
 
           <button *ngIf="field.name === 'password'" type="button" class="btn btn-outline-secondary"
             (click)="onGeneratePassword(field.name)">
             {{ 'FORM.GENERATE' | translate }}
           </button>
-          <button
-  *ngIf="field.inputType === 'password'"
-  type="button"
-  class="btn btn-outline-secondary"
-  (click)="field.showPassword = !field.showPassword">
-  <i [class]="field.showPassword ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
-</button>
+          <button *ngIf="field.inputType === 'password'" type="button" class="btn btn-outline-secondary"
+            (click)="field.showPassword = !field.showPassword">
+            <i [class]="field.showPassword ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
+          </button>
 
           <div *ngIf="
               formGroup.controls[field.name].invalid &&
@@ -70,10 +60,11 @@
               {{ 'FORM.CHARACTERS' | translate }}
             </div>
 
-            <div *ngIf="formGroup.controls[field.name].errors?.['pattern'] && field.inputType === 'number'"
-              class="input-group">
-              {{ 'FORM.PATTERN_INVALID_NUMBER' | translate }}
+            <div *ngIf="formGroup.controls[field.name].errors?.['decimal']
+            && field.inputType === 'number'" class="input-group">
+              {{ 'FORM.INVALID_DECIMAL_NUMBER' | translate }}
             </div>
+
             <div *ngIf="formGroup.controls[field.name].errors?.['email']">
               {{ 'FORM.PATTERN_INVALID_EMAIL' | translate }}
             </div>
@@ -191,37 +182,28 @@
           </div>
         </div>
 
-      <mat-form-field
-  *ngIf="field.type === 'date'"
-  appearance="outline"
-  class="w-100">
+        <mat-form-field *ngIf="field.type === 'date'" appearance="outline" class="w-100">
 
-  <mat-label>{{ field.label | translate }}</mat-label>
-  <input
-    matInput
-    [id]="field.name"
-    [formControlName]="field.name"
-    [matDatepicker]="picker"
-    [readonly]="field.disabled"
-    [disabled]="field.disabled"
-    [ngClass]="{'is-invalid':
+          <mat-label>{{ field.label | translate }}</mat-label>
+          <input matInput [id]="field.name" [formControlName]="field.name" [matDatepicker]="picker"
+            [readonly]="field.disabled" [disabled]="field.disabled" [ngClass]="{'is-invalid':
         formGroup.get(field.name)?.invalid &&
         (formGroup.get(field.name)?.dirty ||
          formGroup.get(field.name)?.touched)}" />
 
-  <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-  <mat-datepicker #picker></mat-datepicker>
-  <mat-error *ngIf="
+          <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-datepicker #picker></mat-datepicker>
+          <mat-error *ngIf="
     formGroup.get(field.name)?.invalid &&
     (formGroup.get(field.name)?.dirty ||
      formGroup.get(field.name)?.touched)
   ">
-    <span *ngIf="formGroup.get(field.name)?.errors?.['required']">
-      {{ field.label | translate }} {{ 'FORM.IS_REQUIRED' | translate }}
-    </span>
-  </mat-error>
+            <span *ngIf="formGroup.get(field.name)?.errors?.['required']">
+              {{ field.label | translate }} {{ 'FORM.IS_REQUIRED' | translate }}
+            </span>
+          </mat-error>
 
-</mat-form-field>
+        </mat-form-field>
 
 
         <!-- ================= FILE UPLOAD ================= -->

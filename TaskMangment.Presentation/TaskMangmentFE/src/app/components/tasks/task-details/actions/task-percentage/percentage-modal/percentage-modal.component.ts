@@ -5,6 +5,7 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { TaskPercentageService } from 'app/core/services/task-percentage.service';
 import { ToastrService } from 'ngx-toastr';
+import { decimalValidator } from 'app/shared/validations/numberVlidator';
 
 @Component({
   selector: 'app-percentage-modal',
@@ -30,12 +31,12 @@ export class PercentageModalComponent implements OnInit {
 
   ngOnInit(): void {
     this.form = this.fb.group({
-      achievementPercent: ['', [Validators.required, Validators.pattern('^(100(\\.0+)?|\\d{1,2}(\\.\\d+)?)%?$')]]
+      achievementPercent: ['', [Validators.required, decimalValidator()]]
     });
   }
 
   submit(): void {
-    if (this.form.invalid || this.isSubmitting) return;
+    //if (this.form.invalid || this.isSubmitting) return;
 
     const model = { achievementPercent: this.form.value.achievementPercent.trim() };
     this.isSubmitting = true;
@@ -51,4 +52,17 @@ export class PercentageModalComponent implements OnInit {
       }
     });
   }
+
+  formatPercent(): void {
+  let value = this.form.get('achievementPercent')?.value;
+
+  if (!value) return;
+
+  value = value.toString().replace('%', '').trim();
+
+  if (!isNaN(value)) {
+    this.form.get('achievementPercent')?.setValue(`${value}%`, { emitEvent: false });
+  }
+}
+
 }

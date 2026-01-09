@@ -148,4 +148,10 @@
   <data name="TASKACHIEVEMENT" xml:space="preserve">
     <value>{0} achieved {1} from task: {2}</value>
   </data>
+  <data name="LEAVEREQUESTCREATED" xml:space="preserve">
+    <value>new leave request from {0} of type {1} from {2} to {3}</value>
+  </data>
+  <data name="LEAVE_APPROVED_NOTIFICATION" xml:space="preserve">
+    <value>the leave {0} have been approved by {1} from {2} to {3}</value>
+  </data>
 </root>

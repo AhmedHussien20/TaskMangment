@@ -86,10 +86,10 @@ export class LeaveTypeComponent implements OnInit {
   this.isLoading = true;
   this.leaveTypeService.getAll().subscribe({
     next: (res: any) => {
-      this.rows = res.data;         // مباشرة من data
-      this.totalItems = res.data.length;  // العدد كله
+      this.rows = res.data;        
+      this.totalItems = res.data.length; 
       this.page = 1;
-      this.entries = 10;            // أو entries الأصلي
+      this.entries = 10;           
       this.isLoading = false;
     },
     error: () => this.isLoading = false

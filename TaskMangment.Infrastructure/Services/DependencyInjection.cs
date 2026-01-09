@@ -89,6 +89,10 @@ namespace TaskMangment.Infrastructure.Services
             services.AddScoped<IEventHandler<TaskAssignedEvent>, TaskAssignedEventHandler>();
             services.AddScoped<IEventHandler<TaskAssignedEvent>, TaskAssignedEmailHandler>();
 
+
+            services.AddScoped<IEventHandler<LeaveEvent>, LeaveEmailHandler>();
+            services.AddScoped<IEventHandler<LeaveEvent>, LeaveEventHandler>();
+
             services.AddScoped<IEventHandler<LeaveRejectedEvent>, LeaveRejectedEmailHandler>();
             services.AddScoped<IEventHandler<LeaveRejectedEvent>, LeaveRejectedEventHandler>();
 
