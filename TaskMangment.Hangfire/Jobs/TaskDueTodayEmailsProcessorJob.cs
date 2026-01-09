@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Localization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,6 +8,7 @@ using System.Threading.Tasks;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Domain.Entities;
 using TaskMangment.Infrastructure.DataContext;
+using TaskMangment.Utilities.Localization.Resources;
 
 namespace TaskMangment.Hangfire.Jobs
 {
@@ -15,19 +17,23 @@ namespace TaskMangment.Hangfire.Jobs
         private readonly AppDbContext _db;
         private readonly IEmailService _emailService;
         private readonly IEmailTemplateRenderer _renderer;
+        private readonly IStringLocalizer<DiscountTypes> _localizer;
 
         public TaskDueTodayEmailsProcessorJob(
             AppDbContext db,
             IEmailService emailService,
-            IEmailTemplateRenderer renderer)
+            IEmailTemplateRenderer renderer, IStringLocalizer<DiscountTypes> localizer)
         {
             _db = db;
             _emailService = emailService;
             _renderer = renderer;
+            _localizer = localizer;
         }
-
+       
         public async Task ExecuteAsync()
         {
+            var text = _localizer["AUTO_CLOSE_DISCOUNT"];
+            Console.WriteLine(text);
             var emails = await _db.EmailQueue
                 .Where(e =>
                     e.Status == EmailStatus.Pending &&

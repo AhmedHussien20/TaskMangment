@@ -31,8 +31,8 @@
     "EDUCATION": "التعليم",
     "EMPLOYEES": "الموظفين",
     "EMPLOYMENT": "التشغيل",
-    "REPORTS" : "التقارير",
-    "LEAVES" : "الاجازات"
+    "REPORTS": "التقارير",
+    "LEAVES": "الاجازات"
   },
   "COMMON": {
     "welcome": "مرحباً",
@@ -48,8 +48,8 @@
     "DELETE_BUTTON": "نعم، احذف",
     "CANCEL_BUTTON": "إلغاء",
     "DELETE_SUCCESS": "تم الحذف بنجاح",
-    "LOADING" :"جاري التحميل",
-    "APPLY" : "تطبيق"
+    "LOADING": "جاري التحميل",
+    "APPLY": "تطبيق"
   },
   "validation": {
     "required": "هذا الحقل مطلوب",
@@ -142,17 +142,16 @@
         "header": "التعليم",
         "title": "التعليم"
       },
-      "reports": 
-      {
-        "header" : "التقارير",
-        "title": "التقارير"
+      "reports": {
+        "header": "التقارير",
+        "title": "التقارير",
+        "dashboard": "لوحة التقارير"
       },
-      "leaves" : 
-      {
-        "header" : "الاجازات",
-        "title" :"الاجازات",
-        "leaves_type" : "انواع الاجازات",
-        "Leaves_requests" : "الاجازات المقدمة"
+      "leaves": {
+        "header": "الاجازات",
+        "title": "الاجازات",
+        "leaves_type": "انواع الاجازات",
+        "Leaves_requests": "الاجازات المقدمة"
       }
     },
     "components": {
@@ -230,7 +229,7 @@
     "FILTERS": "الفلاتر",
     "EXPORT_EXCEL": "تصدير Excel",
     "NO_DATA": "لا توجد بيانات متاحة",
-    "EXPORT_PDF" : "تصدير pdf"
+    "EXPORT_PDF": "تصدير pdf"
   },
   "FORM": {
     "BACK": "رجوع",
@@ -352,9 +351,9 @@
     "TASK.STATUS_CLOSED": "مغلقة",
     "TASK.STATUS_ARCHIVED": "مؤرشفة",
     "STATUS_AUTOCLOSE": "مغلقة تلقائياً",
-    "STATUS_AUTODISCOUNT" : "خصم تلقائي",
+    "STATUS_AUTODISCOUNT": "خصم تلقائي",
     "PENALTY_TYPE": "نوع الخصم",
-    "STATUS_DISCOUNT" : "خصم",
+    "STATUS_DISCOUNT": "خصم",
     "TASK_DETAILS": "تفاصيل المهمة",
     "COMMENT_ALLOW_PERIOD": "فترة السماح للتعليق",
     "MAX_WARNINGS": "الحد الأقصى للتحذيرات",
@@ -479,34 +478,31 @@
     "ENTER_NEW_DATE": "ادخل تاريخ جديد",
     "NEW_DATE": "التاريخ الجديد",
     "MY_ACTIVE_TASKS": "مهامي النشطة",
-
     "ACTIVITY_SUMMARY": "ملخص النشاط",
-  "EXTENSION_REQUESTS": "طلبات التمديد",
-  "CLOSE_REQUESTS": "طلبات الإغلاق",
-  "LAST_COMMENT": "آخر تعليق",
-  "LAST_WARNING": "آخر إنذار",
-  "LAST_PENALTY": "آخر جزاء",
-  "LAST_EXTENSION_REQUEST": "آخر طلب تمديد",
-  "LAST_CLOSE_REQUEST": "آخر طلب إغلاق / إعادة فتح",
-  "NO_WARNINGS": "لا توجد إنذارات حتى الآن",
-  "NO_PENALTIES": "لا توجد جزاءات حتى الآن",
-  "NO_EXTENSION_REQUESTS": "لا توجد طلبات تمديد",
-  "NO_CLOSE_REQUESTS": "لا توجد طلبات إغلاق أو إعادة فتح",
-  "NO_ACTIVITY_DATA": "لا توجد بيانات نشاط متاحة",
-  "REQUESTED_EXTENSION": "طلب تمديد",
-  "REOPEN_REQUEST": "طلب إعادة فتح",
+    "EXTENSION_REQUESTS": "طلبات التمديد",
+    "CLOSE_REQUESTS": "طلبات الإغلاق",
+    "LAST_COMMENT": "آخر تعليق",
+    "LAST_WARNING": "آخر إنذار",
+    "LAST_PENALTY": "آخر جزاء",
+    "LAST_EXTENSION_REQUEST": "آخر طلب تمديد",
+    "LAST_CLOSE_REQUEST": "آخر طلب إغلاق / إعادة فتح",
+    "NO_WARNINGS": "لا توجد إنذارات حتى الآن",
+    "NO_PENALTIES": "لا توجد جزاءات حتى الآن",
+    "NO_EXTENSION_REQUESTS": "لا توجد طلبات تمديد",
+    "NO_CLOSE_REQUESTS": "لا توجد طلبات إغلاق أو إعادة فتح",
+    "NO_ACTIVITY_DATA": "لا توجد بيانات نشاط متاحة",
+    "REQUESTED_EXTENSION": "طلب تمديد",
+    "REOPEN_REQUEST": "طلب إعادة فتح",
     "PERCENTAGE_UPDATES": "تحديثات النسبة المئوية",
     "NO_DATA": "لا توجد بيانات",
     "ACHIEVEMENT": "الإنجاز",
-    "ADD_PERCENTAGE" : "اضف نسبة انجاز",
+    "ADD_PERCENTAGE": "اضف نسبة انجاز",
     "PERCENTAGE_PLACEHOLDER": "اضف نسبة انجازك للمهمة",
     "SUBMIT_PERCENTAGE": "ارسال النسبة",
     "ACHIEVEMENT_INFO" : "ملاحظة هامة: تحديد نسبة إنجاز العمل خاصة لكل فرد مكلف، وتحديدها يسهل من تقييم مدرائك فاحرص عليها." ,
     "PERCENTAGE_SUCCESS" : "تم ارسال النسبة بنجاح",
     "INVALID_PERCENT" : "ادخل نسبة مئوية صحيحة"
   },
-
-
   "EMPLOYEE": {
     "LIST_TITLE": "قائمة الموظفين",
     "CREATE_TITLE": "إضافة موظف",
@@ -671,7 +667,7 @@
       "ANNIVERSAR": "ذكرى سنوية",
       "REMINDER": "تذكير",
       "TASKDEADLINE": "المهلة النهائية للمهمة",
-      "COMMENT" : "حدث خاص بتعليق"
+      "COMMENT": "حدث خاص بتعليق"
     },
     "15MIN": "15 دقيقة",
     "30MIN": "30 دقيقة",
@@ -757,35 +753,34 @@
     "SPECIALIZATION": "التخصص المطلوب",
     "NOTES": "ملاحظات"
   },
-  "REPORTS" : 
-  {
-    "TOP_COMMENTERS" : "أكثر الموظفين إضافةً للتعليقات",
-    "EMPLOYEE_NAME" : "اسم الموظف",
-    "COMMENTS_COUNT" : "عدد التعليقات",
-    "FROM" : "من",
-    "TO" : "الي",
+  "REPORTS": {
+    "TOP_COMMENTERS": "أكثر الموظفين إضافةً للتعليقات",
+    "EMPLOYEE_NAME": "اسم الموظف",
+    "COMMENTS_COUNT": "عدد التعليقات",
+    "FROM": "من",
+    "TO": "الي",
     "EMPLOYEE_ARCHIVED_TASKS": "أكثر الموظفين أرشفةً للمهام",
-    "ARCHIVEED_TASKS_COUNT" : "عدد المهام المؤرشفة",
-    "MOST_ASSIGNED" : " أكثر الموظفين تكليفًا بالمهام",
-    "TASKS_COUNT" : "أجمالى المهام",
-    "ON_TIME_COMPLETION" : "أفضل الموظفين التزامًا بالمواعيد",
-    "ON_TIME_COUNT":"عدد المهام المنتهية فى الوقت",
-    "STATUS" : "حالة المهمة",
-    "SELECT_EMPLOYEE" :"اختر الموظف",
-    "TASK" : "المهمة" ,
-    "CLOSED_DATE" : "تاريخ الإغلاق",
-    "MANUAL_DISCOUNT" : "إجمالي الحسومات اليدوية",
-    "AUTO_DISCOUNT" : "إجمالي الخصومات الإلكترونية",
-    "ASSIGNED_BY" : "جهة التكليف",
-    "EVALUATION" : "التقييم",
-    "TASK_DISCOUNTS" : "خصومات المهام الواردة", 
-    "EMPLOYEE" : "حسابات الموظفين",
-    "DISCOUNT_FROM" : "تاريخ الخصم من",
-    "DISCOUNT_TO" : "تاريخ الخصم الي"
-
-
-    
-
+    "ARCHIVEED_TASKS_COUNT": "عدد المهام المؤرشفة",
+    "MOST_ASSIGNED": " أكثر الموظفين تكليفًا بالمهام",
+    "TASKS_COUNT": "أجمالى المهام",
+    "ON_TIME_COMPLETION": "أفضل الموظفين التزامًا بالمواعيد",
+    "ON_TIME_COUNT": "عدد المهام المنتهية فى الوقت",
+    "STATUS": "حالة المهمة",
+    "SELECT_EMPLOYEE": "اختر الموظف",
+    "TASK": "المهمة",
+    "CLOSED_DATE": "تاريخ الإغلاق",
+    "MANUAL_DISCOUNT": "إجمالي الحسومات اليدوية",
+    "AUTO_DISCOUNT": "إجمالي الخصومات الإلكترونية",
+    "ASSIGNED_BY": "جهة التكليف",
+    "EVALUATION": "التقييم",
+    "TASK_DISCOUNTS": "خصومات المهام الواردة",
+    "EMPLOYEE": "حسابات الموظفين",
+    "DISCOUNT_FROM": "تاريخ الخصم من",
+    "DISCOUNT_TO": "تاريخ الخصم الي",
+    "TOP_COMMENTER": "أكثر الموظفين تعليقًا",
+    "ON_TIME": "المهام المنتهية في وقتها",
+    "ARCHIVED": "المهام المؤرشفة",
+    "TASKS_DISCOUNT": "خصومات المهام"
   },
   "LEAVE" : 
   {
@@ -826,5 +821,4 @@
     "CREATE_SUCCESS" : "تم اضافة اجازة بنجاح",
     "UPDATE_SUCCESS" :"تم تحديث الاجازة بنجاح"
   }
-
 }

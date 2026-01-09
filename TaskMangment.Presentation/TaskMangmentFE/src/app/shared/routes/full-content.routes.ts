@@ -43,7 +43,7 @@ export const content: Routes = [
       {path: 'student', loadChildren: () => import('../../../app/components/student/student.routes').then(r => r.StudentRoutingModule)},
       {path: 'course', loadChildren: () => import('../../../app/components/course/course.routes').then(r => r.CourseRoutingModule)},
       {path: 'offer', loadChildren: () => import('../../../app/components/offer/offer.routes').then(r => r.OfferRoutingModule)},
-      {path: 'report', loadChildren: () => import('../../../app/components/report/report.routes').then(r => r.TopCommenterRoutingModule)},
+      {path: 'report', loadChildren: () => import('../../../app/components/report/report.routes').then(r => r.ReportRoutingModule)},
       {path: 'leave', loadChildren: () => import('../../../app/components/leave/leave.routes').then(r => r.LeaveRoutingModule)},
 
 

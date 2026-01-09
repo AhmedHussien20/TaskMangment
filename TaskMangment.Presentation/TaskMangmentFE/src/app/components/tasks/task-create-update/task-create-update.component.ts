@@ -173,7 +173,7 @@ export class TaskCreateUpdateComponent implements OnInit {
         Validators.minLength(3),
         Validators.maxLength(100)
       ]],
-      description: ['',Validators.required],
+      description: ['', Validators.required],
       assignedEmployeeIds: [[], Validators.required],
       priority: [TaskPriority.Low, Validators.required],
       status: [TaskStatus.New, Validators.required],
@@ -247,10 +247,18 @@ export class TaskCreateUpdateComponent implements OnInit {
       this.toastr.error(this.translate.instant('FORM.VALIDATION_ERROR'));
       return;
     }
-
+    const payload = { ...this.formGroup.value };
+    if (payload.dueDate instanceof Date) {
+      const d: Date = payload.dueDate;
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      payload.dueDate = `${y}-${m}-${day}`;
+    }
     const request$ = this.isEdit && this.taskId
-      ? this.taskService.update(this.taskId, this.formGroup.value)
-      : this.taskService.create(this.formGroup.value);
+      ? this.taskService.update(this.taskId, payload)
+      : this.taskService.create(payload);
+
 
     request$.subscribe({
       next: () => {

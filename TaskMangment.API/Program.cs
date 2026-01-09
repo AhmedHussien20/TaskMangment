@@ -26,6 +26,7 @@ using TaskMangment.Application.Dashboards.Employee;
 using TaskMangment.Application.Dashboards.Admin;
 using TaskMangment.Infrastructure.Services.TaskMangment.Infrastructure.Services.Dashboard;
 using QuestPDF.Infrastructure;
+using TaskMangment.Utilities.Localization;
 
 namespace TaskMangment.API
 {
@@ -97,13 +98,15 @@ namespace TaskMangment.API
                 //Localization
                 builder.Services.AddLocalization(options =>
                 {
-                    options.ResourcesPath = "Resources";
+                    options.ResourcesPath = "Localization/Resources";
                 });
+            builder.Services.AddControllers()
+                            .AddDataAnnotationsLocalization();
 
-                // ------------------------------
-                // JWT AUTH
-                // ------------------------------
-                builder.Services.AddAuthentication(options =>
+            // ------------------------------
+            // JWT AUTH
+            // ------------------------------
+            builder.Services.AddAuthentication(options =>
                 {
                     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
