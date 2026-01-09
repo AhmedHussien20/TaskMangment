@@ -22,6 +22,7 @@ export class TaskService {
   }
 
   create(model: TaskAddEdit) {
+    console.log('Creating task with model:', model);
     return this.api.post(this.service, '', model);
   }
 

@@ -86,6 +86,11 @@
         "title": "Branches",
         "list": "Branch List"
       },
+      "reports": {
+        "header": "Reports",
+        "title": "Reports",
+        "dashboard": "Reports Dashboard"
+      },
       "department": {
         "title": "Departments",
         "list": "Department List",
@@ -338,9 +343,9 @@
     "TASK.STATUS_NEW": "New",
     "TASK.STATUS_IN_PROGRESS": "In Progress",
     "TASK.STATUS_CLOSED": "Closed",
-    "STATUS_AUTO_DISCOUNT" : "Auto Discount",
+    "STATUS_AUTO_DISCOUNT": "Auto Discount",
     "PENALTY_TYPE": "Penalty type",
-    "STATUS_DISCOUNT" : "Discount",
+    "STATUS_DISCOUNT": "Discount",
     "TASK.STATUS_ARCHIVED": "Archived",
     "STATUS_AUTOCLOSE": "Auto closed",
     "TASK_DETAILS": "Task Details",
@@ -348,7 +353,7 @@
     "MAX_WARNINGS": "Maximum Warnings",
     "PENALTY_AT_MAX_WARNINGS": "Penalty at Maximum Warnings",
     "PENALTY_ON_AUTO_CLOSE": "Penalty on Auto Close",
-    "PENALTY_ON_STOP_COMMENT" : "Penalty on stop commenting on period",
+    "PENALTY_ON_STOP_COMMENT": "Penalty on stop commenting on period",
     "IS_SHARED": "Shared Task",
     "STATUS_OPEN": "Open",
     "STATUS_COMPLETED": "Completed",
@@ -466,7 +471,6 @@
     "ACTIVE": "Active",
     "ENTER_NEW_DATE": "Enter new date",
     "NEW_DATE": "New date",
-
     "ACTIVITY_SUMMARY": "Activity Summary",
     "EXTENSION_REQUESTS": "Extension Requests",
     "CLOSE_REQUESTS": "Close Requests",
@@ -485,13 +489,12 @@
     "PERCENTAGE_UPDATES": "Percentage Updates",
     "NO_DATA": "No data available",
     "ACHIEVEMENT": "Achievement",
-    "ADD_PERCENTAGE" : "Add Achievement percentage",
-    "PERCENTAGE_PLACEHOLDER" : "Add Achievement percentage for task",
-    "SUBMIT_PERCENTAGE" : "submit percentage",
-    "ACHIEVEMENT_INFO" : "Your achievement percentage will be sent to the concerned authority.",
-    "PERCENTAGE_SUCCESS" : "Percentage sent successfully",
-    "INVALID_PERCENT" : "Enter true percentage"
-    
+    "ADD_PERCENTAGE": "Add Achievement percentage",
+    "PERCENTAGE_PLACEHOLDER": "Add Achievement percentage for task",
+    "SUBMIT_PERCENTAGE": "submit percentage",
+    "ACHIEVEMENT_INFO": "Your achievement percentage will be sent to the concerned authority.",
+    "PERCENTAGE_SUCCESS": "Percentage sent successfully",
+    "INVALID_PERCENT": "Enter true percentage"
   },
   "EMPLOYEE": {
     "LIST_TITLE": "Employee List",
@@ -657,7 +660,7 @@
       "ANNIVERSAR": "Anniversary",
       "REMINDER": "Reminder",
       "TASKDEADLINE": "Task Deadline",
-      "COMMENT" : "Event of comment"
+      "COMMENT": "Event of comment"
     },
     "15MIN": "15 Minutes",
     "30MIN": "30 Minutes",

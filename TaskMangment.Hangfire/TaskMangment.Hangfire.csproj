@@ -16,6 +16,7 @@
 	<ItemGroup>
 		<ProjectReference Include="..\TaskMangment.Application\TaskMangment.Application.csproj" />
 		<ProjectReference Include="..\TaskMangment.Infrastructure\TaskMangment.Infrastructure.csproj" />
+		<ProjectReference Include="..\TaskMangment.Utilities\TaskMangment.Utilities.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
