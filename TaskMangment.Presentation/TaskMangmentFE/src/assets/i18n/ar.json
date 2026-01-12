@@ -499,9 +499,9 @@
     "ADD_PERCENTAGE": "اضف نسبة انجاز",
     "PERCENTAGE_PLACEHOLDER": "اضف نسبة انجازك للمهمة",
     "SUBMIT_PERCENTAGE": "ارسال النسبة",
-    "ACHIEVEMENT_INFO": "سيتم ارسال نسبة انجازك الي الجهة المعنية",
-    "PERCENTAGE_SUCCESS": "تم ارسال النسبة بنجاح",
-    "INVALID_PERCENT": "ادخل نسبة مئوية صحيحة"
+    "ACHIEVEMENT_INFO" : "ملاحظة هامة: تحديد نسبة إنجاز العمل خاصة لكل فرد مكلف، وتحديدها يسهل من تقييم مدرائك فاحرص عليها." ,
+    "PERCENTAGE_SUCCESS" : "تم ارسال النسبة بنجاح",
+    "INVALID_PERCENT" : "ادخل نسبة مئوية صحيحة"
   },
   "EMPLOYEE": {
     "LIST_TITLE": "قائمة الموظفين",
@@ -773,46 +773,63 @@
     "AUTO_DISCOUNT": "إجمالي الخصومات الإلكترونية",
     "ASSIGNED_BY": "جهة التكليف",
     "EVALUATION": "التقييم",
-    "TASK_DISCOUNTS": "خصومات المهام الواردة",
     "EMPLOYEE": "حسابات الموظفين",
     "DISCOUNT_FROM": "تاريخ الخصم من",
     "DISCOUNT_TO": "تاريخ الخصم الي",
     "TOP_COMMENTER": "أكثر الموظفين تعليقًا",
     "ON_TIME": "المهام المنتهية في وقتها",
     "ARCHIVED": "المهام المؤرشفة",
-    "TASKS_DISCOUNT": "خصومات المهام"
+    "TASKS_DISCOUNT": "خصومات المهام(الصادرة/الواردة)",
+
+    "TASK_ACTIVITY_REPORT" : "تقرير عن حركات المهام",
+    "COMMENT" : "التعليق",
+    "COMMENT_DATE" : "تاريخ التعليق",
+    "COMMENTED_BY" : "التعليق بواسطة",
+    "TASK_MOVEMENT_TITLE" : "حركات المهام (الواردة/ الصادرة) لليوم",
+    "MOVEMENT_TYPE" : "نوع المهمة" ,
+    "REPORT_TITLE" : "عنوان التقرير" ,
+    "OUTGOING" : "الصادرة" ,
+    "INCOMING" : "الواردة",
+    "TASKS_CLOSING_SOON" : "المهام المغلقة قريباً" 
+    
   },
-  "LEAVE": {
-    "ID": "الكود",
-    "TYPE": "نوع الاجازة",
-    "START_DATE": "تاريخ البدء",
-    "END_DATE": "تاريخ الانتهاء",
-    "STATUS": "الحالة",
-    "APPROVED": "الموافقة",
-    "APPROVED_SUCCESS": "تمت الموافقة بنجاح",
-    "REJECTED_SUCCESS": "تم الرفض بنجاح",
-    "REJECT": "رفض",
-    "REJECT_REASON": "سبب الرفض",
-    "ADD": "اضافة طلب اجازة",
-    "EMPLOYEE": "اسم الموظف",
-    "DETAILS": "تفاصيل الطلب",
-    "NOTES": "ملاحظات",
-    "REVIEW_STATUS": "اختر الحالة",
-    "REJECT_REASON_REQUIRED": "سبب الرفض مطلوب",
-    "PENDING": "معلق",
-    "REJECTED": "مرفوض",
-    "LIST_TITLE": "قائمة تقديم الاجازات",
-    "SEARCH": "بحث"
+  "LEAVE" : 
+  {
+    "ID" : "الكود",
+    "TYPE" : "نوع الاجازة",
+    "START_DATE" :"تاريخ البدء",
+    "END_DATE" :"تاريخ الانتهاء",
+    "STATUS" :"الحالة",
+    "APPROVED" :  "الموافقة",
+    "APPROVED_SUCCESS" : "تمت الموافقة بنجاح",
+    "REJECTED_SUCCESS" : "تم الرفض بنجاح",
+    "REJECT" : "رفض",
+    "REJECT_REASON" : "سبب الرفض",
+    "ADD" : "اضافة طلب اجازة",
+    "EMPLOYEE" : "اسم الموظف",
+    "DETAILS" : "تفاصيل الطلب",
+    "NOTES" : "ملاحظات",
+    "REVIEW_STATUS" : "اختر الحالة",
+    "REJECT_REASON_REQUIRED" : "سبب الرفض مطلوب",
+    "PENDING" : "معلق",
+    "REJECTED" : "مرفوض",
+    "LIST_TITLE" : "قائمة تقديم الاجازات" ,
+    "SEARCH" : "بحث",
+    "CREATE_SUCCESS" : "تم ارسال الطلب بنجاح"
+
   },
-  "LEAVE_TYPE": {
-    "ADD": "اضافة نوع اجازة",
-    "ID": "الكود",
-    "NAME_AR": "اسم الاجازة باللغة العربية",
-    "NAME_EN": "اسم الاجازة باللغة الانجليزية",
-    "IS_PAID": "مدفوعة الاجر",
-    "MAX_DAYS": "الحد الاقصي للايام",
-    "PAID_NO": "لا",
-    "PAID_YES": "نعم",
-    "title": "قائمة الاجازات"
+  "LEAVE_TYPE" : 
+  {
+    "ADD" : "اضافة نوع اجازة",
+    "ID" :"الكود",
+    "NAME_AR" : "اسم الاجازة باللغة العربية",
+    "NAME_EN" : "اسم الاجازة باللغة الانجليزية",
+    "IS_PAID" : "مدفوعة الاجر" ,
+    "MAX_DAYS" : "الحد الاقصي للايام",
+    "PAID_NO" : "لا",
+    "PAID_YES" : "نعم",
+    "title" : "قائمة الاجازات",
+    "CREATE_SUCCESS" : "تم اضافة اجازة بنجاح",
+    "UPDATE_SUCCESS" :"تم تحديث الاجازة بنجاح"
   }
 }

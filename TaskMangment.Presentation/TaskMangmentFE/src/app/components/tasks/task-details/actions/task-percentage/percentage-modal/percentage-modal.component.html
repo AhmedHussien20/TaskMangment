@@ -13,11 +13,17 @@
     <label class="form-label">
       {{ 'TASK.CLOSE_REQUEST_TITLE' | translate }}
     </label>
-    <input
-      type="text"
-      class="form-control"
-      formControlName="achievementPercent"
-      placeholder="{{ 'TASK.PERCENTAGE_PLACEHOLDER' | translate }}">
+    <div class="input-group">
+  <input
+    type="number"
+    class="form-control"
+    formControlName="achievementPercent"
+    placeholder="{{ 'TASK.PERCENTAGE_PLACEHOLDER' | translate }}"
+    (blur)="formatPercent()"
+  />
+  <span class="input-group-text">%</span>
+</div>
+
 
     <div class="text-danger small mt-1" *ngIf="form.controls['achievementPercent'].touched && form.controls['achievementPercent'].invalid">
       <div *ngIf="form.controls['achievementPercent'].errors?.['required']">
@@ -35,12 +41,13 @@
       {{ 'FORM.CANCEL' | translate }}
     </button>
 
-    <button
-      class="btn btn-danger"
-      [disabled]="form.invalid || isSubmitting"
-      (click)="submit()">
-      {{ 'TASK.SUBMIT_PERCENTAGE' | translate }}
-    </button>
+   <button
+  class="btn btn-danger"
+  [disabled]="!form.get('achievementPercent')?.value || isSubmitting"
+  (click)="submit()">
+  {{ 'TASK.SUBMIT_PERCENTAGE' | translate }}
+</button>
+
   </div>
 
 </form>

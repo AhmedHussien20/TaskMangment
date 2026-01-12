@@ -144,7 +144,7 @@ private MENUITEMS: MenuItem[] = [
     children: [
      {
       title: 'nav.apps.reports.dashboard',
-      path: '/reports',
+      path: '/report/reports-dashboard',
       type: 'link',
       minRoleLevel: 10
     }

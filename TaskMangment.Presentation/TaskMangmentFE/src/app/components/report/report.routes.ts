@@ -44,6 +44,24 @@ export const ReportRoutes: Routes = [
     loadComponent: () =>
       import('./tasks-discoun-report/tasks-discoun-report.component')
         .then(m => m.TasksDiscountReportComponent)
+  },
+   {
+    path: 'tasks-comment-activity-list',
+    loadComponent: () =>
+      import('./task-comments-activity-report/task-comments-activity-report.component')
+        .then(m => m.TaskCommentsActivityReportComponent)
+  },
+   {
+    path: 'tasks-today-activity-list',
+    loadComponent: () =>
+      import('./task-today-activity-report/task-today-activity-report.component')
+        .then(m => m.TaskTodayActivityReportComponent)
+  },
+  {
+    path: 'tasks-closed-soon-list',
+    loadComponent: () =>
+      import('./task-closed-soon-report/task-closed-soon-report.component')
+        .then(m => m.TaskClosedSoonReportComponent)
   }
 ];
 

@@ -9,7 +9,7 @@ import { GenericTableComponent, TableColumn } from 'app/shared/components/generi
 import { PageHeaderComponent } from 'app/shared/components/page-header/page-header.component';
 import { ReportListService } from 'app/core/services/report-list.service';
 import { ReportPdfService } from 'app/core/services/report-pdf.service';
-import { TaskDiscountReportDto } from 'app/core/models/reports/reports';
+import { TaskDiscountReportDto, TaskMovementType } from 'app/core/models/reports/reports';
 import { SimpleEmployee } from 'app/core/models/task/task';
 import { EmployeeService } from 'app/core/services/employee.service';
 
@@ -28,9 +28,9 @@ import { EmployeeService } from 'app/core/services/employee.service';
 })
 export class TasksDiscountReportComponent implements OnInit {
 
-  title = 'REPORTS.TASK_DISCOUNTS';
-  activeitem = 'REPORTS.TASK_DISCOUNTS_TITLE';
-  breadcrumbs = ['MENU.HOME', 'MENU.REPORTS', 'REPORTS.TASK_DISCOUNTS'];
+  title = 'REPORTS.TASKS_DISCOUNT';
+  activeitem = 'REPORTS.TASKS_DISCOUNT';
+  breadcrumbs = ['MENU.HOME', 'MENU.REPORTS', 'REPORTS.TASKS_DISCOUNT'];
 
   columns: TableColumn[] = [
     { key: 'taskIdTitle', label: 'REPORTS.TASK' }, 
@@ -55,7 +55,13 @@ selectedEmployeeId?: number;
   status?: string;
 
   isLoading = false;
-
+  movementType: TaskMovementType = TaskMovementType.Outgoing;
+  
+  movementOptions = [
+      { label: 'REPORTS.OUTGOING', value: TaskMovementType.Outgoing },
+      { label: 'REPORTS.INCOMING', value: TaskMovementType.Incoming }
+    ];
+ 
  statusOptions = [
   { label: 'TASK.STATUS_IN_PROGRESS', value: 'InProgress' },
   { label: 'TASK.STATUS_ARCHIVED', value: 'Archived' },
@@ -86,6 +92,7 @@ loadData(): void {
   this.reportService
 this.reportService.getTaskDiscounts(
   this.selectedEmployeeId ?? 0,
+  this.movementType,
   this.fromDate ?? '',          
   this.toDate,
   this.status
@@ -93,7 +100,9 @@ this.reportService.getTaskDiscounts(
       next: (res) => {
         this.rows = res.data.map((t: TaskDiscountReportDto) => ({
           ...t,
-          taskIdTitle: `[${t.taskId}] ${t.title}`
+          taskIdTitle: `[${t.taskId}] ${t.title}`,
+          assignedBy: this.movementType === TaskMovementType.Outgoing ? t.employeeName : t.assignedBy
+
         }));
         this.totalItems = this.rows.length;
         this.isLoading = false;
@@ -146,7 +155,7 @@ loadEmployees(): void {
 
   onExportPdf(): void {
     this.reportPdfService
-      .getTaskDiscountsPdf(  this.selectedEmployeeId ?? 0,this.fromDate, this.toDate, this.status)
+      .getTaskDiscountsPdf(  this.selectedEmployeeId ?? 0, this.movementType,this.fromDate, this.toDate, this.status)
       .subscribe({
         next: (blob) => {
           const url = window.URL.createObjectURL(blob);
