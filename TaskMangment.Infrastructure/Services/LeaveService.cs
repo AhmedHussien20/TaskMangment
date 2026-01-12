@@ -24,19 +24,23 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<LeaveType> _leaveTypeRepo;
         private readonly IMapper _mapper;
         private readonly IDomainEventDispatcher _eventDispatcher;
+        private readonly IRepository<Employee> _empRepo;
 
         public LeaveService(
             IRepository<Leave> leaveRepo,
             IRepository<Employee> employeeRepo,
             IRepository<LeaveType> leaveTypeRepo,
             IMapper mapper,
-            IDomainEventDispatcher eventDispatcher)
+            IDomainEventDispatcher eventDispatcher,
+            IRepository<Employee> empRepo
+            )
         {
             _leaveRepo = leaveRepo;
             _employeeRepo = employeeRepo;
             _leaveTypeRepo = leaveTypeRepo;
             _mapper = mapper;
             _eventDispatcher = eventDispatcher;
+            _empRepo = empRepo;
         }
          
         public async Task<ApiResponse<LeaveGetDto>> CreateAsync(LeaveAddDto dto, int employeeId)
@@ -150,7 +154,7 @@ namespace TaskMangment.Infrastructure.Services
         // =========================
         // Approve
         // =========================
-        public async Task<ApiResponse<bool>> ApproveAsync(int leaveId, int managerId)
+        public async Task<ApiResponse<bool>> ApproveAsync(int leaveId, int managerId , string managerFullName)
         {
             var leave = await _leaveRepo.GetAll(l => l.Id == leaveId)
                                          .Include(l => l.Employee)   
@@ -164,6 +168,10 @@ namespace TaskMangment.Infrastructure.Services
             if (leave.Status != LeaveStatus.Pending)
                 throw new AppException(ErrorCodes.InvalidOperation, StatusCodes.Status400BadRequest);
 
+            var manager = await _empRepo.GetByIDAsync(managerId);
+            if (manager == null)
+                throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
+
             leave.Status = LeaveStatus.Approved;
             leave.ApprovedById = managerId;
             leave.ApprovedAt = DateTime.UtcNow;
@@ -174,8 +182,8 @@ namespace TaskMangment.Infrastructure.Services
                 leave.Id,
                 leave.EmployeeId,
                 leave.Employee.FullName,
-                leave.ApprovedBy.FullName,
-                leave.LeaveType.NameAr,
+managerFullName,
+leave.LeaveType.NameAr,
                 leave.StartDate,
                 leave.EndDate
  ));
@@ -205,12 +213,19 @@ namespace TaskMangment.Infrastructure.Services
             leave.ApprovedById = managerId;
             leave.ApprovedAt = DateTime.UtcNow;
 
+
             await _leaveRepo.SaveChangesAsync();
+
+          //////////remember to discuss about best pos for manager check
+            var manager = await _empRepo.GetByIDAsync(managerId);
+            if (manager == null)
+                throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
+
             await _eventDispatcher.PublishAsync(new LeaveRejectedEvent(
                   leave.Id,
                   leave.EmployeeId,
                   leave.Employee.FullName,
-                  leave.ApprovedBy.FullName,      
+                  manager.FullName,
                   leave.LeaveType.NameAr,
                   leave.RejectionReason,
                   leave.StartDate,

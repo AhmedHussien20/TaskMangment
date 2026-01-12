@@ -9,6 +9,7 @@ import { ToastrService } from 'ngx-toastr';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { FormFieldConfig } from 'app/core/models/form-field-config';
 import { StudentService } from 'app/core/services/student.service';
+import { decimalValidator } from 'app/shared/validations/numberVlidator';
 
 @Component({
   selector: 'app-offer-create-update',
@@ -189,9 +190,7 @@ export class OfferCreateUpdateComponent implements OnInit {
     paymentMethod: ['', Validators.required],
 
     price: [null, [
-      Validators.required,
-      Validators.pattern('^[0-9]+(\\.[0-9]+)?$')
-    ]],
+      Validators.required,decimalValidator()]],
 
     interestRate: [null, [Validators.pattern('^[0-9]+(\\.[0-9]+)?%?$'),Validators.required]],
 

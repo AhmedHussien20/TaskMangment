@@ -60,10 +60,11 @@
               {{ 'FORM.CHARACTERS' | translate }}
             </div>
 
-            <div *ngIf="formGroup.controls[field.name].errors?.['pattern'] && field.inputType === 'number'"
-              class="input-group">
-              {{ 'FORM.PATTERN_INVALID_NUMBER' | translate }}
+            <div *ngIf="formGroup.controls[field.name].errors?.['decimal']
+            && field.inputType === 'number'" class="input-group">
+              {{ 'FORM.INVALID_DECIMAL_NUMBER' | translate }}
             </div>
+
             <div *ngIf="formGroup.controls[field.name].errors?.['email']">
               {{ 'FORM.PATTERN_INVALID_EMAIL' | translate }}
             </div>
@@ -201,7 +202,7 @@
     {{ field.label | translate }} {{ 'FORM.IS_REQUIRED' | translate }}
   </mat-error>
 
-</mat-form-field>
+        </mat-form-field>
 
 
 

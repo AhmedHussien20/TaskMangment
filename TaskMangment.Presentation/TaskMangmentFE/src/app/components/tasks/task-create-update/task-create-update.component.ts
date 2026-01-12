@@ -9,6 +9,7 @@ import { Employee } from 'app/core/models/employee/employee';
 import { ToastrService } from 'ngx-toastr';
 import { FormFieldConfig } from 'app/core/models/form-field-config';
 import { CommentAllowPeriod, TaskPriority, TaskStatus } from 'app/core/models/task/task';
+import { decimalValidator } from 'app/shared/validations/numberVlidator';
 
 @Component({
   selector: 'app-task-create-update',
@@ -178,10 +179,10 @@ export class TaskCreateUpdateComponent implements OnInit {
       status: [TaskStatus.New, Validators.required],
       dueDate: [null, Validators.required],
       commentAllowPeriodDays: [''],
-      maxWarnings: [3, [Validators.pattern('^[0-9]+$')]],
-      penaltyAtMaxWarnings: [0, [Validators.pattern('^[0-9]+$')]],
-      penaltyOnAutoClose: [0, [Validators.pattern('^[0-9]+$')]],
-      penaltyOnStopComment: [0, [Validators.pattern('^[0-9]+$')]],
+      maxWarnings: [3, [decimalValidator()]],
+      penaltyAtMaxWarnings: [0, [decimalValidator()]],
+      penaltyOnAutoClose: [0, [decimalValidator()]],
+      penaltyOnStopComment : [0, [decimalValidator()]],
       isShared: [false]
     });
 

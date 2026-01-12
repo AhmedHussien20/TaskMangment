@@ -1,0 +1,72 @@
+<app-page-header
+  [title]="title | translate"
+  [title1]="breadcrumbs"
+  [activeitem]="activeitem | translate">
+</app-page-header>
+
+<div class="row row-sm">
+  <div class="col-md-12 col-lg-12">
+    <div class="card custom-card">
+
+      <!-- Filters -->
+      <div class="card-header border-bottom-0">
+        <div class="d-flex justify-content-center align-items-end gap-3">
+
+          <div class="d-flex flex-column">
+            <label class="form-label small">{{ 'REPORTS.EMPLOYEE' | translate }}</label>
+            <select [(ngModel)]="selectedEmployeeId" class="form-control form-control-sm">
+              <option [ngValue]="undefined">{{ 'FORM.SELECT' | translate }}</option>
+              <option *ngFor="let emp of employees" [ngValue]="emp.id">{{ emp.fullName }}</option>
+            </select>
+          </div>
+
+          <div class="d-flex flex-column">
+            <label class="form-label small">{{ 'REPORTS.MOVEMENT_TYPE' | translate }}</label>
+            <select [(ngModel)]="movementType" class="form-control form-control-sm">
+              <option *ngFor="let m of movementOptions" [ngValue]="m.value">{{ m.label | translate }}</option>
+            </select>
+          </div>
+
+          <div class="d-flex flex-column">
+            <label class="form-label small">{{ 'REPORTS.REPORT_TITLE' | translate }}</label>
+            <input type="text" [(ngModel)]="reportTitle" class="form-control form-control-sm">
+          </div>
+
+          <div class="d-flex align-items-end gap-2">
+            <button class="btn btn-primary btn-sm" (click)="onFilterApply()">
+              {{ 'COMMON.APPLY' | translate }}
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="card-body pt-2">
+        <div *ngIf="isLoading" class="text-center my-3">
+          <div class="spinner-border" role="status">
+            <span class="visually-hidden">{{ 'TABLE.LOADING' | translate }}</span>
+          </div>
+        </div>
+
+        <div *ngIf="!isLoading">
+          <app-generic-table
+            [title]="title"
+            [columns]="columns"
+            [data]="rows"
+            [entries]="entries"
+            [page]="page"
+            [showFilters]="false"
+            [showPagination]="false"
+            [totalItems]="totalItems"
+            [showExportPdf]="true"
+            (exportPdfClick)="onExportPdf()"
+            (pageChange)="onPageChange($event)"
+            (entriesChange)="onEntriesChange($event)">
+          </app-generic-table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
