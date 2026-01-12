@@ -10,11 +10,8 @@ using TaskMangment.Hangfire;
 using TaskMangment.Infrastructure;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common;
-using Microsoft.Extensions.Localization; 
 using Microsoft.AspNetCore.Localization;
 using System.Globalization;
-using TaskMangment.Utilities.Localization.Resources;
-using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -108,27 +105,27 @@ app.UseHangfireDashboard("/hangfire", new DashboardOptions
 // =======================
 // Jobs
 // =======================
-//RecurringJob.AddOrUpdate<ProcessPendingEmailsJob>(
-//    "process-pending-emails",
-//    job => job.ExecuteAsync(),
-//    Cron.Minutely);
+RecurringJob.AddOrUpdate<ProcessPendingEmailsJob>(
+    "process-pending-emails",
+    job => job.ExecuteAsync(),
+    Cron.Minutely);
 
 //RecurringJob.AddOrUpdate<AttachmentBlobMigrationJob>(
 //    "attachment-blob-migration",
 //    job => job.ExecuteAsync(),
 //    Cron.Minutely);
 
-//RecurringJob.AddOrUpdate<PenaltyForMissingCommentsJob>(
-//      "penalty-missing-comments",
-//    job => job.ExecuteAsync(),
-//    Cron.Hourly
-//);
+RecurringJob.AddOrUpdate<PenaltyForMissingCommentsJob>(
+      "penalty-missing-comments",
+    job => job.ExecuteAsync(),
+    Cron.Hourly
+);
 
-//RecurringJob.AddOrUpdate<ArchiveOverdueTasksJob>(
-//               "archive-overdue-tasks",
-//               job => job.ExecuteAsync(),
-//               Cron.Hourly
-//               );
+RecurringJob.AddOrUpdate<ArchiveOverdueTasksJob>(
+               "archive-overdue-tasks",
+               job => job.ExecuteAsync(),
+               Cron.Hourly
+               );
 RecurringJob.AddOrUpdate<TaskDueTodayEmailsProcessorJob>(
                "task-due-today-email-job",
                job => job.ExecuteAsync(),
