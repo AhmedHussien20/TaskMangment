@@ -47,6 +47,8 @@ namespace TaskMangment.Hangfire.Jobs
                     continue;
 
                 task.Status = WorkTaskStatus.AutoClose;
+                task.ClosedAt = DateTime.UtcNow;
+                task.CloseReason = CloseReason.Auto;
 
                 var discountsToPublish = new List<Discount>();
 

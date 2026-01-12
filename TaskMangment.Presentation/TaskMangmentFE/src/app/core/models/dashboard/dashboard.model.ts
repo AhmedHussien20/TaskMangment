@@ -1,3 +1,5 @@
+import { TaskStatus } from "../task/task";
+
 export interface AdminDashboardDto {
   kpis: {
     totalEmployees: number;
@@ -59,4 +61,13 @@ export interface PendingCloseRequestDto {
   title: string;
   requestedBy: string;
   requestedAt: string;
+}
+
+export interface TaskStatusDto {
+    taskId: number;
+    title: string;
+    status: TaskStatus;
+    statusText : string;
+    dueDate: Date | null;
+    employees: string[];
 }

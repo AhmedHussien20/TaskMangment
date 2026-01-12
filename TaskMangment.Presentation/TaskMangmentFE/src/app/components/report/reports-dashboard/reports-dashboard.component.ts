@@ -92,6 +92,7 @@ export class ReportsDashboardComponent {
      svg: this.REPORT_ICON_SVG,
     clickable: true,
     url: '/report/tasks-closed-soon-list'
+    
   }
 ];
 

@@ -6,11 +6,14 @@
 <!--Row-->
 <div class="row row-sm">
     <div class="row row-sm">
-        @for (card of cards; track $index) {
-        <div class="col-12 col-md-6 col-xl-3">
-            <spk-dashboard [card]="card"></spk-dashboard>
-        </div>
-        }
+      @for (card of cards; track $index) {
+  <div class="col-12 col-md-6 col-xl-3">
+    <div (click)="openCard(card)" style="cursor: pointer;">
+      <spk-dashboard [card]="card"></spk-dashboard>
+    </div>
+  </div>
+}
+
     </div>
     <div class="col-sm-12 col-lg-12 col-xl-8">
         <div class="row row-sm" *ngIf="isAdmin">

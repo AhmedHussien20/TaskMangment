@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { ApiService } from 'app/core/services/api.service';
 import { Observable } from 'rxjs';
 import { BaseResponse } from 'app/models/base.response.model';
-import { AdminDashboardDto, CompletedTasksTodayDto, EmployeeDashboardDto, InProgressUpdatedTodayDto, PendingCloseRequestDto } from '../models/dashboard/dashboard.model';
+import { AdminDashboardDto, CompletedTasksTodayDto, EmployeeDashboardDto, InProgressUpdatedTodayDto, PendingCloseRequestDto, TaskStatusDto } from '../models/dashboard/dashboard.model';
 
 @Injectable({
     providedIn: 'root'
@@ -25,6 +25,11 @@ export class DashboardService {
     getAdminInProgressUpdatedToday(): Observable<BaseResponse<InProgressUpdatedTodayDto[]>> {
         return this.api.get<BaseResponse<InProgressUpdatedTodayDto[]>>(this.service,'admin/in-progress-updated-today'); 
     }
+
+    getAdminTasksByStatus(status: 'Active' | 'Overdue' | 'Active'): Observable<BaseResponse<TaskStatusDto[]>> {
+      return this.api.get<BaseResponse<TaskStatusDto[]>>(this.service,`admin/tasks-by-status?status=${status}`);
+    }
+
 
     // completed-tasks-today
 getAdminCompletedTasksToday()

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TaskMangment.Infrastructure.DataContext;
 
@@ -11,9 +12,11 @@ using TaskMangment.Infrastructure.DataContext;
 namespace TaskMangment.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260112135247_addClosedDateTask")]
+    partial class addClosedDateTask
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2001,14 +2004,8 @@ namespace TaskMangment.Infrastructure.Migrations
                     b.Property<int?>("AssignedByEmployeeId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("CloseReason")
-                        .HasColumnType("int");
-
                     b.Property<DateTime?>("ClosedAt")
                         .HasColumnType("datetime2");
-
-                    b.Property<int?>("ClosedByUserId")
-                        .HasColumnType("int");
 
                     b.Property<int?>("CommentAllowPeriodDays")
                         .HasColumnType("int");

@@ -106,7 +106,12 @@ export class DepartmentCreateUpdateComponent implements OnInit {
       .subscribe(res => {
         const list = res.data.data;
         const field = this.formConfig.find(f => f.name === 'managerEmployeeId');
-        if (field) field.options = list.map((e: Employee) => ({ label: e.fullName, value: e.id }));
+        if (field) field.options = list.map((e: Employee) => 
+          ({ label: e.fullName, 
+            value: e.id,
+            mobile: e.mobile,
+          email: e.email
+           }));
       });
   }
 

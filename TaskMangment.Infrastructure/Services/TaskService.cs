@@ -253,6 +253,13 @@ namespace TaskMangment.Infrastructure.Services
 
             _mapper.Map(dto, task);
 
+            if (dto.Status == WorkTaskStatus.Closed)
+            {
+                task.ClosedAt = DateTime.UtcNow;
+                task.ClosedByUserId = modifierUser;
+                task.CloseReason= CloseReason.Admin;
+            }
+
             var existingAssignments = await _assignmentRepo
                 .GetAll(a => a.TaskId == id)
                 .ToListAsync();

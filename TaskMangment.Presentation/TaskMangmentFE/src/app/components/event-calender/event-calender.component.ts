@@ -246,23 +246,23 @@ export class EventCalenderComponent implements OnInit, AfterViewInit {
   private resolveEventClass(e: CalendarEventGetDto): string {
     switch (e.eventType) {
       case CalendarEventType.Meeting:
-        return 'bg-secondary-transparent';
+        return 'bg-secondary';
       case CalendarEventType.Appointment:
-        return 'bg-success-transparent';
+        return 'bg-success';
       case CalendarEventType.TaskDeadline:
-        return 'bg-info-transparent';
+        return 'bg-info';
       case CalendarEventType.Holiday:
-        return 'bg-danger-transparent';
+        return 'bg-danger';
       case CalendarEventType.Reminder:
-        return 'bg-teal-transparent';
+        return 'bg-teal';
       case CalendarEventType.Birthday:
-        return 'bg-warning-transparent';
+        return 'bg-warning';
       case CalendarEventType.Anniversar:
-        return 'bg-purple-transparent';
+        return 'bg-purple';
       case CalendarEventType.Comment:
-        return 'bg-secondary-transparent';
+        return 'bg-secondary';
       default:
-        return 'bg-primary-transparent';
+        return 'bg-primary';
     }
   }
 

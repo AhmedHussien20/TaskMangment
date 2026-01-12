@@ -501,7 +501,9 @@
     "SUBMIT_PERCENTAGE": "ارسال النسبة",
     "ACHIEVEMENT_INFO" : "ملاحظة هامة: تحديد نسبة إنجاز العمل خاصة لكل فرد مكلف، وتحديدها يسهل من تقييم مدرائك فاحرص عليها." ,
     "PERCENTAGE_SUCCESS" : "تم ارسال النسبة بنجاح",
-    "INVALID_PERCENT" : "ادخل نسبة مئوية صحيحة"
+    "INVALID_PERCENT" : "ادخل نسبة مئوية صحيحة",
+    "STATUS_INPROGRESS": "قيد التنفيذ"
+
   },
   "EMPLOYEE": {
     "LIST_TITLE": "قائمة الموظفين",

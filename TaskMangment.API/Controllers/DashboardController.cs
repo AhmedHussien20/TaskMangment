@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using TaskMangment.Application.Dashboards.Admin;
 using TaskMangment.Application.Dashboards.Employee;
+using TaskMangment.Application.DTOs;
 using TaskMangment.Domain.Entities;
 using TaskMangment.Infrastructure.Services.TaskMangment.Infrastructure.Services.Dashboard;
 
@@ -22,9 +23,9 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpGet("admin")]
-        public async Task<IActionResult> GetAdminDashboard()
+        public async Task<IActionResult> GetAdminDashboard([FromQuery] PeriodDto period)
         {
-            var result = await _adminService.GetDashboardAsync(CompanyId);
+            var result = await _adminService.GetDashboardAsync(CompanyId, period);
             return Success(result.Data);
         }
 
@@ -36,25 +37,39 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpGet("admin/in-progress-updated-today")]
-        public async Task<IActionResult> GetTodayUpdatedInProgressTasks()
+        public async Task<IActionResult> GetTodayUpdatedInProgressTasks([FromQuery] PeriodDto period)
         {
-            var result = await _adminService.GetTodayUpdatedInProgressTasksAsync(this.CompanyId);
+            var result = await _adminService.GetTodayUpdatedInProgressTasksAsync(this.CompanyId,period);
             return Success(result.Data);
         }
 
         [HttpGet("admin/completed-tasks-today")]
-        public async Task<IActionResult> GetEmployeesCompletedTasksToday()
+        public async Task<IActionResult> GetEmployeesCompletedTasksToday([FromQuery] PeriodDto period)
         {
-            var result = await _adminService.GetEmployeesCompletedTasksTodayAsync(this.CompanyId);
+            var result = await _adminService.GetEmployeesCompletedTasksTodayAsync(this.CompanyId, period);
                 
 
             return Success(result.Data);
         }
 
         [HttpGet("admin/pending-close-requests")]
-        public async Task<IActionResult> GetPendingCloseRequests()
+        public async Task<IActionResult> GetPendingCloseRequests([FromQuery] PeriodDto period)
         {
-            var result = await _adminService .GetPendingCloseRequestsAsync(this.CompanyId);
+            var result = await _adminService .GetPendingCloseRequestsAsync(this.CompanyId, period);
+            return Success(result.Data);
+        }
+
+        [HttpGet("admin/tasks-by-status")]
+        public async Task<IActionResult> GetAdminTasksByStatus([FromQuery] string status, [FromQuery] PeriodDto period)
+        {
+            var result = await _adminService.GetTasksByStatusAsync(this.CompanyId, status, period);
+            return Success(result.Data);
+        }
+
+        [HttpGet("admin/kpis")]
+        public async Task<IActionResult> GetAdminKpis([FromQuery] PeriodDto period)
+        {
+            var result = await _adminService.GetKpisAsync(this.CompanyId, period);
             return Success(result.Data);
         }
 
