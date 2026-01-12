@@ -32,8 +32,6 @@ namespace TaskMangment.Hangfire.Jobs
        
         public async Task ExecuteAsync()
         {
-            var text = _localizer["AUTO_CLOSE_DISCOUNT"];
-            Console.WriteLine(text);
             var emails = await _db.EmailQueue
                 .Where(e =>
                     e.Status == EmailStatus.Pending &&

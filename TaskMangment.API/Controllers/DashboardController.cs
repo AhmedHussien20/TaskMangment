@@ -45,8 +45,8 @@ namespace TaskMangment.API.Controllers
         [HttpGet("admin/completed-tasks-today")]
         public async Task<IActionResult> GetEmployeesCompletedTasksToday()
         {
-            var result = await _adminService
-                .GetEmployeesCompletedTasksTodayAsync(this.CompanyId);
+            var result = await _adminService.GetEmployeesCompletedTasksTodayAsync(this.CompanyId);
+                
 
             return Success(result.Data);
         }
