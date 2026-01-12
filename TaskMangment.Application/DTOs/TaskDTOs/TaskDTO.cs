@@ -50,6 +50,10 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
         public decimal PenaltyOnAutoClose { get; set; } = 0;
         public decimal PenaltyOnStopComment { get; set; } = 0;
         public int? CommentAllowPeriodDays { get; set; }
+
+        public DateTime? ClosedAt { get; set; }
+        public int? ClosedByUserId { get; set; }
+        public CloseReason? CloseReason { get; set; }
     }
     public class TaskEmployeeAssignmentDto
     {

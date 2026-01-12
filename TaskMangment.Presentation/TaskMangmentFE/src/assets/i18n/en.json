@@ -148,11 +148,6 @@
         "header": "Education",
         "title": "Education"
       },
-      "reports": 
-      {
-        "header" : "Reports",
-        "title": "Reports"
-      },
       "leaves" : 
       {
         "header" : "Leaves",
@@ -494,7 +489,8 @@
     "SUBMIT_PERCENTAGE": "submit percentage",
     "ACHIEVEMENT_INFO": "Your achievement percentage will be sent to the concerned authority.",
     "PERCENTAGE_SUCCESS": "Percentage sent successfully",
-    "INVALID_PERCENT": "Enter true percentage"
+    "INVALID_PERCENT": "Enter true percentage",
+    "STATUS_INPROGRESS": "Inprogress"
   },
   "EMPLOYEE": {
     "LIST_TITLE": "Employee List",

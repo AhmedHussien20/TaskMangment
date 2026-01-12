@@ -83,6 +83,21 @@ namespace TaskMangment.Domain.Entities
         Rejected = 3
     }
 
+    public enum CloseReason
+    {
+        Auto = 1,
+        Manual = 2,
+        Rejected = 3,
+        Admin = 4,
+    }
+
+    public enum DashboardPeriod
+    {
+        Day,
+        Month,
+        Year,
+        Custom
+    }
 
 
 }

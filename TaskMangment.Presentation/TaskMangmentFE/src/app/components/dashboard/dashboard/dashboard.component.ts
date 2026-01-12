@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { SharedModule } from '../../../shared/shared.module';
 import * as chartData from '../../../shared/data/dashboard';
-import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgbModal, NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { NgSelectModule } from '@ng-select/ng-select';
 import { NgCircleProgressModule } from 'ng-circle-progress';
 import { NgApexchartsModule } from 'ng-apexcharts';
@@ -17,6 +17,7 @@ import {
 import { DashboardService } from 'app/core/services/dashboar.service';
 import { AdminDashboardDto, CompletedTasksTodayDto, EmployeeDashboardDto, InProgressUpdatedTodayDto, PendingCloseRequestDto } from 'app/core/models/dashboard/dashboard.model';
 import { AuthService } from 'app/core/services/auth.service';
+import { TaskStatusPopupComponent } from './task-status-popup.component';
 
 
 @Component({
@@ -48,7 +49,8 @@ export class DashboardComponent {
 
   cards: any[] = [];
   tasks: any[] = [];
-  constructor(private translate: TranslateService, private dashboardService: DashboardService, private authService: AuthService
+  constructor(private translate: TranslateService, private dashboardService: DashboardService, private authService: AuthService,
+    private modalService: NgbModal
   ) {
     console.log('DashboardComponent');
     this.translate.use('ar');
@@ -107,7 +109,9 @@ export class DashboardComponent {
         <line x1="12" y1="8" x2="12" y2="12"></line>
         <line x1="12" y1="16" x2="12.01" y2="16"></line>
       </svg>
-    `
+    `,
+        clickable: true,
+        status: 'Overdue'
         },
         {
           title: 'DASHBOARD.ACTIVE_TASKS',
@@ -119,7 +123,11 @@ export class DashboardComponent {
            class="feather feather-activity text-warning">
         <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
       </svg>
-    `
+    `,
+
+        clickable: true,
+        status: 'Active'
+
         },
         {
           title: 'DASHBOARD.TOTAL_EMPLOYEES',
@@ -133,7 +141,7 @@ export class DashboardComponent {
         <path d="M7 21v-2a4 4 0 0 1 3-3.87"></path>
         <circle cx="12" cy="7" r="4"></circle>
       </svg>
-    `
+    `,
         },
         {
           title: 'DASHBOARD.COMPLETED_TASKS',
@@ -146,7 +154,10 @@ export class DashboardComponent {
         <path d="M9 12l2 2 4-4"></path>
         <circle cx="12" cy="12" r="10"></circle>
       </svg>
-    `
+    `,
+        clickable: true,
+        status: 'Completed'
+
         }
       ];
 
@@ -403,5 +414,21 @@ export class DashboardComponent {
     { header: 'Priority', field: 'Priority', tableHeadColumn: 'wd-lg-20p' },
     { header: 'Status', field: 'Status', tableHeadColumn: 'wd-lg-20p' },
   ];
+
+openCard(card: any) {
+  if (!card.clickable || !card.status) return;
+
+  this.dashboardService
+    .getAdminTasksByStatus(card.status)
+    .subscribe(res => {
+
+      const modalRef = this.modalService.open(TaskStatusPopupComponent, {
+        size: 'lg',
+         centered: true
+      });
+
+      modalRef.componentInstance.tasks = res.data;
+    });
+}
 
 }

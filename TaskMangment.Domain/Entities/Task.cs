@@ -23,7 +23,10 @@ namespace TaskMangment.Domain.Entities
         public DateTime? DueDate { get; set; }
         public int? AssignedByEmployeeId { get; set; }
         public WorkTaskStatus  Status { get; set; } = WorkTaskStatus.New;
-        //public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime? ClosedAt { get; set; }
+        public int? ClosedByUserId { get; set; }
+        public CloseReason? CloseReason { get; set; }
+
 
         [ForeignKey(nameof(CompanyId))] public Company Company { get; set; }
 

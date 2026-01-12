@@ -21,6 +21,14 @@ export enum CommentAllowPeriod {
   Monthly = 30
 }
 
+ export enum CloseReason
+ {
+     Auto = 1,
+Manual = 2,
+Rejected = 3,
+Admin = 4,
+ }
+
 
 
 export interface TaskAddEdit {
@@ -58,6 +66,9 @@ export interface TaskGet {
   penaltyAtMaxWarnings?: number;
   penaltyOnAutoClose?: number;
   penaltyOnStopComment? : number;
+  ClosedAt? : string
+ ClosedByUserId? :number
+ CloseReason? : CloseReason 
 }
 
 export interface TaskSummary {

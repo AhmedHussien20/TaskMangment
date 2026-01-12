@@ -186,6 +186,9 @@ namespace TaskMangment.Infrastructure.Services
 
                 var task = request.TaskAssignment.Task;
                 task.Status = WorkTaskStatus.Closed;
+                task.ClosedAt = DateTime.UtcNow;
+                task.ClosedByUserId = reviewerId;
+                task.CloseReason = CloseReason.Manual;
 
                 var assignedEmployeeIds = await _taskAssignmentRepo
                     .GetAll(a => a.TaskId == task.Id && a.IsActive)

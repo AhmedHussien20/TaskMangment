@@ -62,7 +62,8 @@ export class TaskBasicInfoComponent implements OnChanges {
             penaltyOnStopComment: this.taskInfo.penaltyOnStopComment,
             createdDate:this.taskInfo.createdDate,
             dueDate: this.taskInfo.dueDate,
-            assignedByName: this.taskInfo.assignedByName
+            assignedByName: this.taskInfo.assignedByName,
+           // closedAt: this.taskInfo.ClosedAt
           });
         }
       },
