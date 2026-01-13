@@ -15,9 +15,11 @@ import {
   TranslateStore,
 } from '@ngx-translate/core';
 import { DashboardService } from 'app/core/services/dashboar.service';
-import { AdminDashboardDto, CompletedTasksTodayDto, EmployeeDashboardDto, InProgressUpdatedTodayDto, PendingCloseRequestDto } from 'app/core/models/dashboard/dashboard.model';
+import { AdminDashboardDto, AdminKpisExtendedDto, CompletedTasksTodayDto, EmployeeDashboardDto, InProgressUpdatedTodayDto, PendingCloseRequestDto } from 'app/core/models/dashboard/dashboard.model';
 import { AuthService } from 'app/core/services/auth.service';
 import { TaskStatusPopupComponent } from './task-status-popup.component';
+import { PeriodDto, PeriodType } from 'app/models/period-type.model';
+import { FormsModule } from '@angular/forms';
 
 
 @Component({
@@ -33,7 +35,8 @@ import { TaskStatusPopupComponent } from './task-status-popup.component';
     SpkDashboardComponent,
     SpkReusableTablesComponent,
     CommonModule,
-    TranslateModule
+    TranslateModule,
+    FormsModule
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
@@ -46,8 +49,21 @@ export class DashboardComponent {
   todayInProgressTasks: InProgressUpdatedTodayDto[] = [];
   completedTasksToday: CompletedTasksTodayDto[] = [];
   pendingCloseRequests: PendingCloseRequestDto[] = [];
+  periodOptions = [
+    { label: 'Today', value: 'Day' },
+    { label: 'This Month', value: 'Month' },
+    { label: 'This Year', value: 'Year' }
+  ];
 
-  cards: any[] = [];
+  selectedPeriod: PeriodType = 'Day';
+
+  currentPeriod: PeriodDto = { type: 'Day' };
+
+  adminKpis!: AdminKpisExtendedDto;
+  kpiCards: any[] = [];
+
+
+  statCards: any[] = [];
   tasks: any[] = [];
   constructor(private translate: TranslateService, private dashboardService: DashboardService, private authService: AuthService,
     private modalService: NgbModal
@@ -59,6 +75,7 @@ export class DashboardComponent {
     const user = this.authService.getCurrentUser();
     const userLevel = this.authService.getRoleLevel() ?? 0;
     if (userLevel >= 50) {
+      this.loadAdminKpis();
       this.loadAdminDashboard();
       this.loadTodayInProgressTasks();
       this.loadCompletedTasksToday();
@@ -71,7 +88,7 @@ export class DashboardComponent {
 
   private loadCompletedTasksToday() {
     this.dashboardService
-      .getAdminCompletedTasksToday()
+      .getAdminCompletedTasksToday(this.currentPeriod)
       .subscribe(res => {
         this.completedTasksToday = res.data ?? [];
       });
@@ -79,7 +96,7 @@ export class DashboardComponent {
 
   private loadPendingCloseRequests() {
     this.dashboardService
-      .getAdminPendingCloseRequests()
+      .getAdminPendingCloseRequests(this.currentPeriod)
       .subscribe(res => {
         this.pendingCloseRequests = res.data ?? [];
       });
@@ -87,17 +104,100 @@ export class DashboardComponent {
 
   private loadTodayInProgressTasks() {
     this.dashboardService
-      .getAdminInProgressUpdatedToday()
+      .getAdminInProgressUpdatedToday(this.currentPeriod)
       .subscribe(res => {
         this.todayInProgressTasks = res.data ?? [];
       });
   }
+  onPeriodChanged() {
+    this.currentPeriod = {
+      type: this.selectedPeriod
+    };
+
+    this.reloadDashboard();
+  }
+  private loadAdminKpis() {
+    this.dashboardService.getAdminKpis(this.currentPeriod).subscribe(res => {
+      this.adminKpis = res.data;
+      this.buildAdminKpiCards();
+    });
+  }
+
+  private buildAdminKpiCards() {
+    this.kpiCards = [
+      {
+        title: 'DASHBOARD.AVG_COMPLETION_TIME',
+        value: (this.adminKpis.averageCompletionHours / 24).toFixed(1) + ' Days',
+        svg: `
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+     viewBox="0 0 24 24" fill="none" stroke="currentColor"
+     stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+     class="feather feather-clock text-primary">
+  <circle cx="12" cy="12" r="10"></circle>
+  <polyline points="12 6 12 12 16 14"></polyline>
+</svg>
+`,
+      },
+      {
+        title: 'DASHBOARD.ON_TIME_RATE',
+        value: this.adminKpis.onTimeRatePercent.toFixed(0) + '%',
+        svg: `
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+     viewBox="0 0 24 24" fill="none" stroke="currentColor"
+     stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+     class="feather feather-trending-up text-success">
+  <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+  <polyline points="17 6 23 6 23 12"></polyline>
+</svg>
+`
+      },
+      {
+        title: 'DASHBOARD.HIGH_PRIORITY',
+        value: this.adminKpis.highPriorityOpenTasks,
+        svg: `
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+     viewBox="0 0 24 24" fill="none" stroke="currentColor"
+     stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+     class="feather feather-flag text-danger">
+  <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path>
+  <line x1="4" y1="22" x2="4" y2="15"></line>
+</svg>
+`
+      },
+      {
+        title: 'DASHBOARD.PENALTIES',
+        value: this.adminKpis.penaltiesThisMonth + ' SAR',
+        svg:`
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+     viewBox="0 0 24 24" fill="none" stroke="currentColor"
+     stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+     class="feather feather-dollar-sign text-danger">
+  <line x1="12" y1="1" x2="12" y2="23"></line>
+  <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+</svg>
+`
+      }
+    ];
+  }
+
+
+  private reloadDashboard() {
+    if (this.isAdmin) {
+      this.loadAdminKpis();
+      this.loadAdminDashboard();
+      this.loadTodayInProgressTasks();
+      this.loadCompletedTasksToday();
+      this.loadPendingCloseRequests();
+    } else {
+      this.loadEmployeeDashboard();
+    }
+  }
 
   private loadAdminDashboard() {
-    this.dashboardService.getAdminDashboard().subscribe(res => {
+    this.dashboardService.getAdminDashboard(this.currentPeriod).subscribe(res => {
       this.adminData = res.data;
       this.topDelayedEmployees = res.data.topDelayedEmployees ?? [];
-      this.cards = [
+      this.statCards = [
         {
           title: 'DASHBOARD.OVERDUE_TASKS',
           value: this.adminData.kpis.overdueTasks,
@@ -110,8 +210,8 @@ export class DashboardComponent {
         <line x1="12" y1="16" x2="12.01" y2="16"></line>
       </svg>
     `,
-        clickable: true,
-        status: 'Overdue'
+          clickable: true,
+          status: 'Overdue'
         },
         {
           title: 'DASHBOARD.ACTIVE_TASKS',
@@ -125,8 +225,8 @@ export class DashboardComponent {
       </svg>
     `,
 
-        clickable: true,
-        status: 'Active'
+          clickable: true,
+          status: 'Active'
 
         },
         {
@@ -155,8 +255,8 @@ export class DashboardComponent {
         <circle cx="12" cy="12" r="10"></circle>
       </svg>
     `,
-        clickable: true,
-        status: 'Completed'
+          clickable: true,
+          status: 'Completed'
 
         }
       ];
@@ -170,7 +270,7 @@ export class DashboardComponent {
     this.dashboardService.getEmployeeDashboard().subscribe(res => {
       this.employeeData = res.data;
 
-      this.cards = [
+      this.statCards = [
         {
           title: 'DASHBOARD.MY_ACTIVE_TASKS',
           value: this.employeeData.kpis.myActiveTasks,
@@ -415,20 +515,20 @@ export class DashboardComponent {
     { header: 'Status', field: 'Status', tableHeadColumn: 'wd-lg-20p' },
   ];
 
-openCard(card: any) {
-  if (!card.clickable || !card.status) return;
+  openCard(card: any) {
+    if (!card.clickable || !card.status) return;
 
-  this.dashboardService
-    .getAdminTasksByStatus(card.status)
-    .subscribe(res => {
+    this.dashboardService
+      .getAdminTasksByStatus(card.status)
+      .subscribe(res => {
 
-      const modalRef = this.modalService.open(TaskStatusPopupComponent, {
-        size: 'lg',
-         centered: true
+        const modalRef = this.modalService.open(TaskStatusPopupComponent, {
+          size: 'lg',
+          centered: true
+        });
+
+        modalRef.componentInstance.tasks = res.data;
       });
-
-      modalRef.componentInstance.tasks = res.data;
-    });
-}
+  }
 
 }

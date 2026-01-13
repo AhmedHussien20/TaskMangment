@@ -23,7 +23,14 @@
     "DUE_SOON": "مهام أوشكت على الانتهاء",
     "MY_WARNINGS": "تحذيراتي",
     "TASK_PROGRESS": "نسبة الإنجاز",
-    "MY_ACTIVE_TASKS": "مهامي النشطة"
+    "MY_ACTIVE_TASKS": "مهامي النشطة",
+     "PENALTIES": "الخصومات",
+    "HIGH_PRIORITY": "المهام الحرجة",
+    "ON_TIME_RATE": "نسبة الالتزام بالمواعيد",
+    "AVG_COMPLETION_TIME": "متوسط وقت إنجاز المهمة",
+
+    "DAYS": "يوم",
+    "HOURS": "ساعة"
   },
   "MENU": {
     "HOME": "الرئيسية",

@@ -9,9 +9,12 @@ export class ApiService {
 
   constructor(private http: HttpClient) {}
 
-  get<T>(service: string, endpoint: string) {
-    return this.http.get<T>(`${this.baseUrl}/${service}/${endpoint}`);
-  }
+ get<T>(service: string, endpoint: string, params?: any): Observable<T> {
+  return this.http.get<T>(`${this.baseUrl}/${service}/${endpoint}`, {
+    params: params
+  });
+}
+
 
   post<T>(service: string, endpoint: string, body: any) {
     return this.http.post<T>(`${this.baseUrl}/${service}/${endpoint}`, body);
