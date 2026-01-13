@@ -494,7 +494,9 @@
     "ACHIEVEMENT_INFO": "Your achievement percentage will be sent to the concerned authority.",
     "PERCENTAGE_SUCCESS": "Percentage sent successfully",
     "INVALID_PERCENT": "Enter true percentage",
-    "STATUS_INPROGRESS": "Inprogress"
+    "STATUS_INPROGRESS": "Inprogress",
+    "CLOSED_AT" : "Closed at", 
+    "DURATION" : "Work duration"
   },
   "EMPLOYEE": {
     "LIST_TITLE": "Employee List",

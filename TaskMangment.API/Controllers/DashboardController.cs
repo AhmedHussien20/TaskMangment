@@ -73,7 +73,26 @@ namespace TaskMangment.API.Controllers
             return Success(result.Data);
         }
 
+        [HttpGet("admin/discounts")]
+        public async Task<IActionResult> GetDiscounts([FromQuery] PeriodDto period)
+        {
+            var result = await _adminService.GetDiscountsAsync(this.CompanyId, period);
+            return Success(result.Data);
+        }
 
+        [HttpGet("admin/high-priority-tasks")]
+        public async Task<IActionResult> GetHighPriorityTasks()
+        {
+            var result = await _adminService.GetHighPriorityTasksAsync(this.CompanyId);
+            return Success(result.Data);
+        }
+
+        [HttpGet("admin/completed-tasks-details")]
+        public async Task<IActionResult> GetCompletedTasksDetails([FromQuery] PeriodDto period)
+        {
+            var result = await _adminService.GetCompletedTasksDetailsAsync(this.CompanyId, period);
+            return Success(result.Data);
+        }
     }
 
 }

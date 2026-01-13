@@ -1,8 +1,9 @@
-﻿ 
+﻿
 using Microsoft.EntityFrameworkCore;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Dashboards.Admin;
-using TaskMangment.Application.DTOs; 
+using TaskMangment.Application.DTOs;
+using TaskMangment.Application.DTOs.TaskDTOs;
 using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
@@ -114,7 +115,7 @@ namespace TaskMangment.Infrastructure.Services
             }
 
 
-            public async Task<ApiResponse<List<UpdatedTodayTaskDto>>>GetTodayUpdatedInProgressTasksAsync(int companyId, PeriodDto period)
+            public async Task<ApiResponse<List<UpdatedTodayTaskDto>>> GetTodayUpdatedInProgressTasksAsync(int companyId, PeriodDto period)
             {
                 var range = PeriodHelper.GetRange(period);
 
@@ -195,7 +196,7 @@ namespace TaskMangment.Infrastructure.Services
             }
 
 
-            public async Task<ApiResponse<List<PendingCloseRequestTaskDto>>>GetPendingCloseRequestsAsync(int companyId, PeriodDto period)
+            public async Task<ApiResponse<List<PendingCloseRequestTaskDto>>> GetPendingCloseRequestsAsync(int companyId, PeriodDto period)
             {
                 var range = PeriodHelper.GetRange(period);
 
@@ -327,6 +328,79 @@ namespace TaskMangment.Infrastructure.Services
                 };
 
                 return ApiResponse<AdminKpisExtendedDto>.Ok(dto);
+            }
+
+            public async Task<ApiResponse<List<DiscountGetDto>>> GetDiscountsAsync(int companyId, PeriodDto period)
+            {
+                var range = PeriodHelper.GetRange(period);
+
+                var discounts = await _deductionRepo
+                    .GetAll(d =>
+                        d.Employee.CompanyId == companyId &&
+                        d.CreatedDate >= range.Start &&
+                        d.CreatedDate <= range.End && d.Amount > 0)
+                    .Select(d => new DiscountGetDto
+                    {
+                        EmployeeName = d.Employee.FullName,
+                        TaskTitle = d.Task.Title,
+                        CreatedDate = d.CreatedDate,
+                        Reason = d.Reason,
+                        Amount = d.Amount
+                    })
+                    .OrderByDescending(d => d.CreatedDate)
+                    .ToListAsync();
+
+                return ApiResponse<List<DiscountGetDto>>.Ok(discounts);
+            }
+
+
+            public async Task<ApiResponse<List<HighPriorityTaskDto>>> GetHighPriorityTasksAsync(int companyId)
+            {
+                var tasks = await _taskRepo
+                    .GetAll(t =>
+                        t.CompanyId == companyId &&
+                        t.Priority == TaskPriority.High &&
+                        (t.Status == WorkTaskStatus.New || t.Status == WorkTaskStatus.InProgress))
+                    .Select(t => new HighPriorityTaskDto
+                    {
+                        TaskTitle = t.Title,
+                        Employees = t.Assignments.Where(a => a.IsActive).Select(a => a.Employee.FullName).ToList(),
+                        Status = t.Status,
+                        StatusText = t.Status.ToString(),
+                        DueDate = t.DueDate
+                    })
+                    .OrderBy(t => t.DueDate)
+                    .ToListAsync();
+
+                return ApiResponse<List<HighPriorityTaskDto>>.Ok(tasks);
+            }
+
+            public async Task<ApiResponse<List<CompletedTaskDetailDto>>> GetCompletedTasksDetailsAsync(int companyId, PeriodDto period)
+            {
+                var range = PeriodHelper.GetRange(period);
+
+                var tasks = await _taskRepo
+     .GetAll(t =>
+         t.CompanyId == companyId &&
+         t.ClosedAt != null &&
+         t.ClosedAt >= range.Start &&
+         t.ClosedAt <= range.End)
+     .Select(t => new CompletedTaskDetailDto
+     {
+         TaskTitle = t.Title,
+         EmployeeNames = t.Assignments
+                         .Where(a => a.IsActive)
+                         .Select(a => a.Employee.FullName)
+                         .ToList(),
+         CreatedAt = t.CreatedDate,
+         ClosedAt = t.ClosedAt.Value,
+         DurationHours = EF.Functions.DateDiffHour(t.CreatedDate, t.ClosedAt.Value)
+     })
+     .OrderByDescending(t => t.ClosedAt)
+     .ToListAsync();
+
+
+                return ApiResponse<List<CompletedTaskDetailDto>>.Ok(tasks);
             }
 
 

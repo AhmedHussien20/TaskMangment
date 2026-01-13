@@ -1,150 +1,130 @@
-<app-page-header [title]="'DASHBOARD.WELCOME' | translate" [title1]="['DASHBOARD.HOME' | translate]"
+<app-page-header 
+    [title]="'DASHBOARD.WELCOME' | translate" 
+    [title1]="['DASHBOARD.HOME' | translate]"
     [activeitem]="'DASHBOARD.HOME' | translate">
 </app-page-header>
 
 <div class="d-flex justify-content-end mb-3">
-    <ng-select [items]="periodOptions" bindLabel="label" bindValue="value" [(ngModel)]="selectedPeriod"
-        (change)="onPeriodChanged()" [clearable]="false" style="width: 200px;">
+    <ng-select 
+        [items]="periodOptions" 
+        bindLabel="label" 
+        bindValue="value" 
+        [(ngModel)]="selectedPeriod"
+        (change)="onPeriodChanged()" 
+        [clearable]="false" 
+        style="width: 200px;">
     </ng-select>
 </div>
 
-<!--Row-->
 <div class="row row-sm">
-    <div class="row row-sm">
-        @for (card of statCards; track $index) {
-        <div class="col-12 col-md-6 col-xl-3">
-            <div (click)="openCard(card)" style="cursor: pointer;">
-                <spk-dashboard [card]="card"></spk-dashboard>
-            </div>
-        </div>
-        }
-        <div class="row row-sm">
-            @for (card of kpiCards; track $index) {
-            <div class="col-12 col-md-6 col-xl-3">
-                <spk-dashboard [card]="card"></spk-dashboard>
-            </div>
-            }
+
+    <div class="col-12 col-md-6 col-xl-3" *ngFor="let card of statCards; let i = index">
+        <div (click)="openCard(card)" style="cursor: pointer;">
+            <spk-dashboard [card]="card"></spk-dashboard>
         </div>
     </div>
-    <div class="col-sm-12 col-lg-12 col-xl-8">
-        <div class="row row-sm" *ngIf="isAdmin">
-            <div class="col-12 col-xl-6">
-                <div class="card custom-card overflow-hidden">
-                    <div class="card-body">
-                        <div id="project">
-                            <div class="card custom-card mt-4" *ngIf="topDelayedEmployees.length">
-                                <div class="card-header border-bottom-0 pb-0">
-                                    <label class="main-content-label">
-                                        {{ 'DASHBOARD.TOP_DELAYED_EMPLOYEES' | translate }}
-                                    </label>
-                                    <span class="d-block fs-12 text-muted">
-                                        {{ 'DASHBOARD.TOP_DELAYED_EMPLOYEES_DESC' | translate }}
-                                    </span>
-                                </div>
 
-                                <div class="card-body">
-                                    <ul class="list-group list-group-flush">
-                                        <li class="list-group-item d-flex justify-content-between align-items-center"
-                                            *ngFor="let emp of topDelayedEmployees">
+    <div class="col-12 col-md-6 col-xl-3" *ngFor="let card of kpiCards; let i = index">
+        <div (click)="openCard(card)" style="cursor: pointer;">
+            <spk-dashboard [card]="card"></spk-dashboard>
+        </div>
+    </div>
 
-                                            <div>
-                                                <strong>{{ emp.employeeName }}</strong>
-                                                <div class="text-muted fs-12">
-                                                    ID: {{ emp.employeeId }}
-                                                </div>
-                                            </div>
+</div>
 
-                                            <span class="badge bg-danger rounded-pill">
-                                                {{ emp.delayedTasksCount }}
-                                            </span>
+<!-- Admin Section -->
+<div class="row row-sm" *ngIf="isAdmin">
 
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
-            </div><!-- col end -->
-            <div class="col-sm-12 col-md-6 col-lg-6 col-xl-6">
-                <div class="card custom-card overflow-hidden">
-
-                    <div class="card-header d-block border-bottom-0 pb-0">
+    <!-- Top Delayed Employees -->
+    <div class="col-12 col-xl-6">
+        <div class="card custom-card overflow-hidden" *ngIf="topDelayedEmployees.length">
+            <div class="card-header border-bottom-0 pb-0">
+                <label class="main-content-label">
+                    {{ 'DASHBOARD.TOP_DELAYED_EMPLOYEES' | translate }}
+                </label>
+                <span class="d-block fs-12 text-muted">
+                    {{ 'DASHBOARD.TOP_DELAYED_EMPLOYEES_DESC' | translate }}
+                </span>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between align-items-center"
+                        *ngFor="let emp of topDelayedEmployees">
                         <div>
-                            <div class="d-md-flex">
-                                <label class="main-content-label my-auto pt-2">
-                                    {{ 'DASHBOARD.TODAY_INPROGRESS_TASKS' | translate }}
-                                </label>
+                            <strong>{{ emp.employeeName }}</strong>
+                            <div class="text-muted fs-12">
+                                ID: {{ emp.employeeId }}
                             </div>
-                            <span class="d-block fs-12 mt-2 mb-0 text-muted">
-                                {{ 'DASHBOARD.TODAY_INPROGRESS_DESC' | translate }}
-                            </span>
                         </div>
-                    </div>
+                        <span class="badge bg-danger rounded-pill">
+                            {{ emp.delayedTasksCount }}
+                        </span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
 
-                    <div class="card-body pt-0">
-                        <div class="table-responsive">
-                            <table class="table table-hover mb-0 text-nowrap">
-                                <thead>
-                                    <tr>
-                                        <th>{{ 'TASK.TITLE' | translate }}</th>
-                                        <th>{{ 'TASK.UPDATED_BY' | translate }}</th>
-                                        <th>{{ 'TASK.DUE_DATE' | translate }}</th>
-                                        <th>{{ 'TASK.UPDATED_AT' | translate }}</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr *ngFor="let task of todayInProgressTasks">
-                                        <td>{{ task.title }}</td>
-                                        <td>{{ task.updatedBy }}</td>
-                                        <td>{{ task.dueDate | date:'yyyy-MM-dd' }}</td>
-                                        <td>{{ task.updatedAt | date:'HH:mm' }}</td>
-                                    </tr>
-
-                                    <tr *ngIf="!todayInProgressTasks.length">
-                                        <td colspan="4" class="text-center text-muted">
-                                            {{ 'DASHBOARD.NO_TASKS_TODAY' | translate }}
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
+    <!-- Today In Progress Tasks -->
+    <div class="col-12 col-xl-6">
+        <div class="card custom-card overflow-hidden">
+            <div class="card-header d-block border-bottom-0 pb-0">
+                <div>
+                    <label class="main-content-label my-auto pt-2">
+                        {{ 'DASHBOARD.TODAY_INPROGRESS_TASKS' | translate }}
+                    </label>
+                    <span class="d-block fs-12 mt-2 mb-0 text-muted">
+                        {{ 'DASHBOARD.TODAY_INPROGRESS_DESC' | translate }}
+                    </span>
                 </div>
             </div>
+            <div class="card-body pt-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 text-nowrap">
+                        <thead>
+                            <tr>
+                                <th>{{ 'TASK.TITLE' | translate }}</th>
+                                <th>{{ 'TASK.UPDATED_BY' | translate }}</th>
+                                <th>{{ 'TASK.DUE_DATE' | translate }}</th>
+                                <th>{{ 'TASK.UPDATED_AT' | translate }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let task of todayInProgressTasks">
+                                <td>{{ task.title }}</td>
+                                <td>{{ task.updatedBy }}</td>
+                                <td>{{ task.dueDate | date:'yyyy-MM-dd' }}</td>
+                                <td>{{ task.updatedAt | date:'HH:mm' }}</td>
+                            </tr>
+                            <tr *ngIf="!todayInProgressTasks.length">
+                                <td colspan="4" class="text-center text-muted">
+                                    {{ 'DASHBOARD.NO_TASKS_TODAY' | translate }}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 
-
-
-            <!-- <div class="col-lg-12">
-                <app-generic-module-permission [modulePermissions]="modulePermissions"/>
-                <app-generic-module-availability [modules]="modulePermissions"/>
-            </div> -->
-            <!-- col end -->
-        </div><!-- Row end -->
-    </div><!-- col end -->
-    <div class="col-sm-12 col-lg-12 col-xl-4 mt-xl-4" *ngIf="isAdmin">
-        <div class="card custom-card card-dashboard-calendar">
-
+    <!-- Completed Today -->
+    <div class="col-12 col-xl-4 mt-xl-4">
+        <div class="card custom-card card-dashboard-calendar" *ngIf="completedTasksToday.length">
             <label class="main-content-label mb-2 pt-1">
                 {{ 'DASHBOARD.COMPLETED_TODAY' | translate }}
             </label>
-
             <span class="d-block fs-12 mb-2 text-muted">
                 {{ 'DASHBOARD.COMPLETED_TODAY_DESC' | translate }}
             </span>
 
             <spk-reusable-tables [tableClass]="'table  m-b-0 transcations mt-2'" [showCheckbox]="false">
-
-                @for (emp of completedTasksToday; track emp.employeeId) {
-                <tr>
+                <tr *ngFor="let emp of completedTasksToday">
                     <td class="wd-5p">
                         <div class="main-img-user avatar-md">
                             <img alt="avatar" class="rounded-circle me-3" [src]="emp.employeeImageUrl">
                         </div>
                     </td>
-
                     <td>
                         <div class="d-flex align-middle ms-3">
                             <div class="d-inline-block">
@@ -155,7 +135,6 @@
                             </div>
                         </div>
                     </td>
-
                     <td class="text-end">
                         <div class="d-inline-block">
                             <h6 class="mb-2 fs-15 font-weight-semibold">
@@ -167,19 +146,14 @@
                         </div>
                     </td>
                 </tr>
-                }
 
-                @if (!completedTasksToday.length) {
-                <tr>
+                <tr *ngIf="!completedTasksToday.length">
                     <td colspan="3" class="text-center text-muted py-3">
                         {{ 'DASHBOARD.NO_COMPLETED_TODAY' | translate }}
                     </td>
                 </tr>
-                }
-
             </spk-reusable-tables>
         </div>
+    </div>
 
-
-    </div><!-- col end -->
-</div><!-- Row end -->
+</div>

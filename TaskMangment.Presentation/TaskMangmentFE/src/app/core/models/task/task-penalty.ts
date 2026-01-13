@@ -11,7 +11,7 @@ export interface DiscountGetDto {
   taskTitle?: string;
   reason: string;
   amount: number;
- CreatedDate: string;
+  createdDate: string;
  autoDiscount: boolean;
 }
 
