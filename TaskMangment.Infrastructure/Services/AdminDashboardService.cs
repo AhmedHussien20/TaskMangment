@@ -289,9 +289,14 @@ namespace TaskMangment.Infrastructure.Services
                     t.ClosedAt >= range.Start &&
                     t.ClosedAt <= range.End);
 
-                var averageCompletionHours = await closedTasksQuery
-                    .Select(t => EF.Functions.DateDiffHour(t.CreatedDate, t.ClosedAt!.Value))
-                    .AverageAsync();
+                double averageCompletionHours = 0;
+
+                if (await closedTasksQuery.AnyAsync())
+                {
+                    averageCompletionHours = await closedTasksQuery
+                        .Select(t => EF.Functions.DateDiffHour(t.CreatedDate, t.ClosedAt!.Value))
+                        .AverageAsync();
+                }
 
                 var totalClosedTasks = await closedTasksQuery.CountAsync();
 

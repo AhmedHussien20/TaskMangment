@@ -71,3 +71,10 @@ export interface TaskStatusDto {
     dueDate: Date | null;
     employees: string[];
 }
+
+export interface AdminKpisExtendedDto {
+  averageCompletionHours: number;
+  onTimeRatePercent: number;
+  highPriorityOpenTasks: number;
+  penaltiesThisMonth: number;
+}

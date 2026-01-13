@@ -24,7 +24,13 @@
     "DUE_SOON": "Due Soon",
     "MY_WARNINGS": "My Warnings",
     "MY_TASKS": "My Tasks",
-    "TASK_PROGRESS": "Progress"
+    "TASK_PROGRESS": "Progress",
+    "PENALTIES": "Penalties",
+    "HIGH_PRIORITY": "High Priority Tasks",
+    "ON_TIME_RATE": "On-Time Rate",
+    "AVG_COMPLETION_TIME": "Avg Completion Time",
+    "DAYS": "Days",
+    "HOURS": "Hours"
   },
   "MENU": {
     "HOME": "Home",
@@ -32,8 +38,8 @@
     "EDUCATION": "Education",
     "EMPLOYEES": "Employees",
     "EMPLOYMENT": "Operations",
-    "REPORTS" : "Reports",
-    "LEAVES" : "Leaves"
+    "REPORTS": "Reports",
+    "LEAVES": "Leaves"
   },
   "COMMON": {
     "welcome": "Welcome",
@@ -49,8 +55,8 @@
     "DELETE_BUTTON": "Yes, Delete",
     "CANCEL_BUTTON": "Cancel",
     "DELETE_SUCCESS": "Deleted successfully",
-    "LOADING" :"Loading",
-    "APPLY" : "Apply"
+    "LOADING": "Loading",
+    "APPLY": "Apply"
   },
   "validation": {
     "required": "This field is required",
@@ -148,12 +154,11 @@
         "header": "Education",
         "title": "Education"
       },
-      "leaves" : 
-      {
-        "header" : "Leaves",
-        "title" :"Leaves",
-        "leaves_type" : "Leaves types",
-        "Leaves_requests" : "Leaves request"
+      "leaves": {
+        "header": "Leaves",
+        "title": "Leaves",
+        "leaves_type": "Leaves types",
+        "Leaves_requests": "Leaves request"
       }
     },
     "components": {
@@ -231,9 +236,8 @@
     "FILTERS": "Filters",
     "EXPORT": "Export",
     "NO_DATA": "No data available",
-    "EXPORT_PDF" : "Export PDF",
-    "EXPORT_EXCEL" : "Export EXCEL"
-
+    "EXPORT_PDF": "Export PDF",
+    "EXPORT_EXCEL": "Export EXCEL"
   },
   "FORM": {
     "BACK": "Back",
@@ -742,7 +746,6 @@
     "SPECIALIZATION": "Required Specialization",
     "NOTES": "Notes"
   },
-  
   "REPORTS": {
     "TOP_COMMENTERS": "Top Commenters",
     "EMPLOYEE_NAME": "Employee Name",
@@ -771,19 +774,16 @@
     "ON_TIME": "On-Time Tasks",
     "ARCHIVED": "Archived Tasks",
     "TASKS_DISCOUNT": "Task Discounts (Incoming/Outgoing)",
-
-    "TASK_ACTIVITY_REPORT" : "Report of tasks activities",
-    "COMMENT" : "Comment",
-    "COMMENT_DATE" : "Comment date",
-    "COMMENTED_BY" : "Commented by",
+    "TASK_ACTIVITY_REPORT": "Report of tasks activities",
+    "COMMENT": "Comment",
+    "COMMENT_DATE": "Comment date",
+    "COMMENTED_BY": "Commented by",
     "TASK_MOVEMENT_TITLE": "Today's Task Movements (Incoming/Outgoing)",
     "MOVEMENT_TYPE": "Task Type",
     "REPORT_TITLE": "Report Title",
     "OUTGOING": "Outgoing",
     "INCOMING": "Incoming",
-    "TASKS_CLOSING_SOON" : "Closed soon tasks" 
-
-
+    "TASKS_CLOSING_SOON": "Closed soon tasks"
   },
   "LEAVE": {
     "ID": "ID",
@@ -806,7 +806,7 @@
     "REJECTED": "Rejected",
     "LIST_TITLE": "Leave Requests List",
     "SEARCH": "Search",
-    "CREATE_SUCCESS" : "Request sent successfully"
+    "CREATE_SUCCESS": "Request sent successfully"
   },
   "LEAVE_TYPE": {
     "ADD": "Add Leave Type",
@@ -818,9 +818,7 @@
     "PAID_NO": "No",
     "PAID_YES": "Yes",
     "title": "Leave Types List",
-    "CREATE_SUCCESS" : "Leave created successfully",
-    "UPDATE_SUCCESS" :"Leave updated successfully"
+    "CREATE_SUCCESS": "Leave created successfully",
+    "UPDATE_SUCCESS": "Leave updated successfully"
   }
-
-
 }
