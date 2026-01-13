@@ -101,6 +101,72 @@ namespace TaskMangment.Infrastructure.Services
 
             return ApiResponse<EmployeeDashboardDto>.Ok(dto);
         }
+
+        public async Task<ApiResponse<List<TodayCommentTaskDto>>> GetTasksWithoutCommentsTodayAsync(int employeeId)
+        {
+            var today = DateTime.UtcNow.Date;
+
+            var tasks = await _assignmentRepo
+                .GetAll(a =>
+                    a.EmployeeId == employeeId &&
+                    a.IsActive &&
+                    !a.IsClosed &&
+                    a.Task.Comments.All(c => c.CreatedDate < today))
+                .Select(a => new TodayCommentTaskDto
+                {
+                    TaskId = a.TaskId,
+                    Title = a.Task.Title,
+                    Status = a.Task.Status,
+                    StatusText = a.Task.Status.ToString(),
+                    DueDate = a.Task.DueDate,
+                    AssignedBy = a.Task.AssignedBy.FullName,
+                    Employees = a.Task.Assignments
+                                .Where(x => x.IsActive)
+                                .Select(x => x.Employee.FullName)
+                                .ToList()
+                })
+                .OrderBy(a => a.DueDate)
+                .ToListAsync();
+
+            return ApiResponse<List<TodayCommentTaskDto>>.Ok(tasks);
+        }
+
+        public async Task<ApiResponse<List<WarningDto>>> GetWarningsAsync(int employeeId)
+        {
+            var warnings = await _warningRepo
+                .GetAll(w => w.TaskAssignment.EmployeeId == employeeId)
+                .Select(w => new WarningDto
+                {
+                    Id = w.Id,
+                    Reason = w.Reason,
+                    CreatedDate = w.CreatedDate,
+                    TaskTitle = w.TaskAssignment.Task.Title,
+                    TaskStatus = w.TaskAssignment.Task.Status.ToString()
+                })
+                .OrderByDescending(w => w.CreatedDate)
+                .ToListAsync();
+
+            return ApiResponse<List<WarningDto>>.Ok(warnings);
+        }
+        public async Task<ApiResponse<List<DeductionDto>>> GetDeductionsAsync(int employeeId)
+        {
+            var deductions = await _deductionRepo
+                .GetAll(d => d.EmployeeId == employeeId)
+                .Select(d => new DeductionDto
+                {
+                    Id = d.Id,
+                    Amount = d.Amount,
+                    Reason = d.Reason,
+                    CreatedDate = d.CreatedDate
+                })
+                .OrderByDescending(d => d.CreatedDate)
+                .ToListAsync();
+
+            return ApiResponse<List<DeductionDto>>.Ok(deductions);
+        }
+
+
+
     }
 }
 

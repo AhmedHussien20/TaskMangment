@@ -253,7 +253,7 @@ namespace TaskMangment.Infrastructure.Services
 
             _mapper.Map(dto, task);
 
-            if (dto.Status == WorkTaskStatus.Closed)
+            if (dto.Status == WorkTaskStatus.Closed || dto.Status == WorkTaskStatus.Archived)
             {
                 task.ClosedAt = DateTime.UtcNow;
                 task.ClosedByUserId = modifierUser;

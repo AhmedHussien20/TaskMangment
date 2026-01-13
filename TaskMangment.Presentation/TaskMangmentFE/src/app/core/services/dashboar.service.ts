@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { ApiService } from 'app/core/services/api.service';
 import { Observable } from 'rxjs';
 import { BaseResponse } from 'app/models/base.response.model';
-import { AdminDashboardDto, AdminKpisExtendedDto, CompletedTasksTodayDto, EmployeeDashboardDto, InProgressUpdatedTodayDto, PendingCloseRequestDto, TaskStatusDto } from '../models/dashboard/dashboard.model';
+import { AdminDashboardDto, AdminKpisExtendedDto, CompletedTasksTodayDto, DeductionDto, EmployeeDashboardDto, InProgressUpdatedTodayDto, MyTaskDto, PendingCloseRequestDto, TaskStatusDto, TodayCommentTaskDto, WarningDto } from '../models/dashboard/dashboard.model';
 import { PeriodDto } from 'app/models/period-type.model';
 
 @Injectable({
@@ -26,6 +26,19 @@ export class DashboardService {
   getEmployeeDashboard(): Observable<BaseResponse<EmployeeDashboardDto>> {
     return this.api.get<BaseResponse<EmployeeDashboardDto>>(this.service, 'employee');
   }
+
+  getEmployeeWarnings(): Observable<BaseResponse<WarningDto[]>> {
+  return this.api.get<BaseResponse<WarningDto[]>>(this.service, 'employee/warnings');
+}
+
+getEmployeeDeductions(): Observable<BaseResponse<DeductionDto[]>> {
+  return this.api.get<BaseResponse<DeductionDto[]>>(this.service, 'employee/deductions');
+}
+
+
+  getTasksNotCommentToday(): Observable<BaseResponse<TodayCommentTaskDto[]>> { 
+  return this.api.get<BaseResponse<TodayCommentTaskDto[]>>(this.service, 'not-comment-today');
+}
 
 
 

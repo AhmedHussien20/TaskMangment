@@ -22,12 +22,14 @@
     "NO_TASKS_TODAY": "لا توجد مهام محدثة اليوم",
     "DUE_SOON": "مهام أوشكت على الانتهاء",
     "MY_WARNINGS": "تحذيراتي",
+    
     "TASK_PROGRESS": "نسبة الإنجاز",
     "MY_ACTIVE_TASKS": "مهامي النشطة",
      "PENALTIES": "الخصومات",
     "HIGH_PRIORITY": "المهام الحرجة",
     "ON_TIME_RATE": "نسبة الالتزام بالمواعيد",
     "AVG_COMPLETION_TIME": "متوسط وقت إنجاز المهمة",
+    "NOT_COMMENTED_TODAY" : "مهام صادرة لم يعلق عليها اليوم",
 
     "DAYS": "يوم",
     "HOURS": "ساعة"

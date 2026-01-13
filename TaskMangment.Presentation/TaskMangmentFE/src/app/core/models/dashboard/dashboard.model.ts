@@ -39,6 +39,22 @@ export interface EmployeeDashboardDto {
   };
 }
 
+export interface WarningDto {
+  id: number;
+  taskTitle: string
+  reason: string;
+  createdDate: string; 
+  taskStatus: string;
+}
+
+export interface DeductionDto {
+  id: number;
+  amount: number;
+  reason: string;
+  createdDate: string;
+}
+
+
 export interface InProgressUpdatedTodayDto {
   taskId: number;
   title: string;
@@ -77,4 +93,22 @@ export interface AdminKpisExtendedDto {
   onTimeRatePercent: number;
   highPriorityOpenTasks: number;
   penaltiesThisMonth: number;
+}
+export interface MyTaskDto {
+  taskId: number;
+  title: string;
+  status: TaskStatus;
+  dueDate?: string | null;    
+  progressPercent: number;
+  isOverdue?: boolean;    
+}
+
+export interface TodayCommentTaskDto {
+  taskId: number;
+  title: string;
+  status: string;     
+  statusText: string;
+  dueDate?: Date;
+  assignedBy: string;
+  employees: string[];
 }

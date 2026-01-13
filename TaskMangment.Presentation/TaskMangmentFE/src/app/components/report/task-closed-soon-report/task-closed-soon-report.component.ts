@@ -13,6 +13,7 @@ import { ReportPdfService } from 'app/core/services/report-pdf.service';
 import { SimpleEmployee } from 'app/core/models/task/task';
 import { EmployeeService } from 'app/core/services/employee.service';
 import { TasksClosingSoonDto } from 'app/core/models/reports/reports';
+import { AuthService } from 'app/core/services/auth.service';
 
 @Component({
   selector: 'app-task-closed-soon-report',
@@ -53,19 +54,32 @@ export class TaskClosedSoonReportComponent implements OnInit {
   toDate?: string;
 
   isLoading = false;
+  isAdmin = false;
 
   constructor(
     private reportService: ReportListService,
     private reportPdfService: ReportPdfService,
     private toastr: ToastrService,
     private translate: TranslateService,
-    private employeeService: EmployeeService
+    private employeeService: EmployeeService,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
-    this.loadEmployees();
-    this.loadData();
+    const roleLevel = this.authService.getRoleLevel() ?? 0;
+    this.isAdmin = roleLevel >= 50;
+
+    if (this.isAdmin) {
+      this.loadEmployees();
+      this.selectedEmployeeId = undefined; 
+      this.loadData(); 
+    } else {
+      const user = this.authService.getCurrentUser();
+      this.selectedEmployeeId = user.userId;
+      this.loadData();
+    }
   }
+
 
   loadData(): void {
     if (!this.selectedEmployeeId) return;

@@ -40,7 +40,7 @@ namespace TaskMangment.API.Controllers
             DateTime? fromDate,
             DateTime? toDate)
         {
-            var data = await _reportService.GetOnTimeCompletionReportAsync(fromDate, toDate);
+            var data = await _reportService.GetOnTimeCompletionReportAsync(this.Role,this.CurrentUserId,fromDate, toDate);
             return Success(data);
         }
 
@@ -66,7 +66,7 @@ namespace TaskMangment.API.Controllers
         [HttpGet("task-activities")]
         public async Task<IActionResult> GetTaskActivities(DateTime? fromDate,DateTime? toDate)
         {
-            var data = await _reportService.GetTaskActivityReportAsync(fromDate, toDate);
+            var data = await _reportService.GetTaskActivityReportAsync(this.Role, this.CurrentUserId, fromDate, toDate);
             return Success(data);
         }
 

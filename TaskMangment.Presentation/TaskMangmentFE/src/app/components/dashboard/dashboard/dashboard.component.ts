@@ -30,6 +30,8 @@ import { FormsModule } from '@angular/forms';
 import { HighPriorityTasksPopupComponent } from '../dashboard-pop-ups/high-priority-open-tasks-popup';
 import { CompletedTasksPopupComponent } from '../dashboard-pop-ups/average-completion-hours-popup';
 import { DiscountsPopupComponent } from '../dashboard-pop-ups/penalities-details-popup';
+import { EmployeeTasksPopupComponent } from '../employee-dashboard-pop-ups/active-tasks-popup';
+import { WarningsPopupComponent } from '../employee-dashboard-pop-ups/my-warning-popup';
 
 @Component({
   selector: 'app-dashboard',
@@ -70,7 +72,8 @@ export class DashboardComponent {
 
   adminKpis!: AdminKpisExtendedDto;
   kpiCards: any[] = [];
-
+  tasksNotCommentedToday: any[] = [];
+ 
   statCards: any[] = [];
   tasks: any[] = [];
   constructor(
@@ -94,6 +97,8 @@ export class DashboardComponent {
       this.isAdmin = true;
     } else {
       this.loadEmployeeDashboard();
+      this.loadTasksNotCommentToday();
+
     }
   }
 
@@ -197,6 +202,8 @@ export class DashboardComponent {
         clickable: true,
       type: 'penalties'
       },
+      
+      
     ];
   }
 
@@ -211,6 +218,24 @@ export class DashboardComponent {
       this.loadEmployeeDashboard();
     }
   }
+private loadTasksNotCommentToday(): void {
+  this.dashboardService.getTasksNotCommentToday().subscribe(res => {
+    if (res.data && res.data.length) {
+      this.tasksNotCommentedToday = res.data.map(t => ({
+        taskId: t.taskId,
+        name: t.title,
+        status: t.statusText,
+            
+        dueDate: t.dueDate,
+        assignedBy: t.assignedBy,
+        employees: t.employees,    
+      }));
+    } else {
+      this.tasksNotCommentedToday = [];
+    }
+  });
+}
+
 
   private loadAdminDashboard() {
     this.dashboardService
@@ -306,6 +331,8 @@ export class DashboardComponent {
             <line x1="3" y1="18" x2="3.01" y2="18"></line>
           </svg>
         `,
+           clickable: true,
+           type: 'activeTasks'
         },
         {
           title: 'DASHBOARD.DUE_SOON',
@@ -319,6 +346,8 @@ export class DashboardComponent {
             <polyline points="12 6 12 12 16 14"></polyline>
           </svg>
         `,
+        clickable: true,
+
         },
         {
           title: 'DASHBOARD.MY_WARNINGS',
@@ -333,7 +362,28 @@ export class DashboardComponent {
             <line x1="12" y1="17" x2="12.01" y2="17"></line>
           </svg>
         `,
+        clickable: true,
+        type: 'myWarnings'
+
+
         },
+        {
+          title: 'DASHBOARD.PENALTIES',
+          value: this.employeeData.kpis.myPenalties,
+          svg:`
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+     viewBox="0 0 24 24" fill="none" stroke="currentColor"
+     stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+     class="feather feather-dollar-sign text-danger">
+  <line x1="12" y1="1" x2="12" y2="23"></line>
+  <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+   </svg>
+`,
+        clickable: true,
+        type: 'myPenalities'
+
+        },
+        
       ];
 
       this.tasks = this.employeeData.myTasks.map((t) => ({
@@ -344,6 +394,7 @@ export class DashboardComponent {
       }));
     });
   }
+ 
 
   ngOnInit(): void {
     this.translate.use('ar');
@@ -559,6 +610,12 @@ openCard(card: any) {
   else if (card.type === 'penalties') {
     this.openDiscounts();
   }
+  else if (card.type === 'activeTasks') {
+    this.openEmployeeTasksPopup();
+  }
+  else if (card.type === 'myWarnings') {
+    this.openMyWarning();
+  }
 }
 
   openAvgCompletionTasks() {
@@ -594,4 +651,23 @@ openDiscounts() {
       modalRef.componentInstance.discounts = res.data;
     });
 }
+
+openEmployeeTasksPopup() {
+  if (!this.employeeData || !this.employeeData.myTasks) return;
+
+  const modalRef = this.modalService.open(EmployeeTasksPopupComponent, { size: 'lg',centered: true  });
+  modalRef.componentInstance.tasks = this.employeeData.myTasks; 
+}
+
+openMyWarning() {
+  this.dashboardService.getEmployeeWarnings()
+    .subscribe(res => {
+      const modalRef = this.modalService.open(WarningsPopupComponent, { 
+        size: 'lg', 
+        centered: true 
+      });
+      modalRef.componentInstance.warnings = res.data ?? [];
+    });
+}
+
 }

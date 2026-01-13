@@ -36,6 +36,28 @@ namespace TaskMangment.API.Controllers
             return Success(result.Data);
         }
 
+        [HttpGet("employee/warnings")]
+        public async Task<IActionResult> GetEmployeeWarnings()
+        {
+            var result = await _employeeService.GetWarningsAsync(CurrentUserId);
+            return Success(result.Data);
+        }
+
+        [HttpGet("employee/deductions")]
+        public async Task<IActionResult> GetEmployeeDeductions()
+        {
+            var result = await _employeeService.GetDeductionsAsync(CurrentUserId);
+            return Success(result.Data);
+        }
+
+        [HttpGet("not-comment-today")]
+        public async Task<IActionResult> GetTasksWithoutCommentsToday()
+        {
+            var result = await _employeeService.GetTasksWithoutCommentsTodayAsync(CurrentUserId);
+            return Success(result.Data);
+        }
+
+
         [HttpGet("admin/in-progress-updated-today")]
         public async Task<IActionResult> GetTodayUpdatedInProgressTasks([FromQuery] PeriodDto period)
         {

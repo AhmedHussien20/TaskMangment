@@ -11,5 +11,9 @@ namespace TaskMangment.Application.Dashboards.Employee
     public interface IEmployeeDashboardService
     {
         Task<ApiResponse<EmployeeDashboardDto>> GetDashboardAsync(int employeeId);
+        Task<ApiResponse<List<TodayCommentTaskDto>>> GetTasksWithoutCommentsTodayAsync(int employeeId);
+        Task<ApiResponse<List<DeductionDto>>> GetDeductionsAsync(int employeeId);
+        Task<ApiResponse<List<WarningDto>>> GetWarningsAsync(int employeeId);
+
     }
 }

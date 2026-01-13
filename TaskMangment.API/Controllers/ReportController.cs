@@ -11,7 +11,7 @@ using TaskMangment.Infrastructure.SignalR;
 namespace TaskMangment.API.Controllers
 {
     [Route("api/[controller]")]
-    public class ReportController : Controller
+    public class ReportController : BaseController
     {
 
         private readonly ITaskService _taskService;
@@ -61,8 +61,7 @@ namespace TaskMangment.API.Controllers
         [HttpGet("on-time-completion/pdf")]
         public async Task<IActionResult> GetOnTimeCompletionPdf(DateTime? fromDate,DateTime? toDate)
         {
-            var data = await _reportService
-                .GetOnTimeCompletionReportAsync(fromDate, toDate);
+            var data = await _reportService.GetOnTimeCompletionReportAsync(this.Role, this.CurrentUserId, fromDate, toDate);
 
             var report = new OnTimeCompletionPdfReport(data);
             var pdf = report.GeneratePdf();
@@ -96,7 +95,7 @@ namespace TaskMangment.API.Controllers
         [HttpGet("task-activities/pdf")]
         public async Task<IActionResult> GetTaskActivitiesPdf(DateTime? fromDate, DateTime? toDate)
         {
-            var data = await _reportService.GetTaskActivityReportAsync(fromDate, toDate);
+            var data = await _reportService.GetTaskActivityReportAsync(this.Role, this.CurrentUserId, fromDate, toDate);
 
             var report = new TaskActivityPdfReport(data); 
             var pdf = report.GeneratePdf();

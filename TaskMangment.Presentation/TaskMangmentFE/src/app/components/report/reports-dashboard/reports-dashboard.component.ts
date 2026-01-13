@@ -1,9 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core'; // تغيير من Component فقط إلى Component, OnInit
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { SpkDashboardComponent } from 'app/@spk/reusable-dashboard/spk-dashboard/spk-dashboard.component';
 import { PageHeaderComponent } from 'app/shared/components/page-header/page-header.component';
+import { AuthService } from 'app/core/services/auth.service'; // إضافة هذا السطر
 
 interface ReportTile {
   title: string;
@@ -14,17 +15,21 @@ interface ReportTile {
 @Component({
   selector: 'app-reports-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule, TranslateModule, SpkDashboardComponent,PageHeaderComponent],
+  imports: [CommonModule, RouterModule, TranslateModule, SpkDashboardComponent, PageHeaderComponent],
   templateUrl: './reports-dashboard.component.html',
   styleUrls: ['./reports-dashboard.component.css']
 })
-export class ReportsDashboardComponent {
+export class ReportsDashboardComponent implements OnInit { // إضافة implements OnInit
 
   title = 'MENU.REPORTS';
   activeitem = 'MENU.REPORTS';
   breadcrumbs = ['MENU.HOME', 'MENU.REPORTS'];
   isLoading = false;
- REPORT_ICON_SVG = `
+  
+  // تعريف متغير للكروت المصفاة
+  filteredCards: any[] = [];
+  
+  REPORT_ICON_SVG = `
 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
      viewBox="0 0 24 24" fill="none" stroke="currentColor"
      stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
@@ -36,66 +41,90 @@ export class ReportsDashboardComponent {
   <polyline points="10 9 9 9 8 9"></polyline>
 </svg>
 `;
- cards = [
-  {
-    title: 'REPORTS.TOP_COMMENTER',
-    value: '',
-    svg: this.REPORT_ICON_SVG,
-    clickable: true,
-    url: '/report/top-commenter-list'
-  },
-  {
-    title: 'REPORTS.MOST_ASSIGNED',
-    value: '',
-     svg: this.REPORT_ICON_SVG,
-    clickable: true,
-    url: '/report/most-assigned-list'
-  },
-  {
-    title: 'REPORTS.ON_TIME',
-    value: '',
-     svg: this.REPORT_ICON_SVG,
-    clickable: true,
-    url: '/report/on-time-completion-list'
-  },
-  {
-    title: 'REPORTS.ARCHIVED',
-    value: '',
-     svg: this.REPORT_ICON_SVG,
-    clickable: true,
-    url: '/report/archived-tasks-list'
-  },
-  {
-    title: 'REPORTS.TASKS_DISCOUNT',
-    value: '',
-     svg: this.REPORT_ICON_SVG,
-    clickable: true,
-    url: '/report/tasks-discount-list'
-  },
-  {
-    title: 'REPORTS.TASK_ACTIVITY_REPORT',
-    value: '',
-     svg: this.REPORT_ICON_SVG,
-    clickable: true,
-    url: '/report/tasks-comment-activity-list'
-  },
-   {
-    title: 'REPORTS.TASK_MOVEMENT_TITLE',
-    value: '',
-     svg: this.REPORT_ICON_SVG,
-    clickable: true,
-    url: '/report/tasks-today-activity-list'
-  },
-  {
-    title: 'REPORTS.TASKS_CLOSING_SOON',
-    value: '',
-     svg: this.REPORT_ICON_SVG,
-    clickable: true,
-    url: '/report/tasks-closed-soon-list'
-    
+
+  allCards = [
+    {
+      title: 'REPORTS.TOP_COMMENTER',
+      value: '',
+      svg: this.REPORT_ICON_SVG,
+      clickable: true,
+      url: '/report/top-commenter-list'
+    },
+    {
+      title: 'REPORTS.MOST_ASSIGNED',
+      value: '',
+      svg: this.REPORT_ICON_SVG,
+      clickable: true,
+      url: '/report/most-assigned-list'
+    },
+    {
+      title: 'REPORTS.ON_TIME',
+      value: '',
+      svg: this.REPORT_ICON_SVG,
+      clickable: true,
+      url: '/report/on-time-completion-list'
+    },
+    {
+      title: 'REPORTS.ARCHIVED',
+      value: '',
+      svg: this.REPORT_ICON_SVG,
+      clickable: true,
+      url: '/report/archived-tasks-list'
+    },
+    {
+      title: 'REPORTS.TASKS_DISCOUNT',
+      value: '',
+      svg: this.REPORT_ICON_SVG,
+      clickable: true,
+      url: '/report/tasks-discount-list'
+    },
+    {
+      title: 'REPORTS.TASK_ACTIVITY_REPORT',
+      value: '',
+      svg: this.REPORT_ICON_SVG,
+      clickable: true,
+      url: '/report/tasks-comment-activity-list'
+    },
+    {
+      title: 'REPORTS.TASK_MOVEMENT_TITLE',
+      value: '',
+      svg: this.REPORT_ICON_SVG,
+      clickable: true,
+      url: '/report/tasks-today-activity-list'
+    },
+    {
+      title: 'REPORTS.TASKS_CLOSING_SOON',
+      value: '',
+      svg: this.REPORT_ICON_SVG,
+      clickable: true,
+      url: '/report/tasks-closed-soon-list'
+    }
+  ];
+
+  constructor(private authService: AuthService) {}
+
+  ngOnInit(): void {
+    this.filterCardsByRole();
   }
-];
 
+  private filterCardsByRole(): void {
+    const roleLevel = this.authService.getRoleLevel() ?? 0;
+    
+    if (roleLevel >= 70) {
+      this.filteredCards = [...this.allCards];
+    } else {
+      this.filteredCards = this.allCards.filter(card => {
+        
+        
+        const restrictedCards = [
+          'REPORTS.TOP_COMMENTER',
+          'REPORTS.MOST_ASSIGNED',
+          'REPORTS.ARCHIVED'
 
+        ];
+        
+        return !restrictedCards.includes(card.title);
+      });
+    }
+  }
 }
-

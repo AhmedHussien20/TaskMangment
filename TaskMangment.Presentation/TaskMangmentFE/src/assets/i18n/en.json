@@ -30,7 +30,8 @@
     "ON_TIME_RATE": "On-Time Rate",
     "AVG_COMPLETION_TIME": "Avg Completion Time",
     "DAYS": "Days",
-    "HOURS": "Hours"
+    "HOURS": "Hours",
+    "NOT_COMMENTED_TODAY" : "Incoming tasks have no comments today"
   },
   "MENU": {
     "HOME": "Home",
