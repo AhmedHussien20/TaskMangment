@@ -1,5 +1,6 @@
 ﻿
 using TaskMangment.Application.DTOs;
+using TaskMangment.Application.DTOs.TaskDTOs;
 using TaskMangment.Application.Responses;
 
 namespace TaskMangment.Application.Dashboards.Admin
@@ -13,6 +14,10 @@ namespace TaskMangment.Application.Dashboards.Admin
 
         Task<ApiResponse<List<TaskStatusDto>>> GetTasksByStatusAsync(int companyId, string status, PeriodDto period);
         Task<ApiResponse<AdminKpisExtendedDto>> GetKpisAsync(int companyId, PeriodDto period);
+
+        Task<ApiResponse<List<DiscountGetDto>>> GetDiscountsAsync(int companyId, PeriodDto period);
+        Task<ApiResponse<List<HighPriorityTaskDto>>> GetHighPriorityTasksAsync(int companyId);
+        Task<ApiResponse<List<CompletedTaskDetailDto>>> GetCompletedTasksDetailsAsync(int companyId, PeriodDto period);
 
     }
 }

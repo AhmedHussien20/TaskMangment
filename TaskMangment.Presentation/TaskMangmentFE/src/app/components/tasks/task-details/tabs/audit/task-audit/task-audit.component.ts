@@ -110,7 +110,7 @@ export class TaskAuditComponent implements OnInit, OnDestroy {
               type: 'penalty',
               message: `${summary.lastPenalty.amount} - ${summary.lastPenalty.reason}`,
               user: summary.lastPenalty.employeeName || '',
-              date: summary.lastPenalty.CreatedDate
+              date: summary.lastPenalty.createdDate
             };
             this.items.push(penaltyItem);
             this.penaltyItems.push(penaltyItem);

@@ -29,8 +29,8 @@ export class DashboardService {
 
 
 
-  getAdminTasksByStatus(status: 'Active' | 'Overdue' | 'Active'): Observable<BaseResponse<TaskStatusDto[]>> {
-    return this.api.get<BaseResponse<TaskStatusDto[]>>(this.service, `admin/tasks-by-status?status=${status}`);
+  getAdminTasksByStatus(status: 'Active' | 'Overdue' | 'Active',period: PeriodDto): Observable<BaseResponse<TaskStatusDto[]>> {
+    return this.api.get<BaseResponse<TaskStatusDto[]>>(this.service, `admin/tasks-by-status?status=${status}`,period as any);
   }
 
 
@@ -66,5 +66,16 @@ export class DashboardService {
     );
   }
 
+   getAdminDiscounts(period: PeriodDto) {
+    return this.api.get<BaseResponse<any[]>>(this.service, 'admin/discounts', period as any);
+  }
+
+  getAdminHighPriorityTasks() {
+    return this.api.get<BaseResponse<any[]>>(this.service, 'admin/high-priority-tasks');
+  }
+
+  getAdminCompletedTasksDetails(period: PeriodDto) {
+    return this.api.get<BaseResponse<any[]>>(this.service, 'admin/completed-tasks-details', period as any);
+  }
 
 }
