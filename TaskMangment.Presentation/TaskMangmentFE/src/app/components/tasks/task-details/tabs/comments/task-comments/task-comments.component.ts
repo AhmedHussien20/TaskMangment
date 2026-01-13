@@ -54,23 +54,27 @@ export class TaskCommentsComponent implements OnInit, OnDestroy {
   }
 
   timeAgo(dateString: string): string {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMins / 60);
-    const diffDays = Math.floor(diffHours / 24);
+  if (!dateString) return '';
+  
+  const date = new Date(dateString);
+  const now = new Date();
 
-    if (diffDays === 0) {
+  const diffMs = now.getTime() - date.getTime(); 
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffDays === 0) {
     if (diffHours > 0) 
       return this.translate.instant('TASK.HOURS_AGO', { value: diffHours });
     if (diffMins > 0) 
       return this.translate.instant('TASK.MINUTES_AGO', { value: diffMins });
     return this.translate.instant('TASK.NOW');
   }
+
   return this.translate.instant('TASK.DAYS_AGO', { value: diffDays });
-  }
+}
+
 
   ngOnDestroy(): void {
     this.sub?.unsubscribe();

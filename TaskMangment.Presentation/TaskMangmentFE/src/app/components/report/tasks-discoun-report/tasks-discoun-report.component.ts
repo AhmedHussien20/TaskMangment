@@ -12,6 +12,7 @@ import { ReportPdfService } from 'app/core/services/report-pdf.service';
 import { TaskDiscountReportDto, TaskMovementType } from 'app/core/models/reports/reports';
 import { SimpleEmployee } from 'app/core/models/task/task';
 import { EmployeeService } from 'app/core/services/employee.service';
+import { AuthService } from 'app/core/services/auth.service';
 
 @Component({
   selector: 'app-tasks-discount-report',
@@ -53,7 +54,7 @@ selectedEmployeeId?: number;
   fromDate?: string;
   toDate?: string;
   status?: string;
-
+  isAdmin = false;
   isLoading = false;
   movementType: TaskMovementType = TaskMovementType.Outgoing;
   
@@ -78,42 +79,62 @@ selectedEmployeeId?: number;
     private reportPdfService: ReportPdfService,
     private toastr: ToastrService,
     private translate: TranslateService,
-    private employeeService: EmployeeService
+    private employeeService: EmployeeService,
+      private authService: AuthService
+
   ) {}
 
   ngOnInit(): void {
+  const roleLevel = this.authService.getRoleLevel();
+  this.isAdmin = roleLevel >= 50;
+
+  if (this.isAdmin) {
+    this.loadEmployees();    
+    this.selectedEmployeeId = undefined;
     this.loadData();
-      this.loadEmployees();
+  } else {
+    const user = this.authService.getCurrentUser();
+    this.selectedEmployeeId = user.userId;
+    this.loadData();             
   }
+}
+
+
 
 loadData(): void {
+  if (!this.isAdmin && !this.selectedEmployeeId) {  
+    return; 
+  }
+
   this.isLoading = true;
 
-  this.reportService
-this.reportService.getTaskDiscounts(
-  this.selectedEmployeeId ?? 0,
-  this.movementType,
-  this.fromDate ?? '',          
-  this.toDate,
-  this.status
-)    .subscribe({
-      next: (res) => {
-        this.rows = res.data.map((t: TaskDiscountReportDto) => ({
-          ...t,
-          taskIdTitle: `[${t.taskId}] ${t.title}`,
-          assignedBy: this.movementType === TaskMovementType.Outgoing ? t.employeeName : t.assignedBy
+  this.reportService.getTaskDiscounts(
+    this.selectedEmployeeId!,
+    this.movementType,
+    this.fromDate ?? '',
+    this.toDate,
+    this.status
+  ).subscribe({
+    next: (res) => {
+      this.rows = res.data.map((t: TaskDiscountReportDto) => ({
+        ...t,
+        taskIdTitle: `[${t.taskId}] ${t.title}`,
+        assignedBy:
+          this.movementType === TaskMovementType.Outgoing
+            ? t.employeeName
+            : t.assignedBy
+      }));
 
-        }));
-        this.totalItems = this.rows.length;
-        this.isLoading = false;
-      },
-      error: () => {
-        this.isLoading = false;
-        this.toastr.error(
-          this.translate.instant('COMMON.ERROR_LOADING_DATA')
-        );
-      }
-    });
+      this.totalItems = this.rows.length;
+      this.isLoading = false;
+    },
+    error: () => {
+      this.isLoading = false;
+      this.toastr.error(
+        this.translate.instant('COMMON.ERROR_LOADING_DATA')
+      );
+    }
+  });
 }
 
 loadEmployees(): void {

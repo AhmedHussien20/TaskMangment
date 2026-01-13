@@ -74,9 +74,21 @@ namespace TaskMangment.Infrastructure.Services
 
 
 
-        public async Task<List<EmployeeOnTimeReportDto>> GetOnTimeCompletionReportAsync(DateTime? fromDate = null,DateTime? toDate = null)
+        public async Task<List<EmployeeOnTimeReportDto>> GetOnTimeCompletionReportAsync(
+     string role,
+     int employeeId,
+     DateTime? fromDate = null,
+     DateTime? toDate = null)
         {
-            var query = _context.TaskAssignments.Include(a => a.Employee).Include(a => a.Task).AsQueryable();
+            var query = _context.TaskAssignments
+                .Include(a => a.Employee)
+                .Include(a => a.Task)
+                .AsQueryable();
+
+            if (role != "Manager")
+            {
+                query = query.Where(a => a.EmployeeId == employeeId);
+            }
 
             if (fromDate.HasValue)
                 query = query.Where(a => a.Task.CreatedDate >= fromDate.Value);
@@ -88,17 +100,11 @@ namespace TaskMangment.Infrastructure.Services
                 return new List<EmployeeOnTimeReportDto>();
 
             var result = await query
-                .GroupBy(a => new
-                {
-                    a.EmployeeId,
-                    a.Employee.FullName
-                })
+                .GroupBy(a => new { a.EmployeeId, a.Employee.FullName })
                 .Select(g => new EmployeeOnTimeReportDto
                 {
                     EmployeeName = g.Key.FullName,
-
                     TotalTasks = g.Count(),
-
                     OnTimeTasks = g.Count(x =>
                         x.Task.Status == WorkTaskStatus.Closed &&
                         x.Task.DueDate >= DateTime.UtcNow)
@@ -111,6 +117,7 @@ namespace TaskMangment.Infrastructure.Services
 
             return result;
         }
+
 
 
         public async Task<List<EmployeeArchivedTasksReportDto>> GetMostArchivedEmployeesAsync(DateTime? fromDate = null, DateTime? toDate = null)
@@ -158,12 +165,10 @@ namespace TaskMangment.Infrastructure.Services
 
             if (dto.MovementType == TaskMovementType.Incoming)
             {
-                // خصومات الواردة → خصومات على الموظف
                 query = query.Where(a => a.EmployeeId == dto.EmployeeId);
             }
             else
             {
-                // خصومات الصادرة → خصومات قام الموظف بمنحها
                 query = query.Where(a => a.Task.AssignedByEmployeeId == dto.EmployeeId);
             }
 
@@ -203,13 +208,18 @@ namespace TaskMangment.Infrastructure.Services
             return result;
         }
 
-        public async Task<List<TaskActivityReportDto>> GetTaskActivityReportAsync(DateTime? fromDate = null, DateTime? toDate = null)
+        public async Task<List<TaskActivityReportDto>> GetTaskActivityReportAsync(string role, int employeeId, DateTime? fromDate = null, DateTime? toDate = null)
         {
             var query = _context.TaskComments
                 .Include(c => c.Employee)
                 .Include(c => c.Task)
                 .ThenInclude(t => t.AssignedBy)
-                .AsQueryable(); 
+                .AsQueryable();
+
+            if (role != "Manager")
+            {
+                query = query.Where(c => c.Task.Assignments.Any(a => a.EmployeeId == employeeId));
+            }
 
             if (fromDate.HasValue)
                 query = query.Where(c => c.CreatedDate >= fromDate.Value);

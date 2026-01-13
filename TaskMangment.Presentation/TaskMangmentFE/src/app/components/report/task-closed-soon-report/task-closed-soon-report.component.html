@@ -8,15 +8,17 @@
       <!-- Filters -->
       <div class="card-header border-bottom-0">
         <div class="d-flex justify-content-center align-items-end gap-3">
-          <div class="d-flex flex-column">
-            <label class="form-label small">{{ 'REPORTS.EMPLOYEE' | translate }}</label>
-            <select [(ngModel)]="selectedEmployeeId" class="form-control form-control-sm">
-              <option [ngValue]="undefined">{{ 'FORM.SELECT' | translate }}</option>
-              <option *ngFor="let emp of employees" [ngValue]="emp.id">{{ emp.fullName }}</option>
-            </select>
-          </div>
+               <div class="d-flex flex-column" *ngIf="isAdmin">
+  <label class="form-label small">{{ 'REPORTS.EMPLOYEE' | translate }}</label>
+  <select [(ngModel)]="selectedEmployeeId" class="form-control form-control-sm">
+    <option [ngValue]="undefined">{{ 'FORM.SELECT' | translate }}</option>
+    <option *ngFor="let emp of employees" [ngValue]="emp.id">
+      {{ emp.fullName }}
+    </option>
+  </select>
+</div>
 
-          <div class="d-flex align-items-end gap-2">
+          <div class="d-flex align-items-end gap-2"  *ngIf="isAdmin">
             <button class="btn btn-primary btn-sm" (click)="onFilterApply()">
               {{ 'COMMON.APPLY' | translate }}
             </button>

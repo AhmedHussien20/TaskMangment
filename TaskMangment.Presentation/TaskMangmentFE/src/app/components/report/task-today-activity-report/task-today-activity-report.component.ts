@@ -12,6 +12,7 @@ import { ReportPdfService } from 'app/core/services/report-pdf.service';
 import { SimpleEmployee } from 'app/core/models/task/task';
 import { EmployeeService } from 'app/core/services/employee.service';
 import { TaskMovementReportDto, TaskMovementType } from 'app/core/models/reports/reports';
+import { AuthService } from 'app/core/services/auth.service';
 
 @Component({
   selector: 'app-task-today-activity-report',
@@ -49,10 +50,12 @@ export class TaskTodayActivityReportComponent implements OnInit {
   employees: SimpleEmployee[] = [];
   selectedEmployeeId?: number;
 
-  movementType: TaskMovementType = TaskMovementType.Outgoing; // Default: صادرة
+  movementType: TaskMovementType = TaskMovementType.Outgoing; 
   reportTitle?: string;
 
   isLoading = false;
+  isAdmin = false;
+
 
   movementOptions = [
     { label: 'REPORTS.OUTGOING', value: TaskMovementType.Outgoing },
@@ -64,13 +67,25 @@ export class TaskTodayActivityReportComponent implements OnInit {
     private reportPdfService: ReportPdfService,
     private toastr: ToastrService,
     private translate: TranslateService,
-    private employeeService: EmployeeService
+    private employeeService: EmployeeService,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
-    this.loadEmployees();
-    this.loadData();
+    const roleLevel = this.authService.getRoleLevel() ?? 0;
+    this.isAdmin = roleLevel >= 50;
+
+    if (this.isAdmin) {
+      this.loadEmployees();
+      this.selectedEmployeeId = undefined; 
+      this.loadData();
+    } else {
+      const user = this.authService.getCurrentUser();
+      this.selectedEmployeeId = user.userId; 
+      this.loadData();
+    }
   }
+
 
   loadData(): void {
     if (!this.selectedEmployeeId) return;
