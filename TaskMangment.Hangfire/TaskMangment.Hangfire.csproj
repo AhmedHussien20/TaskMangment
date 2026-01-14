@@ -7,6 +7,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Content Remove="appsettings.json" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="Hangfire" Version="1.8.22" />
 		<PackageReference Include="Hangfire.AspNetCore" Version="1.8.22" />
 		<PackageReference Include="Hangfire.SqlServer" Version="1.8.22" />
@@ -20,9 +24,14 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <TypeScriptCompile Include="appsettings.json" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<Content Update="appsettings.Development.json">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-			<CopyToPublishDirectory>Never</CopyToPublishDirectory>
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+			<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
 		</Content>
 	</ItemGroup>
 
