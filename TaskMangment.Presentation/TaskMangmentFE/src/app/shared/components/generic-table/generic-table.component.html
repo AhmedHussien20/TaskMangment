@@ -10,7 +10,7 @@
                 {{ addButtonLabel | translate }}
             </button>
 
-            <button class="btn btn-outline-info btn-sm" (click)="exportExcel()">
+            <button *ngIf="showExportExcel" class="btn btn-outline-info btn-sm" (click)="exportExcel()">
                 <i class="fa fa-file-excel"></i>
                 {{ 'TABLE.EXPORT_EXCEL' | translate }}
             </button>

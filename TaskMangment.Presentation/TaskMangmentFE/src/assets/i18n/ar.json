@@ -197,6 +197,27 @@
     "REGISTER_HERE": "سجل هنا",
     "SUBTITLE": "الرجاء تسجيل الدخول للمتابعة"
   },
+  "FORGOT_PASSWORD":
+  {
+    "TITLE": "نسيت كلمة السر؟",
+    "EMAIL_ADDRESS" :"البريد الإلكتروني",
+    "EMAIL_PLACEHOLDER" : "ادخل البريد الالكتروني الخاص بك",
+    "SUBMIT" : "إرسال",
+    "BACK_TO_LOGIN" : "الرجوع لتسجيل الدخول",
+    "RESET_PASSWORD" : "كلمة السر الجديدة" ,
+    "NEW_PASSWORD" : "كلمة السر الجديدة",
+    "NEW_PASSWORD_PLACE_HOLDER" : "ادخل كلمة السر الجديدة",
+    "CONFIRM" : "تأكيد",
+    "GO_BACK_TO_LOGIN" : "العودة لتسجيل الدخول",
+    "RESET_CODE_CHECK" : "تأكد من صحة رمز التحقق",
+    "VERIFY_CODE" : "رمز التحقق" ,
+    "VERIFY_NOTE" : "أدخل الكود المكون من 6 أرقام الذي أُرسل إلى بريدك الإلكتروني لإعادة تعيين كلمة المرور.",
+    "6_CODE_DIGITS": "ادخل الكود المكون من 6 ارقام",
+    "PASSWORDS_NOT_MATCH" : "كلمة المرور غير متطابقة",
+    "CONFIRM_PASSWORD_PLACE_HOLDER" : "تأكيد كلمة المرور الجديدة" , 
+    "CONFIRM_PASSWORD" : "تأكيد كلمة المرور"
+
+  },
   "AREA": {
     "COMPANY": "الشركة",
     "LIST_TITLE": "قائمة المناطق",
@@ -513,7 +534,12 @@
     "INVALID_PERCENT" : "ادخل نسبة مئوية صحيحة",
     "STATUS_INPROGRESS": "قيد التنفيذ",
     "CLOSED_AT" : "تم الاغلاق في", 
-    "DURATION" : "مدة التنفيذ"
+    "DURATION" : "مدة التنفيذ",
+    "ADD_ACHIEVEMENT" : "اضف نسبة انجازك",
+    "SAR" : "ريال",
+    "ADD_TO_CALENDAR" : "اضافة حدث مع هذا التعليق",
+    "COMMENT_MIN_LENGTH_TASK_CHARACTERS" : "ادخل بحد ادني 500 حرف",
+    "COMMENT_OR_FILE_REQUIRED" : "ادخل الحقول المطلوبه"
 
   },
   "EMPLOYEE": {

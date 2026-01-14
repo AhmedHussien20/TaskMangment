@@ -58,7 +58,17 @@ namespace TaskMangment.Application.Common.ApiRequests.Auth
     public class ResetPasswordRequest
     {
         public string Email { get; set; }
-        public string Token { get; set; }   // reset code sent by email
+        public string Token { get; set; }  
+        public string NewPassword { get; set; }
+    }
+    public class VerifyResetCodeRequest
+    {
+        public string Email { get; set; }
+        public string Token { get; set; }
+    }
+    public class UpdatePasswordRequest
+    {
+        public string Email { get; set; }
         public string NewPassword { get; set; }
     }
 

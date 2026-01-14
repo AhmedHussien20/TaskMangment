@@ -195,4 +195,7 @@
   <data name="INVALID_DATE" xml:space="preserve">
     <value>ادخل التاريخ الصحيح</value>
   </data>
+  <data name="INVALID_TOKEN" xml:space="preserve">
+    <value>كود التأكيد غير صحيح</value>
+  </data>
 </root>

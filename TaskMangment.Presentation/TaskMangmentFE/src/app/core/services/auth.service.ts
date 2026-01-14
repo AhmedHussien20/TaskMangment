@@ -11,15 +11,18 @@ import { selectAuthLoading } from 'app/store/auth/auth.selectors';
 import { Router } from '@angular/router';
 import { AuthUser } from '../models/auth/auth-user';
 import * as NavActions from '../../store/nav/nav.actions';
+import { ApiService } from './api.service';
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
+  private readonly service = 'Auth';
   public showLoader: boolean = false;
   constructor(
     private authRepository: AuthRepository,
     private store: Store<AppState>,
-    private router: Router
+    private router: Router,
+    private apiService: ApiService
   ) {
     this.store.pipe(select(selectAuthLoading)).subscribe(loading => {
       this.showLoader = loading;
@@ -67,6 +70,31 @@ export class AuthService {
 
     this.router.navigate(['/auth/login'], { replaceUrl: true });
   }
+
+    forgotPassword(email: string): Observable<BaseResponse<null>> {
+    return this.apiService.post<BaseResponse<null>>(
+      this.service,
+      'forgot-password',
+      { email }
+    );
+  }
+
+ verifyResetCode(request: { email: string; token: string }): Observable<BaseResponse<null>> {
+    return this.apiService.post<BaseResponse<null>>(
+      this.service,
+      'verify-reset-code',
+      request
+    );
+  }
+
+  updatePassword(request: { email: string; newPassword: string }): Observable<BaseResponse<null>> {
+    return this.apiService.post<BaseResponse<null>>(
+      this.service,
+      'reset-password',
+      request
+    );
+  }
+
 
   private userKey = 'auth_user';
 

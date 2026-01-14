@@ -11,6 +11,8 @@ namespace TaskMangment.Application.Common.Errors
         public const string NotFound = "NOT_FOUND";
         public const string EmailNotFound = "EMAIL_NOT_FOUND";
         public const string Invalid = "INVALID_PASS_OR_EMAIL";
+        public const string InvalidToken = "INVALID_TOKEN";
+
 
         public const string TaskNotFound = "TASK_NOT_FOUND";
         public const string NotAssigned = "NOT_ASSIGNED";

@@ -196,4 +196,7 @@
   <data name="INVALID_DATE" xml:space="preserve">
     <value>Enter the right date</value>
   </data>
+  <data name="INVALID_TOKEN" xml:space="preserve">
+    <value>Invalid confirmation code</value>
+  </data>
 </root>

@@ -20,8 +20,10 @@ import {
   AdminKpisExtendedDto,
   CompletedTasksTodayDto,
   EmployeeDashboardDto,
+  EmployeeKpisExtendedDto,
   InProgressUpdatedTodayDto,
   PendingCloseRequestDto,
+  WarningDto,
 } from 'app/core/models/dashboard/dashboard.model';
 import { AuthService } from 'app/core/services/auth.service';
 import { TaskStatusPopupComponent } from '../dashboard-pop-ups/task-status-popup.component';
@@ -32,6 +34,9 @@ import { CompletedTasksPopupComponent } from '../dashboard-pop-ups/average-compl
 import { DiscountsPopupComponent } from '../dashboard-pop-ups/penalities-details-popup';
 import { EmployeeTasksPopupComponent } from '../employee-dashboard-pop-ups/active-tasks-popup';
 import { WarningsPopupComponent } from '../employee-dashboard-pop-ups/my-warning-popup';
+import { TaskTodayCommentComponent } from '../task-today-comment/task-today-comment.component';
+import { PenalitiesPopupComponent } from '../employee-dashboard-pop-ups/my-penalities-popup';
+import { MyDueSoonTasksPopupComponent } from '../employee-dashboard-pop-ups/due-soon-tasks';
 
 @Component({
   selector: 'app-dashboard',
@@ -48,6 +53,7 @@ import { WarningsPopupComponent } from '../employee-dashboard-pop-ups/my-warning
     CommonModule,
     TranslateModule,
     FormsModule,
+    TaskTodayCommentComponent
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
@@ -56,6 +62,7 @@ export class DashboardComponent {
   isAdmin = false;
   adminData!: AdminDashboardDto;
   employeeData!: EmployeeDashboardDto;
+  myWarning!: WarningDto;
   topDelayedEmployees: any[] = [];
   todayInProgressTasks: InProgressUpdatedTodayDto[] = [];
   completedTasksToday: CompletedTasksTodayDto[] = [];
@@ -71,6 +78,7 @@ export class DashboardComponent {
   currentPeriod: PeriodDto = { type: 'Day' };
 
   adminKpis!: AdminKpisExtendedDto;
+  EmployeeKpis! : EmployeeKpisExtendedDto
   kpiCards: any[] = [];
   tasksNotCommentedToday: any[] = [];
  
@@ -97,7 +105,9 @@ export class DashboardComponent {
       this.isAdmin = true;
     } else {
       this.loadEmployeeDashboard();
-      this.loadTasksNotCommentToday();
+      this.loadEmployeeKpis();
+
+      //this.loadTasksNotCommentToday();
 
     }
   }
@@ -136,6 +146,14 @@ export class DashboardComponent {
     this.dashboardService.getAdminKpis(this.currentPeriod).subscribe((res) => {
       this.adminKpis = res.data;
       this.buildAdminKpiCards();
+
+    });
+  }
+   private loadEmployeeKpis() {
+    this.dashboardService.getEmployeeKpis(this.currentPeriod).subscribe((res) => {
+      this.EmployeeKpis = res.data;
+      this.buildEmployeeKpiCards();
+      
     });
   }
 
@@ -185,11 +203,10 @@ export class DashboardComponent {
 `,clickable: true,
       type: 'highPriority'
 
-
       },
       {
         title: 'DASHBOARD.PENALTIES',
-        value: this.adminKpis.penaltiesThisMonth + ' SAR',
+        value: this.adminKpis.penaltiesThisMonth + this.translate.instant('TASK.SAR'),
         svg: `
 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
      viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -216,9 +233,11 @@ export class DashboardComponent {
       this.loadPendingCloseRequests();
     } else {
       this.loadEmployeeDashboard();
+      this.loadEmployeeKpis();
     }
   }
-private loadTasksNotCommentToday(): void {
+
+/*  private loadTasksNotCommentToday(): void {
   this.dashboardService.getTasksNotCommentToday().subscribe(res => {
     if (res.data && res.data.length) {
       this.tasksNotCommentedToday = res.data.map(t => ({
@@ -235,7 +254,7 @@ private loadTasksNotCommentToday(): void {
     }
   });
 }
-
+*/
 
   private loadAdminDashboard() {
     this.dashboardService
@@ -311,7 +330,7 @@ private loadTasksNotCommentToday(): void {
       });
   }
   private loadEmployeeDashboard(): void {
-    this.dashboardService.getEmployeeDashboard().subscribe((res) => {
+    this.dashboardService.getEmployeeDashboard(this.currentPeriod).subscribe((res) => {
       this.employeeData = res.data;
 
       this.statCards = [
@@ -347,6 +366,7 @@ private loadTasksNotCommentToday(): void {
           </svg>
         `,
         clickable: true,
+        type: 'myDueSoonTasks'
 
         },
         {
@@ -369,7 +389,8 @@ private loadTasksNotCommentToday(): void {
         },
         {
           title: 'DASHBOARD.PENALTIES',
-          value: this.employeeData.kpis.myPenalties,
+          value: this.employeeData.kpis.myPenalties + ' ' + this.translate.instant('TASK.SAR'),
+          
           svg:`
 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
      viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -395,6 +416,41 @@ private loadTasksNotCommentToday(): void {
     });
   }
  
+  private buildEmployeeKpiCards() {
+    this.kpiCards = [
+      {
+        title: 'DASHBOARD.AVG_COMPLETION_TIME',
+        value:
+          (this.EmployeeKpis.averageCompletionHours / 24).toFixed(1) + ' Days',
+        svg: `
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+     viewBox="0 0 24 24" fill="none" stroke="currentColor"
+     stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+     class="feather feather-clock text-primary">
+  <circle cx="12" cy="12" r="10"></circle>
+  <polyline points="12 6 12 12 16 14"></polyline>
+</svg>
+`,clickable: true,
+      type: 'empAvgCompletion'
+      
+
+      },
+      {
+        title: 'DASHBOARD.ON_TIME_RATE',
+        value: this.EmployeeKpis.onTimeRatePercent.toFixed(0) + '%',
+        svg: `
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+     viewBox="0 0 24 24" fill="none" stroke="currentColor"
+     stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+     class="feather feather-trending-up text-success">
+  <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+  <polyline points="17 6 23 6 23 12"></polyline>
+</svg>
+`,
+      }
+      
+    ];
+  }
 
   ngOnInit(): void {
     this.translate.use('ar');
@@ -601,6 +657,8 @@ openCard(card: any) {
         modalRef.componentInstance.tasks = res.data;
       });
   }
+
+  //switch
   else if (card.type === 'avgCompletion') {
     this.openAvgCompletionTasks();
   }
@@ -616,10 +674,30 @@ openCard(card: any) {
   else if (card.type === 'myWarnings') {
     this.openMyWarning();
   }
+   else if (card.type === 'myPenalities') {
+    this.openMyPenalities();
+  }
+  else if (card.type === 'myDueSoonTasks') {
+    this.openEmployeeDueSoonTasksPopup();
+  }
+  else if (card.type === 'empAvgCompletion') {
+    this.openEmployeeAvgCompletionTasks();
+  }
 }
 
   openAvgCompletionTasks() {
   this.dashboardService.getAdminCompletedTasksDetails(this.currentPeriod)
+    .subscribe(res => {
+      const modalRef = this.modalService.open(CompletedTasksPopupComponent, { 
+        size: 'xl', 
+        centered: true 
+      });
+      modalRef.componentInstance.tasks = res.data;
+    });
+}
+
+openEmployeeAvgCompletionTasks() {
+  this.dashboardService.getEmployeeCompletedTasksDetails(this.currentPeriod)
     .subscribe(res => {
       const modalRef = this.modalService.open(CompletedTasksPopupComponent, { 
         size: 'xl', 
@@ -659,14 +737,36 @@ openEmployeeTasksPopup() {
   modalRef.componentInstance.tasks = this.employeeData.myTasks; 
 }
 
+openEmployeeDueSoonTasksPopup() {
+   this.dashboardService.getMyDueSoonTask()
+    .subscribe(res => {
+      const modalRef = this.modalService.open(MyDueSoonTasksPopupComponent, { 
+        size: 'lg', 
+        centered: true 
+      });
+      modalRef.componentInstance.tasks = res.data ?? [];
+    });
+}
+
 openMyWarning() {
-  this.dashboardService.getEmployeeWarnings()
+  this.dashboardService.getEmployeeWarnings(this.currentPeriod)
     .subscribe(res => {
       const modalRef = this.modalService.open(WarningsPopupComponent, { 
         size: 'lg', 
         centered: true 
       });
       modalRef.componentInstance.warnings = res.data ?? [];
+    });
+}
+
+openMyPenalities() {
+  this.dashboardService.getEmployeePenalities(this.currentPeriod)
+    .subscribe(res => {
+      const modalRef = this.modalService.open(PenalitiesPopupComponent, { 
+        size: 'lg', 
+        centered: true 
+      });
+      modalRef.componentInstance.Penalities = res.data ?? [];
     });
 }
 

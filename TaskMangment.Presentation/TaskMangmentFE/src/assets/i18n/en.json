@@ -196,6 +196,26 @@
     "REGISTER_HERE": "Register here",
     "SUBTITLE": "Please login to continue"
   },
+  "FORGOT_PASSWORD": {
+  "TITLE": "Forgot Password?",
+  "EMAIL_ADDRESS": "Email Address",
+  "EMAIL_PLACEHOLDER": "Enter your email address",
+  "SUBMIT": "Submit",
+  "BACK_TO_LOGIN": "Back to Login",
+  "RESET_PASSWORD": "New Password",
+  "NEW_PASSWORD": "New Password",
+  "NEW_PASSWORD_PLACE_HOLDER": "Enter your new password",
+  "CONFIRM": "Confirm",
+  "GO_BACK_TO_LOGIN": "Go back to login",
+  "RESET_CODE_CHECK": "Verify your code",
+  "VERIFY_CODE": "Verification Code",
+  "VERIFY_NOTE": "Enter the 6-digit code sent to your email to reset your password.",
+  "6_CODE_DIGITS": "Enter the 6-digit code",
+  "PASSWORDS_NOT_MATCH": "Passwords do not match",
+  "CONFIRM_PASSWORD_PLACE_HOLDER": "Confirm your new password",
+  "CONFIRM_PASSWORD": "Confirm Password"
+}
+,
   "AREA": {
     "COMPANY": "Company",
     "LIST_TITLE": "Area List",
@@ -497,7 +517,12 @@
     "INVALID_PERCENT": "Enter true percentage",
     "STATUS_INPROGRESS": "Inprogress",
     "CLOSED_AT" : "Closed at", 
-    "DURATION" : "Work duration"
+    "DURATION" : "Work duration",
+    "ADD_ACHIEVEMENT" : "Add your achievement",
+    "SAR" : "SAR",
+    "ADD_TO_CALENDAR" : "Add event with this comment",
+    "COMMENT_MIN_LENGTH_TASK_CHARACTERS" : "Enter 500 characters as Minimum length", 
+    "COMMENT_OR_FILE_REQUIRED" : "Enter required fields"
   },
   "EMPLOYEE": {
     "LIST_TITLE": "Employee List",

@@ -49,7 +49,8 @@ interface HasId {
 export class GenericTableComponent<T> implements OnDestroy {
   @Output() exportPdfClick = new EventEmitter<void>();
   @Input() showExportPdf: boolean = false;
-  
+  @Input() showExportExcel: boolean = true;
+
   @Input() formUrl: string = '';
   @Input() breadcrumbs: string[] = [];
   @Input() activeitem: string = '';
@@ -332,23 +333,32 @@ export class GenericTableComponent<T> implements OnDestroy {
     document.removeEventListener('mouseup', this.onMouseUp);
   }
 
-  onRowClick(item: T, event: MouseEvent) {
-    if (!this.rowClickable) return;
+@Input() rowClickableCondition?: (item: T) => boolean;
 
-    const target = event.target as HTMLElement;
-    if (
-      target.closest('button') ||
-      target.closest('input') ||
-      target.closest('a')
-    ) {
-      return;
-    }
+onRowClick(item: T, event: MouseEvent) {
 
-    const id = this.getItemId(item);
-    if (id !== undefined && id !== null) {
-      this.edit.emit(id);
-    }
+  if (!this.rowClickable) return;
+
+  const target = event.target as HTMLElement;
+  if (
+    target.closest('button') ||
+    target.closest('input') ||
+    target.closest('a')
+  ) {
+    return;
   }
+
+  if (this.rowClickableCondition && !this.rowClickableCondition(item)) {
+    return;
+  }
+
+  const id = this.getItemId(item);
+  if (id !== undefined && id !== null) {
+    this.edit.emit(id); 
+
+  }
+}
+
 
 
   onCheckboxChange(item: T, event: Event) {

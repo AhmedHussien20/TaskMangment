@@ -61,8 +61,8 @@ namespace TaskMangment.Infrastructure.Services
                 var overdueTasks = await _taskRepo.CountAsync(t =>
                     t.CompanyId == companyId &&
                     t.Status != WorkTaskStatus.Closed &&
-                    t.DueDate != null &&
-                    t.DueDate >= range.Start && t.DueDate <= range.End);
+                    t.DueDate != null 
+                   );
 
                 var completedTasks = await _taskRepo.CountAsync(t =>
                     t.CompanyId == companyId &&

@@ -47,11 +47,13 @@ export interface WarningDto {
   taskStatus: string;
 }
 
-export interface DeductionDto {
+export interface PenalityDto {
   id: number;
   amount: number;
   reason: string;
   createdDate: string;
+  taskTitle: string
+
 }
 
 
@@ -111,4 +113,22 @@ export interface TodayCommentTaskDto {
   dueDate?: Date;
   assignedBy: string;
   employees: string[];
+}
+export interface  TasksPagedResponse {
+  data: TodayCommentTaskDto[];
+  totalCount: number;
+  pageIndex: number;
+  pageSize: number;
+}
+export interface TasksRequest {
+  name?: string;
+  companyId?: number;
+  pageIndex: number;
+  pageSize: number;
+  sortColumn: string;
+  sortDirection: string;
+}
+export interface EmployeeKpisExtendedDto {
+  averageCompletionHours: number;
+  onTimeRatePercent: number;
 }

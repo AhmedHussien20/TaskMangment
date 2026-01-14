@@ -101,6 +101,19 @@ export class HeaderComponent implements OnInit, OnDestroy {
       icon: 'ti-id-badge',
       path: '/student/student-list'
     }
+    ,
+    {
+      title: 'nav.apps.reports.title',
+      icon: 'ti-id-badge',
+      path: '/report/reports-dashboard',
+      alwaysEnabled: true
+    },
+    {
+      title: 'nav.apps.leaves.title',
+      icon: 'ti-id-badge',
+      path: '/leave/leave-list',
+      alwaysEnabled: true
+    }
   ];
   ;
 

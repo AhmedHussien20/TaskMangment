@@ -1,7 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, NgModel, FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { TaskCommentService } from 'app/core/services/task-comment.service';
 import { ToastrService } from 'ngx-toastr';
@@ -11,7 +11,7 @@ import { CalendarEventType } from 'app/core/models/event/calendar';
 @Component({
   selector: 'app-comment-modal',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslateModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslateModule,FormsModule],
   templateUrl: './comment-modal.component.html'
 })
 export class CommentModalComponent implements OnInit {
@@ -21,19 +21,20 @@ export class CommentModalComponent implements OnInit {
   form!: FormGroup;
   files: File[] = [];
   isSubmitting = false;
-
+showEventFields = false;
   constructor(
     public modal: NgbActiveModal,
     private fb: FormBuilder,
     private commentService: TaskCommentService,
     private toastr: ToastrService,
     private translate: TranslateService,
-    private calendarService: CalendarEventService,
+    private calendarService: CalendarEventService
+    
   ) {}
 
   ngOnInit(): void {
     this.form = this.fb.group({
-      comment: [null],
+      comment: [null, [Validators.minLength(5)]],
        startDate: [null],  
        endDate: [null]
     });
@@ -71,6 +72,11 @@ submit(): void {
   const commentText = this.form.value.comment?.trim() || '';
   formData.append('CommentText', commentText);
 
+  if (!commentText && this.files.length === 0) {
+  this.toastr.error(this.translate.instant('TASK.COMMENT_OR_FILE_REQUIRED'));
+    this.isSubmitting = true;
+  return;
+}
   // Attachments
   this.files.forEach((file) => {
     formData.append('File', file);
@@ -104,7 +110,6 @@ submit(): void {
           }
         });
       } else {
-        // لو مفيش startDate → نغلق المودال بعد التعليق فقط
         this.toastr.success(this.translate.instant('TASK.COMMENT_SUCCESS'));
         this.isSubmitting = false;
         this.modal.close(true);
@@ -116,6 +121,8 @@ submit(): void {
     }
   });
 }
-
+  toggleEventFields() {
+    this.showEventFields = !this.showEventFields;
+  }
 
 }

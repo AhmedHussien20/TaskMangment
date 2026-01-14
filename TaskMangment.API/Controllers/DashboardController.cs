@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using TaskMangment.Application.ApiRequests;
 using TaskMangment.Application.Dashboards.Admin;
 using TaskMangment.Application.Dashboards.Employee;
 using TaskMangment.Application.DTOs;
@@ -30,30 +31,50 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpGet("employee")]
-        public async Task<IActionResult> GetEmployeeDashboard()
+        public async Task<IActionResult> GetEmployeeDashboard([FromQuery] PeriodDto period)
         {
-            var result = await _employeeService.GetDashboardAsync(CurrentUserId);
+            var result = await _employeeService.GetDashboardAsync(CurrentUserId,period);
             return Success(result.Data);
         }
 
         [HttpGet("employee/warnings")]
-        public async Task<IActionResult> GetEmployeeWarnings()
+        public async Task<IActionResult> GetEmployeeWarnings([FromQuery] PeriodDto period)
         {
-            var result = await _employeeService.GetWarningsAsync(CurrentUserId);
+            var result = await _employeeService.GetWarningsAsync(CurrentUserId,period);
             return Success(result.Data);
         }
 
         [HttpGet("employee/deductions")]
-        public async Task<IActionResult> GetEmployeeDeductions()
+        public async Task<IActionResult> GetEmployeeDeductions([FromQuery] PeriodDto period)
         {
-            var result = await _employeeService.GetDeductionsAsync(CurrentUserId);
+            var result = await _employeeService.GetDeductionsAsync(CurrentUserId, period);
             return Success(result.Data);
         }
 
         [HttpGet("not-comment-today")]
-        public async Task<IActionResult> GetTasksWithoutCommentsToday()
+        public async Task<IActionResult> GetTasksWithoutCommentsToday([FromQuery] BaseApiRequest request)
         {
-            var result = await _employeeService.GetTasksWithoutCommentsTodayAsync(CurrentUserId);
+            var result = await _employeeService.GetTasksWithoutCommentsTodayAsync(request, CurrentUserId);
+            return Success(result.Data);
+        }
+
+        [HttpGet("due-soon-tasks")]
+        public async Task<IActionResult> GetTasksDueSoon()
+        {
+            var result = await _employeeService.GetDueSoonTasksAsync(CurrentUserId);
+            return Success(result.Data);
+        }
+        [HttpGet("employee/kpis")]
+        public async Task<IActionResult> GetEmployeeKpis([FromQuery] PeriodDto period)
+        {
+            var result = await _employeeService.GetEmployeeKpisAsync(CurrentUserId, period);
+            return Success(result.Data);
+        }
+
+        [HttpGet("employee/completed-tasks-details")]
+        public async Task<IActionResult> GetEmployeeCompletedTasksDetails([FromQuery] PeriodDto period)
+        {
+            var result = await _employeeService.GetEmployeeCompletedTasksDetailsAsync(CurrentUserId, period);
             return Success(result.Data);
         }
 
