@@ -26,14 +26,14 @@ namespace TaskMangment.Infrastructure.Services
                 throw new Exception("From email is missing in EmailSettings.");
 
             var payload = new
-            {
+        {
                 sender = new
-                {
+            {
                     email = _settings.From,
                     name = "Task Manager"
                 },
                 to = new[]
-                {
+            {
                     new { email = to }
                 },
                 subject = subject,
@@ -56,4 +56,5 @@ namespace TaskMangment.Infrastructure.Services
             }
         }
     }
-}
+
+    }

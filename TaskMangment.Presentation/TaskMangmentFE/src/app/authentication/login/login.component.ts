@@ -32,7 +32,9 @@ export class LoginComponent {
   disabled = '';
 
   constructor(
-    @Inject(DOCUMENT) private document: Document, 
+    @Inject(DOCUMENT) private document: Document,
+    private elementRef: ElementRef,
+    private sanitizer: DomSanitizer,
     public authservice: AuthService,
     private router: Router,
     private formBuilder: FormBuilder,
@@ -94,7 +96,7 @@ export class LoginComponent {
 
 
   Submit(event: Event) {
-  event.preventDefault();
+    event.preventDefault();
 
   if (this.loginForm.invalid) {
     this.toastr.error('Please fill in the form correctly', '', {
@@ -105,27 +107,28 @@ export class LoginComponent {
   }
 
   const username = this.loginForm.controls['username'].value;
-  const password = this.loginForm.controls['password'].value;
+      const password = this.loginForm.controls['password'].value;
 
   this.authservice.login(username, password).subscribe({
-    next: (response) => {
+        next: (response) => {
 
-      const userId = response.data?.userId || 0;
+            const userId = response.data?.userId || 0;
 
       // Start SignalR
-      this.signalRService.startConnection(userId);
+            this.signalRService.startConnection(userId);
+            const unread = res.data;
 
       // Load notifications
       this.notificationService.getUnread().subscribe(res => {
         const unread = res.data || [];
-        unread.forEach(n => {
+            unread.forEach(n => {
           this.toastr.info(n.message, 'Notification');
         });
-      });
+            });
 
       // Go to dashboard
-      this.router.navigate(['/dashboard']);
-    },
+          this.router.navigate(['/dashboard']);
+        },
 
     // error: (err) => {
     //   debugger
@@ -139,8 +142,9 @@ export class LoginComponent {
     //     }
     //   );
     // }
-  });
-}
+      });
+    }
+  }
 
 
   public togglePassword() {

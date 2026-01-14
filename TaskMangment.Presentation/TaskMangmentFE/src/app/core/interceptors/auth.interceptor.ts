@@ -1,10 +1,13 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
+import { TranslateService } from '@ngx-translate/core';
 import { tap } from 'rxjs/operators';
 
 export const AuthInterceptor: HttpInterceptorFn = (req, next) => {
 
+  const router = inject(Router);
   const toastr = inject(ToastrService);
 
   console.log('%c[INTERCEPTOR] Request intercepted', 'color: green', req.url);
@@ -35,6 +38,7 @@ export const AuthInterceptor: HttpInterceptorFn = (req, next) => {
             }
           );
 
+          // Redirect to login
           window.location.href = '/auth/login';
         }
       }

@@ -31,20 +31,20 @@ export class AuthService {
   }
 
   login(userCode: string, password: string): Observable<BaseResponse<User & { token: string }>> {
-  return this.authRepository.login(userCode, password).pipe(
-    map(response => {
+    return this.authRepository.login(userCode, password).pipe(
+      map(response => {
       if (response.data) {
-        localStorage.setItem('authToken', response.data.token);
-        localStorage.setItem('userData', JSON.stringify(response.data));
-        this.store.dispatch(NavActions.initializeMenu());
+          localStorage.setItem('authToken', response.data.token);
+          localStorage.setItem('userData', JSON.stringify(response.data));
+    this.store.dispatch(NavActions.initializeMenu());
 
-        return response;
-      } else {
+          return response;
+        } else {
         throw new Error(response.errorList?.join('\n') || 'Login failed');
-      }
-    })
-  );
-}
+        }
+      })
+    );
+  }
 
 
   logout() {
@@ -55,6 +55,31 @@ export class AuthService {
 
     this.router.navigate(['/auth/login'], { replaceUrl: true });
   }
+
+    forgotPassword(email: string): Observable<BaseResponse<null>> {
+    return this.apiService.post<BaseResponse<null>>(
+      this.service,
+      'forgot-password',
+      { email }
+    );
+  }
+
+ verifyResetCode(request: { email: string; token: string }): Observable<BaseResponse<null>> {
+    return this.apiService.post<BaseResponse<null>>(
+      this.service,
+      'verify-reset-code',
+      request
+    );
+  }
+
+  updatePassword(request: { email: string; newPassword: string }): Observable<BaseResponse<null>> {
+    return this.apiService.post<BaseResponse<null>>(
+      this.service,
+      'reset-password',
+      request
+    );
+  }
+
 
   private userKey = 'auth_user';
 

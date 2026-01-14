@@ -50,6 +50,16 @@ namespace TaskMangment.Hangfire.Jobs
                 task.ClosedAt = DateTime.UtcNow;
                 task.CloseReason = CloseReason.Auto;
 
+                var assignmentsToClose = await _db.TaskAssignments
+                    .Where(a => a.TaskId == task.Id)
+                    .ToListAsync();
+
+                foreach (var assignment in assignmentsToClose)
+                {
+                    assignment.IsClosed = true;
+                }
+
+
                 var discountsToPublish = new List<Discount>();
 
                 foreach (var assignment in task.Assignments)

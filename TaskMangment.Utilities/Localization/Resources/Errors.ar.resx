@@ -195,6 +195,8 @@
   <data name="INVALID_DATE" xml:space="preserve">
     <value>ادخل التاريخ الصحيح</value>
   </data>
+  <data name="INVALID_TOKEN" xml:space="preserve">
+    <value>كود التأكيد غير صحيح</value>
   <data name="TASK_COMMENT_NOTIFICATION" xml:space="preserve">
     <value>تم إضافة تعليق جديد على المهمة</value>
   </data>

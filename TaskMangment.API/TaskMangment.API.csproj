@@ -6,10 +6,12 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>d209991b-1b99-48a2-9b17-5ef2035c8901</UserSecretsId>
   </PropertyGroup>
-	<ItemGroup>
-		<TypeScriptCompile Include="appsettings.json" />
-	</ItemGroup>
 
+ 
+
+  <ItemGroup>
+    <TypeScriptCompile Include="appsettings.json" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="15.1.0" />

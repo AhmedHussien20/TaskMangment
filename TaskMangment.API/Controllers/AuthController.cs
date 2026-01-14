@@ -31,12 +31,21 @@ public class AuthController : BaseController
     }
 
     [AllowAnonymous]
-    [HttpPost("reset-password")]
-    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+    [HttpPost("verify-reset-code")]
+    public async Task<IActionResult> VerifyResetCode([FromBody] VerifyResetCodeRequest request)
     {
-        var result = await _auth.ResetPasswordAsync(request);
+        var result = await _auth.VerifyResetCodeAsync(request);
         return Success(result.Data);
     }
+
+    [AllowAnonymous]
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword([FromBody] UpdatePasswordRequest request)
+    {
+        var result = await _auth.UpdatePasswordAsync(request);
+        return Success(result.Data);
+    }
+
 
 
 }

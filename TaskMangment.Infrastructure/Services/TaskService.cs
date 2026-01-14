@@ -251,6 +251,9 @@ namespace TaskMangment.Infrastructure.Services
             if (task == null)
                 throw new AppException(ErrorCodes.TaskNotFound, StatusCodes.Status400BadRequest);
 
+            if (task.Status == WorkTaskStatus.Closed || task.Status == WorkTaskStatus.Archived)
+                throw new AppException(ErrorCodes.NotAuthorized, StatusCodes.Status400BadRequest);
+
             _mapper.Map(dto, task);
 
             if (dto.Status == WorkTaskStatus.Closed || dto.Status == WorkTaskStatus.Archived)
@@ -258,6 +261,12 @@ namespace TaskMangment.Infrastructure.Services
                 task.ClosedAt = DateTime.UtcNow;
                 task.ClosedByUserId = modifierUser;
                 task.CloseReason= CloseReason.Admin;
+                var assignmentsToClose = await _assignmentRepo.GetAll(a => a.TaskId == id).ToListAsync();
+                foreach (var assignment in assignmentsToClose)
+                {
+                    assignment.IsClosed = true;
+                }
+
             }
 
             var existingAssignments = await _assignmentRepo

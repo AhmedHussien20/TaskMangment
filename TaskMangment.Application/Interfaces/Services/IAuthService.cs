@@ -12,7 +12,8 @@ namespace TaskMangment.Application.Interfaces.Services
     {
         Task<ApiResponse<LoginResponse>> LoginAsync(LoginRequest request);
         Task<ApiResponse<bool>> ForgotPasswordAsync(string email);
-        Task<ApiResponse<bool>> ResetPasswordAsync(ResetPasswordRequest request);
+        Task<ApiResponse<bool>> VerifyResetCodeAsync(VerifyResetCodeRequest request);
+        Task<ApiResponse<bool>> UpdatePasswordAsync(UpdatePasswordRequest request);
     }
 
 }

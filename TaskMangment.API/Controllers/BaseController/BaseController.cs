@@ -1,8 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
 using System.Security.Claims;
 using TaskMangment.API.Filters;
-using TaskMangment.Application.Common.Exceptions; 
+using TaskMangment.Application.Common.Exceptions;
+using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Responses;
 using TaskMangment.Utilities.Localization.Resources; 
 

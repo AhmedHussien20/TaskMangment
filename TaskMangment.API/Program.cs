@@ -75,9 +75,9 @@ namespace TaskMangment.API
             builder.Services.AddHttpClient();
 
 
+               
 
-
-            QuestPDF.Settings.License = LicenseType.Community;
+                QuestPDF.Settings.License = LicenseType.Community;
 
 
                 builder.Services.AddScoped<ProcessPendingEmailsJob>();
@@ -96,7 +96,7 @@ namespace TaskMangment.API
                     });
                 });
 
-            //Localization
+                //Localization
             builder.Services.AddLocalization();
             builder.Services.AddTaskMangmentLocalization();
 
@@ -224,7 +224,7 @@ namespace TaskMangment.API
             //if (app.Environment.IsDevelopment())
             //{
             app.UseSwagger();
-            app.UseSwaggerUI();
+                    app.UseSwaggerUI();
                 //}
 
                 var supportedCultures = new[]

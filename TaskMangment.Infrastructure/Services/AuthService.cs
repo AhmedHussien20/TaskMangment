@@ -44,7 +44,7 @@ public class AuthService : IAuthService
 
         if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
             throw new AppException(
-                 ErrorCodes.Invalid,
+                ErrorCodes.Invalid,
                 StatusCodes.Status400BadRequest);
 
         var profileImage = await _db.Attachments
@@ -111,19 +111,21 @@ public class AuthService : IAuthService
                 ErrorCodes.EmailNotFound,
                 StatusCodes.Status404NotFound);
 
-        string resetToken = Guid.NewGuid().ToString();
+        var random = new Random();
+        string resetCode = random.Next(100000, 999999).ToString();
 
-        user.ResetPasswordToken = resetToken;
+        user.ResetPasswordToken = BCrypt.Net.BCrypt.HashPassword(resetCode);
         user.ResetPasswordExpiry = DateTime.UtcNow.AddMinutes(30);
 
         await _db.SaveChangesAsync();
 
-        await _email.SendEmailAsync(email, "Password Reset Code", $"Your reset code: {resetToken}");
+        await _email.SendEmailAsync(email, "Password Reset Code", $"Your reset code: {resetCode}");
 
         return ApiResponse<bool>.Ok(true, "Reset code sent to email");
     }
-     
-    public async Task<ApiResponse<bool>> ResetPasswordAsync(ResetPasswordRequest request)
+
+
+    public async Task<ApiResponse<bool>> VerifyResetCodeAsync(VerifyResetCodeRequest request)
     {
         var user = await _db.Employees
             .FirstOrDefaultAsync(u =>
@@ -136,7 +138,28 @@ public class AuthService : IAuthService
                 ErrorCodes.EmailNotFound,
                 StatusCodes.Status404NotFound);
 
+        bool isValidCode = BCrypt.Net.BCrypt.Verify(request.Token, user.ResetPasswordToken);
+        if (!isValidCode)
+            throw new AppException(ErrorCodes.InvalidToken,StatusCodes.Status400BadRequest);
+
+        return ApiResponse<bool>.Ok(true, "Token is valid");
+    }
+
+
+
+
+    public async Task<ApiResponse<bool>> UpdatePasswordAsync(UpdatePasswordRequest request)
+    {
+        var user = await _db.Employees
+            .FirstOrDefaultAsync(u => u.Email == request.Email);
+
+        if (user == null)
+            throw new AppException(
+                ErrorCodes.EmailNotFound,
+                StatusCodes.Status404NotFound);
+
         user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+
         user.ResetPasswordToken = string.Empty;
         user.ResetPasswordExpiry = null;
 
@@ -144,4 +167,7 @@ public class AuthService : IAuthService
 
         return ApiResponse<bool>.Ok(true, "Password reset successfully");
     }
+
+    
+
 }
