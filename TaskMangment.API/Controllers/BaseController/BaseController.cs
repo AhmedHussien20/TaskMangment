@@ -1,12 +1,10 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using System.Security.Claims;
 using TaskMangment.API.Filters;
-using TaskMangment.Application.Common.Exceptions;
-using TaskMangment.Application.Interfaces.IRepository;
+using TaskMangment.Application.Common.Exceptions; 
 using TaskMangment.Application.Responses;
-using static System.Net.WebRequestMethods;
+using TaskMangment.Utilities.Localization.Resources; 
 
 namespace TaskMangment.API.Controllers
 {
@@ -15,6 +13,8 @@ namespace TaskMangment.API.Controllers
     [Route("api/[controller]")]
     public abstract class BaseController : ControllerBase
     {
+        protected IStringLocalizer<Errors> L =>
+        HttpContext.RequestServices.GetRequiredService<IStringLocalizer<Errors>>();
         protected int CurrentUserId
         {
             get

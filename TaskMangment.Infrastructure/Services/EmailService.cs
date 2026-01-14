@@ -1,60 +1,59 @@
 ﻿using TaskMangment.Application.Interfaces.Services;
 using Microsoft.Extensions.Options;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Net.Mail;
+using System.Net.Http.Headers;
 using System.Text;
-using System.Threading.Tasks;
-using TaskMangment.Application.Common.Exceptions;
+using System.Text.Json;
 
 namespace TaskMangment.Infrastructure.Services
 {
     public class EmailService : IEmailService
     {
         private readonly EmailSettings _settings;
+        private readonly HttpClient _httpClient;
 
-        public EmailService(IOptions<EmailSettings> settings)
+        public EmailService(IOptions<EmailSettings> settings, HttpClient httpClient)
         {
             _settings = settings.Value;
-        }
-
-        public async Task SendEmailAsync(string subject, string body)
-        {
-            using var client = new SmtpClient(_settings.Host, _settings.Port)
-            {
-                EnableSsl = _settings.EnableSSL,
-                Credentials = new NetworkCredential(_settings.From, _settings.Password)
-            };
-
-            var mail = new MailMessage(_settings.From, _settings.To, subject, body)
-            {
-                IsBodyHtml = true
-            };
-
-            await client.SendMailAsync(mail);
+            _httpClient = httpClient;
         }
 
         public async Task SendEmailAsync(string to, string subject, string body)
         {
-            if (string.IsNullOrEmpty(_settings.From))
+            if (string.IsNullOrWhiteSpace(_settings.BrevoApiKey))
+                throw new Exception("BrevoApiKey is missing in EmailSettings.");
+
+            if (string.IsNullOrWhiteSpace(_settings.From))
+                throw new Exception("From email is missing in EmailSettings.");
+
+            var payload = new
             {
-                throw new AppException("Email Setting Not Found",500);
+                sender = new
+                {
+                    email = _settings.From,
+                    name = "Task Manager"
+                },
+                to = new[]
+                {
+                    new { email = to }
+                },
+                subject = subject,
+                htmlContent = body
+            };
+
+            string json = JsonSerializer.Serialize(payload);
+
+            using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.brevo.com/v3/smtp/email");
+            request.Headers.Add("api-key", _settings.BrevoApiKey);
+            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            request.Content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            using var response = await _httpClient.SendAsync(request);
+            string responseBody = await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new Exception($"Brevo email send failed: {(int)response.StatusCode} - {responseBody}");
             }
-            using var client = new SmtpClient(_settings.Host, _settings.Port)
-            {
-                EnableSsl = _settings.EnableSSL,
-                Credentials = new NetworkCredential(_settings.From, _settings.Password)
-            };
-
-            var mail = new MailMessage(_settings.From, to, subject, body)
-            {
-                IsBodyHtml = true
-            };
-
-            await client.SendMailAsync(mail);
         }
     }
-
-    }
+}

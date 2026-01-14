@@ -31,33 +31,21 @@ export class AuthService {
   }
 
   login(userCode: string, password: string): Observable<BaseResponse<User & { token: string }>> {
-    this.store.dispatch(login({ userCode, password }));
-    
+  return this.authRepository.login(userCode, password).pipe(
+    map(response => {
+      if (response.data) {
+        localStorage.setItem('authToken', response.data.token);
+        localStorage.setItem('userData', JSON.stringify(response.data));
+        this.store.dispatch(NavActions.initializeMenu());
 
-    return this.authRepository.login(userCode, password).pipe(
-      map(response => {
-        if (response.data !== null) {
-          localStorage.setItem('authToken', response.data.token);
-          localStorage.setItem('userData', JSON.stringify(response.data));
-    this.store.dispatch(NavActions.initializeMenu());
+        return response;
+      } else {
+        throw new Error(response.errorList?.join('\n') || 'Login failed');
+      }
+    })
+  );
+}
 
-          this.store.dispatch(loginSuccess({ token: response.data.token }));
-          return response;
-        } else {
-          this.store.dispatch(loginFailure({ error: response.errorList.join('\n') }));
-          throw new Error(response.errorList.join('\n'));
-        }
-      }),
-      catchError(error => {
-        let errorMessage = error.message;
-        if (error.errorList) {
-          errorMessage = error.errorList.join('\n');
-        }
-        this.store.dispatch(loginFailure({ error: errorMessage }));
-        return throwError(() => new Error(errorMessage));
-      })
-    );
-  }
 
   logout() {
     localStorage.removeItem('authToken');

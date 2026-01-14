@@ -196,4 +196,43 @@
   <data name="INVALID_DATE" xml:space="preserve">
     <value>Enter the right date</value>
   </data>
+  <data name="TASK_COMMENT_NOTIFICATION" xml:space="preserve">
+    <value>A new comment was added to the task</value>
+  </data>
+  <data name="TASK_ASSIGNED_NOTIFICATION" xml:space="preserve">
+    <value>The task has been assigned to you</value>
+  </data>
+  <data name="TASK_UNASSIGNED_NOTIFICATION" xml:space="preserve">
+    <value>The task has been unassigned from you</value>
+  </data>
+  <data name="TASK_EXTENSION_REQUEST_NOTIFICATION" xml:space="preserve">
+    <value>A task extension request has been submitted</value>
+  </data>
+  <data name="TASK_CLOSE_REQUEST_NOTIFICATION" xml:space="preserve">
+    <value>A request to close the task has been submitted</value>
+  </data>
+  <data name="TASK_WARNING_NOTIFICATION" xml:space="preserve">
+    <value>A warning has been issued for the task</value>
+  </data>
+  <data name="TASK_PENALTY_NOTIFICATION" xml:space="preserve">
+    <value> A penalty has been applied to the task</value>
+  </data>
+  <data name="CLOSEAPPROVED" xml:space="preserve">
+    <value>The task closure request has been approved</value>
+  </data>
+  <data name="EXTENDAPPROVED" xml:space="preserve">
+    <value>The task extension request has been approved</value>
+  </data>
+  <data name="TASKACHIEVEMENT" xml:space="preserve">
+    <value>The task has been completed successfully</value>
+  </data>
+  <data name="LEAVEREQUESTCREATED" xml:space="preserve">
+    <value>A leave request has been created</value>
+  </data>
+  <data name="LEAVE_APPROVED_NOTIFICATION" xml:space="preserve">
+    <value>Your leave request has been approved</value>
+  </data>
+  <data name="LEAVE_REJECTED_NOTIFICATION" xml:space="preserve">
+    <value>Your leave request has been rejected</value>
+  </data>
 </root>

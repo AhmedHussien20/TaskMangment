@@ -95,13 +95,12 @@ namespace TaskMangment.API
                     });
                 });
 
-                //Localization
-                builder.Services.AddLocalization(options =>
-                {
-                    options.ResourcesPath = "Localization/Resources";
-                });
-            builder.Services.AddControllers()
-                            .AddDataAnnotationsLocalization();
+            //Localization
+            builder.Services.AddLocalization();
+            builder.Services.AddTaskMangmentLocalization();
+
+            builder.Services.AddControllers().AddDataAnnotationsLocalization();
+                            
 
             // ------------------------------
             // JWT AUTH
@@ -224,7 +223,7 @@ namespace TaskMangment.API
             //if (app.Environment.IsDevelopment())
             //{
             app.UseSwagger();
-                    app.UseSwaggerUI();
+            app.UseSwaggerUI();
                 //}
 
                 var supportedCultures = new[]

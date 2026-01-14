@@ -19,6 +19,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddEnvironmentVariables();
 
 builder.Services.AddOptions();
+builder.Services.AddHttpClient();
 
 builder.Services.Configure<EmailSettings>(
                   builder.Configuration.GetSection("EmailSettings")
