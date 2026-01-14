@@ -72,11 +72,12 @@ namespace TaskMangment.API
 
                 // SignalR
                 builder.Services.AddSignalR();
+            builder.Services.AddHttpClient();
 
 
-               
 
-                QuestPDF.Settings.License = LicenseType.Community;
+
+            QuestPDF.Settings.License = LicenseType.Community;
 
 
                 builder.Services.AddScoped<ProcessPendingEmailsJob>();
