@@ -1,11 +1,10 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using System.Security.Claims;
 using TaskMangment.API.Filters;
-using TaskMangment.Application.Interfaces.IRepository;
+using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Responses;
-
+using TaskMangment.Utilities.Localization.Resources;
 namespace TaskMangment.API.Controllers
 {
     [ServiceFilter(typeof(AuditLogAttribute))] 
@@ -13,26 +12,31 @@ namespace TaskMangment.API.Controllers
     [Route("api/[controller]")]
     public abstract class BaseController : ControllerBase
     {
-        protected int CurrentUserId =>
-       int.Parse(User.FindFirstValue("UserId"));
-
-        protected string CurrentUserEmail =>
-            User.FindFirstValue("Email");
-
-        protected string CurrentUserFullName =>
-            User.FindFirstValue("FullName");
-
-        protected int CompanyId
+        protected IStringLocalizer<Errors> L =>
+        HttpContext.RequestServices.GetRequiredService<IStringLocalizer<Errors>>();
+        protected int CurrentUserId
         {
             get
             {
-                var claim = User.FindFirstValue("CompanyId");
-                if (int.TryParse(claim, out int companyId))
-                    return companyId;
-
-                return 0;
+                var claim = User.FindFirstValue("UserId");
+                return int.TryParse(claim, out var id) ? id : 0;
             }
         }
+
+
+        protected string CurrentUserEmail =>
+            User.FindFirstValue("Email") ?? throw new AppException("FullName claim missing", StatusCodes.Status401Unauthorized);
+
+        protected string CurrentUserFullName =>
+            User.FindFirstValue("FullName") ?? throw new AppException("FullName claim missing", StatusCodes.Status401Unauthorized);
+
+        protected int CompanyId =>
+            int.Parse(User.FindFirstValue("CompanyId")
+                ?? throw new AppException("CompanyId claim missing", StatusCodes.Status401Unauthorized));
+
+        protected string Role =>
+                    User.FindFirstValue(ClaimTypes.Role)
+                    ?? throw new AppException("Unauthorized", StatusCodes.Status401Unauthorized);
 
         protected bool IsAuthenticated => User.Identity.IsAuthenticated;
         protected IActionResult Success<T>(T data, string? message = null)

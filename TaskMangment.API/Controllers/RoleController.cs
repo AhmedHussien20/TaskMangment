@@ -1,11 +1,14 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using TaskMangment.Application.Common.ApiRequests.Job;
+using TaskMangment.Application.Common.ApiRequests.Role;
 using TaskMangment.Application.DTOs;
 using TaskMangment.Application.Interfaces;
 
 namespace TaskMangment.API.Controllers
 {
     [Route("api/[controller]")]
+    [ApiController]
     public class RoleController : BaseController
     {
         private readonly IRoleService _service;
@@ -15,51 +18,48 @@ namespace TaskMangment.API.Controllers
             _service = service;
         }
 
+      
         [HttpPost]
-        public async Task<IActionResult> Add([FromBody] RoleAddDto dto)
+        public async Task<IActionResult> Create([FromBody] RoleAddEditDto dto)
         {
-            dto.CompanyId = this.CompanyId; // companyId from logged user
-
-            var result = await _service.CreateRoleAsync(dto);
-
-            if (!result.Success)
-                return Fail(result.Message);
-
+            var result = await _service.CreateAsync(dto, this.CompanyId);
             return Success(result.Data, "Role created successfully");
         }
 
-        [HttpPost("{roleId}/assign-permissions")]
-        public async Task<IActionResult> AssignPermissions(int roleId, [FromBody] List<int> permissionIds)
+      
+        [HttpGet]
+        public async Task<IActionResult> GetAll([FromQuery] RoleRequest request)
         {
-            var result = await _service.AssignPermissionsAsync(roleId, permissionIds);
-
-            if (!result.Success)
-                return Fail(result.Message);
-
-            return Success(true, "Permissions assigned successfully");
+            var result = await _service.GetAllAsync(request, this.CompanyId);
+            return Success(result.Data);
         }
 
-        [HttpPost("assign-to-employee")]
-        public async Task<IActionResult> AssignRoleToEmployee([FromQuery] int employeeId, [FromQuery] int roleId)
+         
+        [HttpGet("{id:int}")]
+        public async Task<IActionResult> GetById(int id)
         {
-            var result = await _service.AssignRoleToEmployeeAsync(employeeId, roleId);
-
-            if (!result.Success)
-                return Fail(result.Message);
-
-            return Success(true, "Role assigned to employee successfully");
-        }
-
-        [HttpGet("company")]
-        public async Task<IActionResult> GetRoles()
-        {
-            var result = await _service.GetRolesAsync(this.CompanyId);
-
-            if (!result.Success)
-                return Fail(result.Message);
+            var result = await _service.GetByIdAsync(id, this.CompanyId);
 
             return Success(result.Data);
         }
+
+         
+        [HttpPut("{id:int}")]
+        public async Task<IActionResult> Update(int id, [FromBody] RoleAddEditDto dto)
+        {
+            var result = await _service.UpdateAsync(id, dto, this.CompanyId);
+            return Success(result.Data, "Role updated successfully");
+        }
+
+        
+        [HttpDelete("{id:int}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var result = await _service.DeleteAsync(id, this.CompanyId);
+            return Success(true, "Role deleted successfully");
+        }
     }
+
 }
+
 

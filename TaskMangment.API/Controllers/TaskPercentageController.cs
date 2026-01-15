@@ -7,21 +7,19 @@ using TaskMangment.Application.Interfaces.Services;
 namespace TaskMangment.API.Controllers
 {
     [Route("api/[controller]")]
-    public class TaskCommentController : BaseController
+    public class TaskPercentageController : BaseController
     {
-        private readonly ITaskCommentService _service;
+        private readonly ITaskPercentageService _service;
 
-        public TaskCommentController(ITaskCommentService service)
+        public TaskPercentageController(ITaskPercentageService service)
         {
             _service = service;
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll([FromQuery] TaskCommentRequest request)
+        public async Task<IActionResult> GetAll([FromQuery] TaskPercentRequest request)
         {
             var result = await _service.GetAllAsync(request);
-            if (!result.Success) return Fail(result.Message);
-            //SetCacheHeader(300);
             return Success(result.Data);
         }
 
@@ -33,17 +31,17 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpPost("{taskId}")]
-        public async Task<IActionResult> Add(int taskId, [FromForm] TaskCommentAddEditDto dto)
+        public async Task<IActionResult> Add(int taskId, [FromBody] TaskPercentageAddEditDto dto)
         {
             var result = await _service.AddAsync(taskId, this.CurrentUserId, dto);
-            return Success(result.Data, "Comment added");
+            return Success(result.Data, "Percentage added");
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] TaskCommentAddEditDto dto)
+        public async Task<IActionResult> Update(int id, [FromBody] TaskPercentageAddEditDto dto)
         {
             var result = await _service.UpdateAsync(id, dto);
-            return Success(result.Data, "Comment updated");
+            return Success(result.Data, "Percentage updated");
         }
 
         [HttpDelete("{id}")]
@@ -52,6 +50,5 @@ namespace TaskMangment.API.Controllers
             var result = await _service.DeleteAsync(id);
             return Success(true);
         }
-
     }
 }

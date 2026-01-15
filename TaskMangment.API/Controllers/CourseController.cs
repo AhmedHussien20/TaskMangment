@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using TaskMangment.API.Filters;
 using TaskMangment.Application.Common.ApiRequests.Course;
 using TaskMangment.Application.DTOs;
 using TaskMangment.Application.Interfaces.Services;
+using TaskMangment.Infrastructure.Services;
 
 namespace TaskMangment.API.Controllers
 {
@@ -27,7 +29,7 @@ namespace TaskMangment.API.Controllers
             if (!result.Success)
                 return Fail(result.Message!);
 
-            SetCacheHeader(600);
+           // SetCacheHeader(600);
 
             return Success(result.Data);
         }
@@ -36,21 +38,21 @@ namespace TaskMangment.API.Controllers
         public async Task<IActionResult> GetById(int id)
         {
             var result = await _service.GetByIdAsync(id);
-
-            if (!result.Success)
-                return Fail(result.Message!, 404);
-
             return Success(result.Data);
         }
+
+        [HttpGet("{courseId}/subjects")]
+        public async Task<IActionResult> GetSubjectsByCourse(int courseId)
+        {
+            var subjects = await _service.GetSubjectsByCourseAsync(courseId);
+            return Success(subjects.Data);
+        }
+
 
         [HttpPost]
         public async Task<IActionResult> Add([FromBody] CourseAddEditDto dto)
         {
             var result = await _service.AddAsync(dto);
-
-            if (!result.Success)
-                return Fail(result.Message);
-
             return Success(result.Data, "Course added successfully");
         }
 
@@ -58,10 +60,6 @@ namespace TaskMangment.API.Controllers
         public async Task<IActionResult> Update(int id, [FromBody] CourseAddEditDto dto)
         {
             var result = await _service.UpdateAsync(id, dto);
-
-            if (!result.Success)
-                return Fail(result.Message, 404);
-
             return Success(result.Data, "Course updated successfully");
         }
 
@@ -69,10 +67,6 @@ namespace TaskMangment.API.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             var result = await _service.DeleteAsync(id);
-
-            if (!result.Success)
-                return Fail(result.Message, 404);
-
             return Success(true, "Course deleted successfully");
         }
     }

@@ -25,7 +25,7 @@ namespace TaskMangment.API.Controllers
                 return Fail(result.Message!);
 
             // Optional: Cache header
-            SetCacheHeader(600);
+           // SetCacheHeader(600);
 
             return Success(result.Data);
         }
@@ -35,11 +35,6 @@ namespace TaskMangment.API.Controllers
         public async Task<IActionResult> Add([FromBody] PermissionAddDto dto)
         {
             var result = await _service.CreateAsync(dto);
-
-            if (!result.Success)
-                return Fail(result.Message);
-
-
             return Success(result.Data, "Permission added successfully");
         }
 
@@ -47,9 +42,6 @@ namespace TaskMangment.API.Controllers
         public async Task<IActionResult> Update(int id, [FromBody] PermissionAddDto dto)
         {
             var result = await _service.UpdateAsync(id, dto);
-
-            if (!result.Success)
-                return Fail(result.Message, 404);
             return Success(result.Data, "Permission updated successfully");
         }
 
@@ -57,9 +49,6 @@ namespace TaskMangment.API.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             var result = await _service.DeleteAsync(id);
-
-            if (!result.Success)
-                return Fail(result.Message, 404);
             return Success(true, "Permission deleted successfully");
         }
     }
