@@ -5,14 +5,14 @@ using TaskMangment.Application.DTOs.ReportsDTO;
 
 namespace TaskMangment.API.Reports.Task
 {
-    public class MostAssignedEmployeesPdfReport : IDocument
+    public class EmployeeCommentsActivityPdfReport : IDocument
     {
-        private readonly List<EmployeeAssignmentsReportDto> _data;
+        private readonly List<EmployeeCommentsActivityReportDto> _data;
         private readonly DateTime _fromDate;
         private readonly DateTime _toDate;
 
-        public MostAssignedEmployeesPdfReport(
-            List<EmployeeAssignmentsReportDto> data,
+        public EmployeeCommentsActivityPdfReport(
+            List<EmployeeCommentsActivityReportDto> data,
             DateTime fromDate,
             DateTime toDate)
         {
@@ -26,9 +26,9 @@ namespace TaskMangment.API.Reports.Task
         public void Compose(IDocumentContainer container)
         {
             int employeesCount = _data.Count;
-            int totalTasks = _data.Sum(x => x.TotalTasks);
-            var topEmployee = _data.OrderByDescending(x => x.TotalTasks).FirstOrDefault();
-            var leastEmployee = _data.OrderBy(x => x.TotalTasks).FirstOrDefault();
+            int totalComments = _data.Sum(x => x.TotalComments);
+            var topEmployee = _data.OrderByDescending(x => x.TotalComments).FirstOrDefault();
+            var lastActiveDate = _data.Max(x => x.LastCommentDate);
 
             container.Page(page =>
             {
@@ -44,7 +44,7 @@ namespace TaskMangment.API.Reports.Task
                     column.Item().AlignRight().Text("Task Manager System").FontSize(9);
 
                     column.Item().AlignCenter()
-                        .Text("تقرير توزيع المهام على الموظفين")
+                        .Text("تقرير نشاط الموظفين والتفاعل مع المهام")
                         .FontSize(18)
                         .Bold();
 
@@ -74,24 +74,24 @@ namespace TaskMangment.API.Reports.Task
 
                         row.RelativeItem().Background(Colors.Green.Lighten4).Border(1).Padding(8).AlignCenter().Column(c =>
                         {
-                            c.Item().Text("إجمالي المهام").Bold().FontSize(9);
-                            c.Item().Text(totalTasks.ToString()).Bold().FontSize(16);
+                            c.Item().Text("إجمالي التعليقات").Bold().FontSize(9);
+                            c.Item().Text(totalComments.ToString()).Bold().FontSize(16);
                         });
 
                         row.RelativeItem().Background(Colors.Orange.Lighten4).Border(1).Padding(8).AlignCenter().Column(c =>
                         {
-                            c.Item().Text("أعلى عبء عمل").Bold().FontSize(9);
+                            c.Item().Text("أكثر تفاعل").Bold().FontSize(9);
                             c.Item().Text(topEmployee != null
-                                ? $"{topEmployee.EmployeeName} ({topEmployee.TotalTasks})"
+                                ? $"{topEmployee.EmployeeName} ({topEmployee.TotalComments})"
                                 : "-")
                                 .Bold().FontSize(12);
                         });
 
                         row.RelativeItem().Background(Colors.Grey.Lighten3).Border(1).Padding(8).AlignCenter().Column(c =>
                         {
-                            c.Item().Text("أقل عبء عمل").Bold().FontSize(9);
-                            c.Item().Text(leastEmployee != null
-                                ? $"{leastEmployee.EmployeeName} ({leastEmployee.TotalTasks})"
+                            c.Item().Text("آخر نشاط").Bold().FontSize(9);
+                            c.Item().Text(lastActiveDate.HasValue
+                                ? lastActiveDate.Value.ToString("dd/MM/yyyy")
                                 : "-")
                                 .Bold().FontSize(12);
                         });
@@ -102,43 +102,33 @@ namespace TaskMangment.API.Reports.Task
                     {
                         table.ColumnsDefinition(columns =>
                         {
-                            columns.ConstantColumn(35);  
+                            columns.ConstantColumn(40);  
                             columns.RelativeColumn(3);  
-                            columns.RelativeColumn(1.5f); 
-                            columns.RelativeColumn(1.5f); 
-                            columns.RelativeColumn(1.5f); 
-                            columns.RelativeColumn(1.5f);  
-                            columns.RelativeColumn(1.5f); 
-                            columns.RelativeColumn(1.5f);  
-                            columns.RelativeColumn(2); 
+                            columns.RelativeColumn(2);   
+                            columns.RelativeColumn(2);   
+                            columns.RelativeColumn(2);  
+                            columns.RelativeColumn(2);   
                         });
 
-                        // ===== HEADER =====
                         AddHeaderCell(table, "ترتيب");
                         AddHeaderCell(table, "الموظف");
-                        AddHeaderCell(table, "الإجمالي");
-                        AddHeaderCell(table, "جديدة");
-                        AddHeaderCell(table, "قيد التنفيذ");
-                        AddHeaderCell(table, "مغلقة");
-                        AddHeaderCell(table, "متأخرة");
-                        AddHeaderCell(table, "قريبة");
-                        AddHeaderCell(table, "نسبة الإنجاز");
+                        AddHeaderCell(table, "إجمالي التعليقات");
+                        AddHeaderCell(table, "عدد المهام");
+                        AddHeaderCell(table, "متوسط / مهمة");
+                        AddHeaderCell(table, "آخر تعليق");
 
                         int rank = 1;
 
-                        foreach (var row in _data.OrderByDescending(x => x.TotalTasks))
+                        foreach (var row in _data.OrderByDescending(x => x.TotalComments))
                         {
                             string bg = rank % 2 == 0 ? Colors.Grey.Lighten4 : Colors.White;
 
                             AddDataCell(table, rank.ToString(), bg);
                             AddDataCell(table, row.EmployeeName, bg);
-                            AddDataCell(table, row.TotalTasks.ToString(), bg);
-                            AddDataCell(table, row.NewTasks.ToString(), bg);
-                            AddDataCell(table, row.InProgressTasks.ToString(), bg);
-                            AddDataCell(table, row.ClosedTasks.ToString(), bg);
-                            AddDataCell(table, row.OverdueTasks.ToString(), bg);
-                            AddDataCell(table, row.ClosingSoonTasks.ToString(), bg);
-                            AddDataCell(table, row.CompletionRate.ToString("0.##") + " %", bg);
+                            AddDataCell(table, row.TotalComments.ToString(), bg);
+                            AddDataCell(table, row.DistinctTasksCount.ToString(), bg);
+                            AddDataCell(table, row.AvgCommentsPerTask.ToString("0.##"), bg);
+                            AddDataCell(table, row.LastCommentDate?.ToString("dd/MM/yyyy") ?? "-", bg);
 
                             rank++;
                         }
@@ -177,4 +167,5 @@ namespace TaskMangment.API.Reports.Task
                 .FontSize(9);
         }
     }
+
 }

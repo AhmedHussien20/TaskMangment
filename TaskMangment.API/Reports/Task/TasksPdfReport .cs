@@ -12,10 +12,7 @@ public class TasksPdfReport : IDocument
         _tasks = tasks;
     }
 
-    public DocumentMetadata GetMetadata()
-    {
-        return DocumentMetadata.Default;
-    }
+    public DocumentMetadata GetMetadata() => DocumentMetadata.Default;
 
     public void Compose(IDocumentContainer container)
     {
@@ -27,17 +24,22 @@ public class TasksPdfReport : IDocument
             page.DefaultTextStyle(x =>
                 x.FontFamily("Cairo")
                  .FontSize(11));
+            page.ContentFromRightToLeft();
 
             // ================= HEADER =================
-            page.Header().PaddingBottom(10).Column(column =>
+            page.Header().Column(column =>
             {
                 column.Item().AlignRight()
+                    .Text("Task Manager System")
+                    .FontSize(9);
+
+                column.Item().AlignCenter()
                     .Text("تقرير المهام")
                     .FontSize(20)
                     .Bold();
 
-                column.Item().AlignRight()
-                    .Text($"تاريخ التقرير: {DateTime.Now:yyyy/MM/dd}")
+                column.Item().AlignCenter()
+                    .Text($"تاريخ إنشاء التقرير: {DateTime.Now:dd/MM/yyyy}")
                     .FontSize(10)
                     .FontColor(Colors.Grey.Darken1);
 
@@ -47,56 +49,54 @@ public class TasksPdfReport : IDocument
             });
 
             // ================= CONTENT =================
-            page.Content().PaddingTop(10).Table(table =>
+            page.Content().PaddingTop(10).Column(column =>
             {
-                table.ColumnsDefinition(columns =>
+                // ===== TABLE =====
+                column.Item().Table(table =>
                 {
-                    columns.RelativeColumn(4); 
-                    columns.RelativeColumn(2);  
-                    columns.RelativeColumn(2);  
-                    columns.RelativeColumn(3);  
-                    columns.RelativeColumn(2); 
+                    table.ColumnsDefinition(columns =>
+                    {
+                        columns.RelativeColumn(4);  
+                        columns.RelativeColumn(2);  
+                        columns.RelativeColumn(2);  
+                        columns.RelativeColumn(3);  
+                        columns.RelativeColumn(2);  
+                    });
+
+                    // ===== HEADER ROW =====
+                    AddHeaderCell(table, "عنوان المهمة");
+                    AddHeaderCell(table, "الحالة");
+                    AddHeaderCell(table, "الأولوية");
+                    AddHeaderCell(table, "المسؤول");
+                    AddHeaderCell(table, "تاريخ الاستحقاق");
+
+                    int index = 0;
+
+                    foreach (var task in _tasks)
+                    {
+                        string bgColor = index++ % 2 == 0
+                            ? Colors.White
+                            : Colors.Grey.Lighten4;
+
+                        AddDataCell(table, task.Title, bgColor);
+                        AddDataCell(table, task.Status, bgColor);
+                        AddDataCell(table, task.Priority, bgColor);
+                        AddDataCell(table, task.AssignedTo, bgColor);
+                        AddDataCell(
+                            table,
+                            task.DueDate.HasValue
+                                ? task.DueDate.Value.ToString("dd/MM/yyyy")
+                                : "-",
+                            bgColor
+                        );
+                    }
                 });
-
-                // ---------- TABLE HEADER ----------
-                table.Header(header =>
-                {
-                    header.Cell().Element(HeaderCellStyle).Text("عنوان المهمة");
-                    header.Cell().Element(HeaderCellStyle).Text("الحالة");
-                    header.Cell().Element(HeaderCellStyle).Text("الأولوية");
-                    header.Cell().Element(HeaderCellStyle).Text("المسؤول");
-                    header.Cell().Element(HeaderCellStyle).Text("تاريخ الاستحقاق");
-                });
-
-                // ---------- TABLE ROWS ----------
-                int index = 0;
-                foreach (var task in _tasks)
-                {
-                    string bgColor = index++ % 2 == 0
-                        ? Colors.White
-                        : Colors.Grey.Lighten4;
-
-                    table.Cell().Element(c => DataCellStyle(c, bgColor))
-                        .Text(task.Title);
-
-                    table.Cell().Element(c => DataCellStyle(c, bgColor))
-                        .Text(task.Status);
-
-                    table.Cell().Element(c => DataCellStyle(c, bgColor))
-                        .Text(task.Priority);
-
-                    table.Cell().Element(c => DataCellStyle(c, bgColor))
-                        .Text(task.AssignedTo);
-
-                    table.Cell().Element(c => DataCellStyle(c, bgColor))
-                        .Text(task.DueDate?.ToString("yyyy/MM/dd") ?? "-");
-                }
             });
 
             // ================= FOOTER =================
             page.Footer().AlignCenter().Text(text =>
             {
-                text.Span("صفحة ");
+                text.Span("Task Manager System — صفحة ");
                 text.CurrentPageNumber();
                 text.Span(" من ");
                 text.TotalPages();
@@ -104,26 +104,28 @@ public class TasksPdfReport : IDocument
         });
     }
 
-    // ================= STYLES =================
+    // ================= HELPERS =================
 
-    static IContainer HeaderCellStyle(IContainer container)
+    void AddHeaderCell(TableDescriptor table, string text)
     {
-        return container
+        table.Cell()
             .Border(1)
             .BorderColor(Colors.Grey.Darken1)
             .Background(Colors.Grey.Lighten2)
             .Padding(6)
             .AlignRight()
-            .DefaultTextStyle(x => x.Bold());
+            .Text(text)
+            .Bold();
     }
 
-    static IContainer DataCellStyle(IContainer container, string backgroundColor)
+    void AddDataCell(TableDescriptor table, string text, string bgColor)
     {
-        return container
+        table.Cell()
             .Border(1)
             .BorderColor(Colors.Grey.Lighten2)
-            .Background(backgroundColor)
+            .Background(bgColor)
             .Padding(6)
-            .AlignRight();
+            .AlignRight()
+            .Text(text);
     }
 }

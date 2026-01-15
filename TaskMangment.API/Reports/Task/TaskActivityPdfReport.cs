@@ -23,7 +23,7 @@ namespace TaskMangment.API.Reports.Task
                 page.Size(PageSizes.A4);
                 page.Margin(25);
                 page.DefaultTextStyle(x => x.FontFamily("Cairo").FontSize(11));
-
+                page.ContentFromRightToLeft();
                 // Header
                 page.Header().PaddingBottom(10).Column(column =>
                 {
@@ -37,11 +37,11 @@ namespace TaskMangment.API.Reports.Task
                 {
                     table.ColumnsDefinition(columns =>
                     {
-                        columns.RelativeColumn(4); // المهمة + رقمها
-                        columns.RelativeColumn(3); // جهة التكليف
-                        columns.RelativeColumn(4); // التعليق
-                        columns.RelativeColumn(2); // تاريخ التعليق
-                        columns.RelativeColumn(3); // الموظف الذي علق
+                        columns.RelativeColumn(4); 
+                        columns.RelativeColumn(3); 
+                        columns.RelativeColumn(4); 
+                        columns.RelativeColumn(2); 
+                        columns.RelativeColumn(3);  
                     });
 
                     table.Header(header =>

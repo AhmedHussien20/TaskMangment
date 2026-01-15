@@ -38,9 +38,9 @@ namespace TaskMangment.API.Controllers
         [HttpGet("top-commenters/pdf")]
         public async Task<IActionResult> GetTopCommentersPdf(DateTime? fromDate,DateTime? toDate)
         {
-            var data = await _reportService.GetTopEmployeesByCommentsAsync(fromDate, toDate);
+            var data = await _reportService.GetEmployeesCommentsActivityAsync(fromDate.Value, toDate.Value);
 
-            var report = new EmployeeCommentsPdfReport(data);
+            var report = new EmployeeCommentsActivityPdfReport(data, fromDate.Value, toDate.Value);
             var pdf = report.GeneratePdf();
 
             return File(pdf, "application/pdf", "top-commenters-report.pdf");
@@ -52,7 +52,7 @@ namespace TaskMangment.API.Controllers
         {
             var data = await _reportService.GetMostAssignedEmployeesAsync(fromDate, toDate);
 
-            var report = new MostAssignedEmployeesPdfReport(data);
+            var report = new MostAssignedEmployeesPdfReport(data, fromDate.Value,toDate.Value);
             var pdf = report.GeneratePdf();
 
             return File(pdf, "application/pdf", "most-assigned-employees.pdf");
@@ -63,7 +63,7 @@ namespace TaskMangment.API.Controllers
         {
             var data = await _reportService.GetOnTimeCompletionReportAsync(this.Role, this.CurrentUserId, fromDate, toDate);
 
-            var report = new OnTimeCompletionPdfReport(data);
+            var report = new OnTimeCompletionPdfReport(data, fromDate.Value, toDate.Value);
             var pdf = report.GeneratePdf();
 
             return File(pdf, "application/pdf", "on-time-completion-report.pdf");
@@ -83,10 +83,13 @@ namespace TaskMangment.API.Controllers
         [HttpGet("task-discounts/pdf")]
         public async Task<IActionResult> GetTaskDiscountsPdf([FromQuery] TaskDiscountReportFilterDto filter)
         {
-            var data = await _reportService.GetTaskDiscountReportAsync(filter);
+            var data = await _reportService.GetTaskDiscountAuditReportAsync(filter);
+            string title = filter.MovementType == TaskMovementType.Incoming
+    ? "تقرير خصومات المهام الواردة"
+    : "تقرير خصومات المهام الصادرة";
 
 
-            var report = new TaskDiscountsMovementPdfReport(data, filter.MovementType);
+            var report = new TaskDiscountAuditPdfReport(data,title);
             var pdf = report.GeneratePdf();
 
             return File(pdf, "application/pdf", "task-discounts-report.pdf");
@@ -121,7 +124,7 @@ namespace TaskMangment.API.Controllers
         public async Task<IActionResult> GetClosingSoonTasksPdf(int employeeId)
         {
             var now = DateTime.UtcNow;
-            var next3Days = now.AddHours(72);
+            var next3Days = now.AddDays(3);
 
             var tasks = await _reportService.GetTasksClosingSoonAsync(employeeId, now, next3Days);
 

@@ -18,24 +18,35 @@ namespace TaskMangment.API.Reports.Task
 
         public void Compose(IDocumentContainer container)
         {
+            int totalEmployees = _data.Count;
+            int totalTasks = _data.Sum(x => x.TotalTasks);
+            int totalArchived = _data.Sum(x => x.ArchivedTasksCount);
+            decimal maxArchiveRate = _data.Any() ? _data.Max(x => x.ArchiveRate) : 0;
+
             container.Page(page =>
             {
                 page.Size(PageSizes.A4);
                 page.Margin(25);
+                page.ContentFromRightToLeft();
+
                 page.DefaultTextStyle(x =>
                     x.FontFamily("Cairo")
                      .FontSize(11));
 
-                // ===== HEADER =====
-                page.Header().PaddingBottom(10).Column(column =>
+                // ================= HEADER =================
+                page.Header().Column(column =>
                 {
                     column.Item().AlignRight()
-                        .Text("الموظفون الأكثر أرشفةً للمهام")
+                        .Text("Task Manager System")
+                        .FontSize(9);
+
+                    column.Item().AlignCenter()
+                        .Text("تقرير تحليل أرشفة المهام حسب الموظفين")
                         .FontSize(20)
                         .Bold();
 
-                    column.Item().AlignRight()
-                        .Text($"تاريخ التقرير: {DateTime.Now:yyyy/MM/dd}")
+                    column.Item().AlignCenter()
+                        .Text($"تاريخ إنشاء التقرير: {DateTime.Now:dd/MM/yyyy}")
                         .FontSize(10)
                         .FontColor(Colors.Grey.Darken1);
 
@@ -44,40 +55,77 @@ namespace TaskMangment.API.Reports.Task
                         .LineColor(Colors.Grey.Lighten2);
                 });
 
-                // ===== CONTENT =====
-                page.Content().PaddingTop(10).Table(table =>
+                // ================= CONTENT =================
+                page.Content().PaddingTop(10).Column(column =>
                 {
-                    table.ColumnsDefinition(columns =>
+                    // ===== SUMMARY =====
+                    column.Item().Row(row =>
                     {
-                        columns.RelativeColumn(4);
-                        columns.RelativeColumn(2);
+                        SummaryCard(row, "عدد الموظفين", totalEmployees.ToString(), Colors.Blue.Lighten4);
+                        SummaryCard(row, "إجمالي المهام", totalTasks.ToString(), Colors.Grey.Lighten3);
+                        SummaryCard(row, "إجمالي المؤرشف", totalArchived.ToString(), Colors.Orange.Lighten4);
+                        SummaryCard(row, "أعلى نسبة أرشفة", $"{maxArchiveRate:0.##}%", Colors.Red.Lighten4);
                     });
 
-                    table.Header(header =>
+                    column.Item().PaddingTop(10);
+
+                    // ===== TABLE =====
+                    column.Item().Table(table =>
                     {
-                        header.Cell().Element(HeaderCellStyle).Text("اسم الموظف");
-                        header.Cell().Element(HeaderCellStyle).Text("عدد المهام المؤرشفة");
+                        table.ColumnsDefinition(columns =>
+                        {
+                            columns.ConstantColumn(40);    
+                            columns.RelativeColumn(4);    
+                            columns.RelativeColumn(2);   
+                            columns.RelativeColumn(2);   
+                            columns.RelativeColumn(2);   
+                        });
+
+                        AddHeaderCell(table, "ترتيب");
+                        AddHeaderCell(table, "اسم الموظف");
+                        AddHeaderCell(table, "إجمالي المهام");
+                        AddHeaderCell(table, "المؤرشفة");
+                        AddHeaderCell(table, "نسبة الأرشفة %");
+
+                        int index = 1;
+
+                        foreach (var row in _data.OrderByDescending(x => x.ArchiveRate))
+                        {
+                            string bg = Colors.White;
+
+                            AddDataCell(table, index.ToString(), bg);
+                            AddDataCell(table, row.EmployeeName, bg);
+                            AddDataCell(table, row.TotalTasks.ToString(), bg);
+                            AddDataCell(table, row.ArchivedTasksCount.ToString(), bg);
+
+                            string rateColor =
+                                row.ArchiveRate > 50 ? Colors.Red.Lighten4 :
+                                row.ArchiveRate >= 20 ? Colors.Orange.Lighten4 :
+                                Colors.Green.Lighten4;
+
+                            table.Cell()
+                                .Border(1)
+                                .BorderColor(Colors.Grey.Lighten2)
+                                .Background(rateColor)
+                                .Padding(6)
+                                .AlignCenter()
+                                .Text($"{row.ArchiveRate:0.##}%");
+
+                            index++;
+                        }
                     });
 
-                    int index = 0;
-                    foreach (var row in _data)
-                    {
-                        string bg = index++ % 2 == 0
-                            ? Colors.White
-                            : Colors.Grey.Lighten4;
-
-                        table.Cell().Element(c => DataCellStyle(c, bg))
-                            .Text(row.EmployeeName);
-
-                        table.Cell().Element(c => DataCellStyle(c, bg))
-                            .Text(row.ArchivedTasksCount.ToString());
-                    }
+                    // ===== LEGEND =====
+                    column.Item().PaddingTop(8)
+                        .AlignRight()
+                        .Text("🟥 نسبة عالية   🟧 متوسطة   🟩 طبيعية")
+                        .FontSize(9);
                 });
 
-                // ===== FOOTER =====
+                // ================= FOOTER =================
                 page.Footer().AlignCenter().Text(text =>
                 {
-                    text.Span("صفحة ");
+                    text.Span("Task Manager System — صفحة ");
                     text.CurrentPageNumber();
                     text.Span(" من ");
                     text.TotalPages();
@@ -85,22 +133,43 @@ namespace TaskMangment.API.Reports.Task
             });
         }
 
-        static IContainer HeaderCellStyle(IContainer container)
-            => container
+        // ================= HELPERS =================
+
+        void SummaryCard(RowDescriptor row, string title, string value, string bgColor)
+        {
+            row.RelativeItem()
+               .Background(bgColor)
+               .Border(1)
+               .Padding(8)
+               .AlignCenter()
+               .Column(c =>
+               {
+                   c.Item().Text(title).Bold().FontSize(10);
+                   c.Item().Text(value).Bold().FontSize(16);
+               });
+        }
+
+        void AddHeaderCell(TableDescriptor table, string text)
+        {
+            table.Cell()
                 .Border(1)
                 .BorderColor(Colors.Grey.Darken1)
                 .Background(Colors.Grey.Lighten2)
                 .Padding(6)
-                .AlignRight()
-                .DefaultTextStyle(x => x.Bold());
+                .AlignCenter()
+                .Text(text)
+                .Bold();
+        }
 
-        static IContainer DataCellStyle(IContainer container, string bg)
-            => container
+        void AddDataCell(TableDescriptor table, string text, string bg)
+        {
+            table.Cell()
                 .Border(1)
                 .BorderColor(Colors.Grey.Lighten2)
                 .Background(bg)
                 .Padding(6)
-                .AlignRight();
+                .AlignCenter()
+                .Text(text);
+        }
     }
-
 }

@@ -18,98 +18,145 @@ namespace TaskMangment.API.Reports.Task
 
         public void Compose(IDocumentContainer container)
         {
+            int totalTasks = _tasks.Count;
+            int affectedEmployees = _tasks.Select(t => t.EmployeeName).Distinct().Count();
+            int affectedBranches = _tasks.Select(t => t.BranchName).Distinct().Count();
+
             container.Page(page =>
             {
                 page.Size(PageSizes.A4);
-                page.Margin(25);
-                page.DefaultTextStyle(x => x.FontFamily("Cairo").FontSize(11));
+                page.Margin(20);
+                page.ContentFromRightToLeft();
 
-                // ===== HEADER =====
-                page.Header().PaddingBottom(10).Column(column =>
+                page.DefaultTextStyle(x =>
+                    x.FontFamily("Cairo").FontSize(10));
+
+                // ================= HEADER =================
+                page.Header().Column(column =>
                 {
-                    column.Item().AlignRight()
-                        .Text("المهام الجديدة وقيد التنفيذ التي ستغلق قريبًا")
-                        .FontSize(20)
+                    column.Item().AlignRight().Text("Task Manager System").FontSize(9);
+
+                    column.Item().AlignCenter()
+                        .Text("تقرير المهام القريبة من الإغلاق")
+                        .FontSize(18)
                         .Bold();
 
-                    column.Item().AlignRight()
-                        .Text($"تاريخ التقرير: {DateTime.Now:yyyy/MM/dd}")
-                        .FontSize(10)
+                    column.Item().AlignCenter()
+                        .Text($"تاريخ إنشاء التقرير: {DateTime.Now:dd/MM/yyyy}")
+                        .FontSize(9)
                         .FontColor(Colors.Grey.Darken1);
 
-                    column.Item().PaddingTop(5)
-                        .LineHorizontal(1)
-                        .LineColor(Colors.Grey.Lighten2);
+                    column.Item().PaddingTop(5).LineHorizontal(1);
                 });
 
-                // ===== CONTENT =====
-                page.Content().PaddingTop(10).Table(table =>
+                // ================= CONTENT =================
+                page.Content().PaddingTop(10).Column(column =>
                 {
-                    table.ColumnsDefinition(columns =>
+                    // ================= SUMMARY =================
+                    column.Item().Row(row =>
                     {
-                        columns.RelativeColumn(2); // رقم المهمة
-                        columns.RelativeColumn(5); // عنوان المهمة
-                        columns.RelativeColumn(3); // جهة التكليف
-                        columns.RelativeColumn(2); // تاريخ الإغلاق المتوقع
+                        row.RelativeItem().Background(Colors.Blue.Lighten4).Border(1).Padding(8).AlignCenter().Column(c =>
+                        {
+                            c.Item().Text("عدد المهام القريبة من الإغلاق").Bold().FontSize(9);
+                            c.Item().Text(totalTasks.ToString()).Bold().FontSize(16);
+                        });
+
+                        row.RelativeItem().Background(Colors.Green.Lighten4).Border(1).Padding(8).AlignCenter().Column(c =>
+                        {
+                            c.Item().Text("الموظفون المتأثرون").Bold().FontSize(9);
+                            c.Item().Text(affectedEmployees.ToString()).Bold().FontSize(16);
+                        });
+
+                        row.RelativeItem().Background(Colors.Grey.Lighten3).Border(1).Padding(8).AlignCenter().Column(c =>
+                        {
+                            c.Item().Text("الفروع المتأثرة").Bold().FontSize(9);
+                            c.Item().Text(affectedBranches.ToString()).Bold().FontSize(16);
+                        });
                     });
 
-                    // ===== Table Header =====
-                    table.Header(header =>
+                    // ================= TABLE =================
+                    column.Item().PaddingTop(8).Table(table =>
                     {
-                        header.Cell().Element(HeaderCellStyle).Text("رقم المهمة");
-                        header.Cell().Element(HeaderCellStyle).Text("عنوان المهمة");
-                        header.Cell().Element(HeaderCellStyle).Text("جهة التكليف");
-                        header.Cell().Element(HeaderCellStyle).Text("تاريخ الإغلاق المتوقع");
+                        table.ColumnsDefinition(columns =>
+                        {
+                            columns.ConstantColumn(30);    
+                            columns.RelativeColumn(3);    
+                            columns.RelativeColumn(2);   
+                            columns.RelativeColumn(2);  
+                            columns.RelativeColumn(2); 
+                            columns.RelativeColumn(2);  
+                            columns.RelativeColumn(2); 
+                            columns.RelativeColumn(2); 
+                            columns.RelativeColumn(1.5f); 
+                        });
+
+                        // ===== HEADER =====
+                        AddHeaderCell(table, "رقم");
+                        AddHeaderCell(table, "عنوان المهمة");
+                        AddHeaderCell(table, "الموظف");
+                        AddHeaderCell(table, "الشركة");
+                        AddHeaderCell(table, "الفرع");
+                        AddHeaderCell(table, "المنطقة");
+                        AddHeaderCell(table, "جهة التكليف");
+                        AddHeaderCell(table, "تاريخ الإغلاق المتوقع");
+                        AddHeaderCell(table, "الحالة");
+
+                        int index = 1;
+
+                        foreach (var task in _tasks.OrderBy(t => t.ClosedDate))
+                        {
+                            string bg = index % 2 == 0
+                                ? Colors.Grey.Lighten4
+                                : Colors.White;
+
+                            AddDataCell(table, index++.ToString(), bg);
+                            AddDataCell(table, task.Title, bg);
+                            AddDataCell(table, task.EmployeeName, bg);
+                            AddDataCell(table, task.CompanyName, bg);
+                            AddDataCell(table, task.BranchName, bg);
+                            AddDataCell(table, task.AreaName, bg);
+                            AddDataCell(table, task.AssignedBy, bg);
+                            AddDataCell(
+                                table,
+                                task.DueDate.HasValue
+                                    ? task.DueDate.Value.ToString("dd/MM/yyyy")
+                                    : "-",
+                                bg);
+                            AddDataCell(table, task.Status.ToString(), bg);
+                        }
                     });
-
-                    // ===== Table Data =====
-                    int index = 0;
-                    foreach (var task in _tasks)
-                    {
-                        string bg = index++ % 2 == 0 ? Colors.White : Colors.Grey.Lighten4;
-
-                        table.Cell().Element(c => DataCellStyle(c, bg))
-                            .Text(task.TaskId.ToString());
-
-                        table.Cell().Element(c => DataCellStyle(c, bg))
-                            .Text(task.Title);
-
-                        table.Cell().Element(c => DataCellStyle(c, bg))
-                            .Text(task.AssignedBy);
-
-                        table.Cell().Element(c => DataCellStyle(c, bg))
-                            .Text(task.ClosedDate.HasValue
-                                ? task.ClosedDate.Value.ToString("yyyy/MM/dd")
-                                : "-");
-                    }
                 });
 
-                // ===== FOOTER =====
-                page.Footer().AlignCenter().Text(text =>
-                {
-                    text.Span("صفحة ");
-                    text.CurrentPageNumber();
-                    text.Span(" من ");
-                    text.TotalPages();
-                });
+                // ================= FOOTER =================
+                page.Footer().AlignCenter()
+                    .Text($"Task Manager System — تم الإنشاء بتاريخ {DateTime.Now:dd/MM/yyyy}")
+                    .FontSize(9);
             });
         }
 
-        static IContainer HeaderCellStyle(IContainer container) =>
-            container
-                .Border(1)
-                .BorderColor(Colors.Grey.Darken1)
-                .Background(Colors.Grey.Lighten2)
-                .Padding(6)
-                .AlignRight()
-                .DefaultTextStyle(x => x.Bold());
+        // ================= HELPERS =================
 
-        static IContainer DataCellStyle(IContainer container, string bg) =>
-            container
+        void AddHeaderCell(TableDescriptor table, string text)
+        {
+            table.Cell()
                 .Border(1)
-                .BorderColor(Colors.Grey.Lighten2)
+                .Background(Colors.Blue.Lighten5)  
+                .Padding(4)
+                .AlignRight()
+                .Text(text)
+                .Bold()
+                .FontSize(9);
+        }
+
+        void AddDataCell(TableDescriptor table, string text, string bg)
+        {
+            table.Cell()
+                .Border(1)
                 .Background(bg)
-                .Padding(6)
-                .AlignRight();
+                .Padding(3)
+                .AlignRight()
+                .Text(text)
+                .FontSize(9);
+        }
     }
 }

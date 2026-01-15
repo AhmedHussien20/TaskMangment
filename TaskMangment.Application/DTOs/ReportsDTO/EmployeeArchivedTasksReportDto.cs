@@ -9,7 +9,12 @@ namespace TaskMangment.Application.DTOs.ReportsDTO
     public class EmployeeArchivedTasksReportDto
     {
         public string EmployeeName { get; set; }
-        public int ArchivedTasksCount { get; set; }
+
+        public int TotalTasks { get; set; }           
+        public int ArchivedTasksCount { get; set; }  
+
+        public decimal ArchiveRate { get; set; }     
     }
+
 
 }

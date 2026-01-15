@@ -9,9 +9,13 @@ namespace TaskMangment.Application.DTOs.ReportsDTO
     public class EmployeeOnTimeReportDto
     {
         public string EmployeeName { get; set; }
-        public int TotalTasks { get; set; }
+
+        public int TotalClosedTasks { get; set; }
         public int OnTimeTasks { get; set; }
-        //public decimal CommitmentPercentage { get; set; }
+        public int LateTasks { get; set; }
+
+        public decimal CommitmentPercentage { get; set; }
     }
+
 
 }

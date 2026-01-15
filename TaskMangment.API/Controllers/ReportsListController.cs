@@ -76,11 +76,12 @@ namespace TaskMangment.API.Controllers
             var data = await _reportService.GetTaskMovementReportAsync(filter);
             return Success(data);
         }
+
         [HttpGet("closing-soon-tasks")]
         public async Task<IActionResult> GetClosingSoonTasks([FromQuery] int employeeId)
         {
             var now = DateTime.UtcNow;
-            var next3Days = now.AddHours(72); 
+            var next3Days = now.AddDays(3); 
 
             var tasks = await _reportService.GetTasksClosingSoonAsync(employeeId, now, next3Days);
 

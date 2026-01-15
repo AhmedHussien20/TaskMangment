@@ -19,6 +19,33 @@ namespace TaskMangment.Infrastructure.Services
         {
             _context = context;
         }
+        public async Task<List<EmployeeCommentsActivityReportDto>> GetEmployeesCommentsActivityAsync(DateTime fromDate,DateTime toDate)
+        {
+            return await _context.TaskComments
+                .Where(c => c.CreatedDate >= fromDate && c.CreatedDate <= toDate)
+                .GroupBy(c => new
+                {
+                    c.EmployeeId,
+                    c.Employee.FullName
+                })
+                .Select(g => new EmployeeCommentsActivityReportDto
+                {
+                    EmployeeName = g.Key.FullName,
+
+                    TotalComments = g.Count(),
+
+                    DistinctTasksCount = g.Select(x => x.TaskId).Distinct().Count(),
+
+                    AvgCommentsPerTask = g.Select(x => x.TaskId).Distinct().Count() == 0
+                        ? 0
+                        : (decimal)g.Count() / g.Select(x => x.TaskId).Distinct().Count(),
+
+                    LastCommentDate = g.Max(x => x.CreatedDate)
+                })
+                .OrderByDescending(x => x.TotalComments)
+                .AsNoTracking()
+                .ToListAsync();
+        }
 
         public async Task<List<EmployeeCommentsReportDto>> GetTopEmployeesByCommentsAsync(DateTime? fromDate = null, DateTime? toDate = null)
         {
@@ -47,9 +74,12 @@ namespace TaskMangment.Infrastructure.Services
         }
 
 
-        public async Task<List<EmployeeAssignmentsReportDto>> GetMostAssignedEmployeesAsync(DateTime? fromDate = null,DateTime? toDate = null)
+        public async Task<List<EmployeeAssignmentsReportDto>> GetMostAssignedEmployeesAsync( DateTime? fromDate = null,DateTime? toDate = null)
         {
-            var query = _context.TaskAssignments.Include(a => a.Employee).Include(a => a.Task).AsQueryable();
+            var query = _context.TaskAssignments
+                .Include(a => a.Employee)
+                .Include(a => a.Task)
+                .AsQueryable();
 
             if (fromDate.HasValue)
                 query = query.Where(a => a.Task.CreatedDate >= fromDate.Value);
@@ -60,58 +90,96 @@ namespace TaskMangment.Infrastructure.Services
             if (!fromDate.HasValue && !toDate.HasValue)
                 return new List<EmployeeAssignmentsReportDto>();
 
+            DateTime today = DateTime.Today;
+            DateTime closingSoonDate = today.AddDays(3);
+
             return await query
                 .GroupBy(a => new
                 {
                     a.EmployeeId,
                     a.Employee.FullName
-                }).Select(g => new EmployeeAssignmentsReportDto
+                })
+                .Select(g => new EmployeeAssignmentsReportDto
                 {
                     EmployeeName = g.Key.FullName,
-                    TasksCount = g.Count()
-                }).OrderByDescending(x => x.TasksCount) .AsNoTracking().ToListAsync();
+
+                    TotalTasks = g.Count(),
+
+                    NewTasks = g.Count(x => x.Task.Status == WorkTaskStatus.New),
+                    InProgressTasks = g.Count(x => x.Task.Status == WorkTaskStatus.InProgress),
+                    ClosedTasks = g.Count(x => x.Task.Status == WorkTaskStatus.Closed),
+
+                    OverdueTasks = g.Count(x =>
+                        x.Task.Status != WorkTaskStatus.Closed &&
+                        x.Task.DueDate != null &&
+                        x.Task.DueDate < today),
+
+                    ClosingSoonTasks = g.Count(x =>
+                        x.Task.Status != WorkTaskStatus.Closed &&
+                        x.Task.DueDate != null &&
+                        x.Task.DueDate >= today &&
+                        x.Task.DueDate <= closingSoonDate),
+
+                    CompletionRate = g.Count(x => x.Task.Status == WorkTaskStatus.Closed) == 0
+                        ? 0
+                        : (decimal)g.Count(x => x.Task.Status == WorkTaskStatus.Closed) * 100 / g.Count()
+                })
+                .OrderByDescending(x => x.TotalTasks)
+                .AsNoTracking()
+                .ToListAsync();
         }
 
 
 
-        public async Task<List<EmployeeOnTimeReportDto>> GetOnTimeCompletionReportAsync(
-     string role,
-     int employeeId,
-     DateTime? fromDate = null,
-     DateTime? toDate = null)
+
+        public async Task<List<EmployeeOnTimeReportDto>> GetOnTimeCompletionReportAsync(string role,int employeeId,DateTime? fromDate = null, DateTime? toDate = null)
         {
             var query = _context.TaskAssignments
-                .Include(a => a.Employee)
-                .Include(a => a.Task)
-                .AsQueryable();
+                                .Include(a => a.Employee)
+                                .Include(a => a.Task)
+                                .AsQueryable();
 
             if (role != "Manager")
-            {
                 query = query.Where(a => a.EmployeeId == employeeId);
-            }
 
             if (fromDate.HasValue)
-                query = query.Where(a => a.Task.CreatedDate >= fromDate.Value);
+                query = query.Where(a => a.Task.ClosedAt >= fromDate.Value);
 
             if (toDate.HasValue)
-                query = query.Where(a => a.Task.CreatedDate <= toDate.Value);
+                query = query.Where(a => a.Task.ClosedAt <= toDate.Value);
 
-            if (!fromDate.HasValue && !toDate.HasValue)
-                return new List<EmployeeOnTimeReportDto>();
+     
+            query = query.Where(a =>
+                a.Task.Status == WorkTaskStatus.Closed &&
+                a.Task.ClosedAt != null &&
+                a.Task.DueDate != null);
 
             var result = await query
-                .GroupBy(a => new { a.EmployeeId, a.Employee.FullName })
+                .GroupBy(a => new
+                {
+                    a.EmployeeId,
+                    EmployeeName = a.Employee.FullName
+                })
                 .Select(g => new EmployeeOnTimeReportDto
                 {
-                    EmployeeName = g.Key.FullName,
-                    TotalTasks = g.Count(),
+                    EmployeeName = g.Key.EmployeeName,
+
+                    TotalClosedTasks = g.Count(),
+
                     OnTimeTasks = g.Count(x =>
-                        x.Task.Status == WorkTaskStatus.Closed &&
-                        x.Task.DueDate >= DateTime.UtcNow)
+                        x.Task.ClosedAt <= x.Task.DueDate),
+
+                    LateTasks = g.Count(x =>
+                        x.Task.ClosedAt > x.Task.DueDate),
+
+                    CommitmentPercentage =
+                        g.Count() == 0
+                        ? 0
+                        : (decimal)g.Count(x => x.Task.ClosedAt <= x.Task.DueDate) * 100 / g.Count()
                 })
-                .Where(x => x.OnTimeTasks > 0)
-                .OrderByDescending(x => x.OnTimeTasks)
-                .ThenByDescending(x => x.TotalTasks)
+                .Where(x => x.TotalClosedTasks > 0)
+                .OrderByDescending(x => x.CommitmentPercentage)
+                .ThenByDescending(x => x.TotalClosedTasks)
                 .AsNoTracking()
                 .ToListAsync();
 
@@ -120,12 +188,13 @@ namespace TaskMangment.Infrastructure.Services
 
 
 
-        public async Task<List<EmployeeArchivedTasksReportDto>> GetMostArchivedEmployeesAsync(DateTime? fromDate = null, DateTime? toDate = null)
+
+        public async Task<List<EmployeeArchivedTasksReportDto>> GetMostArchivedEmployeesAsync( DateTime? fromDate = null,DateTime? toDate = null)
         {
             var query = _context.TaskAssignments
-                .Include(a => a.Employee)
-                .Include(a => a.Task)
-                .AsQueryable();
+                                .Include(a => a.Employee)
+                                .Include(a => a.Task)
+                                .AsQueryable();
 
             if (fromDate.HasValue)
                 query = query.Where(a => a.Task.CreatedDate >= fromDate.Value);
@@ -140,20 +209,106 @@ namespace TaskMangment.Infrastructure.Services
                 .GroupBy(a => new
                 {
                     a.EmployeeId,
-                    a.Employee.FullName
+                    EmployeeName = a.Employee.FullName
                 })
                 .Select(g => new EmployeeArchivedTasksReportDto
                 {
-                    EmployeeName = g.Key.FullName,
-                    ArchivedTasksCount = g.Count(x => x.Task.Status == WorkTaskStatus.Archived)
+                    EmployeeName = g.Key.EmployeeName,
+
+                    TotalTasks = g.Count(),
+
+                    ArchivedTasksCount = g.Count(x => x.Task.Status == WorkTaskStatus.Archived),
+
+                    ArchiveRate = g.Count() == 0
+                        ? 0
+                        : (decimal)g.Count(x => x.Task.Status == WorkTaskStatus.Archived) * 100 / g.Count()
                 })
-                .Where(x => x.ArchivedTasksCount > 0) 
-                .OrderByDescending(x => x.ArchivedTasksCount)
+                .Where(x => x.ArchivedTasksCount > 0)
+                .OrderByDescending(x => x.ArchiveRate)
+                .ThenByDescending(x => x.ArchivedTasksCount)
                 .AsNoTracking()
                 .ToListAsync();
 
             return result;
         }
+        public async Task<TaskDiscountAuditReportDto> GetTaskDiscountAuditReportAsync(TaskDiscountReportFilterDto dto)
+        {
+            IQueryable<TaskAssignment> query = _context.TaskAssignments
+                .Include(a => a.Task)
+                .Include(a => a.Task.AssignedBy)
+                .Include(a => a.Employee);
+
+            if (dto.MovementType == TaskMovementType.Incoming)
+            {
+                query = query.Where(a => a.EmployeeId == dto.EmployeeId);
+            }
+            else
+            {
+                query = query.Where(a => a.Task.AssignedByEmployeeId == dto.EmployeeId);
+            }
+
+            query = query.Where(a => a.Task.DueDate >= dto.FromDate);
+
+            if (dto.ToDate.HasValue)
+                query = query.Where(a => a.Task.DueDate <= dto.ToDate.Value);
+
+            if (dto.Status.HasValue)
+                query = query.Where(a => a.Task.Status == dto.Status.Value);
+
+            query = query.Where(a => a.Task.Status != WorkTaskStatus.New);
+
+            var flatRows = await query
+                .Select(a => new TaskDiscountAuditRowDto
+                {
+                    TaskId = a.TaskId,
+                    Title = a.Task.Title,
+                    AssignedBy = a.Task.AssignedBy.FullName,
+                    ClosedDate = a.Task.DueDate,
+
+                    Status =
+                        a.Task.Status == WorkTaskStatus.Archived ? "مؤرشفة" :
+                        a.Task.Status == WorkTaskStatus.Closed ? "مغلقة" :
+                        a.Task.Status == WorkTaskStatus.AutoClose ? "مغلقة تلقائيًا" :
+                        a.Task.Status == WorkTaskStatus.InProgress ? "قيد التنفيذ" :
+                        "غير محدد",
+
+                    AutoDiscount = _context.Discounts
+                        .Where(d => d.TaskId == a.TaskId && d.AutoDiscount)
+                        .Sum(d => (decimal?)d.Amount) ?? 0,
+
+                    ManualDiscount = _context.Discounts
+                        .Where(d => d.TaskId == a.TaskId && !d.AutoDiscount)
+                        .Sum(d => (decimal?)d.Amount) ?? 0,
+
+                    EmployeeName =
+                                dto.MovementType == TaskMovementType.Incoming
+                                    ? (a.Employee != null ? a.Employee.FullName : "غير معروف")   
+                                    : (a.Task.AssignedBy != null ? a.Task.AssignedBy.FullName : "غير معروف")  
+
+                })
+                .AsNoTracking()
+                .ToListAsync();
+
+            // ===== Group in Memory (Audit Safe) =====
+            var groups = flatRows
+                .GroupBy(x => x.EmployeeName)
+                .Select(g => new EmployeeDiscountAuditGroupDto
+                {
+                    EmployeeName = g.Key,
+                    Tasks = g.OrderBy(x => x.ClosedDate).ToList()
+                })
+                .OrderByDescending(g => g.TotalDiscount)
+                .ToList();
+
+            return new TaskDiscountAuditReportDto
+            {
+                FromDate = dto.FromDate,
+                ToDate = dto.ToDate,
+                Groups = groups,
+                MovementType = dto.MovementType
+            };
+        }
+
 
         public async Task<List<TaskDiscountReportDto>> GetTaskDiscountReportAsync(TaskDiscountReportFilterDto dto)
         {
@@ -302,33 +457,58 @@ namespace TaskMangment.Infrastructure.Services
             return result;
         }
 
-        public async Task<List<TasksClosingSoonDto>> GetTasksClosingSoonAsync(int employeeId, DateTime fromDate, DateTime toDate)
+        public async Task<List<TasksClosingSoonDto>> GetTasksClosingSoonAsync(int employeeId, DateTime fromDate,DateTime toDate)
         {
-            var query = _context.TaskAssignments
-                .Include(a => a.Task)
-                .Include(a => a.Task.AssignedBy)
-                .Include(a => a.Employee)
-                .Where(a => a.EmployeeId == employeeId &&
-                 (a.Task.Status == WorkTaskStatus.New || a.Task.Status == WorkTaskStatus.InProgress) &&
-                 a.Task.DueDate >= fromDate &&
-                 a.Task.DueDate <= toDate);
+            var query = _context.TaskAssignments.Include(a => a.Task).ThenInclude(t => t.AssignedBy)
+                                .Include(a => a.Employee)
+                                    .ThenInclude(e => e.Branch)
+                                        .ThenInclude(b => b.Area)
+                                .Include(a => a.Employee)
+                                    .ThenInclude(e => e.Company)
+                                .Where(a =>
+                                    a.EmployeeId == employeeId &&
+                                    (a.Task.Status == WorkTaskStatus.New ||
+                                     a.Task.Status == WorkTaskStatus.InProgress) &&
+                                    a.Task.DueDate != null &&
+                                    a.Task.DueDate >= fromDate &&
+                                    a.Task.DueDate <= toDate
+                                );
 
             var result = await query
+                .OrderBy(a => a.Task.DueDate)
                 .Select(a => new TasksClosingSoonDto
                 {
                     TaskId = a.TaskId,
                     Title = a.Task.Title,
                     Status = a.Task.Status,
-                    AssignedBy = a.Task.AssignedBy != null ? a.Task.AssignedBy.FullName : "غير معروف",
-                    ClosedDate = a.Task.DueDate,
-                    EmployeeName = a.Employee != null ? a.Employee.FullName : "غير معروف"
+                    AssignedBy = a.Task.AssignedBy != null
+                        ? a.Task.AssignedBy.FullName
+                        : "غير معروف",
+
+                    DueDate = a.Task.DueDate,
+
+                    EmployeeName = a.Employee != null
+                        ? a.Employee.FullName
+                        : "غير معروف",
+
+                    CompanyName = a.Employee.Company != null
+                        ? a.Employee.Company.Name
+                        : "-",
+
+                    BranchName = a.Employee.Branch != null
+                        ? a.Employee.Branch.Name
+                        : "-",
+
+                    AreaName = a.Employee.Branch != null && a.Employee.Branch.Area != null
+                        ? a.Employee.Branch.Area.Name
+                        : "-"
                 })
-                .OrderBy(t => t.ClosedDate)
                 .AsNoTracking()
                 .ToListAsync();
 
             return result;
         }
+
 
     }
 

@@ -69,11 +69,11 @@ namespace TaskMangment.API.Reports.Task
                 {
                     table.ColumnsDefinition(columns =>
                     {
-                        columns.RelativeColumn(4); // المهمة
-                        columns.RelativeColumn(3); // جهة التكليف
-                        columns.RelativeColumn(4); // التعليق
-                        columns.RelativeColumn(2); // تاريخ التعليق
-                        columns.RelativeColumn(3); // الموظف
+                        columns.RelativeColumn(4); 
+                        columns.RelativeColumn(3);  
+                        columns.RelativeColumn(4);  
+                        columns.RelativeColumn(2);  
+                        columns.RelativeColumn(3); 
                     });
 
                     // ===== Table Header =====
