@@ -39,13 +39,13 @@ public class AuthService : IAuthService
 
         if (user == null)
             throw new AppException(
-                ErrorCodes.EmailNotFound,
-                StatusCodes.Status404NotFound);
+                ErrorCodes.Invalid,
+                StatusCodes.Status400BadRequest);
 
         if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
             throw new AppException(
-                ErrorCodes.Invalid,
-                StatusCodes.Status404NotFound);
+                 ErrorCodes.Invalid,
+                StatusCodes.Status400BadRequest);
 
         var profileImage = await _db.Attachments
             .Where(a =>

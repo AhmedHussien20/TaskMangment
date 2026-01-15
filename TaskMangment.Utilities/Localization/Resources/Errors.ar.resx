@@ -195,7 +195,43 @@
   <data name="INVALID_DATE" xml:space="preserve">
     <value>ادخل التاريخ الصحيح</value>
   </data>
-  <data name="INVALID_TOKEN" xml:space="preserve">
-    <value>كود التأكيد غير صحيح</value>
+  <data name="TASK_COMMENT_NOTIFICATION" xml:space="preserve">
+    <value>تم إضافة تعليق جديد على المهمة</value>
+  </data>
+  <data name="TASK_ASSIGNED_NOTIFICATION" xml:space="preserve">
+    <value>تم إسناد المهمة إليك</value>
+  </data>
+  <data name="TASK_UNASSIGNED_NOTIFICATION" xml:space="preserve">
+    <value>تم إلغاء إسناد المهمة منك</value>
+  </data>
+  <data name="TASK_EXTENSION_REQUEST_NOTIFICATION" xml:space="preserve">
+    <value>تم إرسال طلب تمديد للمهمة</value>
+  </data>
+  <data name="TASK_CLOSE_REQUEST_NOTIFICATION" xml:space="preserve">
+    <value>تم إرسال طلب إغلاق للمهمة</value>
+  </data>
+  <data name="TASK_WARNING_NOTIFICATION" xml:space="preserve">
+    <value>تم توجيه تحذير على المهمة</value>
+  </data>
+  <data name="TASK_PENALTY_NOTIFICATION" xml:space="preserve">
+    <value>تم تطبيق جزاء على المهمة</value>
+  </data>
+  <data name="CLOSEAPPROVED" xml:space="preserve">
+    <value>تم الموافقة على إغلاق المهمة</value>
+  </data>
+  <data name="EXTENDAPPROVED" xml:space="preserve">
+    <value>تم الموافقة على تمديد المهمة</value>
+  </data>
+  <data name="TASKACHIEVEMENT" xml:space="preserve">
+    <value>تم إنجاز المهمة بنجاح</value>
+  </data>
+  <data name="LEAVEREQUESTCREATED" xml:space="preserve">
+    <value>تم إنشاء طلب إجازة</value>
+  </data>
+  <data name="LEAVE_APPROVED_NOTIFICATION" xml:space="preserve">
+    <value>تمت الموافقة على طلب الإجازة الخاص بك</value>
+  </data>
+  <data name="LEAVE_REJECTED_NOTIFICATION" xml:space="preserve">
+    <value>تم رفض طلب الإجازة الخاص بك</value>
   </data>
 </root>

@@ -1,21 +1,24 @@
-﻿using System.Globalization;
-using Microsoft.Extensions.Localization;
-using TaskMangment.API.Middlewares;
+﻿ 
+using Microsoft.Extensions.Localization; 
 using TaskMangment.Application.Common.Errors;
 using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Responses;
+using TaskMangment.Utilities.Localization.Resources;
 
 public class ExceptionHandlingMiddleware
 {
     private readonly RequestDelegate _next;
-    private readonly IStringLocalizer _localizer;
+    private readonly IStringLocalizer<Errors> _L;
     private readonly ILogger<ExceptionHandlingMiddleware> _logger;
 
-    public ExceptionHandlingMiddleware( RequestDelegate next, IStringLocalizerFactory factory, ILogger<ExceptionHandlingMiddleware> logger)
+    public ExceptionHandlingMiddleware(
+        RequestDelegate next,
+        IStringLocalizer<Errors> localizer,
+        ILogger<ExceptionHandlingMiddleware> logger)
     {
         _next = next;
         _logger = logger;
-        _localizer = factory.Create("Errors", "TaskMangment.API");
+        _L = localizer;
     }
 
     public async Task Invoke(HttpContext context)
@@ -50,7 +53,7 @@ public class ExceptionHandlingMiddleware
         }
     }
 
-    private async Task WriteError(HttpContext context, string errorCode,int statusCode)
+    private async Task WriteError(HttpContext context, string errorCode, int statusCode)
     {
         context.Response.StatusCode = statusCode;
         context.Response.ContentType = "application/json";
@@ -60,7 +63,7 @@ public class ExceptionHandlingMiddleware
             Success = false,
             Error = true,
             ErrorCode = errorCode,
-            Message = _localizer[errorCode],
+            Message = _L[errorCode],
             Data = null
         };
 

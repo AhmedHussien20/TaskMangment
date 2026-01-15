@@ -1,11 +1,11 @@
 ﻿using Hangfire;
-using Microsoft.AspNetCore.Authentication.JwtBearer; 
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Globalization;
-using System.Text; 
-using TaskMangment.API.Filters; 
+using System.Text;
+using TaskMangment.API.Filters;
 using TaskMangment.Application.Behaviors;
 using TaskMangment.Application.Behaviors.EmailHandlers;
 using TaskMangment.Application.Common;
@@ -15,9 +15,9 @@ using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Domain.Event;
 using TaskMangment.Hangfire.Jobs;
-using TaskMangment.Infrastructure; 
+using TaskMangment.Infrastructure;
 using TaskMangment.Infrastructure.DataContext;
-using TaskMangment.Infrastructure.Repositories; 
+using TaskMangment.Infrastructure.Repositories;
 using TaskMangment.Infrastructure.Services;
 using TaskMangment.Infrastructure.SignalR;
 using Serilog;
@@ -95,11 +95,12 @@ namespace TaskMangment.API
                     });
                 });
 
-                //Localization
-                builder.Services.AddLocalization(options =>
-                {
-                    options.ResourcesPath = "Localization/Resources";
-                });
+            //Localization
+            builder.Services.AddLocalization();
+            builder.Services.AddTaskMangmentLocalization();
+
+            builder.Services.AddControllers().AddDataAnnotationsLocalization();
+
             builder.Services.AddControllers()
                             .AddDataAnnotationsLocalization();
 

@@ -11,18 +11,15 @@ import { selectAuthLoading } from 'app/store/auth/auth.selectors';
 import { Router } from '@angular/router';
 import { AuthUser } from '../models/auth/auth-user';
 import * as NavActions from '../../store/nav/nav.actions';
-import { ApiService } from './api.service';
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
-  private readonly service = 'Auth';
   public showLoader: boolean = false;
   constructor(
     private authRepository: AuthRepository,
     private store: Store<AppState>,
-    private router: Router,
-    private apiService: ApiService
+    private router: Router
   ) {
     this.store.pipe(select(selectAuthLoading)).subscribe(loading => {
       this.showLoader = loading;
@@ -34,33 +31,21 @@ export class AuthService {
   }
 
   login(userCode: string, password: string): Observable<BaseResponse<User & { token: string }>> {
-    this.store.dispatch(login({ userCode, password }));
-    
+  return this.authRepository.login(userCode, password).pipe(
+    map(response => {
+      if (response.data) {
+        localStorage.setItem('authToken', response.data.token);
+        localStorage.setItem('userData', JSON.stringify(response.data));
+        this.store.dispatch(NavActions.initializeMenu());
 
-    return this.authRepository.login(userCode, password).pipe(
-      map(response => {
-        if (response.data !== null) {
-          localStorage.setItem('authToken', response.data.token);
-          localStorage.setItem('userData', JSON.stringify(response.data));
-    this.store.dispatch(NavActions.initializeMenu());
+        return response;
+      } else {
+        throw new Error(response.errorList?.join('\n') || 'Login failed');
+      }
+    })
+  );
+}
 
-          this.store.dispatch(loginSuccess({ token: response.data.token }));
-          return response;
-        } else {
-          this.store.dispatch(loginFailure({ error: response.errorList.join('\n') }));
-          throw new Error(response.errorList.join('\n'));
-        }
-      }),
-      catchError(error => {
-        let errorMessage = error.message;
-        if (error.errorList) {
-          errorMessage = error.errorList.join('\n');
-        }
-        this.store.dispatch(loginFailure({ error: errorMessage }));
-        return throwError(() => new Error(errorMessage));
-      })
-    );
-  }
 
   logout() {
     localStorage.removeItem('authToken');
@@ -70,31 +55,6 @@ export class AuthService {
 
     this.router.navigate(['/auth/login'], { replaceUrl: true });
   }
-
-    forgotPassword(email: string): Observable<BaseResponse<null>> {
-    return this.apiService.post<BaseResponse<null>>(
-      this.service,
-      'forgot-password',
-      { email }
-    );
-  }
-
- verifyResetCode(request: { email: string; token: string }): Observable<BaseResponse<null>> {
-    return this.apiService.post<BaseResponse<null>>(
-      this.service,
-      'verify-reset-code',
-      request
-    );
-  }
-
-  updatePassword(request: { email: string; newPassword: string }): Observable<BaseResponse<null>> {
-    return this.apiService.post<BaseResponse<null>>(
-      this.service,
-      'reset-password',
-      request
-    );
-  }
-
 
   private userKey = 'auth_user';
 

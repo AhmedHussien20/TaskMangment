@@ -32,9 +32,7 @@ export class LoginComponent {
   disabled = '';
 
   constructor(
-    @Inject(DOCUMENT) private document: Document,
-    private elementRef: ElementRef,
-    private sanitizer: DomSanitizer,
+    @Inject(DOCUMENT) private document: Document, 
     public authservice: AuthService,
     private router: Router,
     private formBuilder: FormBuilder,
@@ -96,46 +94,41 @@ export class LoginComponent {
 
 
   Submit(event: Event) {
-    event.preventDefault();
-    console.log(this.loginForm.value);
-    if (this.loginForm.valid) {
-      const username = this.loginForm.controls['username'].value;  // Change userCode to username
-      const password = this.loginForm.controls['password'].value;
+  event.preventDefault();
 
-      this.authservice.login(username, password).subscribe({  // Change userCode to username
-        next: (response) => {
-          this.notificationService.getUnread().subscribe(res => {
-            console.log('Login successful:', response);
-            const userId = response.data?.userId || 0;
-            console.log('Starting SignalR connection for user1:', userId);
-            this.signalRService.startConnection(userId);
-            const unread = res.data;
-
-            unread.forEach(n => {
-              this.toastr.info(
-                n.message,
-                'Notification'
-              );
-            });
-
-          });
-          this.router.navigate(['/dashboard']);
-        },
-        error: (error) => {
-          console.log(error);
-          this.toastr.error(error, 'error', {
-            timeOut: 3000,
-            positionClass: 'toast-top-right',
-          });
-        }
-      });
-    } else {
-      this.toastr.error('Please fill in the form correctly', 'spruha', {
-        timeOut: 3000,
-        positionClass: 'toast-top-right',
-      });
-    }
+  if (this.loginForm.invalid) {
+    this.toastr.error('Please fill in the form correctly', '', {
+      timeOut: 3000,
+      positionClass: 'toast-top-right',
+    });
+    return;
   }
+
+  const username = this.loginForm.controls['username'].value;
+  const password = this.loginForm.controls['password'].value;
+
+  this.authservice.login(username, password).subscribe({
+    next: (response) => {
+
+      const userId = response.data?.userId || 0;
+
+      // Start SignalR
+      this.signalRService.startConnection(userId);
+
+      // Load notifications
+      this.notificationService.getUnread().subscribe(res => {
+        const unread = res.data || [];
+        unread.forEach(n => {
+          this.toastr.info(n.message, 'Notification');
+        });
+      });
+
+      // Go to dashboard
+      this.router.navigate(['/dashboard']);
+    }, 
+  });
+}
+
 
   public togglePassword() {
     this.showPassword = !this.showPassword;
