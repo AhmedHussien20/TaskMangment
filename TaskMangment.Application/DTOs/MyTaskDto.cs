@@ -9,7 +9,7 @@ namespace TaskMangment.Application.DTOs
         public string Title { get; set; }
         public WorkTaskStatus Status { get; set; }
         public DateTime? DueDate { get; set; }
-        public decimal ProgressPercent { get; set; }
+        public string? ProgressPercent { get; set; }
         public bool IsOverdue => DueDate != null && DueDate < DateTime.UtcNow;
     }
 

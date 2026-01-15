@@ -32,7 +32,11 @@
     "NOT_COMMENTED_TODAY" : "مهام صادرة لم يعلق عليها اليوم",
 
     "DAYS": "يوم",
-    "HOURS": "ساعة"
+    "HOURS": "ساعة",
+    "TODAY" : "اليوم",
+    "MONTH" : "الشهر",
+    "YEAR" : "السنه"
+
   },
   "MENU": {
     "HOME": "الرئيسية",
@@ -539,7 +543,9 @@
     "SAR" : "ريال",
     "ADD_TO_CALENDAR" : "اضافة حدث مع هذا التعليق",
     "COMMENT_MIN_LENGTH_TASK_CHARACTERS" : "ادخل بحد ادني 500 حرف",
-    "COMMENT_OR_FILE_REQUIRED" : "ادخل الحقول المطلوبه"
+    "COMMENT_OR_FILE_REQUIRED" : "ادخل الحقول المطلوبه",
+    "ACHIEVEMENT_RESON" : "معلومات الانجاز",
+    "DAYS" : "يوم"
 
   },
   "EMPLOYEE": {
@@ -756,14 +762,18 @@
     "DEPARTMENT": "القسم",
     "BRANCH": "الفرع",
     "UNASSIGNED": "غير معين",
-    "COMPANY_REF": "رقم الشركة",
+    "COMPANY": "الشركة",
     "CONTACT_INFORMATION": "معلومات الاتصال",
     "MOBILE": "الهاتف المحمول",
     "N_A": "غير متوفر",
     "EMAIL_ADDRESS": "البريد الإلكتروني",
     "LOCATION": "الموقع",
     "NOT_PROVIDED": "غير متوفر",
-    "EDIT_PROFILE": "تعديل الملف الشخصي"
+    "EDIT_PROFILE": "تعديل الملف الشخصي",
+    "QUALIFICATION" :"المؤهل",
+    "OFFICIAL_EMAIL" : "البريد الالكتروني",
+    "TITLE" : "المسمى الوظيفي"
+    
   },
   "OFFER": {
     "ADD": "اضافة عرض",

@@ -70,12 +70,20 @@ namespace TaskMangment.Infrastructure.Services
 
             var full = await _leaveRepo.GetAll(l => l.Id == leave.Id)
                 .Include(l => l.Employee)
+                .ThenInclude(e => e.Branch)
                 .Include(l => l.LeaveType)
                 .FirstAsync();
+            var managerId = full.Employee?.Branch?.ManagerID;
+
+            if (!managerId.HasValue)
+            {
+                throw new AppException(ErrorCodes.Invalid, StatusCodes.Status400BadRequest);
+            }
+
 
             await _eventDispatcher.PublishAsync(new LeaveEvent(
                                                   leave.Id,
-                                                  employeeId,
+                                                  managerId.Value,
                                                   full.Employee.FullName,
                                                   full.LeaveType.NameAr,
                                                   leave.StartDate,
@@ -182,8 +190,8 @@ namespace TaskMangment.Infrastructure.Services
                 leave.Id,
                 leave.EmployeeId,
                 leave.Employee.FullName,
-managerFullName,
-leave.LeaveType.NameAr,
+                managerFullName,
+                leave.LeaveType.NameAr,
                 leave.StartDate,
                 leave.EndDate
  ));

@@ -1,5 +1,6 @@
 export interface TaskPercentageAddEditDto {
   achievementPercent: string;
+  achievementReason: string;
 }
 
 export interface TaskPercentageGetDto {
@@ -9,6 +10,7 @@ export interface TaskPercentageGetDto {
   employeeId?: number;
   employeeName?: string;
   achievementPercent: string;
+  achievementReason: string;
   createdDate: string;
 }
 

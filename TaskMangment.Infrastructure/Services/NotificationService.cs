@@ -13,11 +13,11 @@ public class NotificationService : INotificationService
     private readonly IEmailQueueService _emailQueueService;
     private readonly INotificationSender _notificationSender;
     private readonly IOnlineUserService _onlineUserService;
-    private readonly IStringLocalizer<Errors> _L;
+    private readonly IStringLocalizer<TaskNotification> _L;
 
     public NotificationService(
         INotificationRepository repo,
-        IEmailQueueService emailQueueService, INotificationSender notificationSender, IOnlineUserService onlineUserService, IStringLocalizer<Errors> localizer)
+        IEmailQueueService emailQueueService, INotificationSender notificationSender, IOnlineUserService onlineUserService, IStringLocalizer<TaskNotification> localizer)
 
 
     {
@@ -31,7 +31,7 @@ public class NotificationService : INotificationService
 
     public async Task SendAsync(int userId, string messageKey, bool sendEmail, bool sendWhatsApp)
     {
-        var message = _L[messageKey];
+        var message = messageKey;
 
         bool isOnline = _onlineUserService.IsUserOnline(userId);
 

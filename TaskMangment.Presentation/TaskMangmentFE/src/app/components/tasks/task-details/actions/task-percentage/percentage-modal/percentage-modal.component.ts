@@ -31,14 +31,20 @@ export class PercentageModalComponent implements OnInit {
 
   ngOnInit(): void {
     this.form = this.fb.group({
-      achievementPercent: ['', [Validators.required, decimalValidator()]]
+      achievementPercent: ['', [Validators.required]],
+      achievementReason: ['', [Validators.required]]
+
     });
   }
 
   submit(): void {
-    //if (this.form.invalid || this.isSubmitting) return;
+    if (this.form.invalid || this.isSubmitting) return;
 
-    const model = { achievementPercent: this.form.value.achievementPercent.trim() };
+     const value = this.form.value.achievementPercent;
+  const model = {
+    achievementPercent: `${value}%`, 
+    achievementReason: this.form.value.achievementReason
+  };
     this.isSubmitting = true;
 
     this.percentageService.create(this.taskId, model).subscribe({
@@ -53,16 +59,5 @@ export class PercentageModalComponent implements OnInit {
     });
   }
 
-  formatPercent(): void {
-  let value = this.form.get('achievementPercent')?.value;
-
-  if (!value) return;
-
-  value = value.toString().replace('%', '').trim();
-
-  if (!isNaN(value)) {
-    this.form.get('achievementPercent')?.setValue(`${value}%`, { emitEvent: false });
-  }
-}
-
+ 
 }

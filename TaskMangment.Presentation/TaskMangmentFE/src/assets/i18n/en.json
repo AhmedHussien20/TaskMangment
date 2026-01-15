@@ -31,7 +31,10 @@
     "AVG_COMPLETION_TIME": "Avg Completion Time",
     "DAYS": "Days",
     "HOURS": "Hours",
-    "NOT_COMMENTED_TODAY" : "Incoming tasks have no comments today"
+    "NOT_COMMENTED_TODAY" : "Incoming tasks have no comments today",
+    "TODAY" : "Today",
+    "MONTH" : "Month",
+    "YEAR" : "Year"
   },
   "MENU": {
     "HOME": "Home",
@@ -522,7 +525,9 @@
     "SAR" : "SAR",
     "ADD_TO_CALENDAR" : "Add event with this comment",
     "COMMENT_MIN_LENGTH_TASK_CHARACTERS" : "Enter 500 characters as Minimum length", 
-    "COMMENT_OR_FILE_REQUIRED" : "Enter required fields"
+    "COMMENT_OR_FILE_REQUIRED" : "Enter required fields",
+    "ACHIEVEMENT_RESON" : "Achievement information",
+    "DAYS" : "Days"
   },
   "EMPLOYEE": {
     "LIST_TITLE": "Employee List",
@@ -738,14 +743,17 @@
     "DEPARTMENT": "Department",
     "BRANCH": "Branch",
     "UNASSIGNED": "Unassigned",
-    "COMPANY_REF": "Company Reference",
+    "COMPANY": "Company",
     "CONTACT_INFORMATION": "Contact Information",
     "MOBILE": "Mobile",
     "N_A": "N/A",
     "EMAIL_ADDRESS": "Email Address",
     "LOCATION": "Location",
     "NOT_PROVIDED": "Not Provided",
-    "EDIT_PROFILE": "Edit Profile"
+    "EDIT_PROFILE": "Edit Profile",
+    "QUALIFICATION" :"Qualifications",
+    "OFFICIAL_EMAIL" : "Email",
+    "TITLE" : "Job title"
   },
   "OFFER": {
     "ADD": "Add Offer",

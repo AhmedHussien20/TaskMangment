@@ -10,20 +10,22 @@ using TaskMangment.Application.Common.Notification;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Domain.Entities;
 using TaskMangment.Domain.Event;
+using TaskMangment.Utilities.Localization.Resources;
 
 namespace TaskMangment.Application.Behaviors
 {
     public class TaskAssignedEventHandler : IEventHandler<TaskAssignedEvent>
     {
         private readonly INotificationService _notificationService;
-        private readonly IStringLocalizer _localizer;
+        private readonly IStringLocalizer<TaskNotification> _localizer;
 
         public TaskAssignedEventHandler(
             INotificationService notificationService,
-            IStringLocalizerFactory factory)
+            IStringLocalizer<TaskNotification> localizer)   
         {
             _notificationService = notificationService;
-            _localizer = factory.Create("TaskNotification", "TaskMangment.API");
+            _localizer = localizer;
+           // _localizer = factory.Create("TaskNotification", "TaskMangment.API");
         }
 
         public async Task Handle(TaskAssignedEvent ev)

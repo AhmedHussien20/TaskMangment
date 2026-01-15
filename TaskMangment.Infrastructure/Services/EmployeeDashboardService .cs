@@ -18,18 +18,22 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<TaskAssignment> _assignmentRepo;
         private readonly IRepository<Warning> _warningRepo;
         private readonly IRepository<Discount> _deductionRepo;
+        private readonly IRepository<TaskPercentage> _taskPercentageRepo;
+
         private readonly ICachingService _cache;
 
         public EmployeeDashboardService(
             IRepository<TaskAssignment> assignmentRepo,
             IRepository<Warning> warningRepo,
             IRepository<Discount> deductionRepo,
-            ICachingService cache)
+            ICachingService cache,
+            IRepository<TaskPercentage> taskPercentageRepo)
         {
             _assignmentRepo = assignmentRepo;
             _warningRepo = warningRepo;
             _deductionRepo = deductionRepo;
             _cache = cache;
+            _taskPercentageRepo = taskPercentageRepo;
         }
 
         public async Task<ApiResponse<EmployeeDashboardDto>> GetDashboardAsync(int employeeId, PeriodDto? period = null)
@@ -67,21 +71,33 @@ namespace TaskMangment.Infrastructure.Services
                 )
                 .SumAsync(d => d.Amount);
 
-            var myTasks = await _assignmentRepo
-                .GetAll(a =>
-                    a.EmployeeId == employeeId &&
-                    a.IsActive && !a.IsClosed)
-                .Select(a => new MyTaskDto
-                {
-                    TaskId = a.TaskId,
-                    Title = a.Task.Title,
-                    Status = a.Task.Status,
-                    DueDate = a.Task.DueDate,
-                    ProgressPercent = a.ProgressPercent
-                })
-                .OrderBy(a => a.DueDate)
-                .Take(10)
-                .ToListAsync();
+
+
+            var assignments = await _assignmentRepo
+      .GetAll(a => a.EmployeeId == employeeId && a.IsActive && !a.IsClosed)
+      .Include(a => a.Task) 
+      .OrderBy(a => a.Task.DueDate)
+      .Take(10)
+      .ToListAsync();
+
+            var taskIds = assignments.Select(a => a.TaskId).ToList();
+
+            var progressDict = await _taskPercentageRepo
+                .GetAll(p => taskIds.Contains(p.TaskId))
+                .GroupBy(p => p.TaskId)
+                .Select(g => new { TaskId = g.Key, Progress = g.OrderByDescending(x => x.CreatedDate).FirstOrDefault().AchievementPercent })
+                .ToDictionaryAsync(x => x.TaskId, x => x.Progress);
+
+            var myTasks = assignments.Select(a => new MyTaskDto
+            {
+                TaskId = a.TaskId,
+                Title = a.Task.Title,
+                Status = a.Task.Status,
+                DueDate = a.Task.DueDate,
+                ProgressPercent = progressDict.ContainsKey(a.TaskId) ? (progressDict[a.TaskId]?.ToString() ?? "") : "0"
+            })
+            .OrderBy(t => t.DueDate)
+            .ToList();
 
             var completedTasks = await _assignmentRepo.CountAsync(a =>
                 a.EmployeeId == employeeId &&
@@ -221,9 +237,10 @@ namespace TaskMangment.Infrastructure.Services
         public async Task<ApiResponse<List<MyTaskDto>>> GetDueSoonTasksAsync(int employeeId)
         {
             var now = DateTime.UtcNow;
-            var dueSoonDate = now.AddDays(2); 
+            var dueSoonDate = now.AddDays(2);
 
-            var dueSoonTasks = await _assignmentRepo
+            // Step 1: get due soon assignments
+            var assignments = await _assignmentRepo
                 .GetAll(a =>
                     a.EmployeeId == employeeId &&
                     a.IsActive &&
@@ -231,19 +248,39 @@ namespace TaskMangment.Infrastructure.Services
                     a.Task.DueDate != null &&
                     a.Task.DueDate <= dueSoonDate
                 )
-                .Select(a => new MyTaskDto
-                {
-                    TaskId = a.TaskId,
-                    Title = a.Task.Title,
-                    Status = a.Task.Status,
-                    DueDate = a.Task.DueDate,
-                    ProgressPercent = a.ProgressPercent
-                })
-                .OrderBy(a => a.DueDate)
+                .Include(a => a.Task) // make sure Task is loaded
+                .OrderBy(a => a.Task.DueDate)
                 .ToListAsync();
+
+            // Step 2: fetch progress percentages for these tasks
+            var taskIds = assignments.Select(a => a.TaskId).ToList();
+
+            var progressDict = await _taskPercentageRepo
+                .GetAll(p => taskIds.Contains(p.TaskId))
+                .GroupBy(p => p.TaskId)
+                .Select(g => new
+                {
+                    TaskId = g.Key,
+                    Progress = g.OrderByDescending(x => x.CreatedDate)
+                                .FirstOrDefault().AchievementPercent
+                })
+                .ToDictionaryAsync(x => x.TaskId, x => x.Progress);
+
+            // Step 3: map to DTO
+            var dueSoonTasks = assignments.Select(a => new MyTaskDto
+            {
+                TaskId = a.TaskId,
+                Title = a.Task.Title,
+                Status = a.Task.Status,
+                DueDate = a.Task.DueDate,
+                ProgressPercent = progressDict.ContainsKey(a.TaskId) ? (progressDict[a.TaskId]?.ToString() ?? "") : "0"
+            })
+            .OrderBy(a => a.DueDate)
+            .ToList();
 
             return ApiResponse<List<MyTaskDto>>.Ok(dueSoonTasks);
         }
+
 
         public async Task<ApiResponse<EmployeeDashboardKpisExtendedDto>> GetEmployeeKpisAsync(int employeeId, PeriodDto? period = null)
         {

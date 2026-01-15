@@ -30,7 +30,7 @@ export interface EmployeeDashboardDto {
     title: string;
     status: string;
     dueDate: string;
-    progressPercent: number;
+    progressPercent: string;
   }[];
   performance: {
     completedTasks: number;

@@ -27,6 +27,7 @@ namespace TaskMangment.Infrastructure.Services
     {
         private readonly IRepository<Discount> _discountRepo;
         private readonly IRepository<Employee> _employeeRepo;
+        private readonly IRepository<Branch> _branchRepo;
         private readonly IRepository<WorkTask> _taskRepo;
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
@@ -41,8 +42,8 @@ namespace TaskMangment.Infrastructure.Services
             IMapper mapper,
             ICachingService cache,
             IDomainEventDispatcher eventDispatcher,
-            IStringLocalizer<TaskDiscountService> localizer
-)
+            IStringLocalizer<TaskDiscountService> localizer,
+            IRepository<Branch> branchRepo)
         {
             _discountRepo = discountRepo;
             _employeeRepo = employeeRepo;
@@ -51,6 +52,7 @@ namespace TaskMangment.Infrastructure.Services
             _cache = cache;
             _eventDispatcher = eventDispatcher;
             _localizer = localizer;
+            _branchRepo = branchRepo;
         }
 
         public async Task<ApiResponse<PagedResponse<DiscountGetDto>>> GetAllAsync(TaskDiscountRequest request)
@@ -155,11 +157,30 @@ namespace TaskMangment.Infrastructure.Services
 
 
             var employeeName = await _employeeRepo.GetAll(e => e.Id == createdByEmployeeId).Select(e => e.FullName).FirstOrDefaultAsync();
+            var issuedEmployee = await _employeeRepo.GetAll(e => e.Id == dto.EmployeeId)
+                   .Select(e => new
+                   {
+                       e.BranchId,
+                       e.FullName
+                   }
+                   ).FirstOrDefaultAsync();
 
+            var branch = issuedEmployee.BranchId.HasValue
+                ? await _branchRepo.GetAll()
+                    .Include(b => b.Manager)
+                    .FirstOrDefaultAsync(b => b.Id == issuedEmployee.BranchId.Value)
+                : null;
+
+            var managerId = branch?.ManagerID;
+            var sendToIds = new List<int> { dto.EmployeeId };
+            if (managerId.HasValue && !sendToIds.Contains(managerId.Value))
+                sendToIds.Add(managerId.Value);
+
+            var IssuedToName = issuedEmployee.FullName;
 
             await _eventDispatcher.PublishAsync(
-                new TaskPenaltyEvent(discount.Id, TaskID, employeeName, dto.EmployeeId, task.Title)
-            );
+                     new TaskPenaltyEvent(discount.Id, TaskID, employeeName, sendToIds, IssuedToName, task.Title)
+                 );
 
 
             var fullDiscount = await _discountRepo

@@ -18,6 +18,10 @@ namespace TaskMangment.Domain.Entities
         [Required]
         public string AchievementPercent { get; set; }
 
+        [Required]
+        public string AchievementReason { get; set; }
+
+
         [ForeignKey(nameof(TaskId))]
         public WorkTask Task { get; set; }
 

@@ -75,6 +75,10 @@ export class GenericTableComponent<T> implements OnDestroy {
 
   @Input() showAddButton: boolean = false;
   @Input() addButtonLabel: string = '';
+  @Input() disableActions: boolean = false;
+  @Input() disableEditFn?: (row: T) => boolean;
+@Input() disableDeleteFn?: (row: T) => boolean;
+@Input() disableDetailsFn?: (row: T) => boolean;
 
   @Input() searchCriteria!: SearchCriteria<T>;
   @Input() labels: { [key: string]: string } = {};

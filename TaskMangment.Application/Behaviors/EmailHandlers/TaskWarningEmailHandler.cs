@@ -27,7 +27,7 @@ namespace TaskMangment.Application.Behaviors.EmailHandlers
                 ReferenceType = ReferenceType.EmployeeWarning,
                 RecipientType = RecipientType.Employee,
                 ReferenceId = ev.WarningId,
-                UserIds = new List<int> { ev.IssuedtoId }
+                UserIds = ev.SendTo
             });
         }
     }

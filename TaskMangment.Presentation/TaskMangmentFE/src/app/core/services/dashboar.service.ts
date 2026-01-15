@@ -114,15 +114,4 @@ getEmployeeCompletedTasksDetails(period: PeriodDto) {
   getAdminCompletedTasksDetails(period: PeriodDto) {
     return this.api.get<BaseResponse<any[]>>(this.service, 'admin/completed-tasks-details', period as any);
   }
-
-  private buildQuery(req: SearchCriteria): string {
-      return [
-        `searchKey=${req.searchKey ?? ''}`,
-        `PageIndex=${req.pageIndex}`,
-        `PageSize=${req.pageSize}`,
-        `SortColumn=${req.sortColumn}`,
-        `SortDirection=${req.sortDirection}`
-      ].join('&');
-    }
-
 }

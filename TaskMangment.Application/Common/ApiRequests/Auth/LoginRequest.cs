@@ -20,8 +20,13 @@ namespace TaskMangment.Application.Common.ApiRequests.Auth
         public string Email { get; set; }
 
         public int? CompanyId { get; set; }
+        public string? campanyName { get; set; }
         public int? BranchId { get; set; }
+        public string? branchName { get; set; }
+
         public int? DepartmentId { get; set; }
+        public string? deptName { get; set; }
+
         public int? JobId { get; set; }
 
         public string Title { get; set; }

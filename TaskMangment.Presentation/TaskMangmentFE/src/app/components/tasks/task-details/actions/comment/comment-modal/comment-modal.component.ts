@@ -21,7 +21,7 @@ export class CommentModalComponent implements OnInit {
   form!: FormGroup;
   files: File[] = [];
   isSubmitting = false;
-showEventFields = false;
+  showEventFields = false;
   constructor(
     public modal: NgbActiveModal,
     private fb: FormBuilder,
@@ -34,7 +34,7 @@ showEventFields = false;
 
   ngOnInit(): void {
     this.form = this.fb.group({
-      comment: [null, [Validators.minLength(5)]],
+      comment: ['', [Validators.minLength(5)]],
        startDate: [null],  
        endDate: [null]
     });

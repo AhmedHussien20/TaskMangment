@@ -37,7 +37,9 @@
                         [searchCriteria]="searchCriteria" [onSearch]="applyFilters.bind(this)" [employeeOptions]="employees" [statusOptions]="status"
                         (pageChange)="onPageChange($event)" [addButtonLabel]="'TASK.ADD' | translate"
                         (edit)="openEdit($event, taskModal)" (details)="openDetails($event)"
-                        (delete)="confirmDelete($event)">
+                        (delete)="confirmDelete($event)"
+                        [disableEditFn]="disableEditRow"
+                        [disableDetailsFn]="disableDetailsRow">
                     </app-generic-table>
                 </div>
             </div>

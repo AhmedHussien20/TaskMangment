@@ -11,6 +11,8 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
     {
         [Required]
         public string AchievementPercent { get; set; }
+        [Required]
+        public string AchievementReason { get; set; }
     }
 
     public class TaskPercentageGetDto
@@ -21,6 +23,7 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
         public int EmployeeId { get; set; }
         public string EmployeeName { get; set; }
         public string AchievementPercent { get; set; }
+        public string AchievementReason { get; set; }
         public DateTime CreatedDate { get; set; }
     }
 }

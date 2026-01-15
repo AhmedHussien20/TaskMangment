@@ -115,7 +115,7 @@ namespace TaskMangment.Infrastructure.Services
 
             if (role != "Manager")
             {
-                query = query.Where(t => t.Assignments.Any(a => a.Employee.Id == employeeId));
+                query = query.Where(t => t.Assignments.Any(a => a.Employee.Id == employeeId) || t.CreatedByEmployeeId == employeeId);
             }
             else
             {

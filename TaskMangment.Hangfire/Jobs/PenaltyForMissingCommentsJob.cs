@@ -93,10 +93,56 @@ namespace TaskMangment.Hangfire.Jobs
 
             foreach (var (discount, employeeName, taskId, taskTitle) in discountsToPublish)
             {
-                await _eventDispatcher.PublishAsync(
-                    new TaskPenaltyEvent(discount.Id, taskId, employeeName, discount.EmployeeId, taskTitle)
-                );
+                try
+                {
+                    var issuedEmployee = await _db.Employees
+                        .Where(e => e.Id == discount.EmployeeId)
+                        .Select(e => new
+                        {
+                            e.Id,
+                            e.FullName,
+                            e.BranchId
+                        })
+                        .FirstOrDefaultAsync();
+
+                    if (issuedEmployee == null) continue;
+
+                    var branch = issuedEmployee.BranchId.HasValue
+                        ? await _db.Branches
+                            .Include(b => b.Manager)
+                            .FirstOrDefaultAsync(b => b.Id == issuedEmployee.BranchId.Value)
+                        : null;
+
+                    var managerId = branch?.ManagerID;
+
+                    var sendToIds = new List<int> { discount.EmployeeId };
+                    if (managerId.HasValue && !sendToIds.Contains(managerId.Value))
+                        sendToIds.Add(managerId.Value);
+
+                    var issuedToName = issuedEmployee.FullName;
+
+                    var employeeCreatedName = await _db.Employees
+                        .Where(e => e.Id == discount.CreatedByEmployeeId)
+                        .Select(e => e.FullName)
+                        .FirstOrDefaultAsync() ?? "";
+
+                    await _eventDispatcher.PublishAsync(
+                        new TaskPenaltyEvent(
+                            discount.Id,
+                            taskId,
+                            employeeCreatedName ?? "",
+                            sendToIds,
+                            issuedToName,
+                            taskTitle
+                        )
+                    );
+                }
+                catch (Exception ex)
+                {
+                    
+                }
             }
+
         }
 
     }

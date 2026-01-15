@@ -109,8 +109,8 @@ namespace TaskMangment.Infrastructure.Services
                 throw new AppException(ErrorCodes.TaskAlreadyClosed, StatusCodes.Status400BadRequest);
 
 
-            if (role != "Manager")
-                throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status404NotFound);
+            if (role != "Manager" && task.CreatedByEmployeeId != employeeId)
+                throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
 
 
 
@@ -163,6 +163,7 @@ namespace TaskMangment.Infrastructure.Services
                 throw new AppException("TaskPercentage not found", StatusCodes.Status404NotFound);
 
             entity.AchievementPercent = dto.AchievementPercent;
+            entity.AchievementReason = dto.AchievementReason;
 
             await _repo.SaveChangesAsync();
             await _cache.RemoveAsync("taskPercentages:");

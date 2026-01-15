@@ -26,6 +26,7 @@ namespace TaskMangment.Infrastructure.Services
     {
         private readonly IRepository<Warning> _warningRepo;
         private readonly IRepository<Employee> _employeeRepo;
+        private readonly IRepository<Branch> _branchRepo;
         private readonly IRepository<TaskAssignment> _taskAssignmentRepo;
         private readonly IRepository<WorkTask> _taskRepo;
         private readonly IMapper _mapper;
@@ -42,7 +43,8 @@ namespace TaskMangment.Infrastructure.Services
             ICachingService cache,
             IRepository<WorkTask> taskRepo,
             IDomainEventDispatcher eventDispatcher,
-            IRepository<Discount> discountRepo)
+            IRepository<Discount> discountRepo,
+            IRepository<Branch> branchRepo)
         {
             _warningRepo = warningRepo;
             _employeeRepo = employeeRepo;
@@ -52,6 +54,7 @@ namespace TaskMangment.Infrastructure.Services
             _taskRepo = taskRepo;
             _eventDispatcher = eventDispatcher;
             _discountRepo = discountRepo;
+            _branchRepo = branchRepo;
         }
 
         public async Task<ApiResponse<PagedResponse<WarningGetDto>>> GetAllAsync(WarningRequest request)
@@ -166,16 +169,37 @@ namespace TaskMangment.Infrastructure.Services
                 await _cache.RemoveAsync("warnings:");
 
 
-                var employeeName = await _employeeRepo.GetAll(e => e.Id == employeeId).Select(e => e.FullName).FirstOrDefaultAsync();
+            var employeeName = await _employeeRepo.GetAll(e => e.Id == employeeId).Select(e => e.FullName).FirstOrDefaultAsync();
+            var issuedEmployee = await _employeeRepo.GetAll(e => e.Id == dto.IssuedEmployeeId)
+                   .Select(e => new
+                   {
+                       e.BranchId,
+                       e.FullName
+                   }
+                   ).FirstOrDefaultAsync();
 
-                await _eventDispatcher.PublishAsync(
-                    new TaskWarningEvent(warning.Id, taskId, employeeName, dto.IssuedEmployeeId, task.Title)
+            var branch = issuedEmployee.BranchId.HasValue
+                ? await _branchRepo.GetAll()
+                    .Include(b => b.Manager)
+                    .FirstOrDefaultAsync(b => b.Id == issuedEmployee.BranchId.Value)
+                : null;
+
+            var managerId = branch?.ManagerID;
+            var sendToIds = new List<int> { dto.IssuedEmployeeId };
+            if (managerId.HasValue && !sendToIds.Contains(managerId.Value))
+                sendToIds.Add(managerId.Value);
+
+            var IssuedToName = issuedEmployee.FullName;
+
+
+            await _eventDispatcher.PublishAsync(
+                    new TaskWarningEvent(warning.Id, taskId, employeeName, sendToIds, IssuedToName, task.Title)
                 );
 
             if (discount != null)
             {
                 await _eventDispatcher.PublishAsync(
-                    new TaskPenaltyEvent(discount.Id, taskId, employeeName, dto.IssuedEmployeeId, task.Title)
+                    new TaskPenaltyEvent(discount.Id, taskId, employeeName, sendToIds, IssuedToName, task.Title)
                 );
             }
 

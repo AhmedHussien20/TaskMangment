@@ -67,10 +67,11 @@ export class DashboardComponent {
   todayInProgressTasks: InProgressUpdatedTodayDto[] = [];
   completedTasksToday: CompletedTasksTodayDto[] = [];
   pendingCloseRequests: PendingCloseRequestDto[] = [];
+  
   periodOptions = [
-    { label: 'Today', value: 'Day' },
-    { label: 'This Month', value: 'Month' },
-    { label: 'This Year', value: 'Year' },
+    { label: 'DASHBOARD.TODAY', value: 'Day' },
+    { label: 'DASHBOARD.MONTH', value: 'Month' },
+    { label: 'DASHBOARD.YEAR', value: 'Year' },
   ];
 
   selectedPeriod: PeriodType = 'Day';
@@ -162,7 +163,7 @@ export class DashboardComponent {
       {
         title: 'DASHBOARD.AVG_COMPLETION_TIME',
         value:
-          (this.adminKpis.averageCompletionHours / 24).toFixed(1) + ' Days',
+          (this.adminKpis.averageCompletionHours / 24).toFixed(1) + this.translate.instant('TASK.DAYS'),
         svg: `
 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
      viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -421,7 +422,7 @@ export class DashboardComponent {
       {
         title: 'DASHBOARD.AVG_COMPLETION_TIME',
         value:
-          (this.EmployeeKpis.averageCompletionHours / 24).toFixed(1) + ' Days',
+          (this.EmployeeKpis.averageCompletionHours / 24).toFixed(1) + this.translate.instant('TASK.DAYS'),
         svg: `
 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
      viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -453,6 +454,12 @@ export class DashboardComponent {
   }
 
   ngOnInit(): void {
+    //REMEMBER TO DISCUSS
+     this.periodOptions = [
+      { label: this.translate.instant('DASHBOARD.TODAY'), value: 'Day' },
+      { label: this.translate.instant('DASHBOARD.MONTH'), value: 'Month' },
+      { label: this.translate.instant('DASHBOARD.YEAR'), value: 'Year' },
+    ];
     this.translate.use('ar');
     this.loadDashboard();
   }

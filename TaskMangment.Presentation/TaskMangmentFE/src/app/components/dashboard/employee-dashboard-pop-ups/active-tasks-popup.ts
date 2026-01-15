@@ -59,7 +59,7 @@ export class EmployeeTasksPopupComponent {
       }
     },
     { key: 'dueDate', label: 'TASK.DUE_DATE', type: 'date' },
-    { key: 'progressPercent', label: 'TASK.PROGRESS' }
+    { key: 'progressPercent', label: 'TASK.ACHIEVEMENT' }
   ];
 
   rows: any[] = [];

@@ -8,21 +8,22 @@ using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Notification;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Domain.Event;
+using TaskMangment.Utilities.Localization.Resources;
 
 namespace TaskMangment.Application.Behaviors
 {
     public class TaskPenaltyEventHandler : IEventHandler<TaskPenaltyEvent>
     {
         private readonly INotificationService _notificationService;
-        private readonly IStringLocalizer _localizer;
+        private readonly IStringLocalizer<TaskNotification> _localizer;
 
         public TaskPenaltyEventHandler(
             INotificationService notificationService,
-            IStringLocalizerFactory factory)
+            IStringLocalizer<TaskNotification> localizer)
         {
             _notificationService = notificationService;
-
-            _localizer = factory.Create("TaskNotification", typeof(TaskPenaltyEventHandler).Assembly.GetName().Name);
+            _localizer = localizer;
+           // _localizer = factory.Create("TaskNotification", typeof(TaskPenaltyEventHandler).Assembly.GetName().Name);
         }
 
         public async Task Handle(TaskPenaltyEvent ev)
@@ -37,13 +38,15 @@ namespace TaskMangment.Application.Behaviors
                 ev.IssuedbyName
             );
 
-           
+            foreach (var empId in ev.SendTo)
+            {
                 await _notificationService.SendAsync(
-                    ev.IssuedtoId,
+                    empId,
                     message,
                     sendEmail: true,
                     sendWhatsApp: false
                 );
+            }
             
         }
     }

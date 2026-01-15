@@ -8,20 +8,22 @@ using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Notification;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Domain.Event;
+using TaskMangment.Utilities.Localization.Resources;
 
 namespace TaskMangment.Application.Behaviors
 {
     public class TaskCloseApproveEventHandler : IEventHandler<TaskCloseApproveEvent>
     {
         private readonly INotificationService _notificationService;
-        private readonly IStringLocalizer _localizer;
+        private readonly IStringLocalizer<TaskNotification> _localizer;
 
         public TaskCloseApproveEventHandler(
             INotificationService notificationService,
-            IStringLocalizerFactory factory)
+            IStringLocalizer<TaskNotification> localizer)
         {
             _notificationService = notificationService;
-            _localizer = factory.Create("TaskNotification", "TaskMangment.API");
+            _localizer = localizer;
+           // _localizer = factory.Create("TaskNotification", "TaskMangment.API");
         }
 
         public async Task Handle(TaskCloseApproveEvent ev)

@@ -36,7 +36,7 @@ namespace TaskMangment.Hangfire.Jobs
             if (!overdueTasks.Any()) return;
 
             foreach (var task in overdueTasks)
-            { 
+            {
                 var approvedExtension = await _db.TaskExtensionRequests
                     .Where(r => r.TaskId == task.Id
                          && r.Status == ExtensionRequestStatus.Approved
@@ -113,7 +113,7 @@ namespace TaskMangment.Hangfire.Jobs
                     {
                         var alreadyDiscounted = await _db.Discounts.AnyAsync(d =>
                         d.TaskId == task.Id &&
-                      //  d.EmployeeId == task.CreatedByEmployeeId &&
+                        //  d.EmployeeId == task.CreatedByEmployeeId &&
                         d.discountType == DiscountType.AutoCloseTaskDiscount &&
                         d.AutoDiscount);
 
@@ -142,19 +142,55 @@ namespace TaskMangment.Hangfire.Jobs
                 {
                     try
                     {
+                        var employeeName = await _db.Employees.Where(e => e.Id == discount.CreatedByEmployeeId)
+                            .Select(e => e.FullName)
+                            .FirstOrDefaultAsync();
+
+
+                        // جلب الموظف المستفيد من الخصم
+                        var issuedEmployee = await _db.Employees
+    .Where(e => e.Id == discount.EmployeeId)
+    .Select(e => new
+    {
+        e.Id,
+        e.FullName,
+        e.BranchId
+    })
+    .FirstOrDefaultAsync();
+
+
+                        var branch = issuedEmployee.BranchId.HasValue
+    ? await _db.Branches
+        .Include(b => b.Manager)
+        .FirstOrDefaultAsync(b => b.Id == issuedEmployee.BranchId.Value)
+    : null;
+
+
+                        var managerId = branch?.ManagerID;
+
+                        var sendToIds = new List<int> { discount.EmployeeId };
+                        if (managerId.HasValue && !sendToIds.Contains(managerId.Value))
+                            sendToIds.Add(managerId.Value);
+
+                        var issuedToName = issuedEmployee.FullName;
+
                         await _eventDispatcher.PublishAsync(
                             new TaskPenaltyEvent(
                                 discount.Id,
                                 task.Id,
-                                task.Assignments.FirstOrDefault(a => a.EmployeeId == discount.EmployeeId)?.Employee?.FullName ?? "",
-                                discount.EmployeeId,
-                                task.Title));
-                    }
-                    catch (Exception ex) 
-                    {
+                                employeeName ?? "",
+                                sendToIds,
+                                issuedToName,
+                                task.Title 
+                            )
 
+                             
+                        );
                     }
+                    catch (Exception ex)
+                    {
                     }
+                }
             }
 
         }

@@ -196,23 +196,29 @@
                     <!-- ACTIONS -->
                     <td *ngIf="showEditButton || showDeleteButton || showDetailsButton" class="text-center">
 
-                        <!-- DETAILS -->
-                        <button *ngIf="showDetailsButton" class="btn btn-outline-info btn-sm me-1"
-                            (click)="viewDetails(getItemId(item))">
-                            <i class="bi bi-eye"></i>
-                        </button>
+    <!-- DETAILS -->
+    <button *ngIf="showDetailsButton" class="btn btn-outline-info btn-sm me-1"
+        [disabled]="disableDetailsFn ? disableDetailsFn(item) : false"
+        (click)="viewDetails(getItemId(item))">
+        <i class="bi bi-eye"></i>
+    </button>
 
-                        <button *ngIf="showEditButton" class="btn btn-outline-primary btn-sm"
-                            (click)="editItem(getItemId(item))">
-                            <i class="bi bi-pencil-square"></i>
-                        </button>
+    <!-- EDIT -->
+    <button *ngIf="showEditButton" class="btn btn-outline-primary btn-sm"
+        [disabled]="disableEditFn ? disableEditFn(item) : false"
+        (click)="editItem(getItemId(item))">
+        <i class="bi bi-pencil-square"></i>
+    </button>
 
-                        <button *ngIf="showDeleteButton" class="btn btn-outline-danger btn-sm ms-1"
-                            (click)="deleteItem(getItemId(item))">
-                            <i class="bi bi-trash"></i>
-                        </button>
+    <!-- DELETE -->
+    <button *ngIf="showDeleteButton" class="btn btn-outline-danger btn-sm ms-1"
+        [disabled]="disableDeleteFn ? disableDeleteFn(item) : false"
+        (click)="deleteItem(getItemId(item))">
+        <i class="bi bi-trash"></i>
+    </button>
 
-                    </td>
+</td>
+
                 </tr>
 
                 <!-- NO DATA -->

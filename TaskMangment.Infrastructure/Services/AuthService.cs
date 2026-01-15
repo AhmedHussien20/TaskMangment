@@ -7,7 +7,7 @@ using TaskMangment.Application.Common.Errors;
 using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Interfaces;
 using TaskMangment.Application.Interfaces.IRepository;
-using TaskMangment.Application.Interfaces.Services;  
+using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
 using TaskMangment.Infrastructure.DataContext;
@@ -22,7 +22,7 @@ public class AuthService : IAuthService
     private readonly IRolePermissionService _permissionService;
     private readonly IRepository<RolePermission> _rolePerRepo;
 
-    public AuthService(AppDbContext db, IJwtService jwt, IEmailService email,IRepository<RolePermission> rolePerRepo, IRoleAssignmentService roleService, IRolePermissionService permissionService)
+    public AuthService(AppDbContext db, IJwtService jwt, IEmailService email, IRepository<RolePermission> rolePerRepo, IRoleAssignmentService roleService, IRolePermissionService permissionService)
     {
         _db = db;
         _jwt = jwt;
@@ -35,7 +35,11 @@ public class AuthService : IAuthService
     public async Task<ApiResponse<LoginResponse>> LoginAsync(LoginRequest request)
     {
         var user = await _db.Employees
-            .FirstOrDefaultAsync(u => u.Email == request.Email);
+    .Include(u => u.Company)
+    .Include(u => u.Branch)
+    .Include(u => u.Department)
+    .FirstOrDefaultAsync(u => u.Email == request.Email);
+
 
         if (user == null)
             throw new AppException(
@@ -80,8 +84,11 @@ public class AuthService : IAuthService
             FullName = user.FullName,
             Email = user.Email,
             CompanyId = user.CompanyId,
+            campanyName = user.Company?.Name,
             BranchId = user.BranchId,
+            branchName = user.Branch?.Name,
             DepartmentId = user.DepartmentId,
+            deptName = user.Department?.Name,
             JobId = user.JobId,
             Title = user.Title,
             Nationality = user.Nationality,
@@ -139,7 +146,7 @@ public class AuthService : IAuthService
 
         bool isValidCode = BCrypt.Net.BCrypt.Verify(request.Token, user.ResetPasswordToken);
         if (!isValidCode)
-            throw new AppException(ErrorCodes.InvalidToken,StatusCodes.Status400BadRequest);
+            throw new AppException(ErrorCodes.InvalidToken, StatusCodes.Status400BadRequest);
 
         return ApiResponse<bool>.Ok(true, "Token is valid");
     }
@@ -167,6 +174,6 @@ public class AuthService : IAuthService
         return ApiResponse<bool>.Ok(true, "Password reset successfully");
     }
 
-    
+
 
 }

@@ -184,6 +184,8 @@ export class TaskListComponent implements OnInit {
         const payload = res;
         const pageData = payload.data;
 
+        
+
         this.rows = pageData.data ?? [];
         this.totalItems = pageData.totalCount ?? 0;
         this.page = pageData.pageIndex ?? 1;
@@ -373,5 +375,14 @@ export class TaskListComponent implements OnInit {
     });
   }
 
+disableEditRow = (row: TaskGet) => {
+  return row.status === 3 || row.status === 4 || row.status === 5 ;
+};
+
+
+
+disableDetailsRow = (row: TaskGet) => {
+  return row.status === 3 || row.status === 4 || row.status === 5 ;
+};
 
 }

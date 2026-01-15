@@ -22,7 +22,7 @@
         <i class="bi bi-x-square"></i>
       </button>
 
-      <button class="btn btn-light" ngbTooltip="إضافة نسبة انجاز" container="body" placement="bottom"
+      <button class="btn btn-light" *ngIf="showAdminPages" ngbTooltip="إضافة نسبة انجاز" container="body" placement="bottom"
         (click)="openAction('percent')">
 <i class="bi bi-bar-chart"></i>
       </button>

@@ -2,12 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NgbModal, NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
-import { Router } from '@angular/router';
 
-import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
 import { GenericTableComponent, TableColumn } from '../../../shared/components/generic-table/generic-table.component';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { ToastrService } from 'ngx-toastr';
+import { TranslateModule } from '@ngx-translate/core';
 
 
 import { SearchCriteria } from 'app/core/models/search-criteria.model';
