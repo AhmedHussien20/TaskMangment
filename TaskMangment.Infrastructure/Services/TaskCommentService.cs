@@ -140,6 +140,10 @@ namespace TaskMangment.Infrastructure.Services
             if (assignment == null)
                 throw new AppException(ErrorCodes.NotAssigned, StatusCodes.Status400BadRequest);
 
+            if (assignment.IsClosed)
+                throw new AppException(ErrorCodes.TaskAlreadyClosed, StatusCodes.Status400BadRequest);
+
+
 
             var comment = _mapper.Map<TaskComment>(dto);
             comment.TaskId = taskId;

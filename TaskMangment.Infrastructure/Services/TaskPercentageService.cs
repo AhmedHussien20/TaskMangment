@@ -1,12 +1,14 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TaskMangment.Application.Common.ApiRequests.Task;
+using TaskMangment.Application.Common.Errors;
 using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Responses;
@@ -17,6 +19,7 @@ using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
 using TaskMangment.Domain.Event;
 using TaskMangment.Infrastructure.Persistence.Extensions;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace TaskMangment.Infrastructure.Services
 {
@@ -96,11 +99,21 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<TaskPercentageGetDto>.Ok(dto);
         }
 
-        public async Task<ApiResponse<TaskPercentageGetDto>> AddAsync(int taskId, int employeeId, TaskPercentageAddEditDto dto)
+        public async Task<ApiResponse<TaskPercentageGetDto>> AddAsync(int taskId, int employeeId,string role ,TaskPercentageAddEditDto dto)
         {
             var task = await _taskRepo.GetByIDAsync(taskId);
             if (task == null)
-                throw new AppException("Task not found", StatusCodes.Status404NotFound);
+                throw new AppException(ErrorCodes.TaskNotFound, StatusCodes.Status404NotFound);
+
+            if (task.Status == WorkTaskStatus.Closed || task.Status == WorkTaskStatus.Archived || task.Status == WorkTaskStatus.AutoClose)
+                throw new AppException(ErrorCodes.TaskAlreadyClosed, StatusCodes.Status400BadRequest);
+
+
+            if (role != "Manager")
+                throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status404NotFound);
+
+
+
 
             var entity = _mapper.Map<TaskPercentage>(dto);
             entity.TaskId = taskId;

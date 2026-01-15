@@ -234,4 +234,7 @@
   <data name="LEAVE_REJECTED_NOTIFICATION" xml:space="preserve">
     <value>تم رفض طلب الإجازة الخاص بك</value>
   </data>
+  <data name="TASK_ALREADY_CLOSED" xml:space="preserve">
+    <value>هذه المهمة مغلقة بالفعل</value>
+  </data>
 </root>

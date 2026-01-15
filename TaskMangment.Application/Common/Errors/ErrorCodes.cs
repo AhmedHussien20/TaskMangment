@@ -17,6 +17,7 @@ namespace TaskMangment.Application.Common.Errors
         public const string TaskNotFound = "TASK_NOT_FOUND";
         public const string NotAssigned = "NOT_ASSIGNED";
         public const string AlreadyReviewed = "ALREADY_REVIEWED";
+        public const string TaskAlreadyClosed = "TASK_ALREADY_CLOSED";
 
 
         public const string NotAuthorized = "NOT_AUTHORIZED";

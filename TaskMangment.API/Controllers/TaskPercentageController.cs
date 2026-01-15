@@ -33,7 +33,7 @@ namespace TaskMangment.API.Controllers
         [HttpPost("{taskId}")]
         public async Task<IActionResult> Add(int taskId, [FromBody] TaskPercentageAddEditDto dto)
         {
-            var result = await _service.AddAsync(taskId, this.CurrentUserId, dto);
+            var result = await _service.AddAsync(taskId, this.CurrentUserId,this.Role, dto);
             return Success(result.Data, "Percentage added");
         }
 

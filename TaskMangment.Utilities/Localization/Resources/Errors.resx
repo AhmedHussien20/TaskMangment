@@ -235,4 +235,7 @@
   <data name="LEAVE_REJECTED_NOTIFICATION" xml:space="preserve">
     <value>Your leave request has been rejected</value>
   </data>
+  <data name="TASK_ALREADY_CLOSED" xml:space="preserve">
+    <value>This task has already been closed</value>
+  </data>
 </root>

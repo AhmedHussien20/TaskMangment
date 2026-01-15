@@ -136,6 +136,9 @@ namespace TaskMangment.Infrastructure.Services
             if (assignment == null)
                 throw new AppException(ErrorCodes.NotAssigned, StatusCodes.Status400BadRequest);
 
+            if (assignment.IsClosed)
+                throw new AppException(ErrorCodes.TaskAlreadyClosed, StatusCodes.Status400BadRequest);
+
             var request = _mapper.Map<TaskExtensionRequest>(dto);
             request.TaskAssignmentId = assignment.Id;
             request.TaskId = taskId;
@@ -193,34 +196,49 @@ namespace TaskMangment.Infrastructure.Services
                 .ThenInclude(a => a.Task)
                 .FirstOrDefaultAsync();
 
-
             if (request == null)
                 throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
+
+            var task = request.TaskAssignment?.Task;
+
+            if (task == null)
+                throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
+
+            if (task.Status is WorkTaskStatus.Closed
+                or WorkTaskStatus.AutoClose
+                or WorkTaskStatus.Archived)
+            {
+                throw new AppException(
+                    ErrorCodes.TaskAlreadyClosed,
+                    StatusCodes.Status400BadRequest
+                );
+            }
 
             if (request.Status != ExtensionRequestStatus.Pending)
                 throw new AppException(ErrorCodes.AlreadyReviewed, StatusCodes.Status400BadRequest);
 
             if (dto.Status == ExtensionRequestStatus.Approved)
             {
-                if (!dto.NewDueDate.HasValue || dto.NewDueDate < request.TaskAssignment.Task.DueDate)
+                if (!dto.NewDueDate.HasValue ||
+                    dto.NewDueDate < task.DueDate)
+                {
                     throw new AppException(ErrorCodes.InvalidDate, StatusCodes.Status400BadRequest);
-
-                var task = request.TaskAssignment.Task;
-                var oldDueDate = task.DueDate;
+                }
 
                 request.Status = ExtensionRequestStatus.Approved;
                 request.NewDueDate = dto.NewDueDate.Value;
-               // task.DueDate = dto.NewDueDate.Value;
 
                 var assignedEmployeeIds = await _taskAssignmentRepo
-        .GetAll(a => a.TaskId == task.Id && a.IsActive)
-  .Select(a => a.EmployeeId)
-  .ToListAsync();
+                    .GetAll(a => a.TaskId == task.Id && a.IsActive)
+                    .Select(a => a.EmployeeId)
+                    .ToListAsync();
 
-                if (task.AssignedByEmployeeId.HasValue && !assignedEmployeeIds.Contains(task.AssignedByEmployeeId.Value))
+                if (task.AssignedByEmployeeId.HasValue &&
+                    !assignedEmployeeIds.Contains(task.AssignedByEmployeeId.Value))
                 {
                     assignedEmployeeIds.Add(task.AssignedByEmployeeId.Value);
                 }
+
                 assignedEmployeeIds.Remove(reviewerId);
 
                 await _eventDispatcher.PublishAsync(
@@ -234,7 +252,6 @@ namespace TaskMangment.Infrastructure.Services
                     )
                 );
             }
-
             else
             {
                 request.Status = ExtensionRequestStatus.Rejected;
@@ -246,7 +263,8 @@ namespace TaskMangment.Infrastructure.Services
             await _requestRepo.SaveChangesAsync();
             await _cache.RemoveAsync("taskExtensionRequests:");
 
-            var updatedRequest = await _requestRepo.GetAll(r => r.Id == id)
+            var updatedRequest = await _requestRepo
+                .GetAll(r => r.Id == id)
                 .Include(r => r.RequestedBy)
                 .Include(r => r.ReviewedBy)
                 .Include(r => r.TaskAssignment)
@@ -257,7 +275,8 @@ namespace TaskMangment.Infrastructure.Services
             var resultDto = _mapper.Map<TaskExtensionRequestDetailsDto>(updatedRequest);
             resultDto.TaskTitle = updatedRequest.TaskAssignment.Task?.Title;
 
-            return ApiResponse<TaskExtensionRequestDetailsDto>.Ok(resultDto, "Request reviewed successfully");
+            return ApiResponse<TaskExtensionRequestDetailsDto>
+                .Ok(resultDto, "Request reviewed successfully");
         }
 
     }

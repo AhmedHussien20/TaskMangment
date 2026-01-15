@@ -251,8 +251,8 @@ namespace TaskMangment.Infrastructure.Services
             if (task == null)
                 throw new AppException(ErrorCodes.TaskNotFound, StatusCodes.Status400BadRequest);
 
-            if (task.Status == WorkTaskStatus.Closed || task.Status == WorkTaskStatus.Archived)
-                throw new AppException(ErrorCodes.NotAuthorized, StatusCodes.Status400BadRequest);
+            if (task.Status == WorkTaskStatus.Closed || task.Status == WorkTaskStatus.Archived || task.Status == WorkTaskStatus.AutoClose)
+                throw new AppException(ErrorCodes.TaskAlreadyClosed, StatusCodes.Status400BadRequest);
 
             _mapper.Map(dto, task);
 

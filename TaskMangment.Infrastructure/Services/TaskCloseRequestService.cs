@@ -117,6 +117,11 @@ namespace TaskMangment.Infrastructure.Services
             if (assignment == null)
                 throw new AppException(ErrorCodes.NotAssigned, StatusCodes.Status400BadRequest);
 
+            if (assignment.IsClosed) 
+                throw new AppException(ErrorCodes.TaskAlreadyClosed, StatusCodes.Status400BadRequest);
+
+            
+
             var request = _mapper.Map<TaskCloseRequest>(dto);
 
             request.TaskAssignmentId = assignment.Id;
@@ -165,7 +170,7 @@ namespace TaskMangment.Infrastructure.Services
         }
 
 
-        public async Task<ApiResponse<TaskCloseRequestDetailsDto>> ReviewAsync(int id, CloseRequestStatus status, int reviewerId)
+        public async Task<ApiResponse<TaskCloseRequestDetailsDto>> ReviewAsync(int id,CloseRequestStatus status,int reviewerId)
         {
             var request = await _requestRepo
                 .GetAll(r => r.Id == id)
@@ -176,6 +181,14 @@ namespace TaskMangment.Infrastructure.Services
             if (request == null)
                 throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
 
+            var task = request.TaskAssignment?.Task;
+
+            if (task == null)
+                throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
+
+            if (task.Status == WorkTaskStatus.Closed)
+                throw new AppException(ErrorCodes.TaskAlreadyClosed, StatusCodes.Status400BadRequest);
+
             if (request.Status != CloseRequestStatus.Pending)
                 throw new AppException(ErrorCodes.AlreadyReviewed, StatusCodes.Status400BadRequest);
 
@@ -183,22 +196,27 @@ namespace TaskMangment.Infrastructure.Services
             {
                 request.Status = CloseRequestStatus.Approved;
 
-
-                var task = request.TaskAssignment.Task;
                 task.Status = WorkTaskStatus.Closed;
                 task.ClosedAt = DateTime.UtcNow;
                 task.ClosedByUserId = reviewerId;
                 task.CloseReason = CloseReason.Manual;
 
-                var assignedEmployeeIds = await _taskAssignmentRepo
+                var taskAssignments = await _taskAssignmentRepo
                     .GetAll(a => a.TaskId == task.Id && a.IsActive)
-                    .Select(a => a.EmployeeId)
                     .ToListAsync();
 
-                if (task.AssignedByEmployeeId.HasValue && !assignedEmployeeIds.Contains(task.AssignedByEmployeeId.Value))
+                foreach (var assignment in taskAssignments)
+                    assignment.IsClosed = true;
+
+                var assignedEmployeeIds = taskAssignments
+                    .Select(a => a.EmployeeId)
+                    .ToList();
+
+                if (task.AssignedByEmployeeId.HasValue &&!assignedEmployeeIds.Contains(task.AssignedByEmployeeId.Value))
                 {
                     assignedEmployeeIds.Add(task.AssignedByEmployeeId.Value);
                 }
+
                 assignedEmployeeIds.Remove(reviewerId);
 
                 await _eventDispatcher.PublishAsync(
@@ -214,28 +232,29 @@ namespace TaskMangment.Infrastructure.Services
             {
                 request.Status = CloseRequestStatus.Rejected;
             }
+
             request.ReviewedByEmployeeId = reviewerId;
             request.ReviewedAt = DateTime.UtcNow;
-
 
             await _requestRepo.SaveChangesAsync();
             await _cache.RemoveAsync("taskCloseRequests:");
 
-            var updatedRequest = await _requestRepo.GetAll(r => r.Id == id)
-                                                    .Include(r => r.RequestedBy)
-                                                     .Include(r => r.ReviewedBy)
-                                                     .Include(r => r.TaskAssignment)
-                                                     .ThenInclude(a => a.Employee)
-                                                     .Include(r => r.TaskAssignment)
-                                                     .ThenInclude(a => a.Task)
-                                                    .AsNoTracking()
-                                                    .FirstOrDefaultAsync();
+            var updatedRequest = await _requestRepo
+                .GetAll(r => r.Id == id)
+                .Include(r => r.RequestedBy)
+                .Include(r => r.ReviewedBy)
+                .Include(r => r.TaskAssignment)
+                .ThenInclude(a => a.Employee)
+                .Include(r => r.TaskAssignment)
+                .ThenInclude(a => a.Task)
+                .AsNoTracking()
+                .FirstOrDefaultAsync();
 
             var resultDto = _mapper.Map<TaskCloseRequestDetailsDto>(updatedRequest);
             resultDto.TaskTitle = updatedRequest.TaskAssignment.Task?.Title;
 
-
-            return ApiResponse<TaskCloseRequestDetailsDto>.Ok(resultDto, "Request reviewed successfully");
+            return ApiResponse<TaskCloseRequestDetailsDto>
+                .Ok(resultDto, "Request reviewed successfully");
         }
 
     }
