@@ -123,7 +123,6 @@ export class DepartmentCreateUpdateComponent implements OnInit {
   }
 
   onSubmit(formValue: any) {
-    debugger
     if (this.formGroup.invalid) {
       this.formGroup.markAllAsTouched();
 

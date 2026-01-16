@@ -9,12 +9,12 @@ namespace TaskMangment.API.Reports.Task
     {
         private readonly List<EmployeeCommentsActivityReportDto> _data;
         private readonly DateTime _fromDate;
-        private readonly DateTime _toDate;
+        private readonly DateTime? _toDate;
 
         public EmployeeCommentsActivityPdfReport(
             List<EmployeeCommentsActivityReportDto> data,
             DateTime fromDate,
-            DateTime toDate)
+            DateTime? toDate)
         {
             _data = data;
             _fromDate = fromDate;

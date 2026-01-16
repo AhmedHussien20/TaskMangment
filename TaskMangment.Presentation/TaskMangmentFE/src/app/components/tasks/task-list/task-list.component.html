@@ -39,7 +39,8 @@
                         (edit)="openEdit($event, taskModal)" (details)="openDetails($event)"
                         (delete)="confirmDelete($event)"
                         [disableEditFn]="disableEditRow"
-                        [disableDetailsFn]="disableDetailsRow">
+                        [disableDetailsFn]="disableDetailsRow"
+                        [disableDeleteFn]="disableDeleteRow">
                     </app-generic-table>
                 </div>
             </div>

@@ -41,6 +41,7 @@ namespace TaskMangment.Infrastructure.Services
             int roleLevelId = roles.Any()? roles.Max(r => r.Level) : (int)RoleLevelEnum.Employee;
             claims.Add(new Claim("RoleLevelId", roleLevelId.ToString()));
 
+
             foreach (var role in roles)
             {
                 claims.Add(new Claim(ClaimTypes.Role, role.Name));

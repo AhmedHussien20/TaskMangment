@@ -33,7 +33,9 @@ export class ArchivedTasksListComponent implements OnInit {
 
   columns = [
     { key: 'employeeName', label: 'REPORTS.EMPLOYEE_NAME' },
-    { key: 'archivedTasksCount', label: 'REPORTS.ARCHIVEED_TASKS_COUNT' }
+    { key: 'archivedTasksCount', label: 'REPORTS.ARCHIVEED_TASKS_COUNT' },
+    { key: 'totalTasks', label: 'REPORTS.TASKS_COUNT' },
+    { key: 'archiveRate', label: 'REPORTS.ARCHIVE_RATE' },
   ];
 
   rows: EmployeeArchivedTasksReportDto[] = [];

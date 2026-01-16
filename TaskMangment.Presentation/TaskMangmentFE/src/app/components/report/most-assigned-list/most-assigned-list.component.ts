@@ -33,9 +33,15 @@ export class MostAssignedListComponent implements OnInit {
 
   columns = [
     { key: 'employeeName', label: 'REPORTS.EMPLOYEE_NAME' },
-    { key: 'tasksCount', label: 'REPORTS.TASKS_COUNT' }
+    { key: 'totalTasks', label: 'REPORTS.TASKS_COUNT' },
+    { key: 'newTasks', label: 'REPORTS.NEW_TASKS' },
+    { key: 'inProgressTasks', label: 'REPORTS.IN_PROGRESS_TASKS' },
+    { key: 'closedTasks', label: 'REPORTS.CLOSED_TASKS' },
+    { key: 'overdueTasks', label: 'REPORTS.OVERDUE_TASKS' },
+    { key: 'closingSoonTasks', label: 'REPORTS.CLOSING_SOON_TASKS' },
+    { key: 'completionRate', label: 'REPORTS.COMPLETION_RATE' },
   ];
-
+ 
   rows: EmployeeAssignmentsReportDto[] = [];
   totalItems = 0;
 

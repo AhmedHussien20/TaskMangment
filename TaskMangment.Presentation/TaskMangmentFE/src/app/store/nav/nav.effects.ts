@@ -26,30 +26,30 @@ private MENUITEMS: MenuItem[] = [
   },
 
   // ================= Organization =================
-  { headTitle: 'nav.apps.organization.title', minRoleLevel: 50 },
+  { headTitle: 'nav.apps.organization.title', minRoleLevel: 100 },
   {
     title: 'nav.apps.organization.title',
     icon: 'ti-map',
     type: 'sub',
-    minRoleLevel: 50,
+    minRoleLevel: 100,
     children: [
       {
         title: 'nav.apps.area.list',
         path: '/area/area-list',
         type: 'link',
-        minRoleLevel: 50
+        minRoleLevel: 100
       },
       {
         title: 'nav.apps.branch.list',
         path: '/branch/branch-list',
         type: 'link',
-        minRoleLevel: 50
+        minRoleLevel: 100
       },
       {
         title: 'nav.apps.department.list',
         path: '/department/department-list',
         type: 'link',
-        minRoleLevel: 50
+        minRoleLevel: 100
       }
     ]
   },

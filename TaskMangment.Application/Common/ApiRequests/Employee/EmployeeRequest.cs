@@ -9,6 +9,8 @@ namespace TaskMangment.Application.Common.ApiRequests.Employee
 {
     public class EmployeeRequest : BaseApiRequest
     {
-
+        public int? RoleLevel { get; set; }
+      
     }
+
 }

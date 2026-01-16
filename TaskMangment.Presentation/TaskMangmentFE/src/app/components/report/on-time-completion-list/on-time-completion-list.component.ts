@@ -34,7 +34,9 @@ export class OnTimeCompletionListComponent implements OnInit {
   columns = [
     { key: 'employeeName', label: 'REPORTS.EMPLOYEE_NAME' },
     { key: 'onTimeTasks', label: 'REPORTS.ON_TIME_COUNT' },
-    { key: 'totalTasks', label: 'REPORTS.TASKS_COUNT' },
+    { key: 'totalClosedTasks', label: 'REPORTS.TASKS_CLOSED_COUNT' },
+    { key: 'lateTasks', label: 'REPORTS.LATE_TASKS_COUNT' },
+    { key: 'commitmentPercentage', label: 'REPORTS.COMMITMENT_PERCENTAGE' },
   ];
 
   rows: EmployeeOnTimeReportDto[] = [];

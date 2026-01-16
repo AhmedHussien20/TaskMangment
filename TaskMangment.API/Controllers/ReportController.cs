@@ -38,9 +38,9 @@ namespace TaskMangment.API.Controllers
         [HttpGet("top-commenters/pdf")]
         public async Task<IActionResult> GetTopCommentersPdf(DateTime? fromDate,DateTime? toDate)
         {
-            var data = await _reportService.GetEmployeesCommentsActivityAsync(fromDate.Value, toDate.Value);
+            var data = await _reportService.GetEmployeesCommentsActivityAsync(fromDate, toDate);
 
-            var report = new EmployeeCommentsActivityPdfReport(data, fromDate.Value, toDate.Value);
+            var report = new EmployeeCommentsActivityPdfReport(data, fromDate.Value, toDate);
             var pdf = report.GeneratePdf();
 
             return File(pdf, "application/pdf", "top-commenters-report.pdf");
@@ -52,7 +52,7 @@ namespace TaskMangment.API.Controllers
         {
             var data = await _reportService.GetMostAssignedEmployeesAsync(fromDate, toDate);
 
-            var report = new MostAssignedEmployeesPdfReport(data, fromDate.Value,toDate.Value);
+            var report = new MostAssignedEmployeesPdfReport(data, fromDate.Value,toDate);
             var pdf = report.GeneratePdf();
 
             return File(pdf, "application/pdf", "most-assigned-employees.pdf");
@@ -63,7 +63,7 @@ namespace TaskMangment.API.Controllers
         {
             var data = await _reportService.GetOnTimeCompletionReportAsync(this.Role, this.CurrentUserId, fromDate, toDate);
 
-            var report = new OnTimeCompletionPdfReport(data, fromDate.Value, toDate.Value);
+            var report = new OnTimeCompletionPdfReport(data, fromDate.Value, toDate);
             var pdf = report.GeneratePdf();
 
             return File(pdf, "application/pdf", "on-time-completion-report.pdf");

@@ -126,6 +126,11 @@ namespace TaskMangment.Infrastructure.Services
                     ErrorCodes.CompanyNotFound,
                     StatusCodes.Status404NotFound);
 
+            var existingManager = await _branchRepository.GetAll().AnyAsync(b => b.ManagerID == dto.ManagerId || b.ResponsibleID == dto.ResponsibleId);
+            if (existingManager)
+                throw new AppException(ErrorCodes.AlreadyAssigned, StatusCodes.Status400BadRequest);
+
+
             var branch = _mapper.Map<Branch>(dto);
             branch.CompanyId = CampanyId;
 

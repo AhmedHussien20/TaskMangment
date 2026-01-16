@@ -37,6 +37,9 @@ namespace TaskMangment.API.Controllers
         protected string Role =>
                     User.FindFirstValue(ClaimTypes.Role)
                     ?? throw new AppException("Unauthorized", StatusCodes.Status401Unauthorized);
+        protected int RoleLevel =>
+            int.Parse(User.FindFirstValue("RoleLevelId")?? throw new AppException("Unauthorized", StatusCodes.Status401Unauthorized));
+
 
         protected bool IsAuthenticated => User.Identity.IsAuthenticated;
         protected IActionResult Success<T>(T data, string? message = null)

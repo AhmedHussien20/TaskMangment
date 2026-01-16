@@ -17,12 +17,12 @@ namespace TaskMangment.Hangfire.Jobs
         private readonly AppDbContext _db;
         private readonly IEmailService _emailService;
         private readonly IEmailTemplateRenderer _renderer;
-        private readonly IStringLocalizer<DiscountTypes> _localizer;
+        private readonly IStringLocalizer<DiscountAutoType> _localizer;
 
         public TaskDueTodayEmailsProcessorJob(
             AppDbContext db,
             IEmailService emailService,
-            IEmailTemplateRenderer renderer, IStringLocalizer<DiscountTypes> localizer)
+            IEmailTemplateRenderer renderer, IStringLocalizer<DiscountAutoType> localizer)
         {
             _db = db;
             _emailService = emailService;

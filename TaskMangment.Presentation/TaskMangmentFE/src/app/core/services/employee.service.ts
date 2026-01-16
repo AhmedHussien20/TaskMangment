@@ -47,7 +47,9 @@ export class EmployeeService {
       `PageIndex=${req.pageIndex}`,
       `PageSize=${req.pageSize}`,
       `SortColumn=${req.sortColumn}`,
-      `SortDirection=${req.sortDirection}`
+      `SortDirection=${req.sortDirection}`,
+      `roleLevel=${(req as any).roleLevel ?? ''}`
+
     ].join('&');
   }
 }

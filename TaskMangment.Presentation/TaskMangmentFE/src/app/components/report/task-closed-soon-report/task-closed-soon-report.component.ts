@@ -37,10 +37,12 @@ export class TaskClosedSoonReportComponent implements OnInit {
   columns: TableColumn[] = [
     { key: 'taskIdTitle', label: 'REPORTS.TASK' },
     { key: 'assignedBy', label: 'REPORTS.ASSIGNED_BY' },
-    { key: 'closedDate', label: 'REPORTS.CLOSED_DATE', type: 'date' }
-    
+   // { key: 'closedDate', label: 'REPORTS.CLOSED_DATE', type: 'date' },
+    {key: 'dueDate', label: 'REPORTS.DUE_DATE', type: 'date' },
+    { key: 'branchName', label: 'REPORTS.BRANCH_NAME' },
+    { key: 'areaName', label: 'REPORTS.AREA_NAME' },
+    { key: 'companyName', label: 'REPORTS.COMPANY_NAME' }
   ];
-
   employees: SimpleEmployee[] = [];
   selectedEmployeeId?: number;
 

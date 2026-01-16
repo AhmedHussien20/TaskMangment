@@ -19,10 +19,22 @@ namespace TaskMangment.Infrastructure.Services
         {
             _context = context;
         }
-        public async Task<List<EmployeeCommentsActivityReportDto>> GetEmployeesCommentsActivityAsync(DateTime fromDate,DateTime toDate)
+        public async Task<List<EmployeeCommentsActivityReportDto>> GetEmployeesCommentsActivityAsync(
+    DateTime? fromDate,
+    DateTime? toDate)
         {
-            return await _context.TaskComments
-                .Where(c => c.CreatedDate >= fromDate && c.CreatedDate <= toDate)
+            var query = _context.TaskComments.Include(c => c.Employee).AsQueryable();
+
+            if (fromDate.HasValue)
+                query = query.Where(c => c.CreatedDate >= fromDate.Value);
+
+            if (toDate.HasValue)
+                query = query.Where(c => c.CreatedDate <= toDate.Value);
+
+            if (!fromDate.HasValue && !toDate.HasValue)
+                return new List<EmployeeCommentsActivityReportDto>();
+
+            return await query
                 .GroupBy(c => new
                 {
                     c.EmployeeId,
@@ -47,6 +59,7 @@ namespace TaskMangment.Infrastructure.Services
                 .ToListAsync();
         }
 
+
         public async Task<List<EmployeeCommentsReportDto>> GetTopEmployeesByCommentsAsync(DateTime? fromDate = null, DateTime? toDate = null)
         {
             var query = _context.TaskComments.Include(c => c.Employee).AsQueryable();
@@ -67,7 +80,15 @@ namespace TaskMangment.Infrastructure.Services
                 }).Select(g => new EmployeeCommentsReportDto
                 {
                     EmployeeName = g.Key.FullName,
-                    CommentsCount = g.Count()
+                    CommentsCount = g.Count(),
+
+                    DistinctTasksCount = g.Select(x => x.TaskId).Distinct().Count(),
+
+                    AvgCommentsPerTask = g.Select(x => x.TaskId).Distinct().Count() == 0
+                        ? 0
+                        : (decimal)g.Count() / g.Select(x => x.TaskId).Distinct().Count(),
+
+                    LastCommentDate = g.Max(x => x.CreatedDate)
                 }) .OrderByDescending(x => x.CommentsCount)
                 .AsNoTracking()
                 .ToListAsync();
@@ -102,9 +123,7 @@ namespace TaskMangment.Infrastructure.Services
                 .Select(g => new EmployeeAssignmentsReportDto
                 {
                     EmployeeName = g.Key.FullName,
-
                     TotalTasks = g.Count(),
-
                     NewTasks = g.Count(x => x.Task.Status == WorkTaskStatus.New),
                     InProgressTasks = g.Count(x => x.Task.Status == WorkTaskStatus.InProgress),
                     ClosedTasks = g.Count(x => x.Task.Status == WorkTaskStatus.Closed),
@@ -148,7 +167,9 @@ namespace TaskMangment.Infrastructure.Services
             if (toDate.HasValue)
                 query = query.Where(a => a.Task.ClosedAt <= toDate.Value);
 
-     
+            if (!fromDate.HasValue && !toDate.HasValue)
+                return new List<EmployeeOnTimeReportDto>();
+
             query = query.Where(a =>
                 a.Task.Status == WorkTaskStatus.Closed &&
                 a.Task.ClosedAt != null &&

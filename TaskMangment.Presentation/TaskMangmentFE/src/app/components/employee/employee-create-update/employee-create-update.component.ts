@@ -155,12 +155,12 @@ export class EmployeeCreateUpdateComponent implements OnInit {
   initForm() {
   this.formGroup = this.fb.group({
     fullName: ['', [
-      Validators.required,
+          Validators.required,
       Validators.minLength(3),
       Validators.maxLength(250)
     ]],
 
-    branchId: [null],
+    branchId: [null, [Validators.required]],
 
     title: ['', [
       Validators.required,

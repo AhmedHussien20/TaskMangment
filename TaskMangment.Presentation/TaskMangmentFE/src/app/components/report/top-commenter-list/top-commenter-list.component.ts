@@ -35,8 +35,10 @@ export class TopCommenterListComponent implements OnInit {
   // Table Columns
   columns = [
     { key: 'employeeName', label: 'REPORTS.EMPLOYEE_NAME' },
-    { key: 'commentsCount', label: 'REPORTS.COMMENTS_COUNT' }
-  ];
+    { key: 'commentsCount', label: 'REPORTS.COMMENTS_COUNT' },
+    { key: 'distinctTasksCount', label: 'REPORTS.DISTINCT_TASKS_COUNT' },
+    { key: 'avgCommentsPerTask', label: 'REPORTS.AVG_COMMENTS_PER_TASK' },
+    { key: 'lastCommentDate', label: 'REPORTS.LAST_COMMENT_DATE', type: 'date' },];
 
   rows: EmployeeCommentsReportDto[] = [];
   totalItems = 0;

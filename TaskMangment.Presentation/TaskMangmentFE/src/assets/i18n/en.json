@@ -31,10 +31,10 @@
     "AVG_COMPLETION_TIME": "Avg Completion Time",
     "DAYS": "Days",
     "HOURS": "Hours",
-    "NOT_COMMENTED_TODAY" : "Incoming tasks have no comments today",
-    "TODAY" : "Today",
-    "MONTH" : "Month",
-    "YEAR" : "Year"
+    "NOT_COMMENTED_TODAY": "Incoming tasks have no comments today",
+    "TODAY": "Today",
+    "MONTH": "Month",
+    "YEAR": "Year"
   },
   "MENU": {
     "HOME": "Home",
@@ -60,7 +60,8 @@
     "CANCEL_BUTTON": "Cancel",
     "DELETE_SUCCESS": "Deleted successfully",
     "LOADING": "Loading",
-    "APPLY": "Apply"
+    "APPLY": "Apply",
+    "ERROR_LOADING_DATA": "An error occurred while loading data"
   },
   "validation": {
     "required": "This field is required",
@@ -200,25 +201,24 @@
     "SUBTITLE": "Please login to continue"
   },
   "FORGOT_PASSWORD": {
-  "TITLE": "Forgot Password?",
-  "EMAIL_ADDRESS": "Email Address",
-  "EMAIL_PLACEHOLDER": "Enter your email address",
-  "SUBMIT": "Submit",
-  "BACK_TO_LOGIN": "Back to Login",
-  "RESET_PASSWORD": "New Password",
-  "NEW_PASSWORD": "New Password",
-  "NEW_PASSWORD_PLACE_HOLDER": "Enter your new password",
-  "CONFIRM": "Confirm",
-  "GO_BACK_TO_LOGIN": "Go back to login",
-  "RESET_CODE_CHECK": "Verify your code",
-  "VERIFY_CODE": "Verification Code",
-  "VERIFY_NOTE": "Enter the 6-digit code sent to your email to reset your password.",
-  "6_CODE_DIGITS": "Enter the 6-digit code",
-  "PASSWORDS_NOT_MATCH": "Passwords do not match",
-  "CONFIRM_PASSWORD_PLACE_HOLDER": "Confirm your new password",
-  "CONFIRM_PASSWORD": "Confirm Password"
-}
-,
+    "TITLE": "Forgot Password?",
+    "EMAIL_ADDRESS": "Email Address",
+    "EMAIL_PLACEHOLDER": "Enter your email address",
+    "SUBMIT": "Submit",
+    "BACK_TO_LOGIN": "Back to Login",
+    "RESET_PASSWORD": "New Password",
+    "NEW_PASSWORD": "New Password",
+    "NEW_PASSWORD_PLACE_HOLDER": "Enter your new password",
+    "CONFIRM": "Confirm",
+    "GO_BACK_TO_LOGIN": "Go back to login",
+    "RESET_CODE_CHECK": "Verify your code",
+    "VERIFY_CODE": "Verification Code",
+    "VERIFY_NOTE": "Enter the 6-digit code sent to your email to reset your password.",
+    "6_CODE_DIGITS": "Enter the 6-digit code",
+    "PASSWORDS_NOT_MATCH": "Passwords do not match",
+    "CONFIRM_PASSWORD_PLACE_HOLDER": "Confirm your new password",
+    "CONFIRM_PASSWORD": "Confirm Password"
+  },
   "AREA": {
     "COMPANY": "Company",
     "LIST_TITLE": "Area List",
@@ -519,15 +519,15 @@
     "PERCENTAGE_SUCCESS": "Percentage sent successfully",
     "INVALID_PERCENT": "Enter true percentage",
     "STATUS_INPROGRESS": "Inprogress",
-    "CLOSED_AT" : "Closed at", 
-    "DURATION" : "Work duration",
-    "ADD_ACHIEVEMENT" : "Add your achievement",
-    "SAR" : "SAR",
-    "ADD_TO_CALENDAR" : "Add event with this comment",
-    "COMMENT_MIN_LENGTH_TASK_CHARACTERS" : "Enter 500 characters as Minimum length", 
-    "COMMENT_OR_FILE_REQUIRED" : "Enter required fields",
-    "ACHIEVEMENT_RESON" : "Achievement information",
-    "DAYS" : "Days"
+    "CLOSED_AT": "Closed at",
+    "DURATION": "Work duration",
+    "ADD_ACHIEVEMENT": "Add your achievement",
+    "SAR": "SAR",
+    "ADD_TO_CALENDAR": "Add event with this comment",
+    "COMMENT_MIN_LENGTH_TASK_CHARACTERS": "Enter 500 characters as Minimum length",
+    "COMMENT_OR_FILE_REQUIRED": "Enter required fields",
+    "ACHIEVEMENT_RESON": "Achievement information",
+    "DAYS": "Days"
   },
   "EMPLOYEE": {
     "LIST_TITLE": "Employee List",
@@ -751,9 +751,9 @@
     "LOCATION": "Location",
     "NOT_PROVIDED": "Not Provided",
     "EDIT_PROFILE": "Edit Profile",
-    "QUALIFICATION" :"Qualifications",
-    "OFFICIAL_EMAIL" : "Email",
-    "TITLE" : "Job title"
+    "QUALIFICATION": "Qualifications",
+    "OFFICIAL_EMAIL": "Email",
+    "TITLE": "Job title"
   },
   "OFFER": {
     "ADD": "Add Offer",
@@ -802,24 +802,45 @@
     "AUTO_DISCOUNT": "Total Automatic Discounts",
     "ASSIGNED_BY": "Assigned By",
     "EVALUATION": "Evaluation",
-    "TASK_DISCOUNTS": "Task Discounts",
     "EMPLOYEE": "Employee Accounts",
     "DISCOUNT_FROM": "Discount From",
     "DISCOUNT_TO": "Discount To",
-    "TOP_COMMENTER": "Top Commenters",
+    "TOP_COMMENTER": "Top Commenter",
     "ON_TIME": "On-Time Tasks",
     "ARCHIVED": "Archived Tasks",
-    "TASKS_DISCOUNT": "Task Discounts (Incoming/Outgoing)",
-    "TASK_ACTIVITY_REPORT": "Report of tasks activities",
+    "TASKS_DISCOUNT": "Task Discounts (Incoming / Outgoing)",
+
+    "TASK_ACTIVITY_REPORT": "Task Activity Report",
     "COMMENT": "Comment",
-    "COMMENT_DATE": "Comment date",
-    "COMMENTED_BY": "Commented by",
-    "TASK_MOVEMENT_TITLE": "Today's Task Movements (Incoming/Outgoing)",
+    "COMMENT_DATE": "Comment Date",
+    "COMMENTED_BY": "Commented By",
+    "TASK_MOVEMENT_TITLE": "Today's Task Movements (Incoming / Outgoing)",
     "MOVEMENT_TYPE": "Task Type",
     "REPORT_TITLE": "Report Title",
     "OUTGOING": "Outgoing",
     "INCOMING": "Incoming",
-    "TASKS_CLOSING_SOON": "Closed soon tasks"
+
+    "TASKS_CLOSING_SOON": "Tasks Closing Soon",
+    "NEW_TASKS": "New Tasks",
+    "IN_PROGRESS_TASKS": "In-Progress Tasks",
+    "CLOSED_TASKS": "Closed Tasks",
+    "OVERDUE_TASKS": "Overdue Tasks",
+    "CLOSING_SOON_TASKS": "Tasks Closing Soon",
+
+    "COMPLETION_RATE": "Completion Rate",
+    "TASKS_CLOSED_COUNT": "Closed Tasks Count",
+    "LATE_TASKS_COUNT": "Late Tasks Count",
+    "COMMITMENT_PERCENTAGE": "Commitment Percentage",
+    "ARCHIVE_RATE": "Archive Rate",
+
+    "COMPANY_NAME": "Company Name",
+    "AREA_NAME": "Area Name",
+    "BRANCH_NAME": "Branch Name",
+    "DUE_DATE": "Due Date",
+
+    "DISTINCT_TASKS_COUNT": "Distinct Tasks Count",
+    "AVG_COMMENTS_PER_TASK": "Average Comments per Task",
+    "LAST_COMMENT_DATE": "Last Comment Date"
   },
   "LEAVE": {
     "ID": "ID",

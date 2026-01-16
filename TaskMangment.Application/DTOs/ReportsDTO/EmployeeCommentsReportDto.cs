@@ -10,6 +10,10 @@ namespace TaskMangment.Application.DTOs.ReportsDTO
     {
         public string EmployeeName { get; set; }
         public int CommentsCount { get; set; }
+        public int DistinctTasksCount { get; set; }
+        public decimal AvgCommentsPerTask { get; set; }
+        public DateTime? LastCommentDate { get; set; }
+
     }
 
     public class EmployeeCommentsActivityReportDto

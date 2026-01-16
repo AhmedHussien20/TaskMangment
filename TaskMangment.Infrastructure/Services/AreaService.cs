@@ -133,8 +133,7 @@ namespace TaskMangment.Infrastructure.Services
 
             if (isManagerUsed)
                 throw new AppException(
-                    ErrorCodes.AlreadyAssigned,
-                    StatusCodes.Status400BadRequest);
+                    ErrorCodes.AlreadyAssigned,StatusCodes.Status400BadRequest);
 
             var area = _mapper.Map<Area>(dto);
             area.CompanyId = companyId;

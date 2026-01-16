@@ -66,19 +66,11 @@ namespace TaskMangment.Infrastructure.Services
             _db = db;
         }
 
-        public async Task<ApiResponse<PagedResponse<EmployeeGetDto>>> GetAllAsync(EmployeeRequest request)
+        public async Task<ApiResponse<PagedResponse<EmployeeGetDto>>> GetAllAsync(
+    EmployeeRequest request,
+    int employeeId,
+    int? roleLevel)
         {
-            //string cacheKey =
-            //    $"employees:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
-
-            //if (!request.BypassCache)
-            //{
-            //    var cached = await _cache.GetAsync<PagedResponse<EmployeeGetDto>>(cacheKey);
-            //    if (cached != null)
-            //        return ApiResponse<PagedResponse<EmployeeGetDto>>.Ok(cached);
-            //}
-
-            // 1) Base query (Employees)
             var empQuery = _employeeRepo.GetAll()
                 .Include(e => e.Branch)
                 .Include(e => e.EmployeeRoles)
@@ -86,9 +78,33 @@ namespace TaskMangment.Infrastructure.Services
                 .ApplySearch(request.searchKey)
                 .AsNoTracking();
 
+            int? branchId = null;
+
+            if (roleLevel.HasValue && roleLevel.Value >= 70 && roleLevel.Value < 100)
+            {
+                branchId = await _employeeRepo
+                    .GetAll(e => e.Id == employeeId)
+                    .Select(e => e.BranchId)
+                    .FirstOrDefaultAsync();
+
+                if (!branchId.HasValue)
+                    throw new Exception("Employee does not belong to a branch");
+
+                empQuery = empQuery.Where(e => e.BranchId == branchId.Value);
+            }
+
+            if (request.RoleLevel.HasValue)
+            {
+                empQuery = empQuery.Where(e =>
+                    e.EmployeeRoles.Any(er => er.Role.Level == request.RoleLevel.Value)
+                );
+            }
+
             var totalCount = await empQuery.CountAsync();
 
-            empQuery = empQuery.OrderByDynamicSafe(request.SortColumn, request.SortDirection);
+            empQuery = empQuery.OrderByDynamicSafe(
+                request.SortColumn,
+                request.SortDirection);
 
             var employees = await empQuery
                 .Skip((request.PageIndex - 1) * request.PageSize)
@@ -100,7 +116,7 @@ namespace TaskMangment.Infrastructure.Services
             var images = await _db.Attachments
                 .Where(a =>
                     a.AttachmentType == AttachmentType.Employee &&
-                    !a.IsDeleted && 
+                    !a.IsDeleted &&
                     employeeIds.Contains(a.ReferenceId))
                 .GroupBy(a => a.ReferenceId)
                 .Select(g => new
@@ -119,12 +135,17 @@ namespace TaskMangment.Infrastructure.Services
                 dto.ImageUrl = images.TryGetValue(dto.Id, out var url) ? url : null;
             }
 
-            var response = new PagedResponse<EmployeeGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
-
-           // await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
+            // ======================= Response =======================
+            var response = new PagedResponse<EmployeeGetDto>(
+                dtos,
+                totalCount,
+                request.PageIndex,
+                request.PageSize);
 
             return ApiResponse<PagedResponse<EmployeeGetDto>>.Ok(response);
         }
+
+
 
 
         public async Task<ApiResponse<EmployeeGetDto>> GetByIdAsync(int id)

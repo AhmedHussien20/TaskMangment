@@ -62,7 +62,8 @@
     "CANCEL_BUTTON": "إلغاء",
     "DELETE_SUCCESS": "تم الحذف بنجاح",
     "LOADING": "جاري التحميل",
-    "APPLY": "تطبيق"
+    "APPLY": "تطبيق",
+    "ERROR_LOADING_DATA": "حدث خطأ أثناء تحميل البيانات"
   },
   "validation": {
     "required": "هذا الحقل مطلوب",
@@ -839,7 +840,26 @@
     "REPORT_TITLE" : "عنوان التقرير" ,
     "OUTGOING" : "الصادرة" ,
     "INCOMING" : "الواردة",
-    "TASKS_CLOSING_SOON" : "المهام المغلقة قريباً" 
+    "TASKS_CLOSING_SOON" : "المهام المغلقة قريباً" ,
+    "NEW_TASKS" :"المهام الجديدة",
+    "IN_PROGRESS_TASKS" :"المهام قيد التنفيذ",
+    "CLOSED_TASKS" : "المهام المغلقة",
+    "OVERDUE_TASKS" : "المهام المتأخرة",
+    "CLOSING_SOON_TASKS" : "المهام التي ستغلق قريباً",
+    "COMPLETION_RATE": "نسبة الإنجاز",
+    "TASKS_CLOSED_COUNT": "عدد المهام المغلقة",
+    "LATE_TASKS_COUNT": "عدد المهام المتأخرة",
+    "COMMITMENT_PERCENTAGE": "نسبة الالتزام",
+    "ARCHIVE_RATE": "نسبة الأرشفة",
+    "COMPANY_NAME": "اسم الشركة",
+    "AREA_NAME": "اسم المنطقة",
+    "BRANCH_NAME": "اسم الفرع",
+    "DUE_DATE": "تاريخ الاستحقاق",
+    "DISTINCT_TASKS_COUNT": "عدد المهام المميزة",
+    "AVG_COMMENTS_PER_TASK": "متوسط التعليقات لكل مهمة",
+    "LAST_COMMENT_DATE": "تاريخ آخر تعليق"
+
+    
     
   },
   "LEAVE" : 

@@ -20,7 +20,7 @@ namespace TaskMangment.API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll([FromQuery] EmployeeRequest request)
         {
-            var result = await _service.GetAllAsync(request);
+            var result = await _service.GetAllAsync(request,this.CurrentUserId,this.RoleLevel);
 
             if (!result.Success)
                 return Fail(result.Message!);

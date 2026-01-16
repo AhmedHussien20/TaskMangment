@@ -3,21 +3,36 @@ import { TaskStatus } from "../task/task";
 export interface EmployeeArchivedTasksReportDto {
   employeeName: string;
   archivedTasksCount: number;
+  totalTasks: number;
+  archiveRate: number;
 }
 
 export interface EmployeeOnTimeReportDto {
   employeeName: string;
-  totalTasks: number;
+  totalClosedTasks: number;
   onTimeTasks: number;
+  lateTasks: number;
+  commitmentPercentage: number;
 }
 export interface EmployeeAssignmentsReportDto {
   employeeName: string;
-  tasksCount: number;
+  totalTasks: number;
+  newTasks: number;
+  inProgressTasks: number;
+  closedTasks: number;
+  overdueTasks: number;
+  closingSoonTasks: number;
+  completionRate: number;
 }
+           
 export interface EmployeeCommentsReportDto {
   employeeName: string;
   commentsCount: number;
+  distinctTasksCount: number;
+  avgCommentsPerTask: number;
+  lastCommentDate: string;
 }
+ 
 
 export interface TaskDiscountGetReportDto {
   taskId: number;
@@ -76,6 +91,10 @@ export interface TasksClosingSoonDto {
   closedDate?: string; 
   status: TaskStatus; 
   employeeName: string;
+  branchName: string;
+  areaName: string;
+  companyName: string;
+  dueDate: string;
 }
 
 
