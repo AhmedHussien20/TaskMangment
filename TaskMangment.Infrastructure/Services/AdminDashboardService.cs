@@ -51,11 +51,7 @@ namespace TaskMangment.Infrastructure.Services
 
             }
 
-            public async Task<ApiResponse<AdminDashboardDto>> GetDashboardAsync(
-     int companyId,
-     int roleLevel,           
-     int? employeeId = null,   
-     PeriodDto? period = null)
+            public async Task<ApiResponse<AdminDashboardDto>> GetDashboardAsync(int companyId,int roleLevel,int? employeeId = null,PeriodDto? period = null)   
             {
                 string cacheKey = $"dashboard:admin:{companyId}:{roleLevel}:{employeeId}";
 
@@ -365,12 +361,7 @@ namespace TaskMangment.Infrastructure.Services
                 return ApiResponse<List<PendingCloseRequestTaskDto>>.Ok(result);
             }
 
-            public async Task<ApiResponse<List<TaskStatusDto>>> GetTasksByStatusAsync(
-     int companyId,
-     string status,
-     int roleLevel,         
-     int? employeeId,      
-     PeriodDto period)
+            public async Task<ApiResponse<List<TaskStatusDto>>> GetTasksByStatusAsync(int companyId,string status,int roleLevel,int? employeeId,PeriodDto period)          
             {
                 var range = PeriodHelper.GetRange(period);
 
@@ -390,6 +381,7 @@ namespace TaskMangment.Infrastructure.Services
                         (status == "Overdue" &&
                             t.Status != WorkTaskStatus.Closed &&
                             t.DueDate != null &&
+                            t.DueDate < DateTime.Today &&
                             t.DueDate >= range.Start && t.DueDate <= range.End)
                         ||
                         (status == "Completed" &&
@@ -397,7 +389,6 @@ namespace TaskMangment.Infrastructure.Services
                             t.ClosedAt >= range.Start && t.ClosedAt <= range.End)
                     ));
 
-                // ======================= فلترة حسب الفرع والموظف لو الدور Branch Manager =======================
                 if (roleLevel == 70 && branchId.HasValue && employeeId.HasValue)
                 {
                     tasksQuery = tasksQuery.Where(t =>
