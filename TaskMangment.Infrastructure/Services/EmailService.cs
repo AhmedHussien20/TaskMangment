@@ -18,18 +18,13 @@ namespace TaskMangment.Infrastructure.Services
         }
 
         public async Task SendEmailAsync(string to, string subject, string body)
-        {
-            if (string.IsNullOrWhiteSpace(_settings.BrevoApiKey))
-                throw new Exception("BrevoApiKey is missing in EmailSettings.");
-
-            if (string.IsNullOrWhiteSpace(_settings.From))
-                throw new Exception("From email is missing in EmailSettings.");
+        { 
 
             var payload = new
             {
                 sender = new
                 {
-                    email = _settings.From,
+                    email = "task_for_u@ararhni.com",
                     name = "Task Manager"
                 },
                 to = new[]
@@ -43,7 +38,7 @@ namespace TaskMangment.Infrastructure.Services
             string json = JsonSerializer.Serialize(payload);
 
             using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.brevo.com/v3/smtp/email");
-            request.Headers.Add("api-key", _settings.BrevoApiKey);
+            request.Headers.Add("api-key", "");
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             request.Content = new StringContent(json, Encoding.UTF8, "application/json");
 
