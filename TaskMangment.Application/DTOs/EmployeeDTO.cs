@@ -11,6 +11,8 @@ namespace TaskMangment.Application.DTOs
     public class EmployeeAddEditDto
     {
         public int? BranchId { get; set; }
+        public int? JobId { get; set; }
+        public int? DepartmentId { get; set; }
 
         [MaxLength(50)]
         public string Title { get; set; }
@@ -53,6 +55,13 @@ namespace TaskMangment.Application.DTOs
         public string? Title { get; set; }
         public string BranchName { get; set; }
         public string BranchId { get; set; }
+        public string? JobName { get; set; }
+        public int? JobId { get; set; }
+        public string? DepartmentName { get; set; }
+        public int? DepartmentId { get; set; }
+
+
+
         public string Email { get; set; }
         public string Mobile { get; set; }
         public string Qualification { get; set; }
@@ -61,5 +70,7 @@ namespace TaskMangment.Application.DTOs
         public string IdentityNumber { get; set; }
         public string ImageUrl { get; set; }
         public List<string> Roles { get; set; } = new();
+        public DateTime? LastLoginDate { get; set; }
+
     }
 }

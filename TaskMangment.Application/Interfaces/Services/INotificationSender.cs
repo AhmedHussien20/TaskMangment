@@ -8,7 +8,7 @@ namespace TaskMangment.Application.Interfaces.Services
 {
     public interface INotificationSender
     {
-        Task SendWebAsync(int userId, string message);
+        Task SendWebAsync(int userId, string message, int? taskId);
        
     }
 

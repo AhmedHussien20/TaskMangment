@@ -19,7 +19,8 @@ export class MyDatePipe implements PipeTransform {
   transform(
     value: Date | string | number | null | undefined,
     format: string = 'd MMMM y',
-    includeTime: boolean = false
+    includeTime: boolean = false,
+    delimiter: string = ' — '
   ): string {
     if (!value) return '';
 
@@ -28,10 +29,11 @@ export class MyDatePipe implements PipeTransform {
     let finalFormat = format;
 
     if (includeTime) {
-      finalFormat = `${format} HH:mm`;
+      finalFormat = `${format} _ hh:mm:ss a`;
     }
-
-    const formatted = formatDate(value, finalFormat, lang);
+    const date = new Date(value);
+    const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+    const formatted = formatDate(localDate, finalFormat, lang);
 
     if (lang.startsWith('ar')) {
       return toArabicNumbers(formatted);

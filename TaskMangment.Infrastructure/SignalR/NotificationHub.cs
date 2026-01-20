@@ -58,13 +58,13 @@ namespace TaskMangment.Infrastructure.SignalR
             return _onlineUsers.ContainsKey(userId);
         }
 
-        public async Task SendToUser(int userId, string message)
+        public async Task SendToUser(int userId, string message, int? taskId)
         {
             if (_onlineUsers.TryGetValue(userId, out var connections))
             {
                 foreach (var conn in connections)
                 {
-                    await Clients.Client(conn).SendAsync("ReceiveNotification", message);
+                    await Clients.Client(conn).SendAsync("ReceiveNotification",new { message, taskId});
                 }
             }
         }

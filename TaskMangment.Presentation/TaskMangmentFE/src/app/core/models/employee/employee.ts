@@ -2,13 +2,18 @@ export interface Employee {
   id: number;
   fullName: string;
   branchName?: string;
+  JobName?: string;
+  departmentName?: string;
   email?: string;
   mobile?: string;
   roles: string[];
+  lastLoginDate?: string;
 }
 
 export interface EmployeeAddEdit {
   branchId: number;
+  jobId?: number;
+  departmentId?: number;
   title?: string;
   fullName: string;
   nationality?: string;

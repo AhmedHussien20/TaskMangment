@@ -6,6 +6,7 @@ export interface SignalRNotification {
   message: string;
   link?: string;
   createdAt: Date;
+  taskId?: number;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -26,8 +27,8 @@ export class SignalRService {
     if (this.isStarted) return;
 
     this.hubConnection = new signalR.HubConnectionBuilder()
-      .withUrl(`https://taskmangmentapi-bzh2erdwazfea9g8.westeurope-01.azurewebsites.net/notifications?userId=${userId}`)
-      //.withUrl(`https://localhost:7115/notifications?userId=${userId}`)
+      //.withUrl(`https://taskmangmentapi-bzh2erdwazfea9g8.westeurope-01.azurewebsites.net/notifications?userId=${userId}`)
+      .withUrl(`https://localhost:7115/notifications?userId=${userId}`)
       .withAutomaticReconnect()
       .build();
 
@@ -44,14 +45,15 @@ export class SignalRService {
 
     if (this.isListenerRegistered) return;
 
-    this.hubConnection.on('ReceiveNotification', (message: string) => {
+    this.hubConnection.on('ReceiveNotification', (data: { message: string, taskId?: number }) => {
       const notification: SignalRNotification = {
-        message,
+        message: data.message,
         createdAt: new Date(),
-        link: '/pages/notifications-list'
+        link: '/pages/notifications-list',
+        taskId: data.taskId
       };
-      console.log('Notification received:', message);
-      this.toastr.info(message, '');
+      console.log('Notification received:', notification.message);
+      this.toastr.info(notification.message, '');
       this.notificationSubject.next(notification);
     });
 

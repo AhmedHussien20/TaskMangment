@@ -1,8 +1,13 @@
 export interface FormFieldConfig {
-  type: 'input' | 'select' | 'textarea' | 'date' | 'checkbox' | 'radio' | 'file'; 
+  type: 'input' | 'select' | 'textarea' | 'date' | 'checkbox' | 'radio' | 'file' ; 
 
-  inputType?: 'text' | 'number' | 'email' | 'password' | 'url';
-  
+  inputType?: 'text' | 'number' | 'email' | 'password' | 'url' | 'mobile';
+  countryCodes?: {
+  label: string;
+  value: string;
+  maxLength: number;
+   regex: RegExp;
+}[];
   label: string;
   name: string;
   validations?: any;

@@ -15,9 +15,9 @@ export class DepartmentService {
   constructor(private api: ApiService) {}
 
   // GET /Department?query
-  getAll(request: any): Observable<DepartmentPagedResponse> {
+  getAll(request: any): Observable<any> {
     const query = this.buildQuery(request);
-    return this.api.get<DepartmentPagedResponse>(this.service, `?${query}`);
+    return this.api.get<any>(this.service, `?${query}`);
   }
 
   // GET /Department/{id}

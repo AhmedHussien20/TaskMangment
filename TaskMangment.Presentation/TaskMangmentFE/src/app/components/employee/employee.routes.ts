@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core'; 
+import { AuthGuard } from 'app/core/auth/auth.guard';
 
 export const EmployeeRoutes: Routes = [
   {
@@ -19,7 +20,7 @@ export const EmployeeRoutes: Routes = [
     path: 'edit/:id',
     loadComponent: () =>
       import('./employee-create-update/employee-create-update.component')
-        .then(m => m.EmployeeCreateUpdateComponent)
+        .then(m => m.EmployeeCreateUpdateComponent),
   }
 ];
 

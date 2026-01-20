@@ -217,7 +217,14 @@
     "6_CODE_DIGITS": "Enter the 6-digit code",
     "PASSWORDS_NOT_MATCH": "Passwords do not match",
     "CONFIRM_PASSWORD_PLACE_HOLDER": "Confirm your new password",
-    "CONFIRM_PASSWORD": "Confirm Password"
+    "CONFIRM_PASSWORD": "Confirm Password",
+     "PASSWORD_MISMATCH": "Password and confirmation do not match",
+    "RESET_SUCCESS": "Password reset successfully. You can now login with your new password.",
+    "RESET_FAILED": "Failed to reset password. Please try again.",
+    "CODE_RESENT_SUCCESS": "New verification code sent to your email.",
+    "CODE_RESEND_FAILED": "Failed to send verification code. Please try again.",
+    "CODE_SENT_SUCCESS": "Password reset code sent to your email."
+
   },
   "AREA": {
     "COMPANY": "Company",
@@ -284,7 +291,9 @@
     "ERROR": "Something went wrong. Please try again.",
     "SELECT": "Select",
     "PATTERN_INVALID_NUMBER": "Enter a valid number",
-    "PATTERN_INVALID_EMAIL": "Enter a valid email"
+    "PATTERN_INVALID_EMAIL": "Enter a valid email",
+    "INVALID_MOBILE": "Please enter a valid mobile number",
+    "MOBILE_IS_REQUIRED": "Mobile number is required"
   },
   "VALIDATION": {
     "REQUIRED": "This field is required",
@@ -562,7 +571,10 @@
     "searchKey": "Search by employee name",
     "CONFIRM_PASSWORD": "Confirm Password",
     "ROLE": "Role",
-    "PROFILE_PIC": "Profile Picture"
+    "PROFILE_PIC": "Profile Picture",
+    "JOB": "Job",
+    "LAST_LOGIN": "Last Login",
+    "DEPARTMENT": "Department"
   },
   "STUDENT": {
     "TITLE": "Students",
@@ -877,5 +889,12 @@
     "title": "Leave Types List",
     "CREATE_SUCCESS": "Leave created successfully",
     "UPDATE_SUCCESS": "Leave updated successfully"
+  },
+  "FORBIDDEN": 
+  {
+    "TITLE": "Access Denied",
+    "MESSAGE": "You do not have permission to access this page.",
+    "GO_BACK": "Go back to previous page",
+    "GO_HOME": "Go to home page"
   }
 }

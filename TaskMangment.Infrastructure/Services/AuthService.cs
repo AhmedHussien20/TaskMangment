@@ -78,6 +78,7 @@ public class AuthService : IAuthService
 
         var token = await _jwt.GenerateTokenAsync(user);
 
+        user.LastLoginDate = DateTime.UtcNow;
         return ApiResponse<LoginResponse>.Ok(new LoginResponse
         {
             UserId = user.Id,

@@ -29,7 +29,8 @@ namespace TaskMangment.API.Controllers
                 userId: testUserId,
                 message: " Test Notification from API!",
                 sendEmail: true,
-                sendWhatsApp: true
+                sendWhatsApp: true,
+                taskId: null
             );
 
             return Ok("Notification Sent!");
