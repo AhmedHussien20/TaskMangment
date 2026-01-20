@@ -46,7 +46,8 @@ namespace TaskMangment.Application.Behaviors
                     empId,
                     message,
                     sendEmail: true,
-                    sendWhatsApp: false
+                    sendWhatsApp: false,
+                    ev.TaskId
                 );
             }
         }

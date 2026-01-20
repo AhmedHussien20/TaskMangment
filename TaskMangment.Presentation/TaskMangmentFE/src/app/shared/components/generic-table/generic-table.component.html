@@ -172,6 +172,10 @@
                             {{ getValue(item, col.key) | myDate }}
                         </ng-container>
 
+                         <ng-container *ngSwitchCase="'dateTime'">
+                            {{ getValue(item, col.key) |  myDate:'d MMMM y':true }}
+                        </ng-container>
+
                         <!-- CUSTOM (AMOUNT WITH SAR) -->
                         <ng-container *ngSwitchCase="'custom'">
                             <span class="amount-chip">

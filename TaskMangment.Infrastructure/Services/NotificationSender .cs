@@ -18,7 +18,7 @@ namespace TaskMangment.Infrastructure.Services
             _hub = hub; 
         }
 
-        public async Task SendWebAsync(int userId, string message)
+        public async Task SendWebAsync(int userId, string message, int? taskId)
         {
             if (!NotificationHub._onlineUsers.TryGetValue(userId, out var connections))
                 return;
@@ -27,7 +27,7 @@ namespace TaskMangment.Infrastructure.Services
             {
                 if (string.IsNullOrWhiteSpace(connectionId))
                     continue;
-                await _hub.Clients .Client(connectionId) .SendAsync("ReceiveNotification", message);
+                await _hub.Clients .Client(connectionId) .SendAsync("ReceiveNotification", new { message, taskId });
                    
             }
         } 

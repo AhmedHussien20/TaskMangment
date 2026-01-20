@@ -73,11 +73,11 @@ export class VerifyResetCodeComponent implements OnInit {
     this.authService.forgotPassword(this.email).subscribe({
       next: () => {
         this.isLoading = false;
-        this.toastr.success('New verification code sent to your email');
+        this.toastr.success('FORGOT_PASSWORD.CODE_RESENT_SUCCESS');
       },
       error: (err) => {
         this.isLoading = false;
-        this.toastr.error(err.error?.message || 'Failed to send code');
+        this.toastr.error(err.error?.message || 'FORGOT_PASSWORD.CODE_RESEND_FAILED');
       }
     });
   }

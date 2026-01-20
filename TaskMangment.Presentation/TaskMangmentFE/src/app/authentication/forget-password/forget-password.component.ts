@@ -46,17 +46,15 @@ export class ForgotPasswordComponent {
   this.authService.forgotPassword(email).subscribe({
     next: () => {
       this.isLoading = false;
-      this.toastr.success('Reset password code sent to your email');
+      this.toastr.success('FORGOT_PASSWORD.CODE_SENT_SUCCESS');
 
-      // حفظ الايميل في localStorage
       localStorage.setItem('resetEmail', email);
 
-      // الانتقال للصفحة بدون queryParams
       this.router.navigate(['/auth/verify-code']);
     },
     error: (err) => {
       this.isLoading = false;
-      this.toastr.error(err.error?.message || 'Failed to send reset code');
+      this.toastr.error(err.error?.message || 'FORGOT_PASSWORD.CODE_RESEND_FAILED');
     }
   });
 }

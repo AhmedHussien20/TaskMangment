@@ -11,6 +11,8 @@ import { AuthService } from 'app/core/services/auth.service';
 import { TranslationService } from 'app/shared/services/translation.service';
 import { SignalRService } from 'app/core/services/signalr.service';
 import { NotificationApiService } from 'app/core/services/notification.service';
+import { Router } from '@angular/router';
+import { TaskDetailsShellComponent } from 'app/components/tasks/task-details/task-details-shell/task-details-shell.component';
 
 interface Item {
   user: any;
@@ -34,6 +36,8 @@ interface HeaderNotification {
   createdAt: Date;
   isRead: boolean;
   link: string;
+  type?: 'task' | 'message' | 'other';
+  taskId?: number;
 }
 
 
@@ -42,6 +46,7 @@ interface HeaderNotification {
   standalone: false,
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.scss']
+  
 })
 export class HeaderComponent implements OnInit, OnDestroy {
   user: any;
@@ -159,6 +164,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     private translate: TranslationService,
     private signalR: SignalRService,
     private notificationService: NotificationApiService,
+    private router: Router
   ) {
     this.layoutSubscription = layoutService.changeEmitted.subscribe(
       direction => {
@@ -436,7 +442,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
           message: n!.message,
           createdAt: n!.createdAt,
           isRead: false,
-          link: n!.link || '/pages/notifications-list'
+          link: n!.link || '/pages/notifications-list',
+          type: 'task',
+          taskId: n!.taskId
         };
 
         this.notifications.unshift(notification);
@@ -530,5 +538,38 @@ export class HeaderComponent implements OnInit, OnDestroy {
   Logout() {
     this.authService.logout();
   }
+
+handleNotificationClick(notification: HeaderNotification, event: Event) {
+  event.stopPropagation();
+  //event.preventDefault();
+
+  if (notification.type === 'task' && notification.taskId !== undefined) {
+    this.onEdit(notification.taskId); 
+  } else {
+    this.router.navigate([notification.link]);
+    console.log('Navigating to link:', notification.link);
+    console.log('Navigating:', notification);
+
+  }
+}
+
+rows: { taskId: number; [key: string]: any }[] = [];
+
+onEdit(id: number) {
+  console.log('Editing task ID:', id);
+
+  const task = this.rows.find((x: { taskId: number }) => x.taskId === id);
+  console.log('Task object:', task);
+
+  const modalRef = this.modalService.open(TaskDetailsShellComponent, {
+      size: 'xl',
+      backdrop: 'static',
+      scrollable: true
+  });
+
+  modalRef.componentInstance.taskId = id;
+  modalRef.componentInstance.readonly = true;
+}
+
 }
 

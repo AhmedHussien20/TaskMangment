@@ -27,7 +27,12 @@ namespace TaskMangment.Application.AutoMapper
             CreateMap<BranchAddEditDto, Branch>();
             CreateMap<Employee, EmployeeGetDto>()
                 .ForMember(dest => dest.BranchName, opt => opt.MapFrom(src => src.Branch != null ? src.Branch.Name : null))
-                .ForMember(dest => dest.Roles, opt => opt.MapFrom(src => src.EmployeeRoles.Select(er => er.Role.Name).ToList()));
+                .ForMember(dest => dest.Roles, opt => opt.MapFrom(src => src.EmployeeRoles.Select(er => er.Role.Name).ToList()))
+                .ForMember(dest => dest.JobName, opt => opt.MapFrom(src => src.Job != null ? src.Job.Title : null))
+                .ForMember(dest => dest.DepartmentName, opt => opt.MapFrom(src => src.Department != null ? src.Department.Name : null));
+
+
+
             CreateMap<EmployeeAddEditDto, Employee>()
                 .ForMember(dest => dest.PasswordHash, opt => opt.Ignore());
 

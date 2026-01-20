@@ -29,7 +29,7 @@ public class NotificationService : INotificationService
 
     }
 
-    public async Task SendAsync(int userId, string messageKey, bool sendEmail, bool sendWhatsApp)
+    public async Task SendAsync(int userId, string messageKey, bool sendEmail, bool sendWhatsApp, int? taskId)
     {
         var message = messageKey;
 
@@ -46,7 +46,7 @@ public class NotificationService : INotificationService
 
         if (isOnline)
         {
-            await _notificationSender.SendWebAsync(userId, message);
+            await _notificationSender.SendWebAsync(userId, message, taskId);
             return;
         }
     }

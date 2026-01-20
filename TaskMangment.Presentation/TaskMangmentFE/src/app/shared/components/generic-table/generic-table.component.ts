@@ -14,6 +14,7 @@ export type ColumnType =
   | 'badge'
   | 'custom'
   | 'date'
+  | 'dateTime'
   | 'assignees';
 
 export interface BadgeConfig {
@@ -154,7 +155,7 @@ export class GenericTableComponent<T> implements OnDestroy {
       .toUpperCase();
   }
 
-  getInputType(key: string): 'text' | 'dropdown' | 'date' | 'number' {
+  getInputType(key: string): 'text' | 'dropdown' | 'date' | 'dateTime' | 'number' {
     const filterTypes = (this.searchCriteria?.filterTypes || {}) as any;
     return filterTypes[key] || 'text';
   }

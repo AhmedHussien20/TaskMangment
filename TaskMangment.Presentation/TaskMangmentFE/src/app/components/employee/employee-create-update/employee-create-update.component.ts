@@ -9,6 +9,8 @@ import { BranchService } from 'app/core/services/branch.service';
 import { ToastrService } from 'ngx-toastr';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { FormFieldConfig } from 'app/core/models/form-field-config';
+import { DepartmentService } from 'app/core/services/department.service';
+import { JobService } from 'app/core/services/job.service';
 
 @Component({
   selector: 'app-employee-create-update',
@@ -52,6 +54,19 @@ export class EmployeeCreateUpdateComponent implements OnInit {
       validations: { required: false } 
     },
     { 
+      type: 'select', 
+      label: 'EMPLOYEE.JOB', 
+      selectType: 'simple',
+      name: 'jobId', 
+      options: [] 
+    },{ 
+      type: 'select', 
+      label: 'EMPLOYEE.DEPARTMENT', 
+      selectType: 'simple',
+      name: 'departmentId', 
+      options: []
+    },
+    { 
       type: 'input', 
       label: 'EMPLOYEE.JOB_TITLE', 
       name: 'title', 
@@ -70,13 +85,34 @@ export class EmployeeCreateUpdateComponent implements OnInit {
       name: 'identityNumber', 
       defaultValue: '' 
     },
-    { 
-      type: 'input', 
-      inputType: 'number',
-      label: 'EMPLOYEE.MOBILE', 
-      name: 'mobile', 
-      defaultValue: '' 
+    {
+  type: 'input',
+  inputType: 'mobile',
+  label: 'EMPLOYEE.MOBILE',
+  name: 'mobile',
+  countryCodes: [
+    {
+      label: '+20',
+      value: '+20',
+      maxLength: 10,
+      regex: /^1[0-2,5]\d{8}$/  
     },
+    {
+      label: '+966',
+      value: '+966',
+      maxLength: 9,
+      regex: /^5\d{8}$/       
+    },
+    {
+      label: '+962',
+      value: '+962',
+      maxLength: 9,
+      regex: /^7\d{8}$/         // الأردن
+    }
+  ]
+}
+
+,
     { 
       type: 'input', 
       label: 'EMPLOYEE.ADDRESS', 
@@ -140,12 +176,17 @@ export class EmployeeCreateUpdateComponent implements OnInit {
     private branchService: BranchService,
    // private roleService: RoleService,
     private toastr: ToastrService,
-    private translate: TranslateService
+    private translate: TranslateService,
+    private deptService: DepartmentService,
+    private jobService: JobService
   ) { }
 
   ngOnInit() {
     this.initForm();
+    this.listenToMobileCodeChange();
     this.loadBranches();
+    this.loadDepartments();
+    this.loadJobs();
    // this.loadRoles();
     if (this.isEdit && this.employeeId) {
       this.loadEmployee();
@@ -161,6 +202,9 @@ export class EmployeeCreateUpdateComponent implements OnInit {
     ]],
 
     branchId: [null, [Validators.required]],
+    jobId: [null, [Validators.required]],
+
+    departmentId: [null, [Validators.required]],
 
     title: ['', [
       Validators.required,
@@ -176,11 +220,8 @@ export class EmployeeCreateUpdateComponent implements OnInit {
       Validators.pattern('^[0-9]+$')
     ]],
 
-    mobile: ['', [
-      Validators.required,
-      Validators.maxLength(50),
-      Validators.pattern('^[0-9]+$')
-    ]],
+    mobile: ['', [Validators.required, Validators.pattern(/^\d+$/)]],
+    mobileCode: [null, Validators.required],
 
     address: ['', Validators.maxLength(500)],
 
@@ -248,13 +289,30 @@ export class EmployeeCreateUpdateComponent implements OnInit {
     this.employeeService.getById(this.employeeId).subscribe(res => {
       if (!res) return;
       const emp = res.data;
+
+       let mobileCode = '+20'; 
+    let mobileNumber = emp.mobile || '';
+
+    if (mobileNumber.startsWith('+966')) {
+      mobileCode = '+966';
+      mobileNumber = mobileNumber.slice(4); 
+    } else if (mobileNumber.startsWith('+20')) {
+      mobileCode = '+20';
+      mobileNumber = mobileNumber.slice(3);
+    } else if (mobileNumber.startsWith('+962')) {
+      mobileCode = '+962';
+      mobileNumber = mobileNumber.slice(4);
+    }
       this.formGroup.patchValue({
         fullName: emp.fullName,
         branchId: emp.branchId,
+        jobId: emp.jobId,
+        departmentId: emp.departmentId,
         title: emp.title,
         nationality: emp.nationality,
         identityNumber: emp.identityNumber,
-        mobile: emp.mobile,
+        mobile: mobileNumber,
+        mobileCode: mobileCode,
         address: emp.address,
         qualification: emp.qualification,
         roleIds: emp.roleIds || [],
@@ -301,21 +359,73 @@ loadBranches() {
     }
   });
 }
+loadDepartments() {
+  const req = {
+    searchKey: '',
+    pageIndex: 1,
+    pageSize: 500,
+    sortColumn: 'Id',
+    sortDirection: 'DESC'
+  };
 
+  this.deptService.getAll(req).subscribe(res => {
+    const list: { id: number; name: string }[] = res.data.data;
 
+    const options = list.map(b => ({
+      label: b.name,
+      value: b.id
+    }));
 
- /* loadRoles() {
-    // Assuming you have a RoleService with getAll method
-    const req = {
-      searchKey: '',
-      pageIndex: 1,
-      pageSize: 500,
-      sortColumn: 'Id',
-      sortDirection: 'ASC'
-    };
+    const field = this.formConfig.find(x => x.name === 'departmentId');
+    if (field) {
+      field.options = options;
+    }
 
-  
-  }*/
+    if (this.isEdit && this.employeeId) {
+      const departmentId = this.formGroup.get('departmentId')?.value?.toString();
+
+      const selected = options.find(o => o.value === departmentId);
+      if (selected) {
+        this.formGroup.get('departmentId')?.setValue(selected.value);
+      }
+    }
+  });
+}
+loadJobs() {
+  const req = {
+    searchKey: '',
+    pageIndex: 1,
+    pageSize: 500,
+    sortColumn: 'Id',
+    sortDirection: 'DESC'
+  };
+
+  this.jobService.getAll(req).subscribe(res => {
+    const list: { id: number; title: string }[] = res.data.data;
+
+    const options = list.map(b => ({
+      label: b.title,
+      value: b.id
+    }));
+
+    const field = this.formConfig.find(x => x.name === 'jobId');
+    console.log('Job field:', field);
+    if (field) {
+      field.options = options;
+    }
+
+    if (this.isEdit && this.employeeId) {
+      const jobId = this.formGroup.get('jobId')?.value?.toString();
+    console.log('Job:', jobId);
+    console.log('form:', this.formGroup.value);
+
+      const selected = options.find(o => o.value === jobId);
+      if (selected) {
+        this.formGroup.get('jobId')?.setValue(selected.value);
+      }
+    }
+  });
+}
 
  onSubmit(formValue: any) {
   if (this.formGroup.invalid) {
@@ -331,6 +441,10 @@ loadBranches() {
       formData.append(key, formValue[key]);
     }
   });
+
+   if (formValue.mobileCode && formValue.mobile) {
+    formData.set('mobile', formValue.mobileCode + formValue.mobile);
+  }
 
   const files = formValue.attachments;
   if (files) {
@@ -367,4 +481,27 @@ loadBranches() {
     });
   }
 } 
+listenToMobileCodeChange() {
+  const mobileControl = this.formGroup.get('mobile');
+  const mobileCodeControl = this.formGroup.get('mobileCode');
+
+  mobileCodeControl?.valueChanges.subscribe(code => {
+
+    const mobileField = this.formConfig.find(f => f.name === 'mobile');
+    const country = mobileField?.countryCodes?.find(c => c.value === code);
+
+    if (!country) return;
+
+    mobileControl?.setValidators([
+      Validators.required,
+      Validators.pattern(country.regex),
+      Validators.minLength(country.maxLength),
+      Validators.maxLength(country.maxLength)
+    ]);
+
+    mobileControl?.updateValueAndValidity();
+  });
+}
+
+
 }

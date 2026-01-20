@@ -13,12 +13,7 @@
        'col-md-12': field.type === 'file' || field.type === 'textarea'
      }">
         <label *ngIf="field.type !== 'file'" [for]="field.name">{{ field.label | translate}}</label>
-        <div *ngIf="
-            field.type === 'input' ||
-            field.type === 'text' ||
-            field.type === 'number' ||
-            field.type === 'password'
-          " class="input-group">
+        <div *ngIf="field.inputType !== 'mobile' && (field.type === 'input' || field.type === 'text' || field.type === 'number' || field.inputType === 'password')" class="input-group">
           <div *ngIf="field.prefix" class="input-group-text">
             {{ field.prefix | translate}}
           </div>
@@ -68,10 +63,10 @@
             <div *ngIf="formGroup.controls[field.name].errors?.['email']">
               {{ 'FORM.PATTERN_INVALID_EMAIL' | translate }}
             </div>
-
-
-
-
+            <div *ngIf="
+            formGroup.controls[field.name].errors?.['pattern']&& field.name === 'mobile'">
+              {{ 'FORM.INVALID_SAUDI_MOBILE' | translate }}
+            </div>
             <!-- Password mismatch message -->
             <!-- Password mismatch -->
             <div *ngIf="
@@ -83,6 +78,47 @@
 
           </div>
         </div>
+
+ <div *ngIf="field.inputType === 'mobile'" class="input-group">
+
+  <select
+    class="form-select"
+    style="max-width: 100px"
+    [formControlName]="field.name + 'Code'">
+    <option *ngFor="let code of field.countryCodes" [value]="code.value">
+      {{ code.label }}
+    </option>
+  </select>
+
+  <input
+    type="text"
+    class="form-control"
+    [formControlName]="field.name"
+    [placeholder]="field.label | translate"
+    [ngClass]="{
+      'is-invalid':
+        formGroup.controls[field.name].invalid &&
+        (formGroup.controls[field.name].dirty ||
+         formGroup.controls[field.name].touched)
+    }"
+  />
+ <div *ngIf="formGroup.controls['mobile']?.invalid &&
+            (formGroup.controls['mobile']?.dirty || 
+             formGroup.controls['mobile']?.touched)"
+     class="invalid-feedback">
+  <div *ngIf="formGroup.controls['mobile']?.errors?.['required']">
+    {{ 'FORM.MOBILE_IS_REQUIRED' | translate }}
+  </div>
+
+  <div *ngIf="formGroup.controls['mobile']?.errors?.['pattern']">
+    {{ 'FORM.INVALID_MOBILE' | translate }}
+  </div>
+</div>
+
+
+</div>
+
+
 
         <!-- TEXTAREA -->
         <div *ngIf="field.type === 'textarea'" class="mb-3 col-md-8">
@@ -182,25 +218,20 @@
           </div>
         </div>
 
- <mat-form-field *ngIf="field.type === 'date'" appearance="outline" class="w-100">
+        <mat-form-field *ngIf="field.type === 'date'" appearance="outline" class="w-100">
 
-  <mat-label>{{ field.label | translate }}</mat-label>
+          <mat-label>{{ field.label | translate }}</mat-label>
 
-  <input matInput
-         [id]="field.name"
-         [formControlName]="field.name"
-         [matDatepicker]="picker"
-         [min]="field.minDate"
-         [max]="field.maxDate"
-         [disabled]="field.disabled">
+          <input matInput [id]="field.name" [formControlName]="field.name" [matDatepicker]="picker"
+            [min]="field.minDate" [max]="field.maxDate" [disabled]="field.disabled">
 
-  <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-  <mat-datepicker #picker></mat-datepicker>
+          <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-datepicker #picker></mat-datepicker>
 
-  <!-- Validation -->
-  <mat-error *ngIf="formGroup.get(field.name)?.hasError('required')">
-    {{ field.label | translate }} {{ 'FORM.IS_REQUIRED' | translate }}
-  </mat-error>
+          <!-- Validation -->
+          <mat-error *ngIf="formGroup.get(field.name)?.hasError('required')">
+            {{ field.label | translate }} {{ 'FORM.IS_REQUIRED' | translate }}
+          </mat-error>
 
         </mat-form-field>
 

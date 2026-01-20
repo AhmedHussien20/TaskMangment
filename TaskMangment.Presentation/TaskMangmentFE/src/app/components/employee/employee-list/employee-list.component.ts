@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { NgbModal, NgbModalModule, NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
 
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
-import { GenericTableComponent } from '../../../shared/components/generic-table/generic-table.component';
+import { GenericTableComponent, TableColumn } from '../../../shared/components/generic-table/generic-table.component';
 
 import { EmployeeService } from 'app/core/services/employee.service';
 
@@ -42,13 +42,14 @@ export class EmployeeListComponent implements OnInit {
 ];
 
   // table columns
-  columns = [
+  columns: TableColumn[] = [
     { key: 'id', label: 'EMPLOYEE.ID' },
     { key: 'fullName', label: 'EMPLOYEE.NAME' },
     { key: 'branchName', label: 'EMPLOYEE.BRANCH' },
     { key: 'email', label: 'EMPLOYEE.EMAIL' },
     { key: 'mobile', label: 'EMPLOYEE.MOBILE' },
-    { key: 'roles', label: 'EMPLOYEE.ROLES' }
+    { key: 'roles', label: 'EMPLOYEE.ROLES' },
+    { key: 'lastLoginDate', label: 'EMPLOYEE.LAST_LOGIN', type: 'dateTime' }
   ];
 
   rows: Employee[] = [];

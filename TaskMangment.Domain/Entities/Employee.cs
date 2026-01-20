@@ -48,6 +48,7 @@ namespace TaskMangment.Domain.Entities
         public string? ResetPasswordToken { get; set; }
         public DateTime? ResetPasswordExpiry { get; set; }
 
+        public DateTime? LastLoginDate { get; set; }
 
         // Navigation
         public Company Company { get; set; }

@@ -232,4 +232,7 @@
   <data name="TASKACHIEVEMENT" xml:space="preserve">
     <value>The task has been completed successfully</value>
   </data>
+  <data name="EMAIL_ALREADY_EXISTS" xml:space="preserve">
+    <value>email already exists </value>
+  </data>
 </root>

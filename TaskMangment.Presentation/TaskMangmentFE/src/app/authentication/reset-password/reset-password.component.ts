@@ -33,14 +33,12 @@ export class ResetPasswordComponent {
   ) {}
 
   ngOnInit(): void {
-    // قراءة الايميل والتوكن من localStorage
     this.email = localStorage.getItem('resetEmail') || '';
     this.token = localStorage.getItem('resetToken') || '';
 
     if (!this.email || !this.token) {
       this.errorMessage = 'Invalid reset link';
       this.loading = false;
-      // الرجوع لصفحة forgot-password
       this.router.navigate(['/auth/forgot-password']);
       return;
     }
@@ -66,7 +64,7 @@ export class ResetPasswordComponent {
 
   submit(): void {
     if (this.form.invalid || this.form.value.newPassword !== this.form.value.confirmPassword) {
-      this.toastr.error('Passwords do not match');
+      this.toastr.error('FORGOT_PASSWORD.PASSWORD_MISMATCH');
       return;
     }
 
@@ -75,7 +73,7 @@ export class ResetPasswordComponent {
       newPassword: this.form.value.newPassword
     }).subscribe({
       next: () => {
-        this.toastr.success('Password reset successfully');
+        this.toastr.success('FORGOT_PASSWORD.RESET_SUCCESS');
 
         localStorage.removeItem('resetEmail');
         localStorage.removeItem('resetToken');
@@ -83,7 +81,7 @@ export class ResetPasswordComponent {
         this.router.navigate(['/auth/login']);
       },
       error: err => {
-        this.toastr.error(err.error?.message || 'Reset failed');
+        this.toastr.error(err.error?.message || 'FORGOT_PASSWORD.RESET_FAILED');
       }
     });
   }

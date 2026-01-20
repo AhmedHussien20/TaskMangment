@@ -73,6 +73,8 @@ namespace TaskMangment.Infrastructure.Services
         {
             var empQuery = _employeeRepo.GetAll()
                 .Include(e => e.Branch)
+                .Include(e => e.Department)
+                .Include(e => e.Job)
                 .Include(e => e.EmployeeRoles)
                     .ThenInclude(er => er.Role)
                 .ApplySearch(request.searchKey)
@@ -152,6 +154,8 @@ namespace TaskMangment.Infrastructure.Services
         {
             var employee = await _employeeRepo.GetAll(e => e.Id == id)
                 .Include(e => e.Branch)
+                .Include(e => e.Department)
+                .Include(e => e.Job)
                 .Include(e => e.EmployeeRoles)
                     .ThenInclude(er => er.Role)
                 .AsNoTracking()
@@ -162,6 +166,7 @@ namespace TaskMangment.Infrastructure.Services
 
             
             var dto = _mapper.Map<EmployeeGetDto>(employee);
+           // var x = employee.Department.Name;
 
             return ApiResponse<EmployeeGetDto>.Ok(dto);
         }
@@ -178,6 +183,11 @@ namespace TaskMangment.Infrastructure.Services
 
             if (string.IsNullOrWhiteSpace(dto.Password))
                 throw new AppException(ErrorCodes.Invalid, StatusCodes.Status400BadRequest);
+
+            if (await _employeeRepo.GetAll(e => e.Email == dto.Email).AnyAsync())
+            {
+                throw new AppException(ErrorCodes.EmailAlreadyExists,StatusCodes.Status400BadRequest);
+            }
 
 
             var employee = _mapper.Map<Employee>(dto);
@@ -241,6 +251,8 @@ namespace TaskMangment.Infrastructure.Services
 
             var fullEmployee = await _employeeRepo.GetAll(e => e.Id == employee.Id)
                                                   .Include(e => e.Branch)
+                                                  .Include(e => e.Job)
+                                                  .Include(e => e.Department)
                                                   .Include(e => e.EmployeeRoles)
                                                       .ThenInclude(er => er.Role)
                                                   .FirstOrDefaultAsync();
@@ -262,6 +274,13 @@ namespace TaskMangment.Infrastructure.Services
                 throw new AppException(
                     ErrorCodes.EmployeeNotFound,
                     StatusCodes.Status400BadRequest);
+
+            if (await _employeeRepo.GetAll(e => e.Email == dto.Email && e.Id != id).AnyAsync())
+            {
+                throw new AppException(
+                    ErrorCodes.EmailAlreadyExists,StatusCodes.Status400BadRequest);
+            }
+
 
             _mapper.Map(dto, employee);
 
@@ -322,6 +341,8 @@ namespace TaskMangment.Infrastructure.Services
 
             var fullEmployee = await _employeeRepo.GetAll(e => e.Id == employee.Id)
                 .Include(e => e.Branch)
+                 .Include(e => e.Job)
+                 .Include(e => e.Department)
                 .Include(e => e.EmployeeRoles)
                     .ThenInclude(er => er.Role)
                 .FirstOrDefaultAsync();

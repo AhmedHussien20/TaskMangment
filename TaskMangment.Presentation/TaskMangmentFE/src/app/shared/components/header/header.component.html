@@ -206,36 +206,31 @@
                     <ul class="list-unstyled mb-0 overflow-scroll" id="header-notification-scroll"
                         (click)="handleCardClick($event)">
 
-                        <li class="dropdown-item" *ngFor="let n of notifications">
-                            <div class="d-flex align-items-start">
+                       <li class="dropdown-item" *ngFor="let n of notifications">
+  <div class="d-flex align-items-start" (click)="handleNotificationClick(n, $event)">
+    <div class="pe-2">
+      <span class="avatar avatar-md bg-primary-transparent br-5 d-flex align-items-center justify-content-center">
+        <i class="ti ti-bell"></i>
+      </span>
+    </div>
 
-                                <div class="pe-2">
-                                    <span
-                                        class="avatar avatar-md bg-primary-transparent br-5 d-flex align-items-center justify-content-center">
-                                        <i class="ti ti-bell"></i>
-                                    </span>
-                                </div>
+    <div class="flex-grow-1 d-flex align-items-center justify-content-between">
+      <div>
+        <p class="mb-0 text-dark" style="cursor:pointer;">
+          {{ n.message }}
+        </p>
+        <span class="text-muted fs-12">
+          {{ n.createdAt | date:'MMM d, h:mm a' }}
+        </span>
+      </div>
 
-                                <div class="flex-grow-1 d-flex align-items-center justify-content-between">
-                                    <div>
-                                        <p class="mb-0">
-                                            <a [routerLink]="n.link" class="text-dark">
-                                                {{ n.message }}
-                                            </a>
-                                        </p>
+      <a href="javascript:void(0);" class="text-muted" (click)="removeNotification(n.id)">
+        <i class="ti ti-x fs-16"></i>
+      </a>
+    </div>
+  </div>
+</li>
 
-                                        <span class="text-muted fs-12">
-                                            {{ n.createdAt | date:'MMM d, h:mm a' }}
-                                        </span>
-                                    </div>
-
-                                    <a href="javascript:void(0);" class="text-muted" (click)="removeNotification(n.id)">
-                                        <i class="ti ti-x fs-16"></i>
-                                    </a>
-                                </div>
-
-                            </div>
-                        </li>
 
                     </ul>
 

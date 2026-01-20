@@ -33,6 +33,7 @@ export class AuthService {
     return user ? JSON.parse(user) : null;
   }
 
+
   login(userCode: string, password: string): Observable<BaseResponse<User & { token: string }>> {
     this.store.dispatch(login({ userCode, password }));
     
@@ -65,6 +66,9 @@ export class AuthService {
   logout() {
     localStorage.removeItem('authToken');
     localStorage.removeItem('userData');
+     localStorage.removeItem('userRole');
+  localStorage.removeItem('currentUser');
+  
     
     this.store.dispatch(NavActions.clearMenu());  
 
@@ -96,11 +100,11 @@ export class AuthService {
   }
 
 
-  private userKey = 'auth_user';
 
   isAuthenticated(): boolean {
     return !!localStorage.getItem('authToken');
   }
+
   getUser(): AuthUser | null {
     const u = localStorage.getItem('userData');
     return u ? JSON.parse(u) : null;

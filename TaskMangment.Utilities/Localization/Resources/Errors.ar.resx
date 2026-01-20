@@ -231,4 +231,7 @@
   <data name="TASKACHIEVEMENT" xml:space="preserve">
     <value>تم إنجاز المهمة بنجاح</value>
   </data>
+  <data name="EMAIL_ALREADY_EXISTS" xml:space="preserve">
+    <value>البريد الالكتروني مسجل بالفعل</value>
+  </data>
 </root>

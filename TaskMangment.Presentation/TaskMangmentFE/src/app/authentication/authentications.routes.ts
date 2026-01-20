@@ -31,6 +31,14 @@ export const admin: Routes = [
         m => m.VerifyResetCodeComponent
       ),
   },
+  {
+    path: 'forbidden',
+    loadComponent: () =>
+      import('../components/pages/warning-message/warning-message.component').then(
+        m => m.WarningMessageComponent
+      ),
+
+  },
   { path: '**', redirectTo: 'login' }
 ];
 
