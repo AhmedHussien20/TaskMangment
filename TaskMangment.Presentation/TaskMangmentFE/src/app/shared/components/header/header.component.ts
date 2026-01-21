@@ -545,12 +545,12 @@ handleNotificationClick(notification: HeaderNotification, event: Event) {
 
   if (notification.type === 'task' && notification.taskId !== undefined) {
     this.onEdit(notification.taskId); 
-  } else {
+  } 
+  /*else {
     this.router.navigate([notification.link]);
-    console.log('Navigating to link:', notification.link);
     console.log('Navigating:', notification);
 
-  }
+  }*/
 }
 
 rows: { taskId: number; [key: string]: any }[] = [];

@@ -53,10 +53,10 @@ export class TaskCommentsComponent implements OnInit, OnDestroy {
     });
   }
 
-  timeAgo(dateString: string): string {
+ timeAgo(dateString: string): string {
   if (!dateString) return '';
   
-  const date = new Date(dateString);
+  const date = new Date(dateString + 'Z'); 
   const now = new Date();
 
   const diffMs = now.getTime() - date.getTime(); 
@@ -74,6 +74,7 @@ export class TaskCommentsComponent implements OnInit, OnDestroy {
 
   return this.translate.instant('TASK.DAYS_AGO', { value: diffDays });
 }
+
 
 
   ngOnDestroy(): void {
