@@ -119,11 +119,10 @@ export class LoginComponent {
       this.notificationService.getUnread().subscribe(res => {
         const unread = res.data || [];
         unread.forEach(n => {
-          this.toastr.info(n.message, 'Notification');
+         this.toastr.info(n.message, this.translate.instant('nav.notifications.notification'));
         });
       });
 
-      // Go to dashboard
       this.router.navigate(['/dashboard']);
     }, 
   });

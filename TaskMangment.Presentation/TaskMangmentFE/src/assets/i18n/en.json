@@ -77,7 +77,8 @@
       "title": "Notifications",
       "unread": "Unread",
       "viewAll": "View All",
-      "empty": "No new notifications"
+      "empty": "No new notifications",
+      "notification": "New Notification"
     },
     "applications": {
       "header": "Applications"
