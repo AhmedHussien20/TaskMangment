@@ -137,8 +137,10 @@ namespace TaskMangment.Infrastructure.Services
             services.AddScoped<ITaskDueTodayEmailJob, TaskDueTodayEmailJob>();
             services.AddScoped<IEmployeeDashboardService, EmployeeDashboardService>();
             services.AddScoped<IAdminDashboardService, AdminDashboardService>();
+            services.AddScoped<IAppUnitOfWork, AppUnitOfWork>();
 
-        
+
+
 
 
 
