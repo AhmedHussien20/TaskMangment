@@ -589,7 +589,7 @@
     "DELETE_SUCCESS": "تم حذف الموظف بنجاح",
     "DELETE_FAILED": "فشل في حذف الموظف",
     "VALIDATION_ERROR": "يرجى إدخال جميع الحقول المطلوبة بشكل صحيح.",
-    "searchKey": "بحث باسم الموظف",
+    "searchKey": "بحث عن الموظفين",
     "CONFIRM_PASSWORD": "تأكيد كلمة المرور",
     "ROLE": "الدور",
     "PROFILE_PIC": "صورة الملف الشخصي",

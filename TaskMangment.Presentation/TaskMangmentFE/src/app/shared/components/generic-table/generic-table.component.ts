@@ -1,11 +1,14 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output, OnDestroy } from '@angular/core';
+import { Component, EventEmitter, Input, Output, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { NgbPaginationModule, NgbTooltipModule } from '@ng-bootstrap/ng-bootstrap';
 import { NgSelectModule } from '@ng-select/ng-select';
 import { TranslateModule } from '@ngx-translate/core';
 import { MyDatePipe } from 'app/components/utilities/pipline/MyDatePipe';
 import { SearchCriteria } from 'app/core/models/search-criteria.model';
+import { Subject } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
+
 
 export type ColumnType =
   | 'text'
@@ -47,7 +50,8 @@ interface HasId {
   ],
   styleUrls: ['./generic-table.component.scss']
 })
-export class GenericTableComponent<T> implements OnDestroy {
+export class GenericTableComponent<T> implements OnDestroy{
+  private filtersChanged$ = new Subject<void>();
   @Output() exportPdfClick = new EventEmitter<void>();
   @Input() showExportPdf: boolean = false;
   @Input() showExportExcel: boolean = true;
@@ -123,6 +127,21 @@ export class GenericTableComponent<T> implements OnDestroy {
     checked: boolean;
   }>();
 
+
+  /* ngOnInit(): void {
+  this.filtersChanged$
+    .pipe(debounceTime(400))
+    .subscribe(() => {
+      this.applyFilters(); 
+    });
+}
+onFilterChange(key: string, value: any) {
+  this.searchCriteria[key] = value;
+
+  if (this.searchCriteria.pageIndex) this.searchCriteria.pageIndex = 1;
+
+  this.filtersChanged$.next();
+} */
 
   objectKeys(obj: any): string[] {
     return obj ? Object.keys(obj) : [];

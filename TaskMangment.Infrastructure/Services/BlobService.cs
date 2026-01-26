@@ -50,10 +50,18 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task DeleteAsync(string blobUrl)
         {
-            var blobName = new Uri(blobUrl).AbsolutePath
-                .Split("/attachments/")[1];
+            if (string.IsNullOrWhiteSpace(blobUrl))
+                return;
 
-            await _container.DeleteBlobIfExistsAsync(blobName);
+            var uri = new Uri(blobUrl);
+            var path = uri.AbsolutePath.TrimStart('/');
+
+            const string containerPrefix = "attachments/";
+            if (path.StartsWith(containerPrefix, StringComparison.OrdinalIgnoreCase))
+                path = path.Substring(containerPrefix.Length);
+
+            await _container.DeleteBlobIfExistsAsync(path);
         }
+
     }
 }

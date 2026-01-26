@@ -48,7 +48,10 @@ namespace TaskMangment.Hangfire.Jobs
                         .OrderByDescending(c => c.CreatedDate)
                         .FirstOrDefaultAsync();
 
-                    var shouldHaveComment = lastComment == null || lastComment.CreatedDate.Date.AddDays(periodDays) <= yesterday;
+                    var shouldHaveComment =
+                        (lastComment == null && assignment.AssignedAt.Date.AddDays(periodDays) <= yesterday && assignment.IsActive)
+                        || (lastComment != null && lastComment.CreatedDate.Date.AddDays(periodDays) <= yesterday);
+
                     if (!shouldHaveComment) continue;
 
                     var hasLeave = await _db.Leaves

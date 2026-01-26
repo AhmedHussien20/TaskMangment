@@ -569,7 +569,7 @@
     "DELETE_SUCCESS": "Employee deleted successfully",
     "DELETE_FAILED": "Failed to delete employee",
     "VALIDATION_ERROR": "Please enter all required fields correctly.",
-    "searchKey": "Search by employee name",
+    "searchKey": "Search employees",
     "CONFIRM_PASSWORD": "Confirm Password",
     "ROLE": "Role",
     "PROFILE_PIC": "Profile Picture",
