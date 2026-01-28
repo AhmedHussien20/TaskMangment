@@ -30,7 +30,9 @@ import { PercentageModalComponent } from '../actions/task-percentage/percentage-
 })
 export class TaskDetailsShellComponent implements OnInit {
 
-  @Input() taskId!: number; 
+  @Input() taskId!: number;
+  requireUploadFile = false;
+ 
   readonly = false;
   showAdminPages = true;
 
@@ -62,6 +64,8 @@ export class TaskDetailsShellComponent implements OnInit {
     this.taskService.getById(this.taskId).subscribe({
       next: res => {
         this.taskInfo = res.data;
+        //console.log('requireUploadFile from API:', this.taskInfo.requireUploadFile);
+        this.requireUploadFile = this.taskInfo.requireUploadFile;
       },
       error: err => console.error('Failed to load task', err)
     });
@@ -77,6 +81,7 @@ export class TaskDetailsShellComponent implements OnInit {
       });
 
       ref.componentInstance.taskId = this.taskId;
+      ref.componentInstance.requireUploadFile = this.taskInfo?.requireUploadFile ?? false;
 
       ref.result.then(
         (success) => {

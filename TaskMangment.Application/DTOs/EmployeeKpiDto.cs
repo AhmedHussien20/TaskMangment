@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TaskMangment.Domain.Entities;
 
 namespace TaskMangment.Application.DTOs
 {
@@ -29,8 +30,9 @@ namespace TaskMangment.Application.DTOs
         public decimal Amount { get; set; }
         public string Reason { get; set; } = string.Empty;
         public string TaskTitle { get; set; } = string.Empty;
-
         public DateTime CreatedDate { get; set; }
+        public bool AutoDiscount { get; set; }
+        public DiscountType DiscountType { get; set; }
     }
 
 }

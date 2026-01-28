@@ -1,5 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Localization;
 using TaskMangment.Application.ApiRequests;
+using TaskMangment.Application.Common.DiscountTypes;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Responses;
 using TaskMangment.Application.Dashboards.Employee;
@@ -10,6 +12,7 @@ using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
 using TaskMangment.Infrastructure.Helpers;
 using TaskMangment.Infrastructure.Persistence.Extensions;
+using TaskMangment.Utilities.Localization.Resources;
 
 namespace TaskMangment.Infrastructure.Services
 {
@@ -19,6 +22,7 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<Warning> _warningRepo;
         private readonly IRepository<Discount> _deductionRepo;
         private readonly IRepository<TaskPercentage> _taskPercentageRepo;
+        private readonly IStringLocalizer<DiscountAutoType> _localizer;
 
         private readonly ICachingService _cache;
 
@@ -27,13 +31,17 @@ namespace TaskMangment.Infrastructure.Services
             IRepository<Warning> warningRepo,
             IRepository<Discount> deductionRepo,
             ICachingService cache,
-            IRepository<TaskPercentage> taskPercentageRepo)
+            IRepository<TaskPercentage> taskPercentageRepo,
+            IStringLocalizer<DiscountAutoType> localizer
+
+            )
         {
             _assignmentRepo = assignmentRepo;
             _warningRepo = warningRepo;
             _deductionRepo = deductionRepo;
             _cache = cache;
             _taskPercentageRepo = taskPercentageRepo;
+            _localizer = localizer;
         }
 
         public async Task<ApiResponse<EmployeeDashboardDto>> GetDashboardAsync(int employeeId, PeriodDto? period = null)
@@ -225,10 +233,22 @@ namespace TaskMangment.Infrastructure.Services
                     Amount = d.Amount,
                     Reason = d.Reason,
                     TaskTitle = d.Task.Title,
-                    CreatedDate = d.CreatedDate
+                    CreatedDate = d.CreatedDate,
+                    AutoDiscount = d.AutoDiscount,
+                    DiscountType = d.discountType
+
                 })
                 .OrderByDescending(d => d.CreatedDate)
                 .ToListAsync();
+
+            foreach (var item in deductions)
+            {
+                if (!item.AutoDiscount)
+                    continue;
+
+                item.Reason = GetAutoDiscountReason(item.DiscountType);
+            }
+
 
             return ApiResponse<List<DeductionDto>>.Ok(deductions);
         }
@@ -346,7 +366,22 @@ namespace TaskMangment.Infrastructure.Services
 
             return ApiResponse<List<CompletedTaskDetailDto>>.Ok(tasks);
         }
+        private string GetAutoDiscountReason(DiscountType type)
+        {
+            return type switch
+            {
+                DiscountType.AutoCloseTaskDiscount =>
+                    _localizer[DiscountTypes.AutoCloseTaskDiscount],
 
+                DiscountType.MaxWarningDiscount =>
+                    _localizer[DiscountTypes.MaxwarningTaskDiscount],
+
+                DiscountType.StopCommentDiscount =>
+                    _localizer[DiscountTypes.StopCommentTaskDiscount],
+
+                _ => string.Empty
+            };
+        }
 
     }
 }

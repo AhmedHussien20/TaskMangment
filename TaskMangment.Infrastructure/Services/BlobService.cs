@@ -9,7 +9,7 @@ namespace TaskMangment.Infrastructure.Services
     public class BlobStorageService : IBlobStorageService
     {
         private readonly BlobContainerClient _container;
-
+        private readonly string _sas;
         public BlobStorageService(IConfiguration config)
         {
             var accountUrl = config["Blob:AccountUrl"];
@@ -27,24 +27,24 @@ namespace TaskMangment.Infrastructure.Services
 
             if (string.IsNullOrWhiteSpace(container))
                 throw new Exception("Blob:Container is missing");
+            _sas = sas;
 
             var service = new BlobServiceClient(new Uri(accountUrl + sas));
             _container = service.GetBlobContainerClient(container);
         }
 
-        public async Task<string> UploadAsync(Stream stream,string fileName,string contentType,string folder)
+        public async Task<string> UploadAsync(Stream stream, string fileName, string contentType, string folder)
         {
             var blobName = $"{folder}/{Guid.NewGuid()}_{fileName}";
             var blob = _container.GetBlobClient(blobName);
+            Console.WriteLine(blobName);
+            await blob.UploadAsync(stream, new BlobUploadOptions
+            {
+                HttpHeaders = new BlobHttpHeaders { ContentType = contentType }
+            });
+            Console.WriteLine(blob.Uri.GetLeftPart(UriPartial.Path));
 
-            await blob.UploadAsync(
-                stream,
-                new BlobHttpHeaders
-                {
-                    ContentType = contentType
-                });
-
-            return blob.Uri.ToString();
+            return blob.Uri.GetLeftPart(UriPartial.Path);
         }
 
 
@@ -62,6 +62,13 @@ namespace TaskMangment.Infrastructure.Services
 
             await _container.DeleteBlobIfExistsAsync(path);
         }
+
+        public string WithSas(string urlWithoutSas)
+    => string.IsNullOrWhiteSpace(urlWithoutSas) ? urlWithoutSas : urlWithoutSas + _sas;
+
+
+
+
 
     }
 }

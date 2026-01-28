@@ -80,7 +80,6 @@ namespace TaskMangment.Hangfire.Jobs
                         EmployeeId = employeeId,
                         Amount = task.PenaltyOnStopComment,
                         Reason = "Penalty for not commenting",
-                        //CreatedByEmployeeId = 0,
                         AutoDiscount = true,
                         CreatedDate = DateTime.UtcNow,
                         discountType = DiscountType.StopCommentDiscount

@@ -271,6 +271,7 @@ namespace TaskMangment.Infrastructure.Services
                             .Where(d => d.Id == referenceId)
                             .Select(d => new
                             {
+                                EmployeeName = d.Employee.FullName,
                                 TaskNumber = d.Task.Id.ToString(),
                                 TaskTitle = d.Task.Title,
                                 d.Reason,
@@ -283,6 +284,7 @@ namespace TaskMangment.Infrastructure.Services
 
                         return new Dictionary<string, string>
                         {
+                            ["EmployeeName"] = deduction.EmployeeName,
                             ["TaskNumber"] = deduction.TaskNumber,
                             ["TaskTitle"] = deduction.TaskTitle,
                             ["DeductionReason"] = deduction.Reason,

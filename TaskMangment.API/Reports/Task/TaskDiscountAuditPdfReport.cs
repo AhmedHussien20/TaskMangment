@@ -26,6 +26,8 @@ public class TaskDiscountAuditPdfReport : IDocument
             page.DefaultTextStyle(x => x.FontFamily("Cairo").FontSize(10));
             page.ContentFromRightToLeft();
 
+            bool isOutgoing = _report.MovementType == TaskMovementType.Outgoing;
+
             // ================= HEADER =================
             page.Header().Column(column =>
             {
@@ -66,54 +68,68 @@ public class TaskDiscountAuditPdfReport : IDocument
                 foreach (var group in _report.Groups)
                 {
                     column.Item()
-                             .Background(Colors.Blue.Lighten4)
-                             .Padding(6)
-                             .AlignRight()
-                             .Text($"الموظف: {group.EmployeeName}")
-                             .Bold();
-
+                        .Background(Colors.Blue.Lighten4)
+                        .Padding(6)
+                        .AlignRight()
+                        .Text($"الموظف: {group.EmployeeName}")
+                        .Bold();
 
                     column.Item().Table(table =>
                     {
                         table.ColumnsDefinition(columns =>
                         {
-                            columns.ConstantColumn(30);
-                            columns.RelativeColumn(3);
-                            columns.RelativeColumn(2);
-                            columns.RelativeColumn(2);
-                            columns.RelativeColumn(1);
-                            columns.RelativeColumn(1);
-                            columns.RelativeColumn(1);
+                            columns.ConstantColumn(30);  // م
+                            columns.RelativeColumn(3);   // المهمة
+                            columns.RelativeColumn(2);   // جهة التكليف
+
+                            if (isOutgoing)
+                                columns.RelativeColumn(2); // الموظف (عمود إضافي للصادر)
+
+                            columns.RelativeColumn(2);   // تاريخ الإغلاق
+                            columns.RelativeColumn(1);   // الحالة
+                            columns.RelativeColumn(1);   // تلقائي
+                            columns.RelativeColumn(1);   // يدوي
                         });
 
+                        // Header
                         AddHeader(table, "م");
                         AddHeader(table, "المهمة");
                         AddHeader(table, "جهة التكليف");
+
+                        if (isOutgoing)
+                            AddHeader(table, "الموظف");
+
                         AddHeader(table, "تاريخ الإغلاق");
                         AddHeader(table, "الحالة");
                         AddHeader(table, "تلقائي");
                         AddHeader(table, "يدوي");
 
                         int i = 1;
+
                         foreach (var task in group.Tasks)
                         {
                             AddCell(table, i++.ToString());
                             AddCell(table, $"[{task.TaskId}] {task.Title}");
                             AddCell(table, task.AssignedBy);
+
+                            if (isOutgoing)
+                                AddCell(table, task.EmployeeName ?? "-");
+
                             AddCell(table, task.ClosedDate?.ToString("yyyy/MM/dd") ?? "-");
                             AddCell(table, task.Status);
-                            AddCell(table, task.AutoDiscount.ToString("0.##"), task.AutoDiscount > 0 ? Colors.Blue.Lighten5 : Colors.White);
-                            AddCell(table, task.ManualDiscount.ToString("0.##"), task.ManualDiscount > 0 ? Colors.Orange.Lighten5 : Colors.White);
+                            AddCell(table, task.AutoDiscount.ToString("0.##"),
+                                task.AutoDiscount > 0 ? Colors.Blue.Lighten5 : Colors.White);
+                            AddCell(table, task.ManualDiscount.ToString("0.##"),
+                                task.ManualDiscount > 0 ? Colors.Orange.Lighten5 : Colors.White);
                         }
                     });
 
                     column.Item()
-                            .Background(Colors.Yellow.Lighten4)
-                            .Padding(6)
-                            .AlignRight()
-                            .Text($"إجمالي الموظف: {group.TotalDiscount} | تلقائي: {group.TotalAutoDiscount} | يدوي: {group.TotalManualDiscount} | عدد المهام: {group.TasksCount}")
-                            .Bold();
-
+                        .Background(Colors.Yellow.Lighten4)
+                        .Padding(6)
+                        .AlignRight()
+                        .Text($"إجمالي الموظف: {group.TotalDiscount} | تلقائي: {group.TotalAutoDiscount} | يدوي: {group.TotalManualDiscount} | عدد المهام: {group.TasksCount}")
+                        .Bold();
 
                     column.Item().PaddingBottom(10).LineHorizontal(0.5f);
                 }
@@ -128,7 +144,6 @@ public class TaskDiscountAuditPdfReport : IDocument
                     t.Span(" من ");
                     t.TotalPages();
                 });
-                
         });
     }
 
@@ -158,7 +173,6 @@ public class TaskDiscountAuditPdfReport : IDocument
            });
     }
 
-
     void AddHeader(TableDescriptor table, string text)
     {
         table.Cell()
@@ -170,7 +184,6 @@ public class TaskDiscountAuditPdfReport : IDocument
              .Bold();
     }
 
-
     void AddCell(TableDescriptor table, string text, string bg = null)
     {
         table.Cell()
@@ -180,5 +193,4 @@ public class TaskDiscountAuditPdfReport : IDocument
              .AlignRight()
              .Text(text);
     }
-
 }

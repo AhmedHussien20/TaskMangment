@@ -21,8 +21,9 @@ public class AuthService : IAuthService
     private readonly IRoleAssignmentService _roleService;
     private readonly IRolePermissionService _permissionService;
     private readonly IRepository<RolePermission> _rolePerRepo;
+    private readonly IBlobStorageService _blobStorageService;
 
-    public AuthService(AppDbContext db, IJwtService jwt, IEmailService email, IRepository<RolePermission> rolePerRepo, IRoleAssignmentService roleService, IRolePermissionService permissionService)
+    public AuthService(AppDbContext db, IJwtService jwt, IEmailService email, IRepository<RolePermission> rolePerRepo, IRoleAssignmentService roleService, IRolePermissionService permissionService, IBlobStorageService blobStorageService)
     {
         _db = db;
         _jwt = jwt;
@@ -30,6 +31,7 @@ public class AuthService : IAuthService
         _rolePerRepo = rolePerRepo;
         _roleService = roleService;
         _permissionService = permissionService;
+        _blobStorageService = blobStorageService;
     }
 
     public async Task<ApiResponse<LoginResponse>> LoginAsync(LoginRequest request)
@@ -51,13 +53,16 @@ public class AuthService : IAuthService
                  ErrorCodes.Invalid,
                 StatusCodes.Status400BadRequest);
 
-        var profileImage = await _db.Attachments
+        var profileImageWithoutSas = await _db.Attachments
             .Where(a =>
                 a.ReferenceId == user.Id &&
                 a.AttachmentType == AttachmentType.Employee &&
                 !a.IsDeleted)
             .Select(a => a.FilePath)
             .FirstOrDefaultAsync();
+        var profileImage = _blobStorageService.WithSas(profileImageWithoutSas);
+
+
 
         var userRoles = await _roleService.GetUserRolesAsync(user.Id);
 

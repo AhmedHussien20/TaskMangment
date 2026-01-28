@@ -252,31 +252,54 @@ namespace TaskMangment.Infrastructure.Services
 
             return result;
         }
-        public async Task<TaskDiscountAuditReportDto> GetTaskDiscountAuditReportAsync(TaskDiscountReportFilterDto dto)
+        public async Task<TaskDiscountAuditReportDto> GetTaskDiscountAuditReportAsync(
+    int roleLevel,
+    int currentEmployeeId,
+    TaskDiscountReportFilterDto dto)
         {
             IQueryable<TaskAssignment> query = _context.TaskAssignments
                 .Include(a => a.Task)
                 .Include(a => a.Task.AssignedBy)
-                .Include(a => a.Employee);
+                .Include(a => a.Employee)
+                .AsQueryable();
 
-            if (dto.MovementType == TaskMovementType.Incoming)
+            if (roleLevel == 100)
             {
-                query = query.Where(a => a.EmployeeId == dto.EmployeeId);
+            }
+            else if (roleLevel >= 70 && roleLevel < 100)
+            {
+                var branchId = await _context.Employees
+                    .Where(e => e.Id == currentEmployeeId)
+                    .Select(e => e.BranchId)
+                    .FirstOrDefaultAsync();
+
+                query = query.Where(a =>
+                    a.Employee != null && a.Employee.BranchId == branchId);
             }
             else
             {
-                query = query.Where(a => a.Task.AssignedByEmployeeId == dto.EmployeeId);
+                query = query.Where(a => a.EmployeeId == currentEmployeeId);
             }
 
-            query = query.Where(a => a.Task.DueDate >= dto.FromDate);
+            if (dto.MovementType == TaskMovementType.Incoming)
+            {
+                if (dto.EmployeeId.HasValue && dto.EmployeeId.Value > 0)
+                    query = query.Where(a => a.EmployeeId == dto.EmployeeId.Value);
+            }
+            else 
+            {
+                if (dto.EmployeeId.HasValue && dto.EmployeeId.Value > 0)
+                    query = query.Where(a => a.Task.AssignedByEmployeeId == dto.EmployeeId.Value);
+            }
+
+            if (dto.FromDate.HasValue)
+                query = query.Where(a => a.Task.DueDate >= dto.FromDate.Value);
 
             if (dto.ToDate.HasValue)
                 query = query.Where(a => a.Task.DueDate <= dto.ToDate.Value);
 
             if (dto.Status.HasValue)
                 query = query.Where(a => a.Task.Status == dto.Status.Value);
-
-            query = query.Where(a => a.Task.Status != WorkTaskStatus.New);
 
             var flatRows = await query
                 .Select(a => new TaskDiscountAuditRowDto
@@ -291,6 +314,7 @@ namespace TaskMangment.Infrastructure.Services
                         a.Task.Status == WorkTaskStatus.Closed ? "مغلقة" :
                         a.Task.Status == WorkTaskStatus.AutoClose ? "مغلقة تلقائيًا" :
                         a.Task.Status == WorkTaskStatus.InProgress ? "قيد التنفيذ" :
+                        a.Task.Status == WorkTaskStatus.New ? "جديدة" :
                         "غير محدد",
 
                     AutoDiscount = _context.Discounts
@@ -301,18 +325,18 @@ namespace TaskMangment.Infrastructure.Services
                         .Where(d => d.TaskId == a.TaskId && !d.AutoDiscount)
                         .Sum(d => (decimal?)d.Amount) ?? 0,
 
-                    EmployeeName =
-                                dto.MovementType == TaskMovementType.Incoming
-                                    ? (a.Employee != null ? a.Employee.FullName : "غير معروف")   
-                                    : (a.Task.AssignedBy != null ? a.Task.AssignedBy.FullName : "غير معروف")  
+                    EmployeeName = a.Employee != null ? a.Employee.FullName : "غير معروف",
 
+                    GroupEmployeeName =
+                        dto.MovementType == TaskMovementType.Incoming
+                            ? (a.Employee != null ? a.Employee.FullName : "غير معروف")
+                            : (a.Task.AssignedBy != null ? a.Task.AssignedBy.FullName : "غير معروف")
                 })
                 .AsNoTracking()
                 .ToListAsync();
 
-            // ===== Group in Memory (Audit Safe) =====
             var groups = flatRows
-                .GroupBy(x => x.EmployeeName)
+                .GroupBy(x => x.GroupEmployeeName)
                 .Select(g => new EmployeeDiscountAuditGroupDto
                 {
                     EmployeeName = g.Key,
@@ -331,31 +355,57 @@ namespace TaskMangment.Infrastructure.Services
         }
 
 
-        public async Task<List<TaskDiscountReportDto>> GetTaskDiscountReportAsync(TaskDiscountReportFilterDto dto)
+
+        public async Task<List<TaskDiscountReportDto>> GetTaskDiscountReportAsync(
+    int roleLevel,int currentEmployeeId,
+    TaskDiscountReportFilterDto dto)
         {
             IQueryable<TaskAssignment> query = _context.TaskAssignments
                 .Include(a => a.Task)
                 .Include(a => a.Task.AssignedBy)
-                .Include(a => a.Employee) 
+                .Include(a => a.Employee)
                 .AsQueryable();
 
-            if (dto.MovementType == TaskMovementType.Incoming)
+            if (!dto.FromDate.HasValue && !dto.ToDate.HasValue)
+                return new List<TaskDiscountReportDto>();
+
+            if (roleLevel == 100)
             {
-                query = query.Where(a => a.EmployeeId == dto.EmployeeId);
+            }
+            else if (roleLevel >= 70 && roleLevel < 100)
+            {
+                var branchId = await _context.Employees
+                    .Where(e => e.Id == currentEmployeeId)
+                    .Select(e => e.BranchId)
+                    .FirstOrDefaultAsync();
+
+                query = query.Where(a =>
+                    a.Employee != null && a.Employee.BranchId == branchId);
             }
             else
             {
-                query = query.Where(a => a.Task.AssignedByEmployeeId == dto.EmployeeId);
+                query = query.Where(a => a.EmployeeId == currentEmployeeId);
             }
 
-            query = query.Where(a => a.Task.DueDate >= dto.FromDate);
+            if (dto.MovementType == TaskMovementType.Incoming)
+            {
+                if (dto.EmployeeId.HasValue && dto.EmployeeId.Value > 0)
+                    query = query.Where(a => a.EmployeeId == dto.EmployeeId.Value);
+            }
+            else 
+            {
+                if (dto.EmployeeId.HasValue && dto.EmployeeId.Value > 0)
+                    query = query.Where(a => a.Task.AssignedByEmployeeId == dto.EmployeeId.Value);
+            }
+
+            if (dto.FromDate.HasValue)
+                query = query.Where(a => a.Task.DueDate >= dto.FromDate.Value);
+
             if (dto.ToDate.HasValue)
                 query = query.Where(a => a.Task.DueDate <= dto.ToDate.Value);
 
             if (dto.Status.HasValue)
                 query = query.Where(a => a.Task.Status == dto.Status.Value);
-
-            query = query.Where(a => a.Task.Status != WorkTaskStatus.New);
 
             var result = await query
                 .Select(a => new TaskDiscountReportDto
@@ -364,16 +414,27 @@ namespace TaskMangment.Infrastructure.Services
                     Title = a.Task.Title,
                     AssignedBy = a.Task.AssignedBy.FullName,
                     ClosedDate = a.Task.DueDate,
+
                     Status = a.Task.Status == WorkTaskStatus.Archived ? "مورشف" :
                              a.Task.Status == WorkTaskStatus.Closed ? "مغلقة" :
                              a.Task.Status == WorkTaskStatus.AutoClose ? "مغلق تلقائي" :
-                             a.Task.Status == WorkTaskStatus.InProgress ? "قيد التنفيذ" : "غير محدد",
-                    AutoDiscount = _context.Discounts.Where(d => d.TaskId == a.TaskId && d.AutoDiscount).Sum(d => (decimal?)d.Amount) ?? 0,
-                    ManualDiscount = _context.Discounts.Where(d => d.TaskId == a.TaskId && !d.AutoDiscount).Sum(d => (decimal?)d.Amount) ?? 0,
+                             a.Task.Status == WorkTaskStatus.InProgress ? "قيد التنفيذ" :
+                             a.Task.Status == WorkTaskStatus.New ? "جديدة" :
+                             "غير محدد",
+
+                    AutoDiscount = _context.Discounts
+                        .Where(d => d.TaskId == a.TaskId && d.AutoDiscount)
+                        .Sum(d => (decimal?)d.Amount) ?? 0,
+
+                    ManualDiscount = _context.Discounts
+                        .Where(d => d.TaskId == a.TaskId && !d.AutoDiscount)
+                        .Sum(d => (decimal?)d.Amount) ?? 0,
+
                     Evaluation = a.Task.Status == WorkTaskStatus.Archived ? "جيد" :
                                  a.Task.Status == WorkTaskStatus.Closed ? "جيد" :
                                  a.Task.Status == WorkTaskStatus.AutoClose ? "سيئ" :
                                  "قيد التنفيذ",
+
                     EmployeeName = a.Employee != null ? a.Employee.FullName : "غير معروف"
                 })
                 .OrderBy(r => r.EmployeeName)
@@ -384,34 +445,58 @@ namespace TaskMangment.Infrastructure.Services
             return result;
         }
 
-        public async Task<List<TaskActivityReportDto>> GetTaskActivityReportAsync(string role, int employeeId, DateTime? fromDate = null, DateTime? toDate = null)
+
+        public async Task<List<TaskActivityReportDto>> GetTaskActivityReportAsync(
+    int roleLevel,
+    int employeeId,
+    DateTime? fromDate = null,
+    DateTime? toDate = null)
         {
+            if (!fromDate.HasValue && !toDate.HasValue)
+                return new List<TaskActivityReportDto>();
+
             var query = _context.TaskComments
                 .Include(c => c.Employee)
                 .Include(c => c.Task)
-                .ThenInclude(t => t.AssignedBy)
+                    .ThenInclude(t => t.AssignedBy)
                 .AsQueryable();
-
-            if (role != "Manager")
-            {
-                query = query.Where(c => c.Task.Assignments.Any(a => a.EmployeeId == employeeId));
-            }
 
             if (fromDate.HasValue)
                 query = query.Where(c => c.CreatedDate >= fromDate.Value);
 
             if (toDate.HasValue)
                 query = query.Where(c => c.CreatedDate <= toDate.Value);
-            if (!fromDate.HasValue && !toDate.HasValue)
 
-                return new List<TaskActivityReportDto>();
+
+            if (roleLevel == 100)
+            {
+            }
+            else
+            {
+                var branchId = await _context.Employees
+                    .Where(e => e.Id == employeeId)
+                    .Select(e => e.BranchId)
+                    .FirstOrDefaultAsync();
+
+                if (roleLevel >= 70 && roleLevel < 100)
+                {
+                    query = query.Where(c =>
+                        c.Task.Assignments.Any(a => a.IsActive &&
+                            a.Employee != null &&
+                            a.Employee.BranchId == branchId));
+                }
+                else
+                {
+                    query = query.Where(c =>
+                        c.Task.Assignments.Any(a => a.IsActive && a.EmployeeId == employeeId));
+                }
+            }
 
             var result = await query
                 .Select(c => new TaskActivityReportDto
                 {
                     TaskTitleWithId = $"[{c.Task.Id}] {c.Task.Title}",
                     AssignedBy = c.Task.AssignedBy != null ? c.Task.AssignedBy.FullName : "غير معروف",
-                    Comment = c.CommentText,
                     CommentDate = c.CreatedDate,
                     CommentedBy = c.Employee != null ? c.Employee.FullName : "غير معروف"
                 })
@@ -421,6 +506,7 @@ namespace TaskMangment.Infrastructure.Services
 
             return result;
         }
+
 
 
         public async Task<List<TaskMovementReportDto>> GetTaskMovementReportAsync(TaskMovementReportFilterDto dto)
@@ -437,20 +523,23 @@ namespace TaskMangment.Infrastructure.Services
             query = query.Where(c =>
                 c.CreatedDate >= todayStart && c.CreatedDate < todayEnd);
 
-            // ===== صادرة =====
             if (dto.MovementType == TaskMovementType.Outgoing)
             {
-                query = query.Where(c =>
-                    c.Task.AssignedByEmployeeId == dto.EmployeeId);
+                if (dto.EmployeeId.HasValue && dto.EmployeeId.Value > 0)
+                {
+                    query = query.Where(c =>
+                        c.Task.AssignedByEmployeeId == dto.EmployeeId.Value);
+                }
             }
-
-            // ===== واردة =====
             else if (dto.MovementType == TaskMovementType.Incoming)
             {
-                // الموظف = اللي علّق
-                query = query.Where(c =>
-                    c.EmployeeId == dto.EmployeeId);
+                if (dto.EmployeeId.HasValue && dto.EmployeeId.Value > 0)
+                {
+                    query = query.Where(c =>
+                        c.EmployeeId == dto.EmployeeId.Value);
+                }
             }
+
 
             var result = await query
                 .Select(c => new TaskMovementReportDto
@@ -468,7 +557,7 @@ namespace TaskMangment.Infrastructure.Services
                         ? c.Employee.FullName
                         : "غير معروف",
 
-                    Comment = c.CommentText,
+                    //CommentText = c.CommentText,
                     CommentDate = c.CreatedDate
                 })
                 .OrderBy(x => x.CommentDate)
@@ -478,22 +567,44 @@ namespace TaskMangment.Infrastructure.Services
             return result;
         }
 
-        public async Task<List<TasksClosingSoonDto>> GetTasksClosingSoonAsync(int employeeId, DateTime fromDate,DateTime toDate)
+        public async Task<List<TasksClosingSoonDto>> GetTasksClosingSoonAsync(int roleLevel,int currentEmployeeId,int? employeeId,DateTime fromDate,DateTime toDate)
         {
-            var query = _context.TaskAssignments.Include(a => a.Task).ThenInclude(t => t.AssignedBy)
-                                .Include(a => a.Employee)
-                                    .ThenInclude(e => e.Branch)
-                                        .ThenInclude(b => b.Area)
-                                .Include(a => a.Employee)
-                                    .ThenInclude(e => e.Company)
-                                .Where(a =>
-                                    a.EmployeeId == employeeId &&
-                                    (a.Task.Status == WorkTaskStatus.New ||
-                                     a.Task.Status == WorkTaskStatus.InProgress) &&
-                                    a.Task.DueDate != null &&
-                                    a.Task.DueDate >= fromDate &&
-                                    a.Task.DueDate <= toDate
-                                );
+            var query = _context.TaskAssignments
+                .Include(a => a.Task).ThenInclude(t => t.AssignedBy)
+                .Include(a => a.Employee).ThenInclude(e => e.Branch).ThenInclude(b => b.Area)
+                .Include(a => a.Employee).ThenInclude(e => e.Company)
+                .Where(a =>
+                    a.IsActive &&
+                    (a.Task.Status == WorkTaskStatus.New || a.Task.Status == WorkTaskStatus.InProgress) &&
+                    a.Task.DueDate != null &&
+                    a.Task.DueDate >= fromDate &&
+                    a.Task.DueDate <= toDate
+                )
+                .AsQueryable();
+
+            if (roleLevel == 100)
+            {
+                if (employeeId.HasValue && employeeId.Value > 0)
+                    query = query.Where(a => a.EmployeeId == employeeId.Value);
+            }
+            else if (roleLevel >= 70 && roleLevel < 100)
+            {
+                var branchId = await _context.Employees
+                    .Where(e => e.Id == currentEmployeeId)
+                    .Select(e => e.BranchId)
+                    .FirstOrDefaultAsync();
+
+                query = query.Where(a =>
+                    a.Employee != null &&
+                    a.Employee.BranchId == branchId);
+
+                if (employeeId.HasValue && employeeId.Value > 0)
+                    query = query.Where(a => a.EmployeeId == employeeId.Value);
+            }
+            else
+            {
+                query = query.Where(a => a.EmployeeId == currentEmployeeId);
+            }
 
             var result = await query
                 .OrderBy(a => a.Task.DueDate)
@@ -502,6 +613,7 @@ namespace TaskMangment.Infrastructure.Services
                     TaskId = a.TaskId,
                     Title = a.Task.Title,
                     Status = a.Task.Status,
+
                     AssignedBy = a.Task.AssignedBy != null
                         ? a.Task.AssignedBy.FullName
                         : "غير معروف",
@@ -529,6 +641,7 @@ namespace TaskMangment.Infrastructure.Services
 
             return result;
         }
+
 
 
     }

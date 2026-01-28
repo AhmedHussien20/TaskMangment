@@ -84,7 +84,6 @@ export class TaskClosedSoonReportComponent implements OnInit {
 
 
   loadData(): void {
-    if (!this.selectedEmployeeId) return;
 
     this.isLoading = true;
     this.reportService.getClosedSoonReports(this.selectedEmployeeId).subscribe({
@@ -144,7 +143,7 @@ export class TaskClosedSoonReportComponent implements OnInit {
   }
 
   onExportPdf(): void {
-    if (!this.selectedEmployeeId) return;
+    //if (!this.selectedEmployeeId) return;
 
     this.reportPdfService.getTaskClosedSoonReportsPdf(this.selectedEmployeeId).subscribe({
       next: (blob) => {

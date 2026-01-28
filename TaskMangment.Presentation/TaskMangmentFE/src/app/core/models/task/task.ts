@@ -41,6 +41,7 @@ export interface TaskAddEdit {
   penaltyOnAutoClose: number;
   penaltyOnStopComment? : number;
   isShared: boolean;
+  requireUploadFile: boolean;
   priority: TaskPriority;
   dueDate?: string;
 }
@@ -67,8 +68,9 @@ export interface TaskGet {
   penaltyOnAutoClose?: number;
   penaltyOnStopComment? : number;
   ClosedAt? : string
- ClosedByUserId? :number
- CloseReason? : CloseReason 
+  ClosedByUserId? :number
+  CloseReason? : CloseReason 
+  requireUploadFile: boolean;
 }
 
 export interface TaskSummary {

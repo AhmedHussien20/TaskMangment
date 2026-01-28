@@ -39,12 +39,12 @@ getTaskActivities(fromDate: string, toDate: string): Observable<ApiResponse<Task
     return this.api.get<ApiResponse<TaskActivityReportDto[]>>(this.service, `task-activities${query}`);
   }
   
-  getMovementReports(employeeId: number, movementType: number, reportTitle?: string): Observable<ApiResponse<TaskMovementReportDto[]>> {
+  getMovementReports(employeeId: number| undefined, movementType: number, reportTitle?: string): Observable<ApiResponse<TaskMovementReportDto[]>> {
   const query = this.buildQuery({ employeeId, movementType, reportTitle });
   return this.api.get<ApiResponse<TaskMovementReportDto[]>>(this.service, `task-movements${query}`);
 }
 
- getClosedSoonReports(employeeId: number): Observable<ApiResponse<TasksClosingSoonDto[]>> {
+ getClosedSoonReports(employeeId: number | undefined): Observable<ApiResponse<TasksClosingSoonDto[]>> {
   const query = this.buildQuery({ employeeId});
   return this.api.get<ApiResponse<TasksClosingSoonDto[]>>(this.service, `closing-soon-tasks${query}`);
 }

@@ -27,6 +27,8 @@ namespace TaskMangment.Domain.Entities
         public int? ClosedByUserId { get; set; }
         public CloseReason? CloseReason { get; set; }
 
+        public bool requireUploadFile { get; set; } = false;
+
 
         [ForeignKey(nameof(CompanyId))] public Company Company { get; set; }
 
