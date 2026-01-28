@@ -200,12 +200,10 @@ namespace TaskMangment.Infrastructure.Services
 
                 await _employeeRepo.AddAsync(employee);
 
-                // لازم Save هنا داخل الـ transaction عشان employee.Id يتولد
                 await _employeeRepo.SaveChangesAsync();
 
                 if (dto.Attachments != null)
                 {
-                    // مهم: استخدمي اسم فريد فعليًا في الرفع (بدل اسم الملف الأصلي)
                     var uniqueFileName = $"{Guid.NewGuid()}_{Path.GetFileName(dto.Attachments.FileName)}";
 
                     await using var stream = dto.Attachments.OpenReadStream();
@@ -217,9 +215,10 @@ namespace TaskMangment.Infrastructure.Services
                         folder: "attachments"
                     );
 
+
                     var attachment = new Attachment
                     {
-                        FileName = dto.Attachments.FileName,   // الاسم الأصلي للعرض
+                        FileName = dto.Attachments.FileName,  
                         FilePath = blobUrl,
                         Size = dto.Attachments.Length,
                         UploadedBy = employee.Id,
@@ -232,8 +231,11 @@ namespace TaskMangment.Infrastructure.Services
                         IsUploadedToBlob = true
                     };
 
+
                     await _attachmentRepo.AddAsync(attachment);
                     await _attachmentRepo.SaveChangesAsync();
+
+                    
                 }
 
                 await _cache.RemoveAsync("employees:");
@@ -274,91 +276,118 @@ namespace TaskMangment.Infrastructure.Services
         public async Task<ApiResponse<EmployeeGetDto>> UpdateAsync(int id, EmployeeAddEditDto dto)
         {
             if (dto.BranchId.HasValue && !await _branchRepo.IsExistAsync(dto.BranchId.Value))
-                throw new AppException(
-                    ErrorCodes.BranchNotFound,
-                    StatusCodes.Status400BadRequest);
+                throw new AppException(ErrorCodes.BranchNotFound, StatusCodes.Status400BadRequest);
 
             var employee = await _employeeRepo.GetByIDAsync(id);
             if (employee == null)
-                throw new AppException(
-                    ErrorCodes.EmployeeNotFound,
-                    StatusCodes.Status400BadRequest);
+                throw new AppException(ErrorCodes.EmployeeNotFound, StatusCodes.Status400BadRequest);
 
             if (await _employeeRepo.GetAll(e => e.Email == dto.Email && e.Id != id).AnyAsync())
+                throw new AppException(ErrorCodes.EmailAlreadyExists, StatusCodes.Status400BadRequest);
+
+            await _uow.BeginTransactionAsync();
+
+            string? newBlobUrl = null;
+            string? oldBlobUrl = null;   
+
+            try
             {
-                throw new AppException(
-                    ErrorCodes.EmailAlreadyExists,StatusCodes.Status400BadRequest);
-            }
+                _mapper.Map(dto, employee);
 
+                if (!string.IsNullOrWhiteSpace(dto.Password))
+                    employee.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
 
-            _mapper.Map(dto, employee);
-
-            if (!string.IsNullOrWhiteSpace(dto.Password))
-            {
-                employee.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
-            }
-
-            if (dto.Attachments != null)
-            {
-                var oldAttachment = await _attachmentRepo
-                    .GetAll(a => a.ReferenceId == employee.Id && a.AttachmentType == AttachmentType.Employee)
-                    .FirstOrDefaultAsync();
-                using var stream = dto.Attachments.OpenReadStream();
-                var blobUrl = await _blobStorageService.UploadAsync(
-                    stream,
-                    dto.Attachments.FileName,
-                    dto.Attachments.ContentType,
-                    folder: "attachments"
-                );
-                var fileName = $"{Guid.NewGuid()}_{dto.Attachments.FileName}";
-                if (oldAttachment != null) 
+                if (dto.Attachments != null)
                 {
-                    oldAttachment.BlobUrl=blobUrl;
-                    oldAttachment.BlobUploadedAt=DateTime.UtcNow;
-                    oldAttachment.FilePath= blobUrl;
-                    oldAttachment.FileName=fileName;
+                    var oldAttachment = await _attachmentRepo
+                        .GetAll(a => a.ReferenceId == employee.Id && a.AttachmentType == AttachmentType.Employee)
+                        .FirstOrDefaultAsync();
 
-                    await _attachmentRepo.SaveChangesAsync();
-                }
-                else
-                {
-                    var attachment = new Attachment
+                    if (oldAttachment != null)
+                        oldBlobUrl = oldAttachment.BlobUrl;
+
+                    var uniqueFileName = $"{Guid.NewGuid()}_{Path.GetFileName(dto.Attachments.FileName)}";
+                    await using var stream = dto.Attachments.OpenReadStream();
+
+                    newBlobUrl = await _blobStorageService.UploadAsync(
+                        stream,
+                        uniqueFileName,
+                        dto.Attachments.ContentType,
+                        folder: "attachments"
+                    );
+
+                    if (oldAttachment != null)
                     {
-                        FileName = dto.Attachments.FileName,
-                        FilePath = blobUrl,
-                        Size = dto.Attachments.Length,
-                        UploadedBy = employee.Id,
-                        ContentType = dto.Attachments.ContentType,
-                        UploadedAt = DateTime.UtcNow,
-                        AttachmentType = AttachmentType.Employee,
-                        ReferenceId = employee.Id,
-                        BlobUrl = blobUrl,
-                        BlobUploadedAt = DateTime.UtcNow,
-                        IsUploadedToBlob = true
-                    };
-                    await _attachmentRepo.AddAsync(attachment);
-                    await _attachmentRepo.SaveChangesAsync();
+                        oldAttachment.FileName = dto.Attachments.FileName; 
+                        oldAttachment.FilePath = newBlobUrl;
+                        oldAttachment.Size = dto.Attachments.Length;
+                        oldAttachment.ContentType = dto.Attachments.ContentType;
+                        oldAttachment.UploadedAt = DateTime.UtcNow;
+
+                        oldAttachment.BlobUrl = newBlobUrl;
+                        oldAttachment.BlobUploadedAt = DateTime.UtcNow;
+                        oldAttachment.IsUploadedToBlob = true;
+
+                        await _attachmentRepo.SaveChangesAsync();
+                    }
+                    else
+                    {
+                        var attachment = new Attachment
+                        {
+                            FileName = dto.Attachments.FileName,
+                            FilePath = newBlobUrl,
+                            Size = dto.Attachments.Length,
+                            UploadedBy = employee.Id,
+                            ContentType = dto.Attachments.ContentType,
+                            UploadedAt = DateTime.UtcNow,
+                            AttachmentType = AttachmentType.Employee,
+                            ReferenceId = employee.Id,
+                            BlobUrl = newBlobUrl,
+                            BlobUploadedAt = DateTime.UtcNow,
+                            IsUploadedToBlob = true
+                        };
+
+                        await _attachmentRepo.AddAsync(attachment);
+                        await _attachmentRepo.SaveChangesAsync();
+                    }
                 }
-                   
-                  
-                
+
+                await _employeeRepo.SaveChangesAsync();
+                await _cache.RemoveAsync("employees:");
+
+                await _uow.CommitAsync();
+
+                if (!string.IsNullOrWhiteSpace(oldBlobUrl) &&
+                    !string.IsNullOrWhiteSpace(newBlobUrl) &&
+                    !string.Equals(oldBlobUrl, newBlobUrl, StringComparison.OrdinalIgnoreCase))
+                {
+                    try { await _blobStorageService.DeleteAsync(oldBlobUrl); } catch { }
+                }
+
+                var fullEmployee = await _employeeRepo.GetAll(e => e.Id == employee.Id)
+                    .Include(e => e.Branch)
+                    .Include(e => e.Job)
+                    .Include(e => e.Department)
+                    .Include(e => e.EmployeeRoles)
+                        .ThenInclude(er => er.Role)
+                    .FirstOrDefaultAsync();
+
+                var employeeDto = _mapper.Map<EmployeeGetDto>(fullEmployee);
+                return ApiResponse<EmployeeGetDto>.Ok(employeeDto, "Employee updated successfully");
             }
-            // -------------------------------------------
+            catch
+            {
+                await _uow.RollbackAsync();
 
-            await _employeeRepo.SaveChangesAsync();
-            await _cache.RemoveAsync("employees:");
+                if (!string.IsNullOrWhiteSpace(newBlobUrl))
+                {
+                    try { await _blobStorageService.DeleteAsync(newBlobUrl); } catch { }
+                }
 
-            var fullEmployee = await _employeeRepo.GetAll(e => e.Id == employee.Id)
-                .Include(e => e.Branch)
-                 .Include(e => e.Job)
-                 .Include(e => e.Department)
-                .Include(e => e.EmployeeRoles)
-                    .ThenInclude(er => er.Role)
-                .FirstOrDefaultAsync();
-
-            var employeeDto = _mapper.Map<EmployeeGetDto>(fullEmployee);
-            return ApiResponse<EmployeeGetDto>.Ok(employeeDto, "Employee updated successfully");
+                throw;
+            }
         }
+
 
 
         public async Task<ApiResponse<bool>> DeleteAsync(int id)

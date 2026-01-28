@@ -64,7 +64,6 @@ export interface TaskDiscountFilterDto {
 export interface TaskActivityReportDto {
   taskTitleWithId: string; 
   assignedBy: string; 
-  comment: string;       
   commentDate: string;    
   commentedBy: string;
 }
@@ -79,7 +78,6 @@ export interface TaskMovementReportDto {
   taskTitleWithId: string;
   assignedBy: string;
   commentedBy: string;
-  comment: string;
   commentDate: string;
 }
 

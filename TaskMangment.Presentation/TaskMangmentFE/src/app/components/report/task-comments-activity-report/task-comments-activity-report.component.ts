@@ -35,7 +35,6 @@ export class TaskCommentsActivityReportComponent implements OnInit {
   columns: TableColumn[] = [
     { key: 'taskTitleWithId', label: 'REPORTS.TASK' },
     { key: 'assignedBy', label: 'REPORTS.ASSIGNED_BY' },
-    { key: 'comment', label: 'REPORTS.COMMENT' },
     { key: 'commentDate', label: 'REPORTS.COMMENT_DATE' , type : 'date'},
     { key: 'commentedBy', label: 'REPORTS.COMMENTED_BY'}
   ];

@@ -31,7 +31,7 @@ export class TaskTodayCommentComponent implements OnInit {
   columns: TableColumn[] = [
     { key: 'taskId', label: 'TASK.ID' },
     { key: 'title', label: 'TASK.TITLE' },
-{
+    {
       key: 'statusText',
       label: 'TASK.STATUS',
       type: 'badge',
@@ -43,7 +43,7 @@ export class TaskTodayCommentComponent implements OnInit {
         AutoClose: {text: 'TASK.STATUS_AUTOCLOSE',class: 'bg-warning' },
       }
     },
-        { key: 'assignedBy', label: 'TASK.ASSIGNED_BY' },
+    { key: 'assignedBy', label: 'TASK.ASSIGNED_BY' },
     { key: 'dueDate', label: 'TASK.DUE_DATE', type: 'date' }
   ];
 
@@ -64,10 +64,7 @@ export class TaskTodayCommentComponent implements OnInit {
     }
   };
 
-  labels = {
-    searchKey: 'TASK.SEARCH'
-  };
-
+  labels = {searchKey: 'TASK.SEARCH'};
   isLoading = false;
 
   constructor(private dashboardService: DashboardService,private modalService: NgbModal) {}
@@ -78,7 +75,6 @@ export class TaskTodayCommentComponent implements OnInit {
 
  loadData() {
   this.isLoading = true;
-
   this.dashboardService.getTasksNotCommentToday(this.searchCriteria)
     .subscribe({
       next: (res) => {
@@ -123,14 +119,9 @@ export class TaskTodayCommentComponent implements OnInit {
     this.loadData();
   }
 
-  checkRowClickable(item: any): boolean {
-  return true;
-  
-}
-
+checkRowClickable(item: any): boolean {return true;}
 onEdit(id: number) {
   console.log('Editing task ID:', id);
-  
   const task = this.rows.find(x => x.taskId === id);
   console.log('Task object:', task);
 
@@ -143,7 +134,6 @@ onEdit(id: number) {
     modalRef.componentInstance.taskId = id;
     modalRef.componentInstance.readonly = true;
   }
-
 }
 
 

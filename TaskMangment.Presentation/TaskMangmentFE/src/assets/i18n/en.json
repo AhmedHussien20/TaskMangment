@@ -537,7 +537,9 @@
     "COMMENT_MIN_LENGTH_TASK_CHARACTERS": "Enter 500 characters as Minimum length",
     "COMMENT_OR_FILE_REQUIRED": "Enter required fields",
     "ACHIEVEMENT_RESON": "Achievement information",
-    "DAYS": "Days"
+    "DAYS": "Days",
+    "REQUIRE_UPLOAD_FILE_WHEN_COMMENTING": "upload file when commenting",
+    "FILE_REQUIRED": "Uploading the file is required when commenting for this task"
   },
   "EMPLOYEE": {
     "LIST_TITLE": "Employee List",
@@ -853,7 +855,9 @@
 
     "DISTINCT_TASKS_COUNT": "Distinct Tasks Count",
     "AVG_COMMENTS_PER_TASK": "Average Comments per Task",
-    "LAST_COMMENT_DATE": "Last Comment Date"
+    "LAST_COMMENT_DATE": "Last Comment Date",
+    "EMPLOYEES" : "deducted employee"
+
   },
   "LEAVE": {
     "ID": "ID",

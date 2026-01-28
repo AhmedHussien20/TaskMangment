@@ -8,10 +8,7 @@
   <div class="modal-body">
 
     <!-- textarea -->
-    <textarea
-      class="form-control"
-      rows="4"
-      formControlName="comment"
+    <textarea class="form-control" rows="4" formControlName="comment"
       placeholder="{{ 'TASK.COMMENT_PLACEHOLDER' | translate }}">
     </textarea>
 
@@ -27,21 +24,17 @@
     <!-- file input -->
     <div class="mb-3 mt-2">
       <label for="formFileMultiple" class="form-label">{{ 'TASK.ADD_ATTACHMENTS' | translate }}</label>
-      <input 
-        class="form-control" 
-        type="file" 
-        id="formFileMultiple" 
-        (change)="onFileChange($event)" 
-        multiple>
+      <input class="form-control" type="file" id="formFileMultiple" (change)="onFileChange($event)" multiple>
+      <div class="text-danger small mt-1" *ngIf="requireUploadFile && form.errors?.['fileRequired']">
+        {{ 'TASK.FILE_REQUIRED' | translate }}
+      </div>
+
+
     </div>
 
     <!-- toggle -->
     <div class="form-check mb-3">
-      <input
-        class="form-check-input"
-        type="checkbox"
-        id="addEventToggle"
-        (change)="toggleEventFields()">
+      <input class="form-check-input" type="checkbox" id="addEventToggle" (change)="toggleEventFields()">
       <label class="form-check-label" for="addEventToggle">
         {{ 'TASK.ADD_TO_CALENDAR' | translate }}
       </label>
@@ -71,10 +64,7 @@
       {{ 'FORM.CANCEL' | translate }}
     </button>
 
-    <button
-      class="btn btn-danger"
-      [disabled]="form.invalid || isSubmitting"
-      (click)="submit()">
+    <button class="btn btn-danger" [disabled]="form.invalid || isSubmitting" (click)="submit()">
       {{ 'TASK.SUBMIT_COMMENT' | translate }}
     </button>
   </div>

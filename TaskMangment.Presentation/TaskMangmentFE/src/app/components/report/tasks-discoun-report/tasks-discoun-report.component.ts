@@ -37,6 +37,7 @@ export class TasksDiscountReportComponent implements OnInit {
     { key: 'taskIdTitle', label: 'REPORTS.TASK' }, 
     { key: 'status', label: 'REPORTS.STATUS' },
     { key: 'assignedBy', label: 'REPORTS.ASSIGNED_BY' },
+    { key: 'employeeName', label: 'REPORTS.EMPLOYEES' },
     { key: 'closedDate', label: 'REPORTS.CLOSED_DATE' , type: 'date' },
     { key: 'autoDiscount', label: 'REPORTS.AUTO_DISCOUNT' },
     { key: 'manualDiscount', label: 'REPORTS.MANUAL_DISCOUNT' },
@@ -119,10 +120,9 @@ loadData(): void {
       this.rows = res.data.map((t: TaskDiscountReportDto) => ({
         ...t,
         taskIdTitle: `[${t.taskId}] ${t.title}`,
-        assignedBy:
-          this.movementType === TaskMovementType.Outgoing
-            ? t.employeeName
-            : t.assignedBy
+        assignedBy: t.assignedBy,
+        employeeName: t.employeeName
+
       }));
 
       this.totalItems = this.rows.length;

@@ -24,9 +24,9 @@ namespace TaskMangment.Application.DTOs.ReportsDTO
 
     public class TaskDiscountReportFilterDto
     {
-        public int EmployeeId { get; set; }
+        public int? EmployeeId { get; set; }
         public WorkTaskStatus? Status { get; set; }
-        public DateTime FromDate { get; set; }
+        public DateTime? FromDate { get; set; }
         public DateTime? ToDate { get; set; }
 
         public TaskMovementType MovementType { get; set; }
@@ -54,7 +54,8 @@ namespace TaskMangment.Application.DTOs.ReportsDTO
         public decimal AutoDiscount { get; set; }
         public decimal ManualDiscount { get; set; }
 
-        public string EmployeeName { get; set; }
+        public string EmployeeName { get; set; }        
+        public string GroupEmployeeName { get; set; }
 
         public decimal TotalDiscount => AutoDiscount + ManualDiscount;
     }
@@ -63,7 +64,7 @@ namespace TaskMangment.Application.DTOs.ReportsDTO
     {
         public TaskMovementType MovementType { get; set; }
 
-        public DateTime FromDate { get; set; }
+        public DateTime? FromDate { get; set; }
         public DateTime? ToDate { get; set; }
 
         public List<EmployeeDiscountAuditGroupDto> Groups { get; set; } = new();

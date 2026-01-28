@@ -28,6 +28,8 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
         public TaskPriority Priority { get; set; } = TaskPriority.Low;
         public WorkTaskStatus Status { get; set; } = WorkTaskStatus.New;
         public DateTime? DueDate { get; set; }
+        public bool requireUploadFile { get; set; }
+
     }
     public class TaskGetDto
     {
@@ -54,6 +56,8 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
         public DateTime? ClosedAt { get; set; }
         public int? ClosedByUserId { get; set; }
         public CloseReason? CloseReason { get; set; }
+        public bool requireUploadFile { get; set; }
+
     }
     public class TaskEmployeeAssignmentDto
     {

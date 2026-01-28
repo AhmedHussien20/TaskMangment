@@ -8,7 +8,7 @@ namespace TaskMangment.Application.DTOs.ReportsDTO
 {
     public class TaskMovementReportFilterDto
     {
-        public int EmployeeId { get; set; }
+        public int? EmployeeId { get; set; }
         public TaskMovementType MovementType { get; set; }
         public string ReportTitle { get; set; } = string.Empty;
     }
@@ -20,7 +20,7 @@ namespace TaskMangment.Application.DTOs.ReportsDTO
         public string TaskTitleWithId { get; set; }
         public string AssignedBy { get; set; }
         public string CommentedBy { get; set; }
-        public string Comment { get; set; }
+        public string CommentText { get; set; }
         public DateTime CommentDate { get; set; }
     }
 

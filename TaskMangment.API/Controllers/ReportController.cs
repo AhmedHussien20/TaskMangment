@@ -83,7 +83,7 @@ namespace TaskMangment.API.Controllers
         [HttpGet("task-discounts/pdf")]
         public async Task<IActionResult> GetTaskDiscountsPdf([FromQuery] TaskDiscountReportFilterDto filter)
         {
-            var data = await _reportService.GetTaskDiscountAuditReportAsync(filter);
+            var data = await _reportService.GetTaskDiscountAuditReportAsync(this.RoleLevel,this.CurrentUserId,filter);
             string title = filter.MovementType == TaskMovementType.Incoming
     ? "تقرير خصومات المهام الواردة"
     : "تقرير خصومات المهام الصادرة";
@@ -98,7 +98,7 @@ namespace TaskMangment.API.Controllers
         [HttpGet("task-activities/pdf")]
         public async Task<IActionResult> GetTaskActivitiesPdf(DateTime? fromDate, DateTime? toDate)
         {
-            var data = await _reportService.GetTaskActivityReportAsync(this.Role, this.CurrentUserId, fromDate, toDate);
+            var data = await _reportService.GetTaskActivityReportAsync(this.RoleLevel, this.CurrentUserId, fromDate, toDate);
 
             var report = new TaskActivityPdfReport(data); 
             var pdf = report.GeneratePdf();
@@ -121,13 +121,12 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpGet("closing-soon-tasks/pdf")]
-        public async Task<IActionResult> GetClosingSoonTasksPdf(int employeeId)
+        public async Task<IActionResult> GetClosingSoonTasksPdf(int? employeeId)
         {
             var now = DateTime.UtcNow;
             var next3Days = now.AddDays(3);
 
-            var tasks = await _reportService.GetTasksClosingSoonAsync(employeeId, now, next3Days);
-
+            var tasks = await _reportService.GetTasksClosingSoonAsync(this.RoleLevel,this.CurrentUserId,employeeId, now, next3Days);
             var report = new ClosingSoonTasksPdfReport(tasks);
             var pdf = report.GeneratePdf();
 

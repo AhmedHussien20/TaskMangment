@@ -140,6 +140,12 @@ export class TaskCreateUpdateComponent implements OnInit {
       name: 'isShared',
       defaultValue: false
     },
+    {
+      type: 'checkbox',
+      label: 'TASK.REQUIRE_UPLOAD_FILE_WHEN_COMMENTING',
+      name: 'requireUploadFile',
+      defaultValue: false
+    },
 
     {
       type: 'textarea',
@@ -178,12 +184,13 @@ export class TaskCreateUpdateComponent implements OnInit {
       priority: [TaskPriority.Low, Validators.required],
       status: [TaskStatus.New, Validators.required],
       dueDate: [null, Validators.required],
-      commentAllowPeriodDays: [''],
+      commentAllowPeriodDays: ['', Validators.required],
       maxWarnings: [3, [decimalValidator()]],
       penaltyAtMaxWarnings: [0, [decimalValidator()]],
       penaltyOnAutoClose: [0, [decimalValidator()]],
       penaltyOnStopComment : [0, [decimalValidator()]],
-      isShared: [false]
+      isShared: [false],
+      requireUploadFile: [false]
     });
 
   }

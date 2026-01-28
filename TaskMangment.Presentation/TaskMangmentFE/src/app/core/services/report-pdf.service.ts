@@ -36,12 +36,12 @@ export class ReportPdfService {
     const query = this.buildQuery({ fromDate, toDate });
     return this.api.getBlob(this.service, `task-activities/pdf${query}`);
   }
-getTaskMovementReportsPdf(employeeId: number, movementType: number, reportTitle?: string): Observable<Blob> {
+getTaskMovementReportsPdf(employeeId: number | undefined, movementType: number, reportTitle?: string): Observable<Blob> {
   const query = this.buildQuery({ employeeId, movementType, reportTitle });
   return this.api.getBlob(this.service, `task-movements/pdf${query}`);
 }
 
-getTaskClosedSoonReportsPdf(employeeId: number): Observable<Blob> {
+getTaskClosedSoonReportsPdf(employeeId: number | undefined): Observable<Blob> {
   const query = this.buildQuery({ employeeId});
   return this.api.getBlob(this.service, `closing-soon-tasks/pdf${query}`);
 }

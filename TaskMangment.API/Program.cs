@@ -13,6 +13,7 @@ using TaskMangment.Infrastructure.SignalR;
 using Serilog; 
 using QuestPDF.Infrastructure;
 using TaskMangment.Utilities.Localization;
+using TaskMangment.Infrastructure.Seeding;
 
 namespace TaskMangment.API
 {

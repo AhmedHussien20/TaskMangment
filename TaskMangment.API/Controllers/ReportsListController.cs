@@ -58,7 +58,7 @@ namespace TaskMangment.API.Controllers
         public async Task<IActionResult> GetTaskDiscounts([FromQuery] TaskDiscountReportFilterDto filter) 
         {
             //filter.MovementType = movementType; 
-            var data = await _reportService.GetTaskDiscountReportAsync(filter);
+            var data = await _reportService.GetTaskDiscountReportAsync(this.RoleLevel,this.CurrentUserId,filter);
             return Success(data);
         }
 
@@ -66,7 +66,7 @@ namespace TaskMangment.API.Controllers
         [HttpGet("task-activities")]
         public async Task<IActionResult> GetTaskActivities(DateTime? fromDate,DateTime? toDate)
         {
-            var data = await _reportService.GetTaskActivityReportAsync(this.Role, this.CurrentUserId, fromDate, toDate);
+            var data = await _reportService.GetTaskActivityReportAsync(this.RoleLevel, this.CurrentUserId, fromDate, toDate);
             return Success(data);
         }
 
@@ -83,7 +83,7 @@ namespace TaskMangment.API.Controllers
             var now = DateTime.UtcNow;
             var next3Days = now.AddDays(3); 
 
-            var tasks = await _reportService.GetTasksClosingSoonAsync(employeeId, now, next3Days);
+            var tasks = await _reportService.GetTasksClosingSoonAsync(this.RoleLevel, this.CurrentUserId, employeeId, now, next3Days);
 
             return Success(tasks);
         }

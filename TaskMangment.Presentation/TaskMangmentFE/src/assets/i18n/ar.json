@@ -556,7 +556,10 @@
     "COMMENT_MIN_LENGTH_TASK_CHARACTERS" : "ادخل بحد ادني 500 حرف",
     "COMMENT_OR_FILE_REQUIRED" : "ادخل الحقول المطلوبه",
     "ACHIEVEMENT_RESON" : "معلومات الانجاز",
-    "DAYS" : "يوم"
+    "DAYS" : "يوم",
+    "REQUIRE_UPLOAD_FILE_WHEN_COMMENTING": "مطلوب رفع ملف عند التعليق",
+    "FILE_REQUIRED": "رفع الملف مطلوب عند التعليق لهذه المهمة"
+
 
   },
   "EMPLOYEE": {
@@ -870,7 +873,8 @@
     "DUE_DATE": "تاريخ الاستحقاق",
     "DISTINCT_TASKS_COUNT": "عدد المهام المميزة",
     "AVG_COMMENTS_PER_TASK": "متوسط التعليقات لكل مهمة",
-    "LAST_COMMENT_DATE": "تاريخ آخر تعليق"
+    "LAST_COMMENT_DATE": "تاريخ آخر تعليق",
+    "EMPLOYEES" : "الموظف المجذى"
 
     
     

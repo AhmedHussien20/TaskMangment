@@ -17,6 +17,7 @@ import { CalendarEventType } from 'app/core/models/event/calendar';
 export class CommentModalComponent implements OnInit {
 
   @Input() taskId!: number;
+  @Input() requireUploadFile: boolean = false;
 
   form!: FormGroup;
   files: File[] = [];
@@ -33,58 +34,87 @@ export class CommentModalComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.form = this.fb.group({
-      comment: ['', [Validators.minLength(5)]],
-       startDate: [null],  
-       endDate: [null]
-    });
-  }
+    console.log('from comment model',this.requireUploadFile);
 
-  onFileChange(event: any) {
-  if (event.target.files && event.target.files.length > 0) {
-    this.files = Array.from(event.target.files);
-  } else {
-    this.files = [];
-  }
+  this.form = this.fb.group({
+    comment: [''],
+    startDate: [null],
+    endDate: [null]
+  },
+   { validators: [this.fileRequiredValidator()] }
+);
 
+  this.form.get('comment')?.valueChanges.subscribe(() => {
+    this.updateCommentValidators();
+  });
+
+  this.updateCommentValidators();
+}
+private fileRequiredValidator() {
+  return (group: FormGroup) => {
+    if (!this.requireUploadFile) return null;
+
+    return this.files.length > 0 ? null : { fileRequired: true };
+  };
+}
+
+onFileChange(event: any) {
+  const input = event.target as HTMLInputElement;
+
+  this.files = input.files ? Array.from(input.files) : [];
+
+  this.updateCommentValidators();
+
+  // ✅ مهم عشان الـ form-level validator
+  this.form.updateValueAndValidity({ emitEvent: false });
+}
+
+
+private updateCommentValidators() {
   const commentControl = this.form.get('comment');
-
   if (!commentControl) return;
 
-  if (this.files.length > 0) {
+  if (this.requireUploadFile) {
     commentControl.clearValidators();
-  } else {
-    commentControl.setValidators([
-      Validators.required,
-      Validators.minLength(5)
-    ]);
+  }
+  else {
+    if (this.files.length > 0) {
+      commentControl.clearValidators();
+    } else {
+      commentControl.setValidators([
+        Validators.required,
+        Validators.minLength(500)
+      ]);
+    }
   }
 
-  commentControl.updateValueAndValidity();
+  commentControl.updateValueAndValidity({ emitEvent: false });
 }
+
 
 submit(): void {
   if (this.form.invalid || this.isSubmitting) return;
 
-  const formData = new FormData();
-
-  // Comment text
   const commentText = this.form.value.comment?.trim() || '';
+  const hasFiles = this.files.length > 0;
+
+  if (this.requireUploadFile && !hasFiles) {
+    this.toastr.error(this.translate.instant('TASK.FILE_REQUIRED'));
+    return;
+  }
+
+  if (!this.requireUploadFile && !commentText && !hasFiles) {
+    this.toastr.error(this.translate.instant('TASK.COMMENT_OR_FILE_REQUIRED'));
+    return;
+  }
+
+  const formData = new FormData();
   formData.append('CommentText', commentText);
 
-  if (!commentText && this.files.length === 0) {
-  this.toastr.error(this.translate.instant('TASK.COMMENT_OR_FILE_REQUIRED'));
-    this.isSubmitting = true;
-  return;
-}
-  // Attachments
-  this.files.forEach((file) => {
-    formData.append('File', file);
-  });
+  this.files.forEach(file => formData.append('File', file));
 
   this.isSubmitting = true;
 
-  // إنشاء التعليق
   this.commentService.create(this.taskId, formData).subscribe({
     next: () => {
       if (this.form.value.startDate) {
@@ -124,5 +154,6 @@ submit(): void {
   toggleEventFields() {
     this.showEventFields = !this.showEventFields;
   }
+
 
 }

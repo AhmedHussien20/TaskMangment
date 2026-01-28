@@ -37,8 +37,7 @@ export class TaskTodayActivityReportComponent implements OnInit {
     { key: 'taskTitleWithId', label: 'REPORTS.TASK' },
     { key: 'assignedBy', label: 'REPORTS.ASSIGNED_BY' },
     { key: 'commentedBy', label: 'REPORTS.COMMENTED_BY' },
-    { key: 'comment', label: 'REPORTS.COMMENT' },
-    { key: 'commentDate', label: 'REPORTS.COMMENT_DATE', type: 'date' }
+    { key: 'commentDate', label: 'REPORTS.COMMENT_DATE', type: 'dateTime' }
   ];
 
   rows: TaskMovementReportDto[] = [];
@@ -88,7 +87,7 @@ export class TaskTodayActivityReportComponent implements OnInit {
 
 
   loadData(): void {
-    if (!this.selectedEmployeeId) return;
+    //if (!this.selectedEmployeeId) return;
 
     this.isLoading = true;
 
@@ -133,7 +132,7 @@ export class TaskTodayActivityReportComponent implements OnInit {
   }
 
   onExportPdf(): void {
-    if (!this.selectedEmployeeId) return;
+    //if (!this.selectedEmployeeId) return;
 
     this.reportPdfService.getTaskMovementReportsPdf(this.selectedEmployeeId, this.movementType, this.reportTitle)
       .subscribe({
