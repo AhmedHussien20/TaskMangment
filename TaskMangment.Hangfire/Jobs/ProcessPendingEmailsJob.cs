@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore; 
+﻿using Microsoft.EntityFrameworkCore;
+using TaskMangment.Application.DTOs.ReportsDTO;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Domain.Entities;
 using TaskMangment.Infrastructure.DataContext;
@@ -11,12 +12,15 @@ namespace TaskMangment.Hangfire.Jobs
         private readonly AppDbContext _db;
         private readonly IEmailService _emailService;
         private readonly IEmailTemplateRenderer _renderer;
+        private readonly IOfferSendService _offerPdfService;
 
-        public ProcessPendingEmailsJob(AppDbContext db,IEmailService emailService,IEmailTemplateRenderer renderer)
+
+        public ProcessPendingEmailsJob(AppDbContext db, IEmailService emailService, IEmailTemplateRenderer renderer, IOfferSendService offerPdfService)
         {
             _db = db;
             _emailService = emailService;
             _renderer = renderer;
+            _offerPdfService = offerPdfService;
         }
 
         public async Task ExecuteAsync()
@@ -40,10 +44,29 @@ namespace TaskMangment.Hangfire.Jobs
                         email.ReferenceId,
                         email.UserId);
 
-                    await _emailService.SendEmailAsync(
+                    if (email.TemplateKey == "OfferSent")
+                    {
+                        var pdfBytes = await _offerPdfService.GenerateOfferPdfBytesAsync(email.ReferenceId);
+                        var attachments = new List<EmailAttachment>
+                           {
+                                 new EmailAttachment{
+                                     Name = $"Offer-{email.ReferenceId}.pdf",
+                                     ContentBase64 = Convert.ToBase64String(pdfBytes)
+                                 }
+                        };
+                        await _emailService.SendEmailAsync(
+                        email.ToEmail,
+                        rendered.Subject,
+                        rendered.Body,
+                        attachments);
+                    }
+                    else
+                    {
+                        await _emailService.SendEmailAsync(
                         email.ToEmail,
                         rendered.Subject,
                         rendered.Body);
+                    }
 
                     email.Status = EmailStatus.Sent;
                     email.SentAt = DateTime.UtcNow;

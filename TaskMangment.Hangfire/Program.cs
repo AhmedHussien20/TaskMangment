@@ -1,17 +1,18 @@
 ﻿using Hangfire;
-using Hangfire.SqlServer;
-using Microsoft.EntityFrameworkCore;
-using TaskMangment.Infrastructure.DataContext;
-using TaskMangment.Hangfire.Jobs;
-using TaskMangment.Application.Interfaces.Services;
-using TaskMangment.Infrastructure.Services;
 using Hangfire.Dashboard;
-using TaskMangment.Hangfire;
-using TaskMangment.Infrastructure;
-using TaskMangment.Application.Common.Interfaces;
-using TaskMangment.Application.Common;
+using Hangfire.SqlServer;
 using Microsoft.AspNetCore.Localization;
+using Microsoft.EntityFrameworkCore;
+using QuestPDF.Infrastructure;
 using System.Globalization;
+using TaskMangment.Application.Common;
+using TaskMangment.Application.Common.Interfaces;
+using TaskMangment.Application.Interfaces.Services;
+using TaskMangment.Hangfire;
+using TaskMangment.Hangfire.Jobs;
+using TaskMangment.Infrastructure;
+using TaskMangment.Infrastructure.DataContext;
+using TaskMangment.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,7 +25,7 @@ builder.Services.AddHttpClient();
 builder.Services.Configure<EmailSettings>(
                   builder.Configuration.GetSection("EmailSettings")
               );
- builder.Services.AddDI();
+builder.Services.AddDI();
 builder.Services.Configure<BlobStorageService>(builder.Configuration.GetSection("Blob"));
 // =======================
 // Services
@@ -45,6 +46,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection")));
 
+QuestPDF.Settings.License = LicenseType.Community;
+
 // =======================
 // Hangfire
 // =======================
@@ -64,6 +67,7 @@ builder.Services.AddHangfire(config =>
                 DisableGlobalLocks = true
             });
 });
+
 
 builder.Services.AddHangfireServer();
 
