@@ -173,6 +173,23 @@ private MENUITEMS: MenuItem[] = [
     ]
   },
 
+   { headTitle: 'nav.apps.charts.header', minRoleLevel: 10 },
+  {
+    title: 'nav.apps.charts.title',
+    icon: 'ti ti-chart-pie',
+    type: 'sub',
+    minRoleLevel: 10,
+    children: [
+      {
+        title: 'nav.apps.charts.emp_statistics',
+        path: '/charts/emp-charts',
+        type: 'link',
+        minRoleLevel: 10
+      },
+      
+    ]
+  },
+
 ];
 
 

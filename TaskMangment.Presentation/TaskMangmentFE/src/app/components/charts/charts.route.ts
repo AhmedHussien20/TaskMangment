@@ -2,7 +2,7 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 
 export const admin: Routes = [
-  {path:'charts',children:[
+  {path:'',children:[
     {
       path: 'apex-charts/area-charts',
       loadComponent: () =>
@@ -148,6 +148,14 @@ export const admin: Routes = [
       loadComponent: () =>
         import('./echart-charts/echart-charts.component').then(
           (m) => m.EchartChartsComponent
+        ),
+    },
+
+    {
+      path: 'emp-charts',
+      loadComponent: () =>
+        import('./emp-task-chart/emp-task-chart.component').then(
+          (m) => m.EmpTaskChartComponent
         ),
     },
   ]}

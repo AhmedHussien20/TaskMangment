@@ -70,7 +70,7 @@ export const content: Routes = [
       {path: 'offer', loadChildren: () => import('../../../app/components/offer/offer.routes').then(r => r.OfferRoutingModule)},
       {path: 'report', loadChildren: () => import('../../../app/components/report/report.routes').then(r => r.ReportRoutingModule)},
       {path: 'leave', loadChildren: () => import('../../../app/components/leave/leave.routes').then(r => r.LeaveRoutingModule)},
-
+      {path: 'charts',loadChildren: () => import('../../../app/components/charts/charts.route').then(r => r.chartsRoutingModule)},
 
 
        //    {
@@ -99,10 +99,7 @@ export const content: Routes = [
       //     path: '',
       //     loadChildren: () => import('../../../app/components/maps/maps.routes').then(r => r.mapsRoutingModule)
       //   },
-      //   {
-      //     path: '',
-      //     loadChildren: () => import('../../../app/components/charts/charts.routes').then(r => r.chartsRoutingModule)
-      //   },
+         
       //   {
       //     path: '',
       //     loadChildren: () => import('../../../app/components/pages/pages.routes').then(r => r.pagesRoutingModule)

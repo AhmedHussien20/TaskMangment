@@ -165,6 +165,12 @@
         "title": "Leaves",
         "leaves_type": "Leaves types",
         "Leaves_requests": "Leaves request"
+      },
+       "charts": 
+      {
+         "header": "Statistices",
+        "title": "Statistices",
+        "emp_statistics": "Employee Statistices"
       }
     },
     "components": {
