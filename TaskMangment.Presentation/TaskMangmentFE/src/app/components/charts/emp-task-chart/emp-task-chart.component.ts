@@ -138,6 +138,7 @@ export class EmpTaskChartComponent implements OnInit {
     this.loadCharts();
   }
 
+  
   loadCharts(): void {
     if (!this.selectedEmployeeId) return;
 
