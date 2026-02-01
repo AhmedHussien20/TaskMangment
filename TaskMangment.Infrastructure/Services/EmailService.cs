@@ -48,9 +48,9 @@ namespace TaskMangment.Infrastructure.Services
                 {
                     new { email = to }
                 },
-                subject = subject,
+                subject,
                 htmlContent = body,
-                attachment = brevoAttachments 
+                attachment = brevoAttachments
 
 
 
