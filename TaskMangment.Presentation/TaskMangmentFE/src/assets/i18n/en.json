@@ -907,5 +907,14 @@
     "MESSAGE": "You do not have permission to access this page.",
     "GO_BACK": "Go back to previous page",
     "GO_HOME": "Go to home page"
+  },
+   "CHART":
+  {
+    "FROM":"From",
+    "TO" :"To",
+    "EMPLOYEES":"Employees",
+    "TASK_PERCENT" : "Task percentage for employee",
+    "TASKS_STATUS": "Tasks status for employee",
+    "TASK_STATUS":"Task Status"
   }
 }
