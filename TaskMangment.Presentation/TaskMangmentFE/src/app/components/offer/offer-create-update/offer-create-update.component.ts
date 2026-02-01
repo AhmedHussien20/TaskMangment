@@ -10,6 +10,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { FormFieldConfig } from 'app/core/models/form-field-config';
 import { StudentService } from 'app/core/services/student.service';
 import { decimalValidator } from 'app/shared/validations/numberVlidator';
+import { toLocalDateOnly } from 'app/components/utilities/helpers/toLocalDateOnly';
 
 @Component({
   selector: 'app-offer-create-update',
@@ -293,20 +294,25 @@ export class OfferCreateUpdateComponent implements OnInit {
       return;
     }
 
-    if (this.isEdit && this.offerId) {
-      this.offerService.update(this.offerId, this.formGroup.value).subscribe({
-        next: () => {
-          this.toastr.success(this.translate.instant('OFFER.UPDATE_SUCCESS'));
-          this.formSubmitted.emit();
-        }
-      });
-    } else {
-      this.offerService.create(this.formGroup.value).subscribe({
-        next: () => {
-          this.toastr.success(this.translate.instant('OFFER.CREATE_SUCCESS'));
-          this.formSubmitted.emit();
-        }
-      });
-    }
+    const payload = { ...this.formGroup.value };
+
+  payload.startDate = toLocalDateOnly(payload.startDate);
+  payload.endDate   = toLocalDateOnly(payload.endDate);
+
+     if (this.isEdit && this.offerId) {
+    this.offerService.update(this.offerId, payload).subscribe({
+      next: () => {
+        this.toastr.success(this.translate.instant('OFFER.UPDATE_SUCCESS'));
+        this.formSubmitted.emit();
+      }
+    });
+  } else {
+    this.offerService.create(payload).subscribe({
+      next: () => {
+        this.toastr.success(this.translate.instant('OFFER.CREATE_SUCCESS'));
+        this.formSubmitted.emit();
+      }
+    });
+  }
   }
 }

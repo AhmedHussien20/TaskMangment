@@ -1,8 +1,9 @@
-﻿using TaskMangment.Application.Interfaces.Services;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using TaskMangment.Application.DTOs.ReportsDTO;
+using TaskMangment.Application.Interfaces.Services;
 
 namespace TaskMangment.Infrastructure.Services
 {
@@ -17,13 +18,24 @@ namespace TaskMangment.Infrastructure.Services
             _httpClient = httpClient;
         }
 
-        public async Task SendEmailAsync(string to, string subject, string body)
+        public async Task SendEmailAsync(string to, string subject, string body, List<EmailAttachment>? attachments = null)
         {
             if (string.IsNullOrWhiteSpace(_settings.BrevoApiKey))
                 throw new Exception("BrevoApiKey is missing in EmailSettings.");
 
             if (string.IsNullOrWhiteSpace(_settings.From))
                 throw new Exception("From email is missing in EmailSettings.");
+
+            object[]? brevoAttachments = null;
+
+            if (attachments != null && attachments.Count > 0)
+            {
+                brevoAttachments = attachments.Select(a => new
+                {
+                    name = a.Name,
+                    content = a.ContentBase64
+                }).Cast<object>().ToArray();
+            }
 
             var payload = new
             {
@@ -37,7 +49,11 @@ namespace TaskMangment.Infrastructure.Services
                     new { email = to }
                 },
                 subject = subject,
-                htmlContent = body
+                htmlContent = body,
+                attachment = brevoAttachments 
+
+
+
             };
 
             string json = JsonSerializer.Serialize(payload);

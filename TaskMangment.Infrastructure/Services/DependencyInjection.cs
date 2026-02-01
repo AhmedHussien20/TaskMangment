@@ -138,6 +138,9 @@ namespace TaskMangment.Infrastructure.Services
             services.AddScoped<IEmployeeDashboardService, EmployeeDashboardService>();
             services.AddScoped<IAdminDashboardService, AdminDashboardService>();
             services.AddScoped<IAppUnitOfWork, AppUnitOfWork>();
+            services.AddScoped<IOfferSendService, OfferSendService>();
+            services.AddScoped<IChartService, ChartService>();
+
 
 
 

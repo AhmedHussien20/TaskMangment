@@ -301,6 +301,8 @@ namespace TaskMangment.Infrastructure.Services
             if (dto.Status.HasValue)
                 query = query.Where(a => a.Task.Status == dto.Status.Value);
 
+
+
             var flatRows = await query
                 .Select(a => new TaskDiscountAuditRowDto
                 {
@@ -406,6 +408,12 @@ namespace TaskMangment.Infrastructure.Services
 
             if (dto.Status.HasValue)
                 query = query.Where(a => a.Task.Status == dto.Status.Value);
+
+            query = query.Where(a =>
+    _context.Discounts
+        .Where(d => d.TaskId == a.TaskId)
+        .Sum(d => (decimal?)d.Amount) > 0
+);
 
             var result = await query
                 .Select(a => new TaskDiscountReportDto

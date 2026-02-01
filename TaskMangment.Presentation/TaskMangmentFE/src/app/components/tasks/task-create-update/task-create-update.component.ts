@@ -203,8 +203,6 @@ export class TaskCreateUpdateComponent implements OnInit {
 
 
       this.formGroup.patchValue({ assignedEmployeeIds });
-
-
       let dueDate: string | null = null;
       if (task.dueDate) {
         const d = new Date(task.dueDate);
