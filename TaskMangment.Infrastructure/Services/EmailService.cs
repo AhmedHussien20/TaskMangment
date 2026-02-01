@@ -18,7 +18,7 @@ namespace TaskMangment.Infrastructure.Services
             _httpClient = httpClient;
         }
 
-        public async Task SendEmailAsync(string to, string subject, string body)
+        public async Task SendEmailAsync(string to, string subject, string body, List<EmailAttachment>? attachments = null)
         {
             if (string.IsNullOrWhiteSpace(_settings.BrevoApiKey))
                 throw new Exception("BrevoApiKey is missing in EmailSettings.");
@@ -41,16 +41,16 @@ namespace TaskMangment.Infrastructure.Services
             {
                 sender = new
                 {
-                    email = "task_for_u@ararhni.com",
+                    email = _settings.From,
                     name = "Task Manager"
                 },
                 to = new[]
                 {
                     new { email = to }
                 },
-                subject = subject,
+                subject,
                 htmlContent = body,
-                attachment = brevoAttachments 
+                attachment = brevoAttachments
 
 
 
