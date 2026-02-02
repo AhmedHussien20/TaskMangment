@@ -63,7 +63,8 @@
     "DELETE_SUCCESS": "تم الحذف بنجاح",
     "LOADING": "جاري التحميل",
     "APPLY": "تطبيق",
-    "ERROR_LOADING_DATA": "حدث خطأ أثناء تحميل البيانات"
+    "ERROR_LOADING_DATA": "حدث خطأ أثناء تحميل البيانات",
+    "SELECT_FROM_DATE" : "اختر وقت البداية "
   },
   "validation": {
     "required": "هذا الحقل مطلوب",

@@ -113,7 +113,9 @@ namespace TaskMangment.Infrastructure.Services
                 query = query.Where(t => (int)t.Status == request.StatusId.Value);
             }
 
-            query = query.Where(t =>t.Assignments.Any(a => a.EmployeeId == employeeId) ||t.CreatedByEmployeeId == employeeId);
+            query = query.Where(t =>
+                t.Assignments.Any(a => a.EmployeeId == employeeId && a.IsActive) ||
+                t.CreatedByEmployeeId == employeeId);
 
             var totalCount = await query.CountAsync();
 
@@ -132,6 +134,7 @@ namespace TaskMangment.Infrastructure.Services
                 if (task == null) continue;
 
                 dto.AssignEmployee = task.Assignments
+                    .Where(a => a.IsActive)
                     .Select(a => new TaskEmployeeAssignmentDto
                     {
                         Id = a.Employee.Id,
@@ -145,7 +148,7 @@ namespace TaskMangment.Infrastructure.Services
             var summary = new TaskSummaryDto
             {
                 MyTasks = await _taskRepo.CountAsync(t =>
-                    t.Assignments.Any(a => a.EmployeeId == employeeId)),
+                t.Assignments.Any(a => a.EmployeeId == employeeId && a.IsActive)),
 
                 CreatedByMe = await _taskRepo.CountAsync(t =>
                     t.CreatedByEmployeeId == employeeId),
@@ -182,14 +185,22 @@ namespace TaskMangment.Infrastructure.Services
             if (task == null)
                 throw new AppException(ErrorCodes.TaskNotFound, StatusCodes.Status400BadRequest);
 
-            task.Assignments = task.Assignments
-                .Where(a => a.Employee.IsActive)
+            var dto = _mapper.Map<TaskGetDto>(task);
+
+            dto.AssignEmployee = task.Assignments
+                .Where(a => a.IsActive && a.Employee.IsActive)
+                .Select(a => new TaskEmployeeAssignmentDto
+                {
+                    Id = a.Employee.Id,
+                    Name = a.Employee.FullName
+                })
                 .ToList();
 
-            var taskDto = _mapper.Map<TaskGetDto>(task);
+            dto.AssignedByName = task.AssignedBy?.FullName;
 
-            return ApiResponse<TaskGetDto>.Ok(taskDto);
+            return ApiResponse<TaskGetDto>.Ok(dto);
         }
+
 
 
         public async Task<ApiResponse<TaskGetDto>> AddAsync(TaskAddEditDto dto, int createdUser, int companyId)

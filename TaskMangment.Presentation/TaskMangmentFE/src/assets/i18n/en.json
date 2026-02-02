@@ -61,7 +61,8 @@
     "DELETE_SUCCESS": "Deleted successfully",
     "LOADING": "Loading",
     "APPLY": "Apply",
-    "ERROR_LOADING_DATA": "An error occurred while loading data"
+    "ERROR_LOADING_DATA": "An error occurred while loading data",
+    "SELECT_FROM_DATE" : "Select From date"
   },
   "validation": {
     "required": "This field is required",

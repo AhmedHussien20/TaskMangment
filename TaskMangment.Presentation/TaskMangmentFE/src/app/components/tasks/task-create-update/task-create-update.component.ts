@@ -207,31 +207,42 @@ export class TaskCreateUpdateComponent implements OnInit {
 
   }
 
-  loadTask() {
-    this.taskService.getById(this.taskId!).subscribe(res => {
-      const task = res.data;
-      const assignedEmployeeIds =
-        (task.assignEmployee || []).map((e: any) => e.id);
+ loadTask() {
+  this.taskService.getById(this.taskId!).subscribe(res => {
+    const task = res.data;
 
+    const assigned = (task.assignEmployee || []).map((e: any) => ({
+      value: e.id,
+      label: e.name
+    }));
 
-      this.formGroup.patchValue({ assignedEmployeeIds });
-      let dueDate: string | null = null;
-      if (task.dueDate) {
-        const d = new Date(task.dueDate);
-        const month = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
-        dueDate = `${d.getFullYear()}-${month}-${day}`;
-      }
+    const assignedEmployeeIds = assigned.map(x => x.value);
 
-      const patch = {
-        ...task,
-        assignedEmployeeIds,
-        dueDate
-      };
+    // ✅ ضيفيهم للـ options بتاعة الفيلد (عشان ng-select يقدر يعرض الاسم)
+    const field = this.formConfig.find(f => f.name === 'assignedEmployeeIds');
+    if (field) {
+      field.options = field.options || [];
+      const existing = new Set(field.options.map((x: any) => x.value));
+      const missing = assigned.filter(x => !existing.has(x.value));
+      field.options = [...missing, ...field.options];
+    }
 
-      this.formGroup.patchValue(patch);
+    let dueDate: string | null = null;
+    if (task.dueDate) {
+      const d = new Date(task.dueDate);
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      dueDate = `${d.getFullYear()}-${month}-${day}`;
+    }
+
+    this.formGroup.patchValue({
+      ...task,
+      assignedEmployeeIds,
+      dueDate
     });
-  }
+  });
+}
+
 
 
   loadEmployees() {
