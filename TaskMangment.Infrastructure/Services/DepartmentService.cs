@@ -44,44 +44,50 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<PagedResponse<DepartmentGetDto>>> GetAllAsync(DepartmentRequest request)
         {
-            //string cacheKey = $"departments:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
-
-            //if (!request.BypassCache)
-            //{
-            //    var cached = await _cache.GetAsync<PagedResponse<DepartmentGetDto>>(cacheKey);
-            //    if (cached != null)
-            //        return ApiResponse<PagedResponse<DepartmentGetDto>>.Ok(cached);
-            //}
-
             var query = _departmentRepository.GetAll()
                 .Include(d => d.Manager)
                 .Include(d => d.Branch)
                     .ThenInclude(b => b.Area)
-                .Include(d => d.Jobs)
                 .ApplySearch(request.searchKey);
+
             var totalCount = await query.CountAsync();
 
             query = query.OrderByDynamicSafe(request.SortColumn, request.SortDirection);
 
-            var list = await query
+            // 1) Load paged departments
+            var departments = await query
                 .Skip((request.PageIndex - 1) * request.PageSize)
                 .Take(request.PageSize)
                 .ToListAsync();
 
-            var dtos = _mapper.Map<ICollection<DepartmentGetDto>>(list);
+            var deptIds = departments.Select(d => d.Id).ToList();
 
-            foreach (var dto in dtos)
+            var counts = await _employeeRepository.GetAll()
+                .Where(e => e.DepartmentId.HasValue && deptIds.Contains(e.DepartmentId.Value))
+                .GroupBy(e => e.DepartmentId.Value)
+                .Select(g => new { DepartmentId = g.Key, Count = g.Count() })
+                .ToListAsync();
+
+            var countDict = counts.ToDictionary(x => x.DepartmentId, x => x.Count);
+
+            // 3) Map + set EmployeeCount
+            var dtos = departments.Select(d =>
             {
-                var department = list.First(d => d.Id == dto.Id);
-                dto.EmployeeCount = department.Jobs.Count;
-            }
+                var dto = _mapper.Map<DepartmentGetDto>(d);
+                dto.EmployeeCount = countDict.TryGetValue(d.Id, out var c) ? c : 0;
+                return dto;
+            }).ToList();
 
-            var response = new PagedResponse<DepartmentGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
-
-            //await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
+            var response = new PagedResponse<DepartmentGetDto>(
+                dtos,
+                totalCount,
+                request.PageIndex,
+                request.PageSize
+            );
 
             return ApiResponse<PagedResponse<DepartmentGetDto>>.Ok(response);
         }
+
 
         public async Task<ApiResponse<DepartmentGetDto>> GetByIdAsync(int id)
         {

@@ -15,6 +15,8 @@ import { SpkEchartsComponent } from '../../../@spk/reusable-charts/spk-echarts/s
 import type { EChartsOption } from 'echarts';
 import { ChartService } from 'app/core/services/Chart.Service';
 import { EmpTaskChartItem, TaskStatusCountDto } from 'app/core/models/chart';
+import { EmployeeNgSelectComponent } from 'app/components/employee-select/employee-select.component';
+import { DatePickerComponent } from 'app/components/date-picker/date-picker.component';
 
 
 @Component({
@@ -26,7 +28,9 @@ import { EmpTaskChartItem, TaskStatusCountDto } from 'app/core/models/chart';
     TranslateModule,
     PageHeaderComponent,
     SpkChartjsComponent,  
-    SpkEchartsComponent  
+    SpkEchartsComponent,
+    EmployeeNgSelectComponent,
+    DatePickerComponent
   ],
   templateUrl: './emp-task-chart.component.html',
   styleUrl: './emp-task-chart.component.scss'
@@ -40,6 +44,7 @@ export class EmpTaskChartComponent implements OnInit {
   employees: SimpleEmployee[] = [];
   selectedEmployeeId?: number;
 
+  
   fromDate!: string;
   toDate?: string;
 
@@ -111,13 +116,10 @@ export class EmpTaskChartComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.fromDate = this.toIsoDate(new Date());
-
     const roleLevel = this.authService.getRoleLevel();
     this.isAdmin = roleLevel >= 50;
 
     if (this.isAdmin) {
-      this.loadEmployees();
       this.selectedEmployeeId = undefined;
     } else {
       const user = this.authService.getCurrentUser();
@@ -183,27 +185,7 @@ export class EmpTaskChartComponent implements OnInit {
       });
   }
 
-  loadEmployees(): void {
-    const request = {
-      searchKey: '',
-      pageIndex: 1,
-      pageSize: 1000,
-      sortColumn: 'Id',
-      sortDirection: 'DESC'
-    };
 
-    this.employeeService.getAll(request).subscribe({
-      next: (res) => {
-        this.employees = res.data.data.map((e: any) => ({
-          id: e.id,
-          fullName: e.fullName
-        }));
-      },
-      error: () => {
-        this.toastr.error(this.translate.instant('COMMON.ERROR_LOADING_DATA'));
-      }
-    });
-  }
 
 
   private buildPieOptions(labels: string[], values: number[]): EChartsOption {
@@ -252,9 +234,5 @@ export class EmpTaskChartComponent implements OnInit {
     const cleaned = value.replace('%', '').trim();
     const n = Number(cleaned);
     return Number.isFinite(n) ? n : 0;
-  }
-
-  private toIsoDate(d: Date): string {
-    return d.toISOString().slice(0, 10);
   }
 }

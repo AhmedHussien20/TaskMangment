@@ -10,19 +10,21 @@
 
       <!-- Filters -->
       <div class="card-header border-bottom-0">
-        <div class="d-flex justify-content-center align-items-end gap-3">
+        <div class="d-flex justify-content-center gap-3 flex-wrap">
 
           <div class="d-flex flex-column">
-            <label class="form-label small">{{ 'REPORTS.FROM' | translate }}</label>
-            <input type="date" [(ngModel)]="fromDate" class="form-control form-control-sm">
+            <label class="form-label small">{{ 'CHART.FROM' | translate }}</label>
+            <app-date-picker [(ngModel)]="fromDate" [placeholderKey]="'REPORTS.FROM'">
+            </app-date-picker>
           </div>
 
           <div class="d-flex flex-column">
-            <label class="form-label small">{{ 'REPORTS.TO' | translate }}</label>
-            <input type="date" [(ngModel)]="toDate" class="form-control form-control-sm">
+            <label class="form-label small">{{ 'CHART.TO' | translate }}</label>
+            <app-date-picker [(ngModel)]="toDate" [placeholderKey]="'REPORTS.TO'">
+            </app-date-picker>
           </div>
 
-          <div class="d-flex align-items-end gap-2">
+          <div class="d-flex align-items-center gap-2">
             <button class="btn btn-primary btn-sm" (click)="onFilterApply()">
               {{ 'COMMON.APPLY' | translate }}
             </button>

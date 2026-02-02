@@ -21,6 +21,7 @@ using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
 using TaskMangment.Domain.Event;
 using TaskMangment.Infrastructure.Persistence.Extensions;
+using TaskMangment.Utilities.Localization.Resources;
 namespace TaskMangment.Infrastructure.Services
 {
     public class TaskDiscountService : ITaskDiscountService
@@ -32,7 +33,7 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
         private readonly IDomainEventDispatcher _eventDispatcher;
-        private readonly IStringLocalizer<TaskDiscountService> _localizer;
+        private readonly IStringLocalizer<DiscountAutoType> _localizer;
 
 
         public TaskDiscountService(
@@ -42,7 +43,7 @@ namespace TaskMangment.Infrastructure.Services
             IMapper mapper,
             ICachingService cache,
             IDomainEventDispatcher eventDispatcher,
-            IStringLocalizer<TaskDiscountService> localizer,
+            IStringLocalizer<DiscountAutoType> localizer,
             IRepository<Branch> branchRepo)
         {
             _discountRepo = discountRepo;

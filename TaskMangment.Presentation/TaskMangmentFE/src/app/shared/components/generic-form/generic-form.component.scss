@@ -70,3 +70,13 @@ textarea.form-control {
   color: #374151;
 }
 
+.custom-ng-select ::ng-deep .ng-select-container {
+  min-height: 38px;
+}
+
+.custom-ng-select ::ng-deep .ng-value-container {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+

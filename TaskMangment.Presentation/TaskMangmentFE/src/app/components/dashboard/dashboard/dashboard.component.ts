@@ -37,6 +37,8 @@ import { WarningsPopupComponent } from '../employee-dashboard-pop-ups/my-warning
 import { TaskTodayCommentComponent } from '../task-today-comment/task-today-comment.component';
 import { PenalitiesPopupComponent } from '../employee-dashboard-pop-ups/my-penalities-popup';
 import { MyDueSoonTasksPopupComponent } from '../employee-dashboard-pop-ups/due-soon-tasks';
+import { TaskDetailsShellComponent } from 'app/components/tasks/task-details/task-details-shell/task-details-shell.component';
+import { MyDatePipe } from 'app/components/utilities/pipline/MyDatePipe';
 
 @Component({
   selector: 'app-dashboard',
@@ -53,7 +55,8 @@ import { MyDueSoonTasksPopupComponent } from '../employee-dashboard-pop-ups/due-
     CommonModule,
     TranslateModule,
     FormsModule,
-    TaskTodayCommentComponent
+    TaskTodayCommentComponent,
+    MyDatePipe
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
@@ -136,6 +139,24 @@ export class DashboardComponent {
         this.todayInProgressTasks = res.data ?? [];
       });
   }
+
+  checkRowClickable(task: InProgressUpdatedTodayDto): boolean {
+  return !!task?.taskId; 
+}
+
+openTaskDetails(taskId: number): void {
+  if (!taskId) return;
+
+  const modalRef = this.modalService.open(TaskDetailsShellComponent, {
+    size: 'xl',
+    backdrop: 'static',
+    scrollable: true
+  });
+
+  modalRef.componentInstance.taskId = taskId;
+  modalRef.componentInstance.readonly = true;
+}
+
   onPeriodChanged() {
     this.currentPeriod = {
       type: this.selectedPeriod,

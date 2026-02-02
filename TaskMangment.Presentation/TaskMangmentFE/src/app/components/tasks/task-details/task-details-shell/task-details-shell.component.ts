@@ -64,15 +64,21 @@ export class TaskDetailsShellComponent implements OnInit {
     this.taskService.getById(this.taskId).subscribe({
       next: res => {
         this.taskInfo = res.data;
-        //console.log('requireUploadFile from API:', this.taskInfo.requireUploadFile);
         this.requireUploadFile = this.taskInfo.requireUploadFile;
       },
       error: err => console.error('Failed to load task', err)
     });
   }
 
+get isTaskClosed(): boolean {
+  const status = this.taskInfo?.status;
+  return status === 5
+      || status === 4
+      || status === 3;
+}
 
   openAction(action: string) {
+    if (this.isTaskClosed) return;
 
     if (action === 'comment') {
       const ref = this.modal.open(CommentModalComponent, {

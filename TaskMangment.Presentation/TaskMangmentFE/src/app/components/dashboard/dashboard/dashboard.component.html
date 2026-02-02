@@ -82,12 +82,18 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr *ngFor="let task of todayInProgressTasks">
+                            <tr *ngFor="let task of todayInProgressTasks"
+                                [class.row-clickable]="checkRowClickable(task)"
+                                (click)="checkRowClickable(task) && openTaskDetails(task.taskId)" tabindex="0"
+                                (keydown.enter)="checkRowClickable(task) && openTaskDetails(task.taskId)"
+                                (keydown.space)="$event.preventDefault(); checkRowClickable(task) && openTaskDetails(task.taskId)">
+
                                 <td>{{ task.title }}</td>
                                 <td>{{ task.updatedBy }}</td>
-                                <td>{{ task.dueDate | date:'yyyy-MM-dd' }}</td>
-                                <td>{{ task.updatedAt | date:'HH:mm' }}</td>
+                                <td>{{ task.dueDate | myDate }}</td>
+                                <td>{{ task.updatedAt | myDate:'hh:mm a' }}</td>
                             </tr>
+
                             <tr *ngIf="!todayInProgressTasks.length">
                                 <td colspan="4" class="text-center text-muted">
                                     {{ 'DASHBOARD.NO_TASKS_TODAY' | translate }}
@@ -153,9 +159,9 @@
 
 
 <div class="col-6">
-  <div class="card custom-card overflow-hidden">
-    
-      <app-task-today-comment></app-task-today-comment>
-    
-  </div>
+    <div class="card custom-card overflow-hidden">
+
+        <app-task-today-comment></app-task-today-comment>
+
+    </div>
 </div>

@@ -10,6 +10,7 @@ import { ReportListService } from 'app/core/services/report-list.service';
 import { ReportPdfService } from 'app/core/services/report-pdf.service';
 import { EmployeeAssignmentsReportDto } from 'app/core/models/reports/reports';
 import { PageHeaderComponent } from 'app/shared/components/page-header/page-header.component';
+import { DatePickerComponent } from 'app/components/date-picker/date-picker.component';
 
 @Component({
   selector: 'app-most-assigned-list',
@@ -21,6 +22,7 @@ import { PageHeaderComponent } from 'app/shared/components/page-header/page-head
     TranslateModule,
     GenericTableComponent,
     PageHeaderComponent,
+    DatePickerComponent
   ],
   templateUrl: './most-assigned-list.component.html',
   styleUrls: ['./most-assigned-list.component.scss']

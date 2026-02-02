@@ -10,6 +10,7 @@ import { ReportListService } from 'app/core/services/report-list.service';
 import { EmployeeCommentsReportDto } from 'app/core/models/reports/reports';
 import { PageHeaderComponent } from 'app/shared/components/page-header/page-header.component';
 import { ReportPdfService } from 'app/core/services/report-pdf.service';
+import { DatePickerComponent } from 'app/components/date-picker/date-picker.component';
 
 @Component({
   selector: 'app-top-commenters-list',
@@ -21,6 +22,7 @@ import { ReportPdfService } from 'app/core/services/report-pdf.service';
     TranslateModule,
     GenericTableComponent,
     PageHeaderComponent,
+    DatePickerComponent
     
   ],
   templateUrl: './top-commenter-list.component.html',

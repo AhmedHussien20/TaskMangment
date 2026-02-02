@@ -56,6 +56,17 @@ export class DepartmentCreateUpdateComponent implements OnInit {
       label: 'DEPARTMENT.MANAGER',
       selectType: 'employee',
       name: 'managerEmployeeId',
+      searchFunction: (searchTerm: string) => {
+          const request = {
+            searchKey: searchTerm || '',
+            pageIndex: 1,
+            pageSize: 20, 
+            sortColumn: 'Id',
+            sortDirection: 'DESC'
+          };
+          
+          return this.employeeService.getAll(request);
+        },
       options: [],
       validations: { required: true },
       defaultValue: null
@@ -101,19 +112,34 @@ export class DepartmentCreateUpdateComponent implements OnInit {
       });
   }
 
-  loadEmployees() {
-    this.employeeService.getAll({ searchKey: '', pageIndex: 1, pageSize: 500, sortColumn: 'Id', sortDirection: 'ASC' })
-      .subscribe(res => {
-        const list = res.data.data;
-        const field = this.formConfig.find(f => f.name === 'managerEmployeeId');
-        if (field) field.options = list.map((e: Employee) => 
-          ({ label: e.fullName, 
-            value: e.id,
-            mobile: e.mobile,
-          email: e.email
-           }));
-      });
-  }
+  loadEmployees(): void {
+  const field = this.formConfig.find(f => f.name === 'managerEmployeeId');
+  if (!field) return;
+
+  field.isPaginated = true;
+
+  field.searchFunction = (searchTerm: string, page: number) => {
+    const request = {
+      searchKey: searchTerm || '',
+      pageIndex: page,
+      pageSize: 20,
+      sortColumn: 'Id',
+      sortDirection: 'DESC'
+    };
+
+    return this.employeeService.getAll(request);
+  };
+
+  field.searchFunction('', 1).subscribe(res => {
+    field.options = (res?.data?.data ?? []).map((e: Employee) => ({
+      label: e.fullName,
+      value: e.id,
+      mobile: e.mobile,
+      email: e.email
+    }));
+  });
+}
+
 
   loadDepartment() {
     this.deptService.getById(this.departmentId!).subscribe(res => {

@@ -13,7 +13,7 @@
     "COMPLETED_TASKS": "Completed Tasks",
     "TOP_DELAYED_EMPLOYEES": "Top Delayed Employees",
     "TOP_DELAYED_EMPLOYEES_DESC": "Employees with the highest number of overdue tasks",
-    "TODAY_INPROGRESS_TASKS": "In-Progress Tasks Updated Today",
+    "TODAY_INPROGRESS_TASKS": "In-Progress Tasks Updated",
     "TODAY_INPROGRESS_DESC": "Latest tasks updated today and currently in progress",
     "COMPLETED_TODAY": "Tasks Completed Today",
     "COMPLETED_TODAY_DESC": "Top employees who completed tasks today",
@@ -545,7 +545,8 @@
     "ACHIEVEMENT_RESON": "Achievement information",
     "DAYS": "Days",
     "REQUIRE_UPLOAD_FILE_WHEN_COMMENTING": "upload file when commenting",
-    "FILE_REQUIRED": "Uploading the file is required when commenting for this task"
+    "FILE_REQUIRED": "Uploading the file is required when commenting for this task",
+    "FILE" : "File"
   },
   "EMPLOYEE": {
     "LIST_TITLE": "Employee List",

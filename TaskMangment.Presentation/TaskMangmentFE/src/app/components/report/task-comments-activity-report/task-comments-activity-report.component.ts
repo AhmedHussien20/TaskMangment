@@ -11,6 +11,7 @@ import { ReportListService } from 'app/core/services/report-list.service';
 import { ReportPdfService } from 'app/core/services/report-pdf.service';
 import { TaskActivityReportDto } from 'app/core/models/reports/reports';
 import { ApiResponse } from 'app/core/models/event/calendar';
+import { DatePickerComponent } from 'app/components/date-picker/date-picker.component';
 
 @Component({
   selector: 'app-task-comments-activity-report',
@@ -21,7 +22,8 @@ import { ApiResponse } from 'app/core/models/event/calendar';
     NgbPaginationModule,
     TranslateModule,
     GenericTableComponent,
-    PageHeaderComponent
+    PageHeaderComponent,
+    DatePickerComponent
   ],
   templateUrl: './task-comments-activity-report.component.html',
   styleUrls: ['./task-comments-activity-report.component.scss']

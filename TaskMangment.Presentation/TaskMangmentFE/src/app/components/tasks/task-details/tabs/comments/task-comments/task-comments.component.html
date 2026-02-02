@@ -21,7 +21,18 @@
         </td>
         <td>
           <span class="badge bg-secondary mb-1">{{ 'TASK.COMMENT' | translate }}</span>
-          <p class="mb-1">{{ c.commentText }}</p>
+<p class="mb-1 d-flex align-items-center gap-2">
+
+  <ng-container *ngIf="c.commentText?.trim(); else fileComment">
+    {{ c.commentText }}
+  </ng-container>
+
+  <ng-template #fileComment>
+    <i class="bi bi-paperclip"></i>
+    {{ 'TASK.FILE' | translate }}
+  </ng-template>
+
+</p>
         </td>
         <td class="text-muted">
           {{ timeAgo(c.createdDate) | translate}}
@@ -32,5 +43,5 @@
 </div>
 
 <div *ngIf="!comments.length" class="text-center text-muted mt-3">
-  لا يوجد تعليقات حتى الآن
+  {{'TASK.NO_COMMENTS' | translate}}
 </div>

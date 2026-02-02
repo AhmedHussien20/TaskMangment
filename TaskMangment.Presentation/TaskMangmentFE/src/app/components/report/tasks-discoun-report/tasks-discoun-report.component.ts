@@ -13,6 +13,8 @@ import { TaskDiscountReportDto, TaskMovementType } from 'app/core/models/reports
 import { SimpleEmployee } from 'app/core/models/task/task';
 import { EmployeeService } from 'app/core/services/employee.service';
 import { AuthService } from 'app/core/services/auth.service';
+import { EmployeeNgSelectComponent } from 'app/components/employee-select/employee-select.component';
+import { DatePickerComponent } from 'app/components/date-picker/date-picker.component';
 
 @Component({
   selector: 'app-tasks-discount-report',
@@ -23,7 +25,9 @@ import { AuthService } from 'app/core/services/auth.service';
     NgbPaginationModule,
     TranslateModule,
     GenericTableComponent,
-    PageHeaderComponent
+    PageHeaderComponent,
+    EmployeeNgSelectComponent,
+    DatePickerComponent
   ],
   templateUrl: './tasks-discoun-report.component.html',
 })
