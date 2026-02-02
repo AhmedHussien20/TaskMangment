@@ -14,18 +14,17 @@ namespace TaskMangment.Application.Behaviors.EmailHandlers
     public class TaskCommentEmailHandler : IEventHandler<TaskCommentAddedEvent>
     {
         private readonly IEmailQueueService _emailQueue;
-        private readonly IEmailReplyTokenService _tokenService;
+        
 
-        public TaskCommentEmailHandler(IEmailQueueService emailQueue, IEmailReplyTokenService tokenService)
+        public TaskCommentEmailHandler(IEmailQueueService emailQueue )
         {
             _emailQueue = emailQueue;
-            _tokenService = tokenService;
+            
         }
 
         public async Task Handle(TaskCommentAddedEvent ev)
         {
-            var token = await _tokenService.CreateTaskReplyTokenAsync(ev.TaskId, ev.CommentId);
-
+             
             await _emailQueue.QueueAsync(new EmailQueueRequest
             {
                 TemplateKey = "TaskCommentAdded",
