@@ -69,10 +69,7 @@ namespace TaskMangment.Infrastructure.Services
             _uow = uow;
         }
 
-        public async Task<ApiResponse<PagedResponse<EmployeeGetDto>>> GetAllAsync(
-    EmployeeRequest request,
-    int employeeId,
-    int? roleLevel)
+        public async Task<ApiResponse<PagedResponse<EmployeeGetDto>>> GetAllAsync(EmployeeRequest request,int employeeId,int? roleLevel)
         {
             var empQuery = _employeeRepo.GetAll()
                 .Include(e => e.Branch)
