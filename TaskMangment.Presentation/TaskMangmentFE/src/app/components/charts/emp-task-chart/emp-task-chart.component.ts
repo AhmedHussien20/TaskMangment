@@ -45,7 +45,7 @@ export class EmpTaskChartComponent implements OnInit {
   selectedEmployeeId?: number;
 
   
-  fromDate!: string;
+  fromDate?: string;
   toDate?: string;
 
   isAdmin = false;

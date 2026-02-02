@@ -19,6 +19,8 @@ namespace TaskMangment.Domain.Event
         public IEnumerable<int> UserIds { get; set; } = new List<int>();
 
         public DateTime? ScheduledAt { get; set; }
+        //public string? MetadataJson { get; set; }  
+
     }
 
 }

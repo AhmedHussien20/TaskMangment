@@ -10,6 +10,6 @@ namespace TaskMangment.Application.Interfaces.Services
 {
     public interface  IChartService
     {
-        Task<ApiResponse<EmpTasksChartResultDto>> GetEmployeeTasksChartAsync(int employeeId, DateTime fromDate, DateTime? toDate = null);
+        Task<ApiResponse<EmpTasksChartResultDto>> GetEmployeeTasksChartAsync(int employeeId, DateTime? fromDate = null, DateTime? toDate = null);
     }
 }

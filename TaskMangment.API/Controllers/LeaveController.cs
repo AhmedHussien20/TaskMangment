@@ -28,7 +28,7 @@ namespace TaskMangment.API.Controllers
         [HttpGet]
         public async Task<IActionResult> LeaveRequests([FromQuery] LeaveRequest request)
         {
-            var result = await _service.GetLeaveRequestsAsync(request, this.Role, this.CurrentUserId);
+            var result = await _service.GetLeaveRequestsAsync(request, this.RoleLevel, this.CurrentUserId);
             return Success(result.Data);
         }
         [HttpGet("{id}")]

@@ -218,7 +218,6 @@ export class TaskCreateUpdateComponent implements OnInit {
 
     const assignedEmployeeIds = assigned.map(x => x.value);
 
-    // ✅ ضيفيهم للـ options بتاعة الفيلد (عشان ng-select يقدر يعرض الاسم)
     const field = this.formConfig.find(f => f.name === 'assignedEmployeeIds');
     if (field) {
       field.options = field.options || [];

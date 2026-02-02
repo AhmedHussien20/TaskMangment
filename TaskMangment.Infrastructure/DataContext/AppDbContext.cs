@@ -87,7 +87,9 @@ namespace TaskMangment.Infrastructure.DataContext
         public DbSet<EmailQueue> EmailQueue { get; set; }
         public DbSet<EmailTemplate> EmailTemplates { get; set; }
         public DbSet<WhatsAppQueue> WhatsAppQueue { get; set; }
-        
+        public DbSet<EmailReplyMap> EmailReplyMaps { get; set; }
+
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);

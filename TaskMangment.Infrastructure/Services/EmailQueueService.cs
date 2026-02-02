@@ -59,6 +59,8 @@ namespace TaskMangment.Infrastructure.Services
                     ReferenceId = request.ReferenceId,
                     ScheduledAt = scheduledAt,
                     Status = EmailStatus.Pending
+                    //MetadataJson = request.MetadataJson
+
                 };
 
                 await _db.EmailQueue.AddAsync(emailQueue);

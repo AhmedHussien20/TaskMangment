@@ -25,6 +25,8 @@ namespace TaskMangment.Domain.Entities
         public string? ErrorMessage { get; set; }
         public int? UserId { get; set; }
 
+        //public string? MetadataJson { get; set; }
+
     }
 
 }

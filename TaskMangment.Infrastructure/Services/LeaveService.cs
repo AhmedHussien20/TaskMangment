@@ -95,32 +95,48 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<LeaveGetDto>.Ok(result, "Leave request submitted");
         }
 
-        public async Task<ApiResponse<PagedResponse<LeaveGetDto>>> GetLeaveRequestsAsync(LeaveRequest request, string role, int employeeId)
+        public async Task<ApiResponse<PagedResponse<LeaveGetDto>>> GetLeaveRequestsAsync(
+    LeaveRequest request,
+    int roleLevel,
+    int employeeId)
         {
             IQueryable<Leave> query = _leaveRepo.GetAll()
                 .Include(l => l.Employee)
                 .Include(l => l.LeaveType);
-
 
             if (request.StatusId.HasValue)
             {
                 query = query.Where(l => l.Status == (LeaveStatus)request.StatusId.Value);
             }
 
-
-            if (role != "Manager")
+            if (roleLevel < 70)
             {
                 query = query.Where(l => l.EmployeeId == employeeId);
             }
 
-            if (role == "Manager" && request.EmployeeIds != null && request.EmployeeIds.Any())
+            if (roleLevel == 70)
             {
-                query = query.Where(l => request.EmployeeIds.Contains(l.EmployeeId));
+                var branchId = await _employeeRepo
+                    .GetAll(e => e.Id == employeeId)
+                    .Select(e => e.BranchId)
+                    .FirstOrDefaultAsync();
+
+                if (!branchId.HasValue)
+                    throw new AppException(ErrorCodes.BranchNotFound, StatusCodes.Status400BadRequest);
+
+                query = query.Where(l => l.Employee.BranchId == branchId.Value);
+
+                if (request.EmployeeIds != null && request.EmployeeIds.Any())
+                {
+                    query = query.Where(l => request.EmployeeIds.Contains(l.EmployeeId));
+                }
             }
 
             var totalCount = await query.CountAsync();
 
-            query = query.OrderByDynamicSafe(request.SortColumn ?? "CreatedDate", request.SortDirection ?? "DESC");
+            query = query.OrderByDynamicSafe(
+                request.SortColumn ?? "CreatedDate",
+                request.SortDirection ?? "DESC");
 
             var list = await query
                 .Skip((request.PageIndex - 1) * request.PageSize)
@@ -129,10 +145,15 @@ namespace TaskMangment.Infrastructure.Services
 
             var dtos = _mapper.Map<ICollection<LeaveGetDto>>(list);
 
-            var response = new PagedResponse<LeaveGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
+            var response = new PagedResponse<LeaveGetDto>(
+                dtos,
+                totalCount,
+                request.PageIndex,
+                request.PageSize);
 
             return ApiResponse<PagedResponse<LeaveGetDto>>.Ok(response);
         }
+
 
 
         public async Task<ApiResponse<PagedResponse<LeaveGetDto>>> GetPendingForApprovalAsync(int managerId, LeaveRequest request)

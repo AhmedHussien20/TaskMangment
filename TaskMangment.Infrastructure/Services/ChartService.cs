@@ -26,9 +26,11 @@ namespace TaskMangment.Infrastructure.Services
         }
         public async Task<ApiResponse<EmpTasksChartResultDto>> GetEmployeeTasksChartAsync(
     int employeeId,
-    DateTime fromDate,
+    DateTime? fromDate,
     DateTime? toDate)
         {
+            var startDate = fromDate ?? DateTime.UtcNow;
+
             var endDate = toDate ?? DateTime.UtcNow;
 
             var lastPercentsQuery =
@@ -47,7 +49,7 @@ namespace TaskMangment.Infrastructure.Services
             var rows = await (
                 from t in _taskRepo.GetAll()
                 where t.Assignments.Any(a => a.IsActive && a.EmployeeId == employeeId)
-                      && t.CreatedDate >= fromDate
+                      && t.CreatedDate >= startDate
                       && t.CreatedDate <= endDate
                 join lp in lastPercentsQuery
                     on t.Id equals lp.TaskId into lpj

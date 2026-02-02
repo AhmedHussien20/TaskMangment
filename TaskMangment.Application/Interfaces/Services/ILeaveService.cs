@@ -9,7 +9,7 @@ namespace TaskMangment.Application.Interfaces.Services
     public interface ILeaveService
     {
         Task<ApiResponse<LeaveGetDto>> CreateAsync(LeaveAddDto dto, int employeeId);
-        Task<ApiResponse<PagedResponse<LeaveGetDto>>> GetLeaveRequestsAsync(LeaveRequest request, string role, int employeeId);
+        Task<ApiResponse<PagedResponse<LeaveGetDto>>> GetLeaveRequestsAsync(LeaveRequest request, int roleLevel, int employeeId);
         Task<ApiResponse<LeaveGetDto>> GetByIdAsync(int leaveId);
 
         Task<ApiResponse<PagedResponse<LeaveGetDto>>> GetPendingForApprovalAsync(int managerId, LeaveRequest request);

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Interfaces.Services;
@@ -13,22 +14,31 @@ namespace TaskMangment.Application.Behaviors.EmailHandlers
     public class TaskCommentEmailHandler : IEventHandler<TaskCommentAddedEvent>
     {
         private readonly IEmailQueueService _emailQueue;
+        private readonly IEmailReplyTokenService _tokenService;
 
-        public TaskCommentEmailHandler(IEmailQueueService emailQueue)
+        public TaskCommentEmailHandler(IEmailQueueService emailQueue, IEmailReplyTokenService tokenService)
         {
             _emailQueue = emailQueue;
+            _tokenService = tokenService;
         }
 
         public async Task Handle(TaskCommentAddedEvent ev)
         {
+            var token = await _tokenService.CreateTaskReplyTokenAsync(ev.TaskId, ev.CommentId);
+
             await _emailQueue.QueueAsync(new EmailQueueRequest
             {
                 TemplateKey = "TaskCommentAdded",
                 ReferenceType = ReferenceType.TaskComment,
                 RecipientType = RecipientType.Employee,
                 ReferenceId = ev.CommentId,
-                UserIds = ev.Recipients
+                UserIds = ev.Recipients,
+                //MetadataJson = JsonSerializer.Serialize(new { token }) 
+
+
+
             });
         }
     }
+
 }

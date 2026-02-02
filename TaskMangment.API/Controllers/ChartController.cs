@@ -17,7 +17,7 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpGet("emp-tasks-chart")]
-        public async Task<IActionResult> GetEmpTasksChart(int employeeId,[FromQuery]DateTime from, [FromQuery] DateTime? to = null)
+        public async Task<IActionResult> GetEmpTasksChart(int employeeId,[FromQuery]DateTime? from = null, [FromQuery] DateTime? to = null)
         {
 
             var result = await _service.GetEmployeeTasksChartAsync(employeeId,from,to);

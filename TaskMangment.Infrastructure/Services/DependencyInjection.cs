@@ -140,6 +140,8 @@ namespace TaskMangment.Infrastructure.Services
             services.AddScoped<IAppUnitOfWork, AppUnitOfWork>();
             services.AddScoped<IOfferSendService, OfferSendService>();
             services.AddScoped<IChartService, ChartService>();
+            services.AddScoped<IEmailReplyTokenService, EmailReplyTokenService>();
+
 
 
 

@@ -13,11 +13,11 @@ export class ChartService {
 
   constructor(private api: ApiService) {}
 
-  getEmployeeTasksChart(employeeId: number, fromDate: string, toDate?: string)
+  getEmployeeTasksChart(employeeId: number, fromDate?: string, toDate?: string)
     : Observable<BaseResponse<EmpTasksChartResultDto>> {    
     const query = [
       `employeeId=${employeeId}`,
-      `from=${encodeURIComponent(fromDate)}`,
+      fromDate ?`from=${encodeURIComponent(fromDate)}`: '',
       toDate ? `to=${encodeURIComponent(toDate)}` : ''
     ].filter(Boolean).join('&');
 
