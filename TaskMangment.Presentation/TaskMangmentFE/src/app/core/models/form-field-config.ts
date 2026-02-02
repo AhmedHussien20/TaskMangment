@@ -1,3 +1,5 @@
+import { Observable } from "rxjs";
+
 export interface FormFieldConfig {
   type: 'input' | 'select' | 'textarea' | 'date' | 'checkbox' | 'radio' | 'file' ; 
 
@@ -41,4 +43,8 @@ export interface FormFieldConfig {
     email?: string;
     [key: string]: string | undefined;
   };
+
+  isPaginated?: boolean;
+  searchFunction?: (searchTerm: string, page: number) => Observable<any>;
+  isLoading?: boolean;
 }

@@ -62,6 +62,18 @@ export class AreaCreateUpdateComponent implements OnInit {
       label: 'AREA.MANAGER',
       name: 'managerEmployeeId',
       selectType: 'employee',
+      isPaginated: true,
+      searchFunction: (searchTerm: string) => {
+          const request = {
+            searchKey: searchTerm || '',
+            pageIndex: 1,
+            pageSize: 20, 
+            sortColumn: 'Id',
+            sortDirection: 'DESC'
+          };
+          
+          return this.employeeService.getAll(request);
+        },
       options: [],
       validations: { required: true },
       defaultValue: null
@@ -79,7 +91,7 @@ export class AreaCreateUpdateComponent implements OnInit {
 
   ngOnInit() {
     this.initForm();
-    this.loadEmployees();
+    this.loadManagers();
 
     if (this.isEdit && this.areaId) {
       this.loadArea();
@@ -112,31 +124,35 @@ export class AreaCreateUpdateComponent implements OnInit {
     });
   }
 
-  loadEmployees() {
+ loadManagers(): void {
+  const field = this.formConfig.find(f => f.name === 'managerEmployeeId');
+  if (!field) return;
+
+  field.isPaginated = true;
+
+  field.searchFunction = (searchTerm: string, page: number) => {
     const request = {
-      searchKey: '',
-      pageIndex: 1,
-      pageSize: 1000,
+      searchKey: searchTerm || '',
+      pageIndex: page,
+      pageSize: 20,
       sortColumn: 'Id',
       sortDirection: 'DESC',
       roleLevel: 100
     };
 
-    this.employeeService.getAll(request).subscribe(res => {
-      const list = res.data.data;
+    return this.employeeService.getAll(request);
+  };
 
-      const managerField = this.formConfig.find(f => f.name === 'managerEmployeeId');
+  field.searchFunction('', 1).subscribe(res => {
+    field.options = (res?.data?.data ?? []).map((emp: Employee) => ({
+      label: emp.fullName,
+      value: emp.id,
+      mobile: emp.mobile,
+      email: emp.email
+    }));
+  });
+}
 
-       if (managerField) {
-    managerField.options = list.map((emp: Employee) => ({
-          label: emp.fullName,
-          value: emp.id,
-          mobile: emp.mobile,
-          email: emp.email
-        }));
-      }
-    });
-  }
 
 
 

@@ -10,6 +10,7 @@ import { PageHeaderComponent } from 'app/shared/components/page-header/page-head
 import { ReportListService } from 'app/core/services/report-list.service';
 import { ReportPdfService } from 'app/core/services/report-pdf.service';
 import { EmployeeOnTimeReportDto } from 'app/core/models/reports/reports';
+import { DatePickerComponent } from 'app/components/date-picker/date-picker.component';
 
 @Component({
   selector: 'app-on-time-completion-list',
@@ -20,7 +21,8 @@ import { EmployeeOnTimeReportDto } from 'app/core/models/reports/reports';
     NgbPaginationModule,
     TranslateModule,
     GenericTableComponent,
-    PageHeaderComponent
+    PageHeaderComponent,
+    DatePickerComponent
   ],
   templateUrl: './on-time-completion-list.component.html',
   styleUrls: ['./on-time-completion-list.component.scss']

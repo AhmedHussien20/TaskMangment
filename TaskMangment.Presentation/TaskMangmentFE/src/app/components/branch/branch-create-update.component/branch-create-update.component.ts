@@ -69,7 +69,19 @@ export class BranchCreateUpdateComponent implements OnInit {
       name: 'email'
     },
     { type: 'select', label: 'BRANCH.AREA', selectType: 'simple',name: 'areaId', options: []},
-    { type: 'select', label: 'BRANCH.MANAGER',selectType: 'employee',name: 'managerId', options: []},
+    { type: 'select', label: 'BRANCH.MANAGER',selectType: 'employee',name: 'managerId',
+      searchFunction: (searchTerm: string) => {
+          const request = {
+            searchKey: searchTerm || '',
+            pageIndex: 1,
+            pageSize: 20, 
+            sortColumn: 'Id',
+            sortDirection: 'DESC'
+          };
+          
+          return this.employeeService.getAll(request);
+        },
+       options: []},
     { type: 'select', label: 'BRANCH.RESPONSIBLE',selectType: 'employee',name: 'responsibleId', options: []}
   ];
 
@@ -169,51 +181,62 @@ Validators.pattern('^\\+?[0-9]+$')
     });
   }
 
- loadEmployees() {
-  const request = {
-    searchKey: '',
-    pageIndex: 1,
-    pageSize: 1000,
-    sortColumn: 'Id',
-    sortDirection: 'DESC',
-    roleLevel: 70 
+ loadEmployees(): void {
+  const managerField = this.formConfig.find(f => f.name === 'managerId');
+  const responsibleField = this.formConfig.find(f => f.name === 'responsibleId');
+
+  const searchFn = (searchTerm: string, page: number) => {
+    const request = {
+      searchKey: searchTerm || '',
+      pageIndex: page,
+      pageSize: 20,
+      sortColumn: 'Id',
+      sortDirection: 'DESC',
+      roleLevel: 70
+    };
+    return this.employeeService.getAll(request);
   };
 
-  this.employeeService.getAll(request).subscribe(res => {
-    const list = res.data.data;
+  const mapOptions = (res: any) =>
+    (res?.data?.data ?? []).map((emp: Employee) => ({
+      label: emp.fullName,
+      value: emp.id,
+      mobile: emp.mobile,
+      email: emp.email
+    }));
 
-    const managerField = this.formConfig.find(f => f.name === 'managerId');
-    const responsibleField = this.formConfig.find(f => f.name === 'responsibleId');
+  const loadFirstPage = (field: any, afterLoad?: () => void) => {
+    field.isPaginated = true;
+    field.searchFunction = searchFn;
 
-    if (managerField) {
-      managerField.options = list.map((emp: Employee) => ({
-          label: emp.fullName,
-          value: emp.id,
-          mobile: emp.mobile,
-          email: emp.email
-      }));
-    }
+    field.searchFunction('', 1).subscribe((res: any) => {
+      field.options = mapOptions(res);
+      afterLoad?.();
+    });
+  };
 
-    if (responsibleField) {
-      responsibleField.options = list.map((emp: Employee) => ({
-       label: emp.fullName,
-          value: emp.id,
-          mobile: emp.mobile,
-          email: emp.email
-      }));
-    }
+  if (managerField) loadFirstPage(managerField);
+  if (responsibleField) loadFirstPage(responsibleField);
 
-    if (this.isEdit && this.branchId) {
-      this.branchService.getById(this.branchId).subscribe(res => {
-        const branch = res.data;
+  if (this.isEdit && this.branchId) {
+    const patch = () => {
+      this.branchService.getById(this.branchId!).subscribe(bRes => {
+        const branch = bRes?.data;
         this.formGroup.patchValue({
-          managerId: branch.managerID,
-          responsibleId: branch.responsibleID,
-          areaId: branch.areaId
+          managerId: branch?.managerID ?? null,
+          responsibleId: branch?.responsibleID ?? null,
+          areaId: branch?.areaId ?? null
         });
       });
+    };
+
+    if (managerField) {
+      loadFirstPage(managerField, patch);
+      if (responsibleField) loadFirstPage(responsibleField);
+    } else if (responsibleField) {
+      loadFirstPage(responsibleField, patch);
     }
-  });
+  }
 }
 
   onSubmit(formValue: any) {

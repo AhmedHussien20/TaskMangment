@@ -17,8 +17,8 @@ export class ChartService {
     : Observable<BaseResponse<EmpTasksChartResultDto>> {    
     const query = [
       `employeeId=${employeeId}`,
-      `fromDate=${encodeURIComponent(fromDate)}`,
-      toDate ? `toDate=${encodeURIComponent(toDate)}` : ''
+      `from=${encodeURIComponent(fromDate)}`,
+      toDate ? `to=${encodeURIComponent(toDate)}` : ''
     ].filter(Boolean).join('&');
 
     return this.api.get<BaseResponse<EmpTasksChartResultDto>>(this.service, `emp-tasks-chart?${query}`);

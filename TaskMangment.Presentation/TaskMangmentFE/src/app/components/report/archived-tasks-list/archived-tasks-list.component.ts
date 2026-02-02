@@ -10,6 +10,7 @@ import { PageHeaderComponent } from 'app/shared/components/page-header/page-head
 import { ReportListService } from 'app/core/services/report-list.service';
 import { ReportPdfService } from 'app/core/services/report-pdf.service';
 import { EmployeeArchivedTasksReportDto } from 'app/core/models/reports/reports';
+import { DatePickerComponent } from 'app/components/date-picker/date-picker.component';
 
 @Component({
   selector: 'app-archived-tasks-list',
@@ -20,7 +21,8 @@ import { EmployeeArchivedTasksReportDto } from 'app/core/models/reports/reports'
     NgbPaginationModule,
     TranslateModule,
     GenericTableComponent,
-    PageHeaderComponent
+    PageHeaderComponent,
+    DatePickerComponent
   ],
   templateUrl: './archived-tasks-list.component.html',
   styleUrls: ['./archived-tasks-list.component.scss']

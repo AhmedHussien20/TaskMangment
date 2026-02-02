@@ -13,7 +13,7 @@
     "COMPLETED_TASKS": "المهام المكتملة",
     "TOP_DELAYED_EMPLOYEES": "أكثر الموظفين تأخرًا",
     "TOP_DELAYED_EMPLOYEES_DESC": "الموظفون الذين لديهم أكبر عدد من المهام المتأخرة",
-    "TODAY_INPROGRESS_TASKS": "المهام قيد التنفيذ التي تم تحديثها اليوم",
+    "TODAY_INPROGRESS_TASKS": "المهام قيد التنفيذ التي تم تحديثها",
     "TODAY_INPROGRESS_DESC": "آخر المهام التي تم تعديلها اليوم وحالتها قيد التنفيذ",
     "COMPLETED_TODAY": "المهام المكتملة اليوم",
     "COMPLETED_TODAY_DESC": "أكثر الموظفين إنجازًا للمهام اليوم",
@@ -564,9 +564,8 @@
     "ACHIEVEMENT_RESON" : "معلومات الانجاز",
     "DAYS" : "يوم",
     "REQUIRE_UPLOAD_FILE_WHEN_COMMENTING": "مطلوب رفع ملف عند التعليق",
-    "FILE_REQUIRED": "رفع الملف مطلوب عند التعليق لهذه المهمة"
-
-
+    "FILE_REQUIRED": "رفع الملف مطلوب عند التعليق لهذه المهمة",
+    "FILE" : "ملف"
 
   },
   "EMPLOYEE": {

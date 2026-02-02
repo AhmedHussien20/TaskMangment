@@ -8,6 +8,7 @@ import { TaskService } from 'app/core/services/task.service';
 import { DiscountAddEditDto } from 'app/core/models/task/task-penalty';
 import { SimpleEmployee } from 'app/core/models/task/task';
 import { ToastrService } from 'ngx-toastr';
+import { EmployeeNgSelectComponent } from 'app/components/employee-select/employee-select.component';
 
 @Component({
   selector: 'app-penalty-modal',

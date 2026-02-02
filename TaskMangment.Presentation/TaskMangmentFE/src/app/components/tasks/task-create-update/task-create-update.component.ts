@@ -50,6 +50,18 @@ export class TaskCreateUpdateComponent implements OnInit {
       name: 'assignedEmployeeIds',
       selectType: 'employee',
       multiple: true,
+      isPaginated: true,
+      searchFunction: (searchTerm: string) => {
+          const request = {
+            searchKey: searchTerm || '',
+            pageIndex: 1,
+            pageSize: 20, 
+            sortColumn: 'Id',
+            sortDirection: 'DESC'
+          };
+          
+          return this.employeeService.getAll(request);
+        },
       options: [],
       validations: { required: true },
       defaultValue: []
@@ -223,29 +235,33 @@ export class TaskCreateUpdateComponent implements OnInit {
 
 
   loadEmployees() {
-    const request = {
-      searchKey: '',
-      pageIndex: 1,
-      pageSize: 1000,
-      sortColumn: 'Id',
-      sortDirection: 'DESC'
+  const field = this.formConfig.find(f => f.name === 'assignedEmployeeIds');
+  if (field) {
+    field.isPaginated = true;
+    field.searchFunction = (searchTerm: string, page: number) => {
+      const request = {
+        searchKey: searchTerm || '',
+        pageIndex: page,
+        pageSize: 20,
+        sortColumn: 'Id',
+        sortDirection: 'DESC'
+      };
+      
+      return this.employeeService.getAll(request);
     };
-
-    this.employeeService.getAll(request).subscribe(res => {
-      const list = res.data.data;
-
-      const field = this.formConfig.find(f => f.name === 'assignedEmployeeIds');
-      if (field) {
-        field.options = list.map((emp: Employee) => ({
+    
+    if (field.searchFunction) {
+      field.searchFunction('', 1).subscribe(res => {
+        field.options = res.data.data.map((emp: Employee) => ({
           label: emp.fullName,
           value: emp.id,
           mobile: emp.mobile,
           email: emp.email
         }));
-      }
-    });
+      });
+    }
   }
-
+}
   onSubmit(formData: any) {
     if (this.formGroup.invalid) {
       this.formGroup.markAllAsTouched();

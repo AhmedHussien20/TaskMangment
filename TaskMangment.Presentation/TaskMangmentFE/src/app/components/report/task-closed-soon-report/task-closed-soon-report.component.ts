@@ -14,6 +14,7 @@ import { SimpleEmployee } from 'app/core/models/task/task';
 import { EmployeeService } from 'app/core/services/employee.service';
 import { TasksClosingSoonDto } from 'app/core/models/reports/reports';
 import { AuthService } from 'app/core/services/auth.service';
+import { EmployeeNgSelectComponent } from 'app/components/employee-select/employee-select.component';
 
 @Component({
   selector: 'app-task-closed-soon-report',
@@ -24,7 +25,8 @@ import { AuthService } from 'app/core/services/auth.service';
     NgbPaginationModule,
     TranslateModule,
     GenericTableComponent,
-    PageHeaderComponent
+    PageHeaderComponent,
+    EmployeeNgSelectComponent
   ],
   templateUrl: './task-closed-soon-report.component.html',
 })
@@ -72,7 +74,6 @@ export class TaskClosedSoonReportComponent implements OnInit {
     this.isAdmin = roleLevel >= 50;
 
     if (this.isAdmin) {
-      this.loadEmployees();
       this.selectedEmployeeId = undefined; 
       this.loadData(); 
     } else {
@@ -104,29 +105,6 @@ export class TaskClosedSoonReportComponent implements OnInit {
     });
   }
 
-  loadEmployees(): void {
-    const request = {
-      searchKey: '',
-      pageIndex: 1,
-      pageSize: 1000,
-      sortColumn: 'Id',
-      sortDirection: 'DESC'
-    };
-
-    this.employeeService.getAll(request).subscribe({
-      next: (res) => {
-        this.employees = res.data.data.map((e: any) => ({
-          id: e.id,
-          fullName: e.fullName
-        }));
-      },
-      error: () => {
-        this.toastr.error(
-          this.translate.instant('COMMON.ERROR_LOADING_DATA')
-        );
-      }
-    });
-  }
 
   onFilterApply(): void {
     this.page = 1;

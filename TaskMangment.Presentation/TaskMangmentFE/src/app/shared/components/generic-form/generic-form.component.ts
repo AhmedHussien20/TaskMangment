@@ -119,5 +119,65 @@ export class GenericFormComponent implements OnInit {
 
 
 
+ onSelectScrollToEnd(field: FormFieldConfig): void {
+    if (!field.isPaginated || !field.searchFunction || field.isLoading) return;
+    
+    const nextPage = Math.ceil((field.options?.length || 0) / 20) + 1;
+    
+    field.isLoading = true;
+    
+    field.searchFunction('', nextPage).subscribe({
+      next: (res) => {
+        const newOptions = res.data.data.map((item: any) => ({
+          value: item.id,
+          label: item.fullName || item.name,
+          ...(field.selectType === 'employee' && {
+            imageUrl: item.imageUrl,
+            mobile: item.mobile,
+            email: item.email
+          })
+        }));
+        
+        field.options = [...(field.options || []), ...newOptions];
+        field.isLoading = false;
+      },
+      error: () => {
+        field.isLoading = false;
+      }
+    });
+  }
 
+  onSearch(term: string, field: FormFieldConfig): void {
+    if (!field.isPaginated || !field.searchFunction) return;
+    
+    field.isLoading = true;
+    
+    field.searchFunction(term, 1).subscribe({
+      next: (res) => {
+        const options = res.data.data.map((item: any) => ({
+          value: item.id,
+          label: item.fullName || item.name,
+          ...(field.selectType === 'employee' && {
+            imageUrl: item.imageUrl,
+            mobile: item.mobile,
+            email: item.email
+          })
+        }));
+        
+        field.options = options;
+        field.isLoading = false;
+      },
+      error: () => {
+        field.isLoading = false;
+      }
+    });
+  }
+
+  onSelectOpen(field: FormFieldConfig): void {
+    if (!field.isPaginated || (field.options && field.options.length > 0)) return;
+    
+    if (!field.options || field.options.length === 0) {
+      this.onSearch('', field);
+    }
+  }
 }

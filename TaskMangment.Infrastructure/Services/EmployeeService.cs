@@ -134,8 +134,17 @@ namespace TaskMangment.Infrastructure.Services
 
             foreach (var dto in dtos)
             {
-                dto.ImageUrl = images.TryGetValue(dto.Id, out var url) ? url : null;
+                if (images.TryGetValue(dto.Id, out var blobName) &&
+                    !string.IsNullOrWhiteSpace(blobName))
+                {
+                    dto.ImageUrl = _blobStorageService.WithSas(blobName);
+                }
+                else
+                {
+                    dto.ImageUrl = null;
+                }
             }
+
 
             // ======================= Response =======================
             var response = new PagedResponse<EmployeeGetDto>(
