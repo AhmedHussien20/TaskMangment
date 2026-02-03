@@ -32,8 +32,8 @@ namespace TaskMangment.API.Reports.Task
                 page.Header().PaddingBottom(10).Column(column =>
                 {
                     string title = _movementType == TaskMangment.Application.DTOs.ReportsDTO.TaskMovementType.Incoming
-                    ? "تقرير حركة المهام الواردة"
-                    : "تقرير حركة المهام الصادرة";
+                    ? "تقرير حركة المهام الواردة لليوم"
+                    : "تقرير حركة المهام الصادرة لليوم";
 
                     column.Item()
                         .AlignRight()
@@ -71,7 +71,7 @@ namespace TaskMangment.API.Reports.Task
                     {
                         columns.RelativeColumn(4); 
                         columns.RelativeColumn(3);  
-                        //columns.RelativeColumn(4);  
+                        columns.RelativeColumn(4);  
                         columns.RelativeColumn(2);  
                         columns.RelativeColumn(3); 
                     });
@@ -81,7 +81,7 @@ namespace TaskMangment.API.Reports.Task
                     {
                         header.Cell().Element(HeaderCellStyle).Text("المهمة");
                         header.Cell().Element(HeaderCellStyle).Text("جهة التكليف");
-                        //header.Cell().Element(HeaderCellStyle).Text("التعليق");
+                        header.Cell().Element(HeaderCellStyle).Text("التعليق");
                         header.Cell().Element(HeaderCellStyle).Text("تاريخ التعليق");
                         header.Cell().Element(HeaderCellStyle).Text("الموظف الذي علّق");
                     });
@@ -100,8 +100,8 @@ namespace TaskMangment.API.Reports.Task
                         table.Cell().Element(c => DataCellStyle(c, bgColor))
                             .Text(item.AssignedBy);
 
-                        //table.Cell().Element(c => DataCellStyle(c, bgColor))
-                        //    .Text(item.CommentText);
+                        table.Cell().Element(c => DataCellStyle(c, bgColor))
+                            .Text(item.CommentText);
 
                         table.Cell().Element(c => DataCellStyle(c, bgColor))
                             .Text(item.CommentDate.ToString("yyyy/MM/dd HH:mm"));

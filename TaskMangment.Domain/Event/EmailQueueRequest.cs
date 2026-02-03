@@ -20,6 +20,7 @@ namespace TaskMangment.Domain.Event
 
         public DateTime? ScheduledAt { get; set; }
         //public string? MetadataJson { get; set; }  
+        public bool ForAll { get; set; } = false;
 
     }
 

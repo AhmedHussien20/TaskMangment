@@ -66,6 +66,7 @@ export interface TaskActivityReportDto {
   assignedBy: string; 
   commentDate: string;    
   commentedBy: string;
+  comment?: string
 }
 
 export enum TaskMovementType {
@@ -79,6 +80,7 @@ export interface TaskMovementReportDto {
   assignedBy: string;
   commentedBy: string;
   commentDate: string;
+  commentText: string
 }
 
 
@@ -94,5 +96,7 @@ export interface TasksClosingSoonDto {
   companyName: string;
   dueDate: string;
 }
-
-
+export enum ExportType {
+  Pdf = 1,
+  Excel = 2
+}

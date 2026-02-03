@@ -9,7 +9,7 @@ import { GenericTableComponent } from 'app/shared/components/generic-table/gener
 import { PageHeaderComponent } from 'app/shared/components/page-header/page-header.component';
 import { ReportListService } from 'app/core/services/report-list.service';
 import { ReportPdfService } from 'app/core/services/report-pdf.service';
-import { EmployeeOnTimeReportDto } from 'app/core/models/reports/reports';
+import { EmployeeOnTimeReportDto, ExportType } from 'app/core/models/reports/reports';
 import { DatePickerComponent } from 'app/components/date-picker/date-picker.component';
 
 @Component({
@@ -99,13 +99,34 @@ export class OnTimeCompletionListComponent implements OnInit {
 
   onExportPdf(): void {
     this.reportPdfService
-      .getOnTimeCompletionPdf(this.fromDate, this.toDate)
+      .getOnTimeCompletionPdf(ExportType.Pdf, this.fromDate, this.toDate)
       .subscribe({
         next: (blob) => {
           const url = window.URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
           a.download = 'on-time-completion-report.pdf';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+        },
+        error: () => {
+          this.toastr.error(
+            this.translate.instant('COMMON.ERROR_LOADING_DATA')
+          );
+        }
+      });
+  }
+  onExportExcel(): void {
+    this.reportPdfService
+      .getOnTimeCompletionPdf(ExportType.Excel, this.fromDate, this.toDate)
+      .subscribe({
+        next: (blob) => {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'on-time-completion-report.xlsx';
           document.body.appendChild(a);
           a.click();
           document.body.removeChild(a);

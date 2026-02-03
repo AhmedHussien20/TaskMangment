@@ -11,7 +11,7 @@ import { ReportListService } from 'app/core/services/report-list.service';
 import { ReportPdfService } from 'app/core/services/report-pdf.service';
 import { SimpleEmployee } from 'app/core/models/task/task';
 import { EmployeeService } from 'app/core/services/employee.service';
-import { TaskMovementReportDto, TaskMovementType } from 'app/core/models/reports/reports';
+import { ExportType, TaskMovementReportDto, TaskMovementType } from 'app/core/models/reports/reports';
 import { AuthService } from 'app/core/services/auth.service';
 import { EmployeeNgSelectComponent } from 'app/components/employee-select/employee-select.component';
 
@@ -39,9 +39,11 @@ export class TaskTodayActivityReportComponent implements OnInit {
     { key: 'taskTitleWithId', label: 'REPORTS.TASK' },
     { key: 'assignedBy', label: 'REPORTS.ASSIGNED_BY' },
     { key: 'commentedBy', label: 'REPORTS.COMMENTED_BY' },
-    { key: 'commentDate', label: 'REPORTS.COMMENT_DATE', type: 'dateTime' }
-  ];
+    { key: 'commentDate', label: 'REPORTS.COMMENT_DATE', type: 'dateTime' },
+    { key: 'commentText', label: 'REPORTS.COMMENT' },
 
+  ];
+  exportType= ExportType.Pdf
   rows: TaskMovementReportDto[] = [];
   totalItems = 0;
 
@@ -125,13 +127,32 @@ export class TaskTodayActivityReportComponent implements OnInit {
   onExportPdf(): void {
     //if (!this.selectedEmployeeId) return;
 
-    this.reportPdfService.getTaskMovementReportsPdf(this.selectedEmployeeId, this.movementType, this.reportTitle)
+    this.reportPdfService.getTaskMovementReportsPdf(this.exportType,this.selectedEmployeeId, this.movementType, this.reportTitle)
       .subscribe({
         next: (blob) => {
           const url = window.URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
           a.download = 'task-movement-report.pdf';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+        },
+        error: () => {
+          this.toastr.error(this.translate.instant('COMMON.ERROR_LOADING_DATA'));
+        }
+      });
+  }
+   onExportExcel(): void {
+    //if (!this.selectedEmployeeId) return;
+    this.reportPdfService.getTaskMovementReportsPdf(ExportType.Excel, this.selectedEmployeeId, this.movementType, this.reportTitle)
+      .subscribe({
+        next: (blob) => {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'task-movement-report.xlsx';
           document.body.appendChild(a);
           a.click();
           document.body.removeChild(a);

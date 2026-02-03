@@ -8,7 +8,7 @@ import { ToastrService } from 'ngx-toastr';
 import { GenericTableComponent } from '../../../shared/components/generic-table/generic-table.component';
 import { ReportListService } from 'app/core/services/report-list.service';
 import { ReportPdfService } from 'app/core/services/report-pdf.service';
-import { EmployeeAssignmentsReportDto } from 'app/core/models/reports/reports';
+import { EmployeeAssignmentsReportDto, ExportType } from 'app/core/models/reports/reports';
 import { PageHeaderComponent } from 'app/shared/components/page-header/page-header.component';
 import { DatePickerComponent } from 'app/components/date-picker/date-picker.component';
 
@@ -96,12 +96,29 @@ export class MostAssignedListComponent implements OnInit {
   }
 
   onExportPdf(): void {
-    this.reportPdfService.getMostAssignedPdf(this.fromDate, this.toDate).subscribe({
+    this.reportPdfService.getMostAssignedPdf( ExportType.Pdf, this.fromDate, this.toDate).subscribe({
       next: (blob) => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = 'most-assigned-report.pdf';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      },
+      error: () => {
+        this.toastr.error(this.translate.instant('COMMON.ERROR_LOADING_DATA'));
+      }
+    });
+  }
+  onExportExcel(): void {
+    this.reportPdfService.getMostAssignedPdf( ExportType.Excel, this.fromDate, this.toDate).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'most-assigned-report.xlsx';
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);

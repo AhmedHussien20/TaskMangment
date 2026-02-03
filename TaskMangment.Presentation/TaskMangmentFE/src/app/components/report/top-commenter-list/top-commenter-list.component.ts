@@ -5,9 +5,9 @@ import { NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ToastrService } from 'ngx-toastr';
 
-import { GenericTableComponent } from '../../../shared/components/generic-table/generic-table.component';
+import { GenericTableComponent, TableColumn } from '../../../shared/components/generic-table/generic-table.component';
 import { ReportListService } from 'app/core/services/report-list.service';
-import { EmployeeCommentsReportDto } from 'app/core/models/reports/reports';
+import { EmployeeCommentsReportDto, ExportType } from 'app/core/models/reports/reports';
 import { PageHeaderComponent } from 'app/shared/components/page-header/page-header.component';
 import { ReportPdfService } from 'app/core/services/report-pdf.service';
 import { DatePickerComponent } from 'app/components/date-picker/date-picker.component';
@@ -35,12 +35,12 @@ export class TopCommenterListComponent implements OnInit {
   breadcrumbs = ['MENU.HOME', 'MENU.REPORTS', 'REPORTS.TOP_COMMENTERS'];
 
   // Table Columns
-  columns = [
+  columns: TableColumn[] = [
     { key: 'employeeName', label: 'REPORTS.EMPLOYEE_NAME' },
     { key: 'commentsCount', label: 'REPORTS.COMMENTS_COUNT' },
     { key: 'distinctTasksCount', label: 'REPORTS.DISTINCT_TASKS_COUNT' },
     { key: 'avgCommentsPerTask', label: 'REPORTS.AVG_COMMENTS_PER_TASK' },
-    { key: 'lastCommentDate', label: 'REPORTS.LAST_COMMENT_DATE' },];
+    { key: 'lastCommentDate', label: 'REPORTS.LAST_COMMENT_DATE', type: 'dateTime' },];
 
   rows: EmployeeCommentsReportDto[] = [];
   totalItems = 0;
@@ -90,12 +90,29 @@ export class TopCommenterListComponent implements OnInit {
 
 
   onExportPdf(): void {
-  this.reportPdfService.getTopCommentersPdf(this.fromDate, this.toDate).subscribe({
+  this.reportPdfService.getTopCommentersPdf(ExportType.Pdf,this.fromDate, this.toDate).subscribe({
     next: (blob) => {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = 'top-commenters-report.pdf';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    },
+    error: () => {
+      this.toastr.error(this.translate.instant('COMMON.ERROR_LOADING_DATA'));
+    }
+  });
+}
+ onExportExcel(): void {
+  this.reportPdfService.getTopCommentersPdf(ExportType.Excel,this.fromDate, this.toDate).subscribe({
+    next: (blob) => {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'top-commenters-report.xlsx';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

@@ -12,10 +12,10 @@ namespace TaskMangment.Application.Interfaces.Services
 {
     public interface ICalenderEventsService
     {
-        Task<ApiResponse<PagedResponse<CalendarEventGetDto>>> GetAllAsync(CalendarEventRequest request, int currentEmployeeId);
+        Task<ApiResponse<PagedResponse<CalendarEventGetDto>>> GetAllAsync(CalendarEventRequest request, int currentEmployeeId,int roleLevel);
         Task<ApiResponse<CalendarEventGetDto>> GetByIdAsync(int id);
         Task<ApiResponse<CalendarEventGetDto>> AddAsync(CalendarEventAddEditDto dto, int createdByEmployeeId, int? companyId);
-        Task<ApiResponse<CalendarEventGetDto>> UpdateAsync(int id, CalendarEventAddEditDto dto);
-        Task<ApiResponse<bool>> DeleteAsync(int id);
+        Task<ApiResponse<CalendarEventGetDto>> UpdateAsync(int id, CalendarEventAddEditDto dto, int currentEmployeeId, int roleLevel);
+        Task<ApiResponse<bool>> DeleteAsync(int id, int currentEmployeeId, int roleLevel);
     }
 }

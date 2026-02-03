@@ -65,7 +65,10 @@
                     <app-generic-table [title]="title" [columns]="columns" [data]="rows" [entries]="entries"
                         [page]="page" [showFilters]="false" [showPagination]="false" [totalItems]="totalItems"
                         [showExportPdf]="true" (exportPdfClick)="onExportPdf()" (pageChange)="onPageChange($event)"
-                        (entriesChange)="onEntriesChange($event)">
+                        (entriesChange)="onEntriesChange($event)"
+                        [showExportExcel]="false"
+            [showExportReportExcel]="true"
+            (exportExcelClick)="onExportExcel()">
                     </app-generic-table>
                 </div>
             </div>

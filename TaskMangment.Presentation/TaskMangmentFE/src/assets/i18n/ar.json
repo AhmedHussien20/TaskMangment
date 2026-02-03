@@ -379,7 +379,7 @@
     "LIST_TITLE": "المهام",
     "ADD": "إضافة مهمة",
     "EDIT": "تعديل مهمة",
-    "TITLE": "العنوان",
+    "TITLE": "عنوان المهمة",
     "DESCRIPTION": "الوصف",
     "ASSIGNED_EMPLOYEES": "الموظفون المكلفون",
     "PRIORITY": "الأولوية",
@@ -736,13 +736,16 @@
       "ANNIVERSAR": "ذكرى سنوية",
       "REMINDER": "تذكير",
       "TASKDEADLINE": "المهلة النهائية للمهمة",
-      "COMMENT": "حدث خاص بتعليق"
+      "COMMENT": "حدث خاص بتعليق",
+      "PUBLICHOLIDAY": "اجازة رسمية"
     },
     "15MIN": "15 دقيقة",
     "30MIN": "30 دقيقة",
     "60MIN": "60 دقيقة",
     "EDIT_EVENT": "تعديل الحدث",
-    "CANCEL_EVENT": "الغاء الحدث"
+    "CANCEL_EVENT": "الغاء الحدث",
+    "PUBLIC_EVENT" : "حدث عام"
+
   },
   "COURSE": {
     "TITLE": "الدورات",
@@ -767,7 +770,9 @@
     "searchKey": "بحث باسم الدورة",
     "ADD_SUBJECT": "إضافة مادة",
     "SUBJECT_PLACEHOLDER": "أدخل اسم المادة",
-    "NO_SUBJECTS": "لا توجد مواد مضافة بعد"
+    "NO_SUBJECTS": "لا توجد مواد مضافة بعد",
+    "SUBJECT_REQUIRED" : "مادة الدورة مطلوبة",
+    "SUBJECT_EXISTS" : "المادة موجودة بالفعل"
   },
   "PROFILE": {
     "PROFILE": "الملف الشخصي",

@@ -9,7 +9,7 @@ import { GenericTableComponent } from 'app/shared/components/generic-table/gener
 import { PageHeaderComponent } from 'app/shared/components/page-header/page-header.component';
 import { ReportListService } from 'app/core/services/report-list.service';
 import { ReportPdfService } from 'app/core/services/report-pdf.service';
-import { EmployeeArchivedTasksReportDto } from 'app/core/models/reports/reports';
+import { EmployeeArchivedTasksReportDto, ExportType } from 'app/core/models/reports/reports';
 import { DatePickerComponent } from 'app/components/date-picker/date-picker.component';
 
 @Component({
@@ -32,6 +32,7 @@ export class ArchivedTasksListComponent implements OnInit {
   title = 'REPORTS.EMPLOYEE_ARCHIVED_TASKS';
   activeitem = 'EMPLOYEE.LIST_TITLE';
   breadcrumbs = ['MENU.HOME', 'MENU.REPORTS', 'REPORTS.EMPLOYEE_ARCHIVED_TASKS'];
+  exportType= ExportType.Pdf
 
   columns = [
     { key: 'employeeName', label: 'REPORTS.EMPLOYEE_NAME' },
@@ -98,13 +99,34 @@ export class ArchivedTasksListComponent implements OnInit {
 
   onExportPdf(): void {
     this.reportPdfService
-      .getArchivedTasksPdf(this.fromDate, this.toDate)
+      .getArchivedTasksPdf(this.exportType,this.fromDate, this.toDate)
       .subscribe({
         next: (blob) => {
           const url = window.URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
           a.download = 'archived-tasks-report.pdf';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+        },
+        error: () => {
+          this.toastr.error(
+            this.translate.instant('COMMON.ERROR_LOADING_DATA')
+          );
+        }
+      });
+  }
+  onExportExcel(): void {
+    this.reportPdfService
+      .getArchivedTasksPdf(ExportType.Excel,this.fromDate, this.toDate)
+      .subscribe({
+        next: (blob) => {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'archived-tasks-report.xlsx';
           document.body.appendChild(a);
           a.click();
           document.body.removeChild(a);

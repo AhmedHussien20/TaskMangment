@@ -23,6 +23,8 @@ namespace TaskMangment.Application.DTOs
         public int? RelatedTaskId { get; set; }
 
         public CalendarEventType EventType { get; set; } = CalendarEventType.Reminder;
+        public bool Public { get; set; }
+
 
         public int reminder { get; set; }
 
@@ -49,6 +51,11 @@ namespace TaskMangment.Application.DTOs
         public string EventTypeText => EventType.ToString();
 
         public int reminder { get; set; }
+        public bool Public { get; set; }
+
+        public bool CanEdit { get; set; }
+        public bool CanDelete { get; set; }
+
 
 
     }

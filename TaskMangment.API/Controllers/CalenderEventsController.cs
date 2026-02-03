@@ -21,7 +21,7 @@ namespace TaskMangment.API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll([FromQuery] CalendarEventRequest request)
         {
-            var result = await _service.GetAllAsync(request, this.CurrentUserId);
+            var result = await _service.GetAllAsync(request, this.CurrentUserId, this.RoleLevel);
 
             if (!result.Success)
                 return Fail(result.Message!);
@@ -48,14 +48,14 @@ namespace TaskMangment.API.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] CalendarEventAddEditDto dto)
         {
-            var result = await _service.UpdateAsync(id, dto);
+            var result = await _service.UpdateAsync(id, dto,this.CurrentUserId,this.RoleLevel);
             return Success(result.Data, "Calender Event updated successfully");
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var result = await _service.DeleteAsync(id);
+            var result = await _service.DeleteAsync(id, this.CurrentUserId, this.RoleLevel);
             return Success(true, "Calender Event deleted successfully");
         }
     }

@@ -301,7 +301,9 @@ namespace TaskMangment.Infrastructure.Services
             if (dto.Status.HasValue)
                 query = query.Where(a => a.Task.Status == dto.Status.Value);
 
-
+            query = query.Where(a =>_context.Discounts
+            .Where(d => d.TaskId == a.TaskId)
+            .Sum(d => (decimal?)d.Amount) > 0);
 
             var flatRows = await query
                 .Select(a => new TaskDiscountAuditRowDto
@@ -457,29 +459,33 @@ namespace TaskMangment.Infrastructure.Services
         public async Task<List<TaskActivityReportDto>> GetTaskActivityReportAsync(
     int roleLevel,
     int employeeId,
+    ExportType exportType,
     DateTime? fromDate = null,
     DateTime? toDate = null)
         {
             if (!fromDate.HasValue && !toDate.HasValue)
                 return new List<TaskActivityReportDto>();
 
+            var lastCommentIds = await _context.TaskComments
+                .Where(c =>
+                    (!fromDate.HasValue || c.CreatedDate >= fromDate.Value) &&
+                    (!toDate.HasValue || c.CreatedDate <= toDate.Value))
+                .GroupBy(c => new { c.TaskId, c.EmployeeId })
+                .Select(g => g
+                    .OrderByDescending(c => c.CreatedDate)
+                    .ThenByDescending(c => c.Id)
+                    .Select(c => c.Id)
+                    .FirstOrDefault())
+                .ToListAsync();
+
             var query = _context.TaskComments
                 .Include(c => c.Employee)
                 .Include(c => c.Task)
                     .ThenInclude(t => t.AssignedBy)
+                .Where(c => lastCommentIds.Contains(c.Id))
                 .AsQueryable();
 
-            if (fromDate.HasValue)
-                query = query.Where(c => c.CreatedDate >= fromDate.Value);
-
-            if (toDate.HasValue)
-                query = query.Where(c => c.CreatedDate <= toDate.Value);
-
-
-            if (roleLevel == 100)
-            {
-            }
-            else
+            if (roleLevel != 100)
             {
                 var branchId = await _context.Employees
                     .Where(e => e.Id == employeeId)
@@ -506,9 +512,23 @@ namespace TaskMangment.Infrastructure.Services
                     TaskTitleWithId = $"[{c.Task.Id}] {c.Task.Title}",
                     AssignedBy = c.Task.AssignedBy != null ? c.Task.AssignedBy.FullName : "غير معروف",
                     CommentDate = c.CreatedDate,
-                    CommentedBy = c.Employee != null ? c.Employee.FullName : "غير معروف"
+                    CommentedBy = c.Employee != null ? c.Employee.FullName : "غير معروف",
+                    Comment =
+    exportType == ExportType.Pdf
+        ? (
+            string.IsNullOrWhiteSpace(c.CommentText)
+                ? "رفع ملف"
+                : (c.CommentText.Length > 50
+                    ? c.CommentText.Substring(0, 50)
+                    : c.CommentText)
+          )
+        : (
+            string.IsNullOrWhiteSpace(c.CommentText)
+                ? "رفع ملف"
+                : c.CommentText
+          )
                 })
-                .OrderBy(c => c.CommentDate)
+                .OrderByDescending(c => c.CommentDate)
                 .AsNoTracking()
                 .ToListAsync();
 
@@ -517,58 +537,63 @@ namespace TaskMangment.Infrastructure.Services
 
 
 
-        public async Task<List<TaskMovementReportDto>> GetTaskMovementReportAsync(TaskMovementReportFilterDto dto)
+        public async Task<List<TaskMovementReportDto>> GetTaskMovementReportAsync(TaskMovementReportFilterDto dto, ExportType exportType)
         {
             var todayStart = DateTime.Today;
             var todayEnd = todayStart.AddDays(1);
 
+            var lastCommentIds = await _context.TaskComments
+                .Where(c => c.CreatedDate >= todayStart && c.CreatedDate < todayEnd)
+                .GroupBy(c => new { c.TaskId, c.EmployeeId })
+                .Select(g => g
+                    .OrderByDescending(c => c.CreatedDate)
+                    .ThenByDescending(c => c.Id)
+                    .Select(c => c.Id)
+                    .FirstOrDefault())
+                .ToListAsync();
+
             var query = _context.TaskComments
                 .Include(c => c.Employee)
                 .Include(c => c.Task)
-                .ThenInclude(t => t.AssignedBy)
+                    .ThenInclude(t => t.AssignedBy)
+                .Where(c => lastCommentIds.Contains(c.Id))
                 .AsQueryable();
 
-            query = query.Where(c =>
-                c.CreatedDate >= todayStart && c.CreatedDate < todayEnd);
-
-            if (dto.MovementType == TaskMovementType.Outgoing)
+            if (dto.MovementType == TaskMovementType.Outgoing && dto.EmployeeId.HasValue)
             {
-                if (dto.EmployeeId.HasValue && dto.EmployeeId.Value > 0)
-                {
-                    query = query.Where(c =>
-                        c.Task.AssignedByEmployeeId == dto.EmployeeId.Value);
-                }
+                query = query.Where(c => c.Task.AssignedByEmployeeId == dto.EmployeeId.Value);
             }
-            else if (dto.MovementType == TaskMovementType.Incoming)
+            else if (dto.MovementType == TaskMovementType.Incoming && dto.EmployeeId.HasValue)
             {
-                if (dto.EmployeeId.HasValue && dto.EmployeeId.Value > 0)
-                {
-                    query = query.Where(c =>
-                        c.EmployeeId == dto.EmployeeId.Value);
-                }
+                query = query.Where(c => c.EmployeeId == dto.EmployeeId.Value);
             }
-
 
             var result = await query
                 .Select(c => new TaskMovementReportDto
                 {
                     ReportTitle = dto.ReportTitle,
-
                     TaskTitleWithId = $"[{c.Task.Id}] {c.Task.Title}",
                     MovementType = dto.MovementType,
-
-                    AssignedBy = c.Task.AssignedBy != null
-                        ? c.Task.AssignedBy.FullName
-                        : "غير معروف",
-
-                    CommentedBy = c.Employee != null
-                        ? c.Employee.FullName
-                        : "غير معروف",
-
-                    //CommentText = c.CommentText,
-                    CommentDate = c.CreatedDate
+                    AssignedBy = c.Task.AssignedBy != null ? c.Task.AssignedBy.FullName : "غير معروف",
+                    CommentedBy = c.Employee != null ? c.Employee.FullName : "غير معروف",
+                    CommentDate = c.CreatedDate,
+                    CommentText =
+    exportType == ExportType.Pdf
+        ? (
+            string.IsNullOrWhiteSpace(c.CommentText)
+                ? "رفع ملف"
+                : (c.CommentText.Length > 50
+                    ? c.CommentText.Substring(0, 50)
+                    : c.CommentText)
+          )
+        : (
+            string.IsNullOrWhiteSpace(c.CommentText)
+                ? "رفع ملف"
+                : c.CommentText
+          )
+                
                 })
-                .OrderBy(x => x.CommentDate)
+                .OrderByDescending(c => c.CommentDate)
                 .AsNoTracking()
                 .ToListAsync();
 

@@ -19,6 +19,7 @@ export enum CalendarEventType {
   Birthday = 6,
   Anniversar = 7,
   Comment = 8
+  
 }
 export interface CalendarEventGetDto {
   title: string;
@@ -32,6 +33,9 @@ export interface CalendarEventGetDto {
   id: number;
   eventType: CalendarEventType;
   reminder?: number | null;
+  public: boolean;
+  canEdit:boolean;
+  canDelete: boolean;
 }
 
 export interface CalendarEventUpsertDto {
@@ -43,6 +47,8 @@ export interface CalendarEventUpsertDto {
   relatedTaskId?: number | null | undefined;
   eventType?: CalendarEventType | null | undefined;
   reminder?: number | null | undefined;
+  public?: boolean;
+
 }
 
 

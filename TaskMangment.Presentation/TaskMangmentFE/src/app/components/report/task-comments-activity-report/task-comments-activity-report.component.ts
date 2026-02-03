@@ -9,7 +9,7 @@ import { GenericTableComponent, TableColumn } from 'app/shared/components/generi
 import { PageHeaderComponent } from 'app/shared/components/page-header/page-header.component';
 import { ReportListService } from 'app/core/services/report-list.service';
 import { ReportPdfService } from 'app/core/services/report-pdf.service';
-import { TaskActivityReportDto } from 'app/core/models/reports/reports';
+import { ExportType, TaskActivityReportDto } from 'app/core/models/reports/reports';
 import { ApiResponse } from 'app/core/models/event/calendar';
 import { DatePickerComponent } from 'app/components/date-picker/date-picker.component';
 
@@ -38,9 +38,10 @@ export class TaskCommentsActivityReportComponent implements OnInit {
     { key: 'taskTitleWithId', label: 'REPORTS.TASK' },
     { key: 'assignedBy', label: 'REPORTS.ASSIGNED_BY' },
     { key: 'commentDate', label: 'REPORTS.COMMENT_DATE' , type : 'date'},
-    { key: 'commentedBy', label: 'REPORTS.COMMENTED_BY'}
+    { key: 'commentedBy', label: 'REPORTS.COMMENTED_BY'},
+    { key: 'comment', label: 'REPORTS.COMMENT' },
   ];
-
+ exportType= ExportType.Pdf
   rows: TaskActivityReportDto[] = [];
   totalItems = 0;
 
@@ -99,7 +100,7 @@ export class TaskCommentsActivityReportComponent implements OnInit {
 
   onExportPdf(): void {
     this.reportPdfService
-      .getTaskActivitiesPdf(this.fromDate!, this.toDate!)
+      .getTaskActivitiesPdf(this.fromDate!, this.toDate!, this.exportType)
       .subscribe({
         next: (blob) => {
           const url = window.URL.createObjectURL(blob);
@@ -118,4 +119,27 @@ export class TaskCommentsActivityReportComponent implements OnInit {
         }
       });
   }
+
+  onExportExcel(): void {
+  this.reportPdfService
+    .getTaskActivitiesPdf(this.fromDate!, this.toDate!, ExportType.Excel)
+    .subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'task-activities-report.xlsx';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      },
+      error: () => {
+        this.toastr.error(
+          this.translate.instant('COMMON.ERROR_LOADING_DATA')
+        );
+      }
+    });
+}
+
 }

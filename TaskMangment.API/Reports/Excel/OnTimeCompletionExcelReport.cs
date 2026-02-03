@@ -1,0 +1,172 @@
+﻿using ClosedXML.Excel;
+using TaskMangment.Application.DTOs.ReportsDTO;
+
+namespace TaskMangment.API.Reports.Task
+{
+    public static class OnTimeCompletionExcelReport
+    {
+        public static byte[] Build(
+            List<EmployeeOnTimeReportDto> data,
+            DateTime fromDate,
+            DateTime? toDate)
+        {
+            using var wb = new XLWorkbook();
+            var ws = wb.Worksheets.Add("On Time Completion");
+
+            ws.RightToLeft = true;
+
+            // ===== Summary =====
+            int employeesCount = data.Count;
+            int totalClosedTasks = data.Sum(x => x.TotalClosedTasks);
+            var bestEmployee = data.OrderByDescending(x => x.CommitmentPercentage).FirstOrDefault();
+            var worstEmployee = data.OrderBy(x => x.CommitmentPercentage).FirstOrDefault();
+
+            // ===== Header =====
+            ws.Cell(1, 1).Value = "Task Manager System";
+            ws.Range(1, 1, 1, 6).Merge().Style
+                .Font.SetFontSize(9)
+                .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Right);
+
+            ws.Cell(2, 1).Value = "تقرير أفضل الموظفين التزامًا بالمواعيد";
+            ws.Range(2, 1, 2, 6).Merge().Style
+                .Font.SetBold()
+                .Font.SetFontSize(18)
+                .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+
+            var toText = toDate.HasValue ? toDate.Value.ToString("dd/MM/yyyy") : "-";
+            ws.Cell(3, 1).Value = $"الفترة: من {fromDate:dd/MM/yyyy} إلى {toText}";
+            ws.Range(3, 1, 3, 6).Merge().Style
+                .Font.SetFontSize(10)
+                .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+
+            ws.Cell(4, 1).Value = $"تاريخ إنشاء التقرير: {DateTime.Now:dd/MM/yyyy}";
+            ws.Range(4, 1, 4, 6).Merge().Style
+                .Font.SetFontSize(9)
+                .Font.SetFontColor(XLColor.Gray)
+                .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+
+            // ===== Summary Cards (MERGED to match table width 6 cols) =====
+            int cardsRow = 6;
+
+            var bestText = bestEmployee != null
+                ? $"{bestEmployee.EmployeeName} ({bestEmployee.CommitmentPercentage:0.##}%)"
+                : "-";
+
+            var worstText = worstEmployee != null
+                ? $"{worstEmployee.EmployeeName} ({worstEmployee.CommitmentPercentage:0.##}%)"
+                : "-";
+
+            // توزيع الأعمدة: 2 + 2 + 1 + 1 = 6 أعمدة (نفس عرض الجدول)
+            WriteCard(ws, cardsRow, 1, 1, "عدد الموظفين", employeesCount.ToString(), "#D6E4FF");                 // Blue
+            WriteCard(ws, cardsRow, 2, 2, "إجمالي المهام المغلقة", totalClosedTasks.ToString(), "#DFF5DF");     // Green
+            WriteCard(ws, cardsRow, 3, 4, "أفضل التزام", bestText, "#FFE6CC");                                  // Orange
+            WriteCard(ws, cardsRow, 5, 6, "أقل التزام", worstText, "#FFD6D6");                                  // Red light
+
+            // ===== Table Header =====
+            int headerRow = 9;
+
+            ws.Cell(headerRow, 1).Value = "ترتيب";
+            ws.Cell(headerRow, 2).Value = "الموظف";
+            ws.Cell(headerRow, 3).Value = "في الوقت";
+            ws.Cell(headerRow, 4).Value = "متأخرة";
+            ws.Cell(headerRow, 5).Value = "إجمالي المغلقة";
+            ws.Cell(headerRow, 6).Value = "نسبة الالتزام %";
+
+            var headerRange = ws.Range(headerRow, 1, headerRow, 6);
+            headerRange.Style
+                .Font.SetBold()
+                .Font.SetFontSize(9)
+                .Fill.SetBackgroundColor(XLColor.FromHtml("#E8F0FF"))
+                .Border.SetOutsideBorder(XLBorderStyleValues.Thin)
+                .Border.SetInsideBorder(XLBorderStyleValues.Thin)
+                .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Right)
+                .Alignment.SetVertical(XLAlignmentVerticalValues.Center);
+
+            // ===== Data =====
+            int row = headerRow + 1;
+            int rank = 1;
+
+            foreach (var item in data.OrderByDescending(x => x.CommitmentPercentage))
+            {
+                ws.Cell(row, 1).Value = rank++;
+                ws.Cell(row, 2).Value = item.EmployeeName;
+                ws.Cell(row, 3).Value = item.OnTimeTasks;
+                ws.Cell(row, 4).Value = item.LateTasks;
+                ws.Cell(row, 5).Value = item.TotalClosedTasks;
+
+                ws.Cell(row, 6).Value = (double)item.CommitmentPercentage;
+                ws.Cell(row, 6).Style.NumberFormat.Format = "0.##\" %\"";
+
+                var dataRange = ws.Range(row, 1, row, 6);
+                dataRange.Style
+                    .Font.SetFontSize(9)
+                    .Border.SetOutsideBorder(XLBorderStyleValues.Thin)
+                    .Border.SetInsideBorder(XLBorderStyleValues.Thin)
+                    .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Right)
+                    .Alignment.SetVertical(XLAlignmentVerticalValues.Center)
+                    .Alignment.SetWrapText(true);
+
+                // Zebra
+                if ((row - (headerRow + 1)) % 2 == 1)
+                    dataRange.Style.Fill.SetBackgroundColor(XLColor.FromHtml("#F5F5F5"));
+
+                // Percent color
+                var percentBg =
+                    item.CommitmentPercentage >= 90 ? "#DFF5DF" :
+                    item.CommitmentPercentage >= 70 ? "#FFE6CC" :
+                    "#FFD6D6";
+
+                ws.Cell(row, 6).Style.Fill.SetBackgroundColor(XLColor.FromHtml(percentBg));
+
+                row++;
+            }
+
+            // ===== Layout =====
+            ws.Column(1).Width = 8;
+            ws.Column(2).Width = 26;
+            ws.Column(3).Width = 12;
+            ws.Column(4).Width = 12;
+            ws.Column(5).Width = 16;
+            ws.Column(6).Width = 14;
+
+            ws.SheetView.FreezeRows(headerRow);
+            ws.Range(headerRow, 1, headerRow, 6).SetAutoFilter();
+
+            ws.PageSetup.PageOrientation = XLPageOrientation.Landscape;
+            ws.PageSetup.FitToPages(1, 0);
+
+            using var stream = new MemoryStream();
+            wb.SaveAs(stream);
+            return stream.ToArray();
+        }
+
+        // ✅ Merge title row and value row separately (so value doesn't disappear)
+        private static void WriteCard(
+            IXLWorksheet ws,
+            int row,
+            int colFrom,
+            int colTo,
+            string title,
+            string value,
+            string bgHex)
+        {
+            var titleRng = ws.Range(row, colFrom, row, colTo);
+            titleRng.Merge();
+            titleRng.Value = title;
+
+            var valueRng = ws.Range(row + 1, colFrom, row + 1, colTo);
+            valueRng.Merge();
+            valueRng.Value = value;
+
+            var cardRng = ws.Range(row, colFrom, row + 1, colTo);
+            cardRng.Style
+                .Fill.SetBackgroundColor(XLColor.FromHtml(bgHex))
+                .Border.SetOutsideBorder(XLBorderStyleValues.Thin)
+                .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center)
+                .Alignment.SetVertical(XLAlignmentVerticalValues.Center);
+
+            titleRng.Style.Font.SetBold().Font.SetFontSize(9);
+            valueRng.Style.Font.SetBold().Font.SetFontSize(13);
+        }
+    }
+}

@@ -64,16 +64,16 @@ namespace TaskMangment.API.Controllers
 
 
         [HttpGet("task-activities")]
-        public async Task<IActionResult> GetTaskActivities(DateTime? fromDate,DateTime? toDate)
+        public async Task<IActionResult> GetTaskActivities(DateTime? fromDate,DateTime? toDate, ExportType exportType)
         {
-            var data = await _reportService.GetTaskActivityReportAsync(this.RoleLevel, this.CurrentUserId, fromDate, toDate);
+            var data = await _reportService.GetTaskActivityReportAsync(this.RoleLevel, this.CurrentUserId,exportType, fromDate, toDate);
             return Success(data);
         }
 
         [HttpGet("task-movements")]
-        public async Task<IActionResult> GetTaskMovements([FromQuery] TaskMovementReportFilterDto filter)
+        public async Task<IActionResult> GetTaskMovements([FromQuery] TaskMovementReportFilterDto filter, ExportType exportType)
         {
-            var data = await _reportService.GetTaskMovementReportAsync(filter);
+            var data = await _reportService.GetTaskMovementReportAsync(filter, exportType);
             return Success(data);
         }
 

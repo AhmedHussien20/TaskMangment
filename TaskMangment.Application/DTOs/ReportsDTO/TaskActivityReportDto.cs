@@ -14,5 +14,10 @@ namespace TaskMangment.Application.DTOs.ReportsDTO
         public DateTime CommentDate { get; set; } 
         public string CommentedBy { get; set; }
     }
+    public enum ExportType
+    {
+        Pdf = 1,
+        Excel = 2
+    }
 
 }

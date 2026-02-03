@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { TranslateModule } from '@ngx-translate/core';
 import { CalendarEventGetDto, CalendarEventType} from 'app/core/models/event/calendar';
+import { AuthService } from 'app/core/services/auth.service';
 import { CalendarEventService } from 'app/core/services/calendar-events.service';
 
 @Component({
@@ -38,7 +39,8 @@ export class EventCreateModalComponent {
   constructor(
     private fb: FormBuilder,
     private calendarService: CalendarEventService,
-    public activeModal: NgbActiveModal
+    public activeModal: NgbActiveModal,
+    private auth: AuthService
   ) {}
 
   ngOnInit(): void {
@@ -49,7 +51,8 @@ export class EventCreateModalComponent {
       endDate: [''],
       allDay: [true],
       eventType: [CalendarEventType.Reminder, Validators.required],
-      reminder: [15]
+      reminder: [15],
+      public: [false]
     });
 
     if (this.isEdit && this.event) {
@@ -60,7 +63,8 @@ export class EventCreateModalComponent {
         endDate: this.event.endDate ? this.formatDateLocal(new Date(this.event.endDate)) : '',
         allDay: this.event.allDay,
         eventType: this.event.eventType,
-        reminder: this.event.reminder || 15
+        reminder: this.event.reminder || 15,
+        public: this.event.public
       });
     } else {
       const dateStr = this.formatDateLocal(this.startDate || new Date());
@@ -90,7 +94,8 @@ export class EventCreateModalComponent {
       endDate: this.form.value.endDate ? this.form.value.endDate + ':00' : null,
       allDay: this.form.value.allDay,
       eventType: Number(this.form.value.eventType),
-      reminder: Number(this.form.value.reminder)
+      reminder: Number(this.form.value.reminder),
+      public: this.form.value.public
     };
 
     if (this.isEdit && this.event?.id) {
@@ -114,5 +119,9 @@ export class EventCreateModalComponent {
     }
   }
 
-  
+ get canSetPublic(): boolean {
+  const roleLevel = this.auth.getRoleLevel();
+  return roleLevel === 70 || roleLevel === 100;
+}
+
 }

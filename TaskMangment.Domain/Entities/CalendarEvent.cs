@@ -22,6 +22,7 @@ namespace TaskMangment.Domain.Entities
         public CalendarEventType EventType { get; set; } = CalendarEventType.Reminder;
         public int reminder { get; set; } = 15;
         //public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public bool Public { get; set; } = false;
 
         [ForeignKey(nameof(CompanyId))] public Company Company { get; set; }
         [ForeignKey(nameof(RelatedTaskId))] public WorkTask RelatedTask { get; set; }

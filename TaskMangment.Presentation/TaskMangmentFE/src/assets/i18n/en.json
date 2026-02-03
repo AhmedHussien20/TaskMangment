@@ -361,7 +361,7 @@
     "LIST_TITLE": "Tasks",
     "ADD": "Add Task",
     "EDIT": "Edit Task",
-    "TITLE": "Title",
+    "TITLE": "Task title",
     "DESCRIPTION": "Description",
     "ASSIGNED_EMPLOYEES": "Assigned Employees",
     "PRIORITY": "Priority",
@@ -716,13 +716,16 @@
       "ANNIVERSAR": "Anniversary",
       "REMINDER": "Reminder",
       "TASKDEADLINE": "Task Deadline",
-      "COMMENT": "Event of comment"
+      "COMMENT": "Event of comment",
+      "PUBLICHOLIDAY": "Public holiday"
+
     },
     "15MIN": "15 Minutes",
     "30MIN": "30 Minutes",
     "60MIN": "60 Minutes",
     "EDIT_EVENT": "Edit Event",
-    "CANCEL_EVENT": "Cancel Event"
+    "CANCEL_EVENT": "Cancel Event",
+    "PUBLIC_EVENT" : "Public event"
   },
   "COURSE": {
     "TITLE": "Courses",
@@ -747,7 +750,9 @@
     "searchKey": "Search by course name",
     "ADD_SUBJECT": "Add Subject",
     "SUBJECT_PLACEHOLDER": "Enter subject name",
-    "NO_SUBJECTS": "No subjects added yet"
+    "NO_SUBJECTS": "No subjects added yet",
+    "SUBJECT_REQUIRED" : "Course subject required",
+    "SUBJECT_EXISTS" : "Subject already exist"
   },
   "PROFILE": {
     "PROFILE": "Profile",

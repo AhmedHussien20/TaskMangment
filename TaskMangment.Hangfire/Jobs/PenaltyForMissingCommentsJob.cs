@@ -1,8 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using TaskMangment.Domain.Entities;
-using TaskMangment.Infrastructure.DataContext;
 using TaskMangment.Application.Common.Interfaces;
+using TaskMangment.Domain.Entities;
+using TaskMangment.Domain.Entities.Enum;
 using TaskMangment.Domain.Event;
+using TaskMangment.Infrastructure.DataContext;
 
 namespace TaskMangment.Hangfire.Jobs
 {
@@ -22,6 +23,22 @@ namespace TaskMangment.Hangfire.Jobs
             var today = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime.UtcNow, "Arab Standard Time").Date;
             var yesterday = today.AddDays(-1);
 
+            if (yesterday.DayOfWeek == DayOfWeek.Friday)
+                return;
+
+            var isPublicHoliday = await _db.CalendarEvents
+        .AsNoTracking()
+        .AnyAsync(e =>
+            e.Public == true &&
+            e.EventType == CalendarEventType.Holiday &&
+            !e.IsDeleted &&
+            e.StartDate.Date <= yesterday &&
+            (e.EndDate == null ? e.StartDate.Date >= yesterday : e.EndDate.Value.Date >= yesterday)
+        );
+
+            if (isPublicHoliday)
+                return;
+
             var tasks = await _db.Tasks
                 .Include(t => t.Assignments)
                     .ThenInclude(a => a.Employee)
@@ -38,9 +55,14 @@ namespace TaskMangment.Hangfire.Jobs
             foreach (var task in tasks)
             {
                 var periodDays = (int)task.CommentAllowPeriodDays!.Value;
+                if (periodDays < 1) periodDays = 1;
+
 
                 foreach (var assignment in task.Assignments)
                 {
+                    if (!assignment.IsActive)
+                        continue;
+
                     var employeeId = assignment.EmployeeId;
 
                     var lastComment = await _db.TaskComments
@@ -48,11 +70,13 @@ namespace TaskMangment.Hangfire.Jobs
                         .OrderByDescending(c => c.CreatedDate)
                         .FirstOrDefaultAsync();
 
-                    var shouldHaveComment =
-                        (lastComment == null && assignment.AssignedAt.Date.AddDays(periodDays) <= yesterday && assignment.IsActive)
-                        || (lastComment != null && lastComment.CreatedDate.Date.AddDays(periodDays) <= yesterday);
+                    var baseDate = lastComment == null
+                        ? assignment.AssignedAt.Date
+                        : lastComment.CreatedDate.Date;
 
+                    var shouldHaveComment = baseDate.AddDays(periodDays - 1) <= yesterday;
                     if (!shouldHaveComment) continue;
+
 
                     var hasLeave = await _db.Leaves
                         .Where(l => l.EmployeeId == employeeId &&

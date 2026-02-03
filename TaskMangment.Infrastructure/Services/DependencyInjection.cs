@@ -117,6 +117,8 @@ namespace TaskMangment.Infrastructure.Services
 
             services.AddScoped<IEventHandler<TaskAchievePercentEvent>, TaskAchievePercentEmailHandler>();
             services.AddScoped<IEventHandler<TaskAchievePercentEvent>, TaskAchievePercentEventHandler>();
+            services.AddScoped<IEventHandler<PublicHolidayEvent>, PublicHolidayEmailHandler>();
+
 
             services.AddScoped<ILeaveService, LeaveService>();
             services.AddScoped<ILeaveTypeService, LeaveTypeService>();

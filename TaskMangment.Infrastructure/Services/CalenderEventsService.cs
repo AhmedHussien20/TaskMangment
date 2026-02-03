@@ -16,6 +16,8 @@ using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
+using TaskMangment.Domain.Entities.Enum;
+using TaskMangment.Domain.Event;
 using TaskMangment.Infrastructure.Persistence.Extensions;
 
 namespace TaskMangment.Infrastructure.Services
@@ -25,20 +27,28 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<CalendarEvent> _eventRepo;
         private readonly ICachingService _cache;
         private readonly IMapper _mapper;
+        private readonly IDomainEventDispatcher _eventDispatcher;
 
-        public CalendarEventService(IRepository<CalendarEvent> eventRepo, IMapper mapper, ICachingService cache)
+
+        public CalendarEventService(IRepository<CalendarEvent> eventRepo, IMapper mapper, ICachingService cache,IDomainEventDispatcher eventDispatcher)
         {
             _eventRepo = eventRepo;
             _cache = cache;
             _mapper = mapper;
+            _eventDispatcher = eventDispatcher;
         }
 
 
-        public async Task<ApiResponse<PagedResponse<CalendarEventGetDto>>> GetAllAsync(CalendarEventRequest request,int currentEmployeeId)
+        public async Task<ApiResponse<PagedResponse<CalendarEventGetDto>>> GetAllAsync(
+    CalendarEventRequest request,
+    int currentEmployeeId,
+    int roleLevel
+)
         {
-            
-
-            var query = _eventRepo.GetAll(e => e.CreatedByEmployeeId == currentEmployeeId)
+            var query = _eventRepo.GetAll(e =>
+                    e.CreatedByEmployeeId == currentEmployeeId
+                    || e.Public == true
+                )
                 .Include(e => e.RelatedTask)
                 .ApplySearch(request.searchKey);
 
@@ -51,12 +61,25 @@ namespace TaskMangment.Infrastructure.Services
                 .Take(request.PageSize)
                 .ToListAsync();
 
-            var dtos = _mapper.Map<ICollection<CalendarEventGetDto>>(list);
+            var isPrivileged = roleLevel == 100;
+
+            var dtos = list.Select(e =>
+            {
+                var dto = _mapper.Map<CalendarEventGetDto>(e);
+
+                var isOwner = e.CreatedByEmployeeId == currentEmployeeId;
+
+                dto.CanEdit = isOwner || isPrivileged;
+                dto.CanDelete = dto.CanEdit;
+
+                return dto;
+            }).ToList();
 
             var response = new PagedResponse<CalendarEventGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
 
             return ApiResponse<PagedResponse<CalendarEventGetDto>>.Ok(response);
         }
+
 
         public async Task<ApiResponse<CalendarEventGetDto>> GetByIdAsync(int id)
         {
@@ -86,18 +109,37 @@ namespace TaskMangment.Infrastructure.Services
 
             await _eventRepo.AddAsync(ev);
             await _eventRepo.SaveChangesAsync();
+
+            if (ev.EventType == CalendarEventType.Holiday && ev.Public)
+            {
+                await _eventDispatcher.PublishAsync(
+                    new PublicHolidayEvent(
+                        ev.Id,
+                        ev.Title,
+                        ev.StartDate
+                    )
+                );
+            }
             await _cache.RemoveAsync("events:");
+
             var calendarEventdto = _mapper.Map<CalendarEventGetDto>(ev);
             return ApiResponse<CalendarEventGetDto>.Ok(calendarEventdto, "Event added");
         }
 
-        public async Task<ApiResponse<CalendarEventGetDto>> UpdateAsync(int id, CalendarEventAddEditDto dto)
+        public async Task<ApiResponse<CalendarEventGetDto>> UpdateAsync(int id, CalendarEventAddEditDto dto, int currentEmployeeId, int roleLevel)
         {
             var ev = await _eventRepo.GetByIDAsync(id);
             if (ev == null)
                 throw new AppException(
                                       ErrorCodes.NotFound,
                                       StatusCodes.Status404NotFound);
+
+            var isOwner = ev.CreatedByEmployeeId == currentEmployeeId;
+            var isPrivileged = roleLevel == 100;
+
+            if (ev.Public && !(isOwner || isPrivileged))
+                throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
+
             _mapper.Map(dto, ev);
 
             await _eventRepo.SaveChangesAsync();
@@ -107,13 +149,19 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<CalendarEventGetDto>.Ok(calendarEventdto, "Event updated");
         }
 
-        public async Task<ApiResponse<bool>> DeleteAsync(int id)
+        public async Task<ApiResponse<bool>> DeleteAsync(int id, int currentEmployeeId, int roleLevel)
         {
             var ev = await _eventRepo.GetByIDAsync(id);
             if (ev == null)
                 throw new AppException(
                                       ErrorCodes.NotFound,
                                       StatusCodes.Status404NotFound);
+
+            var isOwner = ev.CreatedByEmployeeId == currentEmployeeId;
+            var isPrivileged = roleLevel == 100;
+
+            if (ev.Public && !(isOwner || isPrivileged))
+                throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
             _eventRepo.SoftDelete(ev);
             await _eventRepo.SaveChangesAsync();
             await _cache.RemoveAsync("events:");

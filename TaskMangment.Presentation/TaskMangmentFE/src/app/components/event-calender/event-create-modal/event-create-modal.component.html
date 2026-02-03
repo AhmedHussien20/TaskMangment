@@ -66,13 +66,36 @@
       </select>
     </div>
 
-    <!-- خيار كل اليوم -->
-    <div class="form-check mb-3">
-      <input class="form-check-input" type="checkbox" formControlName="allDay" id="allDay">
-      <label class="form-check-label" for="allDay">
-        {{ 'CALENDAR.ALL_DAY' | translate }}
-      </label>
-    </div>
+  <!-- خيار كل اليوم -->
+<div class="form-check form-switch mb-3 d-flex align-items-center gap-2">
+  <input
+    class="form-check-input"
+    type="checkbox"
+    formControlName="allDay"
+    id="allDay"
+    style="transform: scale(1.5);">
+  <label class="form-check-label fw-semibold fs-15 mb-0" for="allDay">
+    {{ 'CALENDAR.ALL_DAY' | translate }}
+  </label>
+</div>
+
+    <!-- خيار Public -->
+<div class="form-check form-switch mb-3 d-flex align-items-center gap-2" *ngIf="canSetPublic">
+  <input
+    class="form-check-input"
+    type="checkbox"
+    formControlName="public"
+    id="publicEvent"
+    style="transform: scale(1.5);">
+
+  <i class="ti ti-world fs-20 text-primary"></i>
+
+  <label class="form-check-label fw-semibold fs-15 mb-0" for="publicEvent">
+    {{ 'CALENDAR.PUBLIC_EVENT' | translate }}
+  </label>
+</div>
+
+
 
   </div>
 

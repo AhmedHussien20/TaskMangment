@@ -9,7 +9,7 @@ import { GenericTableComponent, TableColumn } from 'app/shared/components/generi
 import { PageHeaderComponent } from 'app/shared/components/page-header/page-header.component';
 import { ReportListService } from 'app/core/services/report-list.service';
 import { ReportPdfService } from 'app/core/services/report-pdf.service';
-import { TaskDiscountReportDto, TaskMovementType } from 'app/core/models/reports/reports';
+import { ExportType, TaskDiscountReportDto, TaskMovementType } from 'app/core/models/reports/reports';
 import { SimpleEmployee } from 'app/core/models/task/task';
 import { EmployeeService } from 'app/core/services/employee.service';
 import { AuthService } from 'app/core/services/auth.service';
@@ -180,13 +180,35 @@ loadEmployees(): void {
 
   onExportPdf(): void {
     this.reportPdfService
-      .getTaskDiscountsPdf(  this.selectedEmployeeId ?? 0, this.movementType,this.fromDate, this.toDate, this.status)
+      .getTaskDiscountsPdf(ExportType.Pdf,this.selectedEmployeeId ?? 0, this.movementType,this.fromDate, this.toDate, this.status)
       .subscribe({
         next: (blob) => {
           const url = window.URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
           a.download = 'task-discounts-report.pdf';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+        },
+        error: () => {
+          this.toastr.error(
+            this.translate.instant('COMMON.ERROR_LOADING_DATA')
+          );
+        }
+      });
+  }
+
+  onExportExcel(): void {
+    this.reportPdfService
+      .getTaskDiscountsPdf(ExportType.Excel,this.selectedEmployeeId ?? 0, this.movementType,this.fromDate, this.toDate, this.status)
+      .subscribe({
+        next: (blob) => {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'task-discounts-report.xlsx';
           document.body.appendChild(a);
           a.click();
           document.body.removeChild(a);

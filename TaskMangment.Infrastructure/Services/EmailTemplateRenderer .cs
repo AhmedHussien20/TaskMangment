@@ -410,6 +410,34 @@ namespace TaskMangment.Infrastructure.Services
                     }
 
 
+
+                case ReferenceType.OfficialHoliday:
+                    {
+                        var holiday = await _db.CalendarEvents
+                            .Where(e => e.Id == referenceId)
+                            .Select(e => new
+                            {
+                                e.Title,
+                                e.StartDate,
+                                e.EndDate,
+                                e.Description
+                            })
+                            .FirstOrDefaultAsync();
+
+                        if (holiday == null)
+                            throw new Exception($"Official holiday with Id {referenceId} not found.");
+
+                        return new Dictionary<string, string>
+                        {
+                            ["HolidayTitle"] = holiday.Title ?? "-",
+                            ["HolidayDate"] = holiday.StartDate.ToString("yyyy-MM-dd"),
+                            ["StartDate"] = holiday.StartDate.ToString("yyyy-MM-dd"),
+                            ["EndDate"] = holiday.EndDate?.ToString("yyyy-MM-dd") ?? "-",
+                            ["HolidayNotes"] = holiday.Description ?? "-"
+                        };
+                    }
+
+
                 // =========================
                 default:
                     return new Dictionary<string, string>();

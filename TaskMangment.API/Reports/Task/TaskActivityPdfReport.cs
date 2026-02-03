@@ -39,7 +39,7 @@ namespace TaskMangment.API.Reports.Task
                     {
                         columns.RelativeColumn(4); 
                         columns.RelativeColumn(3); 
-                       // columns.RelativeColumn(4); 
+                        columns.RelativeColumn(4); 
                         columns.RelativeColumn(2); 
                         columns.RelativeColumn(3);  
                     });
@@ -48,7 +48,7 @@ namespace TaskMangment.API.Reports.Task
                     {
                         header.Cell().Element(HeaderCellStyle).Text("المهمة");
                         header.Cell().Element(HeaderCellStyle).Text("جهة التكليف");
-                        //header.Cell().Element(HeaderCellStyle).Text("التعليق");
+                        header.Cell().Element(HeaderCellStyle).Text("التعليق");
                         header.Cell().Element(HeaderCellStyle).Text("تاريخ التعليق");
                         header.Cell().Element(HeaderCellStyle).Text("الموظف الذي علق");
                     });
@@ -60,7 +60,7 @@ namespace TaskMangment.API.Reports.Task
 
                         table.Cell().Element(c => DataCellStyle(c, bgColor)).Text(activity.TaskTitleWithId);
                         table.Cell().Element(c => DataCellStyle(c, bgColor)).Text(activity.AssignedBy);
-                        //table.Cell().Element(c => DataCellStyle(c, bgColor)).Text(activity.Comment);
+                        table.Cell().Element(c => DataCellStyle(c, bgColor)).Text(activity.Comment);
                         table.Cell().Element(c => DataCellStyle(c, bgColor)).Text(activity.CommentDate.ToString("yyyy/MM/dd"));
                         table.Cell().Element(c => DataCellStyle(c, bgColor)).Text(activity.CommentedBy);
                     }

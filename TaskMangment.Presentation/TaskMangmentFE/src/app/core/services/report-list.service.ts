@@ -2,7 +2,7 @@ import { Injectable } from "@angular/core";
 import { ApiService } from "./api.service";
 import { Observable } from "rxjs";
 import { ApiResponse } from "../models/event/calendar";
-import { EmployeeArchivedTasksReportDto, EmployeeAssignmentsReportDto, EmployeeCommentsReportDto, EmployeeOnTimeReportDto, TaskActivityReportDto, TaskDiscountReportDto, TaskMovementReportDto, TasksClosingSoonDto } from "../models/reports/reports";
+import { EmployeeArchivedTasksReportDto, EmployeeAssignmentsReportDto, EmployeeCommentsReportDto, EmployeeOnTimeReportDto, ExportType, TaskActivityReportDto, TaskDiscountReportDto, TaskMovementReportDto, TasksClosingSoonDto } from "../models/reports/reports";
 
 @Injectable({ providedIn: 'root' })
 export class ReportListService {
@@ -34,13 +34,13 @@ export class ReportListService {
   const query = this.buildQuery({ employeeId,movementType, fromDate, toDate, status });
   return this.api.get<ApiResponse<TaskDiscountReportDto[]>>(this.service, `task-discounts${query}`);
 }
-getTaskActivities(fromDate: string, toDate: string): Observable<ApiResponse<TaskActivityReportDto[]>> {
-    const query = this.buildQuery({ fromDate, toDate });
+  getTaskActivities(fromDate: string, toDate: string): Observable<ApiResponse<TaskActivityReportDto[]>> {
+    const query = this.buildQuery({ fromDate, toDate, exportType: ExportType.Pdf });
     return this.api.get<ApiResponse<TaskActivityReportDto[]>>(this.service, `task-activities${query}`);
   }
   
   getMovementReports(employeeId: number| undefined, movementType: number, reportTitle?: string): Observable<ApiResponse<TaskMovementReportDto[]>> {
-  const query = this.buildQuery({ employeeId, movementType, reportTitle });
+  const query = this.buildQuery({ employeeId, movementType, reportTitle, exportType:ExportType.Pdf });
   return this.api.get<ApiResponse<TaskMovementReportDto[]>>(this.service, `task-movements${query}`);
 }
 
@@ -50,13 +50,14 @@ getTaskActivities(fromDate: string, toDate: string): Observable<ApiResponse<Task
 }
 
 
- private buildQuery(params: { fromDate?: string; toDate?: string; status?: string; employeeId?: number; movementType?: number; reportTitle?: string  }): string {
+ private buildQuery(params: { fromDate?: string; toDate?: string; status?: string; employeeId?: number; movementType?: number; reportTitle?: string; exportType?: ExportType }): string {
   const q: string[] = [];
   if (params.fromDate) q.push(`fromDate=${encodeURIComponent(params.fromDate)}`);
   if (params.toDate) q.push(`toDate=${encodeURIComponent(params.toDate)}`);
   if (params.status) q.push(`status=${encodeURIComponent(params.status)}`);
   if (params.employeeId !== undefined) q.push(`employeeId=${params.employeeId}`);
   if (params.movementType !== undefined) q.push(`movementType=${params.movementType}`);
+  if (params.exportType !== undefined) q.push(`exportType=${params.exportType}`);
   if (params.reportTitle) q.push(`reportTitle=${encodeURIComponent(params.reportTitle)}`);
   return q.length ? `?${q.join('&')}` : '';
 }

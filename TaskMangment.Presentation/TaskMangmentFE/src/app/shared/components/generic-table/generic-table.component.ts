@@ -53,8 +53,11 @@ interface HasId {
 export class GenericTableComponent<T> implements OnDestroy{
   private filtersChanged$ = new Subject<void>();
   @Output() exportPdfClick = new EventEmitter<void>();
+  @Output() exportExcelClick = new EventEmitter<void>();
+
   @Input() showExportPdf: boolean = false;
   @Input() showExportExcel: boolean = true;
+  @Input() showExportReportExcel: boolean = false;
 
   @Input() formUrl: string = '';
   @Input() breadcrumbs: string[] = [];
@@ -402,6 +405,9 @@ onRowClick(item: T, event: MouseEvent) {
   }
  exportPdf() {
     this.exportPdfClick.emit();
+  }
+  exportExcell() {
+    this.exportExcelClick.emit();
   }
 
 }

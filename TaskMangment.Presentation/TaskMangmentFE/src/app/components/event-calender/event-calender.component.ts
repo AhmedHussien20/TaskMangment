@@ -224,7 +224,11 @@ export class EventCalenderComponent implements OnInit, AfterViewInit {
               relatedTaskTitle: e.relatedTaskTitle,
               companyId: e.companyId,
               reminder: e.reminder ?? 15,
-              eventType: e.eventType
+              eventType: e.eventType,
+              public: e.public,
+              canEdit: e.canEdit,     
+              canDelete: e.canDelete
+
             }
           };
         });
@@ -365,6 +369,13 @@ export class EventCalenderComponent implements OnInit, AfterViewInit {
   const event = arg.event;
   const jsEvent = (arg as any).jsEvent as MouseEvent;
 
+  const canEdit = !!event.extendedProps?.['canEdit'];
+  const canDelete = !!event.extendedProps?.['canDelete'];
+
+  if (!canEdit && !canDelete) {
+    return;
+  }
+
   const menu = document.createElement('div');
   menu.classList.add('dropdown-menu', 'show');
   menu.style.position = 'absolute';
@@ -447,7 +458,10 @@ deleteEvent(event: EventApi) {
       relatedTaskId: event.extendedProps?.relatedTaskId || null,
       relatedTaskTitle: event.extendedProps?.relatedTaskTitle || '',
       companyId: event.extendedProps?.companyId || null,
-      reminder: event.extendedProps?.reminder || 15
+      reminder: event.extendedProps?.reminder || 15,
+      public: event.extendedProps.public || false,
+      canEdit: event.extendedProps?.canEdit ?? false,
+      canDelete: event.extendedProps?.canDelete ?? false
     };
 
     modalRef.componentInstance.event = tempEvent;
@@ -483,7 +497,8 @@ deleteEvent(event: EventApi) {
       allDay: event.allDay,
       eventType: event.extendedProps?.eventType ?? CalendarEventType.Reminder,
       relatedTaskId: event.extendedProps?.relatedTaskId ?? null,
-      reminder: event.extendedProps?.reminder ?? 15
+      reminder: event.extendedProps?.reminder ?? 15,
+      public: event.extendedProps?.public ?? false
     };
 
     this.calendarService.update(eventId, payload).subscribe({

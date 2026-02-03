@@ -12,7 +12,7 @@ import { ReportListService } from 'app/core/services/report-list.service';
 import { ReportPdfService } from 'app/core/services/report-pdf.service';
 import { SimpleEmployee } from 'app/core/models/task/task';
 import { EmployeeService } from 'app/core/services/employee.service';
-import { TasksClosingSoonDto } from 'app/core/models/reports/reports';
+import { ExportType, TasksClosingSoonDto } from 'app/core/models/reports/reports';
 import { AuthService } from 'app/core/services/auth.service';
 import { EmployeeNgSelectComponent } from 'app/components/employee-select/employee-select.component';
 
@@ -122,13 +122,33 @@ export class TaskClosedSoonReportComponent implements OnInit {
 
   onExportPdf(): void {
     //if (!this.selectedEmployeeId) return;
-
-    this.reportPdfService.getTaskClosedSoonReportsPdf(this.selectedEmployeeId).subscribe({
+    this.reportPdfService.getTaskClosedSoonReportsPdf(ExportType.Pdf, this.selectedEmployeeId).subscribe({
       next: (blob) => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = 'tasks-closing-soon-report.pdf';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      },
+      error: () => {
+        this.toastr.error(
+          this.translate.instant('COMMON.ERROR_LOADING_DATA')
+        );
+      }
+    });
+  }
+
+   onExportExcel(): void {
+    //if (!this.selectedEmployeeId) return;
+    this.reportPdfService.getTaskClosedSoonReportsPdf(ExportType.Excel, this.selectedEmployeeId).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'tasks-closing-soon-report.xlsx';
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);

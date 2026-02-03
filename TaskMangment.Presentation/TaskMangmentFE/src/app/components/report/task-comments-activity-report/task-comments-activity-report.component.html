@@ -55,7 +55,11 @@
             (pageChange)="onPageChange($event)"
             (entriesChange)="onEntriesChange($event)"
             [showExportPdf]="true"
-            (exportPdfClick)="onExportPdf()">
+            (exportPdfClick)="onExportPdf()"
+            [showExportExcel]="false"
+            [showExportReportExcel]="true"
+            (exportExcelClick)="onExportExcel()"
+            >
           </app-generic-table>
         </div>
 

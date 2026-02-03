@@ -4,6 +4,7 @@
 <div class="row row-sm">
   <div class="col-md-12 col-lg-12">
     <div class="card custom-card">
+
       <div class="card-header border-bottom-0">
         <div class="d-flex justify-content-center gap-3 flex-wrap">
 
@@ -26,7 +27,7 @@
           </div>
 
         </div>
-      
+      </div>
 
 
       <div class="card-body pt-2">
@@ -38,7 +39,10 @@
 
         <div *ngIf="!isLoading">
           <app-generic-table [title]="title" [columns]="columns" [data]="rows" [entries]="entries" [page]="page"
-            [showFilters]="false" [showPagination]="false" [showExportPdf]="true" (exportPdfClick)="onExportPdf()">
+            [showFilters]="false" [showPagination]="false" [showExportPdf]="true" (exportPdfClick)="onExportPdf()"
+            [showExportExcel]="false"
+            [showExportReportExcel]="true"
+            (exportExcelClick)="onExportExcel()">
           </app-generic-table>
         </div>
       </div>

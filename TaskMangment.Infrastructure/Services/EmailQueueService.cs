@@ -34,6 +34,24 @@ namespace TaskMangment.Infrastructure.Services
         {
             var scheduledAt = request.ScheduledAt ?? DateTime.UtcNow;
             scheduledAt.AddMinutes(5);
+
+            if (request.ForAll)
+            {
+                await _db.EmailQueue.AddAsync(new EmailQueue
+                {
+                    ForAll = true,
+                    ToEmail = "For all employees",
+                    TemplateKey = request.TemplateKey,
+                    ReferenceType = request.ReferenceType,
+                    ReferenceId = request.ReferenceId,
+                    ScheduledAt = scheduledAt,
+                    Status = EmailStatus.Pending
+                });
+
+                await _db.SaveChangesAsync();
+                return;
+            }
+
             foreach (var userId in request.UserIds)
             {
                 string? email = request.RecipientType switch
