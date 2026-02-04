@@ -1,5 +1,5 @@
 .task-details-wrapper {
-  max-height: 60vh;   
+  max-height: 50vh;   
   overflow-y: auto;
   overflow-x: hidden;
   display: block;
@@ -9,12 +9,11 @@
 
 .task-details-table {
   width: 100%;
-  table-layout: fixed; 
 }
 
 /* العنوان */
 .task-details-table th {
-  width: 30%;              
+  width: 40%;              
   text-align: right;
   white-space: nowrap;
   padding: 10px 12px;
@@ -24,7 +23,7 @@
   background: #f9fafb;
 }
 
-/* القيمة */
+
 .task-details-table td {
   width: 70%;
   padding: 10px 12px;
@@ -53,3 +52,5 @@
   font-size: 11px;
   opacity: 0.8;
 }
+
+
