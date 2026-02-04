@@ -1,6 +1,7 @@
 <div *ngIf="readonly" class="task-details-wrapper">
 
-  <table class="table task-details-table">
+  <div class="task-details-scroll">
+    <table class="table task-details-table">
     <tbody>
 
       <tr>
@@ -68,6 +69,18 @@
         <td>{{ taskInfo?.dueDate | myDate }}</td>
       </tr>
 
+     <tr *ngIf="hasExtensions">
+  <th>{{ 'TASK.EXTENSIONS_COUNT' | translate }}</th>
+  <td>{{ taskInfo?.numberOfExtensions }}</td>
+</tr>
+
+<tr *ngIf="hasNewDate">
+  <th>{{ 'TASK.NEW_DUE_DATE' | translate }}</th>
+  <td>{{ taskInfo?.newDate | myDate }}</td>
+</tr>
+
+
+
       <tr>
         <th>{{ 'TASK.ASSIGNED_BY' | translate }}</th>
         <td class="fw-semibold">{{ taskInfo?.assignedByName }}</td>
@@ -77,4 +90,5 @@
     </tbody>
   </table>
 
+</div>
 </div>

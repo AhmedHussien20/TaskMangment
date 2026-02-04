@@ -9,13 +9,9 @@
     <div class="card custom-card">
       <div>
 
-        <div *ngIf="isLoading" class="text-center my-3">
-          <div class="spinner-border" role="status">
-            <span class="visually-hidden">{{ 'TABLE.LOADING' | translate }}</span>
-          </div>
-        </div>
+      
 
-        <div *ngIf="!isLoading">
+        <div>
           <app-generic-table
             [title]="title"
             [breadcrumbs]="breadcrumbs"

@@ -41,7 +41,7 @@ namespace TaskMangment.Hangfire.Jobs
 
             var tasks = await _db.Tasks
                 .Include(t => t.Assignments)
-                    .ThenInclude(a => a.Employee)
+                    .ThenInclude(a => a.Employee)                   
                 .Where(t => t.CommentAllowPeriodDays != null && t.DueDate > yesterday)
                 .Where(t =>
                     t.Status != WorkTaskStatus.Closed &&

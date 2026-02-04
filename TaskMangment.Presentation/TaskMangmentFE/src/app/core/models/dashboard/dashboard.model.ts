@@ -112,7 +112,7 @@ export interface TodayCommentTaskDto {
   statusText: string;
   dueDate?: Date;
   assignedBy: string;
-  employees: string[];
+  employees?: { name: string }[];
 }
 export interface  TasksPagedResponse {
   data: TodayCommentTaskDto[];
@@ -131,4 +131,15 @@ export interface TasksRequest {
 export interface EmployeeKpisExtendedDto {
   averageCompletionHours: number;
   onTimeRatePercent: number;
+}
+
+export interface PagedResponse<T> {
+  data: T[];
+  totalCount: number;
+  pageIndex: number;
+  pageSize: number;
+}
+export interface BranchFilterDto {
+  id: number;
+  name: string;
 }

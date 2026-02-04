@@ -23,7 +23,7 @@ namespace TaskMangment.Application.DTOs
         public DateTime? DueDate { get; set; }
 
         public string AssignedBy { get; set; }
-        public List<string> Employees { get; set; }
+        public List<string>? Employees { get; set; }
     }
 
 

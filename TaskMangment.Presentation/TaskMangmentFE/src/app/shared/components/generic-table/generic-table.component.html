@@ -45,16 +45,18 @@
                     <ng-container [ngSwitch]="getInputType(key)">
 
                         <!-- TEXT -->
-                        <input *ngSwitchCase="'text'" class="form-control" [(ngModel)]="searchCriteria[key]" />
+                        <input *ngSwitchCase="'text'" class="form-control" [ngModel]="searchCriteria[key]"
+                            (ngModelChange)="onFilterChange(key, $event)" />
 
                         <!-- NUMBER -->
                         <input *ngSwitchCase="'number'" type="number" class="form-control"
-                            [(ngModel)]="searchCriteria[key]" />
+                            [ngModel]="searchCriteria[key]" (ngModelChange)="onFilterChange(key, $event)" />
+
 
                         <!-- DROPDOWN -->
                         <ng-select *ngSwitchCase="'dropdown'" [items]="getDropdownOptions(key)" bindValue="id"
-                            [(ngModel)]="searchCriteria[key]" [multiple]="isMultiSelect(key)"
-                            [closeOnSelect]="!isMultiSelect(key)" [clearable]="true">
+                            [ngModel]="searchCriteria[key]" (ngModelChange)="onFilterChange(key, $event)"
+                            [multiple]="isMultiSelect(key)" [closeOnSelect]="!isMultiSelect(key)" [clearable]="true">
 
                             <ng-template ng-option-tmp let-item="item">
                                 {{ item.name | translate }}
@@ -63,12 +65,14 @@
                             <ng-template ng-label-tmp let-item="item">
                                 {{ item.name | translate }}
                             </ng-template>
-
                         </ng-select>
 
+
                         <!-- DATE -->
-                        <input *ngSwitchCase="'date'" type="date" class="form-control"
-                            [(ngModel)]="searchCriteria[key]" />
+                        <input *ngSwitchCase="'date'" type="date" class="form-control" [ngModel]="searchCriteria[key]"
+                            (ngModelChange)="onFilterChange(key, $event)" />
+
+
 
                     </ng-container>
                 </div>

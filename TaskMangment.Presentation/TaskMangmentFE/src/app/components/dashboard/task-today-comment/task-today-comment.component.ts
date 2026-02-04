@@ -11,6 +11,7 @@ import { SearchCriteria } from 'app/core/models/search-criteria.model';
 import { DashboardService } from 'app/core/services/dashboar.service';
 import { TodayCommentTaskDto } from 'app/core/models/dashboard/dashboard.model';
 import { TaskDetailsShellComponent } from 'app/components/tasks/task-details/task-details-shell/task-details-shell.component';
+import { AuthService } from 'app/core/services/auth.service';
 
 @Component({
   selector: 'app-task-today-comment',
@@ -51,7 +52,7 @@ export class TaskTodayCommentComponent implements OnInit {
   totalItems = 0;
 
   page = 1;
-  entries = 5;
+  entries = 10;
 
   searchCriteria: SearchCriteria = {
     searchKey: '',
@@ -67,11 +68,23 @@ export class TaskTodayCommentComponent implements OnInit {
   labels = {searchKey: 'TASK.SEARCH'};
   isLoading = false;
 
-  constructor(private dashboardService: DashboardService,private modalService: NgbModal) {}
+  constructor(private dashboardService: DashboardService,private modalService: NgbModal,private authService: AuthService) {}
 
-  ngOnInit(): void {
-    this.loadData();
+  ngOnInit() {
+  const userLevel = Number(this.authService.getRoleLevel() ?? 0);
+
+  if ([70, 100].includes(userLevel)) {
+    this.columns.splice(4, 0, {
+      key: 'employees',
+      label: 'DASHBOARD.NOT_COMMENTED_EMPLOYEES',
+      type: 'assignees',
+      displayField: 'name'
+    });
   }
+
+  this.loadData();
+}
+
 
  loadData() {
   this.isLoading = true;
@@ -81,8 +94,10 @@ export class TaskTodayCommentComponent implements OnInit {
         const data = res.data;
         this.rows = data.data.map(x => ({
           ...x,
-          id: x.taskId  
-        }));
+          id: x.taskId ,
+  employees: (x.employees ?? []).map((name: any) =>
+    typeof name === 'string' ? ({ name }) : name
+  )        }));
         this.totalItems = data.totalCount;
         this.page = data.pageIndex;
         this.entries = data.pageSize;

@@ -9,5 +9,6 @@ namespace TaskMangment.Application.Common.ApiRequests.Role
 {
     public class RoleAssignmentReguest: BaseApiRequest
     {
+        public bool? IsAssigned { set; get; }
     }
 }

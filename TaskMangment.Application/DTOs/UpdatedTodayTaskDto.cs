@@ -1,5 +1,6 @@
 ﻿
 
+using TaskMangment.Application.ApiRequests;
 using TaskMangment.Domain.Entities;
 
 namespace TaskMangment.Application.DTOs
@@ -13,5 +14,11 @@ namespace TaskMangment.Application.DTOs
         public string UpdatedBy { get; set; }
         public DateTime? UpdatedAt { get; set; }
     }
+
+    public class UpdatedTodayTasksRequest : BaseApiRequest
+    {
+        public PeriodDto Period { get; set; } = new();
+    }
+
 
 }

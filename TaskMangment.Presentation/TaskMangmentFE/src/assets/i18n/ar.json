@@ -35,7 +35,9 @@
     "HOURS": "ساعة",
     "TODAY" : "اليوم",
     "MONTH" : "الشهر",
-    "YEAR" : "السنه"
+    "YEAR" : "السنه",
+    "SELECT_BRANCH" : "اختر فرع",
+    "NOT_COMMENTED_EMPLOYEES": "موظفنين لم يعلقو"
 
   },
   "MENU": {
@@ -566,7 +568,10 @@
     "DAYS" : "يوم",
     "REQUIRE_UPLOAD_FILE_WHEN_COMMENTING": "مطلوب رفع ملف عند التعليق",
     "FILE_REQUIRED": "رفع الملف مطلوب عند التعليق لهذه المهمة",
-    "FILE" : "ملف"
+    "FILE" : "ملف",
+    "DELETE_SUCCESS":"تم الحذف بنجاح",
+    "EXTENSIONS_COUNT" : "طلبات التمديد المقبولة",
+    "NEW_DUE_DATE" : "تاريخ ما بعد التمديد"
 
   },
   "EMPLOYEE": {
@@ -682,8 +687,12 @@
       "TEAM_LEAD": "قائد فريق",
       "MANAGER": "مدير",
       "ADMIN": "مدير النظام"
-    }
-  },
+    },
+    "ASSIGNMENT_STATUS": "الموظفين",
+    "ALL": "الكل",
+    "ASSIGNED" :"معين",
+    "NOT_ASSIGNED": "غير معين"
+   },
   "PERMISSION": {
     "TITLE": "إدارة التصاريح",
     "LIST_TITLE": "قائمة التصاريح",

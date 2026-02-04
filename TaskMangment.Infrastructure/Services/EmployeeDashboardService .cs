@@ -136,64 +136,79 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<EmployeeDashboardDto>.Ok(dto);
         }
 
-        public async Task<ApiResponse<PagedResponse<TodayCommentTaskDto>>>GetTasksWithoutCommentsTodayAsync(BaseApiRequest request, int employeeId)
+        public async Task<ApiResponse<PagedResponse<TodayCommentTaskDto>>> GetTasksWithoutCommentsTodayAsync(
+    BaseApiRequest request,
+    int employeeId,
+    int roleLevel)
         {
-            var today = DateTime.UtcNow.Date;
+            var today = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime.UtcNow, "Arab Standard Time").Date;
             var allowedStatuses = new[] { WorkTaskStatus.New, WorkTaskStatus.InProgress };
-            var query = _assignmentRepo.GetAll(a =>
-                a.EmployeeId == employeeId &&
+
+            var baseQuery = _assignmentRepo.GetAll(a =>
                 a.IsActive &&
                 !a.IsClosed &&
-                allowedStatuses.Contains(a.Task.Status) &&   
-                a.Task.Comments.All(c => c.CreatedDate < today)
-            ).AsQueryable();
+                allowedStatuses.Contains(a.Task.Status) &&
+                !a.Task.Comments.Any(c => c.CreatedDate >= today && c.EmployeeId == a.EmployeeId) 
+            );
 
-            query = query
-                .Include(a => a.Task)
-                    .ThenInclude(t => t.AssignedBy)
-                .Include(a => a.Task)
-                    .ThenInclude(t => t.Assignments)
-                        .ThenInclude(ta => ta.Employee);
+            if (roleLevel < 70)
+            {
+                baseQuery = baseQuery.Where(a => a.EmployeeId == employeeId);
+            }
+            else
+            {
+                baseQuery = baseQuery.Where(a => a.EmployeeId == employeeId || a.Task.AssignedByEmployeeId == employeeId);
+            }
 
             if (!string.IsNullOrWhiteSpace(request.searchKey))
             {
-                query = query.Where(a =>
-                    a.Task.Title.Contains(request.searchKey) ||
-                    a.Task.AssignedBy.FullName.Contains(request.searchKey));
+                var key = request.searchKey.Trim();
+                baseQuery = baseQuery.Where(a =>
+                    a.Task.Title.Contains(key) ||
+                    a.Task.AssignedBy.FullName.Contains(key));
             }
 
-            var totalCount = await query.CountAsync();
+            var dtoQuery = baseQuery
+                .GroupBy(a => new
+                {
+                    a.TaskId,
+                    a.Task.Title,
+                    a.Task.Status,
+                    a.Task.DueDate,
+                    AssignedBy = a.Task.AssignedBy.FullName
+                })
+                .Select(g => new TodayCommentTaskDto
+                {
+                    TaskId = g.Key.TaskId,
+                    Title = g.Key.Title,
+                    Status = g.Key.Status,
+                    StatusText = g.Key.Status.ToString(),
+                    DueDate = g.Key.DueDate,
+                    AssignedBy = g.Key.AssignedBy,
 
-            query = query.OrderByDynamicSafe(request.SortColumn, request.SortDirection);
+                    Employees = g.Select(x => x.Employee.FullName).Distinct().ToList()
+                })
+                .AsNoTracking();
 
-            var assignments = await query
+            var totalCount = await dtoQuery.CountAsync();
+
+            dtoQuery = dtoQuery.OrderBy(x => x.DueDate);
+
+            var list = await dtoQuery
                 .Skip((request.PageIndex - 1) * request.PageSize)
                 .Take(request.PageSize)
                 .ToListAsync();
 
-            var dtoList = assignments.Select(a => new TodayCommentTaskDto
-            {
-                TaskId = a.TaskId,
-                Title = a.Task.Title,
-                Status = a.Task.Status,
-                StatusText = a.Task.Status.ToString(),
-                DueDate = a.Task.DueDate,
-                AssignedBy = a.Task.AssignedBy?.FullName,
-                Employees = a.Task.Assignments
-                    .Where(x => x.IsActive)
-                    .Select(x => x.Employee.FullName)
-                    .ToList()
-            }).ToList();
-
             var response = new PagedResponse<TodayCommentTaskDto>(
-                dtoList,
+                list,
                 totalCount,
                 request.PageIndex,
                 request.PageSize);
 
             return ApiResponse<PagedResponse<TodayCommentTaskDto>>.Ok(response);
-
         }
+
+
 
 
 

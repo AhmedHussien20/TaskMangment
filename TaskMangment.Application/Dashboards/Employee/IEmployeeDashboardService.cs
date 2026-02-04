@@ -14,7 +14,7 @@ namespace TaskMangment.Application.Dashboards.Employee
     public interface IEmployeeDashboardService
     {
         Task<ApiResponse<EmployeeDashboardDto>> GetDashboardAsync(int employeeId, PeriodDto? period = null);
-        Task<ApiResponse<PagedResponse<TodayCommentTaskDto>>> GetTasksWithoutCommentsTodayAsync(BaseApiRequest request, int employeeId);
+        Task<ApiResponse<PagedResponse<TodayCommentTaskDto>>> GetTasksWithoutCommentsTodayAsync(BaseApiRequest request, int employeeId, int roleLevel);
         Task<ApiResponse<List<DeductionDto>>> GetDeductionsAsync(int employeeId, PeriodDto? period = null);
         Task<ApiResponse<List<WarningDto>>> GetWarningsAsync(int employeeId, PeriodDto? period = null);
 

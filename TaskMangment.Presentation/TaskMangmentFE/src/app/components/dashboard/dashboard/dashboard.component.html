@@ -2,11 +2,33 @@
     [activeitem]="'DASHBOARD.HOME' | translate">
 </app-page-header>
 
-<div class="d-flex justify-content-end mb-3">
-    <ng-select [items]="periodOptions" bindLabel="label" bindValue="value" [(ngModel)]="selectedPeriod"
-        (change)="onPeriodChanged()" [clearable]="false" style="width: 200px;">
-    </ng-select>
+<div class="d-flex justify-content-end gap-2 mb-3 align-items-center">
+
+  <!-- Period -->
+  <ng-select
+    [items]="periodOptions"
+    bindLabel="label"
+    bindValue="value"
+    [(ngModel)]="selectedPeriod"
+    (change)="onPeriodChanged()"
+    [clearable]="false"
+    style="width: 200px;">
+  </ng-select>
+
+  <!-- Branches -->
+  <ng-select *ngIf="isAdmin"
+    [items]="branches"
+    bindLabel="name"
+    bindValue="id"
+    [(ngModel)]="selectedBranchId"
+    (change)="onBranchChanged()"
+    [clearable]="true"
+    [placeholder]="'DASHBOARD.SELECT_BRANCH' | translate"
+    style="width: 220px;">
+  </ng-select>
+
 </div>
+
 
 <div class="row row-sm">
 
@@ -60,49 +82,11 @@
     <!-- Today In Progress Tasks -->
     <div class="col-12 col-xl-6">
         <div class="card custom-card overflow-hidden">
-            <div class="card-header d-block border-bottom-0 pb-0">
-                <div>
-                    <label class="main-content-label my-auto pt-2">
-                        {{ 'DASHBOARD.TODAY_INPROGRESS_TASKS' | translate }}
-                    </label>
-                    <span class="d-block fs-12 mt-2 mb-0 text-muted">
-                        {{ 'DASHBOARD.TODAY_INPROGRESS_DESC' | translate }}
-                    </span>
-                </div>
-            </div>
-            <div class="card-body pt-0">
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0 text-nowrap">
-                        <thead>
-                            <tr>
-                                <th>{{ 'TASK.TITLE' | translate }}</th>
-                                <th>{{ 'TASK.UPDATED_BY' | translate }}</th>
-                                <th>{{ 'TASK.DUE_DATE' | translate }}</th>
-                                <th>{{ 'TASK.UPDATED_AT' | translate }}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr *ngFor="let task of todayInProgressTasks"
-                                [class.row-clickable]="checkRowClickable(task)"
-                                (click)="checkRowClickable(task) && openTaskDetails(task.taskId)" tabindex="0"
-                                (keydown.enter)="checkRowClickable(task) && openTaskDetails(task.taskId)"
-                                (keydown.space)="$event.preventDefault(); checkRowClickable(task) && openTaskDetails(task.taskId)">
+<app-task-today-updated
+  [currentPeriod]="currentPeriod"
+  [currentBranchId]="selectedBranchId">
+</app-task-today-updated>
 
-                                <td>{{ task.title }}</td>
-                                <td>{{ task.updatedBy }}</td>
-                                <td>{{ task.dueDate | myDate }}</td>
-                                <td>{{ task.updatedAt | myDate:'hh:mm a' }}</td>
-                            </tr>
-
-                            <tr *ngIf="!todayInProgressTasks.length">
-                                <td colspan="4" class="text-center text-muted">
-                                    {{ 'DASHBOARD.NO_TASKS_TODAY' | translate }}
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
         </div>
     </div>
 

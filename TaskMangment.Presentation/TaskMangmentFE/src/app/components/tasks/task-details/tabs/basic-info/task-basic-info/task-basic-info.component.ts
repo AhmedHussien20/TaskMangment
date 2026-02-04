@@ -10,13 +10,17 @@ import { MyDatePipe } from 'app/components/utilities/pipline/MyDatePipe';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule,TranslateModule, MyDatePipe
 ],
-  templateUrl: './task-basic-info.component.html'
+  templateUrl: './task-basic-info.component.html',
+    styleUrls: ['./task-basic-info.component.scss']
+
+
 })
 export class TaskBasicInfoComponent implements OnChanges {
 
   @Input() taskId!: number;
   @Input() readonly = false;
-
+hasExtensions = false;
+hasNewDate = false;
   form!: FormGroup;
   taskInfo!: TaskGet | null;
 
@@ -41,7 +45,9 @@ export class TaskBasicInfoComponent implements OnChanges {
       penaltyOnStopComment: [0],
       createdDate:[null],
       dueDate: [null],
-      assignedByName: ['']
+      assignedByName: [''],
+      newDate: [null],
+      numberOfExtensions: [null]
     });
   }
 
@@ -51,6 +57,8 @@ export class TaskBasicInfoComponent implements OnChanges {
     this.taskService.getById(this.taskId).subscribe({
       next: (res) => {
         this.taskInfo = res.data;
+         this.hasExtensions = !!this.taskInfo?.numberOfExtensions && this.taskInfo.numberOfExtensions > 0;
+         this.hasNewDate = !!this.taskInfo?.newDate;
         if (this.taskInfo) {
           this.form.patchValue({
             title: this.taskInfo.title,
@@ -63,6 +71,8 @@ export class TaskBasicInfoComponent implements OnChanges {
             createdDate:this.taskInfo.createdDate,
             dueDate: this.taskInfo.dueDate,
             assignedByName: this.taskInfo.assignedByName,
+            newDate: this.taskInfo.newDate,
+            numberOfExtensions: this.taskInfo.numberOfExtensions
            // closedAt: this.taskInfo.ClosedAt
           });
         }

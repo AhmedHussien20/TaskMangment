@@ -147,7 +147,7 @@ namespace TaskMangment.Infrastructure.Services
     ).CountAsync() + 1;
 
             Discount? discount = null;
-            if (warningCount >= task.MaxWarnings)
+            if (warningCount > task.MaxWarnings)
             {
                 discount = new Discount
                 {

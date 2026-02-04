@@ -90,7 +90,7 @@ export class GenericTableComponent<T> implements OnDestroy{
 
   @Input() searchCriteria!: SearchCriteria<T>;
   @Input() labels: { [key: string]: string } = {};
-  @Input() statusOptions: { id: number; name: string }[] = [];
+  @Input() statusOptions: { id: any; name: string }[] = [];
   @Input() employeeOptions: { id: number; name: string }[] = [];
   // callback من الـ parent (زى Expiry)
   @Input() onSearch?: (criteria: SearchCriteria<T>) => void;
@@ -105,9 +105,10 @@ export class GenericTableComponent<T> implements OnDestroy{
   @Output() delete = new EventEmitter<number>();
   @Input() rowClickable: boolean = false;
   @Input() showEmployeeFilter: boolean = true;
+  @Input() extraFilterOptions: Record<string, { value: any; label: string }[]> = {};
 
   // ---------- UI State ----------
-  loading: boolean = false;             // لو حبيت تستخدمه بعدين
+  loading: boolean = false;             
   filtersOpen: boolean = true;
 
   sortColumn: string = '';
@@ -176,8 +177,11 @@ onFilterChange(key: string, value: any) {
       .substring(0, 2)
       .toUpperCase();
   }
+getExtraOptions(key: string) {
+  return this.extraFilterOptions?.[key] ?? [];
+}
 
-  getInputType(key: string): 'text' | 'dropdown' | 'date' | 'dateTime' | 'number' {
+  getInputType(key: string): 'text' | 'dropdown' | 'date' | 'dateTime' | 'number'|'toggle' {
     const filterTypes = (this.searchCriteria?.filterTypes || {}) as any;
     return filterTypes[key] || 'text';
   }
@@ -190,6 +194,8 @@ onFilterChange(key: string, value: any) {
       case 'employeeIds':
         return this.employeeOptions;
 
+case 'isAssigned':                 
+      return this.statusOptions; 
       default:
         return [];
     }
@@ -197,6 +203,19 @@ onFilterChange(key: string, value: any) {
 
   // ---------- Filters ----------
 
+  ngOnInit(): void {
+    this.filtersChanged$
+      .pipe(debounceTime(100))
+      .subscribe(() => {
+        (this.searchCriteria as any).pageIndex = 1;
+        this.applyFilters();
+      });
+  }
+
+   onFilterChange(key: string, value: any) {
+    (this.searchCriteria as any)[key] = value;
+    this.filtersChanged$.next();
+  }
   applyFilters() {
     if (this.onSearch) {
       this.onSearch({ ...(this.searchCriteria || {}) });
@@ -242,10 +261,19 @@ onFilterChange(key: string, value: any) {
       if (type === 'text' || type === 'number') {
         (this.searchCriteria as any)[key] = '';
       } else if (type === 'dropdown' || type === 'radio') {
-        (this.searchCriteria as any)[key] = this.isMultiSelect(key) ? [] : 0;
+  if (this.isMultiSelect(key)) {
+    (this.searchCriteria as any)[key] = [];
+  } else {
+    (this.searchCriteria as any)[key] = (key === 'statusId') ? 0 : null;
+  }
+
       } else if (type === 'date') {
         (this.searchCriteria as any)[key] = null;
       }
+      else if (type === 'toggle') {
+        (this.searchCriteria as any)[key] = null;
+      }
+
     });
 
     this.applyFilters();
@@ -409,5 +437,11 @@ onRowClick(item: T, event: MouseEvent) {
   exportExcell() {
     this.exportExcelClick.emit();
   }
+ 
+onToggleFilterClick(key: string, value: any) {
+  (this.searchCriteria as any)[key] = value;
+  (this.searchCriteria as any).pageIndex = 1;
+  this.applyFilters();
+}
 
 }

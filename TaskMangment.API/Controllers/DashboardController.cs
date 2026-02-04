@@ -24,9 +24,9 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpGet("admin")]
-        public async Task<IActionResult> GetAdminDashboard([FromQuery] PeriodDto period)
+        public async Task<IActionResult> GetAdminDashboard([FromQuery] PeriodDto period, int? branchId = null)
         {
-            var result = await _adminService.GetDashboardAsync(CompanyId,this.RoleLevel,CurrentUserId, period);
+            var result = await _adminService.GetDashboardAsync(CompanyId,this.RoleLevel,CurrentUserId, period, branchId);
             return Success(result.Data);
         }
 
@@ -54,7 +54,7 @@ namespace TaskMangment.API.Controllers
         [HttpGet("not-comment-today")]
         public async Task<IActionResult> GetTasksWithoutCommentsToday([FromQuery] BaseApiRequest request)
         {
-            var result = await _employeeService.GetTasksWithoutCommentsTodayAsync(request, CurrentUserId);
+            var result = await _employeeService.GetTasksWithoutCommentsTodayAsync(request, CurrentUserId,this.RoleLevel);
             return Success(result.Data);
         }
 
@@ -80,62 +80,75 @@ namespace TaskMangment.API.Controllers
 
 
         [HttpGet("admin/in-progress-updated-today")]
-        public async Task<IActionResult> GetTodayUpdatedInProgressTasks([FromQuery] PeriodDto period)
+        public async Task<IActionResult> GetTodayUpdatedInProgressTasks([FromQuery] UpdatedTodayTasksRequest request, int? branchId = null)
         {
-            var result = await _adminService.GetTodayUpdatedInProgressTasksAsync(CompanyId, this.RoleLevel, CurrentUserId, period);
+            var result = await _adminService.GetTodayUpdatedInProgressTasksAsync(CompanyId, this.RoleLevel, CurrentUserId, request, branchId);
             return Success(result.Data);
         }
 
         [HttpGet("admin/completed-tasks-today")]
-        public async Task<IActionResult> GetEmployeesCompletedTasksToday([FromQuery] PeriodDto period)
+        public async Task<IActionResult> GetEmployeesCompletedTasksToday([FromQuery] PeriodDto period, int? branchId = null)
         {
-            var result = await _adminService.GetEmployeesCompletedTasksTodayAsync(CompanyId, this.RoleLevel, CurrentUserId, period);
+            var result = await _adminService.GetEmployeesCompletedTasksTodayAsync(CompanyId, this.RoleLevel, CurrentUserId, period, branchId);
                 
 
             return Success(result.Data);
         }
 
         [HttpGet("admin/pending-close-requests")]
-        public async Task<IActionResult> GetPendingCloseRequests([FromQuery] PeriodDto period)
+        public async Task<IActionResult> GetPendingCloseRequests([FromQuery] PeriodDto period, int? branchId = null)
         {
-            var result = await _adminService .GetPendingCloseRequestsAsync(CompanyId, this.RoleLevel, CurrentUserId, period);
+            var result = await _adminService .GetPendingCloseRequestsAsync(CompanyId, this.RoleLevel, CurrentUserId, period, branchId);
             return Success(result.Data);
         }
 
         [HttpGet("admin/tasks-by-status")]
-        public async Task<IActionResult> GetAdminTasksByStatus([FromQuery] string status, [FromQuery] PeriodDto period)
+        public async Task<IActionResult> GetAdminTasksByStatus([FromQuery] string status, [FromQuery] PeriodDto period, int? branchId = null)
         {
-            var result = await _adminService.GetTasksByStatusAsync(this.CompanyId, status, this.RoleLevel, CurrentUserId, period);
+            var result = await _adminService.GetTasksByStatusAsync(this.CompanyId, status, this.RoleLevel, CurrentUserId, period, branchId);
             return Success(result.Data);
         }
 
         [HttpGet("admin/kpis")]
-        public async Task<IActionResult> GetAdminKpis([FromQuery] PeriodDto period)
+        public async Task<IActionResult> GetAdminKpis([FromQuery] PeriodDto period, int? branchId = null)
         {
-            var result = await _adminService.GetKpisAsync(CompanyId, this.RoleLevel, CurrentUserId, period);
+            var result = await _adminService.GetKpisAsync(CompanyId, this.RoleLevel, CurrentUserId, period,branchId);
             return Success(result.Data);
         }
 
         [HttpGet("admin/discounts")]
-        public async Task<IActionResult> GetDiscounts([FromQuery] PeriodDto period)
+        public async Task<IActionResult> GetDiscounts([FromQuery] PeriodDto period, int? branchId = null)
         {
-            var result = await _adminService.GetDiscountsAsync(CompanyId, this.RoleLevel, CurrentUserId, period);
+            var result = await _adminService.GetDiscountsAsync(CompanyId, this.RoleLevel, CurrentUserId, period, branchId);
             return Success(result.Data);
         }
 
         [HttpGet("admin/high-priority-tasks")]
-        public async Task<IActionResult> GetHighPriorityTasks()
+        public async Task<IActionResult> GetHighPriorityTasks(int? branchId = null)
         {
-            var result = await _adminService.GetHighPriorityTasksAsync(this.CompanyId , this.RoleLevel, CurrentUserId);
+            var result = await _adminService.GetHighPriorityTasksAsync(this.CompanyId , this.RoleLevel, this.CurrentUserId, branchId);
             return Success(result.Data);
         }
 
         [HttpGet("admin/completed-tasks-details")]
-        public async Task<IActionResult> GetCompletedTasksDetails([FromQuery] PeriodDto period)
+        public async Task<IActionResult> GetCompletedTasksDetails([FromQuery] PeriodDto period, int? branchId = null)
         {
-            var result = await _adminService.GetCompletedTasksDetailsAsync(CompanyId, this.RoleLevel, CurrentUserId, period);
+            var result = await _adminService.GetCompletedTasksDetailsAsync(CompanyId, this.RoleLevel, CurrentUserId, period,branchId);
             return Success(result.Data);
         }
+
+        [HttpGet("admin/branches-for-filter")]
+        public async Task<IActionResult> GetBranchesForFilter()
+        {
+            var result = await _adminService.GetBranchesForFilterAsync(
+                this.CompanyId,
+                this.RoleLevel,
+                this.CurrentUserId
+            );
+
+            return Success(result.Data);
+        }
+
     }
 
 }

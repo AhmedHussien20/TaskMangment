@@ -1,0 +1,33 @@
+<div class="col-12 col-lg-12">
+  <div class="card custom-card overflow-hidden">
+
+      <!-- LOADING -->
+      <div *ngIf="isLoading" class="text-center my-3">
+        <div class="spinner-border" role="status"></div>
+      </div>
+
+      <!-- TABLE -->
+<app-generic-table
+  [title]="title"
+  [columns]="columns"
+  [data]="rows"
+  [entries]="entries"
+  [page]="page"
+  [totalItems]="totalItems"
+  [showAddButton]="false"
+  [showEditButton]="false"
+  [showDeleteButton]="false"
+  [showFilters]="false"
+  [showExportExcel]="false"
+  [rowClickable]="true"
+  [rowClickableCondition]="checkRowClickable"
+  (pageChange)="onPageChange($event)"
+  (entriesChange)="onEntriesChange($event)"
+  [rowClickableCondition]="checkRowClickable"
+  (edit)="onEdit($event)">
+</app-generic-table>
+
+      </div>
+
+    
+  </div>

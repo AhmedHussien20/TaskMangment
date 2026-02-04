@@ -117,6 +117,13 @@ namespace TaskMangment.Infrastructure.Services
                 t.Assignments.Any(a => a.EmployeeId == employeeId && a.IsActive) ||
                 t.CreatedByEmployeeId == employeeId);
 
+            if (request.EmployeeIds != null && request.EmployeeIds.Any())
+            {
+                query = query.Where(t =>
+                    t.Assignments.Any(a => a.IsActive && request.EmployeeIds.Contains(a.EmployeeId)));
+            }
+
+
             var totalCount = await query.CountAsync();
 
             query = query.OrderByDynamicSafe(request.SortColumn, request.SortDirection);
@@ -185,7 +192,19 @@ namespace TaskMangment.Infrastructure.Services
             if (task == null)
                 throw new AppException(ErrorCodes.TaskNotFound, StatusCodes.Status400BadRequest);
 
+            var extQuery = _extensionRequestRepo.GetAll().Where(x => x.TaskId == task.Id && !x.IsDeleted && x.Status == ExtensionRequestStatus.Approved);
+
+            var numberOfExtensions = await extQuery.CountAsync();
+
+            DateTime? newDate = await extQuery
+                .OrderByDescending(x => x.CreatedDate)
+                .Select(x => (DateTime?)x.NewDueDate)
+                .FirstOrDefaultAsync();
+
             var dto = _mapper.Map<TaskGetDto>(task);
+
+            dto.NumberOfExtensions = numberOfExtensions;
+            dto.NewDate = newDate;
 
             dto.AssignEmployee = task.Assignments
                 .Where(a => a.IsActive && a.Employee.IsActive)

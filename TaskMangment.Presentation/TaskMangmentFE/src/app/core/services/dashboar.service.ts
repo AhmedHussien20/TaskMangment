@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { ApiService } from 'app/core/services/api.service';
 import { Observable } from 'rxjs';
 import { BaseResponse } from 'app/models/base.response.model';
-import { AdminDashboardDto, AdminKpisExtendedDto, CompletedTasksTodayDto, PenalityDto, EmployeeDashboardDto, InProgressUpdatedTodayDto, MyTaskDto, PendingCloseRequestDto, TasksPagedResponse, TaskStatusDto, TodayCommentTaskDto, WarningDto, EmployeeKpisExtendedDto } from '../models/dashboard/dashboard.model';
+import { AdminDashboardDto, AdminKpisExtendedDto, CompletedTasksTodayDto, PenalityDto, EmployeeDashboardDto, InProgressUpdatedTodayDto, MyTaskDto, PendingCloseRequestDto, TasksPagedResponse, TaskStatusDto, TodayCommentTaskDto, WarningDto, EmployeeKpisExtendedDto, PagedResponse, BranchFilterDto } from '../models/dashboard/dashboard.model';
 import { PeriodDto } from 'app/models/period-type.model';
 import { SearchCriteria } from '../models/search-criteria.model';
 import { HttpParams } from '@angular/common/http';
@@ -17,13 +17,19 @@ export class DashboardService {
 
   constructor(private api: ApiService) { }
 
-  getAdminDashboard(period: PeriodDto): Observable<BaseResponse<AdminDashboardDto>> {
-    return this.api.get<BaseResponse<AdminDashboardDto>>(
-      this.service,
-      'admin',
-      period as any
-    );
+ getAdminDashboard(period: PeriodDto, branchId?: number): Observable<BaseResponse<AdminDashboardDto>> {
+  const query: any = { ...(period as any) };
+
+  if (branchId != null) {
+    query.branchId = branchId;
   }
+
+  return this.api.get<BaseResponse<AdminDashboardDto>>(
+    this.service,
+    'admin',
+    query
+  );
+}
 
   getEmployeeDashboard(period: PeriodDto): Observable<BaseResponse<EmployeeDashboardDto>> {
     return this.api.get<BaseResponse<EmployeeDashboardDto>>(this.service, 'employee',period as any);
@@ -41,19 +47,22 @@ getEmployeePenalities(period: PeriodDto): Observable<BaseResponse<PenalityDto[]>
 }
 
 getTasksNotCommentToday(request: any): Observable<BaseResponse<TasksPagedResponse>> {
-  let params = new HttpParams()
-    .set('searchKey', request.searchKey ?? '')
-    .set('PageIndex', request.pageIndex)
-    .set('PageSize', request.pageSize)
-    .set('SortColumn', request.sortColumn)
-    .set('SortDirection', request.sortDirection);
+
+  const query: any = {
+    searchKey: request.searchKey ?? '',
+    PageIndex: request.pageIndex,
+    PageSize: request.pageSize,
+    SortColumn: request.sortColumn,
+    SortDirection: request.sortDirection
+  };
 
   return this.api.get<BaseResponse<TasksPagedResponse>>(
     this.service,
     'not-comment-today',
-    { params }
+    query
   );
 }
+
 
 
 getEmployeeKpis(period: PeriodDto) {
@@ -66,52 +75,127 @@ getEmployeeCompletedTasksDetails(period: PeriodDto) {
   }
 
 
-  getAdminTasksByStatus(status: 'Active' | 'Overdue' | 'Active',period: PeriodDto): Observable<BaseResponse<TaskStatusDto[]>> {
-    return this.api.get<BaseResponse<TaskStatusDto[]>>(this.service, `admin/tasks-by-status?status=${status}`,period as any);
-  }
+  getAdminTasksByStatus(
+  status: 'Active' | 'Overdue' | 'Completed',
+  period: PeriodDto,
+  branchId?: number
+): Observable<BaseResponse<TaskStatusDto[]>> {
+
+  const query: any = { ...(period as any) };
+  if (branchId != null) query.branchId = branchId;
+
+  return this.api.get<BaseResponse<TaskStatusDto[]>>(
+    this.service,
+    `admin/tasks-by-status?status=${status}`,
+    query
+  );
+}
 
 
-  getAdminInProgressUpdatedToday(period: PeriodDto) {
-    return this.api.get<BaseResponse<InProgressUpdatedTodayDto[]>>(
-      this.service,
-      'admin/in-progress-updated-today',
-      period as any
-    );
-  }
 
-  getAdminCompletedTasksToday(period: PeriodDto) {
-    return this.api.get<BaseResponse<CompletedTasksTodayDto[]>>(
-      this.service,
-      'admin/completed-tasks-today',
-      period as any
-    );
-  }
+ getAdminInProgressUpdatedToday(request: any, branchId?: number) {
+  const query: any = {
+    searchKey: request.searchKey ?? '',
+    PageIndex: request.pageIndex,
+    PageSize: request.pageSize,
+    SortColumn: request.sortColumn ?? 'UpdatedAt',
+    SortDirection: request.sortDirection ?? 'DESC',
+    'Period.Type': request.period?.type
+  };
 
-  getAdminPendingCloseRequests(period: PeriodDto) {
-    return this.api.get<BaseResponse<PendingCloseRequestDto[]>>(
-      this.service,
-      'admin/pending-close-requests',
-      period as any
-    );
-  }
+  if (request.period?.from) query['Period.From'] = request.period.from;
+  if (request.period?.to) query['Period.To'] = request.period.to;
 
-  getAdminKpis(period: PeriodDto) {
-    return this.api.get<BaseResponse<AdminKpisExtendedDto>>(
-      this.service,
-      'admin/kpis',
-      period
-    );
-  }
+  if (branchId != null) query.branchId = branchId;
 
-   getAdminDiscounts(period: PeriodDto) {
-    return this.api.get<BaseResponse<any[]>>(this.service, 'admin/discounts', period as any);
-  }
+  return this.api.get<BaseResponse<any>>(
+    this.service,
+    'admin/in-progress-updated-today',
+    query
+  );
+}
 
-  getAdminHighPriorityTasks() {
-    return this.api.get<BaseResponse<any[]>>(this.service, 'admin/high-priority-tasks');
-  }
 
-  getAdminCompletedTasksDetails(period: PeriodDto) {
-    return this.api.get<BaseResponse<any[]>>(this.service, 'admin/completed-tasks-details', period as any);
-  }
+
+
+
+
+getAdminCompletedTasksToday(period: PeriodDto, branchId?: number) {
+  const query: any = { ...(period as any) };
+  if (branchId != null) query.branchId = branchId;
+
+  return this.api.get<BaseResponse<CompletedTasksTodayDto[]>>(
+    this.service,
+    'admin/completed-tasks-today',
+    query
+  );
+}
+
+
+  getAdminPendingCloseRequests(period: PeriodDto, branchId?: number) {
+  const query: any = { ...(period as any) };
+  if (branchId != null) query.branchId = branchId;
+
+  return this.api.get<BaseResponse<PendingCloseRequestDto[]>>(
+    this.service,
+    'admin/pending-close-requests',
+    query
+  );
+}
+
+
+ getAdminKpis(period: PeriodDto, branchId?: number) {
+  const query: any = { ...(period as any) };
+  if (branchId != null) query.branchId = branchId;
+
+  return this.api.get<BaseResponse<AdminKpisExtendedDto>>(
+    this.service,
+    'admin/kpis',
+    query
+  );
+}
+
+
+  getAdminDiscounts(period: PeriodDto, branchId?: number) {
+  const query: any = { ...(period as any) };
+  if (branchId != null) query.branchId = branchId;
+
+  return this.api.get<BaseResponse<any[]>>(
+    this.service,
+    'admin/discounts',
+    query
+  );
+}
+
+
+  getAdminHighPriorityTasks(branchId?: number) {
+  const query: any = {};
+  if (branchId != null) query.branchId = branchId;
+
+  return this.api.get<BaseResponse<any[]>>(
+    this.service,
+    'admin/high-priority-tasks',
+    query
+  );
+}
+
+  getAdminCompletedTasksDetails(period: PeriodDto, branchId?: number) {
+  const query: any = { ...(period as any) };
+  if (branchId != null) query.branchId = branchId;
+
+  return this.api.get<BaseResponse<any[]>>(
+    this.service,
+    'admin/completed-tasks-details',
+    query
+  );
+}
+
+
+  getBranchesForFilter(): Observable<BaseResponse<BranchFilterDto[]>> {
+  return this.api.get<BaseResponse<BranchFilterDto[]>>(
+    this.service,
+    'admin/branches-for-filter'
+  );
+}
+
 }

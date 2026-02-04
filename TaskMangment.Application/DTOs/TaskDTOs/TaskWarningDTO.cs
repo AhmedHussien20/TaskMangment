@@ -30,8 +30,11 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
         public string IssuedEmployeeName { get; set; }
         public string IssuedByName { get; set; }
 
+        public bool IsRead { get; set; }
+
+
 
     }
 
-   
+
 }

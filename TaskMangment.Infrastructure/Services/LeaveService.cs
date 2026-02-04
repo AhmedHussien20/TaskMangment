@@ -100,9 +100,10 @@ namespace TaskMangment.Infrastructure.Services
     int roleLevel,
     int employeeId)
         {
-            IQueryable<Leave> query = _leaveRepo.GetAll()
+            var query = _leaveRepo.GetAll()
                 .Include(l => l.Employee)
-                .Include(l => l.LeaveType);
+                .Include(l => l.LeaveType)
+                .ApplySearch(request.searchKey);
 
             if (request.StatusId.HasValue)
             {

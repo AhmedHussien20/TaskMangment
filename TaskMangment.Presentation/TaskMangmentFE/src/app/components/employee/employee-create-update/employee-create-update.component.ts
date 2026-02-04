@@ -107,11 +107,10 @@ export class EmployeeCreateUpdateComponent implements OnInit {
       label: '+962',
       value: '+962',
       maxLength: 9,
-      regex: /^7\d{8}$/         // الأردن
+      regex: /^7\d{8}$/      
     }
   ]
 }
-
 ,
     { 
       type: 'input', 

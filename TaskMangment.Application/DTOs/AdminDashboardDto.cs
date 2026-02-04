@@ -12,5 +12,11 @@ namespace TaskMangment.Application.DTOs
         public TaskStatusChartDto TaskStatus { get; set; }
         public List<TopDelayedEmployeeDto> TopDelayedEmployees { get; set; }
     }
+    public class BranchFilterDto
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = "";
+    }
+
 
 }

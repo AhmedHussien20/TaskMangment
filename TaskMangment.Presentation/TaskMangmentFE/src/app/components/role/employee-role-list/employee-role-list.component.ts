@@ -3,7 +3,7 @@ import { ActivatedRoute } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { RoleAssignmentService } from 'app/core/services/role-assignment.service';
 import { RoleService } from 'app/core/services/role.service';
-import { SearchCriteria } from 'app/models/search-criteria.model';
+import { SearchCriteria } from 'app/core/models/search-criteria.model';
 import { GenericTableComponent, TableColumn } from 'app/shared/components/generic-table/generic-table.component';
 import { PageHeaderComponent } from 'app/shared/components/page-header/page-header.component';
 import { ToastrService } from 'ngx-toastr';
@@ -23,6 +23,8 @@ export class EmployeeRoleListComponent implements OnInit {
  title = '';
   breadcrumbs: string[] = [];
   activeitem = '';
+  
+
 
 
   columns: TableColumn[] = [
@@ -31,6 +33,12 @@ export class EmployeeRoleListComponent implements OnInit {
     { key: 'mobile', label: 'EMPLOYEE.MOBILE' },
     { key: 'branchName', label: 'EMPLOYEE.BRANCH' }
   ];
+
+  assignmentStatusOptions = [
+  { id: null, name: 'ROLE.ALL' },
+  { id: true, name: 'ROLE.ASSIGNED' },
+  { id: false, name: 'ROLE.NOT_ASSIGNED' }
+];
 
   rows: any[] = [];
   totalItems = 0;
@@ -43,12 +51,16 @@ export class EmployeeRoleListComponent implements OnInit {
     pageSize: 20,
     sortColumn: '',
     sortDirection: 'DESC',
+    isAssigned: null,
     filterTypes: {
-      searchKey: 'text'
+      searchKey: 'text',
+      isAssigned: 'dropdown' 
     }
   };
  labels = {
-    searchKey: 'ROLE.SEARCH'
+    searchKey: 'ROLE.SEARCH',
+    isAssigned: 'ROLE.ASSIGNMENT_STATUS'
+
   };
   constructor(
     private route: ActivatedRoute,
@@ -113,9 +125,10 @@ loadRoleInfo() {
   }
 
   applyFilters = (criteria: any) => {
-    this.searchCriteria = { ...criteria, pageIndex: 1 };
-    this.loadData();
-  };
+  this.searchCriteria = { ...this.searchCriteria, ...criteria, pageIndex: 1 };
+  this.loadData();
+};
+
 
   saveAssignments() {
     const assignments = this.rows.map(r => ({

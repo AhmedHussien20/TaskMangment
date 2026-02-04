@@ -57,8 +57,13 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
         public int? ClosedByUserId { get; set; }
         public CloseReason? CloseReason { get; set; }
         public bool requireUploadFile { get; set; }
+        public DateTime? NewDate { get; set; }
+        public int? NumberOfExtensions { get; set; }
 
     }
+
+
+
     public class TaskEmployeeAssignmentDto
     {
         public int Id { get; set; }

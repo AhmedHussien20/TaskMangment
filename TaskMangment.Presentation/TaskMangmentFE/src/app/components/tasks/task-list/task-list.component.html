@@ -1,6 +1,6 @@
 <app-page-header [title]="title | translate" [title1]="breadcrumbs" [activeitem]="activeitem | translate">
 </app-page-header>
-  <div *ngIf="!isLoading" class="row row-sm">
+  <div class="row row-sm">
                     @for (card of cards; track $index) {
                     <div class="col-12 col-md-6 col-xl-3">
                         <spk-dashboard [card]="card"></spk-dashboard>
@@ -20,16 +20,16 @@
             <div class="card-body pt-2">
 
                 <!-- LOADING -->
-                <div *ngIf="isLoading" class="text-center my-3">
+                <!-- <div *ngIf="isLoading" class="text-center my-3">
                     <div class="spinner-border" role="status">
                         <span class="visually-hidden">{{ 'TABLE.LOADING' | translate }}</span>
                     </div>
                 </div>
-              
+               -->
 
                 <!-- TABLE -->
-                <div *ngIf="!isLoading">
-
+                <!-- <div *ngIf="!isLoading"> -->
+            <div>
                     <app-generic-table [title]="title" [breadcrumbs]="breadcrumbs" [columns]="columns" [data]="rows"
                         [entries]="entries" [page]="page" [labels]="labels" [totalItems]="totalItems"
                         [showAddButton]="canCreate" [showEditButton]="canEdit" [showDeleteButton]="canDelete"

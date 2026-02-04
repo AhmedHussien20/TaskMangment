@@ -6,14 +6,10 @@
       <div>
 
         <!-- LOADING -->
-        <div *ngIf="isLoading" class="text-center my-3">
-          <div class="spinner-border" role="status">
-            <span class="visually-hidden">{{ 'TABLE.LOADING' | translate }}</span>
-          </div>
-        </div>
+       
 
         <!-- TABLE -->
-        <div *ngIf="!isLoading">
+        <div>
           <app-generic-table [title]="title" [breadcrumbs]="breadcrumbs" [activeitem]="activeitem" [labels]="labels"
             [columns]="columns" [data]="rows" [entries]="entries" [page]="page" [totalItems]="totalItems"
             [showAddButton]="true" [addButtonLabel]="'DEPARTMENT.ADD' | translate" (addClick)="openAdd(departmentModal)"

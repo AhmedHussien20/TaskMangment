@@ -5,24 +5,25 @@
   <div>
 
     <app-generic-table
-      [title]="title"
-      [columns]="columns"
-      [data]="rows"
+  [title]="title"
+  [columns]="columns"
+  [data]="rows"
+  [entries]="entries"
+  [page]="page"
+  [totalItems]="totalItems"
 
-      [showCheckbox]="true"
-      checkboxKey="isAssigned"
-      (checkboxChange)="onAssignToggle($event)"
+  [searchCriteria]="searchCriteria"
+  [labels]="labels"
+  [statusOptions]="assignmentStatusOptions"  
+  [onSearch]="applyFilters"
 
-      [entries]="entries"
-      [page]="page"
-      [totalItems]="totalItems"
+  (pageChange)="onPageChange($event)"
+  (entriesChange)="onEntriesChange($event)"
 
-      [searchCriteria]="searchCriteria"
-      [onSearch]="applyFilters"
-      [labels]="labels"
-      (pageChange)="onPageChange($event)"
-      (entriesChange)="onEntriesChange($event)">
-    </app-generic-table>
+  [showCheckbox]="true"
+  checkboxKey="isAssigned"
+  (checkboxChange)="onAssignToggle($event)">
+</app-generic-table>
 
     <div class="d-flex justify-content-end mt-3">
       <button class="btn btn-primary" (click)="saveAssignments()">

@@ -9,13 +9,9 @@
 
   <div>
 
-    <!-- Loading -->
-    <div *ngIf="isLoading" class="text-center my-3">
-      <div class="spinner-border"></div>
-    </div>
-
+   
     <!-- Table -->
-    <div *ngIf="!isLoading">
+    <div>
       <app-generic-table
         [title]="title"
         [breadcrumbs]="breadcrumbs"

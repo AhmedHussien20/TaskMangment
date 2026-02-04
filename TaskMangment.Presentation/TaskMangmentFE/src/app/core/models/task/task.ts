@@ -71,6 +71,8 @@ export interface TaskGet {
   ClosedByUserId? :number
   CloseReason? : CloseReason 
   requireUploadFile: boolean;
+  newDate?: string;
+  numberOfExtensions?: number;
 }
 
 export interface TaskSummary {

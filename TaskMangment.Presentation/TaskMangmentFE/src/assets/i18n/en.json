@@ -34,7 +34,10 @@
     "NOT_COMMENTED_TODAY": "Incoming tasks have no comments today",
     "TODAY": "Today",
     "MONTH": "Month",
-    "YEAR": "Year"
+    "YEAR": "Year",
+    "SELECT_BRANCH" : "Select branch",
+    "NOT_COMMENTED_EMPLOYEES" : "Employees aren't comment"
+
   },
   "MENU": {
     "HOME": "Home",
@@ -547,7 +550,10 @@
     "DAYS": "Days",
     "REQUIRE_UPLOAD_FILE_WHEN_COMMENTING": "upload file when commenting",
     "FILE_REQUIRED": "Uploading the file is required when commenting for this task",
-    "FILE" : "File"
+    "FILE" : "File",
+    "DELETE_SUCCESS" :"Deleted successfully",
+    "EXTENSIONS_COUNT" : "Approved extension requests",
+    "NEW_DUE_DATE" : "Date after extend"
   },
   "EMPLOYEE": {
     "LIST_TITLE": "Employee List",
@@ -662,7 +668,11 @@
       "TEAM_LEAD": "Team Lead",
       "MANAGER": "Manager",
       "ADMIN": "System Admin"
-    }
+    },
+    "ASSIGNMENT_STATUS": "Employees",
+    "ALL": "All",
+    "ASSIGNED" :"Assigned",
+    "NOT_ASSIGNED": "Not assigned"
   },
   "PERMISSION": {
     "TITLE": "Permission Management",

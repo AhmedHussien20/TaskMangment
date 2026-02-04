@@ -16,7 +16,9 @@ export class RoleAssignmentService {
     const query = [
       `PageIndex=${request.pageIndex}`,
       `PageSize=${request.pageSize}`,
-      `searchKey=${request.searchKey ?? ''}`
+      `searchKey=${request.searchKey ?? ''}`,
+      `IsAssigned=${request.isAssigned ?? ''}`
+
     ].join('&');
 
     return this.api.get<BaseResponse<any>>(

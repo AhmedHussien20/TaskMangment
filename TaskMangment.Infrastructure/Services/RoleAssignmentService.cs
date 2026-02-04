@@ -116,20 +116,44 @@ namespace TaskMangment.Infrastructure.Services
             if (!await _roleRepo.IsExistAsync(roleId))
                 throw new AppException(ErrorCodes.RoleNotFound, StatusCodes.Status400BadRequest);
 
-            string cacheKey =
-                $"assigned-employees:{roleId}:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
+            //string cacheKey =
+            //    $"assigned-employees:{roleId}:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}:{request.IsAssigned}";
 
-            if (!request.BypassCache)
-            {
-                var cached = await _cache.GetAsync<PagedResponse<AssignedEmployeeDto>>(cacheKey);
-                if (cached != null)
-                    return ApiResponse<PagedResponse<AssignedEmployeeDto>>.Ok(cached);
-            }
+
+            //if (!request.BypassCache)
+            //{
+            //    var cached = await _cache.GetAsync<PagedResponse<AssignedEmployeeDto>>(cacheKey);
+            //    if (cached != null)
+            //        return ApiResponse<PagedResponse<AssignedEmployeeDto>>.Ok(cached);
+            //}
+
+        
 
             var query = _employeeRepo.GetAll()
-                .Include(e => e.Branch)
-                .Include(e => e.EmployeeRoles)
-                .ApplySearch(request.searchKey);
+    .Include(e => e.Branch)
+    .Include(e => e.EmployeeRoles)
+    .ApplySearch(request.searchKey);
+
+            if (request.IsAssigned.HasValue)
+            {
+                if (request.IsAssigned.Value)
+                {
+                    query = query.Where(e =>
+                        e.EmployeeRoles.Any(er =>
+                            er.RoleId == roleId &&
+                            er.IsAssigned &&
+                            !er.IsDeleted));
+                }
+                else
+                {
+                    query = query.Where(e =>
+                        !e.EmployeeRoles.Any(er =>
+                            er.RoleId == roleId &&
+                            er.IsAssigned &&
+                            !er.IsDeleted));
+                }
+            }
+
 
             var totalCount = await query.CountAsync();
 
@@ -158,7 +182,7 @@ namespace TaskMangment.Infrastructure.Services
                 request.PageSize
             );
 
-            await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
+           // await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
 
             return ApiResponse<PagedResponse<AssignedEmployeeDto>>.Ok(response);
         }

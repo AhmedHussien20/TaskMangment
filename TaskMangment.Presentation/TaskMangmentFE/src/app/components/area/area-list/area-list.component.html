@@ -13,14 +13,14 @@
       <div class="card-body pt-2"> -->
         <div>
         <!-- LOADING -->
-        <div *ngIf="isLoading" class="text-center my-3">
+        <!-- <div *ngIf="isLoading" class="text-center my-3">
           <div class="spinner-border" role="status">
             <span class="visually-hidden">{{ 'TABLE.LOADING' | translate }}</span>
           </div>
-        </div>
+        </div> -->
 
         <!-- TABLE -->
-        <div *ngIf="!isLoading">
+        <div>
           <app-generic-table [title]="title" [breadcrumbs]="breadcrumbs" [activeitem]="activeitem | translate" [labels]="labels"
             [columns]="columns" [data]="rows" [entries]="entries" [page]="page" [totalItems]="totalItems"
             [showAddButton]="true" [addButtonLabel]="'AREA.addArea' | translate" (addClick)="openAdd(areaModal)"

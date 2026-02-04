@@ -6,14 +6,14 @@
   <div class="card custom-card">
     <!-- <div class="card-body"> -->
     <div> <!-- LOADING -->
-      <div *ngIf="isLoading" class="text-center my-3">
+     <!--  <div *ngIf="isLoading" class="text-center my-3">
         <div class="spinner-border" role="status">
           <span class="visually-hidden">{{ 'TABLE.LOADING' | translate }}</span>
         </div>
-      </div>
+      </div> -->
 
       <!-- TABLE -->
-      <div *ngIf="!isLoading">
+ 
 
         <app-generic-table [title]="title" [breadcrumbs]="breadcrumbs" [activeitem]="activeitem" [labels]="labels"
           [columns]="columns" [data]="rows" [entries]="entries" [page]="page" [totalItems]="totalItems"
@@ -23,7 +23,7 @@
           (entriesChange)="onEntriesChange($event)" [showDeleteButton]="true" (delete)="confirmDelete($event)">
         </app-generic-table>
 
-      </div>
+    
     </div>
   </div>
 </div>

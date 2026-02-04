@@ -1,17 +1,20 @@
 .task-details-wrapper {
-  max-width: 800px;
-  margin: 0 auto;
+  max-height: 60vh;   
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: block;
 }
 
-/* الجدول */
+
+
 .task-details-table {
   width: 100%;
-  table-layout: fixed; /* 🔥 ده سر تقليل المسافة */
+  table-layout: fixed; 
 }
 
 /* العنوان */
 .task-details-table th {
-  width: 30%;                /* ✨ تحكم في المسافة */
+  width: 30%;              
   text-align: right;
   white-space: nowrap;
   padding: 10px 12px;
