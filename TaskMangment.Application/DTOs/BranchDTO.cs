@@ -30,6 +30,8 @@ namespace TaskMangment.Application.DTOs
 
         public int ManagerId { get; set; }
         public int ResponsibleId { get; set; }
+        public bool MainBranch { get; set; } = false;
+
     }
 
     public class BranchGetDto
@@ -47,6 +49,8 @@ namespace TaskMangment.Application.DTOs
         public string Mobile { get; set; }
         public string Fax { get; set; }
         public string Email { get; set; }
+        public bool MainBranch { get; set; }
+
     }
 
 }

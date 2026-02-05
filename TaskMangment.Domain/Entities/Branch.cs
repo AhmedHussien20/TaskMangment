@@ -10,7 +10,7 @@ namespace TaskMangment.Domain.Entities
 {
     public class Branch : BaseEntity
     {
-        [Required] 
+        [Required]
         public int CompanyId { get; set; }
         public int? AreaId { get; set; }
 
@@ -33,6 +33,7 @@ namespace TaskMangment.Domain.Entities
         public int ResponsibleID { get; set; }
 
         public bool IsActive { get; set; } = true;
+        public bool MainBranch { get; set; }=false;
 
         [ForeignKey(nameof(CompanyId))] public Company Company { get; set; }
         [ForeignKey(nameof(AreaId))] public Area Area { get; set; }

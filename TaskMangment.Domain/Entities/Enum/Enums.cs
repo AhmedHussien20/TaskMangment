@@ -67,6 +67,7 @@ namespace TaskMangment.Domain.Entities
         Employee = 10,
         TeamLead = 50,
         Manager = 70,
+        BranchesManager = 80,
         Admin = 100
     }
 
@@ -98,6 +99,25 @@ namespace TaskMangment.Domain.Entities
         Month,
         Year,
         Custom
+    }
+
+    public enum NotificationType
+    {
+        Comments,
+        Penalty,
+        Warning,
+        TaskAssign,
+        TaskUnassign,
+        LeaveRequest,
+        leaveApproved,
+        leaverejected,
+        ExtensionRequest,
+        ExtensionRequestApproved,
+        ExtensionRequestRejected,
+        CloseRequest,
+        CloseRequestApproved,
+        CloseRequestRejected,
+        AchievementPercent
     }
 
 

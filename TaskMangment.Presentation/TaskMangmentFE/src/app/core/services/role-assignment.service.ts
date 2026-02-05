@@ -1,6 +1,7 @@
 import { BaseResponse } from "app/models/base.response.model";
 import { ApiService } from "./api.service";
 import { Injectable } from "@angular/core";
+import { GetManagerBranchesDto } from "../models/roles/role";
 
 @Injectable({
   providedIn: 'root'
@@ -33,6 +34,20 @@ export class RoleAssignmentService {
       this.service,
       `bulk-assign-employees?roleId=${roleId}`,
       { assignments }
+    );
+  }
+  getManagerBranches(managerId: number) {
+  return this.api.get<BaseResponse<GetManagerBranchesDto>>(
+    this.service,
+    `manager-branches/${managerId}`
+  );
+}
+
+   setManagerBranches(managerId: number, branchIds: number[]) {
+    return this.api.post<BaseResponse<any>>(
+      this.service,
+      `manager-branches/${managerId}`,
+      branchIds
     );
   }
 }

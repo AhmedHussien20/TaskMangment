@@ -194,6 +194,14 @@
                                 <span class="amount-currency">SAR</span>
                             </span>
                         </ng-container>
+                        <!-- SEEN -->
+                        <ng-container *ngSwitchCase="'seen'">
+                            <span class="badge seen-badge"
+                                [ngClass]="getValue(item, col.key) ? 'seen-true' : 'seen-false'">
+                                <i class="bi bi-check2-circle"></i>                
+                            </span>
+                        </ng-container>
+
 
 
                         <!-- DEFAULT TEXT -->

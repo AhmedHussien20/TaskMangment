@@ -31,7 +31,7 @@ private MENUITEMS: MenuItem[] = [
     title: 'nav.apps.organization.title',
     icon: 'ti-map',
     type: 'sub',
-    minRoleLevel: 100,
+    minRoleLevel: 80,
     children: [
       {
         title: 'nav.apps.area.list',
@@ -43,7 +43,7 @@ private MENUITEMS: MenuItem[] = [
         title: 'nav.apps.branch.list',
         path: '/branch/branch-list',
         type: 'link',
-        minRoleLevel: 100
+        minRoleLevel: 80
       },
       {
         title: 'nav.apps.department.list',

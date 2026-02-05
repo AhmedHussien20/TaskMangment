@@ -30,6 +30,8 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<Company> _companyRepository;
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
+        private readonly IRepository<ManagerBranches> _managerBranchesRepo;
+
 
         public BranchService(
             IRepository<Branch> branchRepository,
@@ -37,7 +39,8 @@ namespace TaskMangment.Infrastructure.Services
             IRepository<Area> areaRepository,
             IRepository<Company> companyRepository,
             IMapper mapper,
-            ICachingService cache)
+            ICachingService cache,
+            IRepository<ManagerBranches> managerBranchesRepo)
         {
             _branchRepository = branchRepository;
             _employeeRepository = employeeRepository;
@@ -45,25 +48,41 @@ namespace TaskMangment.Infrastructure.Services
             _companyRepository = companyRepository;
             _mapper = mapper;
             _cache = cache;
+            _managerBranchesRepo = managerBranchesRepo;
         }
 
-        public async Task<ApiResponse<PagedResponse<BranchGetDto>>> GetAllAsync(BranchRequest request)
+        public async Task<ApiResponse<PagedResponse<BranchGetDto>>> GetAllAsync(
+    BranchRequest request,
+    int employeeId,
+    int roleLevel,int companyId)
         {
-            //string cacheKey =
-            //    $"branches:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
-
-            //if (!request.BypassCache)
-            //{
-            //    var cached = await _cache.GetAsync<PagedResponse<BranchGetDto>>(cacheKey);
-            //    if (cached != null)
-            //        return ApiResponse<PagedResponse<BranchGetDto>>.Ok(cached);
-            //}
-
             var query = _branchRepository.GetAll()
                 .Include(b => b.Manager)
                 .Include(b => b.Responsible)
                 .Include(b => b.Area)
-                .ApplySearch(request.searchKey); ;
+                .ApplySearch(request.searchKey);
+
+            query = query.Where(b => b.CompanyId == companyId && !b.IsDeleted);
+
+
+            if (roleLevel == 80)
+            {
+                var myBranchIds = await _managerBranchesRepo
+                    .GetAll(x => x.ManagerId == employeeId && !x.IsDeleted)
+                    .Select(x => x.BranchId)
+                    .Distinct()
+                    .ToListAsync();
+
+                if (!myBranchIds.Any())
+                {
+                    query = query.Where(b => false);
+                }
+                else
+                {
+                    query = query.Where(b => myBranchIds.Contains(b.Id));
+                }
+            }
+
             var totalCount = await query.CountAsync();
 
             query = query.OrderByDynamicSafe(request.SortColumn, request.SortDirection);
@@ -77,10 +96,9 @@ namespace TaskMangment.Infrastructure.Services
 
             var response = new PagedResponse<BranchGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
 
-            //await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
-
             return ApiResponse<PagedResponse<BranchGetDto>>.Ok(response);
         }
+
 
         public async Task<ApiResponse<BranchGetDto>> GetByIdAsync(int id)
         {

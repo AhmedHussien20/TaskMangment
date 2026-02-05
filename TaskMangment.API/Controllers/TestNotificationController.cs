@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using TaskMangment.Application.Interfaces.Services;
+using TaskMangment.Domain.Entities;
 using TaskMangment.Infrastructure.SignalR;
 
 namespace TaskMangment.API.Controllers
@@ -30,7 +31,10 @@ namespace TaskMangment.API.Controllers
                 message: " Test Notification from API!",
                 sendEmail: true,
                 sendWhatsApp: true,
-                taskId: null
+                taskId: null,
+                NotificationType.Comments,
+                0
+
             );
 
             return Ok("Notification Sent!");

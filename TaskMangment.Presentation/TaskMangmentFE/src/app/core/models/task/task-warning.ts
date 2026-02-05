@@ -11,6 +11,7 @@ export interface WarningGetDto {
   issuedAt: string;
   issuedEmployeeName: string;
   issuedByName: string;
+  isRead: boolean | false
 }
 
 export interface WarningAddEditDto {

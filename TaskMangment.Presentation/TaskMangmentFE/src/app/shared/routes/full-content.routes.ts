@@ -45,7 +45,7 @@ export const content: Routes = [
          loadChildren: () => import('../../../app/components/branch/branch.routes').then(r => r.BranchRoutingModule),
           canActivate: [AuthGuard],
           canLoad: [AuthGuard],
-          data: { roleLevel: 100 }
+          data: { roleLevel: 80 }
          },
       { path: 'department', loadChildren: () => import('../../../app/components/department/department.routes').then(r => r.DepartmentRoutingModule),
           canActivate: [AuthGuard],

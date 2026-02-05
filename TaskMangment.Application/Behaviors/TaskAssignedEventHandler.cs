@@ -47,6 +47,8 @@ namespace TaskMangment.Application.Behaviors
                     message,
                     sendEmail: true,
                     sendWhatsApp: false,
+                    ev.TaskId,
+                    NotificationType.TaskAssign,
                     ev.TaskId
                 );
             }

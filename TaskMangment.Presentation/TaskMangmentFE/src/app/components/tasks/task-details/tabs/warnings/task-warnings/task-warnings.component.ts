@@ -27,7 +27,10 @@ export class TaskWarningsComponent implements OnInit, OnDestroy {
      { key: 'issuedAt', label: 'TASK.DATE', type: 'date' },
     { key: 'reason', label: 'TASK.WARNING_RESON' },
     { key: 'issuedEmployeeName', label: 'TASK.WARNED_EMPLOYEE' },
-    { key: 'issuedByName', label: 'TASK.WARNED_BY' }
+    { key: 'issuedByName', label: 'TASK.WARNED_BY' },
+    { key: 'isRead', label: 'TASK.READED', type: 'seen' }
+
+
   ];
 
   private sub!: Subscription;

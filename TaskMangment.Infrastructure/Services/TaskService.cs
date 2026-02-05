@@ -46,6 +46,8 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<TaskComment> _commentRepo;
         private readonly IRepository<Attachment> _attachmentRepo;
         private readonly IRepository<TaskPercentage> _percentRepo;
+        private readonly IRepository<Notification> _notificationRepo;
+
 
 
 
@@ -65,7 +67,9 @@ namespace TaskMangment.Infrastructure.Services
            IRepository<Discount> penaltyRepo,
            IRepository<TaskComment> commentRepo,
            IRepository<Attachment> attachmentRepo,
-           IRepository<TaskPercentage> percentRepo
+           IRepository<TaskPercentage> percentRepo,
+           IRepository<Notification> notificationRepo
+
 
 )
         {
@@ -85,7 +89,7 @@ namespace TaskMangment.Infrastructure.Services
             _commentRepo = commentRepo;
             _attachmentRepo = attachmentRepo;
             _percentRepo = percentRepo;
-
+            _notificationRepo = notificationRepo;
         }
 
         public async Task<ApiResponse<PagedResponse<TaskGetDto>>> GetAllAsync(TaskRequest request, int CompanyId, string role, int employeeId)
@@ -418,8 +422,30 @@ namespace TaskMangment.Infrastructure.Services
                 EmployeeId = a.EmployeeId,
                 EmployeeName = a.Employee.FullName,
                 Role = string.Join(", ", a.Employee.EmployeeRoles.Select(er => er.Role.Name)),
-                Status = a.IsActive ? "Active" : "Inactive"
+                Status = a.IsActive ? "Active" : "Inactive",
+                IsRead = false
             }).ToList();
+
+            var employeeIds = dtos.Select(x => x.EmployeeId).Distinct().ToList();
+
+            var notifReadMap = await _notificationRepo.GetAll(n =>
+                    n.NotificationType == NotificationType.TaskAssign &&
+                    n.ReferenceId == taskId &&
+                    employeeIds.Contains(n.UserId))
+                .Select(n => new { n.UserId, n.IsRead })
+                .ToListAsync();
+
+            var seenDict = notifReadMap
+                .GroupBy(x => x.UserId)
+                .ToDictionary(g => g.Key, g => g.Any(x => x.IsRead));
+
+            foreach (var dto in dtos)
+            {
+                dto.IsRead = seenDict.TryGetValue(dto.EmployeeId, out var seen) && seen;
+            }
+
+            return ApiResponse<List<TaskAssignmentDto>>.Ok(dtos);
+
 
             return ApiResponse<List<TaskAssignmentDto>>.Ok(dtos);
         }

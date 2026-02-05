@@ -38,7 +38,8 @@ export class TaskPenaltiesComponent implements OnInit, OnDestroy {
     true: { text: 'TASK.STATUS_AUTODISCOUNT', class: 'bg-warning' },
     false: { text: 'TASK.STATUS_DISCOUNT', class: 'bg-success' }
   }
-}
+},
+    { key: 'isRead', label: 'TASK.READED', type: 'seen' }
   ];
 
   private sub!: Subscription;

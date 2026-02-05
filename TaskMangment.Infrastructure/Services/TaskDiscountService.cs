@@ -34,6 +34,8 @@ namespace TaskMangment.Infrastructure.Services
         private readonly ICachingService _cache;
         private readonly IDomainEventDispatcher _eventDispatcher;
         private readonly IStringLocalizer<DiscountAutoType> _localizer;
+        private readonly IRepository<Notification> _notificationRepo;
+
 
 
         public TaskDiscountService(
@@ -44,7 +46,8 @@ namespace TaskMangment.Infrastructure.Services
             ICachingService cache,
             IDomainEventDispatcher eventDispatcher,
             IStringLocalizer<DiscountAutoType> localizer,
-            IRepository<Branch> branchRepo)
+            IRepository<Branch> branchRepo,
+            IRepository<Notification> notificationRepo)
         {
             _discountRepo = discountRepo;
             _employeeRepo = employeeRepo;
@@ -54,6 +57,7 @@ namespace TaskMangment.Infrastructure.Services
             _eventDispatcher = eventDispatcher;
             _localizer = localizer;
             _branchRepo = branchRepo;
+            _notificationRepo = notificationRepo;
         }
 
         public async Task<ApiResponse<PagedResponse<DiscountGetDto>>> GetAllAsync(TaskDiscountRequest request)
@@ -101,6 +105,25 @@ namespace TaskMangment.Infrastructure.Services
                 }
             }
             var dtos = _mapper.Map<ICollection<DiscountGetDto>>(list);
+
+            var discountIds = dtos.Select(x => x.Id).ToList();
+
+            var notifReadMap = await _notificationRepo
+                .GetAll(n =>
+                    n.NotificationType == NotificationType.Penalty &&
+                    discountIds.Contains(n.ReferenceId))
+                .Select(n => new { n.ReferenceId, n.IsRead })
+                .ToListAsync();
+
+            var readDict = notifReadMap
+                .GroupBy(x => x.ReferenceId)
+                .ToDictionary(g => g.Key, g => g.Any(x => x.IsRead));
+
+            foreach (var dto in dtos)
+            {
+                dto.IsRead = readDict.TryGetValue(dto.Id, out var isRead) && isRead;
+            }
+
 
             var response = new PagedResponse<DiscountGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
 

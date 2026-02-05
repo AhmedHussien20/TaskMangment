@@ -76,6 +76,8 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
         public string EmployeeName { get; set; } = string.Empty;
         public string Role { get; set; } = string.Empty;
         public string Status { get; set; } = "Active";
+        public bool IsRead { get; set; }
+
     }
 
     public class TaskRequestsDto

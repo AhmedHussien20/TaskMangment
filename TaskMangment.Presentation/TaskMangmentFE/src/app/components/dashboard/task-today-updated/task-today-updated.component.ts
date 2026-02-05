@@ -88,13 +88,19 @@ export class TaskTodayUpdatedComponent {
  console.log('Request being sent:', req);
     this.dashboardService.getAdminInProgressUpdatedToday(req,this.currentBranchId).subscribe({
       next: (res) => {
-        const data = res.data;
-        this.rows = data?.data ?? [];
-        this.totalItems = data?.totalCount ?? 0;
-        this.page = data?.pageIndex ?? this.page;
-        this.entries = data?.pageSize ?? this.entries;
-        this.isLoading = false;
-      },
+  const data = res.data;
+
+  this.rows = (data?.data ?? []).map((x: any) => ({
+    ...x,
+    id: x.taskId,     // ✅ مهم جداً عشان GenericTable
+  }));
+
+  this.totalItems = data?.totalCount ?? 0;
+  this.page = data?.pageIndex ?? this.page;
+  this.entries = data?.pageSize ?? this.entries;
+  this.isLoading = false;
+},
+
       error: () => {
         this.isLoading = false;
       }
@@ -128,6 +134,11 @@ export class TaskTodayUpdatedComponent {
   checkRowClickable(item: any): boolean { return true; }
 
   onEdit(id: number) {
+
+    console.log('Editing task ID:', id);
+  const task = this.rows.find(x => x.taskId === id);
+  console.log('Task object:', task);
+  
     const modalRef = this.modalService.open(TaskDetailsShellComponent, {
       size: 'xl',
       backdrop: 'static',

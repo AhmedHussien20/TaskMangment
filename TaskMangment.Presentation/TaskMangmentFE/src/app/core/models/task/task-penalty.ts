@@ -13,6 +13,8 @@ export interface DiscountGetDto {
   amount: number;
   createdDate: string;
  autoDiscount: boolean;
+ isRead: boolean | false
+
 }
 
 export interface DiscountPagedResponse {

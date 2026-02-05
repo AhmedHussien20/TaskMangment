@@ -29,7 +29,7 @@ public class NotificationService : INotificationService
 
     }
 
-    public async Task SendAsync(int userId, string messageKey, bool sendEmail, bool sendWhatsApp, int? taskId)
+    public async Task SendAsync(int userId, string messageKey, bool sendEmail, bool sendWhatsApp, int? taskId, NotificationType type, int referenceId)
     {
         var message = messageKey;
 
@@ -39,6 +39,8 @@ public class NotificationService : INotificationService
         {
             UserId = userId,
             Message = message,
+            NotificationType = type,
+            ReferenceId = referenceId,
             IsRead = isOnline
         };
 
@@ -59,6 +61,8 @@ public class NotificationService : INotificationService
 
     public Task MarkAllAsReadAsync(int userId)
         => _repo.MarkAllAsReadAsync(userId);
+
+
 }
 
 

@@ -18,7 +18,10 @@ interface AuditItem {
   selector: 'app-task-audit',
   standalone: true,
   imports: [CommonModule, TranslateModule, MyDatePipe],
-  templateUrl: './task-audit.component.html'
+  templateUrl: './task-audit.component.html',
+  styleUrls: ['./task-audit.component.scss']
+
+
 })
 export class TaskAuditComponent implements OnInit, OnDestroy {
 

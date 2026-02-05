@@ -27,6 +27,7 @@ roleLevelsOptions = [
   { value: 10, label: 'ROLE.LEVELS.EMPLOYEE' },
   { value: 50, label: 'ROLE.LEVELS.TEAM_LEAD' },
   { value: 70, label: 'ROLE.LEVELS.MANAGER' },
+    {value: 80, label: 'ROLE.LEVELS.BRANCHES_MANAGER'},
   { value: 100, label: 'ROLE.LEVELS.ADMIN' }
 ];
 

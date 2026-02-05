@@ -7,25 +7,28 @@
       </div>
 
       <!-- TABLE -->
-<app-generic-table
-  [title]="title"
-  [columns]="columns"
-  [data]="rows"
-  [entries]="entries"
-  [page]="page"
-  [totalItems]="totalItems"
-  [showAddButton]="false"
-  [showEditButton]="false"
-  [showDeleteButton]="false"
-  [showFilters]="false"
-  [showExportExcel]="false"
-  [rowClickable]="true"
-  [rowClickableCondition]="checkRowClickable"
-  (pageChange)="onPageChange($event)"
-  (entriesChange)="onEntriesChange($event)"
-  [rowClickableCondition]="checkRowClickable"
-  (edit)="onEdit($event)">
-</app-generic-table>
+ <app-generic-table
+          [title]="title"
+          [columns]="columns"
+          [data]="rows"
+          [entries]="entries"
+          [page]="page"
+          [totalItems]="totalItems"
+          [labels]="labels"
+          [showAddButton]="false"
+          [showEditButton]="false"
+          [showDeleteButton]="false"
+          [showFilters]="false"
+          [showExportExcel]="false"
+          [searchCriteria]="searchCriteria"
+          [onSearch]="applyFilters.bind(this)"
+          (pageChange)="onPageChange($event)"
+          [rowClickable]="true" 
+          (entriesChange)="onEntriesChange($event)"
+          [rowClickableCondition]="checkRowClickable"
+          (edit)="onEdit($event)"
+          >
+        </app-generic-table>
 
       </div>
 

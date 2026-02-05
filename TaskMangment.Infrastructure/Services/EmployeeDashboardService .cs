@@ -25,6 +25,9 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IStringLocalizer<DiscountAutoType> _localizer;
 
         private readonly ICachingService _cache;
+        private readonly IRepository<ManagerBranches> _managerBranchesRepo;
+        private readonly IRepository<Employee> _employeeRepo;
+
 
         public EmployeeDashboardService(
             IRepository<TaskAssignment> assignmentRepo,
@@ -32,9 +35,9 @@ namespace TaskMangment.Infrastructure.Services
             IRepository<Discount> deductionRepo,
             ICachingService cache,
             IRepository<TaskPercentage> taskPercentageRepo,
-            IStringLocalizer<DiscountAutoType> localizer
-
-            )
+            IStringLocalizer<DiscountAutoType> localizer,
+            IRepository<ManagerBranches> managerBranchesRepo,
+            IRepository<Employee> employeeRepo)
         {
             _assignmentRepo = assignmentRepo;
             _warningRepo = warningRepo;
@@ -42,6 +45,8 @@ namespace TaskMangment.Infrastructure.Services
             _cache = cache;
             _taskPercentageRepo = taskPercentageRepo;
             _localizer = localizer;
+            _managerBranchesRepo = managerBranchesRepo;
+            _employeeRepo = employeeRepo;
         }
 
         public async Task<ApiResponse<EmployeeDashboardDto>> GetDashboardAsync(int employeeId, PeriodDto? period = null)
@@ -148,18 +153,55 @@ namespace TaskMangment.Infrastructure.Services
                 a.IsActive &&
                 !a.IsClosed &&
                 allowedStatuses.Contains(a.Task.Status) &&
-                !a.Task.Comments.Any(c => c.CreatedDate >= today && c.EmployeeId == a.EmployeeId) 
+                !a.Task.Comments.Any(c => c.CreatedDate >= today && c.EmployeeId == a.EmployeeId)
             );
 
+            // ===================== Scope حسب RoleLevel =====================
             if (roleLevel < 70)
             {
                 baseQuery = baseQuery.Where(a => a.EmployeeId == employeeId);
             }
+            else if (roleLevel == 70)
+            {
+                var myBranchId = await _employeeRepo
+                    .GetAll(e => e.Id == employeeId)
+                    .Select(e => e.BranchId)
+                    .FirstOrDefaultAsync();
+
+                if (!myBranchId.HasValue)
+                    baseQuery = baseQuery.Where(a => false);
+                else
+                    baseQuery = baseQuery.Where(a => a.Employee.BranchId == myBranchId.Value);
+            }
+            else if (roleLevel == 80)
+            {
+                var managedBranchIds = await _managerBranchesRepo
+                    .GetAll(x => x.ManagerId == employeeId && !x.IsDeleted)
+                    .Select(x => x.BranchId)
+                    .Distinct()
+                    .ToListAsync();
+
+                if (!managedBranchIds.Any())
+                {
+                    baseQuery = baseQuery.Where(a => false);
+                }
+                else
+                {
+                    baseQuery = baseQuery.Where(a =>
+                        a.Employee.BranchId.HasValue &&
+                        managedBranchIds.Contains(a.Employee.BranchId.Value));
+                }
+            }
             else
             {
-                baseQuery = baseQuery.Where(a => a.EmployeeId == employeeId || a.Task.AssignedByEmployeeId == employeeId);
+                // Admin وما فوق: لا فلترة إضافية
             }
 
+            // ✅ (1) فلترة: لازم أكون طرف في المهمة
+            baseQuery = baseQuery.Where(a =>
+                a.EmployeeId == employeeId || a.Task.AssignedByEmployeeId == employeeId);
+
+            // ===================== Search =====================
             if (!string.IsNullOrWhiteSpace(request.searchKey))
             {
                 var key = request.searchKey.Trim();
@@ -168,6 +210,7 @@ namespace TaskMangment.Infrastructure.Services
                     a.Task.AssignedBy.FullName.Contains(key));
             }
 
+            // ===================== Projection =====================
             var dtoQuery = baseQuery
                 .GroupBy(a => new
                 {
@@ -175,7 +218,8 @@ namespace TaskMangment.Infrastructure.Services
                     a.Task.Title,
                     a.Task.Status,
                     a.Task.DueDate,
-                    AssignedBy = a.Task.AssignedBy.FullName
+                    AssignedBy = a.Task.AssignedBy.FullName,
+                    a.Task.AssignedByEmployeeId
                 })
                 .Select(g => new TodayCommentTaskDto
                 {
@@ -185,8 +229,11 @@ namespace TaskMangment.Infrastructure.Services
                     StatusText = g.Key.Status.ToString(),
                     DueDate = g.Key.DueDate,
                     AssignedBy = g.Key.AssignedBy,
+                    Employees = g.Select(x => x.Employee.FullName).Distinct().ToList(),
 
-                    Employees = g.Select(x => x.Employee.FullName).Distinct().ToList()
+                    RemainDays = g.Key.DueDate.HasValue
+                        ? EF.Functions.DateDiffDay(today, g.Key.DueDate.Value)
+                        : 0
                 })
                 .AsNoTracking();
 
@@ -199,14 +246,11 @@ namespace TaskMangment.Infrastructure.Services
                 .Take(request.PageSize)
                 .ToListAsync();
 
-            var response = new PagedResponse<TodayCommentTaskDto>(
-                list,
-                totalCount,
-                request.PageIndex,
-                request.PageSize);
-
-            return ApiResponse<PagedResponse<TodayCommentTaskDto>>.Ok(response);
+            return ApiResponse<PagedResponse<TodayCommentTaskDto>>.Ok(
+                new PagedResponse<TodayCommentTaskDto>(list, totalCount, request.PageIndex, request.PageSize)
+            );
         }
+
 
 
 

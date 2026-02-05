@@ -45,7 +45,9 @@ export class TaskTodayCommentComponent implements OnInit {
       }
     },
     { key: 'assignedBy', label: 'TASK.ASSIGNED_BY' },
-    { key: 'dueDate', label: 'TASK.DUE_DATE', type: 'date' }
+    { key: 'dueDate', label: 'TASK.DUE_DATE', type: 'date' },
+    { key: 'remainDays', label: 'TASK.REMAIN_DAYS' }
+
   ];
 
   rows: TodayCommentTaskDto[] = [];
@@ -73,7 +75,7 @@ export class TaskTodayCommentComponent implements OnInit {
   ngOnInit() {
   const userLevel = Number(this.authService.getRoleLevel() ?? 0);
 
-  if ([70, 100].includes(userLevel)) {
+  if ([70,80, 100].includes(userLevel)) {
     this.columns.splice(4, 0, {
       key: 'employees',
       label: 'DASHBOARD.NOT_COMMENTED_EMPLOYEES',

@@ -37,3 +37,13 @@ export interface RolePagedResponse {
   employeeCount: number;
   permissionCount: number;
 }
+
+export interface BranchLookupDto {
+  id: number;
+  name: string;
+}
+export interface GetManagerBranchesDto {
+  managerId: number;
+  branchIds: number[];
+  branchLookupDtos: BranchLookupDto[];
+}

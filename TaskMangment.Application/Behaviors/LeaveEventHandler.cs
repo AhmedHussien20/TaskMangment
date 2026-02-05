@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Notification;
 using TaskMangment.Application.Interfaces.Services;
+using TaskMangment.Domain.Entities;
 using TaskMangment.Domain.Event;
 using TaskMangment.Utilities.Localization.Resources;
 
@@ -44,7 +45,9 @@ namespace TaskMangment.Application.Behaviors
                 message: message,
                 sendEmail: false,
                 sendWhatsApp: false,
-                null
+                null,
+                NotificationType.LeaveRequest,
+                ev.LeaveId
             );
         }
     }

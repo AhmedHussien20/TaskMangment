@@ -65,6 +65,11 @@ export class RoleListComponent implements OnInit {
         Admin: {
           text: 'ROLE.LEVELS.ADMIN',
           class: 'bg-danger'
+        },
+        BranchesManager:
+        {
+          text: 'ROLE.LEVELS.BRANCHES_MANAGER',
+          class: 'bg-warning'
         }
       }
     },

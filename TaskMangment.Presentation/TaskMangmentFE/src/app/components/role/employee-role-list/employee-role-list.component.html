@@ -4,23 +4,22 @@
 <div class="card">
   <div>
 
-    <app-generic-table
+  <app-generic-table
   [title]="title"
   [columns]="columns"
   [data]="rows"
   [entries]="entries"
   [page]="page"
   [totalItems]="totalItems"
-
   [searchCriteria]="searchCriteria"
   [labels]="labels"
   [statusOptions]="assignmentStatusOptions"  
   [onSearch]="applyFilters"
-
   (pageChange)="onPageChange($event)"
   (entriesChange)="onEntriesChange($event)"
-
   [showCheckbox]="true"
+  [showDetailsButton]="selectbranches"
+(details)="openDetails($event, branchesModal)"
   checkboxKey="isAssigned"
   (checkboxChange)="onAssignToggle($event)">
 </app-generic-table>
@@ -33,3 +32,20 @@
 
   </div>
 </div>
+
+<!-- MODAL TEMPLATE -->
+<ng-template #branchesModal let-modal>
+  <div class="modal-header">
+    <h6 class="modal-title">{{ 'ROLE.LEVELS.BRANCHES_MANAGER' | translate }}</h6>
+    <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
+  </div>
+
+  <div class="modal-body">
+    <app-manager-branches-form
+      [isEdit]="true"
+      [managerId]="selectedManagerId"
+      [selectedBranchIds]="selectedBranchIds"
+      (formSubmitted)="onBranchesFormSubmitted($event, modal)">
+    </app-manager-branches-form>
+  </div>
+</ng-template>

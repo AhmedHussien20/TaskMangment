@@ -24,6 +24,7 @@ namespace TaskMangment.Application.DTOs
 
         public string AssignedBy { get; set; }
         public List<string>? Employees { get; set; }
+        public int RemainDays { get; set; }
     }
 
 

@@ -97,6 +97,7 @@ export interface TaskAssignedEmployee {
   employeeName: string;
   role: string; 
   status: string;
+  isRead: boolean | false
 }
 
 export interface SimpleEmployee {

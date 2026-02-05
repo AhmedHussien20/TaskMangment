@@ -1,6 +1,6 @@
 import { Component, Input, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { GenericTableComponent } from 'app/shared/components/generic-table/generic-table.component';
+import { GenericTableComponent, TableColumn } from 'app/shared/components/generic-table/generic-table.component';
 import { TaskDetailsRefreshService } from '../../../task-details-refresh.service';
 import { TaskService } from 'app/core/services/task.service';
 import { Subscription } from 'rxjs';
@@ -18,7 +18,7 @@ export class TaskEmployeesComponent implements OnInit, OnDestroy {
   @Input() readonly = false;
 
   rows: TaskAssignedEmployee[] = [];
-  columns = [
+  columns:TableColumn[] = [
     { key: 'employeeName', label: 'EMPLOYEE.NAME' },
     { key: 'role', label: 'EMPLOYEE.ROLE' },
     {
@@ -29,7 +29,8 @@ export class TaskEmployeesComponent implements OnInit, OnDestroy {
         Active: { text: 'TASK.ACTIVE', class: 'bg-success' },
         Inactive: { text: 'TASK.INACTIVE', class: 'bg-secondary' },
       }
-    }
+    },
+    { key: 'isRead', label: 'TASK.READED', type: 'seen' }
   ];
 
 

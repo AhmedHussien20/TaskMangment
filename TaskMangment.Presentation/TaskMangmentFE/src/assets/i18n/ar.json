@@ -306,7 +306,8 @@
     "PATTERN_INVALID_NUMBER": "ادخل رقم صحيح",
     "PATTERN_INVALID_EMAIL": "ادخل بريد إلكتروني صحيح",
     "INVALID_MOBILE": "الرجاء إدخال رقم جوال صحيح",
-    "MOBILE_IS_REQUIRED": "رقم الجوال مطلوب"
+    "MOBILE_IS_REQUIRED": "رقم الجوال مطلوب",
+    "MOBILE_CODE_REQUIRED" : "كود البلد مطلوب"
   },
   "VALIDATION": {
     "REQUIRED": "هذا الحقل مطلوب",
@@ -343,7 +344,8 @@
     "DELETE_CONFIRM": "هل أنت متأكد أنك تريد حذف هذا الفرع؟",
     "DELETE_SUCCESS": "تم حذف الفرع بنجاح",
     "DELETE_FAILED": "فشل في حذف الفرع",
-    "VALIDATION_ERROR": "يرجى إدخال جميع الحقول المطلوبة بشكل صحيح."
+    "VALIDATION_ERROR": "يرجى إدخال جميع الحقول المطلوبة بشكل صحيح.",
+    "MAINBRANCH" : "الفرع الرئيسي"
   },
   "AUTH": {
     "SESSION_EXPIRED": "انتهت صلاحية الجلسة. من فضلك قم بتسجيل الدخول مرة أخرى.",
@@ -571,7 +573,9 @@
     "FILE" : "ملف",
     "DELETE_SUCCESS":"تم الحذف بنجاح",
     "EXTENSIONS_COUNT" : "طلبات التمديد المقبولة",
-    "NEW_DUE_DATE" : "تاريخ ما بعد التمديد"
+    "NEW_DUE_DATE" : "تاريخ ما بعد التمديد",
+    "READED": "مشاهدة الموظف",
+    "REMAIN_DAYS" : "باقي الايام للانتهاء"
 
   },
   "EMPLOYEE": {
@@ -686,12 +690,14 @@
       "EMPLOYEE": "موظف",
       "TEAM_LEAD": "قائد فريق",
       "MANAGER": "مدير",
-      "ADMIN": "مدير النظام"
+      "ADMIN": "مدير النظام",
+      "BRANCHES_MANAGER" : "مدير افرع"
     },
     "ASSIGNMENT_STATUS": "الموظفين",
     "ALL": "الكل",
     "ASSIGNED" :"معين",
     "NOT_ASSIGNED": "غير معين"
+    
    },
   "PERMISSION": {
     "TITLE": "إدارة التصاريح",

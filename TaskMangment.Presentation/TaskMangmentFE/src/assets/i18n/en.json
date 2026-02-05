@@ -304,7 +304,8 @@
     "PATTERN_INVALID_NUMBER": "Enter a valid number",
     "PATTERN_INVALID_EMAIL": "Enter a valid email",
     "INVALID_MOBILE": "Please enter a valid mobile number",
-    "MOBILE_IS_REQUIRED": "Mobile number is required"
+    "MOBILE_IS_REQUIRED": "Mobile number is required",
+    "MOBILE_CODE_REQUIRED" : "Country code required"
   },
   "VALIDATION": {
     "REQUIRED": "This field is required",
@@ -341,7 +342,8 @@
     "DELETE_CONFIRM": "Are you sure you want to delete this branch?",
     "DELETE_SUCCESS": "Branch deleted successfully",
     "DELETE_FAILED": "Failed to delete branch",
-    "VALIDATION_ERROR": "Please enter all required fields correctly."
+    "VALIDATION_ERROR": "Please enter all required fields correctly.",
+    "MAINBRANCH": "Main branch"
   },
   "AUTH": {
     "SESSION_EXPIRED": "Session expired. Please login again.",
@@ -553,7 +555,9 @@
     "FILE" : "File",
     "DELETE_SUCCESS" :"Deleted successfully",
     "EXTENSIONS_COUNT" : "Approved extension requests",
-    "NEW_DUE_DATE" : "Date after extend"
+    "NEW_DUE_DATE" : "Date after extend",
+    "READED" : "Employee's seen",
+    "REMAIN_DAYS" : "Remain days for end"
   },
   "EMPLOYEE": {
     "LIST_TITLE": "Employee List",
@@ -667,7 +671,8 @@
       "EMPLOYEE": "Employee",
       "TEAM_LEAD": "Team Lead",
       "MANAGER": "Manager",
-      "ADMIN": "System Admin"
+      "ADMIN": "System Admin",
+      "BRANCHES_MANAGER" : "Branches manager"
     },
     "ASSIGNMENT_STATUS": "Employees",
     "ALL": "All",

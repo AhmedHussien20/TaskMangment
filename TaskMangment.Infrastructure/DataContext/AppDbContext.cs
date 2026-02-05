@@ -87,6 +87,7 @@ namespace TaskMangment.Infrastructure.DataContext
         public DbSet<EmailQueue> EmailQueue { get; set; }
         public DbSet<EmailTemplate> EmailTemplates { get; set; }
         public DbSet<WhatsAppQueue> WhatsAppQueue { get; set; }
+        public DbSet<ManagerBranches> managerBranches { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -265,6 +266,23 @@ namespace TaskMangment.Infrastructure.DataContext
                       .IsRequired()
                       .HasMaxLength(1000);             
             });
+
+            builder.Entity<ManagerBranches>()
+    .HasOne(x => x.Manager)
+    .WithMany()
+    .HasForeignKey(x => x.ManagerId)
+    .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<ManagerBranches>()
+                .HasOne(x => x.Branch)
+                .WithMany()
+                .HasForeignKey(x => x.BranchId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<ManagerBranches>()
+                .HasIndex(x => new { x.ManagerId, x.BranchId })
+                .IsUnique();
+
         }
 
     }

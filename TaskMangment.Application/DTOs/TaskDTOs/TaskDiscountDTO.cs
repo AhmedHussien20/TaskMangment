@@ -23,6 +23,7 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
 
     public class DiscountGetDto
     {
+        public int Id { get; set; }
         public int TaskId { get; set; }
         public string EmployeeName { get; set; }
         public string? TaskTitle { get; set; }
@@ -31,6 +32,8 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
         public DateTime CreatedDate { get; set; }
         public bool AutoDiscount { get; set; }
         public DiscountType DiscountType { get; set; }
+        public bool IsRead { get; set; }
+
 
     }
 

@@ -41,6 +41,7 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IWebHostEnvironment _env;
         private readonly IBlobStorageService _blobStorageService;
         private readonly IAppUnitOfWork _uow;
+        private readonly IRepository<ManagerBranches> _managerBranchesRepo;
 
         public EmployeeService(
             IRepository<Employee> employeeRepo,
@@ -54,7 +55,8 @@ namespace TaskMangment.Infrastructure.Services
             IBlobStorageService blobStorageService,
             AppDbContext db,
             IWebHostEnvironment env,
-            IAppUnitOfWork uow)
+            IAppUnitOfWork uow,
+            IRepository<ManagerBranches> managerBranchesRepo)
         {
             _employeeRepo = employeeRepo;
             _roleRepo = roleRepo;
@@ -67,9 +69,13 @@ namespace TaskMangment.Infrastructure.Services
             _attachmentRepo = attachmentRepo;
             _db = db;
             _uow = uow;
+            _managerBranchesRepo = managerBranchesRepo;
         }
 
-        public async Task<ApiResponse<PagedResponse<EmployeeGetDto>>> GetAllAsync(EmployeeRequest request,int employeeId,int? roleLevel)
+        public async Task<ApiResponse<PagedResponse<EmployeeGetDto>>> GetAllAsync(
+    EmployeeRequest request,
+    int employeeId,
+    int? roleLevel)
         {
             var empQuery = _employeeRepo.GetAll()
                 .Include(e => e.Branch)
@@ -84,15 +90,31 @@ namespace TaskMangment.Infrastructure.Services
 
             if (roleLevel.HasValue && roleLevel.Value >= 70 && roleLevel.Value < 100)
             {
-                branchId = await _employeeRepo
-                    .GetAll(e => e.Id == employeeId)
-                    .Select(e => e.BranchId)
-                    .FirstOrDefaultAsync();
+                if (roleLevel.Value == 80)
+                {
+                    var managedBranchIds = await _managerBranchesRepo
+                        .GetAll(x => x.ManagerId == employeeId && !x.IsDeleted)
+                        .Select(x => x.BranchId)
+                        .Distinct()
+                        .ToListAsync();
 
-                if (!branchId.HasValue)
-                    throw new Exception("Employee does not belong to a branch");
+                    if (!managedBranchIds.Any())
+                        empQuery = empQuery.Where(e => false);
+                    else
+                        empQuery = empQuery.Where(e => e.BranchId.HasValue && managedBranchIds.Contains(e.BranchId.Value));
+                }
+                else
+                {
+                    branchId = await _employeeRepo
+                        .GetAll(e => e.Id == employeeId)
+                        .Select(e => e.BranchId)
+                        .FirstOrDefaultAsync();
 
-                empQuery = empQuery.Where(e => e.BranchId == branchId.Value);
+                    if (!branchId.HasValue)
+                        throw new Exception("Employee does not belong to a branch");
+
+                    empQuery = empQuery.Where(e => e.BranchId == branchId.Value);
+                }
             }
 
             if (request.RoleLevel.HasValue)
@@ -102,11 +124,24 @@ namespace TaskMangment.Infrastructure.Services
                 );
             }
 
+            if (roleLevel.HasValue)
+            {
+                var myLevel = roleLevel.Value;
+
+                empQuery = empQuery.Where(e =>
+                    !e.EmployeeRoles.Any(er =>
+                        er.IsAssigned &&
+                        !er.IsDeleted &&
+                        er.Role != null &&
+                        er.Role.Level > myLevel
+                    )
+                );
+            }
+
+
             var totalCount = await empQuery.CountAsync();
 
-            empQuery = empQuery.OrderByDynamicSafe(
-                request.SortColumn,
-                request.SortDirection);
+            empQuery = empQuery.OrderByDynamicSafe(request.SortColumn, request.SortDirection);
 
             var employees = await empQuery
                 .Skip((request.PageIndex - 1) * request.PageSize)
@@ -136,25 +171,15 @@ namespace TaskMangment.Infrastructure.Services
             {
                 if (images.TryGetValue(dto.Id, out var blobName) &&
                     !string.IsNullOrWhiteSpace(blobName))
-                {
                     dto.ImageUrl = _blobStorageService.WithSas(blobName);
-                }
                 else
-                {
                     dto.ImageUrl = null;
-                }
             }
 
-
-            // ======================= Response =======================
-            var response = new PagedResponse<EmployeeGetDto>(
-                dtos,
-                totalCount,
-                request.PageIndex,
-                request.PageSize);
-
+            var response = new PagedResponse<EmployeeGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
             return ApiResponse<PagedResponse<EmployeeGetDto>>.Ok(response);
         }
+
 
 
 

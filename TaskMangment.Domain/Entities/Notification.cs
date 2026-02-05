@@ -12,5 +12,7 @@ namespace TaskMangment.Domain.Entities
         public string Message { get; set; }
         public NotificationChannel Channel { get; set; }
         public bool IsRead { get; set; } = false;  
+        public int ReferenceId { get; set; }
+        public NotificationType NotificationType { get; set; }
     }
 }

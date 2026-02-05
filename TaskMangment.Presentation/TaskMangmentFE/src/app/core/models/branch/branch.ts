@@ -12,6 +12,7 @@ export interface BranchGetDto {
   areaId?: number;
   managerID?: number;
   responsibleID?: number;
+  mainBranch:boolean
 }
 
 export interface BranchAddEditDto {

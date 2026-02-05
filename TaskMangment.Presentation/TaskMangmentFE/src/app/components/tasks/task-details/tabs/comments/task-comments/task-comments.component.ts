@@ -11,7 +11,9 @@ import { MyDatePipe } from 'app/components/utilities/pipline/MyDatePipe';
   selector: 'app-task-comments',
   standalone: true,
   imports: [CommonModule, TranslateModule, MyDatePipe],
-  templateUrl: './task-comments.component.html'
+  templateUrl: './task-comments.component.html',
+      styleUrls: ['./task-comments.component.scss']
+
 })
 export class TaskCommentsComponent implements OnInit, OnDestroy {
   @Input() taskId!: number;

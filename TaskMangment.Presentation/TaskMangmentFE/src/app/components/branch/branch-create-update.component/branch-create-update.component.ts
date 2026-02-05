@@ -82,7 +82,10 @@ export class BranchCreateUpdateComponent implements OnInit {
           return this.employeeService.getAll(request);
         },
        options: []},
-    { type: 'select', label: 'BRANCH.RESPONSIBLE',selectType: 'employee',name: 'responsibleId', options: []}
+    { type: 'select', label: 'BRANCH.RESPONSIBLE',selectType: 'employee',name: 'responsibleId', options: []},
+    { type: 'checkbox', label: 'BRANCH.MAINBRANCH', name: 'mainBranch' },
+
+
   ];
 
   constructor(
@@ -135,6 +138,7 @@ Validators.pattern('^\\+?[0-9]+$')
     managerId: [null,Validators.required],
 
     responsibleId: [null,Validators.required],
+    mainBranch: [false]
   });
 }
 
@@ -154,7 +158,8 @@ Validators.pattern('^\\+?[0-9]+$')
         email: b.email,
         areaId: b.areaId,
         managerId: b.managerID,
-        responsibleId: b.responsibleID
+        responsibleId: b.responsibleID,
+        mainBranch:b.mainBranch
       });
     });
   }

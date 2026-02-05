@@ -34,5 +34,21 @@ namespace TaskMangment.API.Controllers
             var result = await _service.AssignEmployeesToRoleAsync(roleId,dto);
             return Success(true, "Employees assigned successfully");
         }
+
+        [HttpPost("manager-branches/{managerId}")]
+        public async Task<IActionResult> Set(int managerId, [FromBody] List<int> branchIds)
+        {
+            var result = await _service.SetManagerBranchesAsync(managerId, branchIds);
+            return Success(result.Data, "Branches saved successfully");
+        }
+
+        [HttpGet("manager-branches/{managerId}")]
+        public async Task<IActionResult> Get(int managerId)
+        {
+            var result = await _service.GetManagerBranchesAsync(managerId);
+            return Success(result.Data);
+        }
+
+
     }
 }

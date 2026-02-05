@@ -7,11 +7,13 @@ import { SearchCriteria } from 'app/core/models/search-criteria.model';
 import { GenericTableComponent, TableColumn } from 'app/shared/components/generic-table/generic-table.component';
 import { PageHeaderComponent } from 'app/shared/components/page-header/page-header.component';
 import { ToastrService } from 'ngx-toastr';
+import { ManagerBranchesFormComponent } from '../manager-branches-form/manager-branches-form.component';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 
 
 @Component({
   selector: 'app-employee-role-list',
-  imports: [ TranslateModule,GenericTableComponent,PageHeaderComponent],
+  imports: [ TranslateModule,GenericTableComponent,PageHeaderComponent,ManagerBranchesFormComponent],
   templateUrl: './employee-role-list.component.html',
   styleUrl: './employee-role-list.component.scss'
 })
@@ -19,19 +21,22 @@ export class EmployeeRoleListComponent implements OnInit {
 
   roleId!: number;
   roleName: string = '';
+  roleLevel: string | null = null;
+selectedManagerId: number | null = null;
+selectedBranchIds: number[] = [];
 
  title = '';
-  breadcrumbs: string[] = [];
-  activeitem = '';
+ breadcrumbs: string[] = [];
+ activeitem = '';
   
-
-
+  selectbranches: boolean = false
 
   columns: TableColumn[] = [
     { key: 'fullName', label: 'EMPLOYEE.NAME' },
     { key: 'email', label: 'EMPLOYEE.EMAIL' },
     { key: 'mobile', label: 'EMPLOYEE.MOBILE' },
-    { key: 'branchName', label: 'EMPLOYEE.BRANCH' }
+    { key: 'branchName', label: 'EMPLOYEE.BRANCH' },
+    { key: 'roleName', label: 'ROLE.ASSIGNED' }
   ];
 
   assignmentStatusOptions = [
@@ -67,7 +72,10 @@ export class EmployeeRoleListComponent implements OnInit {
     private roleAssignmentService: RoleAssignmentService,
     private roleService: RoleService,
     private toastr: ToastrService,
-    private translate: TranslateService
+    private translate: TranslateService,
+    private modalService: NgbModal,
+    
+    
 
   ) {}
 
@@ -84,6 +92,7 @@ export class EmployeeRoleListComponent implements OnInit {
       .subscribe(res => {
         this.rows = res.data.data.map((e: any) => ({
           ...e,
+          id: e.employeeId,
           selected: e.isAssigned
         }));
         this.totalItems = res.data.totalCount;
@@ -93,7 +102,11 @@ loadRoleInfo() {
     this.roleService.getById(this.roleId).subscribe({
       next: (res) => {
         this.roleName = res.data.name;
-        
+        this.roleLevel= res.data.level
+        console.log(this.roleLevel)
+        if(this.roleLevel == '80')
+          this.selectbranches= true
+
         this.translate.get('ROLE.ASSIGNEMPLOYEE').subscribe(assignText => {
       this.title = `${assignText}  ${this.roleName}`;
     });
@@ -174,5 +187,46 @@ loadRoleInfo() {
         }
     });
 }
+openDetails(managerId: number, branchesModal: any) {
+  this.selectedManagerId = managerId;
+  console.log('selectedManagerId:', this.selectedManagerId);
+
+  this.roleAssignmentService.getManagerBranches(managerId).subscribe({
+    next: (res) => {
+      const dto = res.data;
+      this.selectedBranchIds = dto?.branchIds ?? [];
+
+      this.modalService.open(branchesModal, {
+        size: 'lg',
+        backdrop: 'static',
+        scrollable: true,
+        centered: true
+      });
+    }
+  });
+}
+
+onBranchesFormSubmitted(
+  e: { managerId: number | null; branchIds: number[] },
+  modal: any
+) {
+  const managerId = e.managerId ?? this.selectedManagerId;
+
+  if (!managerId) {
+    this.toastr.error(this.translate.instant('COMMON.INVALID_DATA'));
+    return;
+  }
+
+  this.roleAssignmentService.setManagerBranches(managerId, e.branchIds).subscribe({
+    next: () => {
+      this.toastr.success(this.translate.instant('ROLE.UPDATE_SUCCESS'));
+      modal.close();
+    },
+    error: () => {
+      this.toastr.error(this.translate.instant('ROLE.UPDATE_FAILED'));
+    }
+  });
+}
+
 
 }

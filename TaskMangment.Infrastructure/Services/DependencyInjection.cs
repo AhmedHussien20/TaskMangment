@@ -19,7 +19,7 @@ using TaskMangment.Infrastructure.Seeding;
 using TaskMangment.Utilities.Localization;
 using TaskMangment.Application.Dashboards.Admin;
 using TaskMangment.Application.Dashboards.Employee;
-using TaskMangment.Infrastructure.Services.TaskMangment.Infrastructure.Services.Dashboard;
+using TaskMangment.Infrastructure.Services.Dashboard;
 
 namespace TaskMangment.Infrastructure.Services
 {

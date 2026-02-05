@@ -18,7 +18,8 @@ export type ColumnType =
   | 'custom'
   | 'date'
   | 'dateTime'
-  | 'assignees';
+  | 'assignees'
+  | 'seen';
 
 export interface BadgeConfig {
   text: string;
@@ -443,5 +444,6 @@ onToggleFilterClick(key: string, value: any) {
   (this.searchCriteria as any).pageIndex = 1;
   this.applyFilters();
 }
+
 
 }

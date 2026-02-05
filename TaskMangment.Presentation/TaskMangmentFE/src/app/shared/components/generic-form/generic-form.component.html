@@ -162,11 +162,10 @@
 
           <ng-select [items]="field.options" bindLabel="label" bindValue="value" [multiple]="field.multiple"
             [searchable]="true" [closeOnSelect]="!field.multiple" [clearable]="true" [loading]="field.isLoading"
-            (open)="onSelectOpen(field)" (scrollToEnd)="onSelectScrollToEnd(field)"
+            (open)="onSelectOpen(field)" (scrollToEnd)="onSelectScrollToEnd(field)" appendTo=".modal"
             (search)="onSearch($event.term, field)" placeholder="{{ 'FORM.SELECT' | translate }}"
             [formControlName]="field.name" class="custom-ng-select">
 
-            <!-- ✅ Multi selected chips + X لكل واحد -->
             <ng-template ng-multi-label-tmp let-items="items" let-clear="clear">
               <div class="d-flex flex-wrap gap-1">
                 <span class="badge bg-light text-dark border d-inline-flex align-items-center" *ngFor="let it of items">

@@ -33,6 +33,8 @@ namespace TaskMangment.Infrastructure.Services
         private readonly ICachingService _cache;
         private readonly IDomainEventDispatcher _eventDispatcher;
         private readonly IRepository<Discount> _discountRepo;
+        private readonly IRepository<Notification> _notificationRepo;
+
 
 
         public TaskWarningService(
@@ -44,7 +46,8 @@ namespace TaskMangment.Infrastructure.Services
             IRepository<WorkTask> taskRepo,
             IDomainEventDispatcher eventDispatcher,
             IRepository<Discount> discountRepo,
-            IRepository<Branch> branchRepo)
+            IRepository<Branch> branchRepo,
+            IRepository<Notification> notificationRepo)
         {
             _warningRepo = warningRepo;
             _employeeRepo = employeeRepo;
@@ -55,6 +58,7 @@ namespace TaskMangment.Infrastructure.Services
             _eventDispatcher = eventDispatcher;
             _discountRepo = discountRepo;
             _branchRepo = branchRepo;
+            _notificationRepo = notificationRepo;
         }
 
         public async Task<ApiResponse<PagedResponse<WarningGetDto>>> GetAllAsync(WarningRequest request)
@@ -90,6 +94,24 @@ namespace TaskMangment.Infrastructure.Services
 
             var dtos = _mapper.Map<ICollection<WarningGetDto>>(list);
 
+
+            var warningIds = dtos.Select(x => x.Id).ToList();
+
+            var notifReadMap = await _notificationRepo
+                .GetAll(n =>
+                    n.NotificationType == NotificationType.Warning &&
+                    warningIds.Contains(n.ReferenceId))
+                .Select(n => new { n.ReferenceId, n.IsRead })
+                .ToListAsync();
+
+            var readDict = notifReadMap
+                .GroupBy(x => x.ReferenceId)
+                .ToDictionary(g => g.Key, g => g.Any(x => x.IsRead));
+
+            foreach (var dto in dtos)
+            {
+                dto.IsRead = readDict.TryGetValue(dto.Id, out var isRead) && isRead;
+            }
             var response = new PagedResponse<WarningGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
 
             //await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
@@ -108,6 +130,12 @@ namespace TaskMangment.Infrastructure.Services
                 throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
 
             var dto = _mapper.Map<WarningGetDto>(warning);
+
+            dto.IsRead = await _notificationRepo.GetAll(n =>
+        n.NotificationType == NotificationType.Warning &&
+        n.ReferenceId == dto.Id)
+    .Select(n => n.IsRead)
+    .FirstOrDefaultAsync();
             return ApiResponse<WarningGetDto>.Ok(dto);
         }
 
