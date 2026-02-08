@@ -34,6 +34,7 @@ export interface TableColumn {
   badgeMap?: Record<string, BadgeConfig>;
   icon?: string;
   displayField?: string;
+  
 }
 
 

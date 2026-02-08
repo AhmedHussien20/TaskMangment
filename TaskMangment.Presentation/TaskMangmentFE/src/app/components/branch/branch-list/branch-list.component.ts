@@ -14,6 +14,7 @@ import { BranchGetDto } from 'app/core/models/branch/branch';
 import { BranchCreateUpdateComponent  } from '../branch-create-update.component/branch-create-update.component';
 import { ToastrService } from 'ngx-toastr';
 import Swal from 'sweetalert2';
+import { AuthService } from 'app/core/services/auth.service';
 
 @Component({
   selector: 'app-branch-list',
@@ -52,7 +53,9 @@ export class BranchListComponent implements OnInit {
 
   rows: BranchGetDto[] = [];
   totalItems = 0;
-
+  canCreate = false;
+  canEdit = false;
+  canDelete = false;
   page = 1;
   entries = 10;
 
@@ -80,10 +83,15 @@ export class BranchListComponent implements OnInit {
     private branchService: BranchService,
     private modalService: NgbModal,
     private translate: TranslateService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private auth:AuthService
   ) { }
 
   ngOnInit(): void {
+    const roleLevel = this.auth.getRoleLevel();
+    this.canCreate = roleLevel > 80;
+    this.canEdit = roleLevel >= 80;
+    this.canDelete = roleLevel > 80;
     this.loadData();
   }
 

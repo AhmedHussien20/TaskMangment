@@ -14,10 +14,10 @@
 
           <app-generic-table [title]="title" [breadcrumbs]="breadcrumbs" [activeitem]="activeitem" [labels]="labels"
             [columns]="columns" [data]="rows" [entries]="entries" [page]="page" [totalItems]="totalItems"
-            [showAddButton]="true" [addButtonLabel]="'BRANCH.ADD' | translate" (addClick)="openAdd(branchModal)"
-            [showEditButton]="true" (edit)="openEdit($event, branchModal)" [showFilters]="true"
+            [showAddButton]="canCreate" [addButtonLabel]="'BRANCH.ADD' | translate" (addClick)="openAdd(branchModal)"
+            [showEditButton]="canEdit" (edit)="openEdit($event, branchModal)" [showFilters]="true"
             [searchCriteria]="searchCriteria" [onSearch]="applyFilters.bind(this)" (pageChange)="onPageChange($event)"
-            (entriesChange)="onEntriesChange($event)" [showDeleteButton]="true" (delete)="confirmDelete($event)">
+            (entriesChange)="onEntriesChange($event)" [showDeleteButton]="canDelete" (delete)="confirmDelete($event)">
           </app-generic-table>
 
         </div>

@@ -28,9 +28,6 @@
         [addButtonLabel]="'PERMISSION.ADD' | translate"
         (addClick)="openAdd(permissionModal)"
 
-        [showEditButton]="true"
-        (edit)="openEdit($event, permissionModal)"
-
         [showFilters]="true"
         [searchCriteria]="searchCriteria"
         [onSearch]="applyFilters.bind(this)"

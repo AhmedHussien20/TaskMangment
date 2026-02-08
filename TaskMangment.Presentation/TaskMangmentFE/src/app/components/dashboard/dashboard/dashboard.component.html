@@ -104,7 +104,7 @@
                 <tr *ngFor="let emp of completedTasksToday">
                     <td class="wd-5p">
                         <div class="main-img-user avatar-md">
-                            <img alt="avatar" class="rounded-circle me-3" [src]="emp.employeeImageUrl">
+                            <img alt="avatar" class="rounded-circle me-3" [src]="emp.employeeImageUrl || 'assets/images/user.png'">
                         </div>
                     </td>
                     <td>
@@ -142,10 +142,10 @@
 </div>
 
 
-<div class="col-6">
+<div class="row row-sm">
+  <div class="col-12 col-xl-6">
     <div class="card custom-card overflow-hidden">
-
-        <app-task-today-comment></app-task-today-comment>
-
+      <app-task-today-comment></app-task-today-comment>
     </div>
+  </div>
 </div>

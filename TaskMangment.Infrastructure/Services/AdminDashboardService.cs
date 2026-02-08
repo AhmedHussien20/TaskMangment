@@ -9,6 +9,7 @@ using TaskMangment.Application.Dashboards.Admin;
 using TaskMangment.Application.DTOs;
 using TaskMangment.Application.DTOs.TaskDTOs;
 using TaskMangment.Application.Interfaces.IRepository;
+using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
 using TaskMangment.Infrastructure.Helpers;
@@ -29,6 +30,8 @@ namespace TaskMangment.Infrastructure.Services.Dashboard
 
         private readonly ICachingService _cache;
         private readonly IStringLocalizer<DiscountAutoType> _localizer;
+        private readonly IBlobStorageService _blobStorageService;
+
 
         public AdminDashboardService(
             IRepository<WorkTask> taskRepo,
@@ -40,7 +43,9 @@ namespace TaskMangment.Infrastructure.Services.Dashboard
             ICachingService cache,
             IStringLocalizer<DiscountAutoType> localizer,
             IRepository<Branch> branchRepo,
-            IRepository<ManagerBranches> managerBranchesRepo
+            IRepository<ManagerBranches> managerBranchesRepo,
+            IBlobStorageService blobStorageService
+
         )
         {
             _taskRepo = taskRepo;
@@ -53,31 +58,25 @@ namespace TaskMangment.Infrastructure.Services.Dashboard
             _localizer = localizer;
             _branchRepo = branchRepo;
             _managerBranchesRepo = managerBranchesRepo;
+            _blobStorageService = blobStorageService;
         }
 
-        // ======================== Branch Scope Helper ========================
-        // returns:
-        // - SingleBranchId: filter by one branch
-        // - BranchIds: filter by many branches (role 80 without explicit branchId)
         private async Task<(int? SingleBranchId, List<int>? BranchIds)> GetBranchScopeAsync(
             int companyId,
             int roleLevel,
             int? employeeId,
             int? requestedBranchId)
         {
-            // Admin / Super admin
             if (roleLevel >= 100)
             {
                 return (requestedBranchId, null);
             }
 
-            // لو مفيش employeeId (احتياط)
             if (!employeeId.HasValue)
             {
                 return (requestedBranchId, null);
             }
 
-            // Branch manager (فرع واحد)
             if (roleLevel == 70)
             {
                 var empBranchId = await _employeeRepo
@@ -86,16 +85,13 @@ namespace TaskMangment.Infrastructure.Services.Dashboard
                     .FirstOrDefaultAsync();
 
                 if (!empBranchId.HasValue)
-                    return (null, new List<int>()); // فاضي
+                    return (null, new List<int>()); 
 
-                // enforce scope
                 return (empBranchId.Value, null);
             }
 
-            // Branches manager (عدة فروع) - RoleLevel 80
             if (roleLevel == 80)
             {
-                // هات فروعه من ManagerBranches + تأكد إن الفرع تبع نفس الشركة
                 var managedBranchIds = await _managerBranchesRepo
                     .GetAll(x => x.ManagerId == employeeId.Value && !x.IsDeleted)
                     .Join(_branchRepo.GetAll(b => b.CompanyId == companyId && !b.IsDeleted),
@@ -106,25 +102,21 @@ namespace TaskMangment.Infrastructure.Services.Dashboard
                     .ToListAsync();
 
                 if (!managedBranchIds.Any())
-                    return (null, new List<int>()); // فاضي
+                    return (null, new List<int>()); 
 
-                // لو المستخدم بعت branchId وضمن فروعه → فلتر على واحد
                 if (requestedBranchId.HasValue && managedBranchIds.Contains(requestedBranchId.Value))
                 {
                     return (requestedBranchId.Value, null);
                 }
 
-                // لو بعت branchId مش ضمن فروعه → نفرض أول فرع
                 if (requestedBranchId.HasValue && !managedBranchIds.Contains(requestedBranchId.Value))
                 {
                     return (managedBranchIds[0], null);
                 }
 
-                // لو مبعتش branchId → فلتر على كل فروعه
                 return (null, managedBranchIds);
             }
 
-            // أي RoleLevel أقل من 100 غير 70/80 → نفس منطقك القديم: يرجع فرعه
             var myBranch = await _employeeRepo
                 .GetAll(e => e.Id == employeeId.Value && e.CompanyId == companyId)
                 .Select(e => e.BranchId)
@@ -136,7 +128,6 @@ namespace TaskMangment.Infrastructure.Services.Dashboard
             return (myBranch.Value, null);
         }
 
-        // ======================= Branch Filter Dropdown =======================
         public async Task<ApiResponse<List<BranchFilterDto>>> GetBranchesForFilterAsync(int companyId, int roleLevel, int employeeId)
         {
             if (roleLevel >= 100)
@@ -150,7 +141,6 @@ namespace TaskMangment.Infrastructure.Services.Dashboard
                 return ApiResponse<List<BranchFilterDto>>.Ok(branches);
             }
 
-            // ✅ Role 80: يرجع كل فروعه
             if (roleLevel == 80)
             {
                 var ids = await _managerBranchesRepo
@@ -165,7 +155,6 @@ namespace TaskMangment.Infrastructure.Services.Dashboard
                 return ApiResponse<List<BranchFilterDto>>.Ok(ids);
             }
 
-            // باقي الرولز: فرعه
             var myBranch = await _employeeRepo
                 .GetAll(e => e.Id == employeeId && e.CompanyId == companyId)
                 .Select(e => new { e.BranchId, BranchName = e.Branch.Name })
@@ -180,7 +169,6 @@ namespace TaskMangment.Infrastructure.Services.Dashboard
             });
         }
 
-        // ======================= Dashboard =======================
         public async Task<ApiResponse<AdminDashboardDto>> GetDashboardAsync(
             int companyId,
             int roleLevel,
@@ -188,7 +176,6 @@ namespace TaskMangment.Infrastructure.Services.Dashboard
             PeriodDto? period = null,
             int? branchId = null)
         {
-            // مهم: الكاش لازم يدخل فيه branchId/employeeId لأن scope مختلف
             string cacheKey = $"dashboard:admin:{companyId}:{roleLevel}:{employeeId}:{branchId}:{period?.Type}";
             var cached = await _cache.GetAsync<AdminDashboardDto>(cacheKey);
             if (cached != null)
@@ -200,7 +187,6 @@ namespace TaskMangment.Infrastructure.Services.Dashboard
             int? effectiveBranchId = scope.SingleBranchId;
             List<int>? effectiveBranchIds = scope.BranchIds;
 
-            // ======================= Total Employees =======================
             var totalEmployeesQuery = _employeeRepo.GetAll(e => e.CompanyId == companyId && e.IsActive);
 
             if (effectiveBranchId.HasValue)
@@ -210,7 +196,6 @@ namespace TaskMangment.Infrastructure.Services.Dashboard
 
             var totalEmployees = await totalEmployeesQuery.CountAsync();
 
-            // ======================= Active Tasks =======================
             var activeTasksQuery = _taskRepo.GetAll(t =>
                 t.CompanyId == companyId &&
                 (t.Status == WorkTaskStatus.New || t.Status == WorkTaskStatus.InProgress));
@@ -224,7 +209,6 @@ namespace TaskMangment.Infrastructure.Services.Dashboard
 
             var activeTasks = await activeTasksQuery.CountAsync();
 
-            // ======================= Overdue Tasks =======================
             var overdueTasksQuery = _taskRepo.GetAll(t =>
                 t.CompanyId == companyId &&
                 t.Status != WorkTaskStatus.Closed &&
@@ -241,7 +225,6 @@ namespace TaskMangment.Infrastructure.Services.Dashboard
 
             var overdueTasks = await overdueTasksQuery.CountAsync();
 
-            // ======================= Completed Tasks =======================
             var completedTasksQuery = _taskRepo.GetAll(t =>
                 t.CompanyId == companyId &&
                 t.Status == WorkTaskStatus.Closed &&
@@ -256,7 +239,6 @@ namespace TaskMangment.Infrastructure.Services.Dashboard
 
             var completedTasks = await completedTasksQuery.CountAsync();
 
-            // ======================= Penalties =======================
             var penaltiesQuery = _deductionRepo.GetAll(d =>
                 d.Employee.CompanyId == companyId &&
                 d.CreatedDate >= range.Start && d.CreatedDate <= range.End);
@@ -268,7 +250,6 @@ namespace TaskMangment.Infrastructure.Services.Dashboard
 
             var penaltiesThisPeriod = await penaltiesQuery.SumAsync(d => d.Amount);
 
-            // ======================= Warnings =======================
             var warningsQuery = _warningRepo.GetAll(w =>
                 w.Task.CompanyId == companyId &&
                 w.IssuedAt >= range.Start && w.IssuedAt <= range.End);
@@ -282,7 +263,6 @@ namespace TaskMangment.Infrastructure.Services.Dashboard
 
             var warningsThisPeriod = await warningsQuery.CountAsync();
 
-            // ======================= Top Delayed Employees =======================
             var topDelayedQuery = _assignmentRepo.GetAll(a =>
                 a.Task.CompanyId == companyId &&
                 a.IsActive &&
@@ -324,7 +304,6 @@ namespace TaskMangment.Infrastructure.Services.Dashboard
             return ApiResponse<AdminDashboardDto>.Ok(dto);
         }
 
-        // ======================= Updated Today Tasks =======================
         public async Task<ApiResponse<PagedResponse<UpdatedTodayTaskDto>>> GetTodayUpdatedInProgressTasksAsync(
             int companyId,
             int roleLevel,
@@ -401,7 +380,6 @@ namespace TaskMangment.Infrastructure.Services.Dashboard
             );
         }
 
-        // ======================= Employees Completed Today =======================
         public async Task<ApiResponse<List<CompletedTodayEmployeeDto>>> GetEmployeesCompletedTasksTodayAsync(
             int companyId,
             int roleLevel,
@@ -426,21 +404,38 @@ namespace TaskMangment.Infrastructure.Services.Dashboard
             else if (effectiveBranchIds != null)
                 query = query.Where(a => a.Employee.BranchId.HasValue && effectiveBranchIds.Contains(a.Employee.BranchId.Value));
 
+
+
+            var attachmentsQuery = _attachmentRepo.GetAll(); 
+
             var result = await query
-                .GroupBy(a => a.EmployeeId)
+                .GroupBy(a => new { a.EmployeeId, a.Employee.FullName })
                 .Select(g => new CompletedTodayEmployeeDto
                 {
-                    EmployeeId = g.Key,
-                    EmployeeName = g.First().Employee.FullName,
-                    CompletedTasksCount = g.Count()
+                    EmployeeId = g.Key.EmployeeId,
+                    EmployeeName = g.Key.FullName,
+                    CompletedTasksCount = g.Count(),
+
+                    EmployeeImageUrl = attachmentsQuery
+                        .Where(att =>
+                            att.ReferenceId == g.Key.EmployeeId &&
+                            att.AttachmentType == AttachmentType.Employee &&
+                            !att.IsDeleted)
+                        .Select(att => att.FilePath)
+                        .FirstOrDefault()
                 })
                 .OrderByDescending(x => x.CompletedTasksCount)
                 .ToListAsync();
 
+            foreach (var item in result)
+            {
+                item.EmployeeImageUrl = _blobStorageService.WithSas(item.EmployeeImageUrl);
+            }
+
+
             return ApiResponse<List<CompletedTodayEmployeeDto>>.Ok(result);
         }
 
-        // ======================= Pending Close Requests =======================
         public async Task<ApiResponse<List<PendingCloseRequestTaskDto>>> GetPendingCloseRequestsAsync(
             int companyId,
             int roleLevel,
@@ -496,7 +491,6 @@ namespace TaskMangment.Infrastructure.Services.Dashboard
             return ApiResponse<List<PendingCloseRequestTaskDto>>.Ok(result);
         }
 
-        // ======================= Tasks By Status =======================
         public async Task<ApiResponse<List<TaskStatusDto>>> GetTasksByStatusAsync(
             int companyId,
             string status,
@@ -555,7 +549,6 @@ namespace TaskMangment.Infrastructure.Services.Dashboard
             return ApiResponse<List<TaskStatusDto>>.Ok(tasks);
         }
 
-        // ======================= KPIs Extended =======================
         public async Task<ApiResponse<AdminKpisExtendedDto>> GetKpisAsync(
             int companyId,
             int roleLevel,
@@ -631,7 +624,6 @@ namespace TaskMangment.Infrastructure.Services.Dashboard
             return ApiResponse<AdminKpisExtendedDto>.Ok(dto);
         }
 
-        // ======================= Discounts =======================
         public async Task<ApiResponse<List<DiscountGetDto>>> GetDiscountsAsync(
             int companyId,
             int roleLevel,
@@ -690,7 +682,6 @@ namespace TaskMangment.Infrastructure.Services.Dashboard
             };
         }
 
-        // ======================= High Priority Tasks =======================
         public async Task<ApiResponse<List<HighPriorityTaskDto>>> GetHighPriorityTasksAsync(
             int companyId,
             int roleLevel,
@@ -726,7 +717,6 @@ namespace TaskMangment.Infrastructure.Services.Dashboard
             return ApiResponse<List<HighPriorityTaskDto>>.Ok(tasks);
         }
 
-        // ======================= Completed Tasks Details =======================
         public async Task<ApiResponse<List<CompletedTaskDetailDto>>> GetCompletedTasksDetailsAsync(
             int companyId,
             int roleLevel,

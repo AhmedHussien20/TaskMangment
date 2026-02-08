@@ -49,12 +49,15 @@ namespace TaskMangment.Domain.Entities
         public DateTime? ResetPasswordExpiry { get; set; }
 
         public DateTime? LastLoginDate { get; set; }
+        public FunctionCode FunctionCode { get; set; } = FunctionCode.Employee;
 
         // Navigation
         public Company Company { get; set; }
         public Branch Branch { get; set; }
         public Department Department { get; set; }
         public Job Job { get; set; }
+
+
 
         public ICollection<EmployeeRole> EmployeeRoles { get; set; } = new List<EmployeeRole>();
 

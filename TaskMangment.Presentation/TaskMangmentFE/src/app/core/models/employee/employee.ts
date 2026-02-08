@@ -8,6 +8,14 @@ export interface Employee {
   mobile?: string;
   roles: string[];
   lastLoginDate?: string;
+  
+}
+export enum FunctionCode 
+{
+    Employee,
+    HR,
+    Accounting,
+    Operations
 }
 
 export interface EmployeeAddEdit {
@@ -25,6 +33,8 @@ export interface EmployeeAddEdit {
   email?: string;
   password?: string;
   attachments?: File; 
+  functionCode?: FunctionCode
+  
 }
 
 export interface EmployeeRequest {

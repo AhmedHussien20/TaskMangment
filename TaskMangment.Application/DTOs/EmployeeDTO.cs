@@ -5,6 +5,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TaskMangment.Domain.Entities;
 
 namespace TaskMangment.Application.DTOs
 {
@@ -45,6 +46,8 @@ namespace TaskMangment.Application.DTOs
         public string? Password { get; set; }
 
         public IFormFile? Attachments { get; set; }
+        public FunctionCode? FunctionCode { get; set; }
+
 
     }
 
@@ -71,6 +74,9 @@ namespace TaskMangment.Application.DTOs
         public string ImageUrl { get; set; }
         public List<string> Roles { get; set; } = new();
         public DateTime? LastLoginDate { get; set; }
+
+        public FunctionCode? FunctionCode { get; set; }
+
 
     }
 }

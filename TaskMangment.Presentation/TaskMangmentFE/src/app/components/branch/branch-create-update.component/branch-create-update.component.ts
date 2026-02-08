@@ -83,7 +83,7 @@ export class BranchCreateUpdateComponent implements OnInit {
         },
        options: []},
     { type: 'select', label: 'BRANCH.RESPONSIBLE',selectType: 'employee',name: 'responsibleId', options: []},
-    { type: 'checkbox', label: 'BRANCH.MAINBRANCH', name: 'mainBranch' },
+   // { type: 'checkbox', label: 'BRANCH.MAINBRANCH', name: 'mainBranch' },
 
 
   ];

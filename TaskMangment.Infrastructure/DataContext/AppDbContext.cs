@@ -88,6 +88,7 @@ namespace TaskMangment.Infrastructure.DataContext
         public DbSet<EmailTemplate> EmailTemplates { get; set; }
         public DbSet<WhatsAppQueue> WhatsAppQueue { get; set; }
         public DbSet<ManagerBranches> managerBranches { get; set; }
+        public DbSet<EmployeeFunctionalScope> EmployeeFunctionalScopes { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder builder)

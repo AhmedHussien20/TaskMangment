@@ -80,9 +80,6 @@ export class PermissionCreateUpdateComponent implements OnInit {
 
   loadPermission() {
     if (!this.permissionId) return;
-
-    // Note: الـ Backend ماعندهاش GetById للـ Permission
-    // محتاج تضيفها في الـ Service
     this.toastr.warning('GetById not implemented in backend');
   }
 

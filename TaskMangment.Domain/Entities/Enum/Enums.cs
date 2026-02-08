@@ -120,5 +120,13 @@ namespace TaskMangment.Domain.Entities
         AchievementPercent
     }
 
+    public enum FunctionCode 
+    {
+        Employee,
+        HR,
+        Accounting,
+        Operations
+    }
+
 
 }

@@ -557,6 +557,7 @@ rows: { taskId: number; [key: string]: any }[] = [];
 
 onEdit(id: number) {
   console.log('Editing task ID:', id);
+ if (id == null) return;
 
   const task = this.rows.find((x: { taskId: number }) => x.taskId === id);
   console.log('Task object:', task);
