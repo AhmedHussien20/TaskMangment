@@ -11,6 +11,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { FormFieldConfig } from 'app/core/models/form-field-config';
 import { DepartmentService } from 'app/core/services/department.service';
 import { JobService } from 'app/core/services/job.service';
+import { EnumItemDto } from 'app/core/models/employee/employee';
 
 @Component({
   selector: 'app-employee-create-update',
@@ -28,6 +29,8 @@ export class EmployeeCreateUpdateComponent implements OnInit {
   @Input() isEdit: boolean = false;
   @Input() employeeId: number | null = null;
   @Output() formSubmitted = new EventEmitter<void>();
+  functionCodes: EnumItemDto[] = [];
+
 
   branches: any[] = [];
   roles: any[] = [];
@@ -166,7 +169,15 @@ export class EmployeeCreateUpdateComponent implements OnInit {
     multiple: true,
     accept: 'image/*,.pdf',
     maxFiles: 5
-  }
+  },
+   {
+        type: 'select',
+        label: 'EMPLOYEE.FUNCTION_CODE',
+        name: 'functionCode',
+        selectType: 'simple',
+        options: [],
+        validations: { required: true },
+      },
   ];
 
   constructor(
@@ -186,6 +197,7 @@ export class EmployeeCreateUpdateComponent implements OnInit {
     this.loadBranches();
     this.loadDepartments();
     this.loadJobs();
+    this.loadFunctionCodes();
    // this.loadRoles();
     if (this.isEdit && this.employeeId) {
       this.loadEmployee();
@@ -235,7 +247,9 @@ export class EmployeeCreateUpdateComponent implements OnInit {
 
     password: [''],
     confirmPassword: [''],
-    attachments: [null]
+    attachments: [null],
+    functionCode: [Validators.required],
+    
 
   }, {
     validators: this.passwordMatchValidator
@@ -316,6 +330,7 @@ export class EmployeeCreateUpdateComponent implements OnInit {
         qualification: emp.qualification,
         roleIds: emp.roleIds || [],
         email: emp.email,
+        functionCode:emp.functionCode,
         
 
         password: '', 
@@ -499,6 +514,25 @@ listenToMobileCodeChange() {
     ]);
 
     mobileControl?.updateValueAndValidity();
+  });
+}
+
+
+loadFunctionCodes() {
+  this.employeeService.getFunctionCodes().subscribe({
+    next: (res) => {
+      this.functionCodes = res.data ?? [];
+
+      const options = this.functionCodes.map(x => ({
+        label: x.name,
+        value: x.id
+      }));
+
+      const field = this.formConfig.find(f => f.name === 'functionCode');
+      if (field) field.options = options;
+
+      this.formConfig = [...this.formConfig];
+    }
   });
 }
 

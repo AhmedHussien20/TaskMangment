@@ -79,4 +79,10 @@ namespace TaskMangment.Application.DTOs
 
 
     }
+    public class FunctionCodeEnumDto
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = null!;
+    }
+
 }

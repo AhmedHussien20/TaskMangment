@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using TaskMangment.Application.Common.ApiRequests.Employee;
 using TaskMangment.Application.DTOs;
 using TaskMangment.Application.Interfaces.Services;
+using TaskMangment.Application.Responses;
+using TaskMangment.Infrastructure.Services;
 
 namespace TaskMangment.API.Controllers
 {
@@ -59,5 +61,10 @@ namespace TaskMangment.API.Controllers
             var result = await _service.DeleteAsync(id);
             return Success(true, "Employee deleted successfully");
         }
+
+        [HttpGet("function-codes")]
+        public async Task<ApiResponse<List<FunctionCodeEnumDto>>> GetFunctionCodes()
+            => await _service.GetFunctionCodesAsync();
+
     }
 }

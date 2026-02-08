@@ -614,7 +614,10 @@
     "PROFILE_PIC": "صورة الملف الشخصي",
     "JOB": "الوظيفة",
     "LAST_LOGIN": "آخر تسجيل دخول",
-    "DEPARTMENT": "القسم"
+    "DEPARTMENT": "القسم",
+    "FUNCTION_CODE" : "نوع الموظف"
+
+   
   },
   "STUDENT": {
     "TITLE": "الطلاب",

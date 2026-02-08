@@ -49,7 +49,7 @@ namespace TaskMangment.Domain.Entities
         public DateTime? ResetPasswordExpiry { get; set; }
 
         public DateTime? LastLoginDate { get; set; }
-        public FunctionCode FunctionCode { get; set; } = FunctionCode.Employee;
+        public FunctionCode FunctionCode { get; set; } = FunctionCode.Operations;
 
         // Navigation
         public Company Company { get; set; }

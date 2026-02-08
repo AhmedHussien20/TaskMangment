@@ -122,7 +122,6 @@ namespace TaskMangment.Domain.Entities
 
     public enum FunctionCode 
     {
-        Employee,
         HR,
         Accounting,
         Operations

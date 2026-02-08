@@ -10,13 +10,11 @@ export interface Employee {
   lastLoginDate?: string;
   
 }
-export enum FunctionCode 
-{
-    Employee,
-    HR,
-    Accounting,
-    Operations
+export interface EnumItemDto {
+  id: number;
+  name: string;
 }
+
 
 export interface EmployeeAddEdit {
   branchId: number;
@@ -33,7 +31,7 @@ export interface EmployeeAddEdit {
   email?: string;
   password?: string;
   attachments?: File; 
-  functionCode?: FunctionCode
+  functionCode?: EnumItemDto
   
 }
 
