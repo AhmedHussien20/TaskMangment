@@ -595,7 +595,9 @@
     "PROFILE_PIC": "Profile Picture",
     "JOB": "Job",
     "LAST_LOGIN": "Last Login",
-    "DEPARTMENT": "Department"
+    "DEPARTMENT": "Department",
+    "FUNCTION_CODE": "Employee type"
+    
   },
   "STUDENT": {
     "TITLE": "Students",

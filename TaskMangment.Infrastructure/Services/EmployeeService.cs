@@ -393,5 +393,17 @@ namespace TaskMangment.Infrastructure.Services
 
             return ApiResponse<bool>.Ok(true, "Employee deleted successfully");
         }
+
+        public Task<ApiResponse<List<FunctionCodeEnumDto>>> GetFunctionCodesAsync()
+        {
+            var values = Enum.GetValues<FunctionCode>()
+                .Select(x => new FunctionCodeEnumDto { Id = (int)x, Name = x.ToString() })
+                .ToList();
+
+            return Task.FromResult(ApiResponse<List<FunctionCodeEnumDto>>.Ok(values));
+        }
+
+
+
     }
 }

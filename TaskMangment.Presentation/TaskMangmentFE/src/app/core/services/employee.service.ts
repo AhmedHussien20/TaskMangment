@@ -3,7 +3,7 @@ import { Observable } from 'rxjs';
 import { BaseResponse } from 'app/models/base.response.model';
 import { ApiService } from 'app/core/services/api.service';
 import { SearchCriteria } from '../models/search-criteria.model';
-import { Employee, EmployeeAddEdit, EmployeePagedResponse } from '../models/employee/employee';
+import { Employee, EmployeeAddEdit, EmployeePagedResponse, EnumItemDto } from '../models/employee/employee';
 
 @Injectable({
   providedIn: 'root'
@@ -39,6 +39,13 @@ export class EmployeeService {
   delete(id: number): Observable<BaseResponse<any>> {
     return this.api.delete<BaseResponse<any>>(this.service, `${id}`);
   }
+
+  // GET /Employee/function-codes
+getFunctionCodes(): Observable<BaseResponse<EnumItemDto[]>> {
+  return this.api.get<BaseResponse<EnumItemDto[]>>(this.service, 'function-codes');
+}
+
+
 
   // Build Query String
   private buildQuery(req: SearchCriteria): string {
