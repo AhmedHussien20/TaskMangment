@@ -15,7 +15,7 @@ using TaskMangment.Domain.Entities;
 using TaskMangment.Infrastructure.Helpers;
 using TaskMangment.Utilities.Localization.Resources;
 
-namespace TaskMangment.Infrastructure.Services.Dashboard
+namespace TaskMangment.Infrastructure.Services
 {
     public class AdminDashboardService : IAdminDashboardService
     {

@@ -90,12 +90,11 @@ namespace TaskMangment.Infrastructure.Services
                  .ApplyAccessScope(access)
                 .AsNoTracking();
 
-            int? branchId = null;
 
-            if (!access.BranchIds.Any() && !access.FunctionCodes.Any())
-            {
-                empQuery = empQuery.Where(e => e.Id == employeeId);
-            }
+            //if (!access.BranchIds.Any() && !access.FunctionCodes.Any())
+            //{
+            //    empQuery = empQuery.Where(e => e.Id == employeeId);
+            //}
              
             var totalCount = await empQuery.CountAsync();
 
