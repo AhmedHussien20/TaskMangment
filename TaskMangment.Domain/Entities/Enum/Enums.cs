@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 namespace TaskMangment.Domain.Entities
 {
     public enum TaskPriority : byte { Low = 1, Medium = 2, High = 3 }
-    public enum WorkTaskStatus : byte { New = 1, InProgress = 2, Closed = 3, Archived = 4, AutoClose=5 }
+    public enum WorkTaskStatus : byte { New = 1, InProgress = 2, Closed = 3, Archived = 4, AutoClose = 5 }
     public enum ExtensionRequestStatus : byte { Pending = 1, Approved = 2, Rejected = 3 }
     public enum CloseRequestStatus : byte { Pending = 1, Approved = 2, Rejected = 3 }
-    public enum DiscountType : byte { ManualDiscount = 1, AutoCloseTaskDiscount = 2, StopCommentDiscount = 3 , MaxWarningDiscount = 4}
+    public enum DiscountType : byte { ManualDiscount = 1, AutoCloseTaskDiscount = 2, StopCommentDiscount = 3, MaxWarningDiscount = 4 }
 
     public enum NotificationChannel
     {
@@ -73,9 +73,9 @@ namespace TaskMangment.Domain.Entities
 
     public enum CommentAllowPeriod
     {
-        Daily = 1,      
-        Weekly = 7,    
-        Monthly = 30  
+        Daily = 1,
+        Weekly = 7,
+        Monthly = 30
     }
 
     public enum LeaveStatus
@@ -120,13 +120,11 @@ namespace TaskMangment.Domain.Entities
         AchievementPercent
     }
 
-    public enum FunctionCode 
+    public enum FunctionCode
     {
-        Employee,
+        OPERATIONS,
         HR,
-        Accounting,
-        Operations
+        ACCOUNTING
     }
-
-
+   
 }

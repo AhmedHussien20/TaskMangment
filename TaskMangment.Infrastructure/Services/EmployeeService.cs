@@ -16,6 +16,7 @@ using TaskMangment.Application.Common.Errors;
 using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Responses;
+using TaskMangment.Application.Common.Security;
 using TaskMangment.Application.DTOs;
 using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
@@ -42,6 +43,7 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IBlobStorageService _blobStorageService;
         private readonly IAppUnitOfWork _uow;
         private readonly IRepository<ManagerBranches> _managerBranchesRepo;
+        private readonly IUserAccessContextProvider _accessProvider;
 
         public EmployeeService(
             IRepository<Employee> employeeRepo,
@@ -56,7 +58,8 @@ namespace TaskMangment.Infrastructure.Services
             AppDbContext db,
             IWebHostEnvironment env,
             IAppUnitOfWork uow,
-            IRepository<ManagerBranches> managerBranchesRepo)
+            IRepository<ManagerBranches> managerBranchesRepo,
+            IUserAccessContextProvider accessProvider)
         {
             _employeeRepo = employeeRepo;
             _roleRepo = roleRepo;
@@ -70,13 +73,13 @@ namespace TaskMangment.Infrastructure.Services
             _db = db;
             _uow = uow;
             _managerBranchesRepo = managerBranchesRepo;
+            _accessProvider = accessProvider;
         }
 
-        public async Task<ApiResponse<PagedResponse<EmployeeGetDto>>> GetAllAsync(
-    EmployeeRequest request,
-    int employeeId,
-    int? roleLevel)
+        public async Task<ApiResponse<PagedResponse<EmployeeGetDto>>> GetAllAsync(EmployeeRequest request,int employeeId,int? roleLevel) 
         {
+            var access = await _accessProvider.GetAsync(employeeId);
+
             var empQuery = _employeeRepo.GetAll()
                 .Include(e => e.Branch)
                 .Include(e => e.Department)
@@ -84,61 +87,16 @@ namespace TaskMangment.Infrastructure.Services
                 .Include(e => e.EmployeeRoles)
                     .ThenInclude(er => er.Role)
                 .ApplySearch(request.searchKey)
+                 .ApplyAccessScope(access)
                 .AsNoTracking();
 
             int? branchId = null;
 
-            if (roleLevel.HasValue && roleLevel.Value >= 70 && roleLevel.Value < 100)
+            if (!access.BranchIds.Any() && !access.FunctionCodes.Any())
             {
-                if (roleLevel.Value == 80)
-                {
-                    var managedBranchIds = await _managerBranchesRepo
-                        .GetAll(x => x.ManagerId == employeeId && !x.IsDeleted)
-                        .Select(x => x.BranchId)
-                        .Distinct()
-                        .ToListAsync();
-
-                    if (!managedBranchIds.Any())
-                        empQuery = empQuery.Where(e => false);
-                    else
-                        empQuery = empQuery.Where(e => e.BranchId.HasValue && managedBranchIds.Contains(e.BranchId.Value));
-                }
-                else
-                {
-                    branchId = await _employeeRepo
-                        .GetAll(e => e.Id == employeeId)
-                        .Select(e => e.BranchId)
-                        .FirstOrDefaultAsync();
-
-                    if (!branchId.HasValue)
-                        throw new Exception("Employee does not belong to a branch");
-
-                    empQuery = empQuery.Where(e => e.BranchId == branchId.Value);
-                }
+                empQuery = empQuery.Where(e => e.Id == employeeId);
             }
-
-            if (request.RoleLevel.HasValue)
-            {
-                empQuery = empQuery.Where(e =>
-                    e.EmployeeRoles.Any(er => er.Role.Level == request.RoleLevel.Value)
-                );
-            }
-
-            if (roleLevel.HasValue)
-            {
-                var myLevel = roleLevel.Value;
-
-                empQuery = empQuery.Where(e =>
-                    !e.EmployeeRoles.Any(er =>
-                        er.IsAssigned &&
-                        !er.IsDeleted &&
-                        er.Role != null &&
-                        er.Role.Level > myLevel
-                    )
-                );
-            }
-
-
+             
             var totalCount = await empQuery.CountAsync();
 
             empQuery = empQuery.OrderByDynamicSafe(request.SortColumn, request.SortDirection);
