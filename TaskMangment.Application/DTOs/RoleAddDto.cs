@@ -93,23 +93,28 @@ public class AssignedPermissionDto
         public bool IsAssigned { get; set; }
     }
 
-    //public class RoleEmployeeBulkAssignDto
-    //{
-    //    [Required]
-    //    public int RoleId { get; set; }
+//public class RoleEmployeeBulkAssignDto
+//{
+//    [Required]
+//    public int RoleId { get; set; }
 
-    //    [Required]
-    //    public List<EmployeeRoleAssignmentDto> Assignments { get; set; } = new();
-    //}
+//    [Required]
+//    public List<EmployeeRoleAssignmentDto> Assignments { get; set; } = new();
+//}
 
-    //public class EmployeeRoleAssignmentDto
-    //{
-    //    [Required]
-    //    public int EmployeeId { get; set; }
+//public class EmployeeRoleAssignmentDto
+//{
+//    [Required]
+//    public int EmployeeId { get; set; }
 
-    //    [Required]
-    //    public bool Assign { get; set; } // true = assign, false = unassign
-    //}
+//    [Required]
+//    public bool Assign { get; set; } // true = assign, false = unassign
+//}
 
-   
 
+
+public class RoleLevelEnumDto
+{
+    public int Value { get; set; }
+    public string Label { get; set; } = null!;
+}

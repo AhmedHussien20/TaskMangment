@@ -6,8 +6,9 @@ import { ToastrService } from 'ngx-toastr';
 
 import { GenericFormComponent } from 'app/shared/components/generic-form/generic-form.component';
 import { RoleService } from 'app/core/services/role.service';
-import { RoleAddEdit } from 'app/core/models/roles/role';
+import { RoleAddEdit, RoleLevelDto } from 'app/core/models/roles/role';
 import { FormFieldConfig } from 'app/core/models/form-field-config';
+import { labels1 } from 'app/components/charts/chartjs-charts/chartjs';
 
  
 
@@ -23,13 +24,9 @@ import { FormFieldConfig } from 'app/core/models/form-field-config';
   templateUrl: './role-create-update.component.html'
 })
 export class RoleCreateUpdateComponent implements OnInit {
-roleLevelsOptions = [
-  { value: 10, label: 'ROLE.LEVELS.EMPLOYEE' },
-  { value: 50, label: 'ROLE.LEVELS.TEAM_LEAD' },
-  { value: 70, label: 'ROLE.LEVELS.MANAGER' },
-    {value: 80, label: 'ROLE.LEVELS.BRANCHES_MANAGER'},
-  { value: 100, label: 'ROLE.LEVELS.ADMIN' }
-];
+
+roleLevelsOptions: RoleLevelDto [] = [];
+
 
 
   @Input() isEdit = false;
@@ -77,12 +74,29 @@ roleLevelsOptions = [
   ) {}
 
   ngOnInit(): void {
-    this.initForm();
+  this.initForm();
 
-    if (this.isEdit && this.roleId) {
-      this.loadRole();
+  this.roleService.getRoleLevels().subscribe({
+    next: (res) => {
+      const data = res.data ?? [];
+
+      this.roleLevelsOptions = data.map(x => ({
+        value: x.value,
+        label: x.label
+      }));
+
+      const field = this.formConfig.find(f => f.name === 'level');
+      if (field) field.options = this.roleLevelsOptions;
+
+      this.formConfig = [...this.formConfig];
+
+      if (this.isEdit && this.roleId) {
+        this.loadRole();
+      }
     }
-  }
+  });
+}
+
 
   initForm() {
     this.formGroup = this.fb.group({
@@ -103,6 +117,25 @@ loadRole() {
       description: role.description,
       level: role.level   
     });
+  });
+}
+
+
+loadRoleLevels() {
+  this.roleService.getRoleLevels().subscribe({
+    next: (res) => {
+      this.roleLevelsOptions = res.data ?? [];
+
+      const field = this.formConfig.find(f => f.name === 'level');
+      if (field) {
+        field.options = this.roleLevelsOptions;
+      }
+
+      this.formConfig = [...this.formConfig];
+    },
+    error: () => {
+      this.toastr.error(this.translate.instant('COMMON.LOAD_FAILED'));
+    }
   });
 }
 

@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TaskMangment.Domain.Entities;
 
 namespace TaskMangment.Application.DTOs
 {
@@ -41,6 +42,7 @@ namespace TaskMangment.Application.DTOs
     public class GetManagerBranchesDto
     {
         public int ManagerId { get; set; }
+        public FunctionCode? FunctionCode { get; set; }  
         public List<int> BranchIds { get; set; } = new();
         public List<BranchLookupDto> branchLookupDtos { get; set; } = new();
     }
@@ -50,6 +52,11 @@ namespace TaskMangment.Application.DTOs
         public string Name { get; set; } = "";
     }
 
+    public class SetManagerBranchesRequest
+    {
+        public FunctionCode FunctionCode { get; set; }
+        public List<int>? BranchIds { get; set; } = new();
+    }
 
 
 }

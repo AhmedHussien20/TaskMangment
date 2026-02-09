@@ -46,4 +46,10 @@ export interface GetManagerBranchesDto {
   managerId: number;
   branchIds: number[];
   branchLookupDtos: BranchLookupDto[];
+  functionCode: number
+}
+
+export interface RoleLevelDto {
+  value: number;
+  label: string;
 }

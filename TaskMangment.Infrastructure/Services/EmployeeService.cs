@@ -74,6 +74,7 @@ namespace TaskMangment.Infrastructure.Services
             _uow = uow;
             _managerBranchesRepo = managerBranchesRepo;
             _accessProvider = accessProvider;
+            _env = env;
         }
 
         public async Task<ApiResponse<PagedResponse<EmployeeGetDto>>> GetAllAsync(EmployeeRequest request,int employeeId,int? roleLevel) 
@@ -84,18 +85,18 @@ namespace TaskMangment.Infrastructure.Services
                 .Include(e => e.Branch)
                 .Include(e => e.Department)
                 .Include(e => e.Job)
-                .Include(e => e.EmployeeRoles)
+                .Include(e => e.EmployeeRoles.Where(er => er.IsAssigned && !er.IsDeleted))
                     .ThenInclude(er => er.Role)
                 .ApplySearch(request.searchKey)
                  .ApplyAccessScope(access)
                 .AsNoTracking();
 
 
-            //if (!access.BranchIds.Any() && !access.FunctionCodes.Any())
-            //{
-            //    empQuery = empQuery.Where(e => e.Id == employeeId);
-            //}
-             
+            if (!access.BranchIds.Any() && !access.FunctionCodes.Any() && roleLevel != 100)
+            {
+                empQuery = empQuery.Where(e => e.Id == employeeId);
+            }
+
             var totalCount = await empQuery.CountAsync();
 
             empQuery = empQuery.OrderByDynamicSafe(request.SortColumn, request.SortDirection);

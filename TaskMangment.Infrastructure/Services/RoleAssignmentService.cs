@@ -28,6 +28,8 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<EmployeeRole> _employeeRoleRepo;
         private readonly IRepository<ManagerBranches> _managerBranchesRepo;
         private readonly IRepository<Branch> _branchRepo;
+        private readonly IRepository<EmployeeFunctionalScope> _employeeFunctionScopeRepo;
+
 
 
         public RoleAssignmentService(IRepository<Employee> employeeRepo,
@@ -35,7 +37,8 @@ namespace TaskMangment.Infrastructure.Services
             IRepository<EmployeeRole> employeeRoleRepo,
             ICachingService cache,
             IRepository<ManagerBranches> managerBranchesRepo,
-            IRepository<Branch> branchRepo)
+            IRepository<Branch> branchRepo,
+            IRepository<EmployeeFunctionalScope> employeeFunctionScopeRepo)
         {
             _employeeRepo = employeeRepo;
             _roleRepo = roleRepo;
@@ -43,7 +46,11 @@ namespace TaskMangment.Infrastructure.Services
             _cache = cache;
             _managerBranchesRepo = managerBranchesRepo;
             _branchRepo = branchRepo;
+            _employeeFunctionScopeRepo = employeeFunctionScopeRepo;
         }
+
+
+
         public async Task<ApiResponse<bool>> AssignEmployeesToRoleAsync(int roleId, RoleWithManyEmployeeAssignDto dto)
         {
             if (!await _roleRepo.IsExistAsync(roleId))
@@ -232,30 +239,64 @@ namespace TaskMangment.Infrastructure.Services
                 .DefaultIfEmpty(0)
                 .MaxAsync();
         }
-        public async Task<ApiResponse<ManagerBranchesDto>> SetManagerBranchesAsync(int managerId, List<int> branchIds)
+        public async Task<ApiResponse<ManagerBranchesDto>> SetManagerBranchesAsync(
+     int managerId,
+     SetManagerBranchesRequest request)
         {
             if (!await _employeeRepo.IsExistAsync(managerId))
                 throw new AppException(ErrorCodes.EmployeeNotFound, StatusCodes.Status400BadRequest);
 
+            var functionCode = (FunctionCode)request.FunctionCode;
+
+            var existingScope = await _employeeFunctionScopeRepo
+                .GetAll(x => x.EmployeeId == managerId && !x.IsDeleted)
+                .FirstOrDefaultAsync();
+
+            if (existingScope != null)
+            {
+                existingScope.FunctionCode = functionCode;
+                existingScope.IsDeleted = false;
+                existingScope.DeletedDate = null;
+            }
+            else
+            {
+                await _employeeFunctionScopeRepo.AddAsync(new EmployeeFunctionalScope
+                {
+                    EmployeeId = managerId,
+                    FunctionCode = functionCode,
+                });
+            }
+
+            if (functionCode != FunctionCode.Operations)
+            {
+                await _employeeFunctionScopeRepo.SaveChangesAsync();
+
+                return ApiResponse<ManagerBranchesDto>.Ok(new ManagerBranchesDto
+                {
+                    ManagerId = managerId,
+                    BranchIds = new List<int>()
+                });
+            }
+
             var hasRoleLevel80 = await _employeeRepo
-       .GetAll(e => e.Id == managerId)
-       .SelectMany(e => e.EmployeeRoles)               
-       .Where(er => !er.IsDeleted)                 
-       .AnyAsync(er => er.Role != null && er.Role.Level == 80);
+                .GetAll(e => e.Id == managerId)
+                .SelectMany(e => e.EmployeeRoles)
+                .Where(er => !er.IsDeleted)
+                .AnyAsync(er => er.Role != null && er.Role.Level == 80);
 
             if (!hasRoleLevel80)
                 throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
 
-            branchIds = (branchIds ?? new List<int>())
-       .Distinct()
-       .ToList();
+            var branchIds = (request.BranchIds ?? new List<int>())
+                .Distinct()
+                .ToList();
 
             if (branchIds.Any())
             {
                 var conflicts = await _managerBranchesRepo
-                    .GetAll(x => branchIds.Contains(x.BranchId) &&
-                                 !x.IsDeleted &&
-                                 x.ManagerId != managerId)
+                    .GetAll(x => branchIds.Contains(x.BranchId)
+                                 && x.IsActive
+                                 && x.ManagerId != managerId)
                     .Select(x => x.BranchId)
                     .Distinct()
                     .ToListAsync();
@@ -265,32 +306,48 @@ namespace TaskMangment.Infrastructure.Services
             }
 
             var existingActive = await _managerBranchesRepo
-                .GetAll(x => x.ManagerId == managerId && !x.IsDeleted)
+                .GetAll(x => x.ManagerId == managerId && x.IsActive)
                 .ToListAsync();
 
-            var existingIds = existingActive.Select(x => x.BranchId).ToHashSet();
+            var existingActiveIds = existingActive.Select(x => x.BranchId).ToHashSet();
 
-            var toDelete = existingActive.Where(x => !branchIds.Contains(x.BranchId)).ToList();
-
-            foreach (var item in toDelete)
+            var toDeactivate = existingActive.Where(x => !branchIds.Contains(x.BranchId)).ToList();
+            foreach (var item in toDeactivate)
             {
-                item.IsDeleted = true;
-                item.DeletedDate = DateTime.UtcNow;
+                item.IsActive = false;
             }
 
-            var toAdd = branchIds.Where(id => !existingIds.Contains(id)).ToList();
+            var toAdd = branchIds.Where(id => !existingActiveIds.Contains(id)).ToList();
 
-            foreach (var bId in toAdd)
+            if (toAdd.Any())
             {
-                await _managerBranchesRepo.AddAsync(new ManagerBranches
+               
+                var existingAny = await _managerBranchesRepo
+                    .GetAll(x => x.ManagerId == managerId && toAdd.Contains(x.BranchId))
+                    .ToListAsync();
+
+                var map = existingAny.ToDictionary(x => x.BranchId);
+
+                foreach (var bId in toAdd)
                 {
-                    ManagerId = managerId,
-                    BranchId = bId,
-                    CreatedDate = DateTime.UtcNow
-                });
+                    if (map.TryGetValue(bId, out var row))
+                    {
+                        row.IsActive = true;
+                    }
+                    else
+                    {
+                        await _managerBranchesRepo.AddAsync(new ManagerBranches
+                        {
+                            ManagerId = managerId,
+                            BranchId = bId,
+                            IsActive = true,
+                        });
+                    }
+                }
             }
 
-            await _managerBranchesRepo.SaveChangesAsync();
+            await _employeeFunctionScopeRepo.SaveChangesAsync();
+            await _managerBranchesRepo.SaveChangesAsync(); // ✅ لازم
 
             return ApiResponse<ManagerBranchesDto>.Ok(new ManagerBranchesDto
             {
@@ -298,18 +355,24 @@ namespace TaskMangment.Infrastructure.Services
                 BranchIds = branchIds
             });
         }
+
         public async Task<ApiResponse<GetManagerBranchesDto>> GetManagerBranchesAsync(int managerId)
         {
             if (!await _employeeRepo.IsExistAsync(managerId))
                 throw new AppException(ErrorCodes.EmployeeNotFound, StatusCodes.Status400BadRequest);
 
             var currentBranchIds = await _managerBranchesRepo
-                .GetAll(x => x.ManagerId == managerId && !x.IsDeleted)
+                .GetAll(x => x.ManagerId == managerId && x.IsActive)
                 .Select(x => x.BranchId)
                 .ToListAsync();
 
+            var functionCode = await _employeeFunctionScopeRepo
+                .GetAll(x => x.EmployeeId == managerId && !x.IsDeleted)
+                .Select(x => x.FunctionCode)
+                .FirstOrDefaultAsync();
+
             var assignedBranchIds = await _managerBranchesRepo
-                .GetAll(x => !x.IsDeleted)
+                .GetAll(x => x.IsActive)
                 .Select(x => x.BranchId)
                 .Distinct()
                 .ToListAsync();
@@ -341,6 +404,7 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<GetManagerBranchesDto>.Ok(new GetManagerBranchesDto
             {
                 ManagerId = managerId,
+                FunctionCode = functionCode,
                 BranchIds = currentBranchIds,
                 branchLookupDtos = combined
             });

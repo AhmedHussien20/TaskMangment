@@ -6,8 +6,8 @@ import { ToastrService } from 'ngx-toastr';
 
 import { GenericFormComponent } from 'app/shared/components/generic-form/generic-form.component';
 import { FormFieldConfig } from 'app/core/models/form-field-config';
-import { BranchService } from 'app/core/services/branch.service';
 import { RoleAssignmentService } from 'app/core/services/role-assignment.service';
+import { EmployeeService } from 'app/core/services/employee.service';
 
 @Component({
   selector: 'app-manager-branches-form',
@@ -21,7 +21,11 @@ export class ManagerBranchesFormComponent implements OnInit {
   @Input() managerId: number | null = null;
   @Input() selectedBranchIds: number[] = [];
 
-  @Output() formSubmitted = new EventEmitter<{ managerId: number | null; branchIds: number[] }>();
+  @Output() formSubmitted = new EventEmitter<{
+    managerId: number | null;
+    functionCode: number;
+    branchIds: number[];
+  }>();
 
   title = 'ROLE.LEVELS.BRANCHES_MANAGER';
   breadcrumbs = ['HOME'];
@@ -29,83 +33,176 @@ export class ManagerBranchesFormComponent implements OnInit {
 
   formGroup!: FormGroup;
 
+  // ✅ functionCode select + branchIds (hidden by default)
   formConfig: FormFieldConfig[] = [
     {
       type: 'select',
-      label: 'EMPLOYEE.BRANCH',   
+      label: 'EMPLOYEE.FUNCTION_CODE',
       selectType: 'simple',
-      name: 'branchIds',
-      multiple: true,            
+      name: 'functionCode',
       options: [],
       validations: { required: true }
+    },
+    {
+      type: 'select',
+      label: 'EMPLOYEE.BRANCH',
+      selectType: 'simple',
+      name: 'branchIds',
+      multiple: true,
+      options: [],
+      validations: { required: false },
+      disabled: true,
+      // @ts-ignore
+      hidden: true
     }
   ];
 
   constructor(
     private fb: FormBuilder,
-    private branchService: BranchService,
     private toastr: ToastrService,
     private translate: TranslateService,
     private roleAssignmentService: RoleAssignmentService,
-
+    private employeeService: EmployeeService
   ) {}
 
   ngOnInit() {
-  this.initForm();
-  this.loadBranches();
-}
+    this.initForm();
+    this.loadFunctionCodes();
+    this.watchFunctionCode();
 
+    if (this.managerId) {
+      this.loadManagerData(); 
+    }
+  }
 
   initForm() {
     this.formGroup = this.fb.group({
-      // ✅ نخزن strings لأن options.value عندك string
-      branchIds: [[], [Validators.required]]
+      functionCode: [null, [Validators.required]],
+      branchIds: [{ value: [], disabled: true }]
     });
   }
 
-  loadBranches() {
-  if (!this.managerId) {
-    // لو لسه managerId مش جاهز
-    const field = this.formConfig.find(x => x.name === 'branchIds');
-    if (field) field.options = [];
-    this.formGroup.get('branchIds')?.setValue([]);
-    return;
+  loadFunctionCodes() {
+    this.employeeService.getFunctionCodes().subscribe({
+      next: (res) => {
+        const functionCodes = res.data ?? [];
+
+        const options = functionCodes.map((x: any) => ({
+          label: x.name,
+          value: x.id
+        }));
+
+        const field = this.formConfig.find(f => f.name === 'functionCode');
+        if (field) field.options = options;
+
+        this.formConfig = [...this.formConfig];
+      },
+      error: () => {
+        this.toastr.error(this.translate.instant('COMMON.LOADING_FAILED'));
+      }
+    });
   }
 
-  this.roleAssignmentService.getManagerBranches(this.managerId).subscribe({
-    next: (res) => {
-      const dto = res.data; // GetManagerBranchesDto
+  private watchFunctionCode() {
+    const ctrl = this.formGroup.get('functionCode');
+    if (!ctrl) return;
 
-      // ✅ options (available + current)
-      const options = (dto.branchLookupDtos ?? []).map(b => ({
-        label: b.name,
-        value: b.id.toString()
-      }));
+    ctrl.valueChanges.subscribe(val => {
+      this.toggleBranches(val);
+    });
+  }
+  private loadManagerData() {
+    if (!this.managerId) return;
 
-      const field = this.formConfig.find(x => x.name === 'branchIds');
-      if (field) field.options = options;
+    this.roleAssignmentService.getManagerBranches(this.managerId).subscribe({
+      next: (res) => {
+        const dto = res.data;
 
-      // ✅ selected للفورم = الفروع الحالية من الـ API (مش من Input)
-      const selected = (dto.branchIds ?? []).map(x => x.toString());
-      this.formGroup.patchValue({ branchIds: selected });
-    },
-    error: () => {
-      this.toastr.error(this.translate.instant('COMMON.LOADING_FAILED'));
+        this.formGroup.patchValue(
+          { functionCode: dto.functionCode },
+          { emitEvent: false }
+        );
+
+        this.toggleBranches(dto.functionCode, true);
+
+        const branchOptions = (dto.branchLookupDtos ?? []).map((b: any) => ({
+          label: b.name,
+          value: b.id
+        }));
+
+        const branchField = this.formConfig.find(x => x.name === 'branchIds');
+        if (branchField) branchField.options = branchOptions;
+
+        const selected = (dto.branchIds ?? []);
+        this.formGroup.patchValue({ branchIds: selected }, { emitEvent: false });
+
+        this.formConfig = [...this.formConfig];
+      },
+      error: () => {
+        this.toastr.error(this.translate.instant('COMMON.LOADING_FAILED'));
+      }
+    });
+  }
+
+
+  private toggleBranches(functionCodeId: any, fromLoad: boolean = false) {
+    const isOperations = Number(functionCodeId) === 1;
+
+    const branchesField = this.formConfig.find(f => f.name === 'branchIds');
+    const branchesCtrl = this.formGroup.get('branchIds');
+
+    if (!branchesField || !branchesCtrl) return;
+
+    if (isOperations) {
+      branchesField.disabled = false;
+      // @ts-ignore
+      branchesField.hidden = false as any;
+      branchesField.validations = { ...(branchesField.validations ?? {}), required: true };
+
+      branchesCtrl.enable({ emitEvent: false });
+      branchesCtrl.setValidators([Validators.required]);
+      branchesCtrl.updateValueAndValidity({ emitEvent: false });
+
+      this.formConfig = [...this.formConfig];
+
+      if (!fromLoad && (!branchesField.options || branchesField.options.length === 0)) {
+        this.loadManagerData();
+      }
+
+    } else {
+      branchesCtrl.reset([], { emitEvent: false });
+      branchesCtrl.clearValidators();
+      branchesCtrl.disable({ emitEvent: false });
+      branchesCtrl.updateValueAndValidity({ emitEvent: false });
+
+      branchesField.disabled = true;
+      // @ts-ignore
+      branchesField.hidden = true as any;
+      branchesField.validations = { ...(branchesField.validations ?? {}) };
+      delete (branchesField.validations as any).required;
+
+      this.formConfig = [...this.formConfig];
     }
-  });
-}
+  }
 
-  onSubmit(formValue: any) {
+  onSubmit() {
     if (this.formGroup.invalid) {
       this.formGroup.markAllAsTouched();
       this.toastr.error(this.translate.instant('FORM.VALIDATION_ERROR'));
       return;
     }
 
-    const branchIds = (formValue.branchIds ?? []).map((x: any) => Number(x)).filter((n: number) => !Number.isNaN(n));
+    const v = this.formGroup.getRawValue();
+
+    const functionCode = Number(v.functionCode);
+
+    const branchIds = (v.branchIds ?? [])
+      .map((x: any) => Number(x))
+      .filter((n: number) => !Number.isNaN(n));
 
     this.formSubmitted.emit({
       managerId: this.managerId,
+      functionCode,
       branchIds
     });
   }

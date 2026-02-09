@@ -7,6 +7,7 @@ import { BaseResponse } from 'app/models/base.response.model';
 import {
   Role,
   RoleAddEdit,
+  RoleLevelDto,
   RolePagedResponse
 } from 'app/core/models/roles/role';
 
@@ -55,6 +56,10 @@ export class RoleService {
   // =============================
   delete(id: number): Observable<BaseResponse<any>> {
     return this.api.delete<BaseResponse<any>>(this.service, `${id}`);
+  }
+
+  getRoleLevels(): Observable<BaseResponse<RoleLevelDto[]>> {
+    return this.api.get<BaseResponse<RoleLevelDto[]>>(this.service, 'role-levels');
   }
 
   // =============================

@@ -8,10 +8,12 @@
           {{ 'FORM.SAVE' | translate }}
         </button>
       </div>
-      <div *ngFor="let field of orderedFields" [ngClass]="{
-       'col-md-4': field.type !== 'file' && field.type !== 'textarea',
-       'col-md-12': field.type === 'file' || field.type === 'textarea'
-     }">
+      <ng-container *ngFor="let field of orderedFields">
+  <div *ngIf="!field.hidden"
+       [ngClass]="{
+         'col-md-4': field.type !== 'file' && field.type !== 'textarea',
+         'col-md-12': field.type === 'file' || field.type === 'textarea'
+       }">
         <label *ngIf="field.type !== 'file' && field.type !== 'checkbox'" [for]="field.name">
           {{ field.label | translate }}
         </label>
@@ -156,7 +158,7 @@
 
 
         <!-- ================= SELECT FIELD ================= -->
-        <div *ngIf="field.type === 'select'" class="mb-3">
+        <div *ngIf="field.type === 'select'"  class="mb-3">
 
 
 
@@ -291,7 +293,8 @@
 
         </div>
 
-      </div>
+        </div>
+</ng-container>
     </form>
   </div>
 </div>

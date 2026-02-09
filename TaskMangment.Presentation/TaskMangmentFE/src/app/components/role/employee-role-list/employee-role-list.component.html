@@ -14,11 +14,14 @@
   [searchCriteria]="searchCriteria"
   [labels]="labels"
   [statusOptions]="assignmentStatusOptions"  
+
   [onSearch]="applyFilters"
   (pageChange)="onPageChange($event)"
   (entriesChange)="onEntriesChange($event)"
   [showCheckbox]="true"
   [showDetailsButton]="selectbranches"
+
+  
 (details)="openDetails($event, branchesModal)"
   checkboxKey="isAssigned"
   (checkboxChange)="onAssignToggle($event)">

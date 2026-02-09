@@ -207,7 +207,7 @@ openDetails(managerId: number, branchesModal: any) {
 }
 
 onBranchesFormSubmitted(
-  e: { managerId: number | null; branchIds: number[] },
+  e: { managerId: number | null; functionCode: number; branchIds: number[] },
   modal: any
 ) {
   const managerId = e.managerId ?? this.selectedManagerId;
@@ -217,7 +217,11 @@ onBranchesFormSubmitted(
     return;
   }
 
-  this.roleAssignmentService.setManagerBranches(managerId, e.branchIds).subscribe({
+  this.roleAssignmentService.setManagerBranches(managerId, {
+  functionCode: e.functionCode,
+  branchIds: e.branchIds
+})
+.subscribe({
     next: () => {
       this.toastr.success(this.translate.instant('ROLE.UPDATE_SUCCESS'));
       modal.close();
@@ -228,5 +232,8 @@ onBranchesFormSubmitted(
   });
 }
 
+disableShowDetailsRow = (row: any) => {
+  return row.isAssigned !== true;
+};
 
 }

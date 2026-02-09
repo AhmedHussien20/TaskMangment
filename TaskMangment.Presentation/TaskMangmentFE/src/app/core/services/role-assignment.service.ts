@@ -43,11 +43,12 @@ export class RoleAssignmentService {
   );
 }
 
-   setManagerBranches(managerId: number, branchIds: number[]) {
-    return this.api.post<BaseResponse<any>>(
-      this.service,
-      `manager-branches/${managerId}`,
-      branchIds
-    );
-  }
+  setManagerBranches(managerId: number, payload: { functionCode: number; branchIds?: number[] }) {
+  return this.api.post<BaseResponse<any>>(
+    this.service,
+    `manager-branches/${managerId}`,
+    payload
+  );
+}
+
 }

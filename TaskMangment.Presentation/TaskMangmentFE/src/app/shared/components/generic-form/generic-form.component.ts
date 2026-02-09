@@ -28,6 +28,7 @@ export class GenericFormComponent implements OnInit {
   @Input() formGroup!: FormGroup;
 
   @Output() formSubmit = new EventEmitter<any>();
+  hidden?: boolean = false;
 
   constructor(private location: Location) { }
 

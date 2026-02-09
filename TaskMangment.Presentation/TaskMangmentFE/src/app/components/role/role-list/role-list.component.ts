@@ -230,8 +230,6 @@ export class RoleListComponent implements OnInit {
     this.roleService.delete(roleId).subscribe({
       next: () => {
         this.toastr.success(this.translate.instant('COMMON.DELETE_SUCCESS'));
-
-
         this.isLoading = false;
         this.loadData();
       },

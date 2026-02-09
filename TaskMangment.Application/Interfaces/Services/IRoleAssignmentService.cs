@@ -17,7 +17,7 @@ namespace TaskMangment.Application.Interfaces.Services
         Task<ApiResponse<bool>> AssignEmployeesToRoleAsync(int roleId,RoleWithManyEmployeeAssignDto dto);
         Task<List<UserRoleDto>> GetUserRolesAsync(int userId);
         Task<int> GetUserMaxRoleLevelAsync(int userId);
-        Task<ApiResponse<ManagerBranchesDto>> SetManagerBranchesAsync(int managerId, List<int> branchIds);
+        Task<ApiResponse<ManagerBranchesDto>> SetManagerBranchesAsync(int managerId, SetManagerBranchesRequest request);
         Task<ApiResponse<GetManagerBranchesDto>> GetManagerBranchesAsync(int managerId);
 
     }

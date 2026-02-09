@@ -17,6 +17,8 @@ namespace TaskMangment.Application.Interfaces
         Task<ApiResponse<int>> CreateAsync(RoleAddEditDto dto, int companyId);
         Task<ApiResponse<RoleGetDto>> UpdateAsync(int id, RoleAddEditDto dto, int companyId);
         Task<ApiResponse<bool>> DeleteAsync(int id, int companyId);
+        public Task<ApiResponse<List<RoleLevelEnumDto>>> GetRoleLevelsAsync();
+
     }
 
 

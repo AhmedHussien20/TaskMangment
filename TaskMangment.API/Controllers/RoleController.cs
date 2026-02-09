@@ -4,6 +4,7 @@ using TaskMangment.Application.Common.ApiRequests.Job;
 using TaskMangment.Application.Common.ApiRequests.Role;
 using TaskMangment.Application.DTOs;
 using TaskMangment.Application.Interfaces;
+using TaskMangment.Application.Responses;
 
 namespace TaskMangment.API.Controllers
 {
@@ -58,6 +59,10 @@ namespace TaskMangment.API.Controllers
             var result = await _service.DeleteAsync(id, this.CompanyId);
             return Success(true, "Role deleted successfully");
         }
+
+        [HttpGet("role-levels")]
+        public async Task<ApiResponse<List<RoleLevelEnumDto>>> GetRoleLevels()
+            => await _service.GetRoleLevelsAsync();
     }
 
 }

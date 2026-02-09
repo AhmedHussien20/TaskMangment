@@ -36,9 +36,9 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpPost("manager-branches/{managerId}")]
-        public async Task<IActionResult> Set(int managerId, [FromBody] List<int> branchIds)
+        public async Task<IActionResult> Set(int managerId, [FromBody] SetManagerBranchesRequest request)
         {
-            var result = await _service.SetManagerBranchesAsync(managerId, branchIds);
+            var result = await _service.SetManagerBranchesAsync(managerId, request);
             return Success(result.Data, "Branches saved successfully");
         }
 

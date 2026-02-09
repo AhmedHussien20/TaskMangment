@@ -66,6 +66,8 @@ namespace TaskMangment.Domain.Entities
     {
         Employee = 10,
         TeamLead = 50,
+        Accountant = 60,
+        HR = 65,
         Manager = 70,
         BranchesManager = 80,
         Admin = 100

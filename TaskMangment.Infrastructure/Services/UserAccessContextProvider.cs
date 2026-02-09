@@ -25,7 +25,7 @@ namespace TaskMangment.Infrastructure.Services
         public async Task<UserAccessContext> GetAsync(int employeeId)
         {
             var branchIds = await _managerBranchesRepo.GetAll()
-                .Where(x => x.ManagerId == employeeId)
+                .Where(x => x.ManagerId == employeeId && x.IsActive)
                 .Select(x => x.BranchId)
                 .ToListAsync();
 

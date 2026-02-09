@@ -203,7 +203,14 @@ namespace TaskMangment.Infrastructure.Services
 
             return ApiResponse<bool>.Ok(true, "Role deleted successfully");
         }
+        public Task<ApiResponse<List<RoleLevelEnumDto>>> GetRoleLevelsAsync()
+        {
+            var values = Enum.GetValues<RoleLevelEnum>()
+                .Select(x => new RoleLevelEnumDto { Value = (int)x, Label = x.ToString() })
+                .ToList();
 
+            return Task.FromResult(ApiResponse<List<RoleLevelEnumDto>>.Ok(values));
+        }
 
     }
 

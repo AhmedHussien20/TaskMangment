@@ -12,6 +12,8 @@ namespace TaskMangment.Domain.Entities
         public int ManagerId { get; set; }
         [ForeignKey(nameof(ManagerId))] public Employee? Manager { get; set; }  
 
+        public bool IsActive { get; set; } = false;
+
 
         public int BranchId { get; set; }
         [ForeignKey(nameof(BranchId))] public Branch? Branch { get; set; } 

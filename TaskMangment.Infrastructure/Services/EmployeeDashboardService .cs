@@ -156,7 +156,6 @@ namespace TaskMangment.Infrastructure.Services
                 !a.Task.Comments.Any(c => c.CreatedDate >= today && c.EmployeeId == a.EmployeeId)
             );
 
-            // ===================== Scope حسب RoleLevel =====================
             if (roleLevel < 70)
             {
                 baseQuery = baseQuery.Where(a => a.EmployeeId == employeeId);
@@ -194,14 +193,11 @@ namespace TaskMangment.Infrastructure.Services
             }
             else
             {
-                // Admin وما فوق: لا فلترة إضافية
             }
 
-            // ✅ (1) فلترة: لازم أكون طرف في المهمة
             baseQuery = baseQuery.Where(a =>
                 a.EmployeeId == employeeId || a.Task.AssignedByEmployeeId == employeeId);
 
-            // ===================== Search =====================
             if (!string.IsNullOrWhiteSpace(request.searchKey))
             {
                 var key = request.searchKey.Trim();
@@ -210,7 +206,6 @@ namespace TaskMangment.Infrastructure.Services
                     a.Task.AssignedBy.FullName.Contains(key));
             }
 
-            // ===================== Projection =====================
             var dtoQuery = baseQuery
                 .GroupBy(a => new
                 {
