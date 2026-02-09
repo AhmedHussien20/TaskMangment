@@ -143,16 +143,8 @@ namespace TaskMangment.Infrastructure.Services
             services.AddScoped<IOfferSendService, OfferSendService>();
             services.AddScoped<IChartService, ChartService>();
             services.AddScoped<IUserAccessContextProvider, UserAccessContextProvider>();
-
-
-
-
-
-
-
-
-
-
+            
+            services.AddScoped<IPermissionChecker, PermissionChecker>();
 
             return services;
         }
