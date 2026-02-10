@@ -73,7 +73,7 @@ namespace TaskMangment.Infrastructure.Services
             var roleIds = roles.Select(r => r.Id).ToList();
              
             var employeeCounts = await _employeeRoleRepo
-                .GetAll(er => roleIds.Contains(er.RoleId))
+                .GetAll(er => roleIds.Contains(er.RoleId) && er.IsAssigned)
                 .GroupBy(er => er.RoleId)
                 .Select(g => new
                 {
@@ -83,7 +83,7 @@ namespace TaskMangment.Infrastructure.Services
                 .ToListAsync();
              
             var permissionCounts = await _rolePermissionRepo
-                .GetAll(rp => roleIds.Contains(rp.RoleId))
+                .GetAll(rp => roleIds.Contains(rp.RoleId) && rp.IsAssigned)
                 .GroupBy(rp => rp.RoleId)
                 .Select(g => new
                 {

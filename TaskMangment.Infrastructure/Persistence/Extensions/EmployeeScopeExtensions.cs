@@ -17,6 +17,7 @@ namespace TaskMangment.Infrastructure.Persistence.Extensions
                 query = query.Where(e =>
                     e.BranchId.HasValue &&
                     access.BranchIds.Contains(e.BranchId.Value));
+
             }
 
             if (access.FunctionCodes.Any() && !access.FunctionCodes.Contains(FunctionCode.Operations))

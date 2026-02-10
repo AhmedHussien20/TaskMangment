@@ -77,7 +77,7 @@ namespace TaskMangment.Infrastructure.Services
             _env = env;
         }
 
-        public async Task<ApiResponse<PagedResponse<EmployeeGetDto>>> GetAllAsync(EmployeeRequest request,int employeeId,int? roleLevel) 
+        public async Task<ApiResponse<PagedResponse<EmployeeGetDto>>> GetAllAsync(EmployeeRequest request,int employeeId,int roleLevel) 
         {
             var access = await _accessProvider.GetAsync(employeeId);
 
@@ -92,10 +92,13 @@ namespace TaskMangment.Infrastructure.Services
                 .AsNoTracking();
 
 
+
             if (!access.BranchIds.Any() && !access.FunctionCodes.Any() && roleLevel != 100)
             {
                 empQuery = empQuery.Where(e => e.Id == employeeId);
             }
+            if (roleLevel != 100)
+                empQuery = empQuery.ApplyRoleHierarchy(roleLevel);
 
             var totalCount = await empQuery.CountAsync();
 

@@ -107,12 +107,13 @@ private MENUITEMS: MenuItem[] = [
   },
 
   // ================= Education =================
-  { headTitle: 'nav.apps.education.header', minRoleLevel: 50 },
+  { headTitle: 'nav.apps.education.header', minRoleLevel: 50 , functionCode:1 },
   {
     title: 'nav.apps.education.title',
     icon: 'ti-book',
     type: 'sub',
     minRoleLevel: 50,
+    functionCode: 1,
     children: [
       {
         title: 'nav.apps.student.list',
@@ -162,7 +163,7 @@ private MENUITEMS: MenuItem[] = [
         title: 'nav.apps.leaves.leaves_type',
         path: '/leave/leave-type-list',
         type: 'link',
-        minRoleLevel: 50
+        minRoleLevel: 10
       },
       {
         title: 'nav.apps.leaves.Leaves_requests',
@@ -271,10 +272,20 @@ private MENUITEMS: MenuItem[] = [
   private canShow(item: MenuItem): boolean {
     const user = this.auth.getUser();
     if (!user) return false;
+      const functionCode = user.functionCode; 
+
 
     if (item.minRoleLevel !== undefined && user.roleLevel < item.minRoleLevel) {
       return false;
     }
+
+   if (item.functionCode != null) {
+  if (functionCode == null || item.functionCode !== functionCode) {
+    return false;
+  }
+}
+
+
 
     if (
       item.requiredPermission &&

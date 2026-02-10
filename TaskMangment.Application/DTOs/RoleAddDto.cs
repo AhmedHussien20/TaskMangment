@@ -69,6 +69,7 @@ namespace TaskMangment.Application.DTOs
     {
         public string Name { get; set; } = string.Empty;
         public int Level { get; set; }
+        public bool IsAssigned { get; set; }
     }
 
     //public class AssignedEmployeeDto

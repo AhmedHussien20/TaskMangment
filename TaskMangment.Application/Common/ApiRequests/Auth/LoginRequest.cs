@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TaskMangment.Domain.Entities;
 
 namespace TaskMangment.Application.Common.ApiRequests.Auth
 {
@@ -18,7 +19,6 @@ namespace TaskMangment.Application.Common.ApiRequests.Auth
         public int UserId { get; set; }
         public string FullName { get; set; }
         public string Email { get; set; }
-
         public int? CompanyId { get; set; }
         public string? campanyName { get; set; }
         public int? BranchId { get; set; }
@@ -49,7 +49,9 @@ namespace TaskMangment.Application.Common.ApiRequests.Auth
 
         // JWT Token
         public string Token { get; set; }
-        public string? ProfileImage { get; set; } 
+        public string? ProfileImage { get; set; }
+        public FunctionCode FunctionCode { get; set; } = FunctionCode.Operations;
+
 
     }
 

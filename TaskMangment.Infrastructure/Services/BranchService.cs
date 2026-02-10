@@ -121,100 +121,139 @@ namespace TaskMangment.Infrastructure.Services
         public async Task<ApiResponse<BranchGetDto>> AddAsync(BranchAddEditDto dto, int CampanyId)
         {
             if (!await _employeeRepository.IsExistAsync(dto.ManagerId))
-                throw new AppException(
-                    ErrorCodes.ManagerNotFound,
-                    StatusCodes.Status404NotFound);
+                throw new AppException(ErrorCodes.ManagerNotFound, StatusCodes.Status404NotFound);
 
             if (!await _employeeRepository.IsExistAsync(dto.ResponsibleId))
-                throw new AppException(
-                    ErrorCodes.ManagerNotFound,
-                    StatusCodes.Status404NotFound);
+                throw new AppException(ErrorCodes.ManagerNotFound, StatusCodes.Status404NotFound);
 
             if (dto.AreaId.HasValue)
             {
                 if (!await _areaRepository.IsExistAsync(dto.AreaId.Value))
-                    throw new AppException(
-                        ErrorCodes.AreaNotFound,
-                        StatusCodes.Status404NotFound);
+                    throw new AppException(ErrorCodes.AreaNotFound, StatusCodes.Status404NotFound);
             }
 
-
             if (!await _companyRepository.IsExistAsync(CampanyId))
-                throw new AppException(
-                    ErrorCodes.CompanyNotFound,
-                    StatusCodes.Status404NotFound);
+                throw new AppException(ErrorCodes.CompanyNotFound, StatusCodes.Status404NotFound);
 
-            var existingManager = await _branchRepository.GetAll().AnyAsync(b => b.ManagerID == dto.ManagerId || b.ResponsibleID == dto.ResponsibleId);
+            var existingManager = await _branchRepository.GetAll()
+                .AnyAsync(b => b.ManagerID == dto.ManagerId || b.ResponsibleID == dto.ResponsibleId);
+
             if (existingManager)
                 throw new AppException(ErrorCodes.AlreadyAssigned, StatusCodes.Status400BadRequest);
-
 
             var branch = _mapper.Map<Branch>(dto);
             branch.CompanyId = CampanyId;
 
             await _branchRepository.AddAsync(branch);
             await _branchRepository.SaveChangesAsync();
+
+            var managerBranch = new ManagerBranches
+            {
+                ManagerId = dto.ManagerId,
+                BranchId = branch.Id,
+                IsActive = true
+            };
+
+            await _managerBranchesRepo.AddAsync(managerBranch);
+            await _managerBranchesRepo.SaveChangesAsync();
+
             await _cache.RemoveAsync("branches:");
 
-
             var branchFull = await _branchRepository.GetAll()
-    .Include(b => b.Manager)
-    .Include(b => b.Responsible)
-    .Include(b => b.Area)
-    .FirstOrDefaultAsync(b => b.Id == branch.Id);
+                .Include(b => b.Manager)
+                .Include(b => b.Responsible)
+                .Include(b => b.Area)
+                .FirstOrDefaultAsync(b => b.Id == branch.Id);
 
             var branchdto = _mapper.Map<BranchGetDto>(branchFull);
 
-            // TODO: Optional: Clear branch cache pattern
-            // await _cache.RemoveByPatternAsync("branches-");
-
             return ApiResponse<BranchGetDto>.Ok(branchdto, "Branch added successfully");
         }
+
 
         public async Task<ApiResponse<BranchGetDto>> UpdateAsync(int id, BranchAddEditDto dto)
         {
             var branch = await _branchRepository.GetByIDAsync(id);
             if (branch == null)
-                throw new AppException(
-                    ErrorCodes.BranchNotFound,
-                    StatusCodes.Status404NotFound);
+                throw new AppException(ErrorCodes.BranchNotFound, StatusCodes.Status404NotFound);
 
             if (!await _employeeRepository.IsExistAsync(dto.ManagerId))
-                throw new AppException(
-                    ErrorCodes.ManagerNotFound,
-                    StatusCodes.Status404NotFound);
+                throw new AppException(ErrorCodes.ManagerNotFound, StatusCodes.Status404NotFound);
 
             if (!await _employeeRepository.IsExistAsync(dto.ResponsibleId))
-                throw new AppException(
-                    ErrorCodes.ManagerNotFound,
-                    StatusCodes.Status404NotFound);
+                throw new AppException(ErrorCodes.ManagerNotFound, StatusCodes.Status404NotFound);
 
             if (dto.AreaId.HasValue)
             {
                 if (!await _areaRepository.IsExistAsync(dto.AreaId.Value))
-                    throw new AppException(
-                        ErrorCodes.AreaNotFound,
-                        StatusCodes.Status404NotFound);
+                    throw new AppException(ErrorCodes.AreaNotFound, StatusCodes.Status404NotFound);
             }
 
+            var existingManager = await _branchRepository.GetAll()
+                .AnyAsync(b =>
+                    b.Id != id &&
+                    (b.ManagerID == dto.ManagerId || b.ResponsibleID == dto.ResponsibleId));
 
+            if (existingManager)
+                throw new AppException(ErrorCodes.AlreadyAssigned, StatusCodes.Status400BadRequest);
+
+            var oldManagerId = branch.ManagerID;
 
             _mapper.Map(dto, branch);
-
             await _branchRepository.SaveChangesAsync();
+
+            if (oldManagerId != dto.ManagerId)
+            {
+                var oldLink = await _managerBranchesRepo.GetAll()
+                    .FirstOrDefaultAsync(x =>
+                        x.BranchId == branch.Id &&
+                        x.ManagerId == oldManagerId);
+
+                if (oldLink != null)
+                    oldLink.IsActive = false;
+
+                var newLink = await _managerBranchesRepo.GetAll()
+                    .FirstOrDefaultAsync(x =>
+                        x.BranchId == branch.Id &&
+                        x.ManagerId == dto.ManagerId);
+
+                if (newLink == null)
+                {
+                    await _managerBranchesRepo.AddAsync(new ManagerBranches
+                    {
+                        BranchId = branch.Id,
+                        ManagerId = dto.ManagerId,
+                        IsActive = true
+                    });
+                }
+                else
+                {
+                    newLink.IsActive = true;
+                }
+
+                var otherLinks = await _managerBranchesRepo.GetAll()
+                    .Where(x => x.BranchId == branch.Id && x.ManagerId != dto.ManagerId)
+                    .ToListAsync();
+
+                foreach (var link in otherLinks)
+                    link.IsActive = false;
+            }
+
+            await _managerBranchesRepo.SaveChangesAsync();
+
             await _cache.RemoveAsync("branches:");
 
             var branchFull = await _branchRepository.GetAll()
-   .Include(b => b.Manager)
-   .Include(b => b.Responsible)
-   .Include(b => b.Area)
-   .FirstOrDefaultAsync(b => b.Id == branch.Id);
-            var branchdto = _mapper.Map<BranchGetDto>(branch);
+                .Include(b => b.Manager)
+                .Include(b => b.Responsible)
+                .Include(b => b.Area)
+                .FirstOrDefaultAsync(b => b.Id == branch.Id);
 
-            // TODO: Optional: Invalidate cache
+            var branchdto = _mapper.Map<BranchGetDto>(branchFull);
 
             return ApiResponse<BranchGetDto>.Ok(branchdto, "Branch updated successfully");
         }
+
 
         public async Task<ApiResponse<bool>> DeleteAsync(int id)
         {

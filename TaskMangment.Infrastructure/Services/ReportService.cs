@@ -19,7 +19,6 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IUserAccessContextProvider _accessProvider;
         private readonly IPermissionChecker _permissionChecker;
 
-
         public ReportService(AppDbContext context, IUserAccessContextProvider accessProvider, IPermissionChecker permissionChecker)
         {
             _context = context;
@@ -28,11 +27,10 @@ namespace TaskMangment.Infrastructure.Services
         }
 
         /// <summary>
-        /// Helper 
+        /// Helper
         /// </summary>
-        /// <param name="currentEmployeeId"></param>
-        /// <returns></returns>
-        private async Task<IQueryable<int>> GetScopedEmployeeIdsAsync(int currentEmployeeId)
+        private async Task<(IQueryable<int> ScopedEmployeeIds, bool CanViewAllTasks)>
+    GetScopedEmployeeIdsAsync(int currentEmployeeId, int roleLevel)
         {
             var access = await _accessProvider.GetAsync(currentEmployeeId);
 
@@ -41,16 +39,33 @@ namespace TaskMangment.Infrastructure.Services
                 .Select(e => e.CompanyId)
                 .FirstAsync();
 
-            return _context.Employees
+            IQueryable<Employee> scopedEmployeesQuery = _context.Employees
                 .Where(e => e.CompanyId == companyId && e.IsActive)
-                .ApplyAccessScope(access)
-                .Select(e => e.Id);
+                .ApplyAccessScope(access);
+
+            if (roleLevel != 100)
+                scopedEmployeesQuery = scopedEmployeesQuery.ApplyRoleHierarchy(roleLevel);
+
+            var scopedEmployeeIds = scopedEmployeesQuery.Select(e => e.Id);
+
+
+            bool canViewAllTasks = true;
+            if (roleLevel < 60)
+                canViewAllTasks = await _permissionChecker.HasPermissionAsync(currentEmployeeId, "VIEW_ALL_TASKS");
+
+            return (scopedEmployeeIds, canViewAllTasks);
         }
 
-        public async Task<List<EmployeeCommentsActivityReportDto>> GetEmployeesCommentsActivityAsync( int currentEmployeeId,DateTime? fromDate,DateTime? toDate)
-        {
 
-            var query = _context.TaskComments.Include(c => c.Employee).AsQueryable();
+        public async Task<List<EmployeeCommentsActivityReportDto>> GetEmployeesCommentsActivityAsync(
+            int currentEmployeeId,
+            int roleLevel,
+            DateTime? fromDate,
+            DateTime? toDate)
+        {
+            var query = _context.TaskComments
+                .Include(c => c.Employee)
+                .AsQueryable();
 
             if (fromDate.HasValue)
                 query = query.Where(c => c.CreatedDate >= fromDate.Value);
@@ -61,19 +76,12 @@ namespace TaskMangment.Infrastructure.Services
             if (!fromDate.HasValue && !toDate.HasValue)
                 return new List<EmployeeCommentsActivityReportDto>();
 
-            var access = await _accessProvider.GetAsync(currentEmployeeId);
+            var (scopedEmployeeIds, canViewAllTasks) = await GetScopedEmployeeIdsAsync(currentEmployeeId, roleLevel);
 
-            var companyId = await _context.Employees
-                .Where(e => e.Id == currentEmployeeId)
-                .Select(e => e.CompanyId)
-                .FirstOrDefaultAsync();
+            query = query.Where(c => scopedEmployeeIds.Contains(c.EmployeeId.Value));
 
-            var scopedEmployeeIds = _context.Employees
-                .Where(e => e.CompanyId == companyId && e.IsActive)
-                .ApplyAccessScope(access)
-                .Select(e => e.Id);
-
-            query = query.Where(c => scopedEmployeeIds.Any(id => id == c.EmployeeId));
+            if (!canViewAllTasks)
+                query = query.Where(c => c.EmployeeId == currentEmployeeId);
 
             return await query
                 .GroupBy(c => new
@@ -98,10 +106,13 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<List<EmployeeCommentsReportDto>> GetTopEmployeesByCommentsAsync(
             int currentEmployeeId,
+            int roleLevel,
             DateTime? fromDate = null,
             DateTime? toDate = null)
         {
-            var query = _context.TaskComments.Include(c => c.Employee).AsQueryable();
+            var query = _context.TaskComments
+                .Include(c => c.Employee)
+                .AsQueryable();
 
             if (fromDate.HasValue)
                 query = query.Where(c => c.CreatedDate >= fromDate.Value);
@@ -112,20 +123,12 @@ namespace TaskMangment.Infrastructure.Services
             if (!fromDate.HasValue && !toDate.HasValue)
                 return new List<EmployeeCommentsReportDto>();
 
-            var access = await _accessProvider.GetAsync(currentEmployeeId);
+            var (scopedEmployeeIds, canViewAllTasks) = await GetScopedEmployeeIdsAsync(currentEmployeeId, roleLevel);
 
-            var companyId = await _context.Employees
-                .Where(e => e.Id == currentEmployeeId)
-                .Select(e => e.CompanyId)
-                .FirstOrDefaultAsync();
+            query = query.Where(c => scopedEmployeeIds.Contains(c.EmployeeId.Value));
 
-            var scopedEmployeeIds = _context.Employees
-                .Where(e => e.CompanyId == companyId && e.IsActive)
-                .ApplyAccessScope(access)
-                .Select(e => e.Id);
-
-
-            query = query.Where(c => scopedEmployeeIds.Any(id => id == c.EmployeeId));
+            if (!canViewAllTasks)
+                query = query.Where(c => c.EmployeeId == currentEmployeeId);
 
             return await query
                 .GroupBy(c => new
@@ -150,6 +153,7 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<List<EmployeeAssignmentsReportDto>> GetMostAssignedEmployeesAsync(
             int currentEmployeeId,
+            int roleLevel,
             DateTime? fromDate = null,
             DateTime? toDate = null)
         {
@@ -167,20 +171,12 @@ namespace TaskMangment.Infrastructure.Services
             if (!fromDate.HasValue && !toDate.HasValue)
                 return new List<EmployeeAssignmentsReportDto>();
 
-            // ✅ Access scope
-            var access = await _accessProvider.GetAsync(currentEmployeeId);
-
-            var companyId = await _context.Employees
-                .Where(e => e.Id == currentEmployeeId)
-                .Select(e => e.CompanyId)
-                .FirstOrDefaultAsync();
-
-            var scopedEmployeeIds = _context.Employees
-                .Where(e => e.CompanyId == companyId && e.IsActive)
-                .ApplyAccessScope(access)
-                .Select(e => e.Id);
+            var (scopedEmployeeIds, canViewAllTasks) = await GetScopedEmployeeIdsAsync(currentEmployeeId, roleLevel);
 
             query = query.Where(a => scopedEmployeeIds.Contains(a.EmployeeId));
+
+            if (!canViewAllTasks)
+                query = query.Where(a => a.EmployeeId == currentEmployeeId);
 
             DateTime today = DateTime.Today;
             DateTime closingSoonDate = today.AddDays(3);
@@ -221,6 +217,7 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<List<EmployeeOnTimeReportDto>> GetOnTimeCompletionReportAsync(
             int currentEmployeeId,
+            int roleLevel,
             DateTime? fromDate = null,
             DateTime? toDate = null)
         {
@@ -238,20 +235,12 @@ namespace TaskMangment.Infrastructure.Services
             if (!fromDate.HasValue && !toDate.HasValue)
                 return new List<EmployeeOnTimeReportDto>();
 
-            // ✅ Access scope
-            var access = await _accessProvider.GetAsync(currentEmployeeId);
-
-            var companyId = await _context.Employees
-                .Where(e => e.Id == currentEmployeeId)
-                .Select(e => e.CompanyId)
-                .FirstOrDefaultAsync();
-
-            var scopedEmployeeIds = _context.Employees
-                .Where(e => e.CompanyId == companyId && e.IsActive)
-                .ApplyAccessScope(access)
-                .Select(e => e.Id);
+            var (scopedEmployeeIds, canViewAllTasks) = await GetScopedEmployeeIdsAsync(currentEmployeeId, roleLevel);
 
             query = query.Where(a => scopedEmployeeIds.Contains(a.EmployeeId));
+
+            if (!canViewAllTasks)
+                query = query.Where(a => a.EmployeeId == currentEmployeeId);
 
             query = query.Where(a =>
                 a.Task.Status == WorkTaskStatus.Closed &&
@@ -285,6 +274,7 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<List<EmployeeArchivedTasksReportDto>> GetMostArchivedEmployeesAsync(
             int currentEmployeeId,
+            int roleLevel,
             DateTime? fromDate = null,
             DateTime? toDate = null)
         {
@@ -302,20 +292,12 @@ namespace TaskMangment.Infrastructure.Services
             if (!fromDate.HasValue && !toDate.HasValue)
                 return new List<EmployeeArchivedTasksReportDto>();
 
-            // ✅ Access scope
-            var access = await _accessProvider.GetAsync(currentEmployeeId);
-
-            var companyId = await _context.Employees
-                .Where(e => e.Id == currentEmployeeId)
-                .Select(e => e.CompanyId)
-                .FirstOrDefaultAsync();
-
-            var scopedEmployeeIds = _context.Employees
-                .Where(e => e.CompanyId == companyId && e.IsActive)
-                .ApplyAccessScope(access)
-                .Select(e => e.Id);
+            var (scopedEmployeeIds, canViewAllTasks) = await GetScopedEmployeeIdsAsync(currentEmployeeId, roleLevel);
 
             query = query.Where(a => scopedEmployeeIds.Contains(a.EmployeeId));
+
+            if (!canViewAllTasks)
+                query = query.Where(a => a.EmployeeId == currentEmployeeId);
 
             var result = await query
                 .GroupBy(a => new
@@ -343,6 +325,7 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<TaskDiscountAuditReportDto> GetTaskDiscountAuditReportAsync(
             int currentEmployeeId,
+            int roleLevel,
             TaskDiscountReportFilterDto dto)
         {
             IQueryable<TaskAssignment> query = _context.TaskAssignments
@@ -351,29 +334,39 @@ namespace TaskMangment.Infrastructure.Services
                 .Include(a => a.Employee)
                 .AsQueryable();
 
-            var access = await _accessProvider.GetAsync(currentEmployeeId);
-
-            var companyId = await _context.Employees
-                .Where(e => e.Id == currentEmployeeId)
-                .Select(e => e.CompanyId)
-                .FirstOrDefaultAsync();
-
-            var scopedEmployeeIds = _context.Employees
-                .Where(e => e.CompanyId == companyId && e.IsActive)
-                .ApplyAccessScope(access)
-                .Select(e => e.Id);
+            var (scopedEmployeeIds, canViewAllTasks) = await GetScopedEmployeeIdsAsync(currentEmployeeId, roleLevel);
 
             query = query.Where(a => scopedEmployeeIds.Contains(a.EmployeeId));
+
+            if (!canViewAllTasks)
+            {
+                // لو Incoming يبقى الموظف اللي عليه التاسك = أنا
+                // لو Outgoing يبقى AssignedBy = أنا
+                if (dto.MovementType == TaskMovementType.Incoming)
+                    query = query.Where(a => a.EmployeeId == currentEmployeeId);
+                else
+                    query = query.Where(a => a.Task.AssignedByEmployeeId == currentEmployeeId);
+            }
 
             if (dto.MovementType == TaskMovementType.Incoming)
             {
                 if (dto.EmployeeId.HasValue && dto.EmployeeId.Value > 0)
-                    query = query.Where(a => a.EmployeeId == dto.EmployeeId.Value);
+                {
+                    if (!canViewAllTasks && dto.EmployeeId.Value != currentEmployeeId)
+                        query = query.Where(a => false);
+                    else
+                        query = query.Where(a => a.EmployeeId == dto.EmployeeId.Value);
+                }
             }
             else
             {
                 if (dto.EmployeeId.HasValue && dto.EmployeeId.Value > 0)
-                    query = query.Where(a => a.Task.AssignedByEmployeeId == dto.EmployeeId.Value);
+                {
+                    if (!canViewAllTasks && dto.EmployeeId.Value != currentEmployeeId)
+                        query = query.Where(a => false);
+                    else
+                        query = query.Where(a => a.Task.AssignedByEmployeeId == dto.EmployeeId.Value);
+                }
             }
 
             if (dto.FromDate.HasValue)
@@ -444,6 +437,7 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<List<TaskDiscountReportDto>> GetTaskDiscountReportAsync(
             int currentEmployeeId,
+            int roleLevel,
             TaskDiscountReportFilterDto dto)
         {
             IQueryable<TaskAssignment> query = _context.TaskAssignments
@@ -455,29 +449,37 @@ namespace TaskMangment.Infrastructure.Services
             if (!dto.FromDate.HasValue && !dto.ToDate.HasValue)
                 return new List<TaskDiscountReportDto>();
 
-            var access = await _accessProvider.GetAsync(currentEmployeeId);
-
-            var companyId = await _context.Employees
-                .Where(e => e.Id == currentEmployeeId)
-                .Select(e => e.CompanyId)
-                .FirstOrDefaultAsync();
-
-            var scopedEmployeeIds = _context.Employees
-                .Where(e => e.CompanyId == companyId && e.IsActive)
-                .ApplyAccessScope(access)
-                .Select(e => e.Id);
+            var (scopedEmployeeIds, canViewAllTasks) = await GetScopedEmployeeIdsAsync(currentEmployeeId, roleLevel);
 
             query = query.Where(a => scopedEmployeeIds.Contains(a.EmployeeId));
+
+            if (!canViewAllTasks)
+            {
+                if (dto.MovementType == TaskMovementType.Incoming)
+                    query = query.Where(a => a.EmployeeId == currentEmployeeId);
+                else
+                    query = query.Where(a => a.Task.AssignedByEmployeeId == currentEmployeeId);
+            }
 
             if (dto.MovementType == TaskMovementType.Incoming)
             {
                 if (dto.EmployeeId.HasValue && dto.EmployeeId.Value > 0)
-                    query = query.Where(a => a.EmployeeId == dto.EmployeeId.Value);
+                {
+                    if (!canViewAllTasks && dto.EmployeeId.Value != currentEmployeeId)
+                        query = query.Where(a => false);
+                    else
+                        query = query.Where(a => a.EmployeeId == dto.EmployeeId.Value);
+                }
             }
             else
             {
                 if (dto.EmployeeId.HasValue && dto.EmployeeId.Value > 0)
-                    query = query.Where(a => a.Task.AssignedByEmployeeId == dto.EmployeeId.Value);
+                {
+                    if (!canViewAllTasks && dto.EmployeeId.Value != currentEmployeeId)
+                        query = query.Where(a => false);
+                    else
+                        query = query.Where(a => a.Task.AssignedByEmployeeId == dto.EmployeeId.Value);
+                }
             }
 
             if (dto.FromDate.HasValue)
@@ -531,27 +533,29 @@ namespace TaskMangment.Infrastructure.Services
             return result;
         }
 
-        public async Task<List<TaskActivityReportDto>> GetTaskActivityReportAsync(int currentEmployeeId, ExportType exportType,  DateTime? fromDate = null, DateTime? toDate = null)
+        public async Task<List<TaskActivityReportDto>> GetTaskActivityReportAsync(
+            int currentEmployeeId,
+            int roleLevel,
+            ExportType exportType,
+            DateTime? fromDate = null,
+            DateTime? toDate = null)
         {
             if (!fromDate.HasValue && !toDate.HasValue)
                 return new List<TaskActivityReportDto>();
 
-            var canViewAllTasks = await _permissionChecker.HasPermissionAsync(currentEmployeeId, "VIEW_ALL_TASKS");
-
-            var scopedEmployeeIds = await GetScopedEmployeeIdsAsync(currentEmployeeId);
-
+            var (scopedEmployeeIds, canViewAllTasks) = await GetScopedEmployeeIdsAsync(currentEmployeeId, roleLevel);
 
             var lastCommentIds = await _context.TaskComments
-             .Where(c =>
-                 (!fromDate.HasValue || c.CreatedDate >= fromDate.Value) &&
-                 (!toDate.HasValue || c.CreatedDate <= toDate.Value))
-             .GroupBy(c => new { c.TaskId, c.EmployeeId })
-             .Select(g => g
-                 .OrderByDescending(c => c.CreatedDate)
-                 .ThenByDescending(c => c.Id)
-                 .Select(c => c.Id)
-                 .First())
-             .ToListAsync();
+                .Where(c =>
+                    (!fromDate.HasValue || c.CreatedDate >= fromDate.Value) &&
+                    (!toDate.HasValue || c.CreatedDate <= toDate.Value))
+                .GroupBy(c => new { c.TaskId, c.EmployeeId })
+                .Select(g => g
+                    .OrderByDescending(c => c.CreatedDate)
+                    .ThenByDescending(c => c.Id)
+                    .Select(c => c.Id)
+                    .First())
+                .ToListAsync();
 
             var query = _context.TaskComments
                 .Include(c => c.Employee)
@@ -561,9 +565,9 @@ namespace TaskMangment.Infrastructure.Services
                 .AsQueryable();
 
             query = query.Where(c =>
-            c.Task.Assignments.Any(a =>
-                a.IsActive &&
-                scopedEmployeeIds.Contains(a.EmployeeId)));
+                c.Task.Assignments.Any(a =>
+                    a.IsActive &&
+                    scopedEmployeeIds.Contains(a.EmployeeId)));
 
             if (!canViewAllTasks)
             {
@@ -596,6 +600,7 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<List<TaskMovementReportDto>> GetTaskMovementReportAsync(
             int currentEmployeeId,
+            int roleLevel,
             TaskMovementReportFilterDto dto,
             ExportType exportType)
         {
@@ -624,20 +629,20 @@ namespace TaskMangment.Infrastructure.Services
             else if (dto.MovementType == TaskMovementType.Incoming && dto.EmployeeId.HasValue)
                 query = query.Where(c => c.EmployeeId == dto.EmployeeId.Value);
 
-            var access = await _accessProvider.GetAsync(currentEmployeeId);
-
-            var companyId = await _context.Employees
-                .Where(e => e.Id == currentEmployeeId)
-                .Select(e => e.CompanyId)
-                .FirstOrDefaultAsync();
-
-            var scopedEmployeeIds = _context.Employees
-                .Where(e => e.CompanyId == companyId && e.IsActive)
-                .ApplyAccessScope(access)
-                .Select(e => e.Id);
+            var (scopedEmployeeIds, canViewAllTasks) = await GetScopedEmployeeIdsAsync(currentEmployeeId, roleLevel);
 
             query = query.Where(c =>
-                c.Task.Assignments.Any(a => a.IsActive && scopedEmployeeIds.Contains(a.EmployeeId)));
+                c.Task.Assignments.Any(a =>
+                    a.IsActive &&
+                    scopedEmployeeIds.Contains(a.EmployeeId)));
+
+            if (!canViewAllTasks)
+            {
+                query = query.Where(c =>
+                    c.Task.Assignments.Any(a =>
+                        a.IsActive &&
+                        a.EmployeeId == currentEmployeeId));
+            }
 
             var result = await query
                 .Select(c => new TaskMovementReportDto
@@ -664,6 +669,7 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<List<TasksClosingSoonDto>> GetTasksClosingSoonAsync(
             int currentEmployeeId,
+            int roleLevel,
             int? employeeId,
             DateTime fromDate,
             DateTime toDate)
@@ -681,22 +687,22 @@ namespace TaskMangment.Infrastructure.Services
                 )
                 .AsQueryable();
 
-            var access = await _accessProvider.GetAsync(currentEmployeeId);
-
-            var companyId = await _context.Employees
-                .Where(e => e.Id == currentEmployeeId)
-                .Select(e => e.CompanyId)
-                .FirstOrDefaultAsync();
-
-            var scopedEmployeeIds = _context.Employees
-                .Where(e => e.CompanyId == companyId && e.IsActive)
-                .ApplyAccessScope(access)
-                .Select(e => e.Id);
+            var (scopedEmployeeIds, canViewAllTasks) = await GetScopedEmployeeIdsAsync(currentEmployeeId, roleLevel);
 
             query = query.Where(a => scopedEmployeeIds.Contains(a.EmployeeId));
 
-            if (employeeId.HasValue && employeeId.Value > 0)
-                query = query.Where(a => a.EmployeeId == employeeId.Value);
+            if (!canViewAllTasks)
+            {
+                if (employeeId.HasValue && employeeId.Value > 0 && employeeId.Value != currentEmployeeId)
+                    query = query.Where(a => false);
+                else
+                    query = query.Where(a => a.EmployeeId == currentEmployeeId);
+            }
+            else
+            {
+                if (employeeId.HasValue && employeeId.Value > 0)
+                    query = query.Where(a => a.EmployeeId == employeeId.Value);
+            }
 
             var result = await query
                 .OrderBy(a => a.Task.DueDate)

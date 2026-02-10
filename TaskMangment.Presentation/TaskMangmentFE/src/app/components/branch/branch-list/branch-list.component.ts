@@ -89,7 +89,7 @@ export class BranchListComponent implements OnInit {
 
   ngOnInit(): void {
     const roleLevel = this.auth.getRoleLevel();
-    this.canCreate = roleLevel > 80;
+    this.canCreate = roleLevel >= 80;
     this.canEdit = roleLevel >= 80;
     this.canDelete = roleLevel > 80;
     this.loadData();
