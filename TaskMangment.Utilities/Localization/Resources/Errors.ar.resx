@@ -234,4 +234,7 @@
   <data name="EMAIL_ALREADY_EXISTS" xml:space="preserve">
     <value>البريد الالكتروني مسجل بالفعل</value>
   </data>
+  <data name="CANNOT_DELETE_TASK" xml:space="preserve">
+    <value>لا يمكنك حذف هذه المهمة، قم بإغلاقها بدلًا من ذلك.</value>
+  </data>
 </root>

@@ -68,7 +68,7 @@ namespace TaskMangment.Infrastructure.Services
             if (roleLevel == 80)
             {
                 var myBranchIds = await _managerBranchesRepo
-                    .GetAll(x => x.ManagerId == employeeId && !x.IsDeleted)
+                    .GetAll(x => x.ManagerId == employeeId&& x.IsActive)
                     .Select(x => x.BranchId)
                     .Distinct()
                     .ToListAsync();

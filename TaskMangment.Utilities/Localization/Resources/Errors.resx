@@ -235,4 +235,7 @@
   <data name="EMAIL_ALREADY_EXISTS" xml:space="preserve">
     <value>email already exists </value>
   </data>
+  <data name="CANNOT_DELETE_TASK" xml:space="preserve">
+    <value>You cannot delete this task, close it instead</value>
+  </data>
 </root>

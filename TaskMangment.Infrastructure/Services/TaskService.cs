@@ -385,7 +385,26 @@ namespace TaskMangment.Infrastructure.Services
             if (task == null)
                 throw new AppException(ErrorCodes.TaskNotFound, StatusCodes.Status400BadRequest);
 
+
+            var hasDependencies =
+    await _warningRepo.GetAll(w => w.TaskId == id).AnyAsync()
+ || await _penaltyRepo.GetAll(d => d.TaskId == id).AnyAsync()
+ || await _percentRepo.GetAll(a => a.TaskId == id).AnyAsync()
+ || await _closeRequestRepo.GetAll(c => c.TaskId == id).AnyAsync()
+ || await _extensionRequestRepo.GetAll(e => e.TaskId == id).AnyAsync()
+ || await _commentRepo.GetAll(e => e.TaskId == id).AnyAsync();
+            if (hasDependencies)
+                throw new AppException(ErrorCodes.CannotDeleteTask, StatusCodes.Status400BadRequest);
+
+
+
             _taskRepo.SoftDelete(task);
+
+            await _assignmentRepo.GetAll(a => a.TaskId == task.Id && !a.IsDeleted)
+     .ExecuteUpdateAsync(setters => setters
+         .SetProperty(a => a.IsDeleted, true)
+         .SetProperty(a => a.DeletedDate, DateTime.UtcNow)
+     );
             await _taskRepo.SaveChangesAsync();
             await _cache.RemoveAsync("tasks:");
 

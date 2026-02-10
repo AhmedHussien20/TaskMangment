@@ -248,7 +248,7 @@ export class EmployeeCreateUpdateComponent implements OnInit {
     password: [''],
     confirmPassword: [''],
     attachments: [null],
-    functionCode: [Validators.required],
+    functionCode: [null,[Validators.required]],
     
 
   }, {

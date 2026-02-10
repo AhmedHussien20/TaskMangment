@@ -16,6 +16,7 @@ namespace TaskMangment.Application.Common.Errors
 
 
         public const string TaskNotFound = "TASK_NOT_FOUND";
+        public const string CannotDeleteTask = "CANNOT_DELETE_TASK";
         public const string NotAssigned = "NOT_ASSIGNED";
         public const string AlreadyReviewed = "ALREADY_REVIEWED";
         public const string TaskAlreadyClosed = "TASK_ALREADY_CLOSED";

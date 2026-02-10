@@ -27,6 +27,7 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IDomainEventDispatcher _eventDispatcher;
         private readonly IRepository<Employee> _empRepo;
         private readonly IUserAccessContextProvider _accessProvider;
+        private readonly IGetHigherManager _getHigherManager;
 
 
         public LeaveService(
@@ -36,7 +37,8 @@ namespace TaskMangment.Infrastructure.Services
             IMapper mapper,
             IDomainEventDispatcher eventDispatcher,
             IRepository<Employee> empRepo,
-            IUserAccessContextProvider accessProvider
+            IUserAccessContextProvider accessProvider,
+            IGetHigherManager getHigherManager
 
             )
         {
@@ -47,6 +49,7 @@ namespace TaskMangment.Infrastructure.Services
             _eventDispatcher = eventDispatcher;
             _empRepo = empRepo;
             _accessProvider = accessProvider;
+            _getHigherManager = getHigherManager;
         }
          
         public async Task<ApiResponse<LeaveGetDto>> CreateAsync(LeaveAddDto dto, int employeeId)
@@ -79,9 +82,12 @@ namespace TaskMangment.Infrastructure.Services
                 .ThenInclude(e => e.Branch)
                 .Include(l => l.LeaveType)
                 .FirstAsync();
-            var managerId = full.Employee?.Branch?.ManagerID;
 
-            if (!managerId.HasValue)
+            var managerId = await _getHigherManager.GetDirectHigherManagerIdAsync(employeeId);
+
+            //var managerId = full.Employee?.Branch?.ManagerID;
+
+             if (!managerId.HasValue)
             {
                 throw new AppException(ErrorCodes.Invalid, StatusCodes.Status400BadRequest);
             }

@@ -35,6 +35,8 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IDomainEventDispatcher _eventDispatcher;
         private readonly IStringLocalizer<DiscountAutoType> _localizer;
         private readonly IRepository<Notification> _notificationRepo;
+        private readonly IGetHigherManager _getHigherManager;
+
 
 
 
@@ -47,7 +49,8 @@ namespace TaskMangment.Infrastructure.Services
             IDomainEventDispatcher eventDispatcher,
             IStringLocalizer<DiscountAutoType> localizer,
             IRepository<Branch> branchRepo,
-            IRepository<Notification> notificationRepo)
+            IRepository<Notification> notificationRepo,
+            IGetHigherManager getHigherManager)
         {
             _discountRepo = discountRepo;
             _employeeRepo = employeeRepo;
@@ -58,6 +61,7 @@ namespace TaskMangment.Infrastructure.Services
             _localizer = localizer;
             _branchRepo = branchRepo;
             _notificationRepo = notificationRepo;
+            _getHigherManager = getHigherManager;
         }
 
         public async Task<ApiResponse<PagedResponse<DiscountGetDto>>> GetAllAsync(TaskDiscountRequest request)
@@ -195,7 +199,9 @@ namespace TaskMangment.Infrastructure.Services
                     .FirstOrDefaultAsync(b => b.Id == issuedEmployee.BranchId.Value)
                 : null;
 
-            var managerId = branch?.ManagerID;
+            //var managerId = branch?.ManagerID;
+            var managerId = await _getHigherManager.GetDirectHigherManagerIdAsync(dto.EmployeeId);
+
             var sendToIds = new List<int> { dto.EmployeeId };
             if (managerId.HasValue && !sendToIds.Contains(managerId.Value))
                 sendToIds.Add(managerId.Value);
