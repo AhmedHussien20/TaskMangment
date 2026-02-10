@@ -214,7 +214,7 @@ namespace TaskMangment.Infrastructure.Services
             var roles = await _employeeRoleRepo
                 .GetAll(er =>
                     er.EmployeeId == userId &&
-                    !er.IsDeleted)
+                    !er.IsDeleted && er.IsAssigned)
                 .Include(er => er.Role)
                 .AsNoTracking()
                 .Select(er => new UserRoleDto

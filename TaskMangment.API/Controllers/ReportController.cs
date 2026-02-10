@@ -47,7 +47,7 @@ namespace TaskMangment.API.Controllers
         [HttpGet("top-commenters/pdf")]
         public async Task<IActionResult> GetTopCommentersPdf(ExportType exportType,DateTime? fromDate,DateTime? toDate)
         {
-            var data = await _reportService.GetEmployeesCommentsActivityAsync(this.CurrentUserId, fromDate, toDate);
+            var data = await _reportService.GetEmployeesCommentsActivityAsync(this.CurrentUserId, this.RoleLevel, fromDate, toDate);
 
             if (exportType == ExportType.Pdf)
             {
@@ -68,7 +68,7 @@ namespace TaskMangment.API.Controllers
         [HttpGet("most-assigned/pdf")]
         public async Task<IActionResult> GetMostAssignedEmployeesPdf(ExportType exportType, DateTime? fromDate,DateTime? toDate)
         {
-            var data = await _reportService.GetMostAssignedEmployeesAsync(this.CurrentUserId, fromDate, toDate);
+            var data = await _reportService.GetMostAssignedEmployeesAsync(this.CurrentUserId, this.RoleLevel, fromDate, toDate);
 
             if (exportType == ExportType.Pdf)
             {
@@ -86,7 +86,7 @@ namespace TaskMangment.API.Controllers
         [HttpGet("on-time-completion/pdf")]
         public async Task<IActionResult> GetOnTimeCompletionPdf(ExportType exportType,DateTime? fromDate,DateTime? toDate)
         {
-            var data = await _reportService.GetOnTimeCompletionReportAsync( this.CurrentUserId, fromDate, toDate);
+            var data = await _reportService.GetOnTimeCompletionReportAsync( this.CurrentUserId, this.RoleLevel, fromDate, toDate);
 
             if (exportType == ExportType.Pdf)
             {
@@ -104,7 +104,7 @@ namespace TaskMangment.API.Controllers
         [HttpGet("archived-tasks/pdf")]
         public async Task<IActionResult> GetArchivedTasksPdf(ExportType exportType,DateTime? fromDate,DateTime? toDate)
         {
-            var data = await _reportService.GetMostArchivedEmployeesAsync(this.CurrentUserId, fromDate, toDate);
+            var data = await _reportService.GetMostArchivedEmployeesAsync(this.CurrentUserId, this.RoleLevel, fromDate, toDate);
 
             if (exportType == ExportType.Pdf)
             {
@@ -125,7 +125,7 @@ namespace TaskMangment.API.Controllers
         [HttpGet("task-discounts/pdf")]
         public async Task<IActionResult> GetTaskDiscountsPdf(ExportType exportType,[FromQuery] TaskDiscountReportFilterDto filter)
         {
-            var data = await _reportService.GetTaskDiscountAuditReportAsync(this.CurrentUserId,filter);
+            var data = await _reportService.GetTaskDiscountAuditReportAsync(this.CurrentUserId, this.RoleLevel, filter);
             string title = filter.MovementType == TaskMovementType.Incoming
                 ? "تقرير خصومات المهام الواردة"
                 : "تقرير خصومات المهام الصادرة";
@@ -147,7 +147,7 @@ namespace TaskMangment.API.Controllers
         [HttpGet("task-activities/pdf")]
         public async Task<IActionResult> GetTaskActivitiesPdf(DateTime? fromDate, ExportType exportType, DateTime? toDate)
         {
-            var data = await _reportService.GetTaskActivityReportAsync(this.CurrentUserId,exportType, fromDate, toDate);
+            var data = await _reportService.GetTaskActivityReportAsync(this.CurrentUserId, this.RoleLevel, exportType, fromDate, toDate);
 
             if (exportType == ExportType.Pdf)
             {
@@ -169,7 +169,7 @@ namespace TaskMangment.API.Controllers
         public async Task<IActionResult> GetTaskMovementsPdf(
     [FromQuery] TaskMovementReportFilterDto filter, ExportType exportType)
         {
-            var data = await _reportService.GetTaskMovementReportAsync(this.CurrentUserId, filter, exportType);
+            var data = await _reportService.GetTaskMovementReportAsync(this.CurrentUserId, this.RoleLevel, filter, exportType);
             if (exportType == ExportType.Pdf)
             {
                 var report = new TaskMovementPdfReport(data, filter.MovementType);
@@ -189,7 +189,7 @@ namespace TaskMangment.API.Controllers
             var now = DateTime.UtcNow;
             var next3Days = now.AddDays(3);
 
-            var tasks = await _reportService.GetTasksClosingSoonAsync(this.CurrentUserId,employeeId, now, next3Days);
+            var tasks = await _reportService.GetTasksClosingSoonAsync(this.CurrentUserId,this.RoleLevel, employeeId, now, next3Days);
             if (exportType == ExportType.Pdf)
             {
                 var doc = new ClosingSoonTasksPdfReport(tasks);

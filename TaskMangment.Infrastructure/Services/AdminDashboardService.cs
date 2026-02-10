@@ -36,8 +36,6 @@ namespace TaskMangment.Infrastructure.Services
 
         private readonly IUserAccessContextProvider _accessProvider;
 
-
-
         public AdminDashboardService(
             IRepository<WorkTask> taskRepo,
             IRepository<Employee> employeeRepo,
@@ -51,8 +49,6 @@ namespace TaskMangment.Infrastructure.Services
             IRepository<ManagerBranches> managerBranchesRepo,
             IBlobStorageService blobStorageService,
             IUserAccessContextProvider accessProvider
-
-
         )
         {
             _taskRepo = taskRepo;
@@ -69,10 +65,37 @@ namespace TaskMangment.Infrastructure.Services
             _accessProvider = accessProvider;
         }
 
+        private async Task<(IQueryable<Employee> ScopedEmployeesQuery, IQueryable<int> ScopedEmployeeIds)>
+            GetScopedEmployeesAsync(
+                int companyId,
+                int roleLevel,
+                int? employeeId,
+                int? branchId = null)
+        {
+            IQueryable<Employee> scopedEmployeesQuery = _employeeRepo
+                .GetAll(e => e.CompanyId == companyId && e.IsActive);
+
+            if (employeeId.HasValue)
+            {
+                var access = await _accessProvider.GetAsync(employeeId.Value);
+                scopedEmployeesQuery = scopedEmployeesQuery.ApplyAccessScope(access);
+            }
+
+            if (roleLevel != 100)
+                scopedEmployeesQuery = scopedEmployeesQuery.ApplyRoleHierarchy(roleLevel);
+
+            if (branchId.HasValue)
+                scopedEmployeesQuery = scopedEmployeesQuery.Where(e => e.BranchId == branchId.Value);
+
+            var scopedEmployeeIds = scopedEmployeesQuery.Select(e => e.Id);
+
+            return (scopedEmployeesQuery, scopedEmployeeIds);
+        }
+
         public async Task<ApiResponse<List<BranchFilterDto>>> GetBranchesForFilterAsync(
-    int companyId,
-    int roleLevel, 
-    int employeeId)
+            int companyId,
+            int roleLevel,
+            int employeeId)
         {
             var access = await _accessProvider.GetAsync(employeeId);
 
@@ -95,9 +118,9 @@ namespace TaskMangment.Infrastructure.Services
                     return ApiResponse<List<BranchFilterDto>>.Ok(new List<BranchFilterDto>());
 
                 return ApiResponse<List<BranchFilterDto>>.Ok(new List<BranchFilterDto>
-        {
-            new BranchFilterDto { Id = myBranch.BranchId.Value, Name = myBranch.BranchName }
-        });
+                {
+                    new BranchFilterDto { Id = myBranch.BranchId.Value, Name = myBranch.BranchName }
+                });
             }
 
             var branches = await branchesQuery
@@ -108,13 +131,12 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<List<BranchFilterDto>>.Ok(branches);
         }
 
-
         public async Task<ApiResponse<AdminDashboardDto>> GetDashboardAsync(
-     int companyId,
-     int roleLevel,          
-     int? employeeId = null,
-     PeriodDto? period = null,
-     int? branchId = null)
+            int companyId,
+            int roleLevel,
+            int? employeeId = null,
+            PeriodDto? period = null,
+            int? branchId = null)
         {
             string cacheKey = $"dashboard:admin:{companyId}:{employeeId}:{branchId}:{period?.Type}";
             var cached = await _cache.GetAsync<AdminDashboardDto>(cacheKey);
@@ -123,32 +145,20 @@ namespace TaskMangment.Infrastructure.Services
 
             var range = PeriodHelper.GetRange(period);
 
-            UserAccessContext? access = null;
-            if (employeeId.HasValue)
-                access = await _accessProvider.GetAsync(employeeId.Value);
-
-            // 1) Employees scoped بالـ access + branchId اللي داخل
-            IQueryable<Employee> scopedEmployeesQuery = _employeeRepo
-                .GetAll(e => e.CompanyId == companyId && e.IsActive);
-
-            if (access != null)
-                scopedEmployeesQuery = scopedEmployeesQuery.ApplyAccessScope(access);
-
-            if (branchId.HasValue)
-                scopedEmployeesQuery = scopedEmployeesQuery.Where(e => e.BranchId == branchId.Value);
-
-            var scopedEmployeeIds = scopedEmployeesQuery.Select(e => e.Id);
+            var (scopedEmployeesQuery, scopedEmployeeIds) =
+                await GetScopedEmployeesAsync(companyId, roleLevel, employeeId, branchId);
 
             var totalEmployees = await scopedEmployeesQuery.CountAsync();
 
-            // 2) Tasks scoped بنفس الموظفين
             var activeTasksQuery = _taskRepo.GetAll(t =>
                 t.CompanyId == companyId &&
                 (t.Status == WorkTaskStatus.New || t.Status == WorkTaskStatus.InProgress));
 
-            if (employeeId.HasValue) // يعني فيه scope
+            if (employeeId.HasValue || branchId.HasValue)
+            {
                 activeTasksQuery = activeTasksQuery.Where(t =>
                     t.Assignments.Any(a => scopedEmployeeIds.Contains(a.EmployeeId)));
+            }
 
             var activeTasks = await activeTasksQuery.CountAsync();
 
@@ -159,9 +169,11 @@ namespace TaskMangment.Infrastructure.Services
                 t.DueDate < DateTime.Today &&
                 t.DueDate >= range.Start && t.DueDate <= range.End);
 
-            if (employeeId.HasValue)
+            if (employeeId.HasValue || branchId.HasValue)
+            {
                 overdueTasksQuery = overdueTasksQuery.Where(t =>
                     t.Assignments.Any(a => scopedEmployeeIds.Contains(a.EmployeeId)));
+            }
 
             var overdueTasks = await overdueTasksQuery.CountAsync();
 
@@ -170,9 +182,11 @@ namespace TaskMangment.Infrastructure.Services
                 t.Status == WorkTaskStatus.Closed &&
                 t.ClosedAt >= range.Start && t.ClosedAt <= range.End);
 
-            if (employeeId.HasValue)
+            if (employeeId.HasValue || branchId.HasValue)
+            {
                 completedTasksQuery = completedTasksQuery.Where(t =>
                     t.Assignments.Any(a => scopedEmployeeIds.Contains(a.EmployeeId)));
+            }
 
             var completedTasks = await completedTasksQuery.CountAsync();
 
@@ -180,7 +194,7 @@ namespace TaskMangment.Infrastructure.Services
                 d.Employee.CompanyId == companyId &&
                 d.CreatedDate >= range.Start && d.CreatedDate <= range.End);
 
-            if (employeeId.HasValue)
+            if (employeeId.HasValue || branchId.HasValue)
                 penaltiesQuery = penaltiesQuery.Where(d => scopedEmployeeIds.Contains(d.EmployeeId));
 
             var penaltiesThisPeriod = await penaltiesQuery.SumAsync(d => d.Amount);
@@ -189,9 +203,11 @@ namespace TaskMangment.Infrastructure.Services
                 w.Task.CompanyId == companyId &&
                 w.IssuedAt >= range.Start && w.IssuedAt <= range.End);
 
-            if (employeeId.HasValue)
+            if (employeeId.HasValue || branchId.HasValue)
+            {
                 warningsQuery = warningsQuery.Where(w =>
                     w.Task.Assignments.Any(a => scopedEmployeeIds.Contains(a.EmployeeId)));
+            }
 
             var warningsThisPeriod = await warningsQuery.CountAsync();
 
@@ -201,7 +217,7 @@ namespace TaskMangment.Infrastructure.Services
                 a.Task.DueDate >= range.Start && a.Task.DueDate <= range.End &&
                 a.Task.Status != WorkTaskStatus.Closed);
 
-            if (employeeId.HasValue)
+            if (employeeId.HasValue || branchId.HasValue)
                 topDelayedQuery = topDelayedQuery.Where(a => scopedEmployeeIds.Contains(a.EmployeeId));
 
             var topDelayedEmployees = await topDelayedQuery
@@ -234,30 +250,17 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<AdminDashboardDto>.Ok(dto);
         }
 
-
         public async Task<ApiResponse<PagedResponse<UpdatedTodayTaskDto>>> GetTodayUpdatedInProgressTasksAsync(
-     int companyId,
-     int roleLevel,                // موجود في التوقيع فقط
-     int? employeeId,
-     UpdatedTodayTasksRequest request,
-     int? branchId = null)
+            int companyId,
+            int roleLevel,
+            int? employeeId,
+            UpdatedTodayTasksRequest request,
+            int? branchId = null)
         {
             var range = PeriodHelper.GetRange(request.Period);
 
-            IQueryable<Employee> scopedEmployeesQuery = _employeeRepo
-                .GetAll(e => e.CompanyId == companyId && e.IsActive);
-
-            UserAccessContext? access = null;
-            if (employeeId.HasValue)
-            {
-                access = await _accessProvider.GetAsync(employeeId.Value);
-                scopedEmployeesQuery = scopedEmployeesQuery.ApplyAccessScope(access);
-            }
-
-            if (branchId.HasValue)
-                scopedEmployeesQuery = scopedEmployeesQuery.Where(e => e.BranchId == branchId.Value);
-
-            var scopedEmployeeIds = scopedEmployeesQuery.Select(e => e.Id);
+            var (_, scopedEmployeeIds) =
+                await GetScopedEmployeesAsync(companyId, roleLevel, employeeId, branchId);
 
             var tasksQuery = _taskRepo.GetAll(t =>
                 t.CompanyId == companyId &&
@@ -266,7 +269,6 @@ namespace TaskMangment.Infrastructure.Services
                     t.Assignments.Any(a => a.ModifiedDate >= range.Start && a.ModifiedDate <= range.End)
                 ));
 
-           
             if (employeeId.HasValue || branchId.HasValue)
             {
                 tasksQuery = tasksQuery.Where(t =>
@@ -318,30 +320,17 @@ namespace TaskMangment.Infrastructure.Services
             );
         }
 
-
         public async Task<ApiResponse<List<CompletedTodayEmployeeDto>>> GetEmployeesCompletedTasksTodayAsync(
-    int companyId,
-    int roleLevel,              // موجود في التوقيع فقط
-    int? employeeId,
-    PeriodDto period,
-    int? branchId = null)
+            int companyId,
+            int roleLevel,
+            int? employeeId,
+            PeriodDto period,
+            int? branchId = null)
         {
             var range = PeriodHelper.GetRange(period);
 
-            IQueryable<Employee> scopedEmployeesQuery = _employeeRepo
-                .GetAll(e => e.CompanyId == companyId && e.IsActive);
-
-            UserAccessContext? access = null;
-            if (employeeId.HasValue)
-            {
-                access = await _accessProvider.GetAsync(employeeId.Value);
-                scopedEmployeesQuery = scopedEmployeesQuery.ApplyAccessScope(access);
-            }
-
-            if (branchId.HasValue)
-                scopedEmployeesQuery = scopedEmployeesQuery.Where(e => e.BranchId == branchId.Value);
-
-            var scopedEmployeeIds = scopedEmployeesQuery.Select(e => e.Id);
+            var (_, scopedEmployeeIds) =
+                await GetScopedEmployeesAsync(companyId, roleLevel, employeeId, branchId);
 
             var query = _assignmentRepo.GetAll(a =>
                 a.Task.CompanyId == companyId &&
@@ -361,7 +350,6 @@ namespace TaskMangment.Infrastructure.Services
                     EmployeeId = g.Key.EmployeeId,
                     EmployeeName = g.Key.FullName,
                     CompletedTasksCount = g.Count(),
-
                     EmployeeImageUrl = attachmentsQuery
                         .Where(att =>
                             att.ReferenceId == g.Key.EmployeeId &&
@@ -379,30 +367,17 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<List<CompletedTodayEmployeeDto>>.Ok(result);
         }
 
-
         public async Task<ApiResponse<List<PendingCloseRequestTaskDto>>> GetPendingCloseRequestsAsync(
-    int companyId,
-    int roleLevel,            // موجود في التوقيع فقط
-    int? employeeId,
-    PeriodDto period,
-    int? branchId = null)
+            int companyId,
+            int roleLevel,
+            int? employeeId,
+            PeriodDto period,
+            int? branchId = null)
         {
             var range = PeriodHelper.GetRange(period);
 
-            IQueryable<Employee> scopedEmployeesQuery = _employeeRepo
-                .GetAll(e => e.CompanyId == companyId && e.IsActive);
-
-            UserAccessContext? access = null;
-            if (employeeId.HasValue)
-            {
-                access = await _accessProvider.GetAsync(employeeId.Value);
-                scopedEmployeesQuery = scopedEmployeesQuery.ApplyAccessScope(access);
-            }
-
-            if (branchId.HasValue)
-                scopedEmployeesQuery = scopedEmployeesQuery.Where(e => e.BranchId == branchId.Value);
-
-            var scopedEmployeeIds = scopedEmployeesQuery.Select(e => e.Id);
+            var (_, scopedEmployeeIds) =
+                await GetScopedEmployeesAsync(companyId, roleLevel, employeeId, branchId);
 
             var query = _taskRepo.GetAll(t =>
                 t.CompanyId == companyId &&
@@ -441,31 +416,18 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<List<PendingCloseRequestTaskDto>>.Ok(result);
         }
 
-
         public async Task<ApiResponse<List<TaskStatusDto>>> GetTasksByStatusAsync(
-    int companyId,
-    string status,
-    int roleLevel,         // موجود في التوقيع فقط
-    int? employeeId,
-    PeriodDto period,
-    int? branchId = null)
+            int companyId,
+            string status,
+            int roleLevel,
+            int? employeeId,
+            PeriodDto period,
+            int? branchId = null)
         {
             var range = PeriodHelper.GetRange(period);
 
-            IQueryable<Employee> scopedEmployeesQuery = _employeeRepo
-                .GetAll(e => e.CompanyId == companyId && e.IsActive);
-
-            UserAccessContext? access = null;
-            if (employeeId.HasValue)
-            {
-                access = await _accessProvider.GetAsync(employeeId.Value);
-                scopedEmployeesQuery = scopedEmployeesQuery.ApplyAccessScope(access);
-            }
-
-            if (branchId.HasValue)
-                scopedEmployeesQuery = scopedEmployeesQuery.Where(e => e.BranchId == branchId.Value);
-
-            var scopedEmployeeIds = scopedEmployeesQuery.Select(e => e.Id);
+            var (_, scopedEmployeeIds) =
+                await GetScopedEmployeesAsync(companyId, roleLevel, employeeId, branchId);
 
             var tasksQuery = _taskRepo.GetAll(t =>
                 t.CompanyId == companyId &&
@@ -509,29 +471,17 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<List<TaskStatusDto>>.Ok(tasks);
         }
 
-
         public async Task<ApiResponse<AdminKpisExtendedDto>> GetKpisAsync(
-     int companyId,
-     int roleLevel,
-     int? employeeId,
-     PeriodDto period,
-     int? branchId = null)
+            int companyId,
+            int roleLevel,
+            int? employeeId,
+            PeriodDto period,
+            int? branchId = null)
         {
             var range = PeriodHelper.GetRange(period);
 
-            IQueryable<Employee> scopedEmployeesQuery = _employeeRepo
-                .GetAll(e => e.CompanyId == companyId && e.IsActive);
-
-            if (employeeId.HasValue)
-            {
-                var access = await _accessProvider.GetAsync(employeeId.Value);
-                scopedEmployeesQuery = scopedEmployeesQuery.ApplyAccessScope(access);
-            }
-
-            if (branchId.HasValue)
-                scopedEmployeesQuery = scopedEmployeesQuery.Where(e => e.BranchId == branchId.Value);
-
-            var scopedEmployeeIds = scopedEmployeesQuery.Select(e => e.Id);
+            var (_, scopedEmployeeIds) =
+                await GetScopedEmployeesAsync(companyId, roleLevel, employeeId, branchId);
 
             var closedTasksQuery = _taskRepo.GetAll(t =>
                 t.CompanyId == companyId &&
@@ -592,27 +542,16 @@ namespace TaskMangment.Infrastructure.Services
         }
 
         public async Task<ApiResponse<List<DiscountGetDto>>> GetDiscountsAsync(
-    int companyId,
-    int roleLevel,
-    int? employeeId,
-    PeriodDto period,
-    int? branchId = null)
+            int companyId,
+            int roleLevel,
+            int? employeeId,
+            PeriodDto period,
+            int? branchId = null)
         {
             var range = PeriodHelper.GetRange(period);
 
-            IQueryable<Employee> scopedEmployeesQuery = _employeeRepo
-                .GetAll(e => e.CompanyId == companyId && e.IsActive);
-
-            if (employeeId.HasValue)
-            {
-                var access = await _accessProvider.GetAsync(employeeId.Value);
-                scopedEmployeesQuery = scopedEmployeesQuery.ApplyAccessScope(access);
-            }
-
-            if (branchId.HasValue)
-                scopedEmployeesQuery = scopedEmployeesQuery.Where(e => e.BranchId == branchId.Value);
-
-            var scopedEmployeeIds = scopedEmployeesQuery.Select(e => e.Id);
+            var (_, scopedEmployeeIds) =
+                await GetScopedEmployeesAsync(companyId, roleLevel, employeeId, branchId);
 
             var discountsQuery = _deductionRepo.GetAll(d =>
                 d.Employee.CompanyId == companyId &&
@@ -646,7 +585,6 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<List<DiscountGetDto>>.Ok(discounts);
         }
 
-
         private string GetAutoDiscountReason(DiscountType type)
         {
             return type switch
@@ -659,24 +597,13 @@ namespace TaskMangment.Infrastructure.Services
         }
 
         public async Task<ApiResponse<List<HighPriorityTaskDto>>> GetHighPriorityTasksAsync(
-    int companyId,
-    int roleLevel,
-    int? employeeId,
-    int? branchId = null)
+            int companyId,
+            int roleLevel,
+            int? employeeId,
+            int? branchId = null)
         {
-            IQueryable<Employee> scopedEmployeesQuery = _employeeRepo
-                .GetAll(e => e.CompanyId == companyId && e.IsActive);
-
-            if (employeeId.HasValue)
-            {
-                var access = await _accessProvider.GetAsync(employeeId.Value);
-                scopedEmployeesQuery = scopedEmployeesQuery.ApplyAccessScope(access);
-            }
-
-            if (branchId.HasValue)
-                scopedEmployeesQuery = scopedEmployeesQuery.Where(e => e.BranchId == branchId.Value);
-
-            var scopedEmployeeIds = scopedEmployeesQuery.Select(e => e.Id);
+            var (_, scopedEmployeeIds) =
+                await GetScopedEmployeesAsync(companyId, roleLevel, employeeId, branchId);
 
             var tasksQuery = _taskRepo.GetAll(t =>
                 t.CompanyId == companyId &&
@@ -702,29 +629,17 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<List<HighPriorityTaskDto>>.Ok(tasks);
         }
 
-
         public async Task<ApiResponse<List<CompletedTaskDetailDto>>> GetCompletedTasksDetailsAsync(
-    int companyId,
-    int roleLevel,
-    int? employeeId,
-    PeriodDto period,
-    int? branchId = null)
+            int companyId,
+            int roleLevel,
+            int? employeeId,
+            PeriodDto period,
+            int? branchId = null)
         {
             var range = PeriodHelper.GetRange(period);
 
-            IQueryable<Employee> scopedEmployeesQuery = _employeeRepo
-                .GetAll(e => e.CompanyId == companyId && e.IsActive);
-
-            if (employeeId.HasValue)
-            {
-                var access = await _accessProvider.GetAsync(employeeId.Value);
-                scopedEmployeesQuery = scopedEmployeesQuery.ApplyAccessScope(access);
-            }
-
-            if (branchId.HasValue)
-                scopedEmployeesQuery = scopedEmployeesQuery.Where(e => e.BranchId == branchId.Value);
-
-            var scopedEmployeeIds = scopedEmployeesQuery.Select(e => e.Id);
+            var (_, scopedEmployeeIds) =
+                await GetScopedEmployeesAsync(companyId, roleLevel, employeeId, branchId);
 
             var tasksQuery = _taskRepo.GetAll(t =>
                 t.CompanyId == companyId &&
@@ -753,6 +668,5 @@ namespace TaskMangment.Infrastructure.Services
 
             return ApiResponse<List<CompletedTaskDetailDto>>.Ok(tasks);
         }
-
     }
 }

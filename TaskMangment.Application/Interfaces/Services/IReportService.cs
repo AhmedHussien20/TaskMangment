@@ -10,15 +10,15 @@ namespace TaskMangment.Application.Interfaces.Services
 {
     public interface IReportService
     {
-        Task<List<EmployeeCommentsReportDto>> GetTopEmployeesByCommentsAsync(int currentEmployeeId, DateTime? fromDate = null,DateTime? toDate = null);
-        Task<List<EmployeeAssignmentsReportDto>> GetMostAssignedEmployeesAsync(int currentEmployeeId, DateTime? fromDate = null, DateTime? toDate = null);
-        Task<List<EmployeeOnTimeReportDto>> GetOnTimeCompletionReportAsync(int employeeId, DateTime? fromDate = null,DateTime? toDate = null);
-        Task<List<EmployeeArchivedTasksReportDto>> GetMostArchivedEmployeesAsync(int currentEmployeeId, DateTime? fromDate = null, DateTime? toDate = null);
-        Task<List<TaskDiscountReportDto>> GetTaskDiscountReportAsync( int currentEmployeeId, TaskDiscountReportFilterDto dto);
-        Task<List<TaskActivityReportDto>> GetTaskActivityReportAsync(int employeeId, ExportType exportType, DateTime? fromDate = null, DateTime? toDate = null);
-        Task<List<TaskMovementReportDto>> GetTaskMovementReportAsync(int currentEmployeeId, TaskMovementReportFilterDto dto, ExportType exportTypee);
-        Task<List<TasksClosingSoonDto>> GetTasksClosingSoonAsync(int currentEmployeeId, int? employeeId, DateTime fromDate, DateTime toDate);
-        Task<List<EmployeeCommentsActivityReportDto>> GetEmployeesCommentsActivityAsync(int currentEmployeeId, DateTime? fromDate, DateTime? toDate);
-        Task<TaskDiscountAuditReportDto> GetTaskDiscountAuditReportAsync(int currentEmployeeId, TaskDiscountReportFilterDto dto);
+        Task<List<EmployeeCommentsReportDto>> GetTopEmployeesByCommentsAsync(int currentEmployeeId, int roleLevel, DateTime? fromDate = null,DateTime? toDate = null);
+        Task<List<EmployeeAssignmentsReportDto>> GetMostAssignedEmployeesAsync(int currentEmployeeId, int roleLevel, DateTime? fromDate = null, DateTime? toDate = null);
+        Task<List<EmployeeOnTimeReportDto>> GetOnTimeCompletionReportAsync(int employeeId, int roleLevel, DateTime? fromDate = null,DateTime? toDate = null);
+        Task<List<EmployeeArchivedTasksReportDto>> GetMostArchivedEmployeesAsync(int currentEmployeeId, int roleLevel, DateTime? fromDate = null, DateTime? toDate = null);
+        Task<List<TaskDiscountReportDto>> GetTaskDiscountReportAsync( int currentEmployeeId, int roleLevel, TaskDiscountReportFilterDto dto);
+        Task<List<TaskActivityReportDto>> GetTaskActivityReportAsync(int employeeId, int roleLevel, ExportType exportType, DateTime? fromDate = null, DateTime? toDate = null);
+        Task<List<TaskMovementReportDto>> GetTaskMovementReportAsync(int currentEmployeeId, int roleLevel, TaskMovementReportFilterDto dto, ExportType exportTypee);
+        Task<List<TasksClosingSoonDto>> GetTasksClosingSoonAsync(int currentEmployeeId, int roleLevel, int? employeeId, DateTime fromDate, DateTime toDate);
+        Task<List<EmployeeCommentsActivityReportDto>> GetEmployeesCommentsActivityAsync(int currentEmployeeId, int roleLevel, DateTime? fromDate, DateTime? toDate);
+        Task<TaskDiscountAuditReportDto> GetTaskDiscountAuditReportAsync(int currentEmployeeId, int roleLevel, TaskDiscountReportFilterDto dto);
     }
 }
