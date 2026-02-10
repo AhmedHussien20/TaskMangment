@@ -7,6 +7,7 @@ using TaskMangment.Application.Common.Errors;
 using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Responses;
+using TaskMangment.Application.Common.Security;
 using TaskMangment.Application.DTOs;
 using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
@@ -25,6 +26,8 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IMapper _mapper;
         private readonly IDomainEventDispatcher _eventDispatcher;
         private readonly IRepository<Employee> _empRepo;
+        private readonly IUserAccessContextProvider _accessProvider;
+
 
         public LeaveService(
             IRepository<Leave> leaveRepo,
@@ -32,7 +35,9 @@ namespace TaskMangment.Infrastructure.Services
             IRepository<LeaveType> leaveTypeRepo,
             IMapper mapper,
             IDomainEventDispatcher eventDispatcher,
-            IRepository<Employee> empRepo
+            IRepository<Employee> empRepo,
+            IUserAccessContextProvider accessProvider
+
             )
         {
             _leaveRepo = leaveRepo;
@@ -41,6 +46,7 @@ namespace TaskMangment.Infrastructure.Services
             _mapper = mapper;
             _eventDispatcher = eventDispatcher;
             _empRepo = empRepo;
+            _accessProvider = accessProvider;
         }
          
         public async Task<ApiResponse<LeaveGetDto>> CreateAsync(LeaveAddDto dto, int employeeId)
@@ -96,9 +102,9 @@ namespace TaskMangment.Infrastructure.Services
         }
 
         public async Task<ApiResponse<PagedResponse<LeaveGetDto>>> GetLeaveRequestsAsync(
-    LeaveRequest request,
-    int roleLevel,
-    int employeeId)
+      LeaveRequest request,
+      int roleLevel,
+      int employeeId)
         {
             var query = _leaveRepo.GetAll()
                 .Include(l => l.Employee)
@@ -106,31 +112,33 @@ namespace TaskMangment.Infrastructure.Services
                 .ApplySearch(request.searchKey);
 
             if (request.StatusId.HasValue)
-            {
                 query = query.Where(l => l.Status == (LeaveStatus)request.StatusId.Value);
-            }
 
-            if (roleLevel < 70)
+            if (roleLevel < 60)
             {
                 query = query.Where(l => l.EmployeeId == employeeId);
             }
-
-            if (roleLevel == 70)
+            else
             {
-                var branchId = await _employeeRepo
-                    .GetAll(e => e.Id == employeeId)
-                    .Select(e => e.BranchId)
-                    .FirstOrDefaultAsync();
+                var access = await _accessProvider.GetAsync(employeeId);
 
-                if (!branchId.HasValue)
-                    throw new AppException(ErrorCodes.BranchNotFound, StatusCodes.Status400BadRequest);
+                var companyId = await _employeeRepo.GetAll(e => e.Id == employeeId)
+                    .Select(e => e.CompanyId)
+                    .FirstAsync();
 
-                query = query.Where(l => l.Employee.BranchId == branchId.Value);
+                IQueryable<Employee> scopedEmployeesQuery = _employeeRepo
+                    .GetAll(e => e.CompanyId == companyId && e.IsActive)
+                    .ApplyAccessScope(access);
+
+                if (roleLevel != 100)
+                    scopedEmployeesQuery = scopedEmployeesQuery.ApplyRoleHierarchy(roleLevel);
+
+                var scopedEmployeeIds = scopedEmployeesQuery.Select(e => e.Id);
+
+                query = query.Where(l => scopedEmployeeIds.Contains(l.EmployeeId));
 
                 if (request.EmployeeIds != null && request.EmployeeIds.Any())
-                {
                     query = query.Where(l => request.EmployeeIds.Contains(l.EmployeeId));
-                }
             }
 
             var totalCount = await query.CountAsync();
@@ -154,7 +162,6 @@ namespace TaskMangment.Infrastructure.Services
 
             return ApiResponse<PagedResponse<LeaveGetDto>>.Ok(response);
         }
-
 
 
         public async Task<ApiResponse<PagedResponse<LeaveGetDto>>> GetPendingForApprovalAsync(int managerId, LeaveRequest request)
@@ -184,13 +191,13 @@ namespace TaskMangment.Infrastructure.Services
         // =========================
         // Approve
         // =========================
-        public async Task<ApiResponse<bool>> ApproveAsync(int leaveId, int managerId , string managerFullName)
+        public async Task<ApiResponse<bool>> ApproveAsync(int leaveId, int managerId, string managerFullName)
         {
             var leave = await _leaveRepo.GetAll(l => l.Id == leaveId)
-                                         .Include(l => l.Employee)   
-                                         .Include(l => l.ApprovedBy) 
-                                         .Include(l => l.LeaveType) 
-                                         .FirstOrDefaultAsync();
+                .Include(l => l.Employee)
+                .Include(l => l.ApprovedBy)
+                .Include(l => l.LeaveType)
+                .FirstOrDefaultAsync();
 
             if (leave == null)
                 throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
@@ -201,6 +208,18 @@ namespace TaskMangment.Infrastructure.Services
             var manager = await _empRepo.GetByIDAsync(managerId);
             if (manager == null)
                 throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
+
+
+
+            var managerLevel = await GetEmployeeRoleLevelAsync(managerId);
+
+            if (leave.EmployeeId == managerId && managerLevel != 100)
+                throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
+
+            var employeeLevel = await GetEmployeeRoleLevelAsync(leave.EmployeeId);
+
+            if (managerLevel != 100 && employeeLevel > managerLevel)
+                throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
 
             leave.Status = LeaveStatus.Approved;
             leave.ApprovedById = managerId;
@@ -216,57 +235,67 @@ namespace TaskMangment.Infrastructure.Services
                 leave.LeaveType.NameAr,
                 leave.StartDate,
                 leave.EndDate
- ));
-
+            ));
 
             return ApiResponse<bool>.Ok(true, "Leave approved");
         }
 
-        // =========================
-        // Reject
-        // =========================
+
+
         public async Task<ApiResponse<bool>> RejectAsync(int leaveId, int managerId, RejectLeaveDto rejectLeaveDto)
         {
             var leave = await _leaveRepo.GetAll(l => l.Id == leaveId)
-                                                    .Include(l => l.Employee)
-                                                    .Include(l => l.ApprovedBy)
-                                                    .Include(l => l.LeaveType)
-                                                    .FirstOrDefaultAsync();
+                .Include(l => l.Employee)
+                .Include(l => l.ApprovedBy)
+                .Include(l => l.LeaveType)
+                .FirstOrDefaultAsync();
+
             if (leave == null)
                 throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
 
+            if (leave.Status != LeaveStatus.Pending)
+                throw new AppException(ErrorCodes.InvalidOperation, StatusCodes.Status400BadRequest);
+
             if (string.IsNullOrWhiteSpace(rejectLeaveDto.reason))
                 throw new AppException(ErrorCodes.Invalid, StatusCodes.Status400BadRequest);
+
+            var manager = await _empRepo.GetByIDAsync(managerId);
+            if (manager == null)
+                throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
+
+            var managerLevel = await GetEmployeeRoleLevelAsync(managerId);
+
+            if (leave.EmployeeId == managerId && managerLevel != 100)
+                throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
+
+            var employeeLevel = await GetEmployeeRoleLevelAsync(leave.EmployeeId);
+
+            if (managerLevel != 100 && employeeLevel > managerLevel)
+                throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
+
 
             leave.Status = LeaveStatus.Rejected;
             leave.RejectionReason = rejectLeaveDto.reason;
             leave.ApprovedById = managerId;
             leave.ApprovedAt = DateTime.UtcNow;
 
-
             await _leaveRepo.SaveChangesAsync();
 
-          //////////remember to discuss about best pos for manager check
-            var manager = await _empRepo.GetByIDAsync(managerId);
-            if (manager == null)
-                throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
-
             await _eventDispatcher.PublishAsync(new LeaveRejectedEvent(
-                  leave.Id,
-                  leave.EmployeeId,
-                  leave.Employee.FullName,
-                  manager.FullName,
-                  leave.LeaveType.NameAr,
-                  leave.RejectionReason,
-                  leave.StartDate,
-                  leave.EndDate
-   ));
+                leave.Id,
+                leave.EmployeeId,
+                leave.Employee.FullName,
+                manager.FullName,
+                leave.LeaveType.NameAr,
+                leave.RejectionReason,
+                leave.StartDate,
+                leave.EndDate
+            ));
+
             return ApiResponse<bool>.Ok(true, "Leave rejected");
         }
 
-        // =========================
-        // Get Leave By Id
-        // =========================
+
         public async Task<ApiResponse<LeaveGetDto>> GetByIdAsync(int leaveId)
         {
             var leave = await _leaveRepo.GetAll(l => l.Id == leaveId)
@@ -281,6 +310,19 @@ namespace TaskMangment.Infrastructure.Services
 
             return ApiResponse<LeaveGetDto>.Ok(dto);
         }
+
+        private async Task<int> GetEmployeeRoleLevelAsync(int employeeId)
+        {
+            var query = _empRepo.GetAll(e => e.Id == employeeId)
+                .SelectMany(e => e.EmployeeRoles)
+                .Where(er => er.IsAssigned && !er.IsDeleted && er.Role != null)
+                .Select(er => (int?)er.Role.Level); 
+            var maxLevel = await query.MaxAsync();
+
+            return maxLevel ?? (int)RoleLevelEnum.Employee;
+        }
+
+
 
     }
 

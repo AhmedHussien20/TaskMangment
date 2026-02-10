@@ -12,4 +12,5 @@ export interface MenuItem {
   
   minRoleLevel?: number;
   requiredPermission?: string;
+  functionCode?: number
 }

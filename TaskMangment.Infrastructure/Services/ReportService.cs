@@ -49,8 +49,9 @@ namespace TaskMangment.Infrastructure.Services
             var scopedEmployeeIds = scopedEmployeesQuery.Select(e => e.Id);
 
 
-            var canViewAllTasks = await _permissionChecker
-                .HasPermissionAsync(currentEmployeeId, "VIEW_ALL_TASKS");
+            bool canViewAllTasks = true;
+            if (roleLevel < 60)
+                canViewAllTasks = await _permissionChecker.HasPermissionAsync(currentEmployeeId, "VIEW_ALL_TASKS");
 
             return (scopedEmployeeIds, canViewAllTasks);
         }

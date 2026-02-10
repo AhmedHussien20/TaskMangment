@@ -104,11 +104,11 @@ public class AuthService : IAuthService
             Qualification = user.Qualification,
             IsActive = user.IsActive,
             ProfileImage = profileImage,
-
             Roles = roles,
             Permissions = permissions,
             RoleLevel = roleLevel,
             RoleLevelName = roleLevelName,
+            FunctionCode= user.FunctionCode,
 
             Token = token
         });

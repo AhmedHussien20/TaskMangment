@@ -13,6 +13,7 @@ import { SearchCriteria } from 'app/core/models/search-criteria.model';
 import { LeaveTypeCreateUpdateComponent } from '../leave-type-create-update/leave-type-create-update.component';
 import Swal from 'sweetalert2';
 import { LeaveTypeGetDto } from 'app/core/models/leave/leave-type.model';
+import { AuthService } from 'app/core/services/auth.service';
 
 @Component({
   selector: 'app-leave-type',
@@ -34,6 +35,11 @@ export class LeaveTypeComponent implements OnInit {
   title = 'LEAVE_TYPE.title';
   activeitem = 'LEAVE_TYPE.title';
   breadcrumbs = ['MENU.HOME', 'MENU.LEAVES', 'LEAVE_TYPE.title'];
+
+  canCreate: boolean = false;
+  canEdit: boolean = false;
+  canDelete: boolean = false;
+
 
   columns: TableColumn[] = [
   { key: 'id', label: 'LEAVE_TYPE.ID' },
@@ -74,10 +80,15 @@ export class LeaveTypeComponent implements OnInit {
     private leaveTypeService: LeaveTypeService,
     private modalService: NgbModal,
     private translate: TranslateService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private auth:AuthService
   ) { }
 
   ngOnInit(): void {
+    const roleLevel = this.auth.getRoleLevel();
+    this.canCreate = roleLevel >= 100;
+    this.canEdit = roleLevel >= 100;
+    this.canDelete = roleLevel >= 100;
     this.loadData();
   }
 

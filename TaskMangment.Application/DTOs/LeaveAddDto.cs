@@ -28,6 +28,8 @@ namespace TaskMangment.Application.DTOs
         public string StatusName => Status.ToString();
 
         public string? RejectionReason { get; set; }
+        public bool CanEdit { get; set; } = false;
+
     }
     public class RejectLeaveDto
     {
