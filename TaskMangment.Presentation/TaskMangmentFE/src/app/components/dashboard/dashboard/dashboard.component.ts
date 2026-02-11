@@ -588,6 +588,7 @@ export class DashboardComponent {
   openHighPriorityTasks() {
     this.dashboardService.getAdminHighPriorityTasks(this.selectedBranchId)
       .subscribe(res => {
+              console.log('HighPriority sample:', res.data?.[0]);
         const modalRef = this.modalService.open(HighPriorityTasksPopupComponent, {
           size: 'xl',
           centered: true

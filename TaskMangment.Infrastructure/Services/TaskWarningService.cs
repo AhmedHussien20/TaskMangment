@@ -34,6 +34,8 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IDomainEventDispatcher _eventDispatcher;
         private readonly IRepository<Discount> _discountRepo;
         private readonly IRepository<Notification> _notificationRepo;
+        private readonly IGetHigherManager _getHigherManager;
+
 
 
 
@@ -47,7 +49,8 @@ namespace TaskMangment.Infrastructure.Services
             IDomainEventDispatcher eventDispatcher,
             IRepository<Discount> discountRepo,
             IRepository<Branch> branchRepo,
-            IRepository<Notification> notificationRepo)
+            IRepository<Notification> notificationRepo,
+            IGetHigherManager getHigherManager)
         {
             _warningRepo = warningRepo;
             _employeeRepo = employeeRepo;
@@ -59,6 +62,7 @@ namespace TaskMangment.Infrastructure.Services
             _discountRepo = discountRepo;
             _branchRepo = branchRepo;
             _notificationRepo = notificationRepo;
+            _getHigherManager = getHigherManager;
         }
 
         public async Task<ApiResponse<PagedResponse<WarningGetDto>>> GetAllAsync(WarningRequest request)
@@ -212,7 +216,7 @@ namespace TaskMangment.Infrastructure.Services
                     .FirstOrDefaultAsync(b => b.Id == issuedEmployee.BranchId.Value)
                 : null;
 
-            var managerId = branch?.ManagerID;
+            var managerId = await _getHigherManager.GetDirectHigherManagerIdAsync(dto.IssuedEmployeeId);
             var sendToIds = new List<int> { dto.IssuedEmployeeId };
             if (managerId.HasValue && !sendToIds.Contains(managerId.Value))
                 sendToIds.Add(managerId.Value);

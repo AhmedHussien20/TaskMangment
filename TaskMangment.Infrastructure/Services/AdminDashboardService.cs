@@ -102,10 +102,10 @@ namespace TaskMangment.Infrastructure.Services
             var branchesQuery = _branchRepo
                 .GetAll(b => b.CompanyId == companyId && !b.IsDeleted);
 
-            var employeesQuery = _employeeRepo
-                .GetAll(e => e.CompanyId == companyId);
+            //var employeesQuery = _employeeRepo
+            //    .GetAll(e => e.CompanyId == companyId);
 
-            branchesQuery = branchesQuery.ApplyAccessScope(employeesQuery, access);
+            branchesQuery = branchesQuery.ApplyAccessScope(access);
 
             if (!access.BranchIds.Any() && !access.FunctionCodes.Any() && roleLevel != 100)
             {
@@ -617,6 +617,7 @@ namespace TaskMangment.Infrastructure.Services
             var tasks = await tasksQuery
                 .Select(t => new HighPriorityTaskDto
                 {
+                    TaskId= t.Id,
                     TaskTitle = t.Title,
                     Employees = t.Assignments.Where(a => a.IsActive).Select(a => a.Employee.FullName).ToList(),
                     Status = t.Status,

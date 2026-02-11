@@ -100,3 +100,17 @@ export enum ExportType {
   Pdf = 1,
   Excel = 2
 }
+export interface EmployeeTaskTrackingReportDto {
+  taskId: number;
+  title: string;
+
+  status: string;
+
+  createdDate: string;  
+  closedAt?: string | null;
+
+  assignedBy: string;
+
+  employeeId: number;
+  employeeName: string;
+}

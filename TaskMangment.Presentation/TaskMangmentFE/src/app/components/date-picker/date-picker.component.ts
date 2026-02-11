@@ -43,20 +43,16 @@ export class DatePickerComponent implements ControlValueAccessor {
   @Input() required = false;
   @Input() disabled = false;
 
-  // ✅ min/max as string (yyyy-MM-dd) OR Date (flexible)
   @Input() min?: string | Date | null;
   @Input() max?: string | Date | null;
 
-  // ✅ output format (default: yyyy-MM-dd)
   @Input() outputFormat: 'yyyy-MM-dd' | 'iso' = 'yyyy-MM-dd';
 
-  // Internal Date for mat-datepicker
   valueDate: Date | null = null;
 
   private onChange: (val: string | null) => void = () => {};
   private onTouched: () => void = () => {};
 
-  // CVA: receive string from outside
   writeValue(val: string | null | undefined): void {
     if (!val) {
       this.valueDate = null;
@@ -77,7 +73,6 @@ export class DatePickerComponent implements ControlValueAccessor {
     this.disabled = isDisabled;
   }
 
-  // called when user changes date in picker
   onDateChange(d: Date | null): void {
     this.valueDate = d;
     this.onTouched();
@@ -86,20 +81,16 @@ export class DatePickerComponent implements ControlValueAccessor {
     this.onChange(out);
   }
 
-  // ===== helpers =====
-
-  // parse "yyyy-MM-dd" safely as LOCAL date (no timezone shift)
+ 
   private parseToDate(input: string): Date | null {
-    // if input looks like yyyy-MM-dd
     const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(input.trim());
     if (m) {
       const y = Number(m[1]);
       const mo = Number(m[2]) - 1;
       const day = Number(m[3]);
-      return new Date(y, mo, day); // local midnight
+      return new Date(y, mo, day); 
     }
 
-    // fallback: try Date constructor (iso etc.)
     const d = new Date(input);
     return isNaN(d.getTime()) ? null : d;
   }
@@ -108,14 +99,12 @@ export class DatePickerComponent implements ControlValueAccessor {
     if (this.outputFormat === 'iso') {
       return d.toISOString();
     }
-    // yyyy-MM-dd (LOCAL)
     const y = d.getFullYear();
     const m = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
     return `${y}-${m}-${day}`;
   }
 
-  // min/max Date to bind to matInput
   get minDate(): Date | null {
     if (!this.min) return null;
     return this.min instanceof Date ? this.min : this.parseToDate(this.min) ;

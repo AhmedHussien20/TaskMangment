@@ -29,7 +29,6 @@ import { TaskDetailsShellComponent } from "app/components/tasks/task-details/tas
         [page]="1"
         [entries]="rows.length"
         [totalItems]="rows.length"
-
         [showAddButton]="false"
         [showEditButton]="false"
         [showDeleteButton]="false"
@@ -55,7 +54,6 @@ export class TaskStatusPopupComponent {
 
  columns: TableColumn[] = [
   { key: 'task', label: 'TASK.TASK_TITLE' },
-
   {
   key: 'statusText',
   label: 'TASK.STATUS',
@@ -69,7 +67,6 @@ export class TaskStatusPopupComponent {
   }
 }
 ,
-
   { key: 'dueDate', label: 'TASK.DUE_DATE', type: 'date' },
   { key: 'employees', label: 'TASK.EMPLOYEES' }
 ];

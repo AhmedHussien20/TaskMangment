@@ -204,6 +204,24 @@ namespace TaskMangment.API.Controllers
                 "closing-soon-tasks.xlsx");
 
         }
+        [HttpGet("employee-task-tracking/pdf")]
+        public async Task<IActionResult> EmployeeTaskTrackingPdf(ExportType exportType,int? employeeId,DateTime fromDate,DateTime? toDate)
+        {
+            var effectiveToDate = toDate ?? DateTime.UtcNow;
+            var tasks = await _reportService.GetEmployeeTaskTrackingAsync(this.CurrentUserId,this.RoleLevel,employeeId,fromDate,effectiveToDate);
+
+            if (exportType == ExportType.Pdf)
+            {
+                var doc = new EmployeeTaskTrackingPdfReport(tasks, fromDate, effectiveToDate);
+                var pdfBytes = doc.GeneratePdf();
+                return File(pdfBytes, "application/pdf", "employee-task-tracking.pdf");
+            }
+            var xlsxBytes = EmployeeTaskTrackingExcelReport.Build(tasks, fromDate, effectiveToDate);
+            return File(
+                xlsxBytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "employee-task-tracking.xlsx");
+        }
 
 
     }
