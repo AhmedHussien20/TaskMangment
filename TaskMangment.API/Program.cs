@@ -213,7 +213,7 @@ namespace TaskMangment.API
             //if (app.Environment.IsDevelopment())
             //{
             app.UseSwagger();
-                    app.UseSwaggerUI();
+            app.UseSwaggerUI();
                 //}
 
                 var supportedCultures = new[]
