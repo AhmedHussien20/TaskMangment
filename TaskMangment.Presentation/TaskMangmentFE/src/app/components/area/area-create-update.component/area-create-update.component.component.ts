@@ -137,7 +137,7 @@ export class AreaCreateUpdateComponent implements OnInit {
       pageSize: 20,
       sortColumn: 'Id',
       sortDirection: 'DESC',
-      roleLevel: 100
+      roleLevel: 80
     };
 
     return this.employeeService.getAll(request);

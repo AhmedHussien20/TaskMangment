@@ -47,6 +47,13 @@ export class ReportPdfService {
   return this.api.getBlob(this.service, `closing-soon-tasks/pdf${query}`);
  }
 
+ getEmployeeTaskTrackingPdf(
+  exportType: ExportType,employeeId: number,fromDate: string,toDate?: string): Observable<Blob> {
+  const query = this.buildQuery({ exportType, employeeId, fromDate, toDate });
+  return this.api.getBlob(this.service, `employee-task-tracking/pdf${query}`);
+}
+
+
   private buildQuery(params: { fromDate?: string; toDate?: string; status?: string; employeeId?: number; movementType?: number; reportTitle?: string;exportType?: ExportType  }): string {
   const q: string[] = [];
   if (params.fromDate) q.push(`fromDate=${encodeURIComponent(params.fromDate)}`);

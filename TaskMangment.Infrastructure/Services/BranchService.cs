@@ -13,6 +13,7 @@ using TaskMangment.Application.Common.Errors;
 using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Responses;
+using TaskMangment.Application.Common.Security;
 using TaskMangment.Application.DTOs;
 using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
@@ -31,6 +32,10 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
         private readonly IRepository<ManagerBranches> _managerBranchesRepo;
+        private readonly IUserAccessContextProvider _accessProvider;
+        private readonly IRepository<Employee> _employeeRepo;
+
+
 
 
         public BranchService(
@@ -40,7 +45,10 @@ namespace TaskMangment.Infrastructure.Services
             IRepository<Company> companyRepository,
             IMapper mapper,
             ICachingService cache,
-            IRepository<ManagerBranches> managerBranchesRepo)
+            IRepository<ManagerBranches> managerBranchesRepo,
+            IUserAccessContextProvider accessProvider,
+            IRepository<Employee> employeeRepo
+)
         {
             _branchRepository = branchRepository;
             _employeeRepository = employeeRepository;
@@ -49,6 +57,9 @@ namespace TaskMangment.Infrastructure.Services
             _mapper = mapper;
             _cache = cache;
             _managerBranchesRepo = managerBranchesRepo;
+            _accessProvider = accessProvider;
+            _employeeRepo = employeeRepo;
+
         }
 
         public async Task<ApiResponse<PagedResponse<BranchGetDto>>> GetAllAsync(
@@ -56,32 +67,15 @@ namespace TaskMangment.Infrastructure.Services
     int employeeId,
     int roleLevel,int companyId)
         {
-            var query = _branchRepository.GetAll()
+            var access = await _accessProvider.GetAsync(employeeId);
+            var query = _branchRepository
+                .GetAll(b => b.CompanyId == companyId && !b.IsDeleted)
                 .Include(b => b.Manager)
                 .Include(b => b.Responsible)
                 .Include(b => b.Area)
-                .ApplySearch(request.searchKey);
+                .ApplySearch(request.searchKey)
+                .ApplyAccessScope(access);
 
-            query = query.Where(b => b.CompanyId == companyId && !b.IsDeleted);
-
-
-            if (roleLevel == 80)
-            {
-                var myBranchIds = await _managerBranchesRepo
-                    .GetAll(x => x.ManagerId == employeeId&& x.IsActive)
-                    .Select(x => x.BranchId)
-                    .Distinct()
-                    .ToListAsync();
-
-                if (!myBranchIds.Any())
-                {
-                    query = query.Where(b => false);
-                }
-                else
-                {
-                    query = query.Where(b => myBranchIds.Contains(b.Id));
-                }
-            }
 
             var totalCount = await query.CountAsync();
 

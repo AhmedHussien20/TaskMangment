@@ -904,10 +904,10 @@
     "DISTINCT_TASKS_COUNT": "عدد المهام المميزة",
     "AVG_COMMENTS_PER_TASK": "متوسط التعليقات لكل مهمة",
     "LAST_COMMENT_DATE": "تاريخ آخر تعليق",
-    "EMPLOYEES" : "الموظف المجذى"
-
-    
-    
+    "EMPLOYEES" : "الموظف المجذى",
+    "CREATED_DATE": "تاريخ الانشاء",
+    "EMPLOYEE_TASK_TRACKING" : "متابعة مهام الموظفين",
+    "EMPLOYEE_REQUIRED" : "الموظف مطلوب"  
   },
   "LEAVE" : 
   {

@@ -723,5 +723,76 @@ namespace TaskMangment.Infrastructure.Services
 
             return result;
         }
+
+
+        public async Task<List<EmployeeTaskTrackingReportDto>> GetEmployeeTaskTrackingAsync(
+     int currentEmployeeId,
+     int roleLevel,
+     int? employeeId,
+     DateTime fromDate,
+     DateTime? toDate)
+        {
+            var effectiveToDate = toDate ?? DateTime.Now;
+
+            IQueryable<TaskAssignment> query = _context.TaskAssignments
+                .Include(a => a.Task)
+                    .ThenInclude(t => t.AssignedBy)
+                .Include(a => a.Employee)
+                .AsQueryable();
+
+            query = query.Where(a => a.Task.CreatedDate >= fromDate);
+
+            query = query.Where(a => a.Task.CreatedDate <= effectiveToDate);
+
+            var (scopedEmployeeIds, canViewAllTasks) =
+                await GetScopedEmployeeIdsAsync(currentEmployeeId, roleLevel);
+
+            query = query.Where(a => scopedEmployeeIds.Contains(a.EmployeeId));
+
+            if (!canViewAllTasks)
+            {
+                if (employeeId.HasValue && employeeId.Value > 0 && employeeId.Value != currentEmployeeId)
+                    query = query.Where(a => false);
+                else
+                    query = query.Where(a => a.EmployeeId == currentEmployeeId);
+            }
+            else
+            {
+                if (employeeId.HasValue && employeeId.Value > 0)
+                    query = query.Where(a => a.EmployeeId == employeeId.Value);
+            }
+
+            query = query.Where(a => a.IsActive);
+
+            var result = await query
+                .Select(a => new EmployeeTaskTrackingReportDto
+                {
+                    TaskId = a.TaskId,
+                    Title = a.Task.Title,
+
+                    Status =
+                        a.Task.Status == WorkTaskStatus.Archived ? "مؤرشفة" :
+                        a.Task.Status == WorkTaskStatus.Closed ? "مغلقة" :
+                        a.Task.Status == WorkTaskStatus.AutoClose ? "مغلقة تلقائيًا" :
+                        a.Task.Status == WorkTaskStatus.InProgress ? "قيد التنفيذ" :
+                        a.Task.Status == WorkTaskStatus.New ? "جديدة" :
+                        "غير محدد",
+
+                    CreatedDate = a.Task.CreatedDate,
+                    ClosedAt = a.Task.DueDate,
+
+                    AssignedBy = a.Task.AssignedBy != null ? a.Task.AssignedBy.FullName : "غير معروف",
+
+                    EmployeeId = a.EmployeeId,
+                    EmployeeName = a.Employee != null ? a.Employee.FullName : "غير معروف"
+                })
+                .OrderBy(r => r.EmployeeName)
+                .ThenBy(r => r.CreatedDate)
+                .AsNoTracking()
+                .ToListAsync();
+
+            return result;
+        }
+
     }
 }

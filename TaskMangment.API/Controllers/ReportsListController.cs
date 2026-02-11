@@ -88,6 +88,14 @@ namespace TaskMangment.API.Controllers
             return Success(tasks);
         }
 
+        [HttpGet("employee-task-tracking")]
+        public async Task<IActionResult> EmployeeTaskTracking(int? employeeId, DateTime fromDate, DateTime? toDate)
+        {
+
+            var tasks = await _reportService.GetEmployeeTaskTrackingAsync(this.CurrentUserId, this.RoleLevel,employeeId, fromDate, toDate);
+            return Success(tasks);
+        }
+
 
     }
 }

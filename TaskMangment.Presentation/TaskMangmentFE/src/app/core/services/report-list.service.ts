@@ -2,7 +2,7 @@ import { Injectable } from "@angular/core";
 import { ApiService } from "./api.service";
 import { Observable } from "rxjs";
 import { ApiResponse } from "../models/event/calendar";
-import { EmployeeArchivedTasksReportDto, EmployeeAssignmentsReportDto, EmployeeCommentsReportDto, EmployeeOnTimeReportDto, ExportType, TaskActivityReportDto, TaskDiscountReportDto, TaskMovementReportDto, TasksClosingSoonDto } from "../models/reports/reports";
+import { EmployeeArchivedTasksReportDto, EmployeeAssignmentsReportDto, EmployeeCommentsReportDto, EmployeeOnTimeReportDto, EmployeeTaskTrackingReportDto, ExportType, TaskActivityReportDto, TaskDiscountReportDto, TaskMovementReportDto, TasksClosingSoonDto } from "../models/reports/reports";
 
 @Injectable({ providedIn: 'root' })
 export class ReportListService {
@@ -48,6 +48,12 @@ export class ReportListService {
   const query = this.buildQuery({ employeeId});
   return this.api.get<ApiResponse<TasksClosingSoonDto[]>>(this.service, `closing-soon-tasks${query}`);
 }
+
+getEmployeeTaskTracking(employeeId: number | undefined, fromDate: string, toDate?: string): Observable<ApiResponse<EmployeeTaskTrackingReportDto[]>> {
+  const query = this.buildQuery({ employeeId, fromDate, toDate });
+  return this.api.get<ApiResponse<EmployeeTaskTrackingReportDto[]>>(this.service, `employee-task-tracking${query}`);
+}
+
 
 
  private buildQuery(params: { fromDate?: string; toDate?: string; status?: string; employeeId?: number; movementType?: number; reportTitle?: string; exportType?: ExportType }): string {

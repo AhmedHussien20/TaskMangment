@@ -98,6 +98,13 @@ export class ReportsDashboardComponent implements OnInit { // إضافة impleme
       svg: this.REPORT_ICON_SVG,
       clickable: true,
       url: '/report/tasks-closed-soon-list'
+    },
+    {
+      title: 'REPORTS.EMPLOYEE_TASK_TRACKING',
+      value: '',
+      svg: this.REPORT_ICON_SVG,
+      clickable: true,
+      url: '/report/employee-task-tracking'
     }
   ];
 

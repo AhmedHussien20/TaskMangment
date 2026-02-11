@@ -100,6 +100,22 @@ namespace TaskMangment.Infrastructure.Services
             if (roleLevel != 100)
                 empQuery = empQuery.ApplyRoleHierarchy(roleLevel);
 
+
+            //if (request.RoleLevel.HasValue)
+            //{
+            //    var level = request.RoleLevel.Value;
+
+            //    empQuery = empQuery.Where(e =>
+            //        e.EmployeeRoles.Any(er =>
+            //            er.IsAssigned &&
+            //            !er.IsDeleted &&
+            //            er.Role != null &&
+            //            er.Role.Level == level
+            //        )
+            //    );
+            //}
+
+
             var totalCount = await empQuery.CountAsync();
 
             empQuery = empQuery.OrderByDynamicSafe(request.SortColumn, request.SortDirection);

@@ -1,4 +1,4 @@
-import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
@@ -6,8 +6,10 @@ import {
   GenericTableComponent,
   TableColumn,
 } from 'app/shared/components/generic-table/generic-table.component';
+import { TaskDetailsShellComponent } from 'app/components/tasks/task-details/task-details-shell/task-details-shell.component';
 
 export interface HighPriorityTask {
+  taskId: number;
   taskTitle: string;
   employees: string[];
   statusText: string;
@@ -28,7 +30,7 @@ export interface HighPriorityTask {
     </div>
 
     <div class="modal-body p-0">
-      <app-generic-table
+       <app-generic-table
         [columns]="columns"
         [data]="rows"
         [page]="1"
@@ -39,8 +41,12 @@ export interface HighPriorityTask {
         [showDeleteButton]="false"
         [showFilters]="false"
         [showPagination]="false"
+        [rowClickable]="true" 
+        [rowClickableCondition]="checkRowClickable"
+        (edit)="onEdit($event)"
       >
       </app-generic-table>
+
     </div>
 
     <div class="modal-footer">
@@ -76,14 +82,36 @@ export class HighPriorityTasksPopupComponent {
 
   rows: any[] = [];
 
-  constructor(public activeModal: NgbActiveModal) {}
+  constructor(public activeModal: NgbActiveModal,private modalService: NgbModal) {}
 
   ngOnInit() {
     this.rows = this.tasks.map((t) => ({
-      title: t.taskTitle, // مطابق للـ column key
+      id: t.taskId,    
+      taskId: t.taskId,        
+      title: t.taskTitle, 
       employees: t.employees.join('، '),
       statusText: t.statusText,
       dueDate: t.dueDate,
     }));
   }
+
+  checkRowClickable(item: any): boolean {
+  console.log('Row:', item);    
+  return true;
+}
+onEdit(id: number) {
+  console.log('Editing task ID:', id); 
+  const task = this.rows.find(x => x.taskId === id);
+  console.log('Task object:', task);
+
+  const modalRef = this.modalService.open(TaskDetailsShellComponent, {
+      size: 'xl',
+      backdrop: 'static',
+      scrollable: true
+    });
+
+    modalRef.componentInstance.taskId = id;
+    modalRef.componentInstance.readonly = true;
+  }
+  
 }

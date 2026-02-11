@@ -9,6 +9,7 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
 {
     public class HighPriorityTaskDto
     {
+        public int TaskId { get; set; }
         public string TaskTitle { get; set; } = "";
         public List<string> Employees { get; set; } = new List<string>();
         public WorkTaskStatus Status { get; set; }
