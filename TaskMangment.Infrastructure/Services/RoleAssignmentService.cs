@@ -278,13 +278,15 @@ namespace TaskMangment.Infrastructure.Services
                 });
             }
 
-            var hasRoleLevel80 = await _employeeRepo
-                .GetAll(e => e.Id == managerId)
-                .SelectMany(e => e.EmployeeRoles)
-                .Where(er => !er.IsDeleted)
-                .AnyAsync(er => er.Role != null && er.Role.Level == 80);
+            var myLevel = await _employeeRepo.GetAll(e => e.Id == managerId)
+     .Select(e => e.EmployeeRoles
+         .Where(er => !er.IsDeleted && er.IsAssigned && er.Role != null)
+         .Select(er => (int?)er.Role.Level)
+         .Max() ?? 0)
+     .FirstAsync();
 
-            if (!hasRoleLevel80)
+
+            if (myLevel != 80)
                 throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
 
             var branchIds = (request.BranchIds ?? new List<int>())
@@ -293,17 +295,38 @@ namespace TaskMangment.Infrastructure.Services
 
             if (branchIds.Any())
             {
-                var conflicts = await _managerBranchesRepo
-                    .GetAll(x => branchIds.Contains(x.BranchId)
-                                 && x.IsActive
-                                 && x.ManagerId != managerId)
-                    .Select(x => x.BranchId)
+                var otherManagerIds = await _managerBranchesRepo.GetAll(x =>
+                        branchIds.Contains(x.BranchId) &&
+                        x.IsActive &&
+                        x.ManagerId != managerId)
+                    .Select(x => x.ManagerId)
                     .Distinct()
                     .ToListAsync();
 
-                if (conflicts.Any())
-                    throw new AppException(ErrorCodes.AlreadyAssigned, StatusCodes.Status409Conflict);
+                if (otherManagerIds.Any())
+                {
+                    var otherManagersLevels = await _employeeRepo.GetAll(e => otherManagerIds.Contains(e.Id))
+                        .Select(e => new
+                        {
+                            ManagerId = e.Id,
+                            Level = e.EmployeeRoles
+                                .Where(er => !er.IsDeleted && er.IsAssigned && er.Role != null)
+                                .Select(er => (int?)er.Role.Level)
+                                .Max() ?? 0
+                        })
+                        .ToListAsync();
+
+                    var sameLevelConflicts = otherManagersLevels
+                        .Where(x => x.Level == myLevel)
+                        .Select(x => x.ManagerId)
+                        .ToList();
+
+                    if (sameLevelConflicts.Any())
+                        throw new AppException(ErrorCodes.AlreadyAssigned, StatusCodes.Status409Conflict);
+
+                }
             }
+
 
             var existingActive = await _managerBranchesRepo
                 .GetAll(x => x.ManagerId == managerId && x.IsActive)
@@ -371,14 +394,52 @@ namespace TaskMangment.Infrastructure.Services
                 .Select(x => x.FunctionCode)
                 .FirstOrDefaultAsync();
 
-            var assignedBranchIds = await _managerBranchesRepo
-                .GetAll(x => x.IsActive)
-                .Select(x => x.BranchId)
+            var myLevel = await _employeeRepo.GetAll(e => e.Id == managerId)
+                .Select(e => e.EmployeeRoles
+                    .Where(er => !er.IsDeleted && er.IsAssigned && er.Role != null)
+                    .Select(er => (int?)er.Role.Level)
+                    .Max() ?? 0)
+                .FirstAsync();
+
+            var activeAssignments = await _managerBranchesRepo
+                .GetAll(x => x.IsActive && x.ManagerId != managerId)
+                .Select(x => new { x.BranchId, x.ManagerId })
                 .Distinct()
                 .ToListAsync();
 
+            var assignedBranchIdsSameLevel = new HashSet<int>();
+
+            if (activeAssignments.Any())
+            {
+                var otherManagerIds = activeAssignments
+                    .Select(x => x.ManagerId)
+                    .Distinct()
+                    .ToList();
+
+                var otherManagersLevels = await _employeeRepo.GetAll(e => otherManagerIds.Contains(e.Id))
+                    .Select(e => new
+                    {
+                        ManagerId = e.Id,
+                        Level = e.EmployeeRoles
+                            .Where(er => !er.IsDeleted && er.IsAssigned && er.Role != null)
+                            .Select(er => (int?)er.Role.Level)
+                            .Max() ?? 0
+                    })
+                    .ToListAsync();
+
+                var sameLevelManagerIds = otherManagersLevels
+                    .Where(x => x.Level == myLevel)
+                    .Select(x => x.ManagerId)
+                    .ToHashSet();
+
+                assignedBranchIdsSameLevel = activeAssignments
+                    .Where(x => sameLevelManagerIds.Contains(x.ManagerId))
+                    .Select(x => x.BranchId)
+                    .ToHashSet();
+            }
+
             var availableBranches = await _branchRepo
-                .GetAll(b => !assignedBranchIds.Contains(b.Id))
+                .GetAll(b => !assignedBranchIdsSameLevel.Contains(b.Id))
                 .Select(b => new BranchLookupDto
                 {
                     Id = b.Id,
@@ -409,7 +470,6 @@ namespace TaskMangment.Infrastructure.Services
                 branchLookupDtos = combined
             });
         }
-
 
     }
 }

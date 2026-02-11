@@ -145,6 +145,7 @@ namespace TaskMangment.Infrastructure.Services
             services.AddScoped<IUserAccessContextProvider, UserAccessContextProvider>();
             
             services.AddScoped<IPermissionChecker, PermissionChecker>();
+            services.AddScoped<IGetHigherManager, GetHigherManager>();
 
             return services;
         }

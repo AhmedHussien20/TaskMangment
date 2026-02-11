@@ -41,6 +41,27 @@ namespace TaskMangment.Infrastructure.Services
                 FunctionCodes = functionCodes
             };
         }
-    }
+
+    //    var areaIds = await _managerBranchesRepo.GetAll()
+    //   .Where(x => x.ManagerId == employeeId
+    //               && x.IsActive
+    //               && x.Type == ManagerScopeType.Area
+    //               && x.AreaId.HasValue)
+    //   .Select(x => x.AreaId!.Value)
+    //   .Distinct()
+    //   .ToListAsync();
+
+    //    List<int> branchIds;
+
+    //if (areaIds.Any())
+    //{
+    //    // ✅ Get all branches under these areas
+    //    branchIds = await _branchRepo.GetAll()
+    //        .Where(b => b.AreaId.HasValue && areaIds.Contains(b.AreaId.Value))
+    //        .Select(b => b.Id)
+    //        .Distinct()
+    //        .ToListAsync();
+    //}
+}
 
 }
