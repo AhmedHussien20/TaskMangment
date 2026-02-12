@@ -19,7 +19,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
   styleUrls: ['./generic-form.component.scss']
 })
 export class GenericFormComponent implements OnInit {
-
+  @Input() showSaveButton: boolean = true;
   @Input() title: string = '';
   @Input() breadcrumbs: string[] = [];
   @Input() activeitem: string = '';

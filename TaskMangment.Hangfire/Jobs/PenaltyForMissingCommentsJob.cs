@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TaskMangment.Application.Common.Interfaces;
+using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Domain.Entities;
 using TaskMangment.Domain.Entities.Enum;
 using TaskMangment.Domain.Event;
@@ -11,11 +12,15 @@ namespace TaskMangment.Hangfire.Jobs
     {
         private readonly AppDbContext _db;
         private readonly IDomainEventDispatcher _eventDispatcher;
+        private readonly IGetHigherManager _getHigherManager;
 
-        public PenaltyForMissingCommentsJob(AppDbContext db, IDomainEventDispatcher eventDispatcher)
+
+        public PenaltyForMissingCommentsJob(AppDbContext db, IDomainEventDispatcher eventDispatcher,IGetHigherManager getHigherManager
+)
         {
             _db = db;
             _eventDispatcher = eventDispatcher;
+            _getHigherManager = getHigherManager;
         }
 
         public async Task ExecuteAsync()
@@ -27,36 +32,80 @@ namespace TaskMangment.Hangfire.Jobs
                 return;
 
             var isPublicHoliday = await _db.CalendarEvents
-        .AsNoTracking()
-        .AnyAsync(e =>
-            e.Public == true &&
-            e.EventType == CalendarEventType.Holiday &&
-            !e.IsDeleted &&
-            e.StartDate.Date <= yesterday &&
-            (e.EndDate == null ? e.StartDate.Date >= yesterday : e.EndDate.Value.Date >= yesterday)
-        );
+                .AsNoTracking()
+                .AnyAsync(e =>
+                    e.Public == true &&
+                    e.EventType == CalendarEventType.Holiday &&
+                    !e.IsDeleted &&
+                    e.StartDate.Date <= yesterday &&
+                    (e.EndDate == null ? e.StartDate.Date >= yesterday : e.EndDate.Value.Date >= yesterday)
+                );
 
             if (isPublicHoliday)
                 return;
 
             var tasks = await _db.Tasks
                 .Include(t => t.Assignments)
-                    .ThenInclude(a => a.Employee)                   
+                    .ThenInclude(a => a.Employee)
                 .Where(t => t.CommentAllowPeriodDays != null && t.DueDate > yesterday)
                 .Where(t =>
                     t.Status != WorkTaskStatus.Closed &&
                     t.Status != WorkTaskStatus.AutoClose &&
                     t.Status != WorkTaskStatus.Archived)
-                //add duedate check
                 .ToListAsync();
 
             var discountsToPublish = new List<(Discount discount, string employeeName, int taskId, string taskTitle)>();
 
             foreach (var task in tasks)
             {
+                // نفس Business بتاع التاني: المدير (Level 100) + Operations Level 80 => ميتخصمش
+                var candidateIds = task.Assignments
+                    .Select(a => a.EmployeeId)
+                    .Distinct()
+                    .ToList();
+
+                if (task.CreatedByEmployeeId.HasValue)
+                    candidateIds.Add(task.CreatedByEmployeeId.Value);
+
+                candidateIds = candidateIds.Distinct().ToList();
+
+                var roleLevels = await _db.EmployeeRoles
+                    .Where(er => candidateIds.Contains(er.EmployeeId)
+                                 && er.IsAssigned
+                                 && !er.IsDeleted
+                                 && er.Role != null)
+                    .GroupBy(er => er.EmployeeId)
+                    .Select(g => new
+                    {
+                        EmployeeId = g.Key,
+                        RoleLevel = g.Max(x => x.Role.Level)
+                    })
+                    .ToListAsync();
+
+                var exemptIds = new HashSet<int>(
+                    roleLevels.Where(x => x.RoleLevel == 100)
+                              .Select(x => x.EmployeeId)
+                );
+
+                var level80Ids = roleLevels
+                    .Where(x => x.RoleLevel == 80)
+                    .Select(x => x.EmployeeId)
+                    .ToList();
+
+                if (level80Ids.Any())
+                {
+                    var ops80Ids = await _db.Employees
+                        .Where(e => level80Ids.Contains(e.Id)
+                                    && e.FunctionCode == FunctionCode.Operations)
+                        .Select(e => e.Id)
+                        .ToListAsync();
+
+                    foreach (var id in ops80Ids)
+                        exemptIds.Add(id);
+                }
+
                 var periodDays = (int)task.CommentAllowPeriodDays!.Value;
                 if (periodDays < 1) periodDays = 1;
-
 
                 foreach (var assignment in task.Assignments)
                 {
@@ -64,6 +113,10 @@ namespace TaskMangment.Hangfire.Jobs
                         continue;
 
                     var employeeId = assignment.EmployeeId;
+
+                    // ✅ Skip discount for exempt employees (المدير ميتخصملهوش)
+                    if (exemptIds.Contains(employeeId))
+                        continue;
 
                     var lastComment = await _db.TaskComments
                         .Where(c => c.TaskId == task.Id && c.EmployeeId == employeeId)
@@ -77,11 +130,10 @@ namespace TaskMangment.Hangfire.Jobs
                     var shouldHaveComment = baseDate.AddDays(periodDays - 1) <= yesterday;
                     if (!shouldHaveComment) continue;
 
-
                     var hasLeave = await _db.Leaves
                         .Where(l => l.EmployeeId == employeeId &&
                                     l.StartDate.Date <= yesterday &&
-                                    l.EndDate.Date >= yesterday&&
+                                    l.EndDate.Date >= yesterday &&
                                     l.Status == LeaveStatus.Approved)
                         .AnyAsync();
                     if (hasLeave) continue;
@@ -139,7 +191,7 @@ namespace TaskMangment.Hangfire.Jobs
                             .FirstOrDefaultAsync(b => b.Id == issuedEmployee.BranchId.Value)
                         : null;
 
-                    var managerId = branch?.ManagerID;
+                    var managerId = await _getHigherManager.GetDirectHigherManagerIdAsync(discount.EmployeeId);
 
                     var sendToIds = new List<int> { discount.EmployeeId };
                     if (managerId.HasValue && !sendToIds.Contains(managerId.Value))
@@ -165,11 +217,9 @@ namespace TaskMangment.Hangfire.Jobs
                 }
                 catch (Exception ex)
                 {
-                    
+                    // intentionally ignored (same as original behavior)
                 }
             }
-
         }
-
     }
 }

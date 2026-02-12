@@ -54,6 +54,7 @@ namespace TaskMangment.Application.Common.Errors
         public const string Unauthorized = "Unauthorized";
 
         public const string InvalidOperation = "INVALID_OPERATION";
+        public const string CloseRequestAlreadyPending = "CLOSEREQUESTALREADYREQUESTED";
     }
 
 }

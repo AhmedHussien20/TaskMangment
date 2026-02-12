@@ -164,9 +164,9 @@ namespace TaskMangment.Infrastructure.Services
 
             var overdueTasksQuery = _taskRepo.GetAll(t =>
                 t.CompanyId == companyId &&
-                t.Status != WorkTaskStatus.Closed &&
+                t.Status != WorkTaskStatus.Closed && t.Status != WorkTaskStatus.AutoClose&& t.Status != WorkTaskStatus.Archived &&
                 t.DueDate != null &&
-                t.DueDate < DateTime.Today &&
+                t.DueDate <= DateTime.Today &&
                 t.DueDate >= range.Start && t.DueDate <= range.End);
 
             if (employeeId.HasValue || branchId.HasValue)
@@ -436,9 +436,9 @@ namespace TaskMangment.Infrastructure.Services
                         (t.Status == WorkTaskStatus.New || t.Status == WorkTaskStatus.InProgress))
                     ||
                     (status == "Overdue" &&
-                        t.Status != WorkTaskStatus.Closed &&
+                    t.Status != WorkTaskStatus.Closed && t.Status != WorkTaskStatus.AutoClose && t.Status != WorkTaskStatus.Archived &&
                         t.DueDate != null &&
-                        t.DueDate < DateTime.Today &&
+                        t.DueDate <= DateTime.Today &&
                         t.DueDate >= range.Start && t.DueDate <= range.End)
                     ||
                     (status == "Completed" &&

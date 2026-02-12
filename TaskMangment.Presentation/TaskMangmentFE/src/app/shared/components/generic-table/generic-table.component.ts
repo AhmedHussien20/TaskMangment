@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { NgbPaginationModule, NgbTooltipModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgbDropdownModule, NgbPaginationModule, NgbTooltipModule } from '@ng-bootstrap/ng-bootstrap';
 import { NgSelectModule } from '@ng-select/ng-select';
 import { TranslateModule } from '@ngx-translate/core';
 import { MyDatePipe } from 'app/components/utilities/pipline/MyDatePipe';
@@ -36,6 +36,13 @@ export interface TableColumn {
   displayField?: string;
   
 }
+export interface ExtraMenuItem {
+  label: string;     
+  value: any;      
+  iconClass?: string; 
+  divider?: boolean;
+  disabled?: boolean;
+}
 
 
 interface HasId {
@@ -48,7 +55,7 @@ interface HasId {
   imports: [
     CommonModule,
     FormsModule,
-    NgbPaginationModule, TranslateModule, MyDatePipe, NgbTooltipModule, NgSelectModule
+    NgbPaginationModule, TranslateModule, MyDatePipe, NgbTooltipModule, NgSelectModule,NgbDropdownModule
   ],
   styleUrls: ['./generic-table.component.scss']
 })
@@ -133,6 +140,18 @@ export class GenericTableComponent<T> implements OnDestroy{
     checked: boolean;
   }>();
 
+  @Input() showExtraButton: boolean = false;
+
+  @Input() extraMenuItems: ExtraMenuItem[] = [];
+
+  @Output() extraMenuSelect = new EventEmitter<ExtraMenuItem>();
+
+  @Output() extraClick = new EventEmitter<void>();
+
+  onExtraMenuItemClick(item: ExtraMenuItem) {
+    if (item?.disabled) return;
+    this.extraMenuSelect.emit(item);
+  }
 
   /* ngOnInit(): void {
   this.filtersChanged$

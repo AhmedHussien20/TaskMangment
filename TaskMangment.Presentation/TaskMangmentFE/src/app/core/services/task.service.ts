@@ -43,14 +43,53 @@ private buildQuery(req: any): string {
   params.push(`SortColumn=${req.sortColumn}`);
   params.push(`SortDirection=${req.sortDirection}`);
 
+  // ✅ employeeIds (existing)
   if (Array.isArray(req.employeeIds) && req.employeeIds.length > 0) {
     req.employeeIds.forEach((id: number) => {
       params.push(`employeeIds=${id}`);
     });
   }
 
+  // ✅ statusId (existing)
   if (req.statusId) {
     params.push(`statusId=${req.statusId}`);
+  }
+
+  // ==========================
+  // ✅ NEW FILTERS
+  // ==========================
+
+  // direction: 1 Incoming, 2 Outgoing
+  if (req.direction) {
+    params.push(`direction=${req.direction}`);
+  }
+
+  // targetEmployeeId
+  if (req.targetEmployeeId) {
+    params.push(`targetEmployeeId=${req.targetEmployeeId}`);
+  }
+
+  // priorityId
+  if (req.priorityId) {
+    params.push(`priorityId=${req.priorityId}`);
+  }
+
+  // createdFrom / createdTo
+  if (req.createdFrom) {
+    params.push(`createdFrom=${encodeURIComponent(req.createdFrom)}`);
+  }
+
+  if (req.createdTo) {
+    params.push(`createdTo=${encodeURIComponent(req.createdTo)}`);
+  }
+
+  // dueFrom / dueTo
+  if (req.dueFrom) {
+    params.push(`dueFrom=${encodeURIComponent(req.dueFrom)}`);
+  }
+
+  if (req.dueTo) {
+    params.push(`dueTo=${encodeURIComponent(req.dueTo)}`);
   }
 
   return params.join('&');

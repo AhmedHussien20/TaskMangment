@@ -563,7 +563,7 @@
     "DURATION" : "مدة التنفيذ",
     "ADD_ACHIEVEMENT" : "اضف نسبة انجازك",
     "SAR" : "ريال",
-    "ADD_TO_CALENDAR" : "اضافة حدث مع هذا التعليق",
+    "ADD_TO_CALENDAR" : "اضافة موعد مع هذا التعليق",
     "COMMENT_MIN_LENGTH_TASK_CHARACTERS" : "ادخل بحد ادني 500 حرف",
     "COMMENT_OR_FILE_REQUIRED" : "ادخل الحقول المطلوبه",
     "ACHIEVEMENT_RESON" : "معلومات الانجاز",
@@ -575,7 +575,20 @@
     "EXTENSIONS_COUNT" : "طلبات التمديد المقبولة",
     "NEW_DUE_DATE" : "تاريخ ما بعد التمديد",
     "READED": "مشاهدة الموظف",
-    "REMAIN_DAYS" : "باقي الايام للانتهاء"
+    "REMAIN_DAYS" : "باقي الايام للانتهاء",
+
+
+    "SHOW_DATA" : "عرض البيانات",
+    "OUTGOING_INPROGRESS" : "المهام الصادرة / قيد التنفيذ",
+    "OUTGOING_AUTOCLOSE" : "المهام الصادرة / مغلقة تلقائيا",
+    "OUTGOING_ARCHIVED" : "المهام الصادرة / مؤرشفة",
+    "INCOMING_INPROGRESS" : "المهام الواردة / قيد التنفيذ",
+    "INCOMING_AUTOCLOSE" : "المهام الواردة / مغلقة تلقائيا",
+    "INCOMING_ARCHIVED" : "المهام الواردة / المؤرشفة",
+    "CREATED_FROM" : "تاريخ انشاء المهمة من",
+    "CREATED_TO" : "تاريخ انشاء المهمة الى" , 
+    "DUE_FROM" : "تاريخ تسليم المهمة من",
+    "DUE_TO" : "تاريخ تسليم المهمة الى"
 
   },
   "EMPLOYEE": {

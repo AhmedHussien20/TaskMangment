@@ -2,7 +2,7 @@ import { TaskGet } from "app/core/models/task/task";
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { NgbModal, NgbModalModule, NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgbModal, NgbModalModule } from '@ng-bootstrap/ng-bootstrap';
 import { GenericTableComponent, TableColumn } from 'app/shared/components/generic-table/generic-table.component';
 import { PageHeaderComponent } from 'app/shared/components/page-header/page-header.component';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -15,7 +15,7 @@ import { ToastrService } from "ngx-toastr";
 import { AuthService } from "app/core/services/auth.service";
 import { SpkDashboardComponent } from "app/@spk/reusable-dashboard/spk-dashboard/spk-dashboard.component";
 import { EmployeeService } from "app/core/services/employee.service";
-
+import { TasksEmployeeDeepSearchComponent } from "../tasks-employee-deep-search/tasks-employee-deep-search.component";
 
 @Component({
   selector: 'app-task-list',
@@ -28,8 +28,8 @@ import { EmployeeService } from "app/core/services/employee.service";
     PageHeaderComponent,
     NgbModalModule,
     TaskCreateUpdateComponent,
-    SpkDashboardComponent
-    // TaskDetailsShellComponent,
+    SpkDashboardComponent,
+    TasksEmployeeDeepSearchComponent
   ],
   templateUrl: './task-list.component.html'
 })
@@ -38,7 +38,11 @@ export class TaskListComponent implements OnInit {
   canCreate = false;
   canEdit = false;
   canDelete = false;
+  canShowExtraTasks= false
+
   showEmployeeFilter = false;
+
+  deepSearchInitial: any = null;
 
   summary!: {
     myTasks: number;
@@ -46,8 +50,8 @@ export class TaskListComponent implements OnInit {
     inProgressTasks: number;
     newTasks: number;
     archiveTasks: number;
-   // autoClose : number;
   };
+
   employees: { id: number; name: string }[] = [];
   status: { id: number; name: string }[] = [];
 
@@ -58,7 +62,9 @@ export class TaskListComponent implements OnInit {
     'MENU.EMPLOYMENT',
     'TASK.LIST_TITLE'
   ];
+
   isLoading = false;
+
   columns: TableColumn[] = [
     { key: 'id', label: 'TASK.ID' },
     { key: 'title', label: 'TASK.TITLE' },
@@ -88,27 +94,25 @@ export class TaskListComponent implements OnInit {
         InProgress: { text: 'TASK.STATUS_IN_PROGRESS', class: 'bg-info' },
         Closed: { text: 'TASK.STATUS_CLOSED', class: 'bg-success' },
         Archived: { text: 'TASK.STATUS_ARCHIVED', class: 'bg-dark' },
-        AutoClose: {text: 'TASK.STATUS_AUTOCLOSE',class: 'bg-warning' },
+        AutoClose: { text: 'TASK.STATUS_AUTOCLOSE', class: 'bg-warning' },
       }
     },
-
     { key: 'dueDate', label: 'TASK.DUE_DATE', type: 'date' }
   ];
-
 
   rows: TaskGet[] = [];
   totalItems = 0;
 
   page = 1;
   entries = 10;
+
   statusOptions = [
     { id: 1, name: 'TASK.STATUS_NEW' },
     { id: 2, name: 'TASK.STATUS_IN_PROGRESS' },
     { id: 3, name: 'TASK.STATUS_CLOSED' },
     { id: 4, name: 'TASK.STATUS_ARCHIVED' },
-    { id: 5, name:'TASK.STATUS_AUTOCLOSE'},
+    { id: 5, name: 'TASK.STATUS_AUTOCLOSE' },
   ];
-
 
   searchCriteria: SearchCriteria = {
     searchKey: '',
@@ -125,12 +129,12 @@ export class TaskListComponent implements OnInit {
     }
   };
 
-
   labels = {
     searchKey: 'TASK.searchKey',
     employeeIds: 'TASK.employee',
     statusId: 'TASK.STATUS'
   };
+
   isEdit = false;
   selectedTaskId: number | null = null;
 
@@ -141,20 +145,23 @@ export class TaskListComponent implements OnInit {
     private translate: TranslateService,
     private auth: AuthService,
     private employeeService: EmployeeService
-
   ) { }
 
   ngOnInit() {
     const roleLevel = this.auth.getRoleLevel();
     this.showEmployeeFilter = roleLevel >= 50;
+
     if (this.showEmployeeFilter) {
       this.loadEmployees();
     }
 
     this.status = this.statusOptions;
+
     this.canCreate = roleLevel >= 50;
     this.canEdit = roleLevel >= 70;
     this.canDelete = roleLevel >= 70;
+    this.canShowExtraTasks = roleLevel == 100
+
     this.loadData();
   }
 
@@ -168,10 +175,10 @@ export class TaskListComponent implements OnInit {
     };
 
     this.employeeService.getAll(request).subscribe(res => {
-      console.log(res);
-      this.employees = res.data.data.map((e: any) => ({
+      this.employees = (res?.data?.data ?? []).map((e: any) => ({
         id: e.id,
-        name: e.fullName
+        name: e.fullName,
+        
       }));
     });
   }
@@ -180,19 +187,14 @@ export class TaskListComponent implements OnInit {
     this.isLoading = true;
     this.taskService.getAll(this.searchCriteria).subscribe({
       next: (res: any) => {
+        const pageData = res?.data;
 
-        const payload = res;
-        const pageData = payload.data;
+        this.rows = pageData?.data ?? [];
+        this.totalItems = pageData?.totalCount ?? 0;
+        this.page = pageData?.pageIndex ?? 1;
+        this.entries = pageData?.pageSize ?? 10;
 
-        
-
-        this.rows = pageData.data ?? [];
-        this.totalItems = pageData.totalCount ?? 0;
-        this.page = pageData.pageIndex ?? 1;
-        this.entries = pageData.pageSize ?? 10;
-
-        this.summary = pageData.summary;
-        console.log(this.summary);
+        this.summary = pageData?.summary;
         this.buildSummaryCards();
 
         this.isLoading = false;
@@ -204,6 +206,7 @@ export class TaskListComponent implements OnInit {
   }
 
   cards: any[] = [];
+
   private buildSummaryCards() {
     if (!this.summary) {
       this.cards = [];
@@ -228,20 +231,6 @@ export class TaskListComponent implements OnInit {
         </svg>
       `
       },
-      // {
-      //   title: 'TASK.CREATED_BY_ME',
-      //   value: this.summary.createdByMe,
-      //   svg: `
-      //   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-      //        viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      //        stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-      //        class="feather feather-user-check text-success">
-      //     <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-      //     <circle cx="8.5" cy="7" r="4"></circle>
-      //     <polyline points="17 11 19 13 23 9"></polyline>
-      //   </svg>
-      // `
-      // },
       {
         title: 'TASK.IN_PROGRESS_TASKS',
         value: this.summary.inProgressTasks,
@@ -282,7 +271,6 @@ export class TaskListComponent implements OnInit {
               </svg>
             `
       }
-
     ];
   }
 
@@ -317,7 +305,6 @@ export class TaskListComponent implements OnInit {
     this.modalService.open(modal, { size: 'lg', centered: true });
   }
 
-
   openEdit(id: number, modal: any) {
     if (!this.canEdit) return;
     this.isEdit = true;
@@ -330,17 +317,20 @@ export class TaskListComponent implements OnInit {
     this.loadData();
   }
 
+ openDetails(taskId: number) {
+  const task = this.rows.find(x => x.id === taskId);
 
-  openDetails(taskId: number) {
-    const modalRef = this.modalService.open(TaskDetailsShellComponent, {
-      size: 'xl',
-      backdrop: 'static',
-      scrollable: true
-    });
+  const modalRef = this.modalService.open(TaskDetailsShellComponent, {
+    size: 'xl',
+    backdrop: 'static',
+    scrollable: true
+  });
 
-    modalRef.componentInstance.taskId = taskId;
-    modalRef.componentInstance.readonly = true;
-  }
+  modalRef.componentInstance.taskId = taskId;
+  modalRef.componentInstance.readonly = true;
+  modalRef.componentInstance.createdByMe = task?.createdByMe ?? false;
+}
+
   confirmDelete(taskId: number) {
     Swal.fire({
       title: this.translate.instant('COMMON.CONFIRM_DELETE_TITLE'),
@@ -364,8 +354,6 @@ export class TaskListComponent implements OnInit {
     this.taskService.delete(taskId).subscribe({
       next: () => {
         this.toastr.success(this.translate.instant('TASK.DELETE_SUCCESS'));
-
-
         this.isLoading = false;
         this.loadData();
       },
@@ -375,14 +363,60 @@ export class TaskListComponent implements OnInit {
     });
   }
 
-disableEditRow = (row: TaskGet) => {
-  return row.status === 3 || row.status === 4 || row.status === 5 ;
+  disableEditRow = (row: TaskGet) => {
+  return !row.createdByMe || row.status === 3 || row.status === 4 || row.status === 5;
 };
-
-
-
 
 disableDeleteRow = (row: TaskGet) => {
-  return row.status === 3 || row.status === 4 || row.status === 5 ;
+  return !row.createdByMe || row.status === 3 || row.status === 4 || row.status === 5;
 };
+
+
+deepSearchTitleKey: string = 'TASK.DEEP_SEARCH';
+extraMenuItems = [
+  // صادرة
+  { label: 'TASK.OUTGOING_INPROGRESS', value: { direction: 2, statusId: 2 } },
+  { label: 'TASK.OUTGOING_AUTOCLOSE',  value: { direction: 2, statusId: 5 } },
+  { label: 'TASK.OUTGOING_ARCHIVED',   value: { direction: 2, statusId: 4 } },
+
+  { divider: true, label: '', value: null },
+
+  { label: 'TASK.INCOMING_INPROGRESS', value: { direction: 1, statusId: 2 } },
+  { label: 'TASK.INCOMING_AUTOCLOSE',  value: { direction: 1, statusId: 5 } },
+  { label: 'TASK.INCOMING_ARCHIVED',   value: { direction: 1, statusId: 4 } },
+];
+
+ onExtraMenuSelect(item: any, modalTpl: any) {
+  if (!item || item.divider) return;
+
+  const preset = item.value ?? {};
+
+  this.deepSearchTitleKey = item.label ?? 'TASK.DEEP_SEARCH';
+
+  this.deepSearchInitial = {
+  direction: preset.direction ?? null,
+  statusId: preset.statusId ?? null,
+  targetEmployeeId: (this.searchCriteria as any)['targetEmployeeId'] ?? null,
+  priorityId: (this.searchCriteria as any)['priorityId'] ?? null,
+  createdFrom: (this.searchCriteria as any)['createdFrom'] ?? null,
+  createdTo: (this.searchCriteria as any)['createdTo'] ?? null,
+  dueFrom: (this.searchCriteria as any)['dueFrom'] ?? null,
+  dueTo: (this.searchCriteria as any)['dueTo'] ?? null,
+  searchKey: this.searchCriteria.searchKey ?? ''
+};
+  this.modalService.open(modalTpl, { size: 'lg', centered: true });
+}
+
+
+  applyDeepSearch(filters: any, modal: any) {
+    this.searchCriteria = {
+      ...this.searchCriteria,
+      ...filters,
+      pageIndex: 1
+    };
+
+    this.page = 1;
+    modal.close(filters);
+    this.loadData();
+  }
 }

@@ -59,6 +59,7 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
         public bool requireUploadFile { get; set; }
         public DateTime? NewDate { get; set; }
         public int? NumberOfExtensions { get; set; }
+        public bool CreatedByMe { get; set; } = false;
 
     }
 

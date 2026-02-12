@@ -120,7 +120,15 @@ namespace TaskMangment.Infrastructure.Services
             if (assignment.IsClosed) 
                 throw new AppException(ErrorCodes.TaskAlreadyClosed, StatusCodes.Status400BadRequest);
 
-            
+            var hasPendingRequest = await _requestRepo.GetAll(r =>
+                    r.TaskId == taskId &&
+                    r.Status == CloseRequestStatus.Pending
+                )
+                .AnyAsync();
+
+            if (hasPendingRequest)
+                throw new AppException(ErrorCodes.CloseRequestAlreadyPending, StatusCodes.Status409Conflict);
+
 
             var request = _mapper.Map<TaskCloseRequest>(dto);
 

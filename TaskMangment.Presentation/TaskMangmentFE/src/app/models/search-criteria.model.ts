@@ -14,4 +14,15 @@ export class SearchCriteria<T = any> {
   constructor(init?: Partial<SearchCriteria<T>>) {
     Object.assign(this, init);
   }
+
+  searchKey?: string;
+  employeeIds?: number[];
+  statusId?: number | null;
+  direction?: number | null;
+  targetEmployeeId?: number | null;
+  priorityId?: number | null;
+  createdFrom?: string | null;
+  createdTo?: string | null;
+  dueFrom?: string | null;
+  dueTo?: string | null;
 }

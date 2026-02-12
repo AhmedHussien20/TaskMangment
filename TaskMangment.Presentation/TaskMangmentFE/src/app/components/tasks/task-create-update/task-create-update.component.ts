@@ -196,7 +196,7 @@ export class TaskCreateUpdateComponent implements OnInit {
       description: ['', Validators.required],
       assignedEmployeeIds: [[], Validators.required],
       priority: [TaskPriority.Low, Validators.required],
-    status: [{ value: TaskStatus.New, disabled: !this.isEdit }, Validators.required], // ✅
+    status: [{ value: TaskStatus.New, disabled: !this.isEdit }, Validators.required], 
       dueDate: [null, Validators.required],
       commentAllowPeriodDays: ['', Validators.required],
       maxWarnings: [3, [decimalValidator()]],
