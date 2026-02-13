@@ -73,6 +73,7 @@ export interface TaskGet {
   requireUploadFile: boolean;
   newDate?: string;
   numberOfExtensions?: number;
+  createdByMe: boolean
 }
 
 export interface TaskSummary {

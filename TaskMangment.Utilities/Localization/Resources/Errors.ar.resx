@@ -237,4 +237,7 @@
   <data name="CANNOT_DELETE_TASK" xml:space="preserve">
     <value>لا يمكنك حذف هذه المهمة، قم بإغلاقها بدلًا من ذلك.</value>
   </data>
+  <data name="CLOSEREQUESTALREADYREQUESTED" xml:space="preserve">
+    <value>هناك طلب اغلاق علي المهمة بالفعل</value>
+  </data>
 </root>

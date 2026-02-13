@@ -28,7 +28,7 @@ namespace TaskMangment.API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll([FromQuery] TaskRequest request)
         {
-            var result = await _service.GetAllAsync(request, CompanyId, this.Role, this.CurrentUserId);
+            var result = await _service.GetAllAsync(request, CompanyId, this.RoleLevel, this.CurrentUserId);
             if (!result.Success)
                 return Fail(result.Message!);
             //SetCacheHeader(600);
@@ -38,7 +38,7 @@ namespace TaskMangment.API.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var result = await _service.GetByIdAsync(id);
+            var result = await _service.GetByIdAsync(id, this.RoleLevel, this.CurrentUserId);
             return Success(result.Data);
         }
         [HttpPost]

@@ -128,7 +128,7 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<TaskCommentGetDto>.Ok(dto);
         }
 
-        public async Task<ApiResponse<TaskCommentGetDto>> AddAsync(int taskId, int employeeId, TaskCommentAddEditDto dto)
+        public async Task<ApiResponse<TaskCommentGetDto>> AddAsync(int taskId, int employeeId,int roleLevel, TaskCommentAddEditDto dto)
         {
             var task = await _taskRepo.GetByIDAsync(taskId);
             if (task == null)
@@ -140,10 +140,10 @@ namespace TaskMangment.Infrastructure.Services
                 .FirstOrDefaultAsync();
 
 
-            if (assignment == null)
+            if (assignment == null && roleLevel != 100 && roleLevel != 80)
                 throw new AppException(ErrorCodes.NotAssigned, StatusCodes.Status400BadRequest);
 
-            if (assignment.IsClosed)
+            if (assignment != null && assignment.IsClosed)
                 throw new AppException(ErrorCodes.TaskAlreadyClosed, StatusCodes.Status400BadRequest);
 
 

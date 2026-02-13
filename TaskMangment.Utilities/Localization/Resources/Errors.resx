@@ -238,4 +238,7 @@
   <data name="CANNOT_DELETE_TASK" xml:space="preserve">
     <value>You cannot delete this task, close it instead</value>
   </data>
+  <data name="CLOSEREQUESTALREADYREQUESTED" xml:space="preserve">
+    <value>A close request already requested</value>
+  </data>
 </root>

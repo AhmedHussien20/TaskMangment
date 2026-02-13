@@ -72,14 +72,51 @@
                         <input *ngSwitchCase="'date'" type="date" class="form-control" [ngModel]="searchCriteria[key]"
                             (ngModelChange)="onFilterChange(key, $event)" />
 
-
+                            
 
                     </ng-container>
+
+                    
                 </div>
 
             </div>
 
             <div class="filter-actions">
+                <!-- EXTRA DROPDOWN -->
+<div *ngIf="showExtraButton" ngbDropdown class="d-inline-block">
+  <button
+    type="button"
+    class="btn btn-dark"
+    ngbDropdownToggle>
+    {{ 'TASK.SHOW_DATA' | translate }}
+  </button>
+
+  <div ngbDropdownMenu class="dropdown-menu-end" style="min-width: 200px; ">
+
+    <ng-container *ngFor="let item of extraMenuItems">
+      <div *ngIf="item.divider" class="dropdown-divider"></div>
+      <button
+        *ngIf="!item.divider"
+        type="button"
+        class="dropdown-item d-flex justify-content-between align-items-center"
+        
+        [disabled]="item.disabled"
+        (click)="onExtraMenuItemClick(item)">
+
+        <span>{{ item.label | translate }}</span>
+
+        <i *ngIf="item.iconClass" [class]="item.iconClass"></i>
+      </button>
+    </ng-container>
+
+    <div *ngIf="!extraMenuItems?.length" class="dropdown-item text-muted">
+      {{ 'COMMON.NO_DATA' | translate }}
+    </div>
+
+  </div>
+</div>
+
+
                 <button class="btn btn-primary btn-sm me-2" (click)="applyFilters()">
                     <i class="fa fa-search"></i>
                     {{ 'TABLE.SEARCH' | translate }}

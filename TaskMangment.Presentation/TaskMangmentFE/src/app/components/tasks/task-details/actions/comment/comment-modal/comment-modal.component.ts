@@ -147,7 +147,6 @@ submit(): void {
     },
     error: () => {
       this.isSubmitting = false;
-      this.toastr.error(this.translate.instant('TASK.COMMENT_ERROR'));
     }
   });
 }

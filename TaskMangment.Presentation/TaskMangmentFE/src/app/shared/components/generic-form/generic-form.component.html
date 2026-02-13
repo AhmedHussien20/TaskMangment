@@ -4,9 +4,13 @@
       [dir]="'rtl'">
       <div class="d-flex justify-content-end mb-4">
 
-        <button type="submit" class="btn btn-primary">
-          {{ 'FORM.SAVE' | translate }}
-        </button>
+       <button
+  *ngIf="showSaveButton"
+  type="submit"
+  class="btn btn-primary">
+  {{ 'FORM.SAVE' | translate }}
+</button>
+
       </div>
       <ng-container *ngFor="let field of orderedFields">
   <div *ngIf="!field.hidden"

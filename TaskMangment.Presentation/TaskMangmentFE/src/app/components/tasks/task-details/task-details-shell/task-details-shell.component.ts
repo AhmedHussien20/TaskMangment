@@ -31,6 +31,7 @@ import { PercentageModalComponent } from '../actions/task-percentage/percentage-
 export class TaskDetailsShellComponent implements OnInit {
 
   @Input() taskId!: number;
+  @Input() createdByMe: boolean = false;
   requireUploadFile = false;
  
   readonly = false;
@@ -44,14 +45,14 @@ export class TaskDetailsShellComponent implements OnInit {
   
   taskInfo: TaskGet | null = null;
 
-  ngOnInit(): void {
-    const roleLevel = this.auth.getRoleLevel();
-    this.showAdminPages = roleLevel >= 50;
-    console.log(this.showAdminPages);
-    if (this.taskId) {
-      this.loadTask();
-    }
+ ngOnInit(): void {
+  this.showAdminPages = this.createdByMe; 
+  console.log(this.showAdminPages);
+
+  if (this.taskId) {
+    this.loadTask();
   }
+}
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['taskId'] && this.taskId) {
@@ -65,9 +66,12 @@ export class TaskDetailsShellComponent implements OnInit {
       next: res => {
         this.taskInfo = res.data;
         this.requireUploadFile = this.taskInfo.requireUploadFile;
+        console.log(`dddd: ${this.createdByMe}`)
       },
       error: err => console.error('Failed to load task', err)
     });
+
+    
   }
 
 get isTaskClosed(): boolean {

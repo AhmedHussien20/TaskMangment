@@ -48,6 +48,9 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<TaskPercentage> _percentRepo;
         private readonly IRepository<Notification> _notificationRepo;
 
+        private readonly IAppUnitOfWork _uow;
+
+
 
 
 
@@ -68,7 +71,9 @@ namespace TaskMangment.Infrastructure.Services
            IRepository<TaskComment> commentRepo,
            IRepository<Attachment> attachmentRepo,
            IRepository<TaskPercentage> percentRepo,
-           IRepository<Notification> notificationRepo
+           IRepository<Notification> notificationRepo,
+           IAppUnitOfWork uow
+
 
 
 )
@@ -90,9 +95,10 @@ namespace TaskMangment.Infrastructure.Services
             _attachmentRepo = attachmentRepo;
             _percentRepo = percentRepo;
             _notificationRepo = notificationRepo;
+            _uow = uow;
         }
 
-        public async Task<ApiResponse<PagedResponse<TaskGetDto>>> GetAllAsync(TaskRequest request, int CompanyId, string role, int employeeId)
+        public async Task<ApiResponse<PagedResponse<TaskGetDto>>> GetAllAsync(TaskRequest request, int CompanyId, int roleLevel, int employeeId)
         {
             //string cacheKey =
             //    $"tasks:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}:{CompanyId}:{role}:{employeeId}";
@@ -110,21 +116,34 @@ namespace TaskMangment.Infrastructure.Services
                 .Include(t => t.AssignedBy)
                 .ApplySearch(request.searchKey);
 
-           
+            bool requestedAdvanced =
+     request.Direction.HasValue ||
+     request.TargetEmployeeId.HasValue ||
+     request.PriorityId.HasValue ||
+     request.CreatedFrom.HasValue || request.CreatedTo.HasValue ||
+     request.DueFrom.HasValue || request.DueTo.HasValue;
 
-            if (request.StatusId.HasValue)
+            if (roleLevel == 100 && requestedAdvanced)
             {
-                query = query.Where(t => (int)t.Status == request.StatusId.Value);
+                query = query.ApplyTaskFilters(request, employeeId);
             }
-
-            query = query.Where(t =>
-                t.Assignments.Any(a => a.EmployeeId == employeeId && a.IsActive) ||
-                t.CreatedByEmployeeId == employeeId);
-
-            if (request.EmployeeIds != null && request.EmployeeIds.Any())
+            else
             {
+
+                if (request.StatusId.HasValue)
+                {
+                    query = query.Where(t => (int)t.Status == request.StatusId.Value);
+                }
+
                 query = query.Where(t =>
-                    t.Assignments.Any(a => a.IsActive && request.EmployeeIds.Contains(a.EmployeeId)));
+                    t.Assignments.Any(a => a.EmployeeId == employeeId && a.IsActive) ||
+                    t.CreatedByEmployeeId == employeeId);
+
+                if (request.EmployeeIds != null && request.EmployeeIds.Any())
+                {
+                    query = query.Where(t =>
+                        t.Assignments.Any(a => a.IsActive && request.EmployeeIds.Contains(a.EmployeeId)));
+                }
             }
 
 
@@ -154,6 +173,11 @@ namespace TaskMangment.Infrastructure.Services
                     .ToList();
 
                 dto.AssignedByName = task.AssignedBy?.FullName;
+                dto.CreatedByMe =
+                    roleLevel == 100 ||
+                    roleLevel == 80 ||
+                    task.CreatedByEmployeeId == employeeId;
+
             }
 
             var summary = new TaskSummaryDto
@@ -183,7 +207,7 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<PagedResponse<TaskGetDto>>.Ok(response);
         }
 
-        public async Task<ApiResponse<TaskGetDto>> GetByIdAsync(int id)
+        public async Task<ApiResponse<TaskGetDto>> GetByIdAsync(int id, int roleLevel, int employeeId)
         {
             var task = await _taskRepo.GetAll(t => t.Id == id)
                 .Include(t => t.CreatedBy)
@@ -210,6 +234,7 @@ namespace TaskMangment.Infrastructure.Services
             dto.NumberOfExtensions = numberOfExtensions;
             dto.NewDate = newDate;
 
+
             dto.AssignEmployee = task.Assignments
                 .Where(a => a.IsActive && a.Employee.IsActive)
                 .Select(a => new TaskEmployeeAssignmentDto
@@ -221,6 +246,11 @@ namespace TaskMangment.Infrastructure.Services
 
             dto.AssignedByName = task.AssignedBy?.FullName;
 
+            dto.CreatedByMe =
+    roleLevel == 100 ||
+    roleLevel == 80 ||
+    task.CreatedByEmployeeId == employeeId;
+
             return ApiResponse<TaskGetDto>.Ok(dto);
         }
 
@@ -228,45 +258,119 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<TaskGetDto>> AddAsync(TaskAddEditDto dto, int createdUser, int companyId)
         {
-            var task = _mapper.Map<WorkTask>(dto);
-            task.CreatedByEmployeeId = createdUser;
-            task.CompanyId = companyId;
-            task.AssignedByEmployeeId = createdUser;
-            task.AssignedBy= await _employeeRepo.GetByIDAsync(createdUser);
+            await _uow.BeginTransactionAsync();
 
-            await _taskRepo.AddAsync(task);
-            await _taskRepo.SaveChangesAsync();
-
-            foreach (var empId in dto.AssignedEmployeeIds)
+            try
             {
-                if (!await _employeeRepo.IsExistAsync(empId))
-                    throw new AppException(ErrorCodes.NotFound, StatusCodes.Status400BadRequest);
-
-                var assignment = new TaskAssignment
+                
+                if (!dto.IsShared)
                 {
-                    TaskId = task.Id,
-                    EmployeeId = empId,
-                    IsActive = true
-                };
-                await _assignmentRepo.AddAsync(assignment);
+                    int? firstTaskId = null;
+
+                    var tasks = new List<WorkTask>();
+
+                    foreach (var empId in dto.AssignedEmployeeIds)
+                    {
+                        if (!await _employeeRepo.IsExistAsync(empId))
+                            throw new AppException(ErrorCodes.NotFound, StatusCodes.Status400BadRequest);
+
+                        var t = _mapper.Map<WorkTask>(dto);
+                        t.CreatedByEmployeeId = createdUser;
+                        t.CompanyId = companyId;
+                        t.AssignedByEmployeeId = createdUser;
+                        t.AssignedBy = await _employeeRepo.GetByIDAsync(createdUser);
+
+                        await _taskRepo.AddAsync(t);
+                        tasks.Add(t);
+                    }
+
+                    await _taskRepo.SaveChangesAsync();
+
+                    firstTaskId = tasks.FirstOrDefault()?.Id;
+
+                    for (int i = 0; i < tasks.Count; i++)
+                    {
+                        var assignment = new TaskAssignment
+                        {
+                            TaskId = tasks[i].Id,
+                            EmployeeId = dto.AssignedEmployeeIds[i],
+                            IsActive = true
+                        };
+
+                        await _assignmentRepo.AddAsync(assignment);
+                    }
+
+                    await _assignmentRepo.SaveChangesAsync();
+
+                    await _cache.RemoveAsync("tasks:");
+
+                    for (int i = 0; i < tasks.Count; i++)
+                    {
+                        await _eventDispatcher.PublishAsync(
+                            new TaskAssignedEvent(tasks[i].Id, tasks[i].Title, new List<int> { dto.AssignedEmployeeIds[i] })
+                        );
+                    }
+
+                    var fullTask = await _taskRepo.GetAll(t => t.Id == firstTaskId.Value)
+                                 .Include(t => t.CreatedBy)
+                                 .Include(t => t.AssignedBy)
+                                 .Include(t => t.Assignments).ThenInclude(a => a.Employee)
+                                 .AsNoTracking()
+                                 .FirstOrDefaultAsync();
+
+                    var taskDto = _mapper.Map<TaskGetDto>(fullTask);
+
+                    await _uow.CommitAsync();
+                    return ApiResponse<TaskGetDto>.Ok(taskDto, "Task added successfully");
+                }
+
+                
+                var task = _mapper.Map<WorkTask>(dto);
+                task.CreatedByEmployeeId = createdUser;
+                task.CompanyId = companyId;
+                task.AssignedByEmployeeId = createdUser;
+                task.AssignedBy = await _employeeRepo.GetByIDAsync(createdUser);
+
+                await _taskRepo.AddAsync(task);
+                await _taskRepo.SaveChangesAsync();
+
+                foreach (var empId in dto.AssignedEmployeeIds)
+                {
+                    if (!await _employeeRepo.IsExistAsync(empId))
+                        throw new AppException(ErrorCodes.NotFound, StatusCodes.Status400BadRequest);
+
+                    var assignment = new TaskAssignment
+                    {
+                        TaskId = task.Id,
+                        EmployeeId = empId,
+                        IsActive = true
+                    };
+                    await _assignmentRepo.AddAsync(assignment);
+                }
+                await _assignmentRepo.SaveChangesAsync();
+                await _cache.RemoveAsync("tasks:");
+
+                await _eventDispatcher.PublishAsync(new TaskAssignedEvent(task.Id, task.Title, dto.AssignedEmployeeIds));
+
+                var fullTaskShared = await _taskRepo.GetAll(t => t.Id == task.Id)
+                             .Include(t => t.CreatedBy)
+                             .Include(t => t.AssignedBy)
+                             .Include(t => t.Assignments).ThenInclude(a => a.Employee)
+                             .AsNoTracking()
+                             .FirstOrDefaultAsync();
+
+                var taskDtoShared = _mapper.Map<TaskGetDto>(fullTaskShared); ;
+
+                await _uow.CommitAsync();
+                return ApiResponse<TaskGetDto>.Ok(taskDtoShared, "Task added successfully");
             }
-            await _assignmentRepo.SaveChangesAsync();
-            await _cache.RemoveAsync("tasks:");
-
-            //Notfication
-            await _eventDispatcher.PublishAsync(new TaskAssignedEvent(task.Id, task.Title, dto.AssignedEmployeeIds));
-
-            var fullTask = await _taskRepo.GetAll(t => t.Id == task.Id)
-                         .Include(t => t.CreatedBy)
-                         .Include(t => t.AssignedBy)
-                         .Include(t => t.Assignments).ThenInclude(a => a.Employee)
-                         .AsNoTracking()
-                         .FirstOrDefaultAsync();
-
-            var taskDto = _mapper.Map<TaskGetDto>(fullTask); ;
-
-            return ApiResponse<TaskGetDto>.Ok(taskDto, "Task added successfully");
+            catch
+            {
+                await _uow.RollbackAsync();
+                throw;
+            }
         }
+
         public async Task<ApiResponse<TaskGetDto>> UpdateAsync(int id, TaskAddEditDto dto, int modifierUser)
         {
             var task = await _taskRepo.GetByIDAsync(id);
