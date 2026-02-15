@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using TaskMangment.Application.ApiRequests;
 using TaskMangment.Application.Dashboards.Admin;
 using TaskMangment.Application.Dashboards.Employee;
@@ -135,6 +136,7 @@ namespace TaskMangment.API.Controllers
             return Success(result.Data);
         }
 
+        
         [HttpGet("admin/branches-for-filter")]
         public async Task<IActionResult> GetBranchesForFilter()
         {
