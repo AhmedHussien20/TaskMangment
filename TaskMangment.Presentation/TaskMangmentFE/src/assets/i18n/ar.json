@@ -66,7 +66,8 @@
     "LOADING": "جاري التحميل",
     "APPLY": "تطبيق",
     "ERROR_LOADING_DATA": "حدث خطأ أثناء تحميل البيانات",
-    "SELECT_FROM_DATE" : "اختر وقت البداية "
+    "SELECT_FROM_DATE" : "اختر وقت البداية ",
+    "SELECT": "اختر"
   },
   "validation": {
     "required": "هذا الحقل مطلوب",
@@ -307,7 +308,8 @@
     "PATTERN_INVALID_EMAIL": "ادخل بريد إلكتروني صحيح",
     "INVALID_MOBILE": "الرجاء إدخال رقم جوال صحيح",
     "MOBILE_IS_REQUIRED": "رقم الجوال مطلوب",
-    "MOBILE_CODE_REQUIRED" : "كود البلد مطلوب"
+    "MOBILE_CODE_REQUIRED" : "كود البلد مطلوب",
+    "INVALID_SAUDI_MOBILE" : "برجاء ادخال رقم سعودي متاح"
   },
   "VALIDATION": {
     "REQUIRED": "هذا الحقل مطلوب",
@@ -579,16 +581,19 @@
 
 
     "SHOW_DATA" : "عرض البيانات",
+    "OUTGOING_NEW" : "المهام الصادرة / الجديدة",
     "OUTGOING_INPROGRESS" : "المهام الصادرة / قيد التنفيذ",
     "OUTGOING_AUTOCLOSE" : "المهام الصادرة / مغلقة تلقائيا",
     "OUTGOING_ARCHIVED" : "المهام الصادرة / مؤرشفة",
+    "INCOMING_NEW" : "المهام الواردة / الجديدة",
     "INCOMING_INPROGRESS" : "المهام الواردة / قيد التنفيذ",
     "INCOMING_AUTOCLOSE" : "المهام الواردة / مغلقة تلقائيا",
     "INCOMING_ARCHIVED" : "المهام الواردة / المؤرشفة",
     "CREATED_FROM" : "تاريخ انشاء المهمة من",
     "CREATED_TO" : "تاريخ انشاء المهمة الى" , 
     "DUE_FROM" : "تاريخ تسليم المهمة من",
-    "DUE_TO" : "تاريخ تسليم المهمة الى"
+    "DUE_TO" : "تاريخ تسليم المهمة الى",
+    "NO_ATTACHMENTS" : "لا يوجد مرفقات مع التعليق"
 
   },
   "EMPLOYEE": {
@@ -920,7 +925,9 @@
     "EMPLOYEES" : "الموظف المجذى",
     "CREATED_DATE": "تاريخ الانشاء",
     "EMPLOYEE_TASK_TRACKING" : "متابعة مهام الموظفين",
-    "EMPLOYEE_REQUIRED" : "الموظف مطلوب"  
+    "EMPLOYEE_REQUIRED" : "الموظف مطلوب"  ,
+    "BRANCH_TASK_TRACKING" : "متابعة مهام الفروع",
+    "BRANCH" : "الفرع"
   },
   "LEAVE" : 
   {

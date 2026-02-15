@@ -296,5 +296,67 @@ namespace TaskMangment.Infrastructure.Services
 
             return ApiResponse<bool>.Ok(true, "Comment deleted");
         }
+
+        public async Task<ApiResponse<List<AttachmentVm>>> GetCommentAttachmentsAsync(int commentId)
+        {
+            var list = await _attachmentRepo
+                .GetAll(a =>
+                    a.ReferenceId == commentId &&
+                    a.AttachmentType == AttachmentType.Comment &&
+                    !a.IsDeleted)
+                .OrderByDescending(a => a.UploadedAt)
+                .Select(a => new
+                {
+                    a.Id,
+                    a.FileName,
+                    a.FilePath,
+                    a.ContentType,
+                    a.Size,
+                    a.UploadedAt
+                })
+                .AsNoTracking()
+                .ToListAsync();
+
+            var result = list.Select(a => new AttachmentVm
+            {
+                Id = a.Id,
+                FileName = a.FileName,
+                Url = _blobStorageService.WithSas(a.FilePath),
+                ContentType = a.ContentType,
+                Size = a.Size,
+                UploadedAt = a.UploadedAt
+            }).ToList();
+
+            return ApiResponse<List<AttachmentVm>>.Ok(result);
+        }
+
+        public async Task<(Stream Stream, string ContentType, string FileName)> DownloadAttachmentAsync(int attachmentId)
+        {
+            var att = await _attachmentRepo
+                .GetAll(a => a.Id == attachmentId && !a.IsDeleted)
+                .Select(a => new { a.FileName, a.FilePath, a.ContentType })
+                .AsNoTracking()
+                .FirstOrDefaultAsync();
+
+            if (att == null)
+                throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
+
+            var sasUrl = _blobStorageService.WithSas(att.FilePath);
+
+            var http = new HttpClient();
+            var resp = await http.GetAsync(sasUrl, HttpCompletionOption.ResponseHeadersRead);
+
+            if (!resp.IsSuccessStatusCode)
+                throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
+
+            var stream = await resp.Content.ReadAsStreamAsync();
+            var contentType = att.ContentType
+                ?? resp.Content.Headers.ContentType?.MediaType
+                ?? "application/octet-stream";
+
+            return (stream, contentType, att.FileName);
+        }
+
+
     }
 }

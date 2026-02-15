@@ -241,4 +241,7 @@
   <data name="CLOSEREQUESTALREADYREQUESTED" xml:space="preserve">
     <value>A close request already requested</value>
   </data>
+  <data name="EMPLOYEE_HAS_ACTIVE_TASKS" xml:space="preserve">
+    <value>Employee has active tasks, cannot delete</value>
+  </data>
 </root>

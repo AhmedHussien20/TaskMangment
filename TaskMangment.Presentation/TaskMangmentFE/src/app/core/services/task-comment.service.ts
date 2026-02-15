@@ -3,11 +3,13 @@ import { Injectable } from '@angular/core';
 import { ApiService } from './api.service';
 import { Observable } from 'rxjs';
 import { 
+  AttachmentVm,
   TaskCommentAddEditDto, 
   TaskCommentGetDto, 
   TaskCommentPagedResponse 
 } from '../models/task/task-comment';
 import { BaseResponse } from 'app/models/base.response.model';
+import { ApiResponse } from '../models/event/calendar';
 
 @Injectable({ providedIn: 'root' })
 export class TaskCommentService {
@@ -43,6 +45,17 @@ export class TaskCommentService {
   delete(id: number): Observable<BaseResponse<boolean>> {
     return this.api.delete<BaseResponse<boolean>>(this.service, `${id}`);
   }
+
+  getCommentAttachments(commentId: number): Observable<BaseResponse<AttachmentVm[]>> {
+  return this.api.get<BaseResponse<AttachmentVm[]>>(this.service, `comments/${commentId}/attachments`);
+}
+
+downloadAttachment(attachmentId: number): Observable<Blob> { 
+  return this.api.get(this.service, `comments/${attachmentId}/download`, {
+    responseType: 'blob'
+  });
+}
+
 
   private buildQuery(req: any): string {
     const params = new URLSearchParams();

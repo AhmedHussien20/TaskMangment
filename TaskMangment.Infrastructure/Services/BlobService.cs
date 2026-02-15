@@ -66,9 +66,7 @@ namespace TaskMangment.Infrastructure.Services
         public string WithSas(string urlWithoutSas)
     => string.IsNullOrWhiteSpace(urlWithoutSas) ? urlWithoutSas : urlWithoutSas + _sas;
 
-
-
-
+      
 
     }
 }

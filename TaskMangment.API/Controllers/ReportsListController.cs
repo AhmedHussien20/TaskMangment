@@ -96,6 +96,20 @@ namespace TaskMangment.API.Controllers
             return Success(tasks);
         }
 
+        [HttpGet("branch-tasks")]
+        public async Task<IActionResult> GetBranchTasks(int branchId,DateTime fromDate,DateTime? toDate)
+        {
+            var filter = new BranchTasksReportFilterDto
+            {
+                BranchId = branchId,
+                FromDate = fromDate,
+                ToDate = toDate
+            };
+
+            var data = await _reportService.GetBranchTasksReportAsync(this.CurrentUserId,this.RoleLevel,filter);
+            return Success(data);
+        }
+
 
     }
 }

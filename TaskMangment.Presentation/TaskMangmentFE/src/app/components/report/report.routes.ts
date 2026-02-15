@@ -67,7 +67,13 @@ export const ReportRoutes: Routes = [
     path: 'employee-task-tracking',
     loadComponent: () =>
       import('./employee-task-tracking/employee-task-tracking.component')
-        .then(m => m.EmployeeTaskTrackingComponent)  }
+        .then(m => m.EmployeeTaskTrackingComponent)  },
+
+  {
+    path: 'branch-task-tracking',
+    loadComponent: () =>
+      import('./branch-task-tracking/branch-task-tracking.component')
+        .then(m => m.BranchTaskTrackingComponent)  }
 ];
 
 @NgModule({

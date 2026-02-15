@@ -4,3 +4,12 @@
   word-break: break-word;
   overflow-wrap: anywhere;
 }
+
+
+.attachments-panel {
+  max-width: 520px;
+}
+
+.attachment-row span {
+  direction: ltr; // أسماء الملفات أحيانًا إنجليزي
+}

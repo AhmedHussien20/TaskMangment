@@ -127,13 +127,13 @@ namespace TaskMangment.Infrastructure.Services
                     ErrorCodes.CompanyNotFound,
                     StatusCodes.Status404NotFound);
 
-            var isManagerUsed = await _areaRepository
-                .GetAll(a => a.ManagerEmployeeId == dto.ManagerEmployeeId)
-                .AnyAsync();
+            //var isManagerUsed = await _areaRepository
+            //    .GetAll(a => a.ManagerEmployeeId == dto.ManagerEmployeeId)
+            //    .AnyAsync();
 
-            if (isManagerUsed)
-                throw new AppException(
-                    ErrorCodes.AlreadyAssigned,StatusCodes.Status400BadRequest);
+            //if (isManagerUsed)
+            //    throw new AppException(
+            //        ErrorCodes.AlreadyAssigned,StatusCodes.Status400BadRequest);
 
             var area = _mapper.Map<Area>(dto);
             area.CompanyId = companyId;

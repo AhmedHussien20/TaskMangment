@@ -44,6 +44,10 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IAppUnitOfWork _uow;
         private readonly IRepository<ManagerBranches> _managerBranchesRepo;
         private readonly IUserAccessContextProvider _accessProvider;
+        private readonly IRepository<TaskAssignment> _taskAssignmentRepo;
+        private readonly IRepository<WorkTask> _taskRepo;
+
+
 
         public EmployeeService(
             IRepository<Employee> employeeRepo,
@@ -59,7 +63,10 @@ namespace TaskMangment.Infrastructure.Services
             IWebHostEnvironment env,
             IAppUnitOfWork uow,
             IRepository<ManagerBranches> managerBranchesRepo,
-            IUserAccessContextProvider accessProvider)
+            IUserAccessContextProvider accessProvider,
+            IRepository<TaskAssignment> taskAssignmentRepo,
+            IRepository<WorkTask> taskRepo
+            )
         {
             _employeeRepo = employeeRepo;
             _roleRepo = roleRepo;
@@ -75,6 +82,8 @@ namespace TaskMangment.Infrastructure.Services
             _managerBranchesRepo = managerBranchesRepo;
             _accessProvider = accessProvider;
             _env = env;
+            _taskAssignmentRepo = taskAssignmentRepo;
+            _taskRepo = taskRepo;
         }
 
         public async Task<ApiResponse<PagedResponse<EmployeeGetDto>>> GetAllAsync(EmployeeRequest request,int employeeId,int roleLevel) 
@@ -405,6 +414,20 @@ namespace TaskMangment.Infrastructure.Services
                 throw new AppException(
                     ErrorCodes.EmployeeNotFound,
                     StatusCodes.Status400BadRequest);
+
+            var hasActiveAssignments = await _taskAssignmentRepo
+                .GetAll(a => a.EmployeeId == id && a.IsActive)
+                .AnyAsync();
+            var hasTasks= await _taskRepo.GetAll(a => a.CreatedByEmployeeId == id).AnyAsync();
+
+
+
+            if (hasActiveAssignments || hasTasks)
+                throw new AppException(
+                    ErrorCodes.EmployeeHasActiveTasks,
+                    StatusCodes.Status409Conflict);
+
+
             _employeeRepo.SoftDelete(employee);
             await _employeeRepo.SaveChangesAsync();
             await _cache.RemoveAsync("employees:");

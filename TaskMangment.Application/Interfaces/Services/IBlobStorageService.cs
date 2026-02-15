@@ -12,7 +12,6 @@ namespace TaskMangment.Application.Interfaces.Services
         Task<string> UploadAsync( Stream stream,  string fileName, string contentType, string folder);
         Task DeleteAsync(string blobUrl);
         string WithSas(string urlWithoutSas);
-
     }
 
 }

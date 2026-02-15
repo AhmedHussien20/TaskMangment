@@ -305,7 +305,8 @@
     "PATTERN_INVALID_EMAIL": "Enter a valid email",
     "INVALID_MOBILE": "Please enter a valid mobile number",
     "MOBILE_IS_REQUIRED": "Mobile number is required",
-    "MOBILE_CODE_REQUIRED" : "Country code required"
+    "MOBILE_CODE_REQUIRED" : "Country code required",
+    "INVALID_SAUDI_MOBILE" : "Enter valid saudi mobile "
   },
   "VALIDATION": {
     "REQUIRED": "This field is required",
@@ -570,7 +571,8 @@
   "CREATED_FROM": "Task Created Date From",
   "CREATED_TO": "Task Created Date To",
   "DUE_FROM": "Task Due Date From",
-  "DUE_TO": "Task Due Date To"
+  "DUE_TO": "Task Due Date To",
+  "NO_ATTACHMENTS" : "their is no attachments with comment"
   },
   "EMPLOYEE": {
     "LIST_TITLE": "Employee List",
@@ -902,7 +904,9 @@
     "EMPLOYEES" : "deducted employee",
      "CREATED_DATE": "Created date",
     "EMPLOYEE_TASK_TRACKING" : "Employee Tasks Tracking",
-    "EMPLOYEE_REQUIRED" : "Employee is required"
+    "EMPLOYEE_REQUIRED" : "Employee is required",
+    "BRANCH_TASK_TRACKING" : "Branchs tasks tracking",
+    "BRANCH" : "Branch"
 
 
   },

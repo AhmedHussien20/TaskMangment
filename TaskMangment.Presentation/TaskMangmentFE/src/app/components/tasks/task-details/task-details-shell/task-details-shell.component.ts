@@ -46,13 +46,18 @@ export class TaskDetailsShellComponent implements OnInit {
   taskInfo: TaskGet | null = null;
 
  ngOnInit(): void {
-  this.showAdminPages = this.createdByMe; 
+
+  const roleLevel = this.auth.getRoleLevel();
+
+  this.showAdminPages = this.createdByMe || roleLevel >= 80;
+
   console.log(this.showAdminPages);
 
   if (this.taskId) {
     this.loadTask();
   }
 }
+
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['taskId'] && this.taskId) {
@@ -62,17 +67,21 @@ export class TaskDetailsShellComponent implements OnInit {
 
 
  loadTask() {
-    this.taskService.getById(this.taskId).subscribe({
-      next: res => {
-        this.taskInfo = res.data;
-        this.requireUploadFile = this.taskInfo.requireUploadFile;
-        console.log(`dddd: ${this.createdByMe}`)
-      },
-      error: err => console.error('Failed to load task', err)
-    });
+  this.taskService.getById(this.taskId).subscribe({
+    next: res => {
+      this.taskInfo = res.data;
+      this.requireUploadFile = this.taskInfo.requireUploadFile;
+      this.createdByMe = !!this.taskInfo.createdByMe;
 
-    
-  }
+      const roleLevel = this.auth.getRoleLevel();
+      this.showAdminPages = this.createdByMe || roleLevel >= 80;
+
+      console.log('createdByMe from API:', this.createdByMe);
+      console.log('showAdminPages:', this.showAdminPages);
+    },
+    error: err => console.error('Failed to load task', err)
+  });
+}
 
 get isTaskClosed(): boolean {
   const status = this.taskInfo?.status;

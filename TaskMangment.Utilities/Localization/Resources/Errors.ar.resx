@@ -240,4 +240,7 @@
   <data name="CLOSEREQUESTALREADYREQUESTED" xml:space="preserve">
     <value>هناك طلب اغلاق علي المهمة بالفعل</value>
   </data>
+  <data name="EMPLOYEE_HAS_ACTIVE_TASKS" xml:space="preserve">
+    <value>الموظف معين علي مهام نشطة لا يمكن حذفه</value>
+  </data>
 </root>

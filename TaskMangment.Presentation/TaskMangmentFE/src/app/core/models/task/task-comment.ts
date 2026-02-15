@@ -21,3 +21,12 @@ export interface TaskCommentPagedResponse {
   pageIndex: number;
   pageSize: number;
 }
+
+export interface AttachmentVm {
+  id: number;
+  fileName: string;
+  url: string;     
+  contentType?: string;
+  size?: number;
+  uploadedAt: string;
+}

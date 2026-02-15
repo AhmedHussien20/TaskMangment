@@ -224,5 +224,38 @@ namespace TaskMangment.API.Controllers
         }
 
 
+        [HttpGet("branch-tasks/pdf")]
+        public async Task<IActionResult> GetBranchTasksReportPdf(ExportType exportType,int branchId,DateTime fromDate,DateTime? toDate)
+        {
+            var effectiveToDate = toDate ?? DateTime.UtcNow;
+            string branchName = "-";
+            var filter = new BranchTasksReportFilterDto
+            {
+                BranchId = branchId,
+                FromDate = fromDate,
+                ToDate = effectiveToDate
+            };
+
+            var data = await _reportService.GetBranchTasksReportAsync(
+                this.CurrentUserId,
+                this.RoleLevel,
+                filter);
+
+            if (exportType == ExportType.Pdf)
+            {
+                var doc = new BranchTasksPdfReport(data, branchName, fromDate, effectiveToDate);
+                var pdfBytes = doc.GeneratePdf();
+                return File(pdfBytes, "application/pdf", "branch-tasks-report.pdf");
+            }
+
+            var xlsxBytes = BranchTasksExcelReport.Build(data, branchName, fromDate, effectiveToDate);
+            return File(
+                xlsxBytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "branch-tasks-report.xlsx");
+        }
+
+
+
     }
 }

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { NgbDropdownModule, NgbPaginationModule, NgbTooltipModule } from '@ng-bootstrap/ng-bootstrap';
 import { NgSelectModule } from '@ng-select/ng-select';
 import { TranslateModule } from '@ngx-translate/core';
+import { EmployeeNgSelectComponent } from 'app/components/employee-select/employee-select.component';
 import { MyDatePipe } from 'app/components/utilities/pipline/MyDatePipe';
 import { SearchCriteria } from 'app/core/models/search-criteria.model';
 import { Subject } from 'rxjs';
@@ -55,7 +56,7 @@ interface HasId {
   imports: [
     CommonModule,
     FormsModule,
-    NgbPaginationModule, TranslateModule, MyDatePipe, NgbTooltipModule, NgSelectModule,NgbDropdownModule
+    NgbPaginationModule, TranslateModule, MyDatePipe, NgbTooltipModule, NgSelectModule,NgbDropdownModule,EmployeeNgSelectComponent
   ],
   styleUrls: ['./generic-table.component.scss']
 })
@@ -100,7 +101,7 @@ export class GenericTableComponent<T> implements OnDestroy{
   @Input() searchCriteria!: SearchCriteria<T>;
   @Input() labels: { [key: string]: string } = {};
   @Input() statusOptions: { id: any; name: string }[] = [];
-  @Input() employeeOptions: { id: number; name: string }[] = [];
+ // @Input() employeeOptions: { id: number; name: string }[] = [];
   // callback من الـ parent (زى Expiry)
   @Input() onSearch?: (criteria: SearchCriteria<T>) => void;
   @Input() onAddClick?: () => void;
@@ -212,15 +213,22 @@ getExtraOptions(key: string) {
       case 'statusId':
         return this.statusOptions;
 
-      case 'employeeIds':
-        return this.employeeOptions;
-
 case 'isAssigned':                 
       return this.statusOptions; 
       default:
         return [];
     }
   }
+getSelectedEmployeeId(): number | undefined {
+  const ids = (this.searchCriteria as any)?.['employeeIds'];
+  if (Array.isArray(ids) && ids.length > 0) return Number(ids[0]);
+  return undefined;
+}
+
+setSelectedEmployeeId(id: number | undefined) {
+  const value = (id === null || id === undefined) ? [] : [Number(id)];
+  this.onFilterChange('employeeIds', value);
+}
 
   // ---------- Filters ----------
 
@@ -248,8 +256,8 @@ case 'isAssigned':
   }
 
   isMultiSelect(key: string): boolean {
-    if (key === 'employeeIds') return true;   // multi
-    if (key === 'statusId') return false;     // single
+    if (key === 'employeeIds') return true; 
+    if (key === 'statusId') return false; 
     return false;
   }
 
@@ -270,7 +278,7 @@ case 'isAssigned':
     (item as any).selected = value;
   }
   clearFilters() {
-    const ignore = ['sortColumn', 'sortDirection', 'pageIndex', 'pageSize'];
+    const ignore = ['sortColumn', 'sortDirection', 'pageIndex', 'pageSize', 'targetEmployeeId', 'direction'];
 
     const filterTypes = (this.searchCriteria?.filterTypes || {}) as Record<string, string>;
 
@@ -332,7 +340,6 @@ case 'isAssigned':
   }
 
   updateSelectedItems() {
-    // لو حبيت تبعت selectedItems للـ parent بعدين
   }
 
   // ---------- Pagination ----------

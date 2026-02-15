@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using TaskMangment.Application.Common.ApiRequests.Task;
 using TaskMangment.Application.DTOs.TaskDTOs;
 using TaskMangment.Application.Interfaces.Services;
+using TaskMangment.Infrastructure.Services;
 
 namespace TaskMangment.API.Controllers
 {
@@ -52,6 +53,21 @@ namespace TaskMangment.API.Controllers
             var result = await _service.DeleteAsync(id);
             return Success(true);
         }
+
+        [HttpGet("comments/{commentId}/attachments")]
+        public async Task<IActionResult> GetCommentAttachments(int commentId)
+        {
+            var res = await _service.GetCommentAttachmentsAsync(commentId);
+            return Ok(res);
+        }
+
+        [HttpGet("comments/{attachmentId}/download")]
+        public async Task<IActionResult> DownloadAttachment(int attachmentId)
+        {
+            var file = await _service.DownloadAttachmentAsync(attachmentId);
+            return File(file.Stream, file.ContentType, file.FileName);
+        }
+
 
     }
 }

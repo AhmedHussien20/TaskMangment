@@ -151,9 +151,7 @@ export class TaskListComponent implements OnInit {
     const roleLevel = this.auth.getRoleLevel();
     this.showEmployeeFilter = roleLevel >= 50;
 
-    if (this.showEmployeeFilter) {
-      this.loadEmployees();
-    }
+    this.showEmployeeFilter = roleLevel >= 50;
 
     this.status = this.statusOptions;
 
@@ -165,24 +163,7 @@ export class TaskListComponent implements OnInit {
     this.loadData();
   }
 
-  loadEmployees() {
-    const request = {
-      searchKey: '',
-      pageIndex: 1,
-      pageSize: 1000,
-      sortColumn: 'Id',
-      sortDirection: 'DESC'
-    };
-
-    this.employeeService.getAll(request).subscribe(res => {
-      this.employees = (res?.data?.data ?? []).map((e: any) => ({
-        id: e.id,
-        name: e.fullName,
-        
-      }));
-    });
-  }
-
+  
   loadData() {
     this.isLoading = true;
     this.taskService.getAll(this.searchCriteria).subscribe({
@@ -374,13 +355,14 @@ disableDeleteRow = (row: TaskGet) => {
 
 deepSearchTitleKey: string = 'TASK.DEEP_SEARCH';
 extraMenuItems = [
-  // صادرة
+  { label: 'TASK.OUTGOING_NEW', value: { direction: 2, statusId: 1 } },
   { label: 'TASK.OUTGOING_INPROGRESS', value: { direction: 2, statusId: 2 } },
   { label: 'TASK.OUTGOING_AUTOCLOSE',  value: { direction: 2, statusId: 5 } },
   { label: 'TASK.OUTGOING_ARCHIVED',   value: { direction: 2, statusId: 4 } },
 
   { divider: true, label: '', value: null },
 
+  { label: 'TASK.INCOMING_NEW', value: { direction: 1, statusId: 1 } },
   { label: 'TASK.INCOMING_INPROGRESS', value: { direction: 1, statusId: 2 } },
   { label: 'TASK.INCOMING_AUTOCLOSE',  value: { direction: 1, statusId: 5 } },
   { label: 'TASK.INCOMING_ARCHIVED',   value: { direction: 1, statusId: 4 } },
@@ -419,4 +401,6 @@ extraMenuItems = [
     modal.close(filters);
     this.loadData();
   }
+
+  
 }

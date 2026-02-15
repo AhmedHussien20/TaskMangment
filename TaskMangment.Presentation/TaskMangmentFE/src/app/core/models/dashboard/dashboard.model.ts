@@ -88,6 +88,8 @@ export interface TaskStatusDto {
     statusText : string;
     dueDate: Date | null;
     employees: string[];
+    createdByMe: boolean
+
 }
 
 export interface AdminKpisExtendedDto {

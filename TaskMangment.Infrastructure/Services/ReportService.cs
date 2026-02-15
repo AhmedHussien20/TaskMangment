@@ -794,5 +794,103 @@ namespace TaskMangment.Infrastructure.Services
             return result;
         }
 
+
+        public async Task<List<BranchTaskReportRowDto>> GetBranchTasksReportAsync(
+     int currentEmployeeId,
+     int roleLevel,
+     BranchTasksReportFilterDto dto)
+        {
+            var effectiveTo = dto.ToDate ?? DateTime.Now;
+
+            var (scopedEmployeeIds, canViewAllTasks) =
+                await GetScopedEmployeeIdsAsync(currentEmployeeId, roleLevel);
+
+            var flat = await _context.TaskAssignments
+                .Include(a => a.Task).ThenInclude(t => t.AssignedBy)
+                .Include(a => a.Employee)
+                .Where(a => a.IsActive)
+                .Where(a => scopedEmployeeIds.Contains(a.EmployeeId))
+                .Where(a => a.Employee.BranchId == dto.BranchId)
+                .Where(a => a.Task.CreatedDate >= dto.FromDate && a.Task.CreatedDate <= effectiveTo)
+                .Where(a => canViewAllTasks ? true : a.EmployeeId == currentEmployeeId)
+                .Select(a => new
+                {
+                    a.TaskId,
+                    a.Task.Title,
+                    AssignedBy = a.Task.AssignedBy != null ? a.Task.AssignedBy.FullName : "غير معروف",
+                    a.Task.CreatedDate,
+                    OriginalDueDate = a.Task.DueDate,
+                    Status = a.Task.Status,
+
+                    EmployeeId = a.EmployeeId,
+                    EmployeeName = a.Employee != null ? a.Employee.FullName : "غير معروف",
+
+                    ExtensionRequestsCount = _context.TaskExtensionRequests
+                        .Count(r => r.TaskId == a.TaskId && !r.IsDeleted),
+
+                    LastApprovedNewDueDate = _context.TaskExtensionRequests
+                        .Where(r => r.TaskId == a.TaskId
+                                    && !r.IsDeleted
+                                    && r.Status == ExtensionRequestStatus.Approved)
+                        .OrderByDescending(r => r.CreatedDate)
+                        .Select(r => (DateTime?)r.NewDueDate)
+                        .FirstOrDefault()
+                })
+                .AsNoTracking()
+                .ToListAsync();
+
+            var result = flat
+                .GroupBy(x => new
+                {
+                    x.TaskId,
+                    x.Title,
+                    x.AssignedBy,
+                    x.CreatedDate,
+                    x.OriginalDueDate,
+                    x.Status
+                })
+                .Select(g =>
+                {
+                    var employees = g
+                        .Select(e => new EmployeeMiniDto { Id = e.EmployeeId, Name = e.EmployeeName })
+                        .GroupBy(e => e.Id)
+                        .Select(gg => gg.First())
+                        .ToList();
+
+                    var lastApproved = g.Select(x => x.LastApprovedNewDueDate).FirstOrDefault();
+                    var extCount = g.Select(x => x.ExtensionRequestsCount).FirstOrDefault();
+
+                    return new BranchTaskReportRowDto
+                    {
+                        TaskId = g.Key.TaskId,
+
+                        Title = g.Key.Title,
+                        AssignedBy = g.Key.AssignedBy,
+                        CreatedDate = g.Key.CreatedDate,
+
+                        OriginalDueDate = g.Key.OriginalDueDate,
+                        EffectiveDueDate = lastApproved ?? g.Key.OriginalDueDate,
+                        ExtensionRequestsCount = extCount,
+
+                        StatusText =
+                            g.Key.Status == WorkTaskStatus.Archived ? "مؤرشفة" :
+                            g.Key.Status == WorkTaskStatus.Closed ? "مغلقة" :
+                            g.Key.Status == WorkTaskStatus.AutoClose ? "مغلقة تلقائيًا" :
+                            g.Key.Status == WorkTaskStatus.InProgress ? "قيد التنفيذ" :
+                            g.Key.Status == WorkTaskStatus.New ? "جديدة" :
+                            "غير محدد",
+
+                        Employees = employees
+                    };
+                })
+                .OrderBy(x => x.Title)
+                .ThenBy(x => x.CreatedDate)
+                .ThenBy(x => x.TaskId)
+                .ToList();
+
+            return result;
+        }
+
+
     }
 }

@@ -26,6 +26,7 @@ export class EmployeeNgSelectComponent implements OnInit {
   @Input() placeholderKey = 'FORM.SELECT';
   @Input() disabled = false;
   @Input() clearable = true;
+@Input() showLabel: boolean = true;
 
   @Input() pageSize = 20;
 

@@ -120,17 +120,22 @@ RecurringJob.AddOrUpdate<ProcessPendingEmailsJob>(
 //    job => job.ExecuteAsync(),
 //    Cron.Minutely);
 
+var saudiTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Arabian Standard Time");
+
 RecurringJob.AddOrUpdate<PenaltyForMissingCommentsJob>(
-      "penalty-missing-comments",
+    "penalty-missing-comments",
     job => job.ExecuteAsync(),
-    Cron.Hourly
+    Cron.Daily(8, 0),
+    saudiTimeZone
 );
 
 RecurringJob.AddOrUpdate<ArchiveOverdueTasksJob>(
-               "archive-overdue-tasks",
-               job => job.ExecuteAsync(),
-               Cron.Hourly
-               );
+    "archive-overdue-tasks",
+    job => job.ExecuteAsync(),
+    Cron.Daily(8, 0),
+    saudiTimeZone
+);
+
 RecurringJob.AddOrUpdate<TaskDueTodayEmailsProcessorJob>(
                "task-due-today-email-job",
                job => job.ExecuteAsync(),

@@ -114,3 +114,23 @@ export interface EmployeeTaskTrackingReportDto {
   employeeId: number;
   employeeName: string;
 }
+
+export interface EmployeeMiniDto {
+  id: number;
+  name: string;
+}
+
+export interface BranchTaskReportRowDto {
+  taskId: number;
+  mergedTaskIds: number[];
+  title: string;
+  assignedBy: string;
+  createdDate: string;         
+  originalDueDate?: string | null;
+  effectiveDueDate?: string | null;
+  extensionRequestsCount: number;
+  statusText: string;
+  employees: EmployeeMiniDto[];
+  isShared: boolean;
+  isMergedByTitle: boolean;
+}

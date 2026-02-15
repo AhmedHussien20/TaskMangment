@@ -1,9 +1,10 @@
 import { Component } from '@angular/core';
-import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { GenericTableComponent, TableColumn } from 'app/shared/components/generic-table/generic-table.component';
 import { MyTaskDto } from 'app/core/models/dashboard/dashboard.model';
+import { TaskDetailsShellComponent } from 'app/components/tasks/task-details/task-details-shell/task-details-shell.component';
 
 @Component({
   standalone: true,
@@ -30,7 +31,10 @@ import { MyTaskDto } from 'app/core/models/dashboard/dashboard.model';
         [showEditButton]="false"
         [showDeleteButton]="false"
         [showFilters]="false"
-        [showPagination]="false">
+        [showPagination]="false"
+        [rowClickable]="true" 
+        [rowClickableCondition]="checkRowClickable"
+        (edit)="onEdit($event)">
       </app-generic-table>
     </div>
 
@@ -64,7 +68,7 @@ export class EmployeeTasksPopupComponent {
 
   rows: any[] = [];
 
-  constructor(public activeModal: NgbActiveModal) {}
+  constructor(public activeModal: NgbActiveModal, private modalService: NgbModal) {}
 
   ngOnInit() {
     this.mapRows();
@@ -72,10 +76,30 @@ export class EmployeeTasksPopupComponent {
 
   private mapRows() {
     this.rows = this.tasks.map(t => ({
+      id: t.taskId,        
+    taskId: t.taskId,   
       task: `[${t.taskId}] ${t.title}`,
       statusText: t.status,
       dueDate: t.dueDate,
       progressPercent: t.progressPercent
     }));
   }
+
+  checkRowClickable(item: any): boolean {
+    console.log('Row:', item);    
+    return true;
+  }
+  onEdit(id: number) {
+  const task = this.rows.find(x => x.id === id);
+
+  const modalRef = this.modalService.open(TaskDetailsShellComponent, {
+    size: 'xl',
+    backdrop: 'static',
+    scrollable: true
+  });
+
+  modalRef.componentInstance.taskId = id;
+  modalRef.componentInstance.readonly = true;
+}
+  
 }

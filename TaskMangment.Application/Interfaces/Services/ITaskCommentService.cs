@@ -17,5 +17,8 @@ namespace TaskMangment.Application.Interfaces.Services
         Task<ApiResponse<TaskCommentGetDto>> AddAsync(int taskId, int employeeId,int roleLevel, TaskCommentAddEditDto dto);
         Task<ApiResponse<TaskCommentGetDto>> UpdateAsync(int id, TaskCommentAddEditDto dto);
         Task<ApiResponse<bool>> DeleteAsync(int id);
+
+        Task<ApiResponse<List<AttachmentVm>>> GetCommentAttachmentsAsync(int commentId);
+        Task<(Stream Stream, string ContentType, string FileName)> DownloadAttachmentAsync(int attachmentId);
     }
 }

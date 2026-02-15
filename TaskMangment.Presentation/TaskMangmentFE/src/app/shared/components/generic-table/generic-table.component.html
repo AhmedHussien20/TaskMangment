@@ -54,67 +54,71 @@
 
 
                         <!-- DROPDOWN -->
-                        <ng-select *ngSwitchCase="'dropdown'" [items]="getDropdownOptions(key)" bindValue="id"
-                            [ngModel]="searchCriteria[key]" (ngModelChange)="onFilterChange(key, $event)"
-                            [multiple]="isMultiSelect(key)" [closeOnSelect]="!isMultiSelect(key)" [clearable]="true">
+                        <ng-container *ngSwitchCase="'dropdown'">
 
-                            <ng-template ng-option-tmp let-item="item">
-                                {{ item.name | translate }}
+                            <ng-container *ngIf="key === 'employeeIds'; else normalDropdown">
+                                <app-employee-ng-select [showLabel]="false"
+                                    [selectedEmployeeId]="getSelectedEmployeeId()"
+                                    (selectedEmployeeIdChange)="setSelectedEmployeeId($event)">
+                                </app-employee-ng-select>
+                            </ng-container>
+
+                            <ng-template #normalDropdown>
+                                <ng-select [items]="getDropdownOptions(key)" bindValue="id"
+                                    [ngModel]="searchCriteria[key]" (ngModelChange)="onFilterChange(key, $event)"
+                                    [multiple]="isMultiSelect(key)" [closeOnSelect]="!isMultiSelect(key)"
+                                    [clearable]="true">
+
+                                    <ng-template ng-option-tmp let-item="item">
+                                        {{ item.name | translate }}
+                                    </ng-template>
+
+                                </ng-select>
                             </ng-template>
 
-                            <ng-template ng-label-tmp let-item="item">
-                                {{ item.name | translate }}
-                            </ng-template>
-                        </ng-select>
+                        </ng-container>
 
 
                         <!-- DATE -->
                         <input *ngSwitchCase="'date'" type="date" class="form-control" [ngModel]="searchCriteria[key]"
                             (ngModelChange)="onFilterChange(key, $event)" />
 
-                            
+
 
                     </ng-container>
 
-                    
+
                 </div>
 
             </div>
 
             <div class="filter-actions">
                 <!-- EXTRA DROPDOWN -->
-<div *ngIf="showExtraButton" ngbDropdown class="d-inline-block">
-  <button
-    type="button"
-    class="btn btn-dark"
-    ngbDropdownToggle>
-    {{ 'TASK.SHOW_DATA' | translate }}
-  </button>
+                <div *ngIf="showExtraButton" ngbDropdown class="d-inline-block">
+                    <button type="button" class="btn btn-dark" ngbDropdownToggle>
+                        {{ 'TASK.SHOW_DATA' | translate }}
+                    </button>
 
-  <div ngbDropdownMenu class="dropdown-menu-end" style="min-width: 200px; ">
+                    <div ngbDropdownMenu class="dropdown-menu-end" style="min-width: 200px; ">
 
-    <ng-container *ngFor="let item of extraMenuItems">
-      <div *ngIf="item.divider" class="dropdown-divider"></div>
-      <button
-        *ngIf="!item.divider"
-        type="button"
-        class="dropdown-item d-flex justify-content-between align-items-center"
-        
-        [disabled]="item.disabled"
-        (click)="onExtraMenuItemClick(item)">
+                        <ng-container *ngFor="let item of extraMenuItems">
+                            <div *ngIf="item.divider" class="dropdown-divider"></div>
+                            <button *ngIf="!item.divider" type="button"
+                                class="dropdown-item d-flex justify-content-between align-items-center"
+                                [disabled]="item.disabled" (click)="onExtraMenuItemClick(item)">
 
-        <span>{{ item.label | translate }}</span>
+                                <span>{{ item.label | translate }}</span>
 
-        <i *ngIf="item.iconClass" [class]="item.iconClass"></i>
-      </button>
-    </ng-container>
+                                <i *ngIf="item.iconClass" [class]="item.iconClass"></i>
+                            </button>
+                        </ng-container>
 
-    <div *ngIf="!extraMenuItems?.length" class="dropdown-item text-muted">
-      {{ 'COMMON.NO_DATA' | translate }}
-    </div>
+                        <div *ngIf="!extraMenuItems?.length" class="dropdown-item text-muted">
+                            {{ 'COMMON.NO_DATA' | translate }}
+                        </div>
 
-  </div>
-</div>
+                    </div>
+                </div>
 
 
                 <button class="btn btn-primary btn-sm me-2" (click)="applyFilters()">
@@ -235,7 +239,7 @@
                         <ng-container *ngSwitchCase="'seen'">
                             <span class="badge seen-badge"
                                 [ngClass]="getValue(item, col.key) ? 'seen-true' : 'seen-false'">
-                                <i class="bi bi-check2-circle"></i>                
+                                <i class="bi bi-check2-circle"></i>
                             </span>
                         </ng-container>
 

@@ -28,4 +28,25 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
 
         public int AttachmentCount { get; set; }
     }
+
+    public class AttachmentVm
+    {
+        public int Id { get; set; }
+        public string FileName { get; set; } = "";
+        public string Url { get; set; } = "";
+
+        public string UrlDownload { get; set; } = "";
+        public string? ContentType { get; set; }
+        public long? Size { get; set; }
+        public DateTime UploadedAt { get; set; }
+    }
+
+    public class DownloadFileResultVm
+    {
+        public byte[] Bytes { get; set; } = Array.Empty<byte>();
+        public string FileName { get; set; } = "file";
+        public string ContentType { get; set; } = "application/octet-stream";
+    }
+
+
 }

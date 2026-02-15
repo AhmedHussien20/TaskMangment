@@ -22,6 +22,8 @@ namespace TaskMangment.Application.Interfaces.Services
         Task<TaskDiscountAuditReportDto> GetTaskDiscountAuditReportAsync(int currentEmployeeId, int roleLevel, TaskDiscountReportFilterDto dto);
 
         Task<List<EmployeeTaskTrackingReportDto>> GetEmployeeTaskTrackingAsync(int currentEmployeeId,int roleLevel,int? employeeId,DateTime fromDate,DateTime? toDate = null);
+        Task<List<BranchTaskReportRowDto>> GetBranchTasksReportAsync(int currentEmployeeId,int roleLevel, BranchTasksReportFilterDto dto);
+
 
     }
 }

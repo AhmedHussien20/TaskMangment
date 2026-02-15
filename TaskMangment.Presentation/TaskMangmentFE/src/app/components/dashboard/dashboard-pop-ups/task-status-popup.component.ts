@@ -87,7 +87,8 @@ export class TaskStatusPopupComponent {
     task: `[${t.taskId}] ${t.title}`,
     statusText: t.statusText,
     dueDate: t.dueDate,
-    employees: t.employees.join('، ')
+    employees: t.employees.join('، '),
+    createdByMe: t.createdByMe,
   }));
 }
 
@@ -110,6 +111,8 @@ onEdit(id: number) {
 
     modalRef.componentInstance.taskId = id;
     modalRef.componentInstance.readonly = true;
+    modalRef.componentInstance.createdByMe = task?.createdByMe ?? false;
+
   }
   
 

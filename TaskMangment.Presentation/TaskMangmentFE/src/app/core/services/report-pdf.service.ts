@@ -53,16 +53,38 @@ export class ReportPdfService {
   return this.api.getBlob(this.service, `employee-task-tracking/pdf${query}`);
 }
 
+getBranchTasksPdf(
+  exportType: ExportType,
+  branchId: number,
+  fromDate: string,
+  toDate?: string
+): Observable<Blob> {
+  const query = this.buildQuery({ exportType, branchId, fromDate, toDate });
+  return this.api.getBlob(this.service, `branch-tasks/pdf${query}`);
+}
 
-  private buildQuery(params: { fromDate?: string; toDate?: string; status?: string; employeeId?: number; movementType?: number; reportTitle?: string;exportType?: ExportType  }): string {
+
+ private buildQuery(params: {
+  fromDate?: string;
+  toDate?: string;
+  status?: string;
+  employeeId?: number;
+  movementType?: number;
+  reportTitle?: string;
+  exportType?: ExportType;
+  branchId?: number;           
+}): string {
   const q: string[] = [];
+
   if (params.fromDate) q.push(`fromDate=${encodeURIComponent(params.fromDate)}`);
   if (params.toDate) q.push(`toDate=${encodeURIComponent(params.toDate)}`);
   if (params.status) q.push(`status=${encodeURIComponent(params.status)}`);
   if (params.employeeId !== undefined) q.push(`employeeId=${params.employeeId}`);
+  if (params.branchId !== undefined) q.push(`branchId=${params.branchId}`);   // ✅ NEW
   if (params.movementType !== undefined) q.push(`movementType=${params.movementType}`);
   if (params.exportType !== undefined) q.push(`exportType=${params.exportType}`);
   if (params.reportTitle) q.push(`reportTitle=${encodeURIComponent(params.reportTitle)}`);
+
   return q.length ? `?${q.join('&')}` : '';
 }
 }

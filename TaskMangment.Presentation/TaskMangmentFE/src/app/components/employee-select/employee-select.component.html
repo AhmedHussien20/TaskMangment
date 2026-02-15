@@ -1,5 +1,7 @@
 <div class="d-flex flex-column">
-  <label class="form-label ">{{ labelKey | translate }}</label>
+<label *ngIf="showLabel" class="form-label">
+  {{ labelKey | translate }}
+</label>
 
   <ng-select
    style="min-width:260px"

@@ -105,6 +105,13 @@ export class ReportsDashboardComponent implements OnInit { // إضافة impleme
       svg: this.REPORT_ICON_SVG,
       clickable: true,
       url: '/report/employee-task-tracking'
+    },
+    {
+      title: 'REPORTS.BRANCH_TASK_TRACKING',
+      value: '',
+      svg: this.REPORT_ICON_SVG,
+      clickable: true,
+      url: '/report/branch-task-tracking'
     }
   ];
 
@@ -126,7 +133,8 @@ export class ReportsDashboardComponent implements OnInit { // إضافة impleme
         const restrictedCards = [
           'REPORTS.TOP_COMMENTER',
           'REPORTS.MOST_ASSIGNED',
-          'REPORTS.ARCHIVED'
+          'REPORTS.ARCHIVED',
+          'REPORTS.BRANCH_TASK_TRACKING'
 
         ];
         
