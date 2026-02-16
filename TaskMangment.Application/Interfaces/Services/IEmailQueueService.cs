@@ -10,5 +10,8 @@ namespace TaskMangment.Application.Interfaces.Services
     public interface IEmailQueueService
     {
         Task QueueAsync(EmailQueueRequest request);
+
+        Task QueueDirectAsync(string toEmail, string subject, string htmlBody, DateTime? scheduledAt = null);
+
     }
 }

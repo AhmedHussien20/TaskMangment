@@ -58,6 +58,7 @@ namespace TaskMangment.API
                 //builder.Services.AddScoped<IBlobStorageService, BlobStorageService>();
                 //builder.Services.AddScoped<AttachmentBlobMigrationJob>();
 
+
                 // SignalR
                 builder.Services.AddSignalR();
 

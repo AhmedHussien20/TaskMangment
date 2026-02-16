@@ -120,7 +120,6 @@ namespace TaskMangment.Hangfire.Jobs
                     .ToListAsync()
                 );
 
-                // ✅ NEW BUSINESS:
                 // لو المهمة Shared وحد قدم طلب اغلاق => مفيش خصم على أي حد على المهمة دي (ولا حتى creator)
                 var skipAllDiscountsBecauseSharedCloseRequest =
                     task.IsShared && closeRequestIds.Any();

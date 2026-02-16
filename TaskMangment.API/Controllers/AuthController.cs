@@ -21,6 +21,7 @@ public class AuthController : BaseController
     {
         var result = await _auth.LoginAsync(request);
         return Success(result.Data);
+
     }
     [AllowAnonymous]
     [HttpPost("forgot-password")]

@@ -61,6 +61,18 @@ namespace TaskMangment.Hangfire.Jobs
 
         private async Task SendSingleQueuedEmailAsync(EmailQueue email)
         {
+            if (email.TemplateKey == "DeveloperErrorAlert")
+            {
+                var raw = email.ErrorMessage ?? "";
+                var splitIndex = raw.IndexOf("\n\n", StringComparison.Ordinal);
+
+                var subject = splitIndex > -1 ? raw.Substring(0, splitIndex) : "Developer Error Alert";
+                var body = splitIndex > -1 ? raw.Substring(splitIndex + 2) : raw;
+
+                await _emailService.SendEmailAsync(email.ToEmail!, subject, body);
+                return;
+            }
+
             var rendered = await _renderer.RenderAsync(
                 email.TemplateKey,
                 email.ReferenceType,
@@ -71,16 +83,17 @@ namespace TaskMangment.Hangfire.Jobs
             {
                 var pdfBytes = await _offerPdfService.GenerateOfferPdfBytesAsync(email.ReferenceId);
                 var attachments = new List<EmailAttachment>
-        {
-            new EmailAttachment
-            {
-                Name = $"Offer-{email.ReferenceId}.pdf",
-                ContentBase64 = Convert.ToBase64String(pdfBytes)
-            }
-        };
+                {
+                         new EmailAttachment
+                         {
+                             Name = $"Offer-{email.ReferenceId}.pdf",
+                             ContentBase64 = Convert.ToBase64String(pdfBytes)
+                         }
+                };
 
                 await _emailService.SendEmailAsync(email.ToEmail!, rendered.Subject, rendered.Body, attachments);
             }
+
             else
             {
                 await _emailService.SendEmailAsync(email.ToEmail!, rendered.Subject, rendered.Body);

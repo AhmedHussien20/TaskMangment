@@ -14,9 +14,10 @@ namespace TaskMangment.Hangfire.Jobs
         private readonly IDomainEventDispatcher _eventDispatcher;
         private readonly IGetHigherManager _getHigherManager;
 
-
-        public PenaltyForMissingCommentsJob(AppDbContext db, IDomainEventDispatcher eventDispatcher,IGetHigherManager getHigherManager
-)
+        public PenaltyForMissingCommentsJob(
+            AppDbContext db,
+            IDomainEventDispatcher eventDispatcher,
+            IGetHigherManager getHigherManager)
         {
             _db = db;
             _eventDispatcher = eventDispatcher;
@@ -25,12 +26,15 @@ namespace TaskMangment.Hangfire.Jobs
 
         public async Task ExecuteAsync()
         {
-            var today = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime.UtcNow, "Arab Standard Time").Date;
+            var tz = TimeZoneInfo.FindSystemTimeZoneById("Arab Standard Time");
+            var today = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, tz).Date;
             var yesterday = today.AddDays(-1);
 
+            // الجمعة مفيش خصومات
             if (yesterday.DayOfWeek == DayOfWeek.Friday)
                 return;
 
+            // أجازة رسمية
             var isPublicHoliday = await _db.CalendarEvents
                 .AsNoTracking()
                 .AnyAsync(e =>
@@ -58,7 +62,12 @@ namespace TaskMangment.Hangfire.Jobs
 
             foreach (var task in tasks)
             {
-                // نفس Business بتاع التاني: المدير (Level 100) + Operations Level 80 => ميتخصمش
+                if (task.PenaltyOnStopComment <= 0)
+                    continue;
+
+                var periodDays = (int)task.CommentAllowPeriodDays!.Value;
+                if (periodDays < 1) periodDays = 1;
+
                 var candidateIds = task.Assignments
                     .Select(a => a.EmployeeId)
                     .Distinct()
@@ -104,9 +113,6 @@ namespace TaskMangment.Hangfire.Jobs
                         exemptIds.Add(id);
                 }
 
-                var periodDays = (int)task.CommentAllowPeriodDays!.Value;
-                if (periodDays < 1) periodDays = 1;
-
                 foreach (var assignment in task.Assignments)
                 {
                     if (!assignment.IsActive)
@@ -114,7 +120,6 @@ namespace TaskMangment.Hangfire.Jobs
 
                     var employeeId = assignment.EmployeeId;
 
-                    // ✅ Skip discount for exempt employees (المدير ميتخصملهوش)
                     if (exemptIds.Contains(employeeId))
                         continue;
 
@@ -128,17 +133,47 @@ namespace TaskMangment.Hangfire.Jobs
                         : lastComment.CreatedDate.Date;
 
                     var shouldHaveComment = baseDate.AddDays(periodDays - 1) <= yesterday;
-                    if (!shouldHaveComment) continue;
+                    if (!shouldHaveComment)
+                        continue;
 
                     var hasLeave = await _db.Leaves
-                        .Where(l => l.EmployeeId == employeeId &&
-                                    l.StartDate.Date <= yesterday &&
-                                    l.EndDate.Date >= yesterday &&
-                                    l.Status == LeaveStatus.Approved)
-                        .AnyAsync();
-                    if (hasLeave) continue;
+                      .Where(l => l.EmployeeId == employeeId &&
+                                  l.StartDate.Date <= yesterday &&
+                                  l.EndDate.Date >= yesterday &&
+                                  l.Status == LeaveStatus.Approved)
+                      .AnyAsync();
 
-                    if (task.PenaltyOnStopComment <= 0) continue;
+                    if (hasLeave)
+                        continue;
+
+                    if (today.Day == 1)
+                    {
+                        var isAccountant = await _db.Employees
+                            .Where(e => e.Id == employeeId)
+                            .Select(e => e.FunctionCode == FunctionCode.Accounting) 
+                            .FirstOrDefaultAsync();
+
+                        if (isAccountant)
+                        {
+                            var localStart = new DateTime(today.Year, today.Month, today.Day, 0, 0, 0, DateTimeKind.Unspecified);
+                            var localEnd = new DateTime(today.Year, today.Month, today.Day, 8, 0, 0, DateTimeKind.Unspecified);
+
+                            var utcStart = TimeZoneInfo.ConvertTimeToUtc(localStart, tz);
+                            var utcEnd = TimeZoneInfo.ConvertTimeToUtc(localEnd, tz);
+
+                            var commentedTodayBefore8 = await _db.TaskComments
+                                .AnyAsync(c =>
+                                    c.TaskId == task.Id &&
+                                    c.EmployeeId == employeeId &&
+                                    c.CreatedDate >= utcStart &&
+                                    c.CreatedDate < utcEnd);
+
+                            if (commentedTodayBefore8)
+                                continue; 
+                        }
+                    }
+
+                  
 
                     var alreadyDiscounted = await _db.Discounts.AnyAsync(d =>
                         d.TaskId == task.Id &&
@@ -162,7 +197,6 @@ namespace TaskMangment.Hangfire.Jobs
                     };
 
                     await _db.Discounts.AddAsync(discount);
-
                     discountsToPublish.Add((discount, assignment.Employee?.FullName ?? "", task.Id, task.Title));
                 }
             }
@@ -184,12 +218,6 @@ namespace TaskMangment.Hangfire.Jobs
                         .FirstOrDefaultAsync();
 
                     if (issuedEmployee == null) continue;
-
-                    var branch = issuedEmployee.BranchId.HasValue
-                        ? await _db.Branches
-                            .Include(b => b.Manager)
-                            .FirstOrDefaultAsync(b => b.Id == issuedEmployee.BranchId.Value)
-                        : null;
 
                     var managerId = await _getHigherManager.GetDirectHigherManagerIdAsync(discount.EmployeeId);
 
@@ -215,7 +243,7 @@ namespace TaskMangment.Hangfire.Jobs
                         )
                     );
                 }
-                catch (Exception ex)
+                catch
                 {
                     // intentionally ignored (same as original behavior)
                 }

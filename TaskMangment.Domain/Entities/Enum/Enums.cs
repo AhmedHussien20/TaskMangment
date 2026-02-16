@@ -53,7 +53,9 @@ namespace TaskMangment.Domain.Entities
         TaskCloseRequestApproved = 11,
         TaskAchieve = 12,
         Leave = 13,
-        OfficialHoliday = 14
+        OfficialHoliday = 14,
+        DevelopmentException = 15
+
 
     }
     public enum RecipientType

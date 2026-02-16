@@ -87,6 +87,26 @@ namespace TaskMangment.Infrastructure.Services
 
             await _db.SaveChangesAsync();
         }
+
+        public async Task QueueDirectAsync(string toEmail, string subject, string htmlBody, DateTime? scheduledAt = null)
+        {
+            var when = scheduledAt ?? DateTime.UtcNow;
+
+            await _db.EmailQueue.AddAsync(new EmailQueue
+            {
+                ToEmail = toEmail,
+                TemplateKey = "DeveloperErrorAlert",
+                ReferenceType = ReferenceType.DevelopmentException,
+                ReferenceId = 0,
+                ScheduledAt = when,
+                Status = EmailStatus.Pending,
+
+                ErrorMessage = subject + "\n\n" + htmlBody
+            });
+
+            await _db.SaveChangesAsync();
+        }
+
     }
 
 }
