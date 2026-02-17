@@ -95,12 +95,6 @@ export class EmployeeCreateUpdateComponent implements OnInit {
       name: 'mobile',
       countryCodes: [
         {
-          label: '+20',
-          value: '+20',
-          maxLength: 10,
-          regex: /^1[0-2,5]\d{8}$/
-        },
-        {
           label: '+966',
           value: '+966',
           maxLength: 9,
@@ -303,15 +297,12 @@ export class EmployeeCreateUpdateComponent implements OnInit {
       if (!res) return;
       const emp = res.data;
 
-      let mobileCode = '+20';
+      let mobileCode = '+966'; // default to Saudi code if not found
       let mobileNumber = emp.mobile || '';
 
       if (mobileNumber.startsWith('+966')) {
         mobileCode = '+966';
         mobileNumber = mobileNumber.slice(4);
-      } else if (mobileNumber.startsWith('+20')) {
-        mobileCode = '+20';
-        mobileNumber = mobileNumber.slice(3);
       } else if (mobileNumber.startsWith('+962')) {
         mobileCode = '+962';
         mobileNumber = mobileNumber.slice(4);

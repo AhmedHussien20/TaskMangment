@@ -261,7 +261,8 @@ export class TaskCreateUpdateComponent implements OnInit {
         pageIndex: page,
         pageSize: 20,
         sortColumn: 'Id',
-        sortDirection: 'DESC'
+        sortDirection: 'DESC',
+        permissionCode : 'CREATE_TASK'
       };
       
       return this.employeeService.getAll(request);

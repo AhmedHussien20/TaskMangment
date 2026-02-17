@@ -2,18 +2,19 @@
 using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using QuestPDF.Infrastructure;
+using Serilog; 
 using System.Globalization;
 using System.Text;
+using TaskMangment.API.Extensions;
 using TaskMangment.API.Filters; 
 using TaskMangment.Hangfire.Jobs;
 using TaskMangment.Infrastructure;
 using TaskMangment.Infrastructure.DataContext;
+using TaskMangment.Infrastructure.Seeding;
 using TaskMangment.Infrastructure.Services;
 using TaskMangment.Infrastructure.SignalR;
-using Serilog; 
-using QuestPDF.Infrastructure;
 using TaskMangment.Utilities.Localization;
-using TaskMangment.Infrastructure.Seeding;
 
 namespace TaskMangment.API
 {
@@ -202,8 +203,10 @@ namespace TaskMangment.API
                     .CreateLogger();
 
                 builder.Host.UseSerilog();
+            builder.Services.AddCaching(builder.Configuration);
 
-                var app = builder.Build();
+
+            var app = builder.Build();
 
                 app.UseRouting();
 

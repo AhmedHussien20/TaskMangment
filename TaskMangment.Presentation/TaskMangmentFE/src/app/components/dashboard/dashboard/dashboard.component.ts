@@ -174,7 +174,7 @@ export class DashboardComponent {
   private loadDashboard() {
     const userLevel = this.authService.getRoleLevel() ?? 0;
 
-    if (userLevel >= 50) {
+    if (userLevel > 50) {
       this.isAdmin = true;
 
       // branches مرة واحدة
@@ -238,6 +238,21 @@ export class DashboardComponent {
             status: 'Overdue',
           },
           {
+            title: 'DASHBOARD.NEW_TASKS',
+            value: this.adminData.kpis.newTasks,
+            svg: `
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
+                   stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                   class="feather feather-alert-circle text-danger">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+            `,
+            clickable: true,
+            status: 'New',
+          },
+          {
             title: 'DASHBOARD.ACTIVE_TASKS',
             value: this.adminData.kpis.activeTasks,
             svg: `
@@ -250,20 +265,6 @@ export class DashboardComponent {
             `,
             clickable: true,
             status: 'Active',
-          },
-          {
-            title: 'DASHBOARD.TOTAL_EMPLOYEES',
-            value: this.adminData.kpis.totalEmployees,
-            svg: `
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                   viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                   class="feather feather-users text-primary">
-                <path d="M17 21v-2a4 4 0 0 0-3-3.87"></path>
-                <path d="M7 21v-2a4 4 0 0 1 3-3.87"></path>
-                <circle cx="12" cy="7" r="4"></circle>
-              </svg>
-            `,
           },
           {
             title: 'DASHBOARD.COMPLETED_TASKS',
@@ -280,6 +281,21 @@ export class DashboardComponent {
             clickable: true,
             status: 'Completed',
           },
+          {
+            title: 'DASHBOARD.TOTAL_EMPLOYEES',
+            value: this.adminData.kpis.totalEmployees,
+            svg: `
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                   viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                   class="feather feather-users text-primary">
+                <path d="M17 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M7 21v-2a4 4 0 0 1 3-3.87"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            `,
+          },
+          
         ];
       });
   }

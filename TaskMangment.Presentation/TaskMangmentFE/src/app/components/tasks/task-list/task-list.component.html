@@ -42,7 +42,10 @@
   [disableDeleteFn]="disableDeleteRow"
   [showExtraButton]="canShowExtraTasks"
   [extraMenuItems]="extraMenuItems"
-  (extraMenuSelect)="onExtraMenuSelect($event, deepSearchModal)">
+  (extraMenuSelect)="onExtraMenuSelect($event, deepSearchModal)"
+  (cleared)="onTableCleared()"
+
+>
 </app-generic-table>
 
         </div>
@@ -83,6 +86,7 @@
       [statusOptions]="statusOptions"
       [initial]="deepSearchInitial"
       (submitFilters)="applyDeepSearch($event, modal)"
+      [triggerClear]="clearTrigger"
       (cancel)="modal.dismiss()">
     </app-tasks-employee-deep-search>
   </div>

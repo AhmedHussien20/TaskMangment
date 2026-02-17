@@ -19,7 +19,7 @@ namespace TaskMangment.Application.Common.ApiRequests.Task
         public int? TargetEmployeeId { get; set; }     
         public int? StatusId { get; set; }            
 
-        public string? SearchKey { get; set; }         
+       // public string? SearchKey { get; set; }         
         public int? PriorityId { get; set; }       
 
         public DateTime? CreatedFrom { get; set; }

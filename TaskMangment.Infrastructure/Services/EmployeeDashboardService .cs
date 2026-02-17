@@ -29,6 +29,8 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<ManagerBranches> _managerBranchesRepo;
         private readonly IRepository<Employee> _employeeRepo;
         private readonly IUserAccessContextProvider _accessProvider;
+        private readonly IRepository<WorkTask> _taskRepo;
+
 
 
 
@@ -41,7 +43,8 @@ namespace TaskMangment.Infrastructure.Services
             IStringLocalizer<DiscountAutoType> localizer,
             IRepository<ManagerBranches> managerBranchesRepo,
             IRepository<Employee> employeeRepo,
-            IUserAccessContextProvider accessProvider
+            IUserAccessContextProvider accessProvider,
+            IRepository<WorkTask> taskRepo
 )
         {
             _assignmentRepo = assignmentRepo;
@@ -53,78 +56,123 @@ namespace TaskMangment.Infrastructure.Services
             _managerBranchesRepo = managerBranchesRepo;
             _employeeRepo = employeeRepo;
             _accessProvider = accessProvider;
+            _taskRepo = taskRepo;
         }
 
-        public async Task<ApiResponse<EmployeeDashboardDto>> GetDashboardAsync(int employeeId, PeriodDto? period = null)
+        public async Task<ApiResponse<EmployeeDashboardDto>> GetDashboardAsync(
+     int employeeId,
+     PeriodDto? period = null)
         {
             string cacheKey = $"dashboard:employee:{employeeId}";
 
             var cached = await _cache.GetAsync<EmployeeDashboardDto>(cacheKey);
-            if (cached != null)
-                return ApiResponse<EmployeeDashboardDto>.Ok(cached);
+            // if (cached != null)
+            //     return ApiResponse<EmployeeDashboardDto>.Ok(cached);
 
             var range = PeriodHelper.GetRange(period);
+
+            // لو عايزة timezone مصر بدل UTC هنا (اختياري)
             var now = DateTime.UtcNow;
             var dueSoonDate = now.AddDays(2);
 
-            var activeTasks = await _assignmentRepo.CountAsync(a =>
-                a.EmployeeId == employeeId &&
-                a.IsActive &&
-                !a.IsClosed);
+            // --------
+            // Base query: assignments الخاصة بالموظف أو المهام اللي هو أنشأها
+            // --------
+            var baseAssignmentsQuery = _assignmentRepo.GetAll(a =>
+                (a.EmployeeId == employeeId || a.Task.CreatedByEmployeeId == employeeId));
 
-            var dueSoonTasks = await _assignmentRepo.CountAsync(a =>
-                a.EmployeeId == employeeId &&
-                a.IsActive &&
-                !a.IsClosed &&
-                a.Task.DueDate != null &&
-                a.Task.DueDate <= dueSoonDate);
+            // --------
+            // ACTIVE TASKS (Distinct TaskIds)
+            // --------
+            var activeTaskIdsQuery = baseAssignmentsQuery
+                .Where(a => a.IsActive && !a.IsClosed)
+                .Select(a => a.TaskId)
+                .Distinct();
 
+            var activeTasks = await activeTaskIdsQuery.CountAsync();
+
+            // --------
+            // DUE SOON TASKS (Distinct TaskIds)
+            // --------
+            var dueSoonTasks = await baseAssignmentsQuery
+                .Where(a =>
+                    a.IsActive &&
+                    !a.IsClosed &&
+                    a.Task.DueDate != null &&
+                    a.Task.DueDate <= dueSoonDate)
+                .Select(a => a.TaskId)
+                .Distinct()
+                .CountAsync();
+
+            // --------
+            // WARNINGS / PENALTIES (زي ما هي عندك)
+            // --------
             var warningsCount = await _warningRepo.CountAsync(w =>
-                w.TaskAssignment.EmployeeId == employeeId&&
-                w.CreatedDate >= range.Start && w.CreatedDate <= range.End
-                );
+                w.TaskAssignment.EmployeeId == employeeId &&
+                w.CreatedDate >= range.Start && w.CreatedDate <= range.End);
 
             var penaltiesTotal = await _deductionRepo
-                .GetAll(d => d.EmployeeId == employeeId&&
-                  d.CreatedDate >= range.Start && d.CreatedDate <= range.End
-                )
+                .GetAll(d =>
+                    d.EmployeeId == employeeId &&
+                    d.CreatedDate >= range.Start && d.CreatedDate <= range.End)
                 .SumAsync(d => d.Amount);
 
+            // --------
+            // MY TASKS LIST
+            // بدل ما نجيب Assignments ونكرر، هنجيب TaskIds distinct وبعدين نجيب Tasks مرة واحدة
+            // --------
+            var myActiveTaskIds = await activeTaskIdsQuery.ToListAsync();
 
+            var tasks = await _taskRepo
+                .GetAll(t => myActiveTaskIds.Contains(t.Id))
+                .OrderBy(t => t.DueDate)
+                .ToListAsync();
 
-            var assignments = await _assignmentRepo
-      .GetAll(a => a.EmployeeId == employeeId && a.IsActive && !a.IsClosed)
-      .Include(a => a.Task) 
-      .OrderBy(a => a.Task.DueDate)
-      .Take(10)
-      .ToListAsync();
-
-            var taskIds = assignments.Select(a => a.TaskId).ToList();
+            var taskIds = tasks.Select(t => t.Id).ToList();
 
             var progressDict = await _taskPercentageRepo
                 .GetAll(p => taskIds.Contains(p.TaskId))
                 .GroupBy(p => p.TaskId)
-                .Select(g => new { TaskId = g.Key, Progress = g.OrderByDescending(x => x.CreatedDate).FirstOrDefault().AchievementPercent })
+                .Select(g => new
+                {
+                    TaskId = g.Key,
+                    Progress = g.OrderByDescending(x => x.CreatedDate)
+                                .Select(x => x.AchievementPercent)
+                                .FirstOrDefault()
+                })
                 .ToDictionaryAsync(x => x.TaskId, x => x.Progress);
 
-            var myTasks = assignments.Select(a => new MyTaskDto
-            {
-                TaskId = a.TaskId,
-                Title = a.Task.Title,
-                Status = a.Task.Status,
-                DueDate = a.Task.DueDate,
-                ProgressPercent = progressDict.ContainsKey(a.TaskId) ? (progressDict[a.TaskId]?.ToString() ?? "") : "0"
-            })
-            .OrderBy(t => t.DueDate)
-            .ToList();
+            var myTasks = tasks
+                .Select(t => new MyTaskDto
+                {
+                    TaskId = t.Id,
+                    Title = t.Title,
+                    Status = t.Status,
+                    DueDate = t.DueDate,
+                    ProgressPercent = progressDict.TryGetValue(t.Id, out var p)
+                        ? (p?.ToString() ?? "0")
+                        : "0"
+                })
+                .OrderBy(t => t.DueDate)
+                .ToList();
 
-            var completedTasks = await _assignmentRepo.CountAsync(a =>
-                a.EmployeeId == employeeId &&
-                a.IsClosed);
+            // --------
+            // PERFORMANCE (Distinct TaskIds)
+            // --------
+            var completedTasks = await baseAssignmentsQuery
+                .Where(a => a.IsClosed)
+                .Select(a => a.TaskId)
+                .Distinct()
+                .CountAsync();
 
-            var totalTasks = await _assignmentRepo.CountAsync(a =>
-                a.EmployeeId == employeeId);
+            var totalTasks = await baseAssignmentsQuery
+                .Select(a => a.TaskId)
+                .Distinct()
+                .CountAsync();
 
+            // --------
+            // DTO
+            // --------
             var dto = new EmployeeDashboardDto
             {
                 Kpis = new EmployeeKpiDto
@@ -143,9 +191,9 @@ namespace TaskMangment.Infrastructure.Services
             };
 
             await _cache.SetAsync(cacheKey, dto, TimeSpan.FromMinutes(3));
-
             return ApiResponse<EmployeeDashboardDto>.Ok(dto);
         }
+
 
         public async Task<ApiResponse<PagedResponse<TodayCommentTaskDto>>> GetTasksWithoutCommentsTodayAsync(
      BaseApiRequest request,
@@ -162,7 +210,7 @@ namespace TaskMangment.Infrastructure.Services
                 !a.Task.Comments.Any(c => c.CreatedDate >= today && c.EmployeeId == a.EmployeeId)
             );
 
-            if (roleLevel < 60)
+            if (roleLevel < 50)
             {
                 baseQuery = baseQuery.Where(a => a.EmployeeId == employeeId);
             }
@@ -308,7 +356,7 @@ namespace TaskMangment.Infrastructure.Services
             // Step 1: get due soon assignments
             var assignments = await _assignmentRepo
                 .GetAll(a =>
-                    a.EmployeeId == employeeId &&
+        (a.EmployeeId == employeeId || a.Task.CreatedByEmployeeId == employeeId) &&
                     a.IsActive &&
                     !a.IsClosed &&
                     a.Task.DueDate != null &&
@@ -353,7 +401,7 @@ namespace TaskMangment.Infrastructure.Services
             var range = PeriodHelper.GetRange(period);
 
             var closedTasksQuery = _assignmentRepo.GetAll(a =>
-                a.EmployeeId == employeeId &&
+                (a.EmployeeId == employeeId || a.Task.CreatedByEmployeeId == employeeId) &&
                 a.IsClosed &&
                 a.Task.ClosedAt != null &&
                 a.Task.ClosedAt >= range.Start &&
@@ -391,7 +439,7 @@ namespace TaskMangment.Infrastructure.Services
 
             var tasks = await _assignmentRepo
                 .GetAll(a =>
-                    a.EmployeeId == employeeId &&
+                    (a.EmployeeId == employeeId || a.Task.CreatedByEmployeeId == employeeId) &&
                     a.IsClosed &&
                     a.Task.ClosedAt != null &&
                     a.Task.ClosedAt >= range.Start &&

@@ -37,7 +37,8 @@
     "MONTH" : "الشهر",
     "YEAR" : "السنه",
     "SELECT_BRANCH" : "اختر فرع",
-    "NOT_COMMENTED_EMPLOYEES": "موظفنين لم يعلقو"
+    "NOT_COMMENTED_EMPLOYEES": "موظفنين لم يعلقو",
+    "NEW_TASKS" : "مهام لم يتم العمل عليها"
 
   },
   "MENU": {

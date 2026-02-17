@@ -45,9 +45,9 @@ namespace TaskMangment.Infrastructure.Persistence.Extensions
                     t.Assignments.Any(a => a.IsActive && request.EmployeeIds.Contains(a.EmployeeId)));
             }
 
-            if (!string.IsNullOrWhiteSpace(request.SearchKey))
+            if (!string.IsNullOrWhiteSpace(request.searchKey))
             {
-                var key = request.SearchKey.Trim();
+                var key = request.searchKey.Trim();
                 query = query.Where(t => t.Title.Contains(key));
             }
 

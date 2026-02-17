@@ -5,6 +5,7 @@ export interface AdminDashboardDto {
     totalEmployees: number;
     activeTasks: number;
     overdueTasks: number;
+    newTasks: number;
     completedTasks: number;
     totalPenaltiesThisMonth: number;
     warningsThisMonth: number;

@@ -168,14 +168,14 @@ namespace TaskMangment.Infrastructure.Services
                     ErrorCodes.ManagerNotFound,
                     StatusCodes.Status404NotFound);
 
-            var isManagerUsed = await _areaRepository
-                .GetAll(a => a.ManagerEmployeeId == dto.ManagerEmployeeId && a.Id != id)
-                .AnyAsync();
+            //var isManagerUsed = await _areaRepository
+            //    .GetAll(a => a.ManagerEmployeeId == dto.ManagerEmployeeId && a.Id != id)
+            //    .AnyAsync();
 
-            if (isManagerUsed)
-                throw new AppException(
-                    ErrorCodes.AlreadyAssigned,
-                    StatusCodes.Status400BadRequest);
+            //if (isManagerUsed)
+            //    throw new AppException(
+            //        ErrorCodes.AlreadyAssigned,
+            //        StatusCodes.Status400BadRequest);
 
             _mapper.Map(dto, area);
 

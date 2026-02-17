@@ -20,6 +20,7 @@ using TaskMangment.Application.ReportDTOs;
 using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
 using TaskMangment.Domain.Event;
+using TaskMangment.Infrastructure.Caching;
 using TaskMangment.Infrastructure.DataContext;
 using TaskMangment.Infrastructure.Persistence.Extensions;
 using TaskMangment.Infrastructure.SignalR;
@@ -202,7 +203,7 @@ namespace TaskMangment.Infrastructure.Services
 
             var response = new PagedResponse<TaskGetDto>(dtos, totalCount, request.PageIndex, request.PageSize, summary);
 
-           // await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
+            // await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
 
             return ApiResponse<PagedResponse<TaskGetDto>>.Ok(response);
         }
@@ -303,6 +304,7 @@ namespace TaskMangment.Infrastructure.Services
                     await _assignmentRepo.SaveChangesAsync();
 
                     await _cache.RemoveAsync("tasks:");
+
 
                     for (int i = 0; i < tasks.Count; i++)
                     {
@@ -447,7 +449,10 @@ namespace TaskMangment.Infrastructure.Services
             }
 
             await _assignmentRepo.SaveChangesAsync();
+            var companyId = task.CompanyId;
+
             await _cache.RemoveAsync("tasks:");
+
 
             if (newlyAssignedEmployeeIds.Any())
             {
