@@ -44,6 +44,7 @@
   [extraMenuItems]="extraMenuItems"
   (extraMenuSelect)="onExtraMenuSelect($event, deepSearchModal)"
   [showCheckbox]="IsClosed"
+  (cleared)="onTableCleared()"
   [checkboxKey]="'__archiveChecked'"
   (checkboxChange)="onCheckboxChange($event)"
   [disableCheckboxFn]="disableArchiveCheckbox"

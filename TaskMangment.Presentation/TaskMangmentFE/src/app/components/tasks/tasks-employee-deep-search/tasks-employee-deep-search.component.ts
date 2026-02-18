@@ -177,7 +177,7 @@ onSubmit(formData: any) {
   }
 
   
-  clear() {
+    clear() {
   this.formGroup.reset({
     direction: null,
     statusId: null,
@@ -211,5 +211,4 @@ onSubmit(formData: any) {
     this.clear();
   }
 }
-  
 }
