@@ -572,7 +572,15 @@
   "CREATED_TO": "Task Created Date To",
   "DUE_FROM": "Task Due Date From",
   "DUE_TO": "Task Due Date To",
-  "NO_ATTACHMENTS" : "their is no attachments with comment"
+  "NO_ATTACHMENTS" : "their is no attachments with comment",
+  "ARCHIVE": "Archive Tasks",
+  "ARCHIVE_CONFIRM_TEXT": "You are about to archive {{count}} task(s). Do you want to continue?",
+  "ARCHIVE_TASKS": "Archive Tasks",
+  "ARCHIVE_SUCCESS": "Tasks archived successfully",
+  "CONFIRM_BUTTON": "Confirm"
+
+
+
   },
   "EMPLOYEE": {
     "LIST_TITLE": "Employee List",

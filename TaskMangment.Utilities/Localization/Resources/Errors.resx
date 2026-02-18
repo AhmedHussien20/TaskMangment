@@ -244,4 +244,10 @@
   <data name="EMPLOYEE_HAS_ACTIVE_TASKS" xml:space="preserve">
     <value>Employee has active tasks, cannot delete</value>
   </data>
+  <data name="TASK_MUST_BE_CLOSED_BEFORE_ARCHIVE" xml:space="preserve">
+    <value>Task must be closed before archive</value>
+  </data>
+  <data name="TASK_HAS_NO_PERCENTAGE" xml:space="preserve">
+    <value>please add valuation to task before accept close request</value>
+  </data>
 </root>

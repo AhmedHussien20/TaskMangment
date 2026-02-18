@@ -196,6 +196,16 @@ namespace TaskMangment.Infrastructure.Services
             if (role == null)
                 throw new AppException(ErrorCodes.RoleNotFound, StatusCodes.Status400BadRequest);
 
+            var hasEmployees = await _employeeRoleRepo.GetAll(er =>
+           er.RoleId == id &&
+           !er.IsDeleted &&        
+           er.IsAssigned)     
+       .AnyAsync();
+
+            if (hasEmployees)
+                throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status400BadRequest);
+
+
             _roleRepo.SoftDelete(role);
             await _roleRepo.SaveChangesAsync();
 

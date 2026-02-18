@@ -143,6 +143,15 @@ export class GenericTableComponent<T> implements OnDestroy{
 
   @Input() showExtraButton: boolean = false;
 
+    @Input() showSecondButton: boolean = false;
+    @Input() disableSecondButton: boolean = false;  
+    @Input() secondButtonLabel: string = '';       
+   
+
+    @Output() secondButtonClick = new EventEmitter<void>();
+onSecondButtonClick(): void {
+    this.secondButtonClick.emit();
+  }
   @Input() extraMenuItems: ExtraMenuItem[] = [];
 
   @Output() extraMenuSelect = new EventEmitter<ExtraMenuItem>();
@@ -443,6 +452,7 @@ onRowClick(item: T, event: MouseEvent) {
 }
 
 
+@Input() disableCheckboxFn: ((row: T) => boolean) | null = null;
 
   onCheckboxChange(item: T, event: Event) {
     const checked = (event.target as HTMLInputElement).checked;

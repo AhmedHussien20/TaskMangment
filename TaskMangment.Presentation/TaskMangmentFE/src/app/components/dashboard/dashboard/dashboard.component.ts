@@ -174,7 +174,7 @@ export class DashboardComponent {
   private loadDashboard() {
     const userLevel = this.authService.getRoleLevel() ?? 0;
 
-    if (userLevel >= 50) {
+    if (userLevel > 50) {
       this.isAdmin = true;
 
       // branches مرة واحدة

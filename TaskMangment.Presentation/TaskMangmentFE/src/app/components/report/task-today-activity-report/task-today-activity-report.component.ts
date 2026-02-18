@@ -5,13 +5,20 @@ import { NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ToastrService } from 'ngx-toastr';
 
-import { GenericTableComponent, TableColumn } from 'app/shared/components/generic-table/generic-table.component';
+import {
+  GenericTableComponent,
+  TableColumn,
+} from 'app/shared/components/generic-table/generic-table.component';
 import { PageHeaderComponent } from 'app/shared/components/page-header/page-header.component';
 import { ReportListService } from 'app/core/services/report-list.service';
 import { ReportPdfService } from 'app/core/services/report-pdf.service';
 import { SimpleEmployee } from 'app/core/models/task/task';
 import { EmployeeService } from 'app/core/services/employee.service';
-import { ExportType, TaskMovementReportDto, TaskMovementType } from 'app/core/models/reports/reports';
+import {
+  ExportType,
+  TaskMovementReportDto,
+  TaskMovementType,
+} from 'app/core/models/reports/reports';
 import { AuthService } from 'app/core/services/auth.service';
 import { EmployeeNgSelectComponent } from 'app/components/employee-select/employee-select.component';
 
@@ -25,12 +32,11 @@ import { EmployeeNgSelectComponent } from 'app/components/employee-select/employ
     TranslateModule,
     GenericTableComponent,
     PageHeaderComponent,
-    EmployeeNgSelectComponent
+    EmployeeNgSelectComponent,
   ],
   templateUrl: './task-today-activity-report.component.html',
 })
 export class TaskTodayActivityReportComponent implements OnInit {
-
   title = 'REPORTS.TASK_MOVEMENT_TITLE';
   activeitem = 'REPORTS.TASK_MOVEMENT_TITLE';
   breadcrumbs = ['MENU.HOME', 'MENU.REPORTS', 'REPORTS.TASK_MOVEMENT_TITLE'];
@@ -38,12 +44,12 @@ export class TaskTodayActivityReportComponent implements OnInit {
   columns: TableColumn[] = [
     { key: 'taskTitleWithId', label: 'REPORTS.TASK' },
     { key: 'assignedBy', label: 'REPORTS.ASSIGNED_BY' },
+    { key: 'assignedToText', label: 'TASK.ASSIGNED_TO' },
     { key: 'commentedBy', label: 'REPORTS.COMMENTED_BY' },
     { key: 'commentDate', label: 'REPORTS.COMMENT_DATE', type: 'dateTime' },
     { key: 'commentText', label: 'REPORTS.COMMENT' },
-
   ];
-  exportType= ExportType.Pdf
+  exportType = ExportType.Pdf;
   rows: TaskMovementReportDto[] = [];
   totalItems = 0;
 
@@ -53,16 +59,15 @@ export class TaskTodayActivityReportComponent implements OnInit {
   employees: SimpleEmployee[] = [];
   selectedEmployeeId?: number;
 
-  movementType: TaskMovementType = TaskMovementType.Outgoing; 
+  movementType: TaskMovementType = TaskMovementType.Outgoing;
   reportTitle?: string;
 
   isLoading = false;
   isAdmin = false;
 
-
   movementOptions = [
     { label: 'REPORTS.OUTGOING', value: TaskMovementType.Outgoing },
-    { label: 'REPORTS.INCOMING', value: TaskMovementType.Incoming }
+    { label: 'REPORTS.INCOMING', value: TaskMovementType.Incoming },
   ];
 
   constructor(
@@ -71,7 +76,7 @@ export class TaskTodayActivityReportComponent implements OnInit {
     private toastr: ToastrService,
     private translate: TranslateService,
     private employeeService: EmployeeService,
-    private authService: AuthService
+    private authService: AuthService,
   ) {}
 
   ngOnInit(): void {
@@ -79,36 +84,47 @@ export class TaskTodayActivityReportComponent implements OnInit {
     this.isAdmin = roleLevel >= 50;
 
     if (this.isAdmin) {
-      this.selectedEmployeeId = undefined; 
+      this.selectedEmployeeId = undefined;
       this.loadData();
     } else {
       const user = this.authService.getCurrentUser();
-      this.selectedEmployeeId = user.userId; 
+      this.selectedEmployeeId = user.userId;
       this.loadData();
     }
   }
-
 
   loadData(): void {
     //if (!this.selectedEmployeeId) return;
 
     this.isLoading = true;
 
-    this.reportService.getMovementReports(this.selectedEmployeeId, this.movementType, this.reportTitle)
+    this.reportService
+      .getMovementReports(
+        this.selectedEmployeeId,
+        this.movementType,
+        this.reportTitle,
+      )
       .subscribe({
         next: (res) => {
-          this.rows = res.data;
+          this.rows = (res.data || []).map((r) => ({
+            ...r,
+            assignedToText: (r.assignedTo || [])
+              .map((x) => x.fullName)
+              .join('، '),
+          }));
+
           this.totalItems = this.rows.length;
           this.isLoading = false;
         },
+
         error: () => {
           this.isLoading = false;
-          this.toastr.error(this.translate.instant('COMMON.ERROR_LOADING_DATA'));
-        }
+          this.toastr.error(
+            this.translate.instant('COMMON.ERROR_LOADING_DATA'),
+          );
+        },
       });
   }
-
- 
 
   onFilterApply(): void {
     this.page = 1;
@@ -127,7 +143,13 @@ export class TaskTodayActivityReportComponent implements OnInit {
   onExportPdf(): void {
     //if (!this.selectedEmployeeId) return;
 
-    this.reportPdfService.getTaskMovementReportsPdf(this.exportType,this.selectedEmployeeId, this.movementType, this.reportTitle)
+    this.reportPdfService
+      .getTaskMovementReportsPdf(
+        this.exportType,
+        this.selectedEmployeeId,
+        this.movementType,
+        this.reportTitle,
+      )
       .subscribe({
         next: (blob) => {
           const url = window.URL.createObjectURL(blob);
@@ -140,13 +162,21 @@ export class TaskTodayActivityReportComponent implements OnInit {
           window.URL.revokeObjectURL(url);
         },
         error: () => {
-          this.toastr.error(this.translate.instant('COMMON.ERROR_LOADING_DATA'));
-        }
+          this.toastr.error(
+            this.translate.instant('COMMON.ERROR_LOADING_DATA'),
+          );
+        },
       });
   }
-   onExportExcel(): void {
+  onExportExcel(): void {
     //if (!this.selectedEmployeeId) return;
-    this.reportPdfService.getTaskMovementReportsPdf(ExportType.Excel, this.selectedEmployeeId, this.movementType, this.reportTitle)
+    this.reportPdfService
+      .getTaskMovementReportsPdf(
+        ExportType.Excel,
+        this.selectedEmployeeId,
+        this.movementType,
+        this.reportTitle,
+      )
       .subscribe({
         next: (blob) => {
           const url = window.URL.createObjectURL(blob);
@@ -159,8 +189,10 @@ export class TaskTodayActivityReportComponent implements OnInit {
           window.URL.revokeObjectURL(url);
         },
         error: () => {
-          this.toastr.error(this.translate.instant('COMMON.ERROR_LOADING_DATA'));
-        }
+          this.toastr.error(
+            this.translate.instant('COMMON.ERROR_LOADING_DATA'),
+          );
+        },
       });
   }
 }

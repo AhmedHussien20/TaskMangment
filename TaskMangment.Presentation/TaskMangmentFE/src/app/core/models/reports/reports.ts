@@ -81,6 +81,8 @@ export interface TaskMovementReportDto {
   commentedBy: string;
   commentDate: string;
   commentText: string
+  assignedTo: { id: number; fullName: string }[];
+  assignedToText?: string;
 }
 
 

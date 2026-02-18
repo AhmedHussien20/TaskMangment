@@ -108,5 +108,9 @@ private buildQuery(req: any): string {
   return this.api.get<BaseResponse<TaskActivitySummary>>(this.service,`${taskId}/activity-summary`);
   }
 
+  archiveClosed(taskIds: number[]): Observable<BaseResponse<boolean>> {
+  return this.api.post<BaseResponse<boolean>>(this.service, 'archive-closed', taskIds);
+}
+
 }
 

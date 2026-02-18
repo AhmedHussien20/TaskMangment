@@ -599,10 +599,10 @@ namespace TaskMangment.Infrastructure.Services
         }
 
         public async Task<List<TaskMovementReportDto>> GetTaskMovementReportAsync(
-            int currentEmployeeId,
-            int roleLevel,
-            TaskMovementReportFilterDto dto,
-            ExportType exportType)
+    int currentEmployeeId,
+    int roleLevel,
+    TaskMovementReportFilterDto dto,
+    ExportType exportType)
         {
             var todayStart = DateTime.Today;
             var todayEnd = todayStart.AddDays(1);
@@ -658,7 +658,18 @@ namespace TaskMangment.Infrastructure.Services
                             ? (string.IsNullOrWhiteSpace(c.CommentText)
                                 ? "رفع ملف"
                                 : (c.CommentText.Length > 50 ? c.CommentText.Substring(0, 50) : c.CommentText))
-                            : (string.IsNullOrWhiteSpace(c.CommentText) ? "رفع ملف" : c.CommentText)
+                            : (string.IsNullOrWhiteSpace(c.CommentText) ? "رفع ملف" : c.CommentText),
+                    AssignedTo = c.Task.Assignments
+            .Where(a => a.IsActive)
+            .Select(a => new EmployeeBriefDto
+            {
+                Id = a.EmployeeId,
+                FullName = a.Employee.FullName
+            })
+            .Distinct()
+            .ToList()
+
+
                 })
                 .OrderByDescending(c => c.CommentDate)
                 .AsNoTracking()

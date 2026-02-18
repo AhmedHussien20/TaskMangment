@@ -87,5 +87,16 @@ namespace TaskMangment.API.Controllers
             return Ok(result);
         }
 
+        [HttpPost("archive-closed")]
+        public async Task<IActionResult> ArchiveClosed([FromBody] List<int> taskIds)
+        {
+            var result = await _service.ArchiveClosedTasksAsync(taskIds);
+            if (!result.Success)
+                return Fail(result.Message!);
+
+            return Success(true);
+        }
+
+
     }
 }

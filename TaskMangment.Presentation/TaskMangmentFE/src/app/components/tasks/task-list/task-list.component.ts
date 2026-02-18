@@ -34,16 +34,15 @@ import { TasksEmployeeDeepSearchComponent } from "../tasks-employee-deep-search/
   templateUrl: './task-list.component.html'
 })
 export class TaskListComponent implements OnInit {
-
+  IsClosed = true;
+  canArchive = false;
+  TurnToArchive = true;
   canCreate = false;
   canEdit = false;
   canDelete = false;
   canShowExtraTasks= false
-
   showEmployeeFilter = false;
-
   deepSearchInitial: any = null;
-
   summary!: {
     myTasks: number;
     createdByMe: number;
@@ -125,7 +124,7 @@ export class TaskListComponent implements OnInit {
     filterTypes: {
       searchKey: 'text',
       employeeIds: 'dropdown',
-      statusId: 'dropdown'
+      statusId: 'dropdown',
     }
   };
 
@@ -164,27 +163,35 @@ export class TaskListComponent implements OnInit {
   }
 
   
-  loadData() {
-    this.isLoading = true;
-    this.taskService.getAll(this.searchCriteria).subscribe({
-      next: (res: any) => {
-        const pageData = res?.data;
+ loadData() {
+  this.isLoading = true;
 
-        this.rows = pageData?.data ?? [];
-        this.totalItems = pageData?.totalCount ?? 0;
-        this.page = pageData?.pageIndex ?? 1;
-        this.entries = pageData?.pageSize ?? 10;
+  this.taskService.getAll(this.searchCriteria).subscribe({
+    next: (res: any) => {
+      const pageData = res?.data;
 
-        this.summary = pageData?.summary;
-        this.buildSummaryCards();
+      this.rows = (pageData?.data ?? []).map((r: any) => ({
+        ...r,
+        __archiveChecked: false
+      }));
 
-        this.isLoading = false;
-      },
-      error: () => {
-        this.isLoading = false;
-      }
-    });
-  }
+      this.selectedArchiveIds = [];
+
+      this.totalItems = pageData?.totalCount ?? 0;
+      this.page = pageData?.pageIndex ?? 1;
+      this.entries = pageData?.pageSize ?? 10;
+
+      this.summary = pageData?.summary;
+      this.buildSummaryCards();
+
+      this.isLoading = false;
+    },
+    error: () => {
+      this.isLoading = false;
+    }
+  });
+}
+
 
   cards: any[] = [];
 
@@ -346,6 +353,7 @@ export class TaskListComponent implements OnInit {
 
   disableEditRow = (row: TaskGet) => {
   return !row.createdByMe || row.status === 3 || row.status === 4 || row.status === 5;
+  
 };
 
 disableDeleteRow = (row: TaskGet) => {
@@ -402,5 +410,56 @@ extraMenuItems = [
     this.loadData();
   }
 
-  
+  selectedArchiveIds: number[] = [];
+onCheckboxChange(e: { row: TaskGet; checked: boolean }) {
+  const row = e.row;
+
+  const allowed = row.status === 3 || row.status === 5;
+
+  if (!allowed) {
+    (row as any)['__archiveChecked'] = false;
+    this.rows = [...this.rows];
+    return;
+  }
+
+  (row as any)['__archiveChecked'] = e.checked;
+
+  if (e.checked) {
+    if (!this.selectedArchiveIds.includes(row.id)) this.selectedArchiveIds.push(row.id);
+  } else {
+    this.selectedArchiveIds = this.selectedArchiveIds.filter(x => x !== row.id);
+  }
+}
+
+ archiveSelectedTasks() {
+  const count = this.selectedArchiveIds.length;
+  if (!count) return;
+
+  Swal.fire({
+    title: this.translate.instant('TASK.ARCHIVE_TASKS'),
+    text: this.translate.instant('TASK.ARCHIVE_CONFIRM_TEXT', { count }),
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: this.translate.instant('TASK.CONFIRM_BUTTON') ,
+    cancelButtonText: this.translate.instant('COMMON.CANCEL_BUTTON'),
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#6c757d'
+  }).then((result) => {
+    if (!result.isConfirmed) return;
+
+    this.taskService.archiveClosed(this.selectedArchiveIds).subscribe({
+      next: () => {
+        this.toastr.success(this.translate.instant('TASK.ARCHIVE_SUCCESS'));
+        this.selectedArchiveIds = [];
+        this.rows = this.rows.map(r => ({ ...(r as any), __archiveChecked: false }));
+        this.loadData();
+      }
+    });
+  });
+}
+
+
+disableArchiveCheckbox = (row: TaskGet) =>
+  !((row.status === 3 || row.status === 5) && row.createdByMe);
+
 }

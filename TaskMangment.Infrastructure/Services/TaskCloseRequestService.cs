@@ -31,6 +31,8 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
         private readonly IDomainEventDispatcher _eventDispatcher;
+        private readonly IRepository<TaskPercentage> _AchievementRepo;
+
 
 
         public TaskCloseRequestService(
@@ -40,7 +42,7 @@ namespace TaskMangment.Infrastructure.Services
             ICachingService cache,
             IRepository<WorkTask> taskRepo,
             IRepository<Employee> employeeRepo,
-            IDomainEventDispatcher eventDispatcher)
+            IDomainEventDispatcher eventDispatcher, IRepository<TaskPercentage> AchievementRepo)
 
         {
             _requestRepo = requestRepo;
@@ -50,6 +52,7 @@ namespace TaskMangment.Infrastructure.Services
             _taskRepo = taskRepo;
             _employeeRepo = employeeRepo;
             _eventDispatcher = eventDispatcher;
+            _AchievementRepo = AchievementRepo;
         }
 
         public async Task<ApiResponse<PagedResponse<TaskCloseRequestListDto>>> GetAllAsync(TaskCloseRequestRequest request)
@@ -202,6 +205,14 @@ namespace TaskMangment.Infrastructure.Services
 
             if (status == CloseRequestStatus.Approved)
             {
+
+                var percent = await _AchievementRepo.GetAll(p =>p.TaskId == task.Id)          
+        .OrderByDescending(p => p.CreatedDate)
+        .FirstOrDefaultAsync();
+
+                if (percent == null)
+                    throw new AppException(ErrorCodes.TaskHasNoPercentage, StatusCodes.Status400BadRequest);
+
                 request.Status = CloseRequestStatus.Approved;
 
                 task.Status = WorkTaskStatus.Closed;

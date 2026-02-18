@@ -21,6 +21,8 @@ namespace TaskMangment.Application.Common.Errors
         public const string NotAssigned = "NOT_ASSIGNED";
         public const string AlreadyReviewed = "ALREADY_REVIEWED";
         public const string TaskAlreadyClosed = "TASK_ALREADY_CLOSED";
+        public const string TaskMustBeClosedBeforeArchive = "TASK_MUST_BE_CLOSED_BEFORE_ARCHIVE";
+        public const string TaskHasNoPercentage = "TASK_HAS_NO_PERCENTAGE";
 
 
         public const string NotAuthorized = "NOT_AUTHORIZED";

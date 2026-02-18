@@ -23,6 +23,7 @@ namespace TaskMangment.Application.Interfaces.Services
         Task<List<TaskReportDto>> GetTasksForReportAsync(int? assignedUserId = null,int? status = null,DateTime? fromDate = null,DateTime? toDate = null);
         Task<ApiResponse<TaskRequestsDto>> GetTaskRequestsAsync(int taskId);
         Task<ApiResponse<TaskActivitySummaryDTO>> GetTaskActivitySummaryAsync(int taskId);
+        Task<ApiResponse<bool>> ArchiveClosedTasksAsync(List<int> taskIds);
 
 
 

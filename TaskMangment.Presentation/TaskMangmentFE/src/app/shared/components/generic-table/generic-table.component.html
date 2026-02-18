@@ -93,6 +93,11 @@
             </div>
 
             <div class="filter-actions">
+
+                <button *ngIf="showSecondButton" type="button" class="btn btn-primary btn-sm me-2"
+                    [disabled]="disableSecondButton" (click)="onSecondButtonClick()">
+                    {{ secondButtonLabel | translate }}
+                </button>
                 <!-- EXTRA DROPDOWN -->
                 <div *ngIf="showExtraButton" ngbDropdown class="d-inline-block">
                     <button type="button" class="btn btn-dark" ngbDropdownToggle>
@@ -119,6 +124,7 @@
 
                     </div>
                 </div>
+
 
 
                 <button class="btn btn-primary btn-sm me-2" (click)="applyFilters()">
@@ -175,6 +181,7 @@
                     <!-- Checkbox -->
                     <td *ngIf="showCheckbox" class="text-center">
                         <input type="checkbox" class="form-check-input" [checked]="isChecked(item)"
+                               [disabled]="disableCheckboxFn ? disableCheckboxFn(item) : false"
                             (change)="onCheckboxChange(item, $event)" />
                     </td>
 

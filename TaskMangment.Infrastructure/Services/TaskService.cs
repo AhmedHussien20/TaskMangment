@@ -129,6 +129,12 @@ namespace TaskMangment.Infrastructure.Services
             }
             else
             {
+                // 1) exclude archived by default unless explicitly requested
+                if (!request.StatusId.HasValue || request.StatusId.Value != (int)WorkTaskStatus.Archived)
+                {
+                    query = query.Where(t => t.Status != WorkTaskStatus.Archived);
+                }
+
 
                 if (request.StatusId.HasValue)
                 {
@@ -377,12 +383,22 @@ namespace TaskMangment.Infrastructure.Services
             if (task == null)
                 throw new AppException(ErrorCodes.TaskNotFound, StatusCodes.Status400BadRequest);
 
-            if (task.Status == WorkTaskStatus.Closed || task.Status == WorkTaskStatus.Archived || task.Status == WorkTaskStatus.AutoClose)
-                throw new AppException(ErrorCodes.TaskAlreadyClosed, StatusCodes.Status400BadRequest);
+            var currentStatus = task.Status;
 
+            if (currentStatus == WorkTaskStatus.Closed || currentStatus == WorkTaskStatus.AutoClose || currentStatus == WorkTaskStatus.Archived)
+            {
+                throw new AppException(ErrorCodes.TaskAlreadyClosed, StatusCodes.Status400BadRequest);
+            }
+
+            if (dto.Status == WorkTaskStatus.Archived)
+            {
+                var canArchive = currentStatus == WorkTaskStatus.Closed || currentStatus == WorkTaskStatus.AutoClose;
+                if (!canArchive)
+                    throw new AppException(ErrorCodes.TaskMustBeClosedBeforeArchive, StatusCodes.Status400BadRequest);
+            }
             _mapper.Map(dto, task);
 
-            if (dto.Status == WorkTaskStatus.Closed || dto.Status == WorkTaskStatus.Archived)
+            if (dto.Status == WorkTaskStatus.Closed)
             {
                 task.ClosedAt = DateTime.UtcNow;
                 task.ClosedByUserId = modifierUser;
@@ -394,6 +410,12 @@ namespace TaskMangment.Infrastructure.Services
                 }
 
             }
+
+            if (dto.Status == WorkTaskStatus.Archived)
+            {
+                task.Status = WorkTaskStatus.Archived;
+            }
+
 
             var existingAssignments = await _assignmentRepo
                 .GetAll(a => a.TaskId == id)
@@ -807,6 +829,34 @@ namespace TaskMangment.Infrastructure.Services
 
             return ApiResponse<TaskActivitySummaryDTO>.Ok(result);
         }
+
+        public async Task<ApiResponse<bool>> ArchiveClosedTasksAsync(List<int> taskIds)
+        {
+            if (taskIds == null || !taskIds.Any())
+                throw new AppException(ErrorCodes.NotFound, StatusCodes.Status400BadRequest);
+
+            var tasks = await _taskRepo.GetAll(t => taskIds.Contains(t.Id))
+                .ToListAsync();
+
+            var missingIds = taskIds.Except(tasks.Select(t => t.Id)).ToList();
+            if (missingIds.Any())
+                throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
+
+            var closedTasks = tasks.Where(t => t.Status == WorkTaskStatus.Closed || t.Status == WorkTaskStatus.AutoClose).ToList();
+            if (!closedTasks.Any())
+                return ApiResponse<bool>.Ok(true);
+
+            foreach (var t in closedTasks)
+            {
+                t.Status = WorkTaskStatus.Archived;
+            }
+
+            await _taskRepo.SaveChangesAsync();
+           // await _cache.RemoveAsync("tasks:");
+
+            return ApiResponse<bool>.Ok(true);
+        }
+
 
     }
 }
