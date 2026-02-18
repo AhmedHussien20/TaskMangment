@@ -15,6 +15,7 @@ namespace TaskMangment.Infrastructure.Caching
         public Task RemoveAsync(string key)
             => Task.CompletedTask;
 
-        
+        public async Task<T> GetOrSetAsync<T>(string key, Func<Task<T>> factory, TimeSpan expiration)
+            => await factory();
     }
 }

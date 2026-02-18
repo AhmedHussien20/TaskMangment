@@ -29,8 +29,7 @@ namespace TaskMangment.Infrastructure.Services
         /// <summary>
         /// Helper
         /// </summary>
-        private async Task<(IQueryable<int> ScopedEmployeeIds, bool CanViewAllTasks)>
-    GetScopedEmployeeIdsAsync(int currentEmployeeId, int roleLevel)
+        private async Task<(IQueryable<int> ScopedEmployeeIds, bool CanViewAllTasks)>GetScopedEmployeeIdsAsync(int currentEmployeeId, int roleLevel)
         {
             var access = await _accessProvider.GetAsync(currentEmployeeId);
 
@@ -658,7 +657,18 @@ namespace TaskMangment.Infrastructure.Services
                             ? (string.IsNullOrWhiteSpace(c.CommentText)
                                 ? "رفع ملف"
                                 : (c.CommentText.Length > 50 ? c.CommentText.Substring(0, 50) : c.CommentText))
-                            : (string.IsNullOrWhiteSpace(c.CommentText) ? "رفع ملف" : c.CommentText)
+                            : (string.IsNullOrWhiteSpace(c.CommentText) ? "رفع ملف" : c.CommentText),
+                    AssignedTo = c.Task.Assignments
+            .Where(a => a.IsActive)
+            .Select(a => new EmployeeBriefDto
+            {
+                Id = a.EmployeeId,
+                FullName = a.Employee.FullName
+            })
+            .Distinct()
+            .ToList()
+
+
                 })
                 .OrderByDescending(c => c.CommentDate)
                 .AsNoTracking()

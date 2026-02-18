@@ -83,7 +83,7 @@ private updateCommentValidators() {
     } else {
       commentControl.setValidators([
         Validators.required,
-        Validators.minLength(500)
+        Validators.minLength(200)
       ]);
     }
   }

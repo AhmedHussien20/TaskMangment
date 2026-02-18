@@ -22,6 +22,13 @@ namespace TaskMangment.Application.DTOs.ReportsDTO
         public string CommentedBy { get; set; }
         public string CommentText { get; set; }
         public DateTime CommentDate { get; set; }
+        public List<EmployeeBriefDto> AssignedTo { get; set; } = new();
+
+    }
+    public class EmployeeBriefDto
+    {
+        public int Id { get; set; }
+        public string FullName { get; set; }
     }
 
     public enum TaskMovementType

@@ -50,6 +50,7 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<Notification> _notificationRepo;
 
         private readonly IAppUnitOfWork _uow;
+        private readonly ICacheInvalidator _cacheInvalidator;
 
 
 
@@ -73,10 +74,8 @@ namespace TaskMangment.Infrastructure.Services
            IRepository<Attachment> attachmentRepo,
            IRepository<TaskPercentage> percentRepo,
            IRepository<Notification> notificationRepo,
-           IAppUnitOfWork uow
-
-
-
+           IAppUnitOfWork uow,
+              ICacheInvalidator cacheInvalidator
 )
         {
             _taskRepo = taskRepo;
@@ -97,6 +96,7 @@ namespace TaskMangment.Infrastructure.Services
             _percentRepo = percentRepo;
             _notificationRepo = notificationRepo;
             _uow = uow;
+            _cacheInvalidator = cacheInvalidator;
         }
 
         public async Task<ApiResponse<PagedResponse<TaskGetDto>>> GetAllAsync(TaskRequest request, int CompanyId, int roleLevel, int employeeId)
@@ -303,7 +303,8 @@ namespace TaskMangment.Infrastructure.Services
 
                     await _assignmentRepo.SaveChangesAsync();
 
-                    await _cache.RemoveAsync("tasks:");
+                    await _cacheInvalidator.InvalidateDashboardAsync(companyId);
+                    //await _cache.RemoveAsync("tasks:");
 
 
                     for (int i = 0; i < tasks.Count; i++)
