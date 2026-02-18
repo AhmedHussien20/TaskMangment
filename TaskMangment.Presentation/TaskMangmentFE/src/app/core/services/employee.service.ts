@@ -55,7 +55,10 @@ getFunctionCodes(): Observable<BaseResponse<EnumItemDto[]>> {
       `PageSize=${req.pageSize}`,
       `SortColumn=${req.sortColumn}`,
       `SortDirection=${req.sortDirection}`,
-      `roleLevel=${(req as any).roleLevel ?? ''}`
+      `roleLevel=${(req as any).roleLevel ?? ''}`,
+      `permissionCode=${(req as any).permissionCode ?? ''}`,
+      `branchId=${(req as any).branchId ?? ''}`
+
 
     ].join('&');
   }

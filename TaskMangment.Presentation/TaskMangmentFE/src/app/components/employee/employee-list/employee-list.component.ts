@@ -14,6 +14,8 @@ import { Employee } from 'app/core/models/employee/employee';
 import { EmployeeCreateUpdateComponent } from '../employee-create-update/employee-create-update.component';
 import Swal from 'sweetalert2';
 import { ToastrService } from 'ngx-toastr';
+import { BranchService } from 'app/core/services/branch.service';
+
 
 @Component({
   selector: 'app-employee-list',
@@ -40,6 +42,7 @@ export class EmployeeListComponent implements OnInit {
   'MENU.EMPLOYEES',
   'EMPLOYEE.LIST_TITLE'
 ];
+branchOptions: { value: number; label: string }[] = [];
 
   // table columns
   columns: TableColumn[] = [
@@ -60,18 +63,21 @@ export class EmployeeListComponent implements OnInit {
 
   searchCriteria: SearchCriteria = {
     searchKey: '',
+    branchId: null as any,
     pageIndex: this.page,
     pageSize: this.entries,
     sortColumn: 'Id',
     sortDirection: 'DESC',
     filterTypes: {
       searchKey: 'text',
+       branchId: 'dropdown',
     }
   };
 
-  labels = {
-    searchKey: 'EMPLOYEE.searchKey'
-  };
+ labels = {
+  searchKey: 'EMPLOYEE.searchKey',
+  branchId: 'EMPLOYEE.BRANCH'
+};
 
   isLoading = false;
 
@@ -82,16 +88,17 @@ export class EmployeeListComponent implements OnInit {
     private employeeService: EmployeeService,
     private modalService: NgbModal,
     private translate: TranslateService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private branchService: BranchService
   ) { }
 
   ngOnInit(): void {
     this.loadData();
+    this.loadBranches();
   }
 
   loadData() {
     this.isLoading = true;
-
     this.employeeService.getAll(this.searchCriteria).subscribe({
       next: (res: any) => {
         this.rows = res.data.data;
@@ -105,7 +112,27 @@ export class EmployeeListComponent implements OnInit {
       }
     });
   }
+  
 
+  loadBranches() {
+    const req = {
+      searchKey: '',
+      pageIndex: 1,
+      pageSize: 500,
+      sortColumn: 'Id',
+      sortDirection: 'DESC'
+    };
+
+    this.branchService.getAll(req).subscribe(res => {
+      const list = res.data.data;
+      this.branchOptions = list.map((b: { id: number; name: string }) => ({
+  value: b.id,
+  label: b.name
+}));
+
+    });
+  }
+        
   onPageChange(page: number) {
     this.page = page;
     this.searchCriteria.pageIndex = page;

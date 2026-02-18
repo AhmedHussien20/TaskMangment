@@ -75,7 +75,7 @@ export class TaskTodayCommentComponent implements OnInit {
   ngOnInit() {
   const userLevel = Number(this.authService.getRoleLevel() ?? 0);
 
-  if ([70,80, 100].includes(userLevel)) {
+  if ([50,70,80, 100].includes(userLevel)) {
     this.columns.splice(4, 0, {
       key: 'employees',
       label: 'DASHBOARD.NOT_COMMENTED_EMPLOYEES',

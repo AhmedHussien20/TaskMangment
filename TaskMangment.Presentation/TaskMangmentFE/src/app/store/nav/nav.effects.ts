@@ -107,12 +107,12 @@ private MENUITEMS: MenuItem[] = [
   },
 
   // ================= Education =================
-  { headTitle: 'nav.apps.education.header', minRoleLevel: 50 , functionCode:1 },
+  { headTitle: 'nav.apps.education.header', minRoleLevel: 60 , functionCode:1 },
   {
     title: 'nav.apps.education.title',
     icon: 'ti-book',
     type: 'sub',
-    minRoleLevel: 50,
+    minRoleLevel: 60,
     functionCode: 1,
     children: [
       {

@@ -1,5 +1,5 @@
 import { TaskGet } from "app/core/models/task/task";
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NgbModal, NgbModalModule } from '@ng-bootstrap/ng-bootstrap';
@@ -37,6 +37,8 @@ export class TaskListComponent implements OnInit {
   IsClosed = true;
   canArchive = false;
   TurnToArchive = true;
+@ViewChild(TasksEmployeeDeepSearchComponent)
+deepSearchComp?: TasksEmployeeDeepSearchComponent;
   canCreate = false;
   canEdit = false;
   canDelete = false;
@@ -158,6 +160,11 @@ export class TaskListComponent implements OnInit {
     this.canEdit = roleLevel >= 70;
     this.canDelete = roleLevel >= 70;
     this.canShowExtraTasks = roleLevel == 100
+
+if (this.auth.hasPermission('CREATE_TASK')) {
+  this.canCreate = true;
+  this.canEdit = true;
+}
 
     this.loadData();
   }
@@ -462,4 +469,20 @@ onCheckboxChange(e: { row: TaskGet; checked: boolean }) {
 disableArchiveCheckbox = (row: TaskGet) =>
   !((row.status === 3 || row.status === 5) && row.createdByMe);
 
+  clearTrigger = 0;
+
+ onTableCleared() {
+  
+  this.deepSearchInitial = null;
+  (this.searchCriteria as any).direction = null;
+  (this.searchCriteria as any).targetEmployeeId = null;
+  (this.searchCriteria as any).priorityId = null;
+  (this.searchCriteria as any).createdFrom = null;
+  (this.searchCriteria as any).createdTo = null;
+  (this.searchCriteria as any).dueFrom = null;
+  (this.searchCriteria as any).dueTo = null;
+  (this.searchCriteria as any).searchKey = '';
+this.clearTrigger++; 
+  this.loadData();
+}
 }

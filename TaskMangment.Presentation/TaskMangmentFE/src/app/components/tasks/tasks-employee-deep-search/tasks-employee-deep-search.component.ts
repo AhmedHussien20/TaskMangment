@@ -176,27 +176,40 @@ onSubmit(formData: any) {
     this.onSubmit(this.formGroup.getRawValue());
   }
 
+  
   clear() {
-    const direction = this.initial?.direction ?? null;
-    const statusId = this.initial?.statusId ?? null;
+  this.formGroup.reset({
+    direction: null,
+    statusId: null,
+    targetEmployeeId: null,
+    searchKey: '',
+    priorityId: null,
+    createdFrom: null,
+    createdTo: null,
+    dueFrom: null,
+    dueTo: null
+  });
 
-    this.formGroup.reset({
-      direction,
-      statusId,
-
-      targetEmployeeId: null,
-      searchKey: '',
-      priorityId: null,
-      createdFrom: null,
-      createdTo: null,
-      dueFrom: null,
-      dueTo: null
-    });
-  }
+  this.submitFilters.emit({
+    direction: null,
+    statusId: null,
+    targetEmployeeId: null,
+    searchKey: '',
+    priorityId: null,
+    createdFrom: null,
+    createdTo: null,
+    dueFrom: null,
+    dueTo: null
+  });
+}
 
   onCancel() {
     this.cancel.emit();
   }
-
+@Input() set triggerClear(val: number) {
+  if (val && this.formGroup) {
+    this.clear();
+  }
+}
   
 }

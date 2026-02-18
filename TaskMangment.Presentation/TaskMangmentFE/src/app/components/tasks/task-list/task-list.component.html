@@ -92,6 +92,7 @@
       [statusOptions]="statusOptions"
       [initial]="deepSearchInitial"
       (submitFilters)="applyDeepSearch($event, modal)"
+      [triggerClear]="clearTrigger"
       (cancel)="modal.dismiss()">
     </app-tasks-employee-deep-search>
   </div>

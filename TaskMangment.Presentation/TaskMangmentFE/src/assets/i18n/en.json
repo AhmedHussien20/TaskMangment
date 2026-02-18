@@ -36,7 +36,8 @@
     "MONTH": "Month",
     "YEAR": "Year",
     "SELECT_BRANCH" : "Select branch",
-    "NOT_COMMENTED_EMPLOYEES" : "Employees aren't comment"
+    "NOT_COMMENTED_EMPLOYEES" : "Employees aren't comment",
+    "NEW_TASKS" : "Tasks not worked on yet"
 
   },
   "MENU": {

@@ -132,11 +132,11 @@ namespace TaskMangment.Infrastructure.Services
         }
 
         public async Task<ApiResponse<AdminDashboardDto>> GetDashboardAsync(
-            int companyId,
-            int roleLevel,
-            int? employeeId = null,
-            PeriodDto? period = null,
-            int? branchId = null)
+      int companyId,
+      int roleLevel,
+      int? employeeId = null,
+      PeriodDto? period = null,
+      int? branchId = null)
         {
             string cacheKey = $"dashboard:admin:{companyId}:{employeeId}:{branchId}:{period?.Type}";
             var cached = await _cache.GetAsync<AdminDashboardDto>(cacheKey);
@@ -164,7 +164,7 @@ namespace TaskMangment.Infrastructure.Services
 
             var overdueTasksQuery = _taskRepo.GetAll(t =>
                 t.CompanyId == companyId &&
-                t.Status != WorkTaskStatus.Closed && t.Status != WorkTaskStatus.AutoClose&& t.Status != WorkTaskStatus.Archived &&
+                t.Status != WorkTaskStatus.Closed && t.Status != WorkTaskStatus.AutoClose && t.Status != WorkTaskStatus.Archived &&
                 t.DueDate != null &&
                 t.DueDate <= DateTime.Today &&
                 t.DueDate >= range.Start && t.DueDate <= range.End);
@@ -189,6 +189,20 @@ namespace TaskMangment.Infrastructure.Services
             }
 
             var completedTasks = await completedTasksQuery.CountAsync();
+
+            var newTasksQuery = _taskRepo.GetAll(t =>
+            t.CompanyId == companyId && 
+            t.Status == WorkTaskStatus.New &&
+            t.CreatedDate >= range.Start && t.CreatedDate <= range.End);
+
+            if (employeeId.HasValue || branchId.HasValue)
+            {
+                newTasksQuery = newTasksQuery.Where(t =>
+                    t.Assignments.Any(a => scopedEmployeeIds.Contains(a.EmployeeId)));
+            }
+
+            var newTasks = await newTasksQuery.CountAsync();
+
 
             var penaltiesQuery = _deductionRepo.GetAll(d =>
                 d.Employee.CompanyId == companyId &&
@@ -240,6 +254,7 @@ namespace TaskMangment.Infrastructure.Services
                     ActiveTasks = activeTasks,
                     OverdueTasks = overdueTasks,
                     CompletedTasks = completedTasks,
+                    NewTasks = newTasks,
                     TotalPenaltiesThisMonth = penaltiesThisPeriod,
                     WarningsThisMonth = warningsThisPeriod
                 },
@@ -434,6 +449,10 @@ namespace TaskMangment.Infrastructure.Services
                 (
                     (status == "Active" &&
                         (t.Status == WorkTaskStatus.New || t.Status == WorkTaskStatus.InProgress))
+                    ||
+                    (status == "New" &&
+                    t.Status == WorkTaskStatus.New &&
+                    t.CreatedDate >= range.Start && t.CreatedDate <= range.End)
                     ||
                     (status == "Overdue" &&
                     t.Status != WorkTaskStatus.Closed && t.Status != WorkTaskStatus.AutoClose && t.Status != WorkTaskStatus.Archived &&

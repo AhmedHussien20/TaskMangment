@@ -58,7 +58,9 @@ interface HasId {
     FormsModule,
     NgbPaginationModule, TranslateModule, MyDatePipe, NgbTooltipModule, NgSelectModule,NgbDropdownModule,EmployeeNgSelectComponent
   ],
-  styleUrls: ['./generic-table.component.scss']
+  styleUrls: ['./generic-table.component.scss'],
+  
+
 })
 export class GenericTableComponent<T> implements OnDestroy{
   private filtersChanged$ = new Subject<void>();
@@ -115,7 +117,9 @@ export class GenericTableComponent<T> implements OnDestroy{
   @Output() delete = new EventEmitter<number>();
   @Input() rowClickable: boolean = false;
   @Input() showEmployeeFilter: boolean = true;
+  @Input() BranchFilter: boolean = false;
   @Input() extraFilterOptions: Record<string, { value: any; label: string }[]> = {};
+  @Output() cleared = new EventEmitter<void>();
 
   // ---------- UI State ----------
   loading: boolean = false;             
@@ -217,17 +221,23 @@ getExtraOptions(key: string) {
     return filterTypes[key] || 'text';
   }
 
-  getDropdownOptions(key: string) {
-    switch (key) {
-      case 'statusId':
-        return this.statusOptions;
+ getDropdownOptions(key: string) {
+  switch (key) {
+    case 'statusId':
+      return this.statusOptions;
 
-case 'isAssigned':                 
-      return this.statusOptions; 
-      default:
-        return [];
-    }
+    case 'isAssigned':
+      return this.statusOptions;
+
+    default:
+      return (this.extraFilterOptions?.[key] ?? []).map(x => ({
+        id: x.value,
+        name: x.label
+      }));
+      
   }
+}
+
 getSelectedEmployeeId(): number | undefined {
   const ids = (this.searchCriteria as any)?.['employeeIds'];
   if (Array.isArray(ids) && ids.length > 0) return Number(ids[0]);
@@ -287,7 +297,7 @@ setSelectedEmployeeId(id: number | undefined) {
     (item as any).selected = value;
   }
   clearFilters() {
-    const ignore = ['sortColumn', 'sortDirection', 'pageIndex', 'pageSize', 'targetEmployeeId', 'direction'];
+    const ignore = ['sortColumn', 'sortDirection', 'pageIndex', 'pageSize'];
 
     const filterTypes = (this.searchCriteria?.filterTypes || {}) as Record<string, string>;
 
@@ -315,6 +325,8 @@ setSelectedEmployeeId(id: number | undefined) {
     });
 
     this.applyFilters();
+    this.cleared.emit();
+
   }
 
   toggleFilters() {
