@@ -9,7 +9,7 @@ namespace TaskMangment.Application.DTOs.ReportsDTO
 {
     public class TaskDiscountReportDto
     {
-        public int TaskId { get; set; }
+        public int? TaskId { get; set; }
         public string Title { get; set; }
         public string AssignedBy { get; set; } 
         public DateTime? ClosedDate { get; set; }
@@ -45,7 +45,7 @@ namespace TaskMangment.Application.DTOs.ReportsDTO
 
     public class TaskDiscountAuditRowDto
     {
-        public int TaskId { get; set; }
+        public int? TaskId { get; set; }
         public string Title { get; set; }
         public string AssignedBy { get; set; }
         public DateTime? ClosedDate { get; set; }

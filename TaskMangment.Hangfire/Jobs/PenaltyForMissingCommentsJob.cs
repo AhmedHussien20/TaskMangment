@@ -51,7 +51,7 @@ namespace TaskMangment.Hangfire.Jobs
             var tasks = await _db.Tasks
                 .Include(t => t.Assignments)
                     .ThenInclude(a => a.Employee)
-                .Where(t => t.CommentAllowPeriodDays != null && t.DueDate > yesterday)
+                .Where(t => t.CommentAllowPeriodDays != null && t.DueDate > yesterday && !t.IsDeleted)
                 .Where(t =>
                     t.Status != WorkTaskStatus.Closed &&
                     t.Status != WorkTaskStatus.AutoClose &&
@@ -124,17 +124,23 @@ namespace TaskMangment.Hangfire.Jobs
                         continue;
 
                     var lastComment = await _db.TaskComments
-                        .Where(c => c.TaskId == task.Id && c.EmployeeId == employeeId)
-                        .OrderByDescending(c => c.CreatedDate)
-                        .FirstOrDefaultAsync();
+     .Where(c => c.TaskId == task.Id && c.EmployeeId == employeeId && !c.IsDeleted)
+     .OrderByDescending(c => c.CreatedDate)
+     .FirstOrDefaultAsync();
 
                     var baseDate = lastComment == null
                         ? assignment.AssignedAt.Date
                         : lastComment.CreatedDate.Date;
 
-                    var shouldHaveComment = baseDate.AddDays(periodDays - 1) <= yesterday;
-                    if (!shouldHaveComment)
+                    var dueDate = baseDate.AddDays(periodDays - 1);
+
+                    if (dueDate > yesterday)
                         continue;
+
+                    // ✅ بدل AnyAsync
+                    if (lastComment != null && lastComment.CreatedDate.Date == dueDate)
+                        continue;
+
 
                     var hasLeave = await _db.Leaves
                       .Where(l => l.EmployeeId == employeeId &&
