@@ -99,114 +99,124 @@ namespace TaskMangment.Infrastructure.Services
             _cacheInvalidator = cacheInvalidator;
         }
 
+        private async Task<int> GetVersionAsync(string versionKey)
+        {
+            var v = await _cache.GetAsync<int>(versionKey);
+            if (v <= 0)
+            {
+                await _cache.SetAsync(versionKey, 1, TimeSpan.FromDays(30));
+                return 1;
+            }
+            return v;
+        }
         public async Task<ApiResponse<PagedResponse<TaskGetDto>>> GetAllAsync(TaskRequest request, int CompanyId, int roleLevel, int employeeId)
         {
-            //string cacheKey =
-            //    $"tasks:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}:{CompanyId}:{role}:{employeeId}";
+            var version = await GetVersionAsync(CacheKeys.TasksVersion(CompanyId));
+            var cacheKey = CacheKeys.TasksList(CompanyId, roleLevel, employeeId, request, version);
 
-            //if (!request.BypassCache)
-            //{
-            //    var cached = await _cache.GetAsync<PagedResponse<TaskGetDto>>(cacheKey);
-            //    if (cached != null)
-            //        return ApiResponse<PagedResponse<TaskGetDto>>.Ok(cached);
-            //}
-
-            var query = _taskRepo.GetAll()
-                .Include(t => t.CreatedBy)
-                .Include(t => t.Assignments).ThenInclude(a => a.Employee)
-                .Include(t => t.AssignedBy)
-                .ApplySearch(request.searchKey);
-
-            bool requestedAdvanced =
-     request.Direction.HasValue ||
-     request.TargetEmployeeId.HasValue ||
-     request.PriorityId.HasValue ||
-     request.CreatedFrom.HasValue || request.CreatedTo.HasValue ||
-     request.DueFrom.HasValue || request.DueTo.HasValue;
-
-            if (roleLevel == 100 && requestedAdvanced)
-            {
-                query = query.ApplyTaskFilters(request, employeeId);
-            }
-            else
-            {
-
-                if (request.StatusId.HasValue)
+            var response = await _cache.GetOrSetAsync<PagedResponse<TaskGetDto>>(
+                cacheKey,
+                async () =>
                 {
-                    query = query.Where(t => (int)t.Status == request.StatusId.Value);
-                }
+                    var query = _taskRepo.GetAll()
+                        .Include(t => t.CreatedBy)
+                        .Include(t => t.Assignments).ThenInclude(a => a.Employee)
+                        .Include(t => t.AssignedBy)
+                        .ApplySearch(request.searchKey);
 
-                query = query.Where(t =>
-                    t.Assignments.Any(a => a.EmployeeId == employeeId && a.IsActive) ||
-                    t.CreatedByEmployeeId == employeeId);
+                    bool requestedAdvanced =
+                        request.Direction.HasValue ||
+                        request.TargetEmployeeId.HasValue ||
+                        request.PriorityId.HasValue ||
+                        request.CreatedFrom.HasValue || request.CreatedTo.HasValue ||
+                        request.DueFrom.HasValue || request.DueTo.HasValue;
 
-                if (request.EmployeeIds != null && request.EmployeeIds.Any())
-                {
-                    query = query.Where(t =>
-                        t.Assignments.Any(a => a.IsActive && request.EmployeeIds.Contains(a.EmployeeId)));
-                }
-            }
-
-
-            var totalCount = await query.CountAsync();
-
-            query = query.OrderByDynamicSafe(request.SortColumn, request.SortDirection);
-
-            var list = await query
-                .Skip((request.PageIndex - 1) * request.PageSize)
-                .Take(request.PageSize)
-                .ToListAsync();
-
-            var dtos = _mapper.Map<ICollection<TaskGetDto>>(list);
-
-            foreach (var dto in dtos)
-            {
-                var task = list.FirstOrDefault(t => t.Id == dto.Id);
-                if (task == null) continue;
-
-                dto.AssignEmployee = task.Assignments
-                    .Where(a => a.IsActive)
-                    .Select(a => new TaskEmployeeAssignmentDto
+                    if (roleLevel == 100 && requestedAdvanced)
                     {
-                        Id = a.Employee.Id,
-                        Name = a.Employee.FullName
-                    })
-                    .ToList();
+                        query = query.ApplyTaskFilters(request, employeeId);
+                    }
+                    else
+                    {
+                        if (request.StatusId.HasValue)
+                        {
+                            query = query.Where(t => (int)t.Status == request.StatusId.Value);
+                        }
 
-                dto.AssignedByName = task.AssignedBy?.FullName;
-                dto.CreatedByMe =
-                    roleLevel == 100 ||
-                    roleLevel == 80 ||
-                    task.CreatedByEmployeeId == employeeId;
+                        query = query.Where(t =>
+                            t.Assignments.Any(a => a.EmployeeId == employeeId && a.IsActive) ||
+                            t.CreatedByEmployeeId == employeeId);
 
-            }
+                        if (request.EmployeeIds != null && request.EmployeeIds.Any())
+                        {
+                            query = query.Where(t =>
+                                t.Assignments.Any(a => a.IsActive && request.EmployeeIds.Contains(a.EmployeeId)));
+                        }
+                    }
 
-            var summary = new TaskSummaryDto
-            {
-                MyTasks = await _taskRepo.CountAsync(t =>
-                t.Assignments.Any(a => a.EmployeeId == employeeId && a.IsActive)),
+                    var totalCount = await query.CountAsync();
 
-                CreatedByMe = await _taskRepo.CountAsync(t =>
-                    t.CreatedByEmployeeId == employeeId),
+                    query = query.OrderByDynamicSafe(request.SortColumn, request.SortDirection);
 
-                InProgressTasks = await _taskRepo.CountAsync(t =>
-                    t.Status == WorkTaskStatus.InProgress &&
-                    t.Assignments.Any(a => a.EmployeeId == employeeId)),
+                    var list = await query
+                        .Skip((request.PageIndex - 1) * request.PageSize)
+                        .Take(request.PageSize)
+                        .ToListAsync();
 
-                NewTasks = await _taskRepo.CountAsync(t =>
-                    t.Status == WorkTaskStatus.New &&
-                    t.Assignments.Any(a => a.EmployeeId == employeeId)),
-                ArchiveTasks = await _taskRepo.CountAsync(t =>
-                    t.Status == WorkTaskStatus.Archived &&
-                    t.Assignments.Any(a => a.EmployeeId == employeeId))
-            };
+                    var dtos = _mapper.Map<ICollection<TaskGetDto>>(list);
 
-            var response = new PagedResponse<TaskGetDto>(dtos, totalCount, request.PageIndex, request.PageSize, summary);
+                    foreach (var dto in dtos)
+                    {
+                        var task = list.FirstOrDefault(t => t.Id == dto.Id);
+                        if (task == null) continue;
 
-            // await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
+                        dto.AssignEmployee = task.Assignments
+                            .Where(a => a.IsActive)
+                            .Select(a => new TaskEmployeeAssignmentDto
+                            {
+                                Id = a.Employee.Id,
+                                Name = a.Employee.FullName
+                            })
+                            .ToList();
+
+                        dto.AssignedByName = task.AssignedBy?.FullName;
+                        dto.CreatedByMe =
+                            roleLevel == 100 ||
+                            roleLevel == 80 ||
+                            task.CreatedByEmployeeId == employeeId;
+                    }
+
+                    var summary = new TaskSummaryDto
+                    {
+                        MyTasks = await _taskRepo.CountAsync(t =>
+                            t.Assignments.Any(a => a.EmployeeId == employeeId && a.IsActive)),
+
+                        CreatedByMe = await _taskRepo.CountAsync(t =>
+                            t.CreatedByEmployeeId == employeeId),
+
+                        InProgressTasks = await _taskRepo.CountAsync(t =>
+                            t.Status == WorkTaskStatus.InProgress &&
+                            t.Assignments.Any(a => a.EmployeeId == employeeId)),
+
+                        NewTasks = await _taskRepo.CountAsync(t =>
+                            t.Status == WorkTaskStatus.New &&
+                            t.Assignments.Any(a => a.EmployeeId == employeeId)),
+
+                        ArchiveTasks = await _taskRepo.CountAsync(t =>
+                            t.Status == WorkTaskStatus.Archived &&
+                            t.Assignments.Any(a => a.EmployeeId == employeeId))
+                    };
+
+                    var result = new PagedResponse<TaskGetDto>(
+                        dtos, totalCount, request.PageIndex, request.PageSize, summary);
+
+                    return result;
+                },
+                TimeSpan.FromMinutes(2)
+            );
 
             return ApiResponse<PagedResponse<TaskGetDto>>.Ok(response);
         }
+
 
         public async Task<ApiResponse<TaskGetDto>> GetByIdAsync(int id, int roleLevel, int employeeId)
         {
@@ -303,7 +313,8 @@ namespace TaskMangment.Infrastructure.Services
 
                     await _assignmentRepo.SaveChangesAsync();
 
-                    await _cacheInvalidator.InvalidateDashboardAsync(companyId);
+                
+
                     //await _cache.RemoveAsync("tasks:");
 
 
@@ -351,7 +362,9 @@ namespace TaskMangment.Infrastructure.Services
                     await _assignmentRepo.AddAsync(assignment);
                 }
                 await _assignmentRepo.SaveChangesAsync();
-                await _cache.RemoveAsync("tasks:");
+
+                await _cacheInvalidator.InvalidateDashboardAsync(companyId);
+                await _cacheInvalidator.InvalidateTasksAsync(companyId);
 
                 await _eventDispatcher.PublishAsync(new TaskAssignedEvent(task.Id, task.Title, dto.AssignedEmployeeIds));
 
@@ -450,7 +463,11 @@ namespace TaskMangment.Infrastructure.Services
             }
 
             await _assignmentRepo.SaveChangesAsync();
+
             var companyId = task.CompanyId;
+
+            await _cacheInvalidator.InvalidateDashboardAsync(companyId);
+            await _cacheInvalidator.InvalidateTasksAsync(companyId);
 
             await _cache.RemoveAsync("tasks:");
 
@@ -514,9 +531,15 @@ namespace TaskMangment.Infrastructure.Services
      .ExecuteUpdateAsync(setters => setters
          .SetProperty(a => a.IsDeleted, true)
          .SetProperty(a => a.DeletedDate, DateTime.UtcNow)
+
+
      );
+
             await _taskRepo.SaveChangesAsync();
-            await _cache.RemoveAsync("tasks:");
+
+            var companyId = task.CompanyId;
+            await _cacheInvalidator.InvalidateDashboardAsync(companyId);
+            await _cacheInvalidator.InvalidateTasksAsync(companyId);
 
             //need to know if we need to delete assignments also or cascade delete will handle it
             //var assignments = await _assignmentRepo.GetAll(a => a.TaskId == task.Id).ToListAsync();

@@ -29,8 +29,16 @@ namespace TaskMangment.Infrastructure.Caching
         public Task InvalidateTasksAsync(int companyId)
             => BumpAsync(CacheKeys.TasksVersion(companyId));
 
-        //public Task InvalidateEmployeesAsync(int companyId)
-        //    => BumpAsync(CacheKeys.EmployeesVersion(companyId)); 
+        public Task InvalidateEmployeesAsync(int companyId)
+            => BumpAsync(CacheKeys.EmployeesVersion(companyId));
+
+        public Task InvalidateAreasAsync(int companyId)
+            => BumpAsync(CacheKeys.AreasVersion(companyId));
+
+        public Task InvalidateBranchAsync(int companyId)
+            => BumpAsync(CacheKeys.BranchesVersion(companyId));
+
+
     }
 
 }

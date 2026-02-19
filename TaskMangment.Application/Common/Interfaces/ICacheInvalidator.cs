@@ -10,7 +10,10 @@ namespace TaskMangment.Application.Common.Interfaces
     {
         Task InvalidateDashboardAsync(int companyId);
         Task InvalidateTasksAsync(int companyId);
-       // Task InvalidateEmployeesAsync(int companyId);
+        Task InvalidateEmployeesAsync(int companyId);
+        Task InvalidateAreasAsync(int companyId);
+
+        Task InvalidateBranchAsync(int companyId);
     }
 
 }

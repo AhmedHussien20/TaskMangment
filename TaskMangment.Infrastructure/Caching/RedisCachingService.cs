@@ -99,7 +99,7 @@ namespace TaskMangment.Infrastructure.Caching
                 var cached = await GetAsync<T>(key);
                 if (cached is not null) return cached;
 
-                var lockKey = key + ":lock";
+               var lockKey = key + ":lock";
 
                 if (await _cache.GetStringAsync(lockKey) is null)
                 {

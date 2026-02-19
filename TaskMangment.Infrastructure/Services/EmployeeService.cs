@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Linq;
 using System.Net.Mail;
 using System.Text;
@@ -22,6 +23,7 @@ using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
+using TaskMangment.Infrastructure.Caching;
 using TaskMangment.Infrastructure.DataContext;
 using TaskMangment.Infrastructure.Persistence.Extensions;
 using Attachment = TaskMangment.Domain.Entities.Attachment;
@@ -46,6 +48,8 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IUserAccessContextProvider _accessProvider;
         private readonly IRepository<TaskAssignment> _taskAssignmentRepo;
         private readonly IRepository<WorkTask> _taskRepo;
+        private readonly ICacheInvalidator _cacheInvalidator;
+
 
 
 
@@ -65,7 +69,8 @@ namespace TaskMangment.Infrastructure.Services
             IRepository<ManagerBranches> managerBranchesRepo,
             IUserAccessContextProvider accessProvider,
             IRepository<TaskAssignment> taskAssignmentRepo,
-            IRepository<WorkTask> taskRepo
+            IRepository<WorkTask> taskRepo,
+            ICacheInvalidator cacheInvalidator
             )
         {
             _employeeRepo = employeeRepo;
@@ -84,104 +89,112 @@ namespace TaskMangment.Infrastructure.Services
             _env = env;
             _taskAssignmentRepo = taskAssignmentRepo;
             _taskRepo = taskRepo;
+            _cacheInvalidator = cacheInvalidator;
+        }
+        private async Task<int> GetVersionAsync(string versionKey)
+        {
+            var v = await _cache.GetAsync<int>(versionKey);
+            if (v <= 0)
+            {
+                await _cache.SetAsync(versionKey, 1, TimeSpan.FromDays(30));
+                return 1;
+            }
+            return v;
         }
 
-        public async Task<ApiResponse<PagedResponse<EmployeeGetDto>>> GetAllAsync(EmployeeRequest request,int employeeId,int roleLevel) 
+        public async Task<ApiResponse<PagedResponse<EmployeeGetDto>>> GetAllAsync(EmployeeRequest request, int employeeId, int roleLevel, int companyId)
         {
             var access = await _accessProvider.GetAsync(employeeId);
 
-            var myBranchId = await _employeeRepo.GetAll(e => e.Id == employeeId)
-       .Select(e => e.BranchId)
-       .FirstOrDefaultAsync();
+            var version = await GetVersionAsync(CacheKeys.EmployeesVersion(companyId));
+            var cacheKey = CacheKeys.EmployeesList(companyId, employeeId, roleLevel, request, version);
 
-            if (myBranchId == 0)
-                throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
-
-            var empQuery = _employeeRepo.GetAll()
-                .Include(e => e.Branch)
-                .Include(e => e.Department)
-                .Include(e => e.Job)
-                .Include(e => e.EmployeeRoles.Where(er => er.IsAssigned && !er.IsDeleted))
-                    .ThenInclude(er => er.Role)
-                .ApplySearch(request.searchKey)
-                 .ApplyAccessScope(access)
-                .AsNoTracking();
-
-
-
-            if (!access.BranchIds.Any() && !access.FunctionCodes.Any() && roleLevel != 100 && string.IsNullOrWhiteSpace(request.PermissionCode))
-            {
-                empQuery = empQuery.Where(e => e.Id == employeeId);
-            }
-            if (!string.IsNullOrWhiteSpace(request.PermissionCode) &&request.PermissionCode == "CREATE_TASK" && roleLevel < 60)
-            {
-                empQuery = empQuery
-                    .Where(e => e.BranchId == myBranchId)
-                    .Where(e => e.EmployeeRoles.Any(er =>
-                        er.IsAssigned &&
-                        !er.IsDeleted &&
-                        er.Role != null &&
-                        er.Role.Level < 60));
-            }
-            else
-            {
-                if (roleLevel != 100)
-                    empQuery = empQuery.ApplyRoleHierarchy(roleLevel);
-            }
-
-            //if (request.RoleLevel.HasValue)
-            //{
-            //    var level = request.RoleLevel.Value;
-
-            //    empQuery = empQuery.Where(e =>
-            //        e.EmployeeRoles.Any(er =>
-            //            er.IsAssigned &&
-            //            !er.IsDeleted &&
-            //            er.Role != null &&
-            //            er.Role.Level == level
-            //        )
-            //    );
-            //}
-
-
-            var totalCount = await empQuery.CountAsync();
-
-            empQuery = empQuery.OrderByDynamicSafe(request.SortColumn, request.SortDirection);
-
-            var employees = await empQuery
-                .Skip((request.PageIndex - 1) * request.PageSize)
-                .Take(request.PageSize)
-                .ToListAsync();
-
-            var employeeIds = employees.Select(e => e.Id).ToList();
-
-            var images = await _db.Attachments
-                .Where(a =>
-                    a.AttachmentType == AttachmentType.Employee &&
-                    !a.IsDeleted &&
-                    employeeIds.Contains(a.ReferenceId))
-                .GroupBy(a => a.ReferenceId)
-                .Select(g => new
+            var response = await _cache.GetOrSetAsync<PagedResponse<EmployeeGetDto>>(
+                cacheKey,
+                async () =>
                 {
-                    EmployeeId = g.Key,
-                    ImageUrl = g.OrderByDescending(x => x.CreatedDate)
-                                .Select(x => x.FilePath)
-                                .FirstOrDefault()
-                })
-                .ToDictionaryAsync(x => x.EmployeeId, x => x.ImageUrl);
+                    var myBranchId = await _employeeRepo.GetAll(e => e.Id == employeeId)
+                        .Select(e => e.BranchId)
+                        .FirstOrDefaultAsync();
 
-            var dtos = _mapper.Map<List<EmployeeGetDto>>(employees);
+                    if (myBranchId == 0)
+                        throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
 
-            foreach (var dto in dtos)
-            {
-                if (images.TryGetValue(dto.Id, out var blobName) &&
-                    !string.IsNullOrWhiteSpace(blobName))
-                    dto.ImageUrl = _blobStorageService.WithSas(blobName);
-                else
-                    dto.ImageUrl = null;
-            }
+                    var empQuery = _employeeRepo.GetAll()
+                        .Include(e => e.Branch)
+                        .Include(e => e.Department)
+                        .Include(e => e.Job)
+                        .Include(e => e.EmployeeRoles.Where(er => er.IsAssigned && !er.IsDeleted))
+                            .ThenInclude(er => er.Role)
+                        .ApplySearch(request.searchKey)
+                        .ApplyAccessScope(access)
+                        .AsNoTracking();
 
-            var response = new PagedResponse<EmployeeGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
+                    if (!access.BranchIds.Any() && !access.FunctionCodes.Any() && roleLevel != 100 &&
+                        string.IsNullOrWhiteSpace(request.PermissionCode))
+                    {
+                        empQuery = empQuery.Where(e => e.Id == employeeId);
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(request.PermissionCode) &&
+                        request.PermissionCode == "CREATE_TASK" && roleLevel < 60)
+                    {
+                        empQuery = empQuery
+                            .Where(e => e.BranchId == myBranchId)
+                            .Where(e => e.EmployeeRoles.Any(er =>
+                                er.IsAssigned &&
+                                !er.IsDeleted &&
+                                er.Role != null &&
+                                er.Role.Level < 60));
+                    }
+                    else
+                    {
+                        if (roleLevel != 100)
+                            empQuery = empQuery.ApplyRoleHierarchy(roleLevel);
+                    }
+
+                    var totalCount = await empQuery.CountAsync();
+
+                    empQuery = empQuery.OrderByDynamicSafe(request.SortColumn, request.SortDirection);
+
+                    var employees = await empQuery
+                        .Skip((request.PageIndex - 1) * request.PageSize)
+                        .Take(request.PageSize)
+                        .ToListAsync();
+
+                    var employeeIds = employees.Select(e => e.Id).ToList();
+
+                    var images = await _db.Attachments
+                        .Where(a =>
+                            a.AttachmentType == AttachmentType.Employee &&
+                            !a.IsDeleted &&
+                            employeeIds.Contains(a.ReferenceId))
+                        .GroupBy(a => a.ReferenceId)
+                        .Select(g => new
+                        {
+                            EmployeeId = g.Key,
+                            ImageUrl = g.OrderByDescending(x => x.CreatedDate)
+                                        .Select(x => x.FilePath)
+                                        .FirstOrDefault()
+                        })
+                        .ToDictionaryAsync(x => x.EmployeeId, x => x.ImageUrl);
+
+                    var dtos = _mapper.Map<List<EmployeeGetDto>>(employees);
+
+                    foreach (var dto in dtos)
+                    {
+                        if (images.TryGetValue(dto.Id, out var blobName) &&
+                            !string.IsNullOrWhiteSpace(blobName))
+                            dto.ImageUrl = _blobStorageService.WithSas(blobName);
+                        else
+                            dto.ImageUrl = null;
+                    }
+
+                    return new PagedResponse<EmployeeGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
+                },
+                TimeSpan.FromMinutes(5)
+            );
+
             return ApiResponse<PagedResponse<EmployeeGetDto>>.Ok(response);
         }
 
@@ -274,7 +287,9 @@ namespace TaskMangment.Infrastructure.Services
                     
                 }
 
-                await _cache.RemoveAsync("employees:");
+                var companyId = employee.CompanyId;
+                await _cacheInvalidator.InvalidateEmployeesAsync(companyId);
+                await _cacheInvalidator.InvalidateDashboardAsync(companyId);
 
                 await _uow.CommitAsync();
 
@@ -389,7 +404,9 @@ namespace TaskMangment.Infrastructure.Services
                 }
 
                 await _employeeRepo.SaveChangesAsync();
-                await _cache.RemoveAsync("employees:");
+
+                var companyId = employee.CompanyId;
+                await _cacheInvalidator.InvalidateEmployeesAsync(companyId);
 
                 await _uow.CommitAsync();
 
@@ -449,7 +466,12 @@ namespace TaskMangment.Infrastructure.Services
 
             _employeeRepo.SoftDelete(employee);
             await _employeeRepo.SaveChangesAsync();
-            await _cache.RemoveAsync("employees:");
+            //await _cache.RemoveAsync("employees:");
+
+            var companyId = employee.CompanyId;
+            await _cacheInvalidator.InvalidateEmployeesAsync(companyId);
+            await _cacheInvalidator.InvalidateDashboardAsync(companyId);
+
 
 
             return ApiResponse<bool>.Ok(true, "Employee deleted successfully");

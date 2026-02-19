@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TaskMangment.Application.ApiRequests.Area;
+using TaskMangment.Application.Common.ApiRequests.Branch;
+using TaskMangment.Application.Common.ApiRequests.Employee;
 using TaskMangment.Application.Common.ApiRequests.Task;
 
 namespace TaskMangment.Infrastructure.Caching
@@ -45,6 +48,7 @@ namespace TaskMangment.Infrastructure.Caching
 
         #endregion
 
+        #region Tasks list cache keys
 
         public static string TasksList(int companyId, int roleLevel, int employeeId, TaskRequest request, int version)
         {
@@ -77,5 +81,67 @@ namespace TaskMangment.Infrastructure.Caching
                 $"df{DateKey(request.DueFrom)}:dt{DateKey(request.DueTo)}:" +
                 $"emps[{empIds}]";
         }
+        #endregion
+
+
+        #region Employees list cache keys
+        public static string EmployeesVersion(int companyId) => $"v:employees:{companyId}";
+        public static string EmployeesList(int companyId, int employeeId, int roleLevel, EmployeeRequest request, int version)
+        {
+            string Norm(string? s) => (s ?? "").Trim().ToLowerInvariant();
+            string IdKey(int? id) => id.HasValue ? id.Value.ToString() : "null";
+            var perm = Norm(request.PermissionCode);
+
+            return
+                $"employees:list:" +
+                $"c{companyId}:v{version}:" +
+                $"me{employeeId}:r{roleLevel}:" +
+                $"p{request.PageIndex}:s{request.PageSize}:" +
+                $"sc{Norm(request.SortColumn)}:{Norm(request.SortDirection)}:" +
+                $"q{Norm(request.searchKey)}:" +
+                $"perm{perm}";
+        }
+
+        #endregion
+
+
+        #region Areas list cache keys
+        public static string AreasVersion(int companyId) => $"v:areas:{companyId}";
+
+        public static string AreasList(int companyId, AreaRequest request, int version)
+        {
+            string Norm(string? s) => (s ?? "").Trim().ToLowerInvariant();
+
+            return
+                $"areas:list:" +
+                $"c{companyId}:v{version}:" +
+                $"p{request.PageIndex}:s{request.PageSize}:" +
+                $"sc{Norm(request.SortColumn)}:{Norm(request.SortDirection)}:" +
+                $"q{Norm(request.searchKey)}";
+        }
+        #endregion
+
+        #region Branches list cache keys
+        public static string BranchesVersion(int companyId) => $"v:branches:{companyId}";
+        public static string BranchesList(int companyId, int employeeId, int roleLevel, BranchRequest request, int version)
+        {
+            string Norm(string? s) => (s ?? "").Trim().ToLowerInvariant();
+
+            return
+                $"branches:list:" +
+                $"c{companyId}:v{version}:me{employeeId}:r{roleLevel}:" +
+                $"p{request.PageIndex}:s{request.PageSize}:" +
+                $"sc{Norm(request.SortColumn)}:{Norm(request.SortDirection)}:" +
+                $"q{Norm(request.searchKey)}";
+        }
+        #endregion
+
+
+        #region Branches list cache keys
+        #endregion
+
+        #region Branches list cache keys
+        #endregion
+
     }
 }
