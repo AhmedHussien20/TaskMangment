@@ -29,8 +29,7 @@ namespace TaskMangment.Infrastructure.Services
         /// <summary>
         /// Helper
         /// </summary>
-        private async Task<(IQueryable<int> ScopedEmployeeIds, bool CanViewAllTasks)>
-    GetScopedEmployeeIdsAsync(int currentEmployeeId, int roleLevel)
+        private async Task<(IQueryable<int> ScopedEmployeeIds, bool CanViewAllTasks)>GetScopedEmployeeIdsAsync(int currentEmployeeId, int roleLevel)
         {
             var access = await _accessProvider.GetAsync(currentEmployeeId);
 

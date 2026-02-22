@@ -19,6 +19,7 @@ using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
+using TaskMangment.Infrastructure.Caching;
 using TaskMangment.Infrastructure.Persistence.Extensions;
 
 namespace TaskMangment.Infrastructure.Services
@@ -34,6 +35,8 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<ManagerBranches> _managerBranchesRepo;
         private readonly IUserAccessContextProvider _accessProvider;
         private readonly IRepository<Employee> _employeeRepo;
+        private readonly ICacheInvalidator _cacheInvalidator;
+
 
 
 
@@ -47,7 +50,8 @@ namespace TaskMangment.Infrastructure.Services
             ICachingService cache,
             IRepository<ManagerBranches> managerBranchesRepo,
             IUserAccessContextProvider accessProvider,
-            IRepository<Employee> employeeRepo
+            IRepository<Employee> employeeRepo,
+            ICacheInvalidator cacheInvalidator
 )
         {
             _branchRepository = branchRepository;
@@ -59,36 +63,54 @@ namespace TaskMangment.Infrastructure.Services
             _managerBranchesRepo = managerBranchesRepo;
             _accessProvider = accessProvider;
             _employeeRepo = employeeRepo;
+            _cacheInvalidator = cacheInvalidator;
 
         }
-
-        public async Task<ApiResponse<PagedResponse<BranchGetDto>>> GetAllAsync(
-    BranchRequest request,
-    int employeeId,
-    int roleLevel,int companyId)
+        private async Task<int> GetVersionAsync(string versionKey)
         {
-            var access = await _accessProvider.GetAsync(employeeId);
-            var query = _branchRepository
-                .GetAll(b => b.CompanyId == companyId && !b.IsDeleted)
-                .Include(b => b.Manager)
-                .Include(b => b.Responsible)
-                .Include(b => b.Area)
-                .ApplySearch(request.searchKey)
-                .ApplyAccessScope(access);
+            var v = await _cache.GetAsync<int>(versionKey);
+            if (v <= 0)
+            {
+                await _cache.SetAsync(versionKey, 1, TimeSpan.FromDays(30));
+                return 1;
+            }
+            return v;
+        }
 
+        public async Task<ApiResponse<PagedResponse<BranchGetDto>>> GetAllAsync( BranchRequest request,int employeeId,int roleLevel, int companyId)
+        {
+            var version = await GetVersionAsync(CacheKeys.BranchesVersion(companyId));
+            var cacheKey = CacheKeys.BranchesList(companyId, employeeId, roleLevel, request, version);
 
-            var totalCount = await query.CountAsync();
+            var response = await _cache.GetOrSetAsync<PagedResponse<BranchGetDto>>(
+                cacheKey,
+                async () =>
+                {
+                    var access = await _accessProvider.GetAsync(employeeId);
 
-            query = query.OrderByDynamicSafe(request.SortColumn, request.SortDirection);
+                    var query = _branchRepository
+                        .GetAll(b => b.CompanyId == companyId && !b.IsDeleted)
+                        .Include(b => b.Manager)
+                        .Include(b => b.Responsible)
+                        .Include(b => b.Area)
+                        .ApplySearch(request.searchKey)
+                        .ApplyAccessScope(access);
 
-            var list = await query
-                .Skip((request.PageIndex - 1) * request.PageSize)
-                .Take(request.PageSize)
-                .ToListAsync();
+                    var totalCount = await query.CountAsync();
 
-            var dtos = _mapper.Map<ICollection<BranchGetDto>>(list);
+                    query = query.OrderByDynamicSafe(request.SortColumn, request.SortDirection);
 
-            var response = new PagedResponse<BranchGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
+                    var list = await query
+                        .Skip((request.PageIndex - 1) * request.PageSize)
+                        .Take(request.PageSize)
+                        .ToListAsync();
+
+                    var dtos = _mapper.Map<ICollection<BranchGetDto>>(list);
+
+                    return new PagedResponse<BranchGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
+                },
+                TimeSpan.FromMinutes(5)
+            );
 
             return ApiResponse<PagedResponse<BranchGetDto>>.Ok(response);
         }
@@ -140,6 +162,8 @@ namespace TaskMangment.Infrastructure.Services
 
             await _branchRepository.AddAsync(branch);
             await _branchRepository.SaveChangesAsync();
+
+            await _cacheInvalidator.InvalidateBranchAsync(CampanyId);
 
             var managerBranch = new ManagerBranches
             {
@@ -235,7 +259,8 @@ namespace TaskMangment.Infrastructure.Services
 
             await _managerBranchesRepo.SaveChangesAsync();
 
-            await _cache.RemoveAsync("branches:");
+            //await _cache.RemoveAsync("branches:");
+                await _cacheInvalidator.InvalidateBranchAsync(branch.CompanyId);
 
             var branchFull = await _branchRepository.GetAll()
                 .Include(b => b.Manager)
@@ -259,7 +284,20 @@ namespace TaskMangment.Infrastructure.Services
 
             _branchRepository.SoftDelete(branch);
             await _branchRepository.SaveChangesAsync();
-            await _cache.RemoveAsync("branches:");
+            //await _cache.RemoveAsync("branches:");
+
+                await _cacheInvalidator.InvalidateBranchAsync(branch.CompanyId);
+    
+                var managerBranches = await _managerBranchesRepo.GetAll()
+                    .Where(x => x.BranchId == id)
+                    .ToListAsync();
+    
+                foreach (var mb in managerBranches)
+                {
+                    mb.IsActive = false;
+                }
+    
+                await _managerBranchesRepo.SaveChangesAsync();
 
 
             // TODO: Optional: Invalidate cache

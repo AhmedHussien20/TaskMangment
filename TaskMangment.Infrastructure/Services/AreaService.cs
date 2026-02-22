@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.Design;
 using System.Text.Json;
 using TaskMangment.Application.ApiRequests.Area;
 using TaskMangment.Application.Common.Errors;
@@ -12,6 +13,7 @@ using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
+using TaskMangment.Infrastructure.Caching;
 using TaskMangment.Infrastructure.Persistence.Extensions;
 
 namespace TaskMangment.Infrastructure.Services
@@ -24,6 +26,7 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<Company> _companyRepo;
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
+        private readonly ICacheInvalidator _cacheInvalidator;
 
         public AreaService(
             IRepository<Area> areaRepository,
@@ -31,7 +34,8 @@ namespace TaskMangment.Infrastructure.Services
             IRepository<Branch> branchRepository,
             IRepository<Company> companyRepo,
             IMapper mapper,
-            ICachingService cache)
+            ICachingService cache,
+            ICacheInvalidator cacheInvalidator)
         {
             _areaRepository = areaRepository;
             _employeeRepository = employeeRepository;
@@ -39,58 +43,69 @@ namespace TaskMangment.Infrastructure.Services
             _companyRepo = companyRepo;
             _mapper = mapper;
             _cache = cache;
+            _cacheInvalidator = cacheInvalidator;
         }
 
+        private async Task<int> GetVersionAsync(string versionKey)
+        {
+            var v = await _cache.GetAsync<int>(versionKey);
+            if (v <= 0)
+            {
+                await _cache.SetAsync(versionKey, 1, TimeSpan.FromDays(30));
+                return 1;
+            }
+            return v;
+        }
         public async Task<ApiResponse<PagedResponse<AreaGetDto>>> GetAllAsync(AreaRequest request, int CompanyId)
         {
-            //string cacheKey = $"areas:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}:{CompanyId}";
+            var version = await GetVersionAsync(CacheKeys.AreasVersion(CompanyId));
+            var cacheKey = CacheKeys.AreasList(CompanyId, request, version);
 
-            //if (!request.BypassCache)
-            //{
-            //    var cached = await _cache.GetAsync<PagedResponse<AreaGetDto>>(cacheKey);
-            //    if (cached != null)
-            //        return ApiResponse<PagedResponse<AreaGetDto>>.Ok(cached);
-            //}
+            var response = await _cache.GetOrSetAsync<PagedResponse<AreaGetDto>>(
+                cacheKey,
+                async () =>
+                {
+                    var query = _areaRepository.GetAll()
+                        .Include(a => a.Manager)
+                        .ApplySearch(request.searchKey);
 
-            var query = _areaRepository.GetAll()
-                .Include(a => a.Manager)
-                .ApplySearch(request.searchKey);   
-              
-            var totalCount = await query.CountAsync();
-             
-            query = query.OrderByDynamicSafe(request.SortColumn, request.SortDirection);
-             
-            var areas = await query
-                .Skip((request.PageIndex - 1) * request.PageSize)
-                .Take(request.PageSize)
-                .ToListAsync();
-             
-            var areaIds = areas.Select(a => a.Id).ToList();
+                    var totalCount = await query.CountAsync();
 
-            var branchCounts = await _branchRepository
-                .GetAll(b => areaIds.Contains(b.AreaId ?? 0))
-                .GroupBy(b => b.AreaId)
-                .Select(g => new { AreaId = g.Key, Count = g.Count() })
-                .ToListAsync();
-             
-            var dtoList = _mapper.Map<List<AreaGetDto>>(areas);
+                    query = query.OrderByDynamicSafe(request.SortColumn, request.SortDirection);
 
-            foreach (var dto in dtoList)
-            {
-                dto.BranchCount = branchCounts
-                    .FirstOrDefault(x => x.AreaId == dto.Id)?.Count ?? 0;
+                    var areas = await query
+                        .Skip((request.PageIndex - 1) * request.PageSize)
+                        .Take(request.PageSize)
+                        .ToListAsync();
 
-                dto.ManagerName = areas
-        .FirstOrDefault(a => a.Id == dto.Id)?.Manager?.FullName;
-            }
-             
-            var response = new PagedResponse<AreaGetDto>(
-                dtoList, totalCount, request.PageIndex, request.PageSize);
-             
-            //await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
+                    var areaIds = areas.Select(a => a.Id).ToList();
+
+                    var branchCounts = await _branchRepository
+                        .GetAll(b => areaIds.Contains(b.AreaId ?? 0))
+                        .GroupBy(b => b.AreaId)
+                        .Select(g => new { AreaId = g.Key, Count = g.Count() })
+                        .ToListAsync();
+
+                    var dtoList = _mapper.Map<List<AreaGetDto>>(areas);
+
+                    foreach (var dto in dtoList)
+                    {
+                        dto.BranchCount = branchCounts
+                            .FirstOrDefault(x => x.AreaId == dto.Id)?.Count ?? 0;
+
+                        dto.ManagerName = areas
+                            .FirstOrDefault(a => a.Id == dto.Id)?.Manager?.FullName;
+                    }
+
+                    return new PagedResponse<AreaGetDto>(
+                        dtoList, totalCount, request.PageIndex, request.PageSize);
+                },
+                TimeSpan.FromMinutes(5)
+            );
 
             return ApiResponse<PagedResponse<AreaGetDto>>.Ok(response);
         }
+
 
 
 
@@ -142,7 +157,8 @@ namespace TaskMangment.Infrastructure.Services
             await _areaRepository.AddAsync(area);
             await _areaRepository.SaveChangesAsync();
 
-            await _cache.RemoveAsync("areas:");
+            //await _cache.RemoveAsync("areas:");
+            await _cacheInvalidator.InvalidateAreasAsync(companyId);
 
             var fullArea = await _areaRepository.GetAll()
                 .Include(a => a.Manager)
@@ -180,7 +196,10 @@ namespace TaskMangment.Infrastructure.Services
             _mapper.Map(dto, area);
 
             await _areaRepository.SaveChangesAsync();
-            await _cache.RemoveAsync("areas:");
+            //await _cache.RemoveAsync("areas:");
+
+            var companyId = area.CompanyId;
+            await _cacheInvalidator.InvalidateAreasAsync(companyId);
 
             var fullArea = await _areaRepository.GetAll()
                 .Include(a => a.Manager)
@@ -203,8 +222,9 @@ namespace TaskMangment.Infrastructure.Services
 
             _areaRepository.SoftDelete(area);
             await _areaRepository.SaveChangesAsync();
-            await _cache.RemoveAsync("areas:");
 
+            var companyId = area.CompanyId;
+            await _cacheInvalidator.InvalidateAreasAsync(companyId);
             return ApiResponse<bool>.Ok(true, "Area deleted successfully");
         }
     }

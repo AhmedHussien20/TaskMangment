@@ -13,6 +13,7 @@ using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
+using TaskMangment.Infrastructure.Caching;
 using TaskMangment.Infrastructure.Helpers;
 using TaskMangment.Infrastructure.Persistence.Extensions;
 using TaskMangment.Utilities.Localization.Resources;
@@ -65,12 +66,19 @@ namespace TaskMangment.Infrastructure.Services
             _accessProvider = accessProvider;
         }
 
+        private async Task<int> GetVersionAsync(string versionKey)
+        {
+            var v = await _cache.GetAsync<int>(versionKey);
+            if (v <= 0)
+            {
+                await _cache.SetAsync(versionKey, 1, TimeSpan.FromDays(30));
+                return 1;
+            }
+            return v;
+        }
+
         private async Task<(IQueryable<Employee> ScopedEmployeesQuery, IQueryable<int> ScopedEmployeeIds)>
-            GetScopedEmployeesAsync(
-                int companyId,
-                int roleLevel,
-                int? employeeId,
-                int? branchId = null)
+            GetScopedEmployeesAsync(int companyId,int roleLevel,int? employeeId,int? branchId = null)
         {
             IQueryable<Employee> scopedEmployeesQuery = _employeeRepo
                 .GetAll(e => e.CompanyId == companyId && e.IsActive);
@@ -92,10 +100,7 @@ namespace TaskMangment.Infrastructure.Services
             return (scopedEmployeesQuery, scopedEmployeeIds);
         }
 
-        public async Task<ApiResponse<List<BranchFilterDto>>> GetBranchesForFilterAsync(
-            int companyId,
-            int roleLevel,
-            int employeeId)
+        public async Task<ApiResponse<List<BranchFilterDto>>> GetBranchesForFilterAsync(int companyId,int roleLevel,int employeeId)
         {
             var access = await _accessProvider.GetAsync(employeeId);
 
@@ -131,150 +136,150 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<List<BranchFilterDto>>.Ok(branches);
         }
 
-        public async Task<ApiResponse<AdminDashboardDto>> GetDashboardAsync(
-      int companyId,
-      int roleLevel,
-      int? employeeId = null,
-      PeriodDto? period = null,
-      int? branchId = null)
+        public async Task<ApiResponse<AdminDashboardDto>> GetDashboardAsync(int companyId, int roleLevel,int? employeeId = null,PeriodDto? period = null,int? branchId = null)
         {
-            string cacheKey = $"dashboard:admin:{companyId}:{employeeId}:{branchId}:{period?.Type}";
-            var cached = await _cache.GetAsync<AdminDashboardDto>(cacheKey);
-            if (cached != null)
-                return ApiResponse<AdminDashboardDto>.Ok(cached);
+            var version = await GetVersionAsync(CacheKeys.DashboardVersion(companyId));
 
             var range = PeriodHelper.GetRange(period);
+            var periodKey = period == null
+                    ? "all"
+                    : $"{period.Type}:{range.Start:yyyyMMdd}:{range.End:yyyyMMdd}";
 
-            var (scopedEmployeesQuery, scopedEmployeeIds) =
-                await GetScopedEmployeesAsync(companyId, roleLevel, employeeId, branchId);
+            var cacheKey = CacheKeys.AdminDashboard(companyId, roleLevel, employeeId, branchId, periodKey, version);
 
-            var totalEmployees = await scopedEmployeesQuery.CountAsync();
-
-            var activeTasksQuery = _taskRepo.GetAll(t =>
-                t.CompanyId == companyId &&
-                (t.Status == WorkTaskStatus.New || t.Status == WorkTaskStatus.InProgress));
-
-            if (employeeId.HasValue || branchId.HasValue)
-            {
-                activeTasksQuery = activeTasksQuery.Where(t =>
-                    t.Assignments.Any(a => scopedEmployeeIds.Contains(a.EmployeeId)));
-            }
-
-            var activeTasks = await activeTasksQuery.CountAsync();
-
-            var overdueTasksQuery = _taskRepo.GetAll(t =>
-                t.CompanyId == companyId &&
-                t.Status != WorkTaskStatus.Closed && t.Status != WorkTaskStatus.AutoClose && t.Status != WorkTaskStatus.Archived &&
-                t.DueDate != null &&
-                t.DueDate <= DateTime.Today &&
-                t.DueDate >= range.Start && t.DueDate <= range.End);
-
-            if (employeeId.HasValue || branchId.HasValue)
-            {
-                overdueTasksQuery = overdueTasksQuery.Where(t =>
-                    t.Assignments.Any(a => scopedEmployeeIds.Contains(a.EmployeeId)));
-            }
-
-            var overdueTasks = await overdueTasksQuery.CountAsync();
-
-            var completedTasksQuery = _taskRepo.GetAll(t =>
-                t.CompanyId == companyId &&
-                t.Status == WorkTaskStatus.Closed &&
-                t.ClosedAt >= range.Start && t.ClosedAt <= range.End);
-
-            if (employeeId.HasValue || branchId.HasValue)
-            {
-                completedTasksQuery = completedTasksQuery.Where(t =>
-                    t.Assignments.Any(a => scopedEmployeeIds.Contains(a.EmployeeId)));
-            }
-
-            var completedTasks = await completedTasksQuery.CountAsync();
-
-            var newTasksQuery = _taskRepo.GetAll(t =>
-            t.CompanyId == companyId && 
-            t.Status == WorkTaskStatus.New &&
-            t.CreatedDate >= range.Start && t.CreatedDate <= range.End);
-
-            if (employeeId.HasValue || branchId.HasValue)
-            {
-                newTasksQuery = newTasksQuery.Where(t =>
-                    t.Assignments.Any(a => scopedEmployeeIds.Contains(a.EmployeeId)));
-            }
-
-            var newTasks = await newTasksQuery.CountAsync();
-
-
-            var penaltiesQuery = _deductionRepo.GetAll(d =>
-                d.Employee.CompanyId == companyId &&
-                d.CreatedDate >= range.Start && d.CreatedDate <= range.End);
-
-            if (employeeId.HasValue || branchId.HasValue)
-                penaltiesQuery = penaltiesQuery.Where(d => scopedEmployeeIds.Contains(d.EmployeeId));
-
-            var penaltiesThisPeriod = await penaltiesQuery.SumAsync(d => d.Amount);
-
-            var warningsQuery = _warningRepo.GetAll(w =>
-                w.Task.CompanyId == companyId &&
-                w.IssuedAt >= range.Start && w.IssuedAt <= range.End);
-
-            if (employeeId.HasValue || branchId.HasValue)
-            {
-                warningsQuery = warningsQuery.Where(w =>
-                    w.Task.Assignments.Any(a => scopedEmployeeIds.Contains(a.EmployeeId)));
-            }
-
-            var warningsThisPeriod = await warningsQuery.CountAsync();
-
-            var topDelayedQuery = _assignmentRepo.GetAll(a =>
-                a.Task.CompanyId == companyId &&
-                a.IsActive &&
-                a.Task.DueDate >= range.Start && a.Task.DueDate <= range.End &&
-                a.Task.Status != WorkTaskStatus.Closed);
-
-            if (employeeId.HasValue || branchId.HasValue)
-                topDelayedQuery = topDelayedQuery.Where(a => scopedEmployeeIds.Contains(a.EmployeeId));
-
-            var topDelayedEmployees = await topDelayedQuery
-                .GroupBy(a => a.EmployeeId)
-                .Select(g => new TopDelayedEmployeeDto
+            var dto = await _cache.GetOrSetAsync(
+                cacheKey,
+                async () =>
                 {
-                    EmployeeId = g.Key,
-                    EmployeeName = g.First().Employee.FullName,
-                    DelayedTasksCount = g.Count()
-                })
-                .OrderByDescending(x => x.DelayedTasksCount)
-                .Take(5)
-                .ToListAsync();
 
-            var dto = new AdminDashboardDto
-            {
-                Kpis = new AdminKpiDto
-                {
-                    TotalEmployees = totalEmployees,
-                    ActiveTasks = activeTasks,
-                    OverdueTasks = overdueTasks,
-                    CompletedTasks = completedTasks,
-                    NewTasks = newTasks,
-                    TotalPenaltiesThisMonth = penaltiesThisPeriod,
-                    WarningsThisMonth = warningsThisPeriod
+                    var (scopedEmployeesQuery, scopedEmployeeIds) =
+                        await GetScopedEmployeesAsync(companyId, roleLevel, employeeId, branchId);
+
+                    var totalEmployees = await scopedEmployeesQuery.CountAsync();
+
+                    var activeTasksQuery = _taskRepo.GetAll(t =>
+                        t.CompanyId == companyId &&
+                        (t.Status == WorkTaskStatus.New || t.Status == WorkTaskStatus.InProgress));
+
+                    if (employeeId.HasValue || branchId.HasValue)
+                    {
+                        activeTasksQuery = activeTasksQuery.Where(t =>
+                            t.Assignments.Any(a => scopedEmployeeIds.Contains(a.EmployeeId)));
+                    }
+
+                    var activeTasks = await activeTasksQuery.CountAsync();
+
+                    var overdueTasksQuery = _taskRepo.GetAll(t =>
+                        t.CompanyId == companyId &&
+                        t.Status != WorkTaskStatus.Closed &&
+                        t.Status != WorkTaskStatus.AutoClose &&
+                        t.Status != WorkTaskStatus.Archived &&
+                        t.DueDate != null &&
+                        t.DueDate <= DateTime.Today &&
+                        t.DueDate >= range.Start && t.DueDate <= range.End);
+
+                    if (employeeId.HasValue || branchId.HasValue)
+                    {
+                        overdueTasksQuery = overdueTasksQuery.Where(t =>
+                            t.Assignments.Any(a => scopedEmployeeIds.Contains(a.EmployeeId)));
+                    }
+
+                    var overdueTasks = await overdueTasksQuery.CountAsync();
+
+                    var completedTasksQuery = _taskRepo.GetAll(t =>
+                        t.CompanyId == companyId &&
+                        t.Status == WorkTaskStatus.Closed &&
+                        t.ClosedAt >= range.Start && t.ClosedAt <= range.End);
+
+                    if (employeeId.HasValue || branchId.HasValue)
+                    {
+                        completedTasksQuery = completedTasksQuery.Where(t =>
+                            t.Assignments.Any(a => scopedEmployeeIds.Contains(a.EmployeeId)));
+                    }
+
+                    var completedTasks = await completedTasksQuery.CountAsync();
+
+                    var penaltiesQuery = _deductionRepo.GetAll(d =>
+                        d.Employee.CompanyId == companyId &&
+                        d.CreatedDate >= range.Start && d.CreatedDate <= range.End);
+
+                    if (employeeId.HasValue || branchId.HasValue)
+                        penaltiesQuery = penaltiesQuery.Where(d => scopedEmployeeIds.Contains(d.EmployeeId));
+
+                    var penaltiesThisPeriod = await penaltiesQuery.SumAsync(d => d.Amount);
+
+                    var warningsQuery = _warningRepo.GetAll(w =>
+                        w.Task.CompanyId == companyId &&
+                        w.IssuedAt >= range.Start && w.IssuedAt <= range.End);
+
+                    if (employeeId.HasValue || branchId.HasValue)
+                    {
+                        warningsQuery = warningsQuery.Where(w =>
+                            w.Task.Assignments.Any(a => scopedEmployeeIds.Contains(a.EmployeeId)));
+                    }
+
+                    var warningsThisPeriod = await warningsQuery.CountAsync();
+
+                    var topDelayedQuery = _assignmentRepo.GetAll(a =>
+                        a.Task.CompanyId == companyId &&
+                        a.IsActive &&
+                        a.Task.DueDate >= range.Start && a.Task.DueDate <= range.End &&
+                        a.Task.Status != WorkTaskStatus.Closed);
+
+                    if (employeeId.HasValue || branchId.HasValue)
+                        topDelayedQuery = topDelayedQuery.Where(a => scopedEmployeeIds.Contains(a.EmployeeId));
+
+                    var topDelayedEmployees = await topDelayedQuery
+                        .GroupBy(a => a.EmployeeId)
+                        .Select(g => new TopDelayedEmployeeDto
+                        {
+                            EmployeeId = g.Key,
+                            EmployeeName = g.First().Employee.FullName,
+                            DelayedTasksCount = g.Count()
+                        })
+                        .OrderByDescending(x => x.DelayedTasksCount)
+                        .Take(5)
+                        .ToListAsync();
+
+                    return new AdminDashboardDto
+                    {
+                        Kpis = new AdminKpiDto
+                        {
+                            TotalEmployees = totalEmployees,
+                            ActiveTasks = activeTasks,
+                            OverdueTasks = overdueTasks,
+                            CompletedTasks = completedTasks,
+                            TotalPenaltiesThisMonth = penaltiesThisPeriod,
+                            WarningsThisMonth = warningsThisPeriod
+                        },
+                        TopDelayedEmployees = topDelayedEmployees
+                    };
                 },
-                TopDelayedEmployees = topDelayedEmployees
-            };
+                TimeSpan.FromMinutes(5)
+            );
 
-            await _cache.SetAsync(cacheKey, dto, TimeSpan.FromMinutes(5));
             return ApiResponse<AdminDashboardDto>.Ok(dto);
         }
 
-        public async Task<ApiResponse<PagedResponse<UpdatedTodayTaskDto>>> GetTodayUpdatedInProgressTasksAsync(
-            int companyId,
-            int roleLevel,
-            int? employeeId,
-            UpdatedTodayTasksRequest request,
-            int? branchId = null)
+        public async Task<ApiResponse<PagedResponse<UpdatedTodayTaskDto>>> GetTodayUpdatedInProgressTasksAsync(int companyId, int roleLevel,int? employeeId,UpdatedTodayTasksRequest request,int? branchId = null)
         {
+
+            var version = await GetVersionAsync(CacheKeys.DashboardVersion(companyId));
+
             var range = PeriodHelper.GetRange(request.Period);
 
-            var (_, scopedEmployeeIds) =
+            var periodKey = request.Period == null
+                ? "all"
+                : $"{request.Period.Type}:{range.Start:yyyyMMdd}:{range.End:yyyyMMdd}";
+
+            var cacheKey = CacheKeys.UpdatedTodayTasks(companyId,roleLevel,employeeId,branchId,periodKey,request.PageIndex, request.PageSize, version);
+
+            var cachedResult = await _cache.GetOrSetAsync<PagedResponse<UpdatedTodayTaskDto>>(
+                cacheKey,
+                async () =>
+                {
+
+                    var (_, scopedEmployeeIds) =
                 await GetScopedEmployeesAsync(companyId, roleLevel, employeeId, branchId);
 
             var tasksQuery = _taskRepo.GetAll(t =>
@@ -330,51 +335,66 @@ namespace TaskMangment.Infrastructure.Services
                 .Take(request.PageSize)
                 .ToListAsync();
 
-            return ApiResponse<PagedResponse<UpdatedTodayTaskDto>>.Ok(
-                new PagedResponse<UpdatedTodayTaskDto>(list, totalCount, request.PageIndex, request.PageSize)
-            );
+                    return new PagedResponse<UpdatedTodayTaskDto>(list, totalCount, request.PageIndex, request.PageSize);
+                },
+                TimeSpan.FromMinutes(5)
+                );
+
+            return ApiResponse<PagedResponse<UpdatedTodayTaskDto>>.Ok(cachedResult);
         }
 
-        public async Task<ApiResponse<List<CompletedTodayEmployeeDto>>> GetEmployeesCompletedTasksTodayAsync(
-            int companyId,
-            int roleLevel,
-            int? employeeId,
-            PeriodDto period,
-            int? branchId = null)
+
+        public async Task<ApiResponse<List<CompletedTodayEmployeeDto>>> GetEmployeesCompletedTasksTodayAsync(int companyId,int roleLevel,int? employeeId,PeriodDto period, int? branchId = null)
         {
+            var version = await GetVersionAsync(CacheKeys.DashboardVersion(companyId));
             var range = PeriodHelper.GetRange(period);
 
-            var (_, scopedEmployeeIds) =
-                await GetScopedEmployeesAsync(companyId, roleLevel, employeeId, branchId);
+            var periodKey = period == null
+                ? "all"
+                : $"{period.Type}:{range.Start:yyyyMMdd}:{range.End:yyyyMMdd}";
 
-            var query = _assignmentRepo.GetAll(a =>
-                a.Task.CompanyId == companyId &&
-                a.Task.Status == WorkTaskStatus.Closed &&
-                a.ModifiedDate >= range.Start &&
-                a.ModifiedDate <= range.End);
+            var cacheKey = CacheKeys.CompletedTodayEmployees(companyId, roleLevel, employeeId, branchId, periodKey, version);
 
-            if (employeeId.HasValue || branchId.HasValue)
-                query = query.Where(a => scopedEmployeeIds.Contains(a.EmployeeId));
-
-            var attachmentsQuery = _attachmentRepo.GetAll();
-
-            var result = await query
-                .GroupBy(a => new { a.EmployeeId, a.Employee.FullName })
-                .Select(g => new CompletedTodayEmployeeDto
+            var result = await _cache.GetOrSetAsync<List<CompletedTodayEmployeeDto>>(
+                cacheKey,
+                async () =>
                 {
-                    EmployeeId = g.Key.EmployeeId,
-                    EmployeeName = g.Key.FullName,
-                    CompletedTasksCount = g.Count(),
-                    EmployeeImageUrl = attachmentsQuery
-                        .Where(att =>
-                            att.ReferenceId == g.Key.EmployeeId &&
-                            att.AttachmentType == AttachmentType.Employee &&
-                            !att.IsDeleted)
-                        .Select(att => att.FilePath)
-                        .FirstOrDefault()
-                })
-                .OrderByDescending(x => x.CompletedTasksCount)
-                .ToListAsync();
+                    var (_, scopedEmployeeIds) =
+                        await GetScopedEmployeesAsync(companyId, roleLevel, employeeId, branchId);
+
+                    var query = _assignmentRepo.GetAll(a =>
+                        a.Task.CompanyId == companyId &&
+                        a.Task.Status == WorkTaskStatus.Closed &&
+                        a.ModifiedDate >= range.Start &&
+                        a.ModifiedDate <= range.End);
+
+                    if (employeeId.HasValue || branchId.HasValue)
+                        query = query.Where(a => scopedEmployeeIds.Contains(a.EmployeeId));
+
+                    var attachmentsQuery = _attachmentRepo.GetAll();
+
+                    var list = await query
+                        .GroupBy(a => new { a.EmployeeId, a.Employee.FullName })
+                        .Select(g => new CompletedTodayEmployeeDto
+                        {
+                            EmployeeId = g.Key.EmployeeId,
+                            EmployeeName = g.Key.FullName,
+                            CompletedTasksCount = g.Count(),
+                            EmployeeImageUrl = attachmentsQuery
+                                .Where(att =>
+                                    att.ReferenceId == g.Key.EmployeeId &&
+                                    att.AttachmentType == AttachmentType.Employee &&
+                                    !att.IsDeleted)
+                                .Select(att => att.FilePath)
+                                .FirstOrDefault()
+                        })
+                        .OrderByDescending(x => x.CompletedTasksCount)
+                        .ToListAsync();
+
+                    return list;
+                },
+                TimeSpan.FromSeconds(45)
+            );
 
             foreach (var item in result)
                 item.EmployeeImageUrl = _blobStorageService.WithSas(item.EmployeeImageUrl);
@@ -382,124 +402,148 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<List<CompletedTodayEmployeeDto>>.Ok(result);
         }
 
-        public async Task<ApiResponse<List<PendingCloseRequestTaskDto>>> GetPendingCloseRequestsAsync(
-            int companyId,
-            int roleLevel,
-            int? employeeId,
-            PeriodDto period,
-            int? branchId = null)
+
+        public async Task<ApiResponse<List<PendingCloseRequestTaskDto>>> GetPendingCloseRequestsAsync(int companyId,int roleLevel,int? employeeId,PeriodDto period,int? branchId = null)
         {
+            var version = await GetVersionAsync(CacheKeys.DashboardVersion(companyId));
             var range = PeriodHelper.GetRange(period);
 
-            var (_, scopedEmployeeIds) =
-                await GetScopedEmployeesAsync(companyId, roleLevel, employeeId, branchId);
+            var periodKey = period == null
+                ? "all"
+                : $"{period.Type}:{range.Start:yyyyMMdd}:{range.End:yyyyMMdd}";
 
-            var query = _taskRepo.GetAll(t =>
-                t.CompanyId == companyId &&
-                t.CloseRequests.Any(r =>
-                    r.Status == CloseRequestStatus.Pending &&
-                    r.CreatedDate >= range.Start &&
-                    r.CreatedDate <= range.End));
+            var cacheKey = CacheKeys.PendingCloseRequests(companyId, roleLevel, employeeId, branchId, periodKey, version);
 
-            if (employeeId.HasValue || branchId.HasValue)
-            {
-                query = query.Where(t =>
-                    t.Assignments.Any(a => scopedEmployeeIds.Contains(a.EmployeeId)));
-            }
-
-            var result = await query
-                .Select(t => new PendingCloseRequestTaskDto
+            var result = await _cache.GetOrSetAsync<List<PendingCloseRequestTaskDto>>(
+                cacheKey,
+                async () =>
                 {
-                    TaskId = t.Id,
-                    Title = t.Title,
-                    RequestedBy = t.CloseRequests
-                        .Where(r => r.Status == CloseRequestStatus.Pending &&
-                                    r.CreatedDate >= range.Start &&
-                                    r.CreatedDate <= range.End)
-                        .Select(r => r.RequestedBy.FullName)
-                        .FirstOrDefault(),
-                    RequestedAt = t.CloseRequests
-                        .Where(r => r.Status == CloseRequestStatus.Pending &&
-                                    r.CreatedDate >= range.Start &&
-                                    r.CreatedDate <= range.End)
-                        .Select(r => r.CreatedDate)
-                        .FirstOrDefault()
-                })
-                .OrderByDescending(x => x.RequestedAt)
-                .ToListAsync();
+                    var (_, scopedEmployeeIds) =
+                        await GetScopedEmployeesAsync(companyId, roleLevel, employeeId, branchId);
+
+                    var query = _taskRepo.GetAll(t =>
+                        t.CompanyId == companyId &&
+                        t.CloseRequests.Any(r =>
+                            r.Status == CloseRequestStatus.Pending &&
+                            r.CreatedDate >= range.Start &&
+                            r.CreatedDate <= range.End));
+
+                    if (employeeId.HasValue || branchId.HasValue)
+                    {
+                        query = query.Where(t =>
+                            t.Assignments.Any(a => scopedEmployeeIds.Contains(a.EmployeeId)));
+                    }
+
+                    var list = await query
+                        .Select(t => new PendingCloseRequestTaskDto
+                        {
+                            TaskId = t.Id,
+                            Title = t.Title,
+                            RequestedBy = t.CloseRequests
+                                .Where(r => r.Status == CloseRequestStatus.Pending &&
+                                            r.CreatedDate >= range.Start &&
+                                            r.CreatedDate <= range.End)
+                                .Select(r => r.RequestedBy.FullName)
+                                .FirstOrDefault(),
+                            RequestedAt = t.CloseRequests
+                                .Where(r => r.Status == CloseRequestStatus.Pending &&
+                                            r.CreatedDate >= range.Start &&
+                                            r.CreatedDate <= range.End)
+                                .Select(r => r.CreatedDate)
+                                .FirstOrDefault()
+                        })
+                        .OrderByDescending(x => x.RequestedAt)
+                        .ToListAsync();
+
+                    return list;
+                },
+                TimeSpan.FromSeconds(45)
+            );
 
             return ApiResponse<List<PendingCloseRequestTaskDto>>.Ok(result);
         }
 
-        public async Task<ApiResponse<List<TaskStatusDto>>> GetTasksByStatusAsync(
-            int companyId,
-            string status,
-            int roleLevel,
-            int? employeeId,
-            PeriodDto period,
-            int? branchId = null)
+        public async Task<ApiResponse<List<TaskStatusDto>>> GetTasksByStatusAsync(int companyId,string status,int roleLevel,int? employeeId,PeriodDto period,int? branchId = null)
         {
+            var version = await GetVersionAsync(CacheKeys.DashboardVersion(companyId));
             var range = PeriodHelper.GetRange(period);
 
-            var (_, scopedEmployeeIds) =
-                await GetScopedEmployeesAsync(companyId, roleLevel, employeeId, branchId);
+            var periodKey = period == null
+                ? "all"
+                : $"{period.Type}:{range.Start:yyyyMMdd}:{range.End:yyyyMMdd}";
 
-            var tasksQuery = _taskRepo.GetAll(t =>
-                t.CompanyId == companyId &&
-                (
-                    (status == "Active" &&
-                        (t.Status == WorkTaskStatus.New || t.Status == WorkTaskStatus.InProgress))
-                    ||
-                    (status == "New" &&
-                    t.Status == WorkTaskStatus.New &&
-                    t.CreatedDate >= range.Start && t.CreatedDate <= range.End)
-                    ||
-                    (status == "Overdue" &&
-                    t.Status != WorkTaskStatus.Closed && t.Status != WorkTaskStatus.AutoClose && t.Status != WorkTaskStatus.Archived &&
-                        t.DueDate != null &&
-                        t.DueDate <= DateTime.Today &&
-                        t.DueDate >= range.Start && t.DueDate <= range.End)
-                    ||
-                    (status == "Completed" &&
-                        t.Status == WorkTaskStatus.Closed &&
-                        t.ClosedAt >= range.Start && t.ClosedAt <= range.End)
-                ));
+            var cacheKey = CacheKeys.TasksByStatus(companyId, status, roleLevel, employeeId, branchId, periodKey, version);
 
-            if (employeeId.HasValue || branchId.HasValue)
-            {
-                tasksQuery = tasksQuery.Where(t =>
-                    t.Assignments.Any(a => scopedEmployeeIds.Contains(a.EmployeeId)));
-            }
-
-            var tasks = await tasksQuery
-                .Select(t => new TaskStatusDto
+            var tasks = await _cache.GetOrSetAsync<List<TaskStatusDto>>(
+                cacheKey,
+                async () =>
                 {
-                    TaskId = t.Id,
-                    Title = t.Title,
-                    DueDate = t.DueDate,
-                    Status = t.Status,
-                    StatusText = t.Status.ToString(),
-                    Employees = t.Assignments
-                        .Where(a => a.IsActive)
-                        .Select(a => a.Employee.FullName)
-                        .ToList()
-                })
-                .AsNoTracking()
-                .ToListAsync();
+                    var (_, scopedEmployeeIds) =
+                        await GetScopedEmployeesAsync(companyId, roleLevel, employeeId, branchId);
+
+                    var tasksQuery = _taskRepo.GetAll(t =>
+                        t.CompanyId == companyId &&
+                        (
+                            (status == "Active" &&
+                                (t.Status == WorkTaskStatus.New || t.Status == WorkTaskStatus.InProgress))
+                            ||
+                            (status == "New" &&
+                                t.Status == WorkTaskStatus.New &&
+                                t.CreatedDate >= range.Start && t.CreatedDate <= range.End)
+                            ||
+                            (status == "Overdue" &&
+                                t.Status != WorkTaskStatus.Closed && t.Status != WorkTaskStatus.AutoClose && t.Status != WorkTaskStatus.Archived &&
+                                t.DueDate != null &&
+                                t.DueDate <= DateTime.Today &&
+                                t.DueDate >= range.Start && t.DueDate <= range.End)
+                            ||
+                            (status == "Completed" &&
+                                t.Status == WorkTaskStatus.Closed &&
+                                t.ClosedAt >= range.Start && t.ClosedAt <= range.End)
+                        ));
+
+                    if (employeeId.HasValue || branchId.HasValue)
+                    {
+                        tasksQuery = tasksQuery.Where(t =>
+                            t.Assignments.Any(a => scopedEmployeeIds.Contains(a.EmployeeId)));
+                    }
+
+                    var list = await tasksQuery
+                        .Select(t => new TaskStatusDto
+                        {
+                            TaskId = t.Id,
+                            Title = t.Title,
+                            DueDate = t.DueDate,
+                            Status = t.Status,
+                            StatusText = t.Status.ToString(),
+                            Employees = t.Assignments
+                                .Where(a => a.IsActive)
+                                .Select(a => a.Employee.FullName)
+                                .ToList()
+                        })
+                        .AsNoTracking()
+                        .ToListAsync();
+
+                    return list;
+                },
+                TimeSpan.FromSeconds(45)
+            );
 
             return ApiResponse<List<TaskStatusDto>>.Ok(tasks);
         }
 
-        public async Task<ApiResponse<AdminKpisExtendedDto>> GetKpisAsync(
-            int companyId,
-            int roleLevel,
-            int? employeeId,
-            PeriodDto period,
-            int? branchId = null)
+        public async Task<ApiResponse<AdminKpisExtendedDto>> GetKpisAsync( int companyId,int roleLevel, int? employeeId,PeriodDto period,int? branchId = null)
         {
+            var version = await GetVersionAsync(CacheKeys.DashboardVersion(companyId));
             var range = PeriodHelper.GetRange(period);
 
-            var (_, scopedEmployeeIds) =
+            var periodKey = period == null ? "all" : $"{period.Type}:{range.Start:yyyyMMdd}:{range.End:yyyyMMdd}";
+
+            var cacheKey = CacheKeys.AdminKpisExtended(companyId, roleLevel, employeeId, branchId, periodKey, version);
+
+            var dto = await _cache.GetOrSetAsync(cacheKey, async () =>
+            {
+                var (_, scopedEmployeeIds) =
                 await GetScopedEmployeesAsync(companyId, roleLevel, employeeId, branchId);
 
             var closedTasksQuery = _taskRepo.GetAll(t =>
@@ -549,27 +593,35 @@ namespace TaskMangment.Infrastructure.Services
 
             var penalties = await penaltiesQuery.SumAsync(d => d.Amount);
 
-            var dto = new AdminKpisExtendedDto
+            var result = new AdminKpisExtendedDto
             {
                 AverageCompletionHours = Math.Round(averageCompletionHours, 2),
                 OnTimeRatePercent = Math.Round(onTimeRatePercent, 2),
                 HighPriorityOpenTasks = highPriorityOpenTasks,
                 PenaltiesThisMonth = penalties
             };
+                return result;
+            }, TimeSpan.FromMinutes(5));
 
             return ApiResponse<AdminKpisExtendedDto>.Ok(dto);
+
+
+
         }
 
-        public async Task<ApiResponse<List<DiscountGetDto>>> GetDiscountsAsync(
-            int companyId,
-            int roleLevel,
-            int? employeeId,
-            PeriodDto period,
-            int? branchId = null)
+        public async Task<ApiResponse<List<DiscountGetDto>>> GetDiscountsAsync(int companyId, int roleLevel,int? employeeId,PeriodDto period,int? branchId = null)
         {
-            var range = PeriodHelper.GetRange(period);
+            var version = await GetVersionAsync(CacheKeys.DashboardVersion(companyId));
 
-            var (_, scopedEmployeeIds) =
+            var range = PeriodHelper.GetRange(period);
+            var periodKey = period == null ? "all" : $"{period.Type}:{range.Start:yyyyMMdd}:{range.End:yyyyMMdd}";
+
+            var cacheKey = CacheKeys.AdminDiscounts(companyId, roleLevel, employeeId, branchId, periodKey, version);
+
+            var list = await _cache.GetOrSetAsync(cacheKey, async () =>
+            {
+
+                var (_, scopedEmployeeIds) =
                 await GetScopedEmployeesAsync(companyId, roleLevel, employeeId, branchId);
 
             var discountsQuery = _deductionRepo.GetAll(d =>
@@ -600,8 +652,10 @@ namespace TaskMangment.Infrastructure.Services
                 if (!item.AutoDiscount) continue;
                 item.Reason = GetAutoDiscountReason(item.DiscountType);
             }
+                return discounts;
+            }, TimeSpan.FromMinutes(5));
 
-            return ApiResponse<List<DiscountGetDto>>.Ok(discounts);
+            return ApiResponse<List<DiscountGetDto>>.Ok(list);
         }
 
         private string GetAutoDiscountReason(DiscountType type)
@@ -615,13 +669,15 @@ namespace TaskMangment.Infrastructure.Services
             };
         }
 
-        public async Task<ApiResponse<List<HighPriorityTaskDto>>> GetHighPriorityTasksAsync(
-            int companyId,
-            int roleLevel,
-            int? employeeId,
-            int? branchId = null)
+        public async Task<ApiResponse<List<HighPriorityTaskDto>>> GetHighPriorityTasksAsync(int companyId,int roleLevel,int? employeeId,int? branchId = null)
         {
-            var (_, scopedEmployeeIds) =
+
+            var version = await GetVersionAsync(CacheKeys.DashboardVersion(companyId));
+            var cacheKey = CacheKeys.AdminHighPriority(companyId, roleLevel, employeeId, branchId, version);
+
+            var list = await _cache.GetOrSetAsync(cacheKey, async () =>
+            {
+                var (_, scopedEmployeeIds) =
                 await GetScopedEmployeesAsync(companyId, roleLevel, employeeId, branchId);
 
             var tasksQuery = _taskRepo.GetAll(t =>
@@ -633,8 +689,8 @@ namespace TaskMangment.Infrastructure.Services
                 tasksQuery = tasksQuery.Where(t =>
                     t.Assignments.Any(a => scopedEmployeeIds.Contains(a.EmployeeId)));
 
-            var tasks = await tasksQuery
-                .Select(t => new HighPriorityTaskDto
+                return await tasksQuery
+                    .Select(t => new HighPriorityTaskDto
                 {
                     TaskId= t.Id,
                     TaskTitle = t.Title,
@@ -645,48 +701,61 @@ namespace TaskMangment.Infrastructure.Services
                 })
                 .OrderBy(t => t.DueDate)
                 .ToListAsync();
+            }, TimeSpan.FromMinutes(2));
 
-            return ApiResponse<List<HighPriorityTaskDto>>.Ok(tasks);
+            return ApiResponse<List<HighPriorityTaskDto>>.Ok(list);
         }
 
-        public async Task<ApiResponse<List<CompletedTaskDetailDto>>> GetCompletedTasksDetailsAsync(
-            int companyId,
-            int roleLevel,
-            int? employeeId,
-            PeriodDto period,
-            int? branchId = null)
+        public async Task<ApiResponse<List<CompletedTaskDetailDto>>> GetCompletedTasksDetailsAsync(int companyId,int roleLevel,int? employeeId, PeriodDto period,int? branchId = null)
         {
+            var version = await GetVersionAsync(CacheKeys.DashboardVersion(companyId));
+
             var range = PeriodHelper.GetRange(period);
+            var periodKey = period == null
+                ? "all"
+                : $"{period.Type}:{range.Start:yyyyMMdd}:{range.End:yyyyMMdd}";
 
-            var (_, scopedEmployeeIds) =
-                await GetScopedEmployeesAsync(companyId, roleLevel, employeeId, branchId);
+            var cacheKey = CacheKeys.CompletedTasksDetails(companyId, roleLevel, employeeId, branchId, periodKey, version);
 
-            var tasksQuery = _taskRepo.GetAll(t =>
-                t.CompanyId == companyId &&
-                t.ClosedAt != null &&
-                t.ClosedAt >= range.Start &&
-                t.ClosedAt <= range.End);
-
-            if (employeeId.HasValue || branchId.HasValue)
-                tasksQuery = tasksQuery.Where(t =>
-                    t.Assignments.Any(a => scopedEmployeeIds.Contains(a.EmployeeId)));
-
-            var tasks = await tasksQuery
-                .Select(t => new CompletedTaskDetailDto
+            var tasks = await _cache.GetOrSetAsync<List<CompletedTaskDetailDto>>(
+                cacheKey,
+                async () =>
                 {
-                    TaskTitle = t.Title,
-                    EmployeeNames = t.Assignments
-                        .Where(a => a.IsActive)
-                        .Select(a => a.Employee.FullName)
-                        .ToList(),
-                    CreatedAt = t.CreatedDate,
-                    ClosedAt = t.ClosedAt.Value,
-                    DurationHours = EF.Functions.DateDiffHour(t.CreatedDate, t.ClosedAt.Value)
-                })
-                .OrderByDescending(t => t.ClosedAt)
-                .ToListAsync();
+                    var (_, scopedEmployeeIds) =
+                        await GetScopedEmployeesAsync(companyId, roleLevel, employeeId, branchId);
+
+                    var tasksQuery = _taskRepo.GetAll(t =>
+                        t.CompanyId == companyId &&
+                        t.ClosedAt != null &&
+                        t.ClosedAt >= range.Start &&
+                        t.ClosedAt <= range.End);
+
+                    if (employeeId.HasValue || branchId.HasValue)
+                        tasksQuery = tasksQuery.Where(t =>
+                            t.Assignments.Any(a => scopedEmployeeIds.Contains(a.EmployeeId)));
+
+                    var list = await tasksQuery
+                        .Select(t => new CompletedTaskDetailDto
+                        {
+                            TaskTitle = t.Title,
+                            EmployeeNames = t.Assignments
+                                .Where(a => a.IsActive)
+                                .Select(a => a.Employee.FullName)
+                                .ToList(),
+                            CreatedAt = t.CreatedDate,
+                            ClosedAt = t.ClosedAt.Value,
+                            DurationHours = EF.Functions.DateDiffHour(t.CreatedDate, t.ClosedAt.Value)
+                        })
+                        .OrderByDescending(t => t.ClosedAt)
+                        .ToListAsync();
+
+                    return list;
+                },
+                TimeSpan.FromMinutes(2)
+            );
 
             return ApiResponse<List<CompletedTaskDetailDto>>.Ok(tasks);
         }
+
     }
 }

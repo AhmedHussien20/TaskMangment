@@ -203,7 +203,7 @@ namespace TaskMangment.API
                     .CreateLogger();
 
                 builder.Host.UseSerilog();
-            //builder.Services.AddCaching(builder.Configuration);
+                builder.Services.AddCaching(builder.Configuration);
 
 
             var app = builder.Build();

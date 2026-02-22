@@ -31,7 +31,6 @@ namespace TaskMangment.Application.DTOs.ReportsDTO
         public string FullName { get; set; }
     }
 
-
     public enum TaskMovementType
     {
         Outgoing = 1, // صادرة

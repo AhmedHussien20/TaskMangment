@@ -44,7 +44,7 @@ namespace TaskMangment.Infrastructure.Services
             services.AddScoped<IRolePermissionService, RolePermissionService>();
 
             services.AddScoped<ITaskService, TaskService>();
-            services.AddSingleton<ICachingService, NoCacheService>();
+            //services.AddSingleton<ICachingService, NoCacheService>();
 
             services.AddScoped<IDepartmentService, DepartmentService>();
             services.AddScoped<ICourseService, CourseService>();
@@ -146,6 +146,9 @@ namespace TaskMangment.Infrastructure.Services
             
             services.AddScoped<IPermissionChecker, PermissionChecker>();
             services.AddScoped<IGetHigherManager, GetHigherManager>();
+
+            services.AddScoped<ICacheInvalidator, CacheInvalidator>();
+
 
             return services;
         }
