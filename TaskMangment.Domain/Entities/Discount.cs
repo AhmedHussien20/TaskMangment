@@ -10,7 +10,6 @@ namespace TaskMangment.Domain.Entities
 {
     public class Discount : BaseEntity
     {
-
         [Required] public int EmployeeId { get; set; }
         public int? TaskId { get; set; }
         [MaxLength(1000)] public string Reason { get; set; }
@@ -19,7 +18,8 @@ namespace TaskMangment.Domain.Entities
 
         public DiscountType discountType { get; set; }
         public bool AutoDiscount { get; set; } = true;
-       // public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime ViolationDate { get; set; } = DateTime.UtcNow;
+
 
         [ForeignKey(nameof(EmployeeId))] public Employee Employee { get; set; }
         [ForeignKey(nameof(TaskId))] public WorkTask Task { get; set; }

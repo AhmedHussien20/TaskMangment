@@ -111,7 +111,7 @@ submit(): void {
   const formData = new FormData();
   formData.append('CommentText', commentText);
 
-  this.files.forEach(file => formData.append('File', file));
+this.files.forEach(file => formData.append('Files', file));
 
   this.isSubmitting = true;
 

@@ -30,6 +30,7 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
         public string Reason { get; set; }
         public decimal Amount { get; set; }
         public DateTime CreatedDate { get; set; }
+        public DateTime ViolationDate { get; set; }
         public bool AutoDiscount { get; set; }
         public DiscountType DiscountType { get; set; }
         public bool IsRead { get; set; }

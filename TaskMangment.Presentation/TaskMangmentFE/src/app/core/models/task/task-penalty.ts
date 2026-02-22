@@ -12,6 +12,7 @@ export interface DiscountGetDto {
   reason: string;
   amount: number;
   createdDate: string;
+ violationDate: string;
  autoDiscount: boolean;
  isRead: boolean | false
 

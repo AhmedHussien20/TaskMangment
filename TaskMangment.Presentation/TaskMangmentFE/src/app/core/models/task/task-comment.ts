@@ -1,7 +1,7 @@
 // app/core/models/task/task-comment.ts
 export interface TaskCommentAddEditDto {
   commentText: string;
-  file?: File;
+  files?: File[]; // multiple
 }
 
 export interface TaskCommentGetDto {

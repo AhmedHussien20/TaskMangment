@@ -124,15 +124,17 @@ namespace TaskMangment.Hangfire.Jobs
                         continue;
 
                     var lastComment = await _db.TaskComments
-     .Where(c => c.TaskId == task.Id && c.EmployeeId == employeeId && !c.IsDeleted)
-     .OrderByDescending(c => c.CreatedDate)
-     .FirstOrDefaultAsync();
+                        .Where(c => c.TaskId == task.Id && c.EmployeeId == employeeId && !c.IsDeleted)
+                        .OrderByDescending(c => c.CreatedDate)
+                        .FirstOrDefaultAsync();
 
                     var baseDate = lastComment == null
                         ? assignment.AssignedAt.Date
                         : lastComment.CreatedDate.Date;
 
-                    var dueDate = baseDate.AddDays(periodDays - 1);
+                    var dueDate = (periodDays == 1 && lastComment != null)
+                        ? baseDate.AddDays(periodDays)     
+                        : baseDate.AddDays(periodDays - 1); 
 
                     if (dueDate > yesterday)
                         continue;
@@ -199,7 +201,8 @@ namespace TaskMangment.Hangfire.Jobs
                         Reason = "Penalty for not commenting",
                         AutoDiscount = true,
                         CreatedDate = DateTime.UtcNow,
-                        discountType = DiscountType.StopCommentDiscount
+                        discountType = DiscountType.StopCommentDiscount,
+                        ViolationDate = dueDate
                     };
 
                     await _db.Discounts.AddAsync(discount);

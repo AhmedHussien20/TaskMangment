@@ -170,8 +170,6 @@ namespace TaskMangment.Infrastructure.Services
                 );
             }
 
-
-
             var discount = _mapper.Map<Discount>(dto);
             discount.TaskId = TaskID;
             discount.CreatedByEmployeeId = createdByEmployeeId;

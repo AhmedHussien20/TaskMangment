@@ -15,51 +15,70 @@ namespace TaskMangment.Infrastructure.Persistence.Extensions
             TaskRequest request,
             int currentEmployeeId)
         {
-            var targetEmployeeId = request.TargetEmployeeId.GetValueOrDefault(currentEmployeeId);
-
             if (request.Direction.HasValue)
             {
-                if (request.Direction.Value == TaskDirection.Incoming)
+                // لو فيه TargetEmployeeId → فلتر عليه
+                if (request.TargetEmployeeId.HasValue)
                 {
-                    query = query.Where(t => t.Assignments.Any(a =>
-                        a.IsActive && a.EmployeeId == targetEmployeeId));
+                    var targetEmployeeId = request.TargetEmployeeId.Value;
+
+                    if (request.Direction.Value == TaskDirection.Incoming)
+                    {
+                        query = query.Where(t => t.Assignments.Any(a =>
+                            a.IsActive && a.EmployeeId == targetEmployeeId));
+                    }
+                    else
+                    {
+                        query = query.Where(t => t.CreatedByEmployeeId == targetEmployeeId);
+                    }
                 }
-                else 
+                else
                 {
-                    query = query.Where(t => t.CreatedByEmployeeId == targetEmployeeId);
+                    // مفيش TargetEmployeeId → متفلترش على موظف
+                    // بس فلتر على الاتجاه فقط
+
+                    if (request.Direction.Value == TaskDirection.Incoming)
+                    {
+                        query = query.Where(t =>
+                            t.Assignments.Any(a => a.IsActive));
+                    }
+                    else
+                    {
+                        query = query.Where(t => t.CreatedByEmployeeId != 0);
+                    }
                 }
-            }
-            else
-            {
-                query = query.Where(t =>
-                    t.Assignments.Any(a => a.EmployeeId == currentEmployeeId && a.IsActive) ||
-                    t.CreatedByEmployeeId == currentEmployeeId);
             }
 
+            // Status
             if (request.StatusId.HasValue)
                 query = query.Where(t => (int)t.Status == request.StatusId.Value);
 
+            // EmployeeIds multi-select
             if (request.EmployeeIds != null && request.EmployeeIds.Any())
             {
                 query = query.Where(t =>
                     t.Assignments.Any(a => a.IsActive && request.EmployeeIds.Contains(a.EmployeeId)));
             }
 
+            // Search
             if (!string.IsNullOrWhiteSpace(request.searchKey))
             {
                 var key = request.searchKey.Trim();
                 query = query.Where(t => t.Title.Contains(key));
             }
 
+            // Priority
             if (request.PriorityId.HasValue)
                 query = query.Where(t => (int)t.Priority == request.PriorityId.Value);
 
+            // Created range
             if (request.CreatedFrom.HasValue)
                 query = query.Where(t => t.CreatedDate >= request.CreatedFrom.Value);
 
             if (request.CreatedTo.HasValue)
                 query = query.Where(t => t.CreatedDate <= request.CreatedTo.Value);
 
+            // Due range
             if (request.DueFrom.HasValue)
                 query = query.Where(t => t.DueDate.HasValue && t.DueDate.Value >= request.DueFrom.Value);
 

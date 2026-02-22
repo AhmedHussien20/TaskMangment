@@ -35,8 +35,10 @@ export class TaskCommentService {
     const formData = new FormData();
     formData.append('commentText', model.commentText);
     
-    if (model.file) {
-      formData.append('file', model.file);
+    if (model.files && model.files.length > 0) {
+      model.files.forEach(file => {
+        formData.append('files', file);
+      });
     }
     
     return this.api.put<BaseResponse<TaskCommentGetDto>>(this.service, `${id}`, formData);

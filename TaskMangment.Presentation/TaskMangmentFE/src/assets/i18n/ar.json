@@ -599,7 +599,8 @@
     "ARCHIVE_CONFIRM_TEXT": "أنتِ على وشك أرشفة {{count}} مهمة. هل تريدين المتابعة؟",
     "ARCHIVE_TASKS": "ارشفة المهام",
   "ARCHIVE_SUCCESS": "تم أرشفة المهام بنجاح",
-  "CONFIRM_BUTTON": "تاكيد"
+  "CONFIRM_BUTTON": "تاكيد",
+  "PENALTY_DATE": "تاريخ الخصم"
 
   },
   "EMPLOYEE": {

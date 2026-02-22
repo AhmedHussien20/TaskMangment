@@ -578,7 +578,8 @@
   "ARCHIVE_CONFIRM_TEXT": "You are about to archive {{count}} task(s). Do you want to continue?",
   "ARCHIVE_TASKS": "Archive Tasks",
   "ARCHIVE_SUCCESS": "Tasks archived successfully",
-  "CONFIRM_BUTTON": "Confirm"
+  "CONFIRM_BUTTON": "Confirm",
+  "PENALTY_DATE": "Penalty Date"
 
 
 
