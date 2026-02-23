@@ -19,6 +19,7 @@ using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
 using TaskMangment.Domain.Event;
+using TaskMangment.Infrastructure.Caching;
 using TaskMangment.Infrastructure.Persistence.Extensions;
 using Attachment = TaskMangment.Domain.Entities.Attachment;
 
@@ -36,6 +37,8 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IDomainEventDispatcher _eventDispatcher;
         private readonly IBlobStorageService _blobStorageService;
         private readonly IAppUnitOfWork _uow;
+        private readonly ICacheInvalidator _cacheInvalidator;
+
 
 
 
@@ -49,7 +52,8 @@ namespace TaskMangment.Infrastructure.Services
             IDomainEventDispatcher eventDispatcher,
             IRepository<Employee> employeeRepo,
             IBlobStorageService blobStorageService,
-            IAppUnitOfWork uow
+            IAppUnitOfWork uow,
+            ICacheInvalidator cacheInvalidator
             )
         {
             _commentRepo = commentRepo;
@@ -62,54 +66,66 @@ namespace TaskMangment.Infrastructure.Services
             _employeeRepo = employeeRepo;
             _blobStorageService = blobStorageService;
             _uow = uow;
+            _cacheInvalidator = cacheInvalidator;
 
         }
-
+        private async Task<int> GetVersionAsync(string versionKey)
+        {
+            var v = await _cache.GetAsync<int>(versionKey);
+            if (v <= 0)
+            {
+                await _cache.SetAsync(versionKey, 1, TimeSpan.FromDays(30));
+                return 1;
+            }
+            return v;
+        }
         public async Task<ApiResponse<PagedResponse<TaskCommentGetDto>>> GetAllAsync(TaskCommentRequest request)
         {
-            //string cacheKey = $"taskComments:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}:{request.TaskId}";
-
-            //if (!request.BypassCache)
-            //{
-            //    var cached = await _cache.GetAsync<PagedResponse<TaskCommentGetDto>>(cacheKey);
-            //    if (cached != null)
-            //        return ApiResponse<PagedResponse<TaskCommentGetDto>>.Ok(cached);
-            //}
-
             var task = await _taskRepo.GetByIDAsync(request.TaskId);
             if (task == null)
                 throw new AppException(ErrorCodes.TaskNotFound, StatusCodes.Status404NotFound);
 
-            var query = _commentRepo.GetAll(c => c.TaskId == request.TaskId)
-                .Include(c => c.Employee)
-                .Include(c => c.Task)
-                .ApplySearch(request.searchKey);
+            var version = await GetVersionAsync(CacheKeys.TaskCommentsVersion(request.TaskId));
+            var cacheKey = CacheKeys.TaskCommentsList(request.TaskId, request, version);
 
-            var totalCount = await query.CountAsync();
+            var response = await _cache.GetOrSetAsync<PagedResponse<TaskCommentGetDto>>(
+                cacheKey,
+                async () =>
+                {
+                    var query = _commentRepo.GetAll(c => c.TaskId == request.TaskId)
+                        .Include(c => c.Employee)
+                        .Include(c => c.Task)
+                        .ApplySearch(request.searchKey);
 
-            query = query.OrderByDynamicSafe(request.SortColumn, request.SortDirection);
+                    var totalCount = await query.CountAsync();
 
-            var list = await query
-                .Skip((request.PageIndex - 1) * request.PageSize)
-                .Take(request.PageSize)
-                .ToListAsync();
+                    query = query.OrderByDynamicSafe(request.SortColumn, request.SortDirection);
 
-            var dtos = _mapper.Map<ICollection<TaskCommentGetDto>>(list);
+                    var list = await query
+                        .Skip((request.PageIndex - 1) * request.PageSize)
+                        .Take(request.PageSize)
+                        .ToListAsync();
 
-            foreach (var dto in dtos)
-            {
-                var comment = list.First(c => c.Id == dto.Id);
-                dto.AttachmentCount = await _attachmentRepo.CountAsync(a => a.ReferenceId == comment.Id && a.AttachmentType == AttachmentType.Comment);
-                dto.TaskTitle = comment.Task?.Title;
-                dto.EmployeeName = comment.Employee?.FullName;
-            }
+                    var dtos = _mapper.Map<ICollection<TaskCommentGetDto>>(list);
 
-            var response = new PagedResponse<TaskCommentGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
-            //await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(8));
+                    foreach (var dto in dtos)
+                    {
+                        var comment = list.First(c => c.Id == dto.Id);
+                        dto.AttachmentCount = await _attachmentRepo.CountAsync(a =>
+                            a.ReferenceId == comment.Id &&
+                            a.AttachmentType == AttachmentType.Comment);
+
+                        dto.TaskTitle = comment.Task?.Title;
+                        dto.EmployeeName = comment.Employee?.FullName;
+                    }
+
+                    return new PagedResponse<TaskCommentGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
+                },
+                TimeSpan.FromMinutes(8)
+            );
 
             return ApiResponse<PagedResponse<TaskCommentGetDto>>.Ok(response);
         }
-
         public async Task<ApiResponse<TaskCommentGetDto>> GetByIdAsync(int id)
         {
             var comment = await _commentRepo.GetAll(c => c.Id == id)
@@ -208,7 +224,8 @@ namespace TaskMangment.Infrastructure.Services
                     await _attachmentRepo.SaveChangesAsync();
                 }
 
-                await _cache.RemoveAsync("taskComments:");
+                await _cacheInvalidator.InvalidateTaskCommentsAsync(taskId);
+                //await _cache.RemoveAsync("taskComments:");
                 await _uow.CommitAsync();
 
                 // ==== Notifications/Event ====

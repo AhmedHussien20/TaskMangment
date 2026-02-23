@@ -14,6 +14,7 @@ using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
 using TaskMangment.Domain.Event;
+using TaskMangment.Infrastructure.Caching;
 using TaskMangment.Infrastructure.Persistence.Extensions;
 
 namespace TaskMangment.Infrastructure.Services
@@ -28,6 +29,9 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<Employee> _empRepo;
         private readonly IUserAccessContextProvider _accessProvider;
         private readonly IGetHigherManager _getHigherManager;
+        private readonly ICachingService _cache;
+        private readonly ICacheInvalidator _cacheInvalidator;
+
 
 
         public LeaveService(
@@ -38,7 +42,9 @@ namespace TaskMangment.Infrastructure.Services
             IDomainEventDispatcher eventDispatcher,
             IRepository<Employee> empRepo,
             IUserAccessContextProvider accessProvider,
-            IGetHigherManager getHigherManager
+            IGetHigherManager getHigherManager,
+            ICachingService cache,
+            ICacheInvalidator cacheInvalidator
 
             )
         {
@@ -50,8 +56,20 @@ namespace TaskMangment.Infrastructure.Services
             _empRepo = empRepo;
             _accessProvider = accessProvider;
             _getHigherManager = getHigherManager;
+            _cache = cache;
+            _cacheInvalidator = cacheInvalidator;
         }
-         
+
+        private async Task<int> GetVersionAsync(string versionKey)
+        {
+            var v = await _cache.GetAsync<int>(versionKey);
+            if (v <= 0)
+            {
+                await _cache.SetAsync(versionKey, 1, TimeSpan.FromDays(30));
+                return 1;
+            }
+            return v;
+        }
         public async Task<ApiResponse<LeaveGetDto>> CreateAsync(LeaveAddDto dto, int employeeId)
         {
             if (!await _employeeRepo.IsExistAsync(employeeId))
@@ -76,6 +94,7 @@ namespace TaskMangment.Infrastructure.Services
 
             await _leaveRepo.AddAsync(leave);
             await _leaveRepo.SaveChangesAsync();
+                await _cacheInvalidator.InvalidateLeavesAsync(leave.Employee.CompanyId);
 
             var full = await _leaveRepo.GetAll(l => l.Id == leave.Id)
                 .Include(l => l.Employee)
@@ -108,63 +127,69 @@ namespace TaskMangment.Infrastructure.Services
         }
 
         public async Task<ApiResponse<PagedResponse<LeaveGetDto>>> GetLeaveRequestsAsync(
-      LeaveRequest request,
-      int roleLevel,
-      int employeeId)
+    LeaveRequest request,
+    int roleLevel,
+    int employeeId)
         {
-            var query = _leaveRepo.GetAll()
-                .Include(l => l.Employee)
-                .Include(l => l.LeaveType)
-                .ApplySearch(request.searchKey);
+            var companyId = await _employeeRepo.GetAll(e => e.Id == employeeId)
+                .Select(e => e.CompanyId)
+                .FirstAsync();
 
-            if (request.StatusId.HasValue)
-                query = query.Where(l => l.Status == (LeaveStatus)request.StatusId.Value);
+            var version = await GetVersionAsync(CacheKeys.LeavesVersion(companyId));
+            var cacheKey = CacheKeys.LeavesList(companyId, roleLevel, employeeId, request, version);
 
-            if (roleLevel < 60)
-            {
-                query = query.Where(l => l.EmployeeId == employeeId);
-            }
-            else
-            {
-                var access = await _accessProvider.GetAsync(employeeId);
+            var response = await _cache.GetOrSetAsync<PagedResponse<LeaveGetDto>>(
+                cacheKey,
+                async () =>
+                {
+                    var query = _leaveRepo.GetAll()
+                        .Include(l => l.Employee)
+                        .Include(l => l.LeaveType)
+                        .ApplySearch(request.searchKey);
 
-                var companyId = await _employeeRepo.GetAll(e => e.Id == employeeId)
-                    .Select(e => e.CompanyId)
-                    .FirstAsync();
+                    if (request.StatusId.HasValue)
+                        query = query.Where(l => l.Status == (LeaveStatus)request.StatusId.Value);
 
-                IQueryable<Employee> scopedEmployeesQuery = _employeeRepo
-                    .GetAll(e => e.CompanyId == companyId && e.IsActive)
-                    .ApplyAccessScope(access);
+                    if (roleLevel < 60)
+                    {
+                        query = query.Where(l => l.EmployeeId == employeeId);
+                    }
+                    else
+                    {
+                        var access = await _accessProvider.GetAsync(employeeId);
 
-                if (roleLevel != 100)
-                    scopedEmployeesQuery = scopedEmployeesQuery.ApplyRoleHierarchy(roleLevel);
+                        IQueryable<Employee> scopedEmployeesQuery = _employeeRepo
+                            .GetAll(e => e.CompanyId == companyId && e.IsActive)
+                            .ApplyAccessScope(access);
 
-                var scopedEmployeeIds = scopedEmployeesQuery.Select(e => e.Id);
+                        if (roleLevel != 100)
+                            scopedEmployeesQuery = scopedEmployeesQuery.ApplyRoleHierarchy(roleLevel);
 
-                query = query.Where(l => scopedEmployeeIds.Contains(l.EmployeeId));
+                        var scopedEmployeeIds = scopedEmployeesQuery.Select(e => e.Id);
 
-                if (request.EmployeeIds != null && request.EmployeeIds.Any())
-                    query = query.Where(l => request.EmployeeIds.Contains(l.EmployeeId));
-            }
+                        query = query.Where(l => scopedEmployeeIds.Contains(l.EmployeeId));
 
-            var totalCount = await query.CountAsync();
+                        if (request.EmployeeIds != null && request.EmployeeIds.Any())
+                            query = query.Where(l => request.EmployeeIds.Contains(l.EmployeeId));
+                    }
 
-            query = query.OrderByDynamicSafe(
-                request.SortColumn ?? "CreatedDate",
-                request.SortDirection ?? "DESC");
+                    var totalCount = await query.CountAsync();
 
-            var list = await query
-                .Skip((request.PageIndex - 1) * request.PageSize)
-                .Take(request.PageSize)
-                .ToListAsync();
+                    query = query.OrderByDynamicSafe(
+                        request.SortColumn ?? "CreatedDate",
+                        request.SortDirection ?? "DESC");
 
-            var dtos = _mapper.Map<ICollection<LeaveGetDto>>(list);
+                    var list = await query
+                        .Skip((request.PageIndex - 1) * request.PageSize)
+                        .Take(request.PageSize)
+                        .ToListAsync();
 
-            var response = new PagedResponse<LeaveGetDto>(
-                dtos,
-                totalCount,
-                request.PageIndex,
-                request.PageSize);
+                    var dtos = _mapper.Map<ICollection<LeaveGetDto>>(list);
+
+                    return new PagedResponse<LeaveGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
+                },
+                TimeSpan.FromMinutes(2)
+            );
 
             return ApiResponse<PagedResponse<LeaveGetDto>>.Ok(response);
         }
@@ -232,6 +257,7 @@ namespace TaskMangment.Infrastructure.Services
             leave.ApprovedAt = DateTime.UtcNow;
 
             await _leaveRepo.SaveChangesAsync();
+            await _cacheInvalidator.InvalidateLeavesAsync(leave.Employee.CompanyId);
 
             await _eventDispatcher.PublishAsync(new LeaveApprovedEvent(
                 leave.Id,
@@ -286,6 +312,8 @@ namespace TaskMangment.Infrastructure.Services
             leave.ApprovedAt = DateTime.UtcNow;
 
             await _leaveRepo.SaveChangesAsync();
+            await _cacheInvalidator.InvalidateLeavesAsync(leave.Employee.CompanyId);
+
 
             await _eventDispatcher.PublishAsync(new LeaveRejectedEvent(
                 leave.Id,

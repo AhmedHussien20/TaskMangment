@@ -5,7 +5,9 @@ using Microsoft.IdentityModel.Tokens;
 using QuestPDF.Infrastructure;
 using Serilog; 
 using System.Globalization;
+using System.Security.Claims;
 using System.Text;
+using System.Threading.RateLimiting;
 using TaskMangment.API.Extensions;
 using TaskMangment.API.Filters; 
 using TaskMangment.Hangfire.Jobs;
@@ -206,6 +208,37 @@ namespace TaskMangment.API
                 builder.Services.AddCaching(builder.Configuration);
 
 
+            builder.Services.AddRateLimiter(options =>
+            {
+                options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+                options.AddPolicy("api", context =>
+                {
+                    var userId =
+                        context.User?.FindFirst("UserId")?.Value ??
+                        context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                    
+                    var key = !string.IsNullOrWhiteSpace(userId)
+                        ? $"u:{userId}"
+                        : $"ip:{context.Connection.RemoteIpAddress?.ToString() ?? "unknown"}";
+
+                    //var companyId = context.User?.FindFirst("CompanyId")?.Value;
+
+                    //var key = !string.IsNullOrWhiteSpace(companyId)
+                    //    ? $"company:{companyId}"
+                    //    : $"ip:{context.Connection.RemoteIpAddress?.ToString() ?? "unknown"}";
+
+                    return RateLimitPartition.GetFixedWindowLimiter(
+                        partitionKey: key,
+                        factory: _ => new FixedWindowRateLimiterOptions
+                        {
+                            PermitLimit = 15,
+                            Window = TimeSpan.FromMinutes(1),
+                            QueueLimit = 0
+                        });
+                });
+            });
+
             var app = builder.Build();
 
                 app.UseRouting();
@@ -246,12 +279,14 @@ namespace TaskMangment.API
 
                 app.UseAuthentication();
                 app.UseAuthorization();
+            app.UseForwardedHeaders();
 
                 // SignalR Hub
                 app.MapHub<NotificationHub>("/notifications");
+            app.UseRateLimiter();
 
-                // API Controllers
-                app.MapControllers();
+            // API Controllers
+            app.MapControllers().RequireRateLimiting("api");
 
             //using (var scope = app.Services.CreateScope())
             //{

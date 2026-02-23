@@ -20,6 +20,7 @@ using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
 using TaskMangment.Domain.Event;
+using TaskMangment.Infrastructure.Caching;
 using TaskMangment.Infrastructure.Persistence.Extensions;
 using TaskMangment.Utilities.Localization.Resources;
 namespace TaskMangment.Infrastructure.Services
@@ -36,6 +37,8 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IStringLocalizer<DiscountAutoType> _localizer;
         private readonly IRepository<Notification> _notificationRepo;
         private readonly IGetHigherManager _getHigherManager;
+        private readonly ICacheInvalidator _cacheInvalidator;
+
 
 
 
@@ -50,7 +53,8 @@ namespace TaskMangment.Infrastructure.Services
             IStringLocalizer<DiscountAutoType> localizer,
             IRepository<Branch> branchRepo,
             IRepository<Notification> notificationRepo,
-            IGetHigherManager getHigherManager)
+            IGetHigherManager getHigherManager,
+            ICacheInvalidator cacheInvalidator)
         {
             _discountRepo = discountRepo;
             _employeeRepo = employeeRepo;
@@ -62,76 +66,88 @@ namespace TaskMangment.Infrastructure.Services
             _branchRepo = branchRepo;
             _notificationRepo = notificationRepo;
             _getHigherManager = getHigherManager;
+            _cacheInvalidator = cacheInvalidator;
+        }
+
+        private async Task<int> GetVersionAsync(string versionKey)
+        {
+            var v = await _cache.GetAsync<int>(versionKey);
+            if (v <= 0)
+            {
+                await _cache.SetAsync(versionKey, 1, TimeSpan.FromDays(30));
+                return 1;
+            }
+            return v;
         }
 
         public async Task<ApiResponse<PagedResponse<DiscountGetDto>>> GetAllAsync(TaskDiscountRequest request)
         {
-            //string cacheKey = $"discounts:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}:{request.TaskId}";
-
-            //if (!request.BypassCache)
-            //{
-            //    var cached = await _cache.GetAsync<PagedResponse<DiscountListDto>>(cacheKey);
-            //    if (cached != null)
-            //        return ApiResponse<PagedResponse<DiscountListDto>>.Ok(cached);
-            //}
-
             var task = await _taskRepo.GetByIDAsync(request.TaskId);
             if (task == null)
                 throw new AppException(ErrorCodes.TaskNotFound, StatusCodes.Status404NotFound);
 
-            var query = _discountRepo.GetAll(c => c.TaskId == request.TaskId)
-                .Include(d => d.Employee)
-                .Include(d => d.Task)
-                .Include(d => d.CreatedBy)
-                .ApplySearch(request.searchKey);
-            
-            var totalCount = await query.CountAsync();
+            var version = await GetVersionAsync(CacheKeys.TaskDiscountsVersion(request.TaskId));
+            var cacheKey = CacheKeys.TaskDiscountsList(request.TaskId, request, version);
 
-            query = query.OrderByDynamicSafe(request.SortColumn, request.SortDirection);
-
-            var list = await query
-                .Skip((request.PageIndex - 1) * request.PageSize)
-                .Take(request.PageSize)
-                .ToListAsync();
-
-            foreach (var item in list)
-            {
-                if (!item.AutoDiscount)
-                    continue;
-                switch (item.discountType)
+            var response = await _cache.GetOrSetAsync<PagedResponse<DiscountGetDto>>(
+                cacheKey,
+                async () =>
                 {
-                    case DiscountType.AutoCloseTaskDiscount:
-                        item.Reason = _localizer[DiscountTypes.AutoCloseTaskDiscount]; break;
-                    case DiscountType.MaxWarningDiscount:
-                        item.Reason = _localizer[DiscountTypes.MaxwarningTaskDiscount]; break;
-                    case DiscountType.StopCommentDiscount:
-                        item.Reason = _localizer[DiscountTypes.StopCommentTaskDiscount]; break;
-                }
-            }
-            var dtos = _mapper.Map<ICollection<DiscountGetDto>>(list);
+                    var query = _discountRepo.GetAll(c => c.TaskId == request.TaskId)
+                        .Include(d => d.Employee)
+                        .Include(d => d.Task)
+                        .Include(d => d.CreatedBy)
+                        .ApplySearch(request.searchKey);
 
-            var discountIds = dtos.Select(x => x.Id).ToList();
+                    var totalCount = await query.CountAsync();
 
-            var notifReadMap = await _notificationRepo
-                .GetAll(n =>
-                    n.NotificationType == NotificationType.Penalty &&
-                    discountIds.Contains(n.ReferenceId))
-                .Select(n => new { n.ReferenceId, n.IsRead })
-                .ToListAsync();
+                    query = query.OrderByDynamicSafe(request.SortColumn, request.SortDirection);
 
-            var readDict = notifReadMap
-                .GroupBy(x => x.ReferenceId)
-                .ToDictionary(g => g.Key, g => g.Any(x => x.IsRead));
+                    var list = await query
+                        .Skip((request.PageIndex - 1) * request.PageSize)
+                        .Take(request.PageSize)
+                        .ToListAsync();
 
-            foreach (var dto in dtos)
-            {
-                dto.IsRead = readDict.TryGetValue(dto.Id, out var isRead) && isRead;
-            }
+                    foreach (var item in list)
+                    {
+                        if (!item.AutoDiscount)
+                            continue;
 
+                        switch (item.discountType)
+                        {
+                            case DiscountType.AutoCloseTaskDiscount:
+                                item.Reason = _localizer[DiscountTypes.AutoCloseTaskDiscount]; break;
+                            case DiscountType.MaxWarningDiscount:
+                                item.Reason = _localizer[DiscountTypes.MaxwarningTaskDiscount]; break;
+                            case DiscountType.StopCommentDiscount:
+                                item.Reason = _localizer[DiscountTypes.StopCommentTaskDiscount]; break;
+                        }
+                    }
 
-            var response = new PagedResponse<DiscountGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
+                    var dtos = _mapper.Map<ICollection<DiscountGetDto>>(list);
 
-           // await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
+                    var discountIds = dtos.Select(x => x.Id).ToList();
+
+                    var notifReadMap = await _notificationRepo
+                        .GetAll(n =>
+                            n.NotificationType == NotificationType.Penalty &&
+                            discountIds.Contains(n.ReferenceId))
+                        .Select(n => new { n.ReferenceId, n.IsRead })
+                        .ToListAsync();
+
+                    var readDict = notifReadMap
+                        .GroupBy(x => x.ReferenceId)
+                        .ToDictionary(g => g.Key, g => g.Any(x => x.IsRead));
+
+                    foreach (var dto in dtos)
+                    {
+                        dto.IsRead = readDict.TryGetValue(dto.Id, out var isRead) && isRead;
+                    }
+
+                    return new PagedResponse<DiscountGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
+                },
+                TimeSpan.FromMinutes(10)
+            );
 
             return ApiResponse<PagedResponse<DiscountGetDto>>.Ok(response);
         }
@@ -179,7 +195,13 @@ namespace TaskMangment.Infrastructure.Services
 
             await _discountRepo.AddAsync(discount);
             await _discountRepo.SaveChangesAsync();
-            await _cache.RemoveAsync("discounts:");
+            //await _cache.RemoveAsync("discounts:");
+
+            await _cacheInvalidator.InvalidateTaskDiscountsAsync(TaskID);
+            //await _cacheInvalidator.InvalidateTasksAsync(task.CompanyId);
+            await _cacheInvalidator.InvalidateDashboardAsync(task.CompanyId);
+            await _cacheInvalidator.InvalidateEmployeeDashboardAsync(dto.EmployeeId);
+
 
 
             var employeeName = await _employeeRepo.GetAll(e => e.Id == createdByEmployeeId).Select(e => e.FullName).FirstOrDefaultAsync();

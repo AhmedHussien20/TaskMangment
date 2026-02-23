@@ -18,6 +18,7 @@ using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
 using TaskMangment.Domain.Event;
+using TaskMangment.Infrastructure.Caching;
 using TaskMangment.Infrastructure.Persistence.Extensions;
 
 namespace TaskMangment.Infrastructure.Services
@@ -35,6 +36,8 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<Discount> _discountRepo;
         private readonly IRepository<Notification> _notificationRepo;
         private readonly IGetHigherManager _getHigherManager;
+        private readonly ICacheInvalidator _cacheInvalidator;
+
 
 
 
@@ -50,7 +53,9 @@ namespace TaskMangment.Infrastructure.Services
             IRepository<Discount> discountRepo,
             IRepository<Branch> branchRepo,
             IRepository<Notification> notificationRepo,
-            IGetHigherManager getHigherManager)
+            IGetHigherManager getHigherManager,
+            ICacheInvalidator cacheInvalidator
+)
         {
             _warningRepo = warningRepo;
             _employeeRepo = employeeRepo;
@@ -63,62 +68,71 @@ namespace TaskMangment.Infrastructure.Services
             _branchRepo = branchRepo;
             _notificationRepo = notificationRepo;
             _getHigherManager = getHigherManager;
+            _cacheInvalidator = cacheInvalidator;
+        }
+        private async Task<int> GetVersionAsync(string versionKey)
+        {
+            var v = await _cache.GetAsync<int>(versionKey);
+            if (v <= 0)
+            {
+                await _cache.SetAsync(versionKey, 1, TimeSpan.FromDays(30));
+                return 1;
+            }
+            return v;
         }
 
         public async Task<ApiResponse<PagedResponse<WarningGetDto>>> GetAllAsync(WarningRequest request)
         {
-            //string cacheKey = $"warnings:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}:{request.TaskId}";
-
-            //if (!request.BypassCache)
-            //{
-            //    var cached = await _cache.GetAsync<PagedResponse<WarningListDto>>(cacheKey);
-            //    if (cached != null)
-            //        return ApiResponse<PagedResponse<WarningListDto>>.Ok(cached);
-            //}
-
             var task = await _taskRepo.GetByIDAsync(request.TaskId);
             if (task == null)
                 throw new AppException(ErrorCodes.TaskNotFound, StatusCodes.Status404NotFound);
 
-            var query = _warningRepo.GetAll(c => c.TaskId == request.TaskId)
-                .Include(w => w.IssuedBy)
-                .Include(w => w.Issued)
-                .Include(c => c.Task)
-                .ApplySearch(request.searchKey);
+            var version = await GetVersionAsync(CacheKeys.TaskWarningsVersion(request.TaskId));
+            var cacheKey = CacheKeys.TaskWarningsList(request.TaskId, request, version);
 
+            var response = await _cache.GetOrSetAsync<PagedResponse<WarningGetDto>>(
+                cacheKey,
+                async () =>
+                {
+                    var query = _warningRepo.GetAll(c => c.TaskId == request.TaskId)
+                        .Include(w => w.IssuedBy)
+                        .Include(w => w.Issued)
+                        .Include(c => c.Task)
+                        .ApplySearch(request.searchKey);
 
+                    var totalCount = await query.CountAsync();
 
-            var totalCount = await query.CountAsync();
-            query = query.OrderByDynamicSafe(request.SortColumn, request.SortDirection);
+                    query = query.OrderByDynamicSafe(request.SortColumn, request.SortDirection);
 
-            var list = await query
-                .Skip((request.PageIndex - 1) * request.PageSize)
-                .Take(request.PageSize)
-                .ToListAsync();
+                    var list = await query
+                        .Skip((request.PageIndex - 1) * request.PageSize)
+                        .Take(request.PageSize)
+                        .ToListAsync();
 
-            var dtos = _mapper.Map<ICollection<WarningGetDto>>(list);
+                    var dtos = _mapper.Map<ICollection<WarningGetDto>>(list);
 
+                    var warningIds = dtos.Select(x => x.Id).ToList();
 
-            var warningIds = dtos.Select(x => x.Id).ToList();
+                    var notifReadMap = await _notificationRepo
+                        .GetAll(n =>
+                            n.NotificationType == NotificationType.Warning &&
+                            warningIds.Contains(n.ReferenceId))
+                        .Select(n => new { n.ReferenceId, n.IsRead })
+                        .ToListAsync();
 
-            var notifReadMap = await _notificationRepo
-                .GetAll(n =>
-                    n.NotificationType == NotificationType.Warning &&
-                    warningIds.Contains(n.ReferenceId))
-                .Select(n => new { n.ReferenceId, n.IsRead })
-                .ToListAsync();
+                    var readDict = notifReadMap
+                        .GroupBy(x => x.ReferenceId)
+                        .ToDictionary(g => g.Key, g => g.Any(x => x.IsRead));
 
-            var readDict = notifReadMap
-                .GroupBy(x => x.ReferenceId)
-                .ToDictionary(g => g.Key, g => g.Any(x => x.IsRead));
+                    foreach (var dto in dtos)
+                    {
+                        dto.IsRead = readDict.TryGetValue(dto.Id, out var isRead) && isRead;
+                    }
 
-            foreach (var dto in dtos)
-            {
-                dto.IsRead = readDict.TryGetValue(dto.Id, out var isRead) && isRead;
-            }
-            var response = new PagedResponse<WarningGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
-
-            //await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
+                    return new PagedResponse<WarningGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
+                },
+                TimeSpan.FromMinutes(10)
+            );
 
             return ApiResponse<PagedResponse<WarningGetDto>>.Ok(response);
         }
@@ -197,8 +211,17 @@ namespace TaskMangment.Infrastructure.Services
             }
 
             await _warningRepo.SaveChangesAsync();
+            await _cacheInvalidator.InvalidateTaskWarningsAsync(taskId);
+            await _cacheInvalidator.InvalidateEmployeeDashboardAsync(dto.IssuedEmployeeId);
 
-                await _cache.RemoveAsync("warnings:");
+            if (discount != null)
+            {
+                await _cacheInvalidator.InvalidateTaskDiscountsAsync(taskId);
+                await _cacheInvalidator.InvalidateDashboardAsync(task.CompanyId);
+
+            }
+            //await _cache.RemoveAsync("warnings:");
+
 
 
             var employeeName = await _employeeRepo.GetAll(e => e.Id == employeeId).Select(e => e.FullName).FirstOrDefaultAsync();

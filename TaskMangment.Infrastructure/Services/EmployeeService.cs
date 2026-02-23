@@ -408,6 +408,7 @@ namespace TaskMangment.Infrastructure.Services
                 var companyId = employee.CompanyId;
                 await _cacheInvalidator.InvalidateEmployeesAsync(companyId);
 
+
                 await _uow.CommitAsync();
 
                 if (!string.IsNullOrWhiteSpace(oldBlobUrl) &&

@@ -3,9 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TaskMangment.Application.ApiRequests;
 using TaskMangment.Application.ApiRequests.Area;
 using TaskMangment.Application.Common.ApiRequests.Branch;
+using TaskMangment.Application.Common.ApiRequests.Department;
 using TaskMangment.Application.Common.ApiRequests.Employee;
+using TaskMangment.Application.Common.ApiRequests.Leave;
+using TaskMangment.Application.Common.ApiRequests.Role;
 using TaskMangment.Application.Common.ApiRequests.Task;
 
 namespace TaskMangment.Infrastructure.Caching
@@ -137,11 +141,167 @@ namespace TaskMangment.Infrastructure.Caching
         #endregion
 
 
-        #region Branches list cache keys
+        #region Employee dashboard cache keys
+
+        public static string EmployeeDashboardVersion(int employeeId) => $"v:empdash:{employeeId}";
+        public static string EmployeeDashboard(int companyId, int employeeId, string periodKey, int version)
+            => $"dashboard:employee:{companyId}:v{version}:emp{employeeId}:{periodKey}";
+
+        public static string EmployeeTasksWithoutCommentsToday(int companyId, int employeeId, int roleLevel, BaseApiRequest request, int version)
+            => $"dashboard:emp:noCommentToday:{companyId}:v{version}:emp{employeeId}:role{roleLevel}:" +
+               $"p{request.PageIndex}:s{request.PageSize}:q{request.searchKey}";
+
+        public static string EmployeeWarnings(int companyId, int employeeId, string periodKey, int version)
+            => $"dashboard:emp:warnings:{companyId}:v{version}:emp{employeeId}:{periodKey}";
+
+        public static string EmployeeDeductions(int companyId, int employeeId, string periodKey, int version)
+            => $"dashboard:emp:deductions:{companyId}:v{version}:emp{employeeId}:{periodKey}";
+
+        public static string EmployeeDueSoonTasks(int companyId, int employeeId, int version)
+            => $"dashboard:emp:dueSoon:{companyId}:v{version}:emp{employeeId}";
+
+        public static string EmployeeKpisExtended(int companyId, int employeeId, string periodKey, int version)
+            => $"dashboard:emp:kpisx:{companyId}:v{version}:emp{employeeId}:{periodKey}";
+
+        public static string EmployeeCompletedTasksDetails(int companyId, int employeeId, string periodKey, int version)
+            => $"dashboard:emp:completedDetails:{companyId}:v{version}:emp{employeeId}:{periodKey}";
         #endregion
 
-        #region Branches list cache keys
+
+
+        #region Departments cache keys (by branch)
+        public static string DepartmentsVersion() => $"v:departments";
+
+        public static string DepartmentsList(DepartmentRequest request, int version)
+            => $"departments:list:v{version}:" +
+               $"p{request.PageIndex}:s{request.PageSize}:" +
+               $"sort{request.SortColumn}:{request.SortDirection}:" +
+               $"q{request.searchKey}";
+
         #endregion
+
+
+        #region Task comments cache keys
+
+        public static string TaskCommentsVersion(int taskId)
+            => $"v:taskcomments:{taskId}";
+
+        public static string TaskCommentsList(int taskId, TaskCommentRequest request, int version)
+            => $"taskcomments:list:task{taskId}:v{version}:" +
+               $"p{request.PageIndex}:s{request.PageSize}:" +
+               $"sort{request.SortColumn}:{request.SortDirection}:" +
+               $"q{request.searchKey}";
+
+        #endregion
+
+
+        #region Task close requests cache keys
+        public static string TaskCloseRequestsVersion(int taskId)
+            => $"v:taskclosereq:{taskId}";
+
+        public static string TaskCloseRequestsList(int taskId, TaskCloseRequestRequest request, int version)
+            => $"taskclosereq:list:task{taskId}:v{version}:" +
+               $"p{request.PageIndex}:s{request.PageSize}:" +
+               $"sort{request.SortColumn}:{request.SortDirection}:" +
+               $"q{request.searchKey}";
+
+        #endregion
+
+        #region Task discounts cache keys
+
+        public static string TaskDiscountsVersion(int taskId)
+            => $"v:taskdiscounts:{taskId}";
+
+        public static string TaskDiscountsList(int taskId, TaskDiscountRequest request, int version)
+            => $"taskdiscounts:list:task{taskId}:v{version}:" +
+               $"p{request.PageIndex}:s{request.PageSize}:" +
+               $"sort{request.SortColumn}:{request.SortDirection}:" +
+               $"q{request.searchKey}";
+
+        #endregion
+
+        #region Task extension requests cache keys
+        public static string TaskExtensionRequestsVersion(int taskId)
+            => $"v:taskextreq:{taskId}";
+
+        public static string TaskExtensionRequestsList(int taskId, TaskExtensionRequestRequest request, int version)
+            => $"taskextreq:list:task{taskId}:v{version}:" +
+               $"p{request.PageIndex}:s{request.PageSize}:" +
+               $"sort{request.SortColumn}:{request.SortDirection}:" +
+               $"q{request.searchKey}";
+
+        #endregion
+
+
+        #region Task warnings cache keys
+        public static string TaskWarningsVersion(int taskId)
+            => $"v:taskwarnings:{taskId}";
+
+        public static string TaskWarningsList(int taskId, WarningRequest request, int version)
+            => $"taskwarnings:list:task{taskId}:v{version}:" +
+               $"p{request.PageIndex}:s{request.PageSize}:" +
+               $"sort{request.SortColumn}:{request.SortDirection}:" +
+               $"q{request.searchKey}";
+
+        #endregion
+
+
+        #region Leaves cache keys
+
+        public static string LeavesVersion(int companyId)
+            => $"v:leaves:{companyId}";
+
+        public static string LeavesList(
+            int companyId,
+            int roleLevel,
+            int employeeId,
+            LeaveRequest request,
+            int version)
+        {
+            var status = request.StatusId ?? 0;
+            var empIdsKey = (request.EmployeeIds == null || !request.EmployeeIds.Any())
+                ? "all"
+                : string.Join("-", request.EmployeeIds.Distinct().OrderBy(x => x));
+
+            return $"leaves:list:{companyId}:v{version}:" +
+                   $"role{roleLevel}:viewer{employeeId}:" +
+                   $"status{status}:emps{empIdsKey}:" +
+                   $"p{request.PageIndex}:s{request.PageSize}:" +
+                   $"sort{request.SortColumn ?? "CreatedDate"}:{request.SortDirection ?? "DESC"}:" +
+                   $"q{request.searchKey}";
+        }
+
+        #endregion
+
+        #region Roles cache keys
+        public static string RolesVersion(int companyId)=> $"v:roles:{companyId}";
+
+        public static string Roles(
+            int companyId,
+            BaseApiRequest request,
+            int version)
+            => $"roles:{companyId}:v{version}:" +
+               $"p{request.PageIndex}:s{request.PageSize}:" +
+               $"sort{request.SortColumn}:{request.SortDirection}:" +
+               $"q{request.searchKey}";
+        #endregion
+
+
+
+
+       #region Employee roles cache keys
+        public static string RoleAssignmentsVersion(int roleId)
+            => $"v:roleAssign:{roleId}";
+
+        public static string RoleAssignments(int roleId, RoleAssignmentReguest request, int version)
+            => $"roleAssign:{roleId}:v{version}:" +
+               $"p{request.PageIndex}:s{request.PageSize}:" +
+               $"sort{request.SortColumn}:{request.SortDirection}:" +
+               $"q{request.searchKey}:" +
+               $"assigned{request.IsAssigned}";
+
+        #endregion
+    }
+
 
     }
-}

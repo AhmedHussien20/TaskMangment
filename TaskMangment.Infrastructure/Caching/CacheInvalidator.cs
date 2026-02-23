@@ -38,7 +38,37 @@ namespace TaskMangment.Infrastructure.Caching
         public Task InvalidateBranchAsync(int companyId)
             => BumpAsync(CacheKeys.BranchesVersion(companyId));
 
+        public Task InvalidateEmployeeDashboardAsync(int employeeId)
+            => BumpAsync(CacheKeys.EmployeeDashboardVersion(employeeId));
+
+        public Task InvalidateDepartmentsAsync() 
+            => BumpAsync(CacheKeys.DepartmentsVersion());
+
+        public Task InvalidateTaskCommentsAsync(int taskId)
+            => BumpAsync(CacheKeys.TaskCommentsVersion(taskId));
+
+        public Task InvalidateTaskCloseRequestsAsync(int taskId)
+            => BumpAsync(CacheKeys.TaskCloseRequestsVersion(taskId));
+
+        public Task InvalidateTaskDiscountsAsync(int taskId)
+            => BumpAsync(CacheKeys.TaskDiscountsVersion(taskId));
+
+        public Task InvalidateTaskExtensionRequestsAsync(int taskId)
+            => BumpAsync(CacheKeys.TaskExtensionRequestsVersion(taskId));
+
+        public Task InvalidateTaskWarningsAsync(int taskId)
+            => BumpAsync(CacheKeys.TaskWarningsVersion(taskId));
+
+        public Task InvalidateLeavesAsync(int companyId)
+            => BumpAsync(CacheKeys.LeavesVersion(companyId));
+
+        public Task InvalidateRolesAsync(int companyId)
+            => BumpAsync(CacheKeys.RolesVersion(companyId));
+
+        public Task InvalidateRoleAssignmentsAsync(int roleId)
+            => BumpAsync(CacheKeys.RoleAssignmentsVersion(roleId));
 
     }
+
 
 }
