@@ -206,7 +206,9 @@ namespace TaskMangment.Infrastructure.Services
 
             var penaltiesQuery = _deductionRepo.GetAll(d =>
                 d.Employee.CompanyId == companyId &&
-                d.CreatedDate >= range.Start && d.CreatedDate <= range.End);
+                d.ViolationDate >= range.Start 
+                && d.ViolationDate <= range.End && d.Amount > 0);
+
 
             if (employeeId.HasValue || branchId.HasValue)
                 penaltiesQuery = penaltiesQuery.Where(d => scopedEmployeeIds.Contains(d.EmployeeId));
@@ -541,8 +543,8 @@ namespace TaskMangment.Infrastructure.Services
 
             var penaltiesQuery = _deductionRepo.GetAll(d =>
                 d.Employee.CompanyId == companyId &&
-                d.CreatedDate >= range.Start &&
-                d.CreatedDate <= range.End);
+                d.ViolationDate >= range.Start &&
+                d.ViolationDate <= range.End);
 
             if (employeeId.HasValue || branchId.HasValue)
                 penaltiesQuery = penaltiesQuery.Where(d => scopedEmployeeIds.Contains(d.EmployeeId));
@@ -574,8 +576,8 @@ namespace TaskMangment.Infrastructure.Services
 
             var discountsQuery = _deductionRepo.GetAll(d =>
                 d.Employee.CompanyId == companyId &&
-                d.CreatedDate >= range.Start &&
-                d.CreatedDate <= range.End &&
+                d.ViolationDate >= range.Start &&
+                d.ViolationDate <= range.End &&
                 d.Amount > 0);
 
             if (employeeId.HasValue || branchId.HasValue)
@@ -587,11 +589,12 @@ namespace TaskMangment.Infrastructure.Services
                     TaskId = d.TaskId,
                     EmployeeName = d.Employee.FullName,
                     TaskTitle = d.Task.Title,
-                    CreatedDate = d.CreatedDate,
+                    CreatedDate = d.ViolationDate,
                     Reason = d.Reason,
                     Amount = d.Amount,
                     AutoDiscount = d.AutoDiscount,
-                    DiscountType = d.discountType
+                    DiscountType = d.discountType,
+                    ViolationDate = d.ViolationDate,
                 })
                 .OrderByDescending(d => d.CreatedDate)
                 .ToListAsync();

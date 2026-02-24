@@ -114,7 +114,7 @@ namespace TaskMangment.Infrastructure.Services
             var penaltiesTotal = await _deductionRepo
                 .GetAll(d =>
                     d.EmployeeId == employeeId &&
-                    d.CreatedDate >= range.Start && d.CreatedDate <= range.End)
+                    d.ViolationDate >= range.Start && d.ViolationDate <= range.End)
                 .SumAsync(d => d.Amount);
 
             // --------
@@ -320,14 +320,14 @@ namespace TaskMangment.Infrastructure.Services
             var deductions = await _deductionRepo
                 .GetAll(d =>
                     d.EmployeeId == employeeId &&
-                    d.CreatedDate >= range.Start && d.CreatedDate <= range.End)
+                    d.ViolationDate >= range.Start && d.ViolationDate <= range.End)
                 .Select(d => new DeductionDto
                 {
                     Id = d.Id,
                     Amount = d.Amount,
                     Reason = d.Reason,
                     TaskTitle = d.Task.Title,
-                    CreatedDate = d.CreatedDate,
+                    CreatedDate = d.ViolationDate,
                     AutoDiscount = d.AutoDiscount,
                     DiscountType = d.discountType
 

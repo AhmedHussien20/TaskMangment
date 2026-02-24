@@ -202,7 +202,7 @@ namespace TaskMangment.Hangfire.Jobs
                         AutoDiscount = true,
                         CreatedDate = DateTime.UtcNow,
                         discountType = DiscountType.StopCommentDiscount,
-                        ViolationDate = dueDate
+                        ViolationDate = DateTime.UtcNow.AddDays(-1)
                     };
 
                     await _db.Discounts.AddAsync(discount);

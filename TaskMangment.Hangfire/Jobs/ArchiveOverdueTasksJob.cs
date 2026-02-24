@@ -154,6 +154,7 @@ namespace TaskMangment.Hangfire.Jobs
                             //CreatedByEmployeeId = 0,
                             AutoDiscount = true,
                             CreatedDate = DateTime.UtcNow,
+                            ViolationDate = DateTime.UtcNow,
                             discountType = DiscountType.AutoCloseTaskDiscount
                         };
 
