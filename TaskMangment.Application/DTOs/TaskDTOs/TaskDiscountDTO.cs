@@ -24,7 +24,7 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
     public class DiscountGetDto
     {
         public int Id { get; set; }
-        public int TaskId { get; set; }
+        public int? TaskId { get; set; }
         public string EmployeeName { get; set; }
         public string? TaskTitle { get; set; }
         public string Reason { get; set; }

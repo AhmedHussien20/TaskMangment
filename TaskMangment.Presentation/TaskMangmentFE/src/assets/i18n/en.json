@@ -548,7 +548,7 @@
     "ADD_ACHIEVEMENT": "Add your achievement",
     "SAR": "SAR",
     "ADD_TO_CALENDAR": "Add event with this comment",
-    "COMMENT_MIN_LENGTH_TASK_CHARACTERS": "Enter 500 characters as Minimum length",
+    "COMMENT_MIN_LENGTH_TASK_CHARACTERS": "Enter 200 characters as Minimum length",
     "COMMENT_OR_FILE_REQUIRED": "Enter required fields",
     "ACHIEVEMENT_RESON": "Achievement information",
     "DAYS": "Days",

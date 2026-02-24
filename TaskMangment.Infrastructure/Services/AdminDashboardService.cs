@@ -584,6 +584,7 @@ namespace TaskMangment.Infrastructure.Services
             var discounts = await discountsQuery
                 .Select(d => new DiscountGetDto
                 {
+                    TaskId = d.TaskId,
                     EmployeeName = d.Employee.FullName,
                     TaskTitle = d.Task.Title,
                     CreatedDate = d.CreatedDate,

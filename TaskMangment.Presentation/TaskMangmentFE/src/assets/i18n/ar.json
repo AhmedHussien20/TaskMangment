@@ -567,7 +567,7 @@
     "ADD_ACHIEVEMENT" : "اضف تقييم",
     "SAR" : "ريال",
     "ADD_TO_CALENDAR" : "اضافة موعد مع هذا التعليق",
-    "COMMENT_MIN_LENGTH_TASK_CHARACTERS" : "ادخل بحد ادني 500 حرف",
+    "COMMENT_MIN_LENGTH_TASK_CHARACTERS" : "ادخل بحد ادني 200 حرف",
     "COMMENT_OR_FILE_REQUIRED" : "ادخل الحقول المطلوبه",
     "ACHIEVEMENT_RESON" : "معلومات التقييم",
     "DAYS" : "يوم",
