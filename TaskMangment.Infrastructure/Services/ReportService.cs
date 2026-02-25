@@ -142,8 +142,11 @@ namespace TaskMangment.Infrastructure.Services
                     CommentsCount = g.Count(),
                     DistinctTasksCount = g.Select(x => x.TaskId).Distinct().Count(),
                     AvgCommentsPerTask = g.Select(x => x.TaskId).Distinct().Count() == 0
-                        ? 0
-                        : (decimal)g.Count() / g.Select(x => x.TaskId).Distinct().Count(),
+    ? 0
+    : Math.Round(
+        (decimal)g.Count() / g.Select(x => x.TaskId).Distinct().Count(),
+        2
+      ),
                     LastCommentDate = g.Max(x => x.CreatedDate)
                 })
                 .OrderByDescending(x => x.CommentsCount)
@@ -207,8 +210,9 @@ namespace TaskMangment.Infrastructure.Services
                         x.Task.DueDate <= closingSoonDate),
 
                     CompletionRate = g.Count(x => x.Task.Status == WorkTaskStatus.Closed) == 0
-                        ? 0
-                        : (decimal)g.Count(x => x.Task.Status == WorkTaskStatus.Closed) * 100 / g.Count()
+                    ? 0
+                    : Math.Round((decimal)g.Count(x => x.Task.Status == WorkTaskStatus.Closed) * 100 / g.Count(),2
+                    )
                 })
                 .OrderByDescending(x => x.TotalTasks)
                 .AsNoTracking()
@@ -310,9 +314,9 @@ namespace TaskMangment.Infrastructure.Services
                     EmployeeName = g.Key.EmployeeName,
                     TotalTasks = g.Count(),
                     ArchivedTasksCount = g.Count(x => x.Task.Status == WorkTaskStatus.Archived),
-                    ArchiveRate = g.Count() == 0
-                        ? 0
-                        : (decimal)g.Count(x => x.Task.Status == WorkTaskStatus.Archived) * 100 / g.Count()
+                    ArchiveRate = g.Count() == 0 ? 0
+                    : Math.Round((decimal)g.Count(x => x.Task.Status == WorkTaskStatus.Archived) * 100 / g.Count(), 2)
+
                 })
                 .Where(x => x.ArchivedTasksCount > 0)
                 .OrderByDescending(x => x.ArchiveRate)
@@ -595,6 +599,7 @@ namespace TaskMangment.Infrastructure.Services
             var result = await query
                 .Select(c => new TaskActivityReportDto
                 {
+                    TaskId = c.TaskId,
                     TaskTitleWithId = $"[{c.Task.Id}] {c.Task.Title}",
                     AssignedBy = c.Task.AssignedBy != null ? c.Task.AssignedBy.FullName : "غير معروف",
                     CommentDate = c.CreatedDate,
@@ -662,6 +667,7 @@ namespace TaskMangment.Infrastructure.Services
             var result = await query
                 .Select(c => new TaskMovementReportDto
                 {
+                    TaskId = c.TaskId,
                     ReportTitle = dto.ReportTitle,
                     TaskTitleWithId = $"[{c.Task.Id}] {c.Task.Title}",
                     MovementType = dto.MovementType,

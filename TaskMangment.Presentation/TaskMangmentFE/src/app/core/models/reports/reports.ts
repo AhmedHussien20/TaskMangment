@@ -62,6 +62,7 @@ export interface TaskDiscountFilterDto {
   employeeId?: number;
 }
 export interface TaskActivityReportDto {
+  taskId: number;
   taskTitleWithId: string; 
   assignedBy: string; 
   commentDate: string;    
@@ -74,6 +75,7 @@ export enum TaskMovementType {
   Incoming = 2
 }
 export interface TaskMovementReportDto {
+  taskId: number;
   reportTitle: string;
   movementType: TaskMovementType;
   taskTitleWithId: string;

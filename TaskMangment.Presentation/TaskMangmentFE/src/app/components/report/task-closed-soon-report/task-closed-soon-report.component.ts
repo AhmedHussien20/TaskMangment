@@ -2,7 +2,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgbModal, NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ToastrService } from 'ngx-toastr';
 
@@ -15,6 +15,7 @@ import { EmployeeService } from 'app/core/services/employee.service';
 import { ExportType, TasksClosingSoonDto } from 'app/core/models/reports/reports';
 import { AuthService } from 'app/core/services/auth.service';
 import { EmployeeNgSelectComponent } from 'app/components/employee-select/employee-select.component';
+import { TaskDetailsShellComponent } from 'app/components/tasks/task-details/task-details-shell/task-details-shell.component';
 
 @Component({
   selector: 'app-task-closed-soon-report',
@@ -66,7 +67,9 @@ export class TaskClosedSoonReportComponent implements OnInit {
     private toastr: ToastrService,
     private translate: TranslateService,
     private employeeService: EmployeeService,
-    private authService: AuthService
+    private authService: AuthService,
+    private modalService: NgbModal
+
   ) {}
 
   ngOnInit(): void {
@@ -89,7 +92,8 @@ export class TaskClosedSoonReportComponent implements OnInit {
     this.isLoading = true;
     this.reportService.getClosedSoonReports(this.selectedEmployeeId).subscribe({
       next: (res) => {
-        this.rows = res.data.map(t => ({
+        this.rows = res.data.map(t => ({ 
+          id: t.taskId,
           ...t,
           taskIdTitle: `[${t.taskId}] ${t.title}`
         }));
@@ -160,5 +164,23 @@ export class TaskClosedSoonReportComponent implements OnInit {
         );
       }
     });
+  }
+  checkRowClickable(item: any): boolean {
+  console.log('Row:', item);    
+  return true;
+}
+onEdit(id: number) {
+  console.log('Editing task ID:', id); 
+  const task = this.rows.find(x => x.taskId === id);
+  console.log('Task object:', task);
+
+  const modalRef = this.modalService.open(TaskDetailsShellComponent, {
+      size: 'xl',
+      backdrop: 'static',
+      scrollable: true
+    });
+
+    modalRef.componentInstance.taskId = id;
+    modalRef.componentInstance.readonly = true;
   }
 }

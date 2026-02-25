@@ -59,6 +59,9 @@
             [showExportExcel]="false"
             [showExportReportExcel]="true"
             (exportExcelClick)="onExportExcel()"
+            [rowClickable]="true" 
+            [rowClickableCondition]="checkRowClickable"
+            (edit)="onEdit($event)"
             >
           </app-generic-table>
         </div>

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgbModal, NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ToastrService } from 'ngx-toastr';
 
@@ -12,6 +12,7 @@ import { ReportPdfService } from 'app/core/services/report-pdf.service';
 import { ExportType, TaskActivityReportDto } from 'app/core/models/reports/reports';
 import { ApiResponse } from 'app/core/models/event/calendar';
 import { DatePickerComponent } from 'app/components/date-picker/date-picker.component';
+import { TaskDetailsShellComponent } from 'app/components/tasks/task-details/task-details-shell/task-details-shell.component';
 
 @Component({
   selector: 'app-task-comments-activity-report',
@@ -57,7 +58,8 @@ export class TaskCommentsActivityReportComponent implements OnInit {
     private reportService: ReportListService,
     private reportPdfService: ReportPdfService,
     private toastr: ToastrService,
-    private translate: TranslateService
+    private translate: TranslateService,
+    private modalService: NgbModal
   ) {}
 
   ngOnInit(): void {
@@ -71,8 +73,15 @@ export class TaskCommentsActivityReportComponent implements OnInit {
       .getTaskActivities(this.fromDate!, this.toDate!)
       .subscribe({
         next: (res: ApiResponse<TaskActivityReportDto[]>) => {
-          this.rows = res.data;
-          this.totalItems = res.data.length;
+this.rows = res.data.map(t => ({
+  id: t.taskId,
+  taskId: t.taskId,
+  taskTitleWithId: t.taskTitleWithId,
+  assignedBy: t.assignedBy,
+  commentDate: t.commentDate,
+  commentedBy: t.commentedBy,
+  comment: t.comment
+}));          this.totalItems = res.data.length;
           this.isLoading = false;
         },
         error: () => {
@@ -141,5 +150,23 @@ export class TaskCommentsActivityReportComponent implements OnInit {
       }
     });
 }
+ checkRowClickable(item: any): boolean {
+  console.log('Row:', item);    
+  return true;
+}
+onEdit(id: number) {
+  console.log('Editing task ID:', id); 
+  const task = this.rows.find(x => x.taskId === id);
+  console.log('Task object:', task);
 
+  const modalRef = this.modalService.open(TaskDetailsShellComponent, {
+      size: 'xl',
+      backdrop: 'static',
+      scrollable: true
+    });
+
+    modalRef.componentInstance.taskId = id;
+    modalRef.componentInstance.readonly = true;
+  }
+  
 }

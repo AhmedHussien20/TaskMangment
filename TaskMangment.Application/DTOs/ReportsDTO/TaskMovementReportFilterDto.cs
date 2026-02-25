@@ -14,6 +14,7 @@ namespace TaskMangment.Application.DTOs.ReportsDTO
     }
     public class TaskMovementReportDto
     {
+        public int TaskId { get; set; }
         public string ReportTitle { get; set; }
         public TaskMovementType MovementType { get; set; }
 
