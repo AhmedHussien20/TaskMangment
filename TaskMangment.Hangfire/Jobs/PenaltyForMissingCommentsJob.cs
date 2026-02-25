@@ -65,6 +65,12 @@ namespace TaskMangment.Hangfire.Jobs
                 if (task.PenaltyOnStopComment <= 0)
                     continue;
 
+                bool hasCloseRequest = await _db.TaskCloseRequests
+                    .AnyAsync(r => r.TaskId == task.Id);
+
+                if (hasCloseRequest)
+                    continue;
+
                 var periodDays = (int)task.CommentAllowPeriodDays!.Value;
                 if (periodDays < 1) periodDays = 1;
 
