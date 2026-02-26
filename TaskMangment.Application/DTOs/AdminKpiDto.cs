@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TaskMangment.Application.ApiRequests;
 using TaskMangment.Domain.Entities;
 
 namespace TaskMangment.Application.DTOs
@@ -24,6 +25,8 @@ namespace TaskMangment.Application.DTOs
         public string Title { get; set; }
         public WorkTaskStatus Status { get; set; }
         public string StatusText { get; set; }
+
+        public DateTime? CreatedDate { get; set; }
         public DateTime? DueDate { get; set; }
         public List<string> Employees { get; set; }
     }
@@ -33,6 +36,9 @@ namespace TaskMangment.Application.DTOs
         public DateTime? StartDate { get; set; }  
         public DateTime? EndDate { get; set; } 
     }
-
+    public class TasksByStatusRequest : BaseApiRequest
+    {
+        public PeriodDto Period { get; set; }
+    }
 
 }

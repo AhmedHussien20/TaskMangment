@@ -4,6 +4,7 @@ using TaskMangment.Application.ApiRequests;
 using TaskMangment.Application.Dashboards.Admin;
 using TaskMangment.Application.Dashboards.Employee;
 using TaskMangment.Application.DTOs;
+using TaskMangment.Application.DTOs.TaskDTOs;
 using TaskMangment.Domain.Entities;
 namespace TaskMangment.API.Controllers
 {
@@ -102,9 +103,9 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpGet("admin/tasks-by-status")]
-        public async Task<IActionResult> GetAdminTasksByStatus([FromQuery] string status, [FromQuery] PeriodDto period, int? branchId = null)
+        public async Task<IActionResult> GetAdminTasksByStatus([FromQuery] string status,[FromQuery] TasksByStatusRequest request,int? branchId = null)
         {
-            var result = await _adminService.GetTasksByStatusAsync(this.CompanyId, status, this.RoleLevel, CurrentUserId, period, branchId);
+            var result = await _adminService.GetTasksByStatusAsync(CompanyId, status,RoleLevel,CurrentUserId,request,branchId);
             return Success(result.Data);
         }
 
@@ -116,17 +117,17 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpGet("admin/discounts")]
-        public async Task<IActionResult> GetDiscounts([FromQuery] PeriodDto period, int? branchId = null)
+        public async Task<IActionResult> GetDiscounts([FromQuery] DiscountsRequest request, int? branchId = null)
         {
-            var result = await _adminService.GetDiscountsAsync(CompanyId, this.RoleLevel, CurrentUserId, period, branchId);
+            var result = await _adminService.GetDiscountsAsync(CompanyId,this.RoleLevel,CurrentUserId,request,branchId);
             return Success(result.Data);
         }
 
         [HttpGet("admin/high-priority-tasks")]
-        public async Task<IActionResult> GetHighPriorityTasks(int? branchId = null)
+        public async Task<IActionResult> GetHighPriorityTasks([FromQuery] TasksHighPriorityRequest request,int? branchId = null)
         {
-            var result = await _adminService.GetHighPriorityTasksAsync(this.CompanyId , this.RoleLevel, this.CurrentUserId, branchId);
-            return Success(result.Data);
+            var result = await _adminService.GetHighPriorityTasksAsync(this.CompanyId,this.RoleLevel,this.CurrentUserId,request,branchId);
+            return Success(result.Data); 
         }
 
         [HttpGet("admin/completed-tasks-details")]

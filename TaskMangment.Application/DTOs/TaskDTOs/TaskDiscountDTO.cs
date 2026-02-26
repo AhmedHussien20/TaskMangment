@@ -5,6 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TaskMangment.Application.ApiRequests;
 using TaskMangment.Domain.Entities;
 
 namespace TaskMangment.Application.DTOs.TaskDTOs
@@ -36,6 +37,11 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
         public bool IsRead { get; set; }
 
 
+    }
+
+    public class DiscountsRequest : BaseApiRequest
+    {
+        public PeriodDto Period { get; set; }
     }
 
 

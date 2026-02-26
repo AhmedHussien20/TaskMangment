@@ -75,7 +75,7 @@ getEmployeeCompletedTasksDetails(period: PeriodDto) {
   }
 
 
-  getAdminTasksByStatus(
+ /*  getAdminTasksByStatus(
   status: 'Active' | 'Overdue' | 'Completed',
   period: PeriodDto,
   branchId?: number
@@ -89,16 +89,38 @@ getEmployeeCompletedTasksDetails(period: PeriodDto) {
     `admin/tasks-by-status?status=${status}`,
     query
   );
+} */
+
+getAdminTasksByStatus(
+  status: 'Active' | 'Overdue' | 'Completed' | 'New',
+request: any,  branchId?: number
+) {
+  const query: any = {
+    searchKey: request.searchKey ?? '',
+    PageIndex: request.pageIndex,
+    PageSize: request.pageSize,
+    SortColumn: request.sortColumn ?? 'Id',
+    SortDirection: request.sortDirection ?? 'DESC',
+    'Period.Type': request.period?.type
+  };
+
+  if (request.period?.from) query['Period.From'] = request.period.from;
+  if (request.period?.to) query['Period.To'] = request.period.to;
+
+  if (branchId != null) query.branchId = branchId;
+  return this.api.get<BaseResponse<any>>(
+    this.service,
+    `admin/tasks-by-status?status=${status}`,
+    query
+  );
 }
-
-
 
  getAdminInProgressUpdatedToday(request: any, branchId?: number) {
   const query: any = {
     searchKey: request.searchKey ?? '',
     PageIndex: request.pageIndex,
     PageSize: request.pageSize,
-    SortColumn: request.sortColumn ?? 'UpdatedAt',
+    SortColumn: request.sortColumn ?? 'Id',
     SortDirection: request.sortDirection ?? 'DESC',
     'Period.Type': request.period?.type
   };
@@ -156,11 +178,22 @@ getAdminCompletedTasksToday(period: PeriodDto, branchId?: number) {
 }
 
 
-  getAdminDiscounts(period: PeriodDto, branchId?: number) {
-  const query: any = { ...(period as any) };
+  getAdminDiscounts(request: any, branchId?: number) {
+  const query: any = {
+    searchKey: request.searchKey ?? '',
+    PageIndex: request.pageIndex,
+    PageSize: request.pageSize,
+    SortColumn: request.sortColumn ?? 'Id',
+    SortDirection: request.sortDirection ?? 'ASC',
+    'Period.Type': request.period?.type
+  };
+
+  if (request.period?.from) query['Period.From'] = request.period.from;
+  if (request.period?.to) query['Period.To'] = request.period.to;
+
   if (branchId != null) query.branchId = branchId;
 
-  return this.api.get<BaseResponse<any[]>>(
+  return this.api.get<BaseResponse<any>>(
     this.service,
     'admin/discounts',
     query
@@ -168,17 +201,27 @@ getAdminCompletedTasksToday(period: PeriodDto, branchId?: number) {
 }
 
 
-  getAdminHighPriorityTasks(branchId?: number) {
-  const query: any = {};
+ getAdminHighPriorityTasks(request: any, branchId?: number) {
+  const query: any = {
+    searchKey: request.searchKey ?? '',
+    PageIndex: request.pageIndex,
+    PageSize: request.pageSize,
+    SortColumn: request.sortColumn ?? 'Id',
+    SortDirection: request.sortDirection ?? 'ASC',
+    'Period.Type': request.period?.type
+  };
+
+  if (request.period?.from) query['Period.From'] = request.period.from;
+  if (request.period?.to) query['Period.To'] = request.period.to;
+
   if (branchId != null) query.branchId = branchId;
 
-  return this.api.get<BaseResponse<any[]>>(
+  return this.api.get<BaseResponse<any>>(
     this.service,
     'admin/high-priority-tasks',
     query
   );
 }
-
   getAdminCompletedTasksDetails(period: PeriodDto, branchId?: number) {
   const query: any = { ...(period as any) };
   if (branchId != null) query.branchId = branchId;

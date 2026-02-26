@@ -934,7 +934,8 @@
     "EMPLOYEE_TASK_TRACKING" : "متابعة مهام الموظفين",
     "EMPLOYEE_REQUIRED" : "الموظف مطلوب"  ,
     "BRANCH_TASK_TRACKING" : "متابعة مهام الفروع",
-    "BRANCH" : "الفرع"
+    "BRANCH" : "الفرع",
+    "BRANCH_REQUIRED" : "الفرع مطلوب"
   },
   "LEAVE" : 
   {

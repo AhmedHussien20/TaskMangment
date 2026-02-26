@@ -14,12 +14,10 @@
 
           <div class="d-flex flex-column">
             <label class="form-label small">{{ 'REPORTS.BRANCH' | translate }}</label>
-
-
             <select class="form-select form-select-sm" [(ngModel)]="selectedBranchId">
-  <option [ngValue]="undefined">{{ 'COMMON.SELECT' | translate }}</option>
-  <option *ngFor="let b of branches" [ngValue]="b.id">{{ b.name }}</option>
-</select>
+              <option [ngValue]="undefined">{{ 'COMMON.SELECT' | translate }}</option>
+              <option *ngFor="let b of branches" [ngValue]="b.id">{{ b.name }}</option>
+            </select>
 
           </div>
 

@@ -433,52 +433,67 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<List<PendingCloseRequestTaskDto>>.Ok(result);
         }
 
-        public async Task<ApiResponse<List<TaskStatusDto>>> GetTasksByStatusAsync(
-            int companyId,
-            string status,
-            int roleLevel,
-            int? employeeId,
-            PeriodDto period,
-            int? branchId = null)
+        public async Task<ApiResponse<PagedResponse<TaskStatusDto>>> GetTasksByStatusAsync(
+    int companyId,
+    string status,
+    int roleLevel,
+    int? employeeId,
+    TasksByStatusRequest request,
+    int? branchId = null)
         {
-            var range = PeriodHelper.GetRange(period);
+            var range = PeriodHelper.GetRange(request.Period);
 
             var (_, scopedEmployeeIds) =
                 await GetScopedEmployeesAsync(companyId, roleLevel, employeeId, branchId);
 
-            var tasksQuery = _taskRepo.GetAll(t =>
-                t.CompanyId == companyId &&
-                (
-                    (status == "Active" &&
-                        (t.Status == WorkTaskStatus.New || t.Status == WorkTaskStatus.InProgress))
-                    ||
-                    (status == "New" &&
-                    t.Status == WorkTaskStatus.New &&
-                    t.CreatedDate >= range.Start && t.CreatedDate <= range.End)
-                    ||
-                    (status == "Overdue" &&
-                    t.Status != WorkTaskStatus.Closed && t.Status != WorkTaskStatus.AutoClose && t.Status != WorkTaskStatus.Archived &&
+            var tasksQuery = _taskRepo.GetAll(t => t.CompanyId == companyId);
+
+            switch (status)
+            {
+                case "Active":
+                    tasksQuery = tasksQuery.Where(t =>
+                        t.Status == WorkTaskStatus.New ||
+                        t.Status == WorkTaskStatus.InProgress);
+                    break;
+
+                case "New":
+                    tasksQuery = tasksQuery.Where(t =>
+                        t.Status == WorkTaskStatus.New &&
+                        t.CreatedDate >= range.Start &&
+                        t.CreatedDate <= range.End);
+                    break;
+
+                case "Overdue":
+                    tasksQuery = tasksQuery.Where(t =>
+                        t.Status != WorkTaskStatus.Closed &&
+                        t.Status != WorkTaskStatus.AutoClose &&
+                        t.Status != WorkTaskStatus.Archived &&
                         t.DueDate != null &&
                         t.DueDate <= DateTime.Today &&
-                        t.DueDate >= range.Start && t.DueDate <= range.End)
-                    ||
-                    (status == "Completed" &&
-                        t.Status == WorkTaskStatus.Closed &&
-                        t.ClosedAt >= range.Start && t.ClosedAt <= range.End)
-                ));
+                        t.DueDate >= range.Start &&
+                        t.DueDate <= range.End);
+                    break;
 
+                case "Completed":
+                    tasksQuery = tasksQuery.Where(t =>
+                        t.Status == WorkTaskStatus.Closed &&
+                        t.ClosedAt >= range.Start &&
+                        t.ClosedAt <= range.End);
+                    break;
+            }
             if (employeeId.HasValue || branchId.HasValue)
             {
                 tasksQuery = tasksQuery.Where(t =>
                     t.Assignments.Any(a => scopedEmployeeIds.Contains(a.EmployeeId)));
             }
 
-            var tasks = await tasksQuery
+            var dtoQuery = tasksQuery
                 .Select(t => new TaskStatusDto
                 {
                     TaskId = t.Id,
                     Title = t.Title,
                     DueDate = t.DueDate,
+                    CreatedDate = t.CreatedDate,
                     Status = t.Status,
                     StatusText = t.Status.ToString(),
                     Employees = t.Assignments
@@ -486,10 +501,19 @@ namespace TaskMangment.Infrastructure.Services
                         .Select(a => a.Employee.FullName)
                         .ToList()
                 })
-                .AsNoTracking()
+                .AsNoTracking();
+
+            var totalCount = await dtoQuery.CountAsync();
+
+            var list = await dtoQuery
+                 .OrderByDescending(x => x.TaskId)
+                .Skip((request.PageIndex - 1) * request.PageSize)
+                .Take(request.PageSize)
                 .ToListAsync();
 
-            return ApiResponse<List<TaskStatusDto>>.Ok(tasks);
+            return ApiResponse<PagedResponse<TaskStatusDto>>.Ok(
+                new PagedResponse<TaskStatusDto>(list, totalCount, request.PageIndex, request.PageSize)
+            );
         }
 
         public async Task<ApiResponse<AdminKpisExtendedDto>> GetKpisAsync(
@@ -562,14 +586,14 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<AdminKpisExtendedDto>.Ok(dto);
         }
 
-        public async Task<ApiResponse<List<DiscountGetDto>>> GetDiscountsAsync(
-            int companyId,
-            int roleLevel,
-            int? employeeId,
-            PeriodDto period,
-            int? branchId = null)
+        public async Task<ApiResponse<PagedResponse<DiscountGetDto>>> GetDiscountsAsync(
+    int companyId,
+    int roleLevel,
+    int? employeeId,
+    DiscountsRequest request,
+    int? branchId = null)
         {
-            var range = PeriodHelper.GetRange(period);
+            var range = PeriodHelper.GetRange(request.Period);
 
             var (_, scopedEmployeeIds) =
                 await GetScopedEmployeesAsync(companyId, roleLevel, employeeId, branchId);
@@ -583,7 +607,7 @@ namespace TaskMangment.Infrastructure.Services
             if (employeeId.HasValue || branchId.HasValue)
                 discountsQuery = discountsQuery.Where(d => scopedEmployeeIds.Contains(d.EmployeeId));
 
-            var discounts = await discountsQuery
+            var dtoQuery = discountsQuery
                 .Select(d => new DiscountGetDto
                 {
                     TaskId = d.TaskId,
@@ -594,18 +618,27 @@ namespace TaskMangment.Infrastructure.Services
                     Amount = d.Amount,
                     AutoDiscount = d.AutoDiscount,
                     DiscountType = d.discountType,
-                    ViolationDate = d.ViolationDate,
+                    ViolationDate = d.ViolationDate
                 })
+                .AsNoTracking();
+
+            var totalCount = await dtoQuery.CountAsync();
+
+            var list = await dtoQuery
                 .OrderByDescending(d => d.CreatedDate)
+                .Skip((request.PageIndex - 1) * request.PageSize)
+                .Take(request.PageSize)
                 .ToListAsync();
 
-            foreach (var item in discounts)
+            foreach (var item in list)
             {
                 if (!item.AutoDiscount) continue;
                 item.Reason = GetAutoDiscountReason(item.DiscountType);
             }
 
-            return ApiResponse<List<DiscountGetDto>>.Ok(discounts);
+            return ApiResponse<PagedResponse<DiscountGetDto>>.Ok(
+                new PagedResponse<DiscountGetDto>(list, totalCount, request.PageIndex, request.PageSize)
+            );
         }
 
         private string GetAutoDiscountReason(DiscountType type)
@@ -619,11 +652,12 @@ namespace TaskMangment.Infrastructure.Services
             };
         }
 
-        public async Task<ApiResponse<List<HighPriorityTaskDto>>> GetHighPriorityTasksAsync(
-            int companyId,
-            int roleLevel,
-            int? employeeId,
-            int? branchId = null)
+        public async Task<ApiResponse<PagedResponse<HighPriorityTaskDto>>> GetHighPriorityTasksAsync(
+    int companyId,
+    int roleLevel,
+    int? employeeId,
+    TasksHighPriorityRequest request, 
+    int? branchId = null)
         {
             var (_, scopedEmployeeIds) =
                 await GetScopedEmployeesAsync(companyId, roleLevel, employeeId, branchId);
@@ -634,23 +668,38 @@ namespace TaskMangment.Infrastructure.Services
                 (t.Status == WorkTaskStatus.New || t.Status == WorkTaskStatus.InProgress));
 
             if (employeeId.HasValue || branchId.HasValue)
+            {
                 tasksQuery = tasksQuery.Where(t =>
                     t.Assignments.Any(a => scopedEmployeeIds.Contains(a.EmployeeId)));
+            }
 
-            var tasks = await tasksQuery
+            var dtoQuery = tasksQuery
                 .Select(t => new HighPriorityTaskDto
                 {
-                    TaskId= t.Id,
+                    TaskId = t.Id,
                     TaskTitle = t.Title,
-                    Employees = t.Assignments.Where(a => a.IsActive).Select(a => a.Employee.FullName).ToList(),
+                    Employees = t.Assignments
+                        .Where(a => a.IsActive)
+                        .Select(a => a.Employee.FullName)
+                        .ToList(),
                     Status = t.Status,
                     StatusText = t.Status.ToString(),
+                    CreateDate= t.CreatedDate,
                     DueDate = t.DueDate
                 })
-                .OrderBy(t => t.DueDate)
+                .AsNoTracking();
+
+            var totalCount = await dtoQuery.CountAsync();
+
+            var list = await dtoQuery
+                .OrderByDescending(x => x.TaskId)
+                .Skip((request.PageIndex - 1) * request.PageSize)
+                .Take(request.PageSize)
                 .ToListAsync();
 
-            return ApiResponse<List<HighPriorityTaskDto>>.Ok(tasks);
+            return ApiResponse<PagedResponse<HighPriorityTaskDto>>.Ok(
+                new PagedResponse<HighPriorityTaskDto>(list, totalCount, request.PageIndex, request.PageSize)
+            );
         }
 
         public async Task<ApiResponse<List<CompletedTaskDetailDto>>> GetCompletedTasksDetailsAsync(
@@ -678,6 +727,7 @@ namespace TaskMangment.Infrastructure.Services
             var tasks = await tasksQuery
                 .Select(t => new CompletedTaskDetailDto
                 {
+                    TaskId = t.Id,
                     TaskTitle = t.Title,
                     EmployeeNames = t.Assignments
                         .Where(a => a.IsActive)
