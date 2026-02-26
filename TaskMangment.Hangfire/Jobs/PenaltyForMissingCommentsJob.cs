@@ -138,14 +138,13 @@ namespace TaskMangment.Hangfire.Jobs
                         ? assignment.AssignedAt.Date
                         : lastComment.CreatedDate.Date;
 
-                    var dueDate = (periodDays == 1 && lastComment != null)
+                    var dueDate = (periodDays == 1)
                         ? baseDate.AddDays(periodDays)     
                         : baseDate.AddDays(periodDays - 1); 
 
                     if (dueDate > yesterday)
                         continue;
 
-                    // ✅ بدل AnyAsync
                     if (lastComment != null && lastComment.CreatedDate.Date == dueDate)
                         continue;
 
