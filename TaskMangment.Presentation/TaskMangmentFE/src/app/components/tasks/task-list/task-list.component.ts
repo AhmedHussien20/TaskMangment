@@ -358,9 +358,8 @@ if (this.auth.hasPermission('CREATE_TASK')) {
     });
   }
 
-  disableEditRow = (row: TaskGet) => {
-  return !row.createdByMe || row.status === 3 || row.status === 4 || row.status === 5;
-  
+disableEditRow = (row: TaskGet) => {
+  return !row.createdByMe || row.status === 3 || row.status === 4 || row.status === 5;  
 };
 
 disableDeleteRow = (row: TaskGet) => {
