@@ -203,7 +203,7 @@ namespace TaskMangment.Hangfire.Jobs
                         TaskId = task.Id,
                         EmployeeId = employeeId,
                         Amount = task.PenaltyOnStopComment,
-                        Reason = "Penalty for not commenting",
+                        Reason = "عدم التعليق فالحد المسموح",
                         AutoDiscount = true,
                         CreatedDate = DateTime.UtcNow,
                         discountType = DiscountType.StopCommentDiscount,

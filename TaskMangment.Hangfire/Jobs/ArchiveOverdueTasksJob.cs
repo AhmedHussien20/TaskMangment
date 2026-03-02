@@ -145,7 +145,7 @@ namespace TaskMangment.Hangfire.Jobs
                             {
                                 TaskId = task.Id,
                                 EmployeeId = assignment.EmployeeId,
-                                Reason = "add discount on auto close task",
+                                Reason = "خصم نتيجة الاغلاق التلقائي للمهمة",
                                 Amount = task.PenaltyOnAutoClose,
                                 AutoDiscount = true,
                                 CreatedDate = DateTime.UtcNow,
@@ -189,7 +189,7 @@ namespace TaskMangment.Hangfire.Jobs
                                     {
                                         TaskId = task.Id,
                                         EmployeeId = creatorId,
-                                        Reason = "manager negligence on overdue task",
+                                        Reason = "إهمال جهة التكليف في متابعة مهمة متأخرة",
                                         Amount = task.PenaltyOnAutoClose,
                                         AutoDiscount = true,
                                         CreatedDate = DateTime.UtcNow,

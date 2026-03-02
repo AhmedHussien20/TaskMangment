@@ -188,6 +188,7 @@ namespace TaskMangment.Infrastructure.Seeding
 نود إحاطتكم علمًا بأنه تم <strong>تطبيق خصم إداري تلقائي</strong> على إحدى المهام. تفاصيل المهمة كالتالي:<br/><br/>
 
 <strong>اسم الموظف المجذي:</strong> {{EmployeeName}}<br/>
+<strong>تاريخ الخصم:</strong> {{ViolationDate}}<br/>
 <strong>رقم المهمة:</strong> {{TaskNumber}}<br/>
 <strong>عنوان المهمة:</strong> {{TaskTitle}}<br/>
 <strong>قيمة الخصم:</strong> {{DeductionAmount}}<br/><br/>
@@ -203,6 +204,7 @@ namespace TaskMangment.Infrastructure.Seeding
 This email is to inform you that an <strong>automatic administrative deduction</strong> has been applied to a task. Task details are as follows:<br/><br/>
 
 <strong>Deducted Employee Name:</strong> {{EmployeeName}}<br/>
+<strong>Violation Date:</strong> {{ViolationDate}}<br/>
 <strong>Task Number:</strong> {{TaskNumber}}<br/>
 <strong>Task Title:</strong> {{TaskTitle}}<br/>
 <strong>Deduction Amount:</strong> {{DeductionAmount}}<br/><br/>

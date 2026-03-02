@@ -6,6 +6,7 @@ import { NgSelectModule } from '@ng-select/ng-select';
 import { ToastrService } from 'ngx-toastr';
 
 import { EmployeeService } from 'app/core/services/employee.service';
+import { AuthService } from 'app/core/services/auth.service';
 export interface EmployeeOption {
   value: number;
   label: string;
@@ -39,16 +40,20 @@ export class EmployeeNgSelectComponent implements OnInit {
   private currentTerm = '';
   private currentPage = 1;
   private hasMore = true;
+  private canCreateTask = false;
+
 
   constructor(
     private employeeService: EmployeeService,
     private toastr: ToastrService,
-    private translate: TranslateService
+    private translate: TranslateService,
+    private authService: AuthService, 
+
   ) {}
 
   ngOnInit(): void {
-    // optionally load on init or only on open
-    // هنا هنخليها lazy load عند open زي اللي عندك
+        this.canCreateTask = this.authService.hasPermission('CREATE_TASK');
+
   }
 
   onOpen(): void {
@@ -82,13 +87,17 @@ export class EmployeeNgSelectComponent implements OnInit {
 
     this.isLoading = true;
 
-    const request = {
+    const request: any = {
       searchKey: term,
       pageIndex: page,
       pageSize: this.pageSize,
       sortColumn: 'Id',
-      sortDirection: 'DESC'
+      sortDirection: 'DESC',
     };
+
+    if (this.canCreateTask) {
+      request.permissionCode = 'CREATE_TASK';
+    }
 
     this.employeeService.getAll(request).subscribe({
       next: (res) => {

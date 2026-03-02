@@ -122,24 +122,21 @@ export class ReportsDashboardComponent implements OnInit { // إضافة impleme
   }
 
   private filterCardsByRole(): void {
-    const roleLevel = this.authService.getRoleLevel() ?? 0;
-    
-    if (roleLevel >= 70) {
-      this.filteredCards = [...this.allCards];
-    } else {
-      this.filteredCards = this.allCards.filter(card => {
-        
-        
-        const restrictedCards = [
-          'REPORTS.TOP_COMMENTER',
-          'REPORTS.MOST_ASSIGNED',
-          'REPORTS.ARCHIVED',
-          'REPORTS.BRANCH_TASK_TRACKING'
+  const roleLevel = this.authService.getRoleLevel() ?? 0;
+  
+  if (roleLevel >= 70) {
+    this.filteredCards = [...this.allCards];
+  } else if (this.authService.hasPermission('CREATE_TASK')) {
+    this.filteredCards = this.allCards.filter(card => card.title !== 'REPORTS.BRANCH_TASK_TRACKING');
+  } else {
+    const restrictedCards = [
+      'REPORTS.TOP_COMMENTER',
+      'REPORTS.MOST_ASSIGNED',
+      'REPORTS.ARCHIVED',
+      'REPORTS.BRANCH_TASK_TRACKING'
+    ];
 
-        ];
-        
-        return !restrictedCards.includes(card.title);
-      });
-    }
+    this.filteredCards = this.allCards.filter(card => !restrictedCards.includes(card.title));
   }
+}
 }
