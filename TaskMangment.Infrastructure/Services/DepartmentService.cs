@@ -77,14 +77,20 @@ namespace TaskMangment.Infrastructure.Services
                             .ThenInclude(b => b.Area)
                         .ApplySearch(request.searchKey);
 
-                    var totalCount = await query.CountAsync();
+            if (request.BranchId.HasValue && request.BranchId.Value > 0)
+            {
+                query = query.Where(d => d.BranchId == request.BranchId.Value);
+            }
+
+
+            var totalCount = await query.CountAsync();
 
                     query = query.OrderByDynamicSafe(request.SortColumn, request.SortDirection);
 
-                    var departments = await query
-                        .Skip((request.PageIndex - 1) * request.PageSize)
-                        .Take(request.PageSize)
-                        .ToListAsync();
+            var departments = await query
+                .Skip((request.PageIndex - 1) * request.PageSize)
+                .Take(request.PageSize)
+                .ToListAsync();
 
                     var deptIds = departments.Select(d => d.Id).ToList();
 
@@ -96,12 +102,12 @@ namespace TaskMangment.Infrastructure.Services
 
                     var countDict = counts.ToDictionary(x => x.DepartmentId, x => x.Count);
 
-                    var dtos = departments.Select(d =>
-                    {
-                        var dto = _mapper.Map<DepartmentGetDto>(d);
-                        dto.EmployeeCount = countDict.TryGetValue(d.Id, out var c) ? c : 0;
-                        return dto;
-                    }).ToList();
+            var dtos = departments.Select(d =>
+            {
+                var dto = _mapper.Map<DepartmentGetDto>(d);
+                dto.EmployeeCount = countDict.TryGetValue(d.Id, out var c) ? c : 0;
+                return dto;
+            }).ToList();
 
                     return new PagedResponse<DepartmentGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
                 },

@@ -49,7 +49,10 @@
             (entriesChange)="onEntriesChange($event)"
             [showExportExcel]="false"
             [showExportReportExcel]="true"
-            (exportExcelClick)="onExportExcel()">
+            (exportExcelClick)="onExportExcel()"
+               [rowClickable]="true" 
+        [rowClickableCondition]="checkRowClickable"
+        (edit)="onEdit($event)">
           </app-generic-table>
         </div>
       </div>

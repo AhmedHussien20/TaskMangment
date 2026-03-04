@@ -237,7 +237,7 @@
     "RESET_SUCCESS": "تم إعادة تعيين كلمة المرور بنجاح. يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة.",
     "RESET_FAILED": "فشل في إعادة تعيين كلمة المرور. يرجى المحاولة مرة أخرى.",
     "CODE_RESENT_SUCCESS": "تم إرسال رمز التحقق الجديد إلى بريدك الإلكتروني.",
-    "": "فشل في إرسال رمز التحقق. يرجى المحاولة مرة أخرى.",
+    "CODE_RESEND_FAILED": "فشل في إرسال رمز التحقق. يرجى المحاولة مرة أخرى.",
     "CODE_SENT_SUCCESS": "تم إرسال رمز إعادة تعيين كلمة المرور إلى بريدك الإلكتروني."
 
 
@@ -567,7 +567,7 @@
     "ADD_ACHIEVEMENT" : "اضف تقييم",
     "SAR" : "ريال",
     "ADD_TO_CALENDAR" : "اضافة موعد مع هذا التعليق",
-    "COMMENT_MIN_LENGTH_TASK_CHARACTERS" : "ادخل بحد ادني 500 حرف",
+    "COMMENT_MIN_LENGTH_TASK_CHARACTERS" : "ادخل بحد ادني 200 حرف",
     "COMMENT_OR_FILE_REQUIRED" : "ادخل الحقول المطلوبه",
     "ACHIEVEMENT_RESON" : "معلومات التقييم",
     "DAYS" : "يوم",
@@ -934,7 +934,8 @@
     "EMPLOYEE_TASK_TRACKING" : "متابعة مهام الموظفين",
     "EMPLOYEE_REQUIRED" : "الموظف مطلوب"  ,
     "BRANCH_TASK_TRACKING" : "متابعة مهام الفروع",
-    "BRANCH" : "الفرع"
+    "BRANCH" : "الفرع",
+    "BRANCH_REQUIRED" : "الفرع مطلوب"
   },
   "LEAVE" : 
   {

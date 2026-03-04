@@ -36,14 +36,18 @@ namespace TaskMangment.API
                 builder.Services.Configure<EmailSettings>(
                     builder.Configuration.GetSection("EmailSettings")
                 );
+            builder .Services.Configure<WhatsAppSettings>(
+                    builder.Configuration.GetSection("WhatsApp")
+                );
 
-                //builder.Services.AddHangfire(config =>
-                //config.UseSqlServerStorage(
-                //builder.Configuration.GetConnectionString("DefaultConnection")));
 
-                //builder.Services.AddHangfireServer();
+            //builder.Services.AddHangfire(config =>
+            //config.UseSqlServerStorage(
+            //builder.Configuration.GetConnectionString("DefaultConnection")));
 
-                builder.Services.AddDI();
+            //builder.Services.AddHangfireServer();
+
+            builder.Services.AddDI();
 
             builder.Services.AddHttpClient();
 

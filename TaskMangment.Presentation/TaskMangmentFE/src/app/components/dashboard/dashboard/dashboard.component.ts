@@ -552,32 +552,37 @@ export class DashboardComponent {
   // ======================= Cards / Popups =======================
 
   openCard(card: any) {
-    if (!card.clickable) return;
+  if (!card.clickable) return;
 
-    if (card.status) {
-      this.dashboardService
-        .getAdminTasksByStatus(card.status, this.currentPeriod, this.selectedBranchId)
-        .subscribe((res) => {
-          const modalRef = this.modalService.open(TaskStatusPopupComponent, {
-            size: 'lg',
-            centered: true,
-          });
-          modalRef.componentInstance.tasks = res.data;
-        });
+  if (card.status) {
+    const modalRef = this.modalService.open(TaskStatusPopupComponent, {
+      size: 'xl',
+      centered: true,
+    });
 
-      return;
-    }
+    modalRef.componentInstance.status = card.status;
+    modalRef.componentInstance.request = {
+      pageIndex: 1,
+      pageSize: 10,
+      period: this.currentPeriod
+    };
+    modalRef.componentInstance.branchId = this.selectedBranchId;
 
-    if (card.type === 'avgCompletion') this.openAvgCompletionTasks();
-    else if (card.type === 'highPriority') this.openHighPriorityTasks();
-    else if (card.type === 'penalties') this.openDiscounts();
-    else if (card.type === 'activeTasks') this.openEmployeeTasksPopup();
-    else if (card.type === 'myWarnings') this.openMyWarning();
-    else if (card.type === 'myPenalities') this.openMyPenalities();
-    else if (card.type === 'myDueSoonTasks') this.openEmployeeDueSoonTasksPopup();
-    else if (card.type === 'empAvgCompletion') this.openEmployeeAvgCompletionTasks();
+    modalRef.componentInstance.loadPageData();
+    return;
   }
 
+
+
+  if (card.type === 'avgCompletion') this.openAvgCompletionTasks();
+  else if (card.type === 'highPriority') this.openHighPriorityTasks();
+  else if (card.type === 'penalties') this.openDiscounts();
+  else if (card.type === 'activeTasks') this.openEmployeeTasksPopup();
+  else if (card.type === 'myWarnings') this.openMyWarning();
+  else if (card.type === 'myPenalities') this.openMyPenalities();
+  else if (card.type === 'myDueSoonTasks') this.openEmployeeDueSoonTasksPopup();
+  else if (card.type === 'empAvgCompletion') this.openEmployeeAvgCompletionTasks();
+}
   openAvgCompletionTasks() {
     this.dashboardService
       .getAdminCompletedTasksDetails(this.currentPeriod, this.selectedBranchId)
@@ -601,27 +606,32 @@ export class DashboardComponent {
       });
   }
 
-  openHighPriorityTasks() {
-    this.dashboardService.getAdminHighPriorityTasks(this.selectedBranchId)
-      .subscribe(res => {
-              console.log('HighPriority sample:', res.data?.[0]);
-        const modalRef = this.modalService.open(HighPriorityTasksPopupComponent, {
-          size: 'xl',
-          centered: true
-        });
-        modalRef.componentInstance.tasks = res.data;
+openHighPriorityTasks() {
+  const request = { pageIndex: 1, pageSize: 10, period: this.currentPeriod };
+  this.dashboardService.getAdminHighPriorityTasks(request, this.selectedBranchId)
+    .subscribe(res => {
+      const data = res.data;
+      const modalRef = this.modalService.open(HighPriorityTasksPopupComponent, {
+        size: 'xl',
+        centered: true
       });
-  }
+      modalRef.componentInstance.request = request;
+      modalRef.componentInstance.branchId = this.selectedBranchId;
+    });
+}
 
   openDiscounts() {
-    this.dashboardService.getAdminDiscounts(this.currentPeriod, this.selectedBranchId)
+    const request = { pageIndex: 1, pageSize: 10, period: this.currentPeriod };
+    this.dashboardService.getAdminDiscounts(request, this.selectedBranchId)
       .subscribe(res => {
         const modalRef = this.modalService.open(DiscountsPopupComponent, {
           size: 'xl',
           centered: true
         });
-        modalRef.componentInstance.discounts = res.data;
-      });
+        
+        modalRef.componentInstance.request = request;
+        modalRef.componentInstance.branchId = this.selectedBranchId;
+          });
   }
 
   openEmployeeTasksPopup() {

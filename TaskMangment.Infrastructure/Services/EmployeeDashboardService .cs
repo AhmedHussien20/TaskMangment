@@ -137,11 +137,11 @@ namespace TaskMangment.Infrastructure.Services
                         w.TaskAssignment.EmployeeId == employeeId &&
                         w.CreatedDate >= range.Start && w.CreatedDate <= range.End);
 
-                    var penaltiesTotal = await _deductionRepo
-                        .GetAll(d =>
-                            d.EmployeeId == employeeId &&
-                            d.CreatedDate >= range.Start && d.CreatedDate <= range.End)
-                        .SumAsync(d => d.Amount);
+            var penaltiesTotal = await _deductionRepo
+                .GetAll(d =>
+                    d.EmployeeId == employeeId &&
+                    d.ViolationDate >= range.Start && d.ViolationDate <= range.End)
+                .SumAsync(d => d.Amount);
 
                     // MY TASKS LIST
                     var myActiveTaskIds = await activeTaskIdsQuery.ToListAsync();
@@ -365,26 +365,23 @@ namespace TaskMangment.Infrastructure.Services
 
             var cacheKey = CacheKeys.EmployeeDeductions(companyId, employeeId, periodKey, version);
 
-            var deductions = await _cache.GetOrSetAsync(
-                cacheKey,
-                async () =>
+            var deductions = await _deductionRepo
+                .GetAll(d =>
+                    d.EmployeeId == employeeId &&
+                    d.ViolationDate >= range.Start && d.ViolationDate <= range.End)
+                .Select(d => new DeductionDto
                 {
-                    var list = await _deductionRepo
-                        .GetAll(d =>
-                            d.EmployeeId == employeeId &&
-                            d.CreatedDate >= range.Start && d.CreatedDate <= range.End)
-                        .Select(d => new DeductionDto
-                        {
-                            Id = d.Id,
-                            Amount = d.Amount,
-                            Reason = d.Reason,
-                            TaskTitle = d.Task.Title,
-                            CreatedDate = d.CreatedDate,
-                            AutoDiscount = d.AutoDiscount,
-                            DiscountType = d.discountType
-                        })
-                        .OrderByDescending(d => d.CreatedDate)
-                        .ToListAsync();
+                    Id = d.Id,
+                    Amount = d.Amount,
+                    Reason = d.Reason,
+                    TaskTitle = d.Task.Title,
+                    CreatedDate = d.ViolationDate,
+                    AutoDiscount = d.AutoDiscount,
+                    DiscountType = d.discountType
+
+                })
+                .OrderByDescending(d => d.CreatedDate)
+                .ToListAsync();
 
                     foreach (var item in list)
                     {

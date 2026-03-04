@@ -14,5 +14,6 @@ namespace TaskMangment.Domain.Entities
         public bool IsRead { get; set; } = false;  
         public int ReferenceId { get; set; }
         public NotificationType NotificationType { get; set; }
+        public int? TaskId { get; set; }
     }
 }

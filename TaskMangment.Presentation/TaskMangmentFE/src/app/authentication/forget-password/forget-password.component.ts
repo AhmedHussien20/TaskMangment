@@ -46,7 +46,7 @@ export class ForgotPasswordComponent {
   this.authService.forgotPassword(email).subscribe({
     next: () => {
       this.isLoading = false;
-      this.toastr.success('FORGOT_PASSWORD.CODE_SENT_SUCCESS');
+      this.toastr.success('FORGOT_PASSWORD.CODE_RESENT_SUCCESS');
 
       localStorage.setItem('resetEmail', email);
 

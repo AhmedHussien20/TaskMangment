@@ -100,7 +100,8 @@ get isTaskClosed(): boolean {
       });
 
       ref.componentInstance.taskId = this.taskId;
-      ref.componentInstance.requireUploadFile = this.taskInfo?.requireUploadFile ?? false;
+      ref.componentInstance.requireUploadFile = this.createdByMe ? false : (this.taskInfo?.requireUploadFile ?? false);
+      ref.componentInstance.createdByMe = this.createdByMe;
 
       ref.result.then(
         (success) => {

@@ -8,6 +8,7 @@ namespace TaskMangment.Application.DTOs.ReportsDTO
 {
     public class TaskActivityReportDto
     {
+        public int TaskId { get; set; }
         public string TaskTitleWithId { get; set; } 
         public string AssignedBy { get; set; }  
         public string? Comment { get; set; }      
