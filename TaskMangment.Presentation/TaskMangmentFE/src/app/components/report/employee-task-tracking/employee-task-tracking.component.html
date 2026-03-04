@@ -53,11 +53,14 @@
             [totalItems]="totalItems"
             (pageChange)="onPageChange($event)"
             (entriesChange)="onEntriesChange($event)"
-              [showExportPdf]="true"
-                (exportPdfClick)="onExportPdf()"
-                [showExportExcel]="false"
+            [showExportPdf]="true"
+            (exportPdfClick)="onExportPdf()"
+            [showExportExcel]="false"
             [showExportReportExcel]="true"
-            (exportExcelClick)="onExportExcel()">
+            (exportExcelClick)="onExportExcel()"
+            [rowClickable]="true" 
+            [rowClickableCondition]="checkRowClickable"
+            (edit)="onEdit($event)">
           </app-generic-table>
         </div>
       </div>

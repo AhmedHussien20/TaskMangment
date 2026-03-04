@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgbModal, NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ToastrService } from 'ngx-toastr';
 
@@ -14,6 +14,7 @@ import { ReportPdfService } from 'app/core/services/report-pdf.service';
 
 import { ExportType, BranchTaskReportRowDto } from 'app/core/models/reports/reports';
 import { BranchService } from 'app/core/services/branch.service';
+import { TaskDetailsShellComponent } from 'app/components/tasks/task-details/task-details-shell/task-details-shell.component';
 
 @Component({
   selector: 'app-branch-task-tracking',
@@ -69,7 +70,8 @@ export class BranchTaskTrackingComponent implements OnInit {
     private reportPdfService: ReportPdfService,
     private toastr: ToastrService,
     private translate: TranslateService,
-    private branchService :BranchService
+    private branchService :BranchService,
+    private modalService: NgbModal
   ) {}
 
   ngOnInit(): void {
@@ -124,8 +126,8 @@ loadBranches(): void {
           const data = res.data ?? [];
 
           this.rows = data.map((t: BranchTaskReportRowDto) => ({
+            id: t.taskId,
             ...t,
-
             taskIdTitle: `[${t.taskId}] ${t.title}`,
 
             employeesText: (t.employees && t.employees.length)
@@ -135,8 +137,6 @@ loadBranches(): void {
             isSharedText: t.isShared ? this.translate.instant('COMMON.YES') : this.translate.instant('COMMON.NO'),
             isMergedText: t.isMergedByTitle ? this.translate.instant('COMMON.YES') : this.translate.instant('COMMON.NO'),
             mergedCount: (t.mergedTaskIds?.length ?? 1),
-
-            // تاريخ الانتهاء الفعلي
             effectiveDueDate: t.effectiveDueDate ?? null
           }));
 
@@ -211,5 +211,23 @@ loadBranches(): void {
     a.click();
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
+  }
+  checkRowClickable(item: any): boolean {
+  console.log('Row:', item);    
+  return true;
+}
+onEdit(id: number) {
+  console.log('Editing task ID:', id); 
+  const task = this.rows.find(x => x.taskId === id);
+  console.log('Task object:', task);
+
+  const modalRef = this.modalService.open(TaskDetailsShellComponent, {
+      size: 'xl',
+      backdrop: 'static',
+      scrollable: true
+    });
+
+    modalRef.componentInstance.taskId = id;
+    modalRef.componentInstance.readonly = true;
   }
 }

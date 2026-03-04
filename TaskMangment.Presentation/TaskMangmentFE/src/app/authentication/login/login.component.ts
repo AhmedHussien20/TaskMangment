@@ -115,14 +115,14 @@ export class LoginComponent {
       // Start SignalR
       this.signalRService.startConnection(userId);
 
-      // Load notifications
+     /*  // Load notifications
       this.notificationService.getUnread().subscribe(res => {
         const unread = res.data || [];
         unread.forEach(n => {
          this.toastr.info(n.message, this.translate.instant('nav.notifications.notification'));
         });
       });
-
+ */
       this.router.navigate(['/dashboard']);
     }, 
   });

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgbModal, NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ToastrService } from 'ngx-toastr';
 
@@ -15,6 +15,7 @@ import { ReportPdfService } from 'app/core/services/report-pdf.service';
 import { AuthService } from 'app/core/services/auth.service';
 
 import { EmployeeTaskTrackingReportDto, ExportType } from 'app/core/models/reports/reports';
+import { TaskDetailsShellComponent } from 'app/components/tasks/task-details/task-details-shell/task-details-shell.component';
 
 @Component({
   selector: 'app-employee-task-tracking',
@@ -66,7 +67,8 @@ rows: any[] = [];
     private reportPdfService: ReportPdfService,
     private toastr: ToastrService,
     private translate: TranslateService,
-    private authService: AuthService
+    private authService: AuthService,
+    private modalService: NgbModal
   ) {}
 
   ngOnInit(): void {
@@ -103,6 +105,7 @@ rows: any[] = [];
       .subscribe({
         next: (res) => {
 this.rows = (res.data ?? []).map((t: EmployeeTaskTrackingReportDto) => ({
+  id: t.taskId,
   ...t,
   taskIdTitle: `[${t.taskId}] ${t.title}`
 }));
@@ -188,5 +191,23 @@ this.rows = (res.data ?? []).map((t: EmployeeTaskTrackingReportDto) => ({
         this.toastr.error(this.translate.instant('COMMON.ERROR_LOADING_DATA'));
       }
     });
+  }
+  checkRowClickable(item: any): boolean {
+  console.log('Row:', item);    
+  return true;
+}
+onEdit(id: number) {
+  console.log('Editing task ID:', id); 
+  const task = this.rows.find(x => x.taskId === id);
+  console.log('Task object:', task);
+
+  const modalRef = this.modalService.open(TaskDetailsShellComponent, {
+      size: 'xl',
+      backdrop: 'static',
+      scrollable: true
+    });
+
+    modalRef.componentInstance.taskId = id;
+    modalRef.componentInstance.readonly = true;
   }
 }

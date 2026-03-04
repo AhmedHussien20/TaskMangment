@@ -8,6 +8,7 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
 {
     public class CompletedTaskDetailDto
     {
+        public int? TaskId { get; set; }
         public string TaskTitle { get; set; } = "";
         public List<string> EmployeeNames { get; set; } = new();
         public DateTime CreatedAt { get; set; }

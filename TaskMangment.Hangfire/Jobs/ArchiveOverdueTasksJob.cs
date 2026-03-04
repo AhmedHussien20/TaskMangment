@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Interfaces.Services;
@@ -18,8 +17,7 @@ namespace TaskMangment.Hangfire.Jobs
         private readonly IDomainEventDispatcher _eventDispatcher;
         private readonly IGetHigherManager _getHigherManager;
 
-        public ArchiveOverdueTasksJob(AppDbContext db, IDomainEventDispatcher eventDispatcher,IGetHigherManager getHigherManager
-)
+        public ArchiveOverdueTasksJob(AppDbContext db, IDomainEventDispatcher eventDispatcher, IGetHigherManager getHigherManager)
         {
             _db = db;
             _eventDispatcher = eventDispatcher;
@@ -64,128 +62,121 @@ namespace TaskMangment.Hangfire.Jobs
 
                 var discountsToPublish = new List<Discount>();
 
-
-                var candidateIds = task.Assignments
-                    .Select(a => a.EmployeeId)
-                    .Distinct()
-                    .ToList();
-
-                if (task.CreatedByEmployeeId.HasValue)
-                    candidateIds.Add(task.CreatedByEmployeeId.Value);
-
-                candidateIds = candidateIds.Distinct().ToList();
-
-                var roleLevels = await _db.EmployeeRoles
-                    .Where(er => candidateIds.Contains(er.EmployeeId)
-                                 && er.IsAssigned
-                                 && !er.IsDeleted
-                                 && er.Role != null)
-                    .GroupBy(er => er.EmployeeId)
-                    .Select(g => new
-                    {
-                        EmployeeId = g.Key,
-                        RoleLevel = g.Max(x => x.Role.Level)
-                    })
-                    .ToListAsync();
-
-                var exemptIds = new HashSet<int>(
-                    roleLevels.Where(x => x.RoleLevel == 100)
-                              .Select(x => x.EmployeeId)
-                );
-
-                var level80Ids = roleLevels
-                    .Where(x => x.RoleLevel == 80)
-                    .Select(x => x.EmployeeId)
-                    .ToList();
-
-                if (level80Ids.Any())
+                if (task.PenaltyOnAutoClose > 0)
                 {
-                    var ops80Ids = await _db.Employees
-                        .Where(e => level80Ids.Contains(e.Id)
-                                    && e.FunctionCode == FunctionCode.Operations)
-                        .Select(e => e.Id)
-                        .ToListAsync();
-
-                    foreach (var id in ops80Ids)
-                        exemptIds.Add(id);
-                }
-
-                var closeRequestIds = new HashSet<int>(
-                    await _db.TaskCloseRequests
-                    .Where(r => r.TaskId == task.Id
-                    && r.RequestedBy != null
-                    && candidateIds.Contains(r.RequestedBy.Id))
-                    .Select(r => r.RequestedBy.Id)
-                    .Distinct()
-                    .ToListAsync()
-                );
-
-                // لو المهمة Shared وحد قدم طلب اغلاق => مفيش خصم على أي حد على المهمة دي (ولا حتى creator)
-                var skipAllDiscountsBecauseSharedCloseRequest =
-                    task.IsShared && closeRequestIds.Any();
-
-                if (!skipAllDiscountsBecauseSharedCloseRequest)
-                {
-                    foreach (var assignment in task.Assignments)
-                    {
-                        // Skip discount for exempt employees
-                        if (exemptIds.Contains(assignment.EmployeeId))
-                            continue;
-
-                        // (مازال موجود زي ما هو، بس في حالة shared + close request احنا مش بندخل هنا أصلاً)
-                        if (closeRequestIds.Contains(assignment.EmployeeId))
-                            continue;
-
-                        var alreadyDiscounted = await _db.Discounts.AnyAsync(d =>
-                            d.TaskId == task.Id &&
-                            d.EmployeeId == assignment.EmployeeId &&
-                            d.discountType == DiscountType.AutoCloseTaskDiscount &&
-                            d.AutoDiscount);
-
-                        if (alreadyDiscounted)
-                            continue;
-
-                        var discount = new Discount
-                        {
-                            TaskId = task.Id,
-                            EmployeeId = assignment.EmployeeId,
-                            Reason = "add discount on auto close task",
-                            Amount = task.PenaltyOnAutoClose,
-                            //CreatedByEmployeeId = 0,
-                            AutoDiscount = true,
-                            CreatedDate = DateTime.UtcNow,
-                            discountType = DiscountType.AutoCloseTaskDiscount
-                        };
-
-                        await _db.Discounts.AddAsync(discount);
-                        discountsToPublish.Add(discount);
-                    }
-
+                    var candidateIds = task.Assignments
+                        .Select(a => a.EmployeeId)
+                        .Distinct()
+                        .ToList();
 
                     if (task.CreatedByEmployeeId.HasValue)
-                    {
-                        var creatorId = task.CreatedByEmployeeId.Value;
+                        candidateIds.Add(task.CreatedByEmployeeId.Value);
 
-                        var creatorCommented = await _db.TaskComments.AnyAsync(c =>
-                            c.TaskId == task.Id &&
-                            c.EmployeeId == creatorId);
+                    candidateIds = candidateIds.Distinct().ToList();
 
-                        var creatorAddedPenalty = await _db.Discounts.AnyAsync(d =>
-                            d.TaskId == task.Id &&
-                            d.CreatedByEmployeeId == creatorId &&
-                            !d.AutoDiscount);
-
-                        var creatorAddedWarning = await _db.Warnings.AnyAsync(w =>
-                            w.TaskId == task.Id &&
-                            w.CreatedBy == creatorId);
-
-                        var managerDidSomething = creatorCommented || creatorAddedPenalty || creatorAddedWarning;
-
-                        if (!managerDidSomething)
+                    var roleLevels = await _db.EmployeeRoles
+                        .Where(er => candidateIds.Contains(er.EmployeeId)
+                                     && er.IsAssigned
+                                     && !er.IsDeleted
+                                     && er.Role != null)
+                        .GroupBy(er => er.EmployeeId)
+                        .Select(g => new
                         {
-                            // Skip discount for exempt creators
-                            // Skip manager discount ONLY (do NOT skip saving the task changes)
-                            if (!exemptIds.Contains(creatorId))
+                            EmployeeId = g.Key,
+                            RoleLevel = g.Max(x => x.Role.Level)
+                        })
+                        .ToListAsync();
+
+                    var exemptIds = new HashSet<int>(
+                        roleLevels.Where(x => x.RoleLevel == 100)
+                                  .Select(x => x.EmployeeId)
+                    );
+
+                    var level80Ids = roleLevels
+                        .Where(x => x.RoleLevel == 80)
+                        .Select(x => x.EmployeeId)
+                        .ToList();
+
+                    if (level80Ids.Any())
+                    {
+                        var ops80Ids = await _db.Employees
+                            .Where(e => level80Ids.Contains(e.Id)
+                                        && e.FunctionCode == FunctionCode.Operations)
+                            .Select(e => e.Id)
+                            .ToListAsync();
+
+                        foreach (var id in ops80Ids)
+                            exemptIds.Add(id);
+                    }
+
+                    var closeRequestIds = new HashSet<int>(
+                        await _db.TaskCloseRequests
+                        .Where(r => r.TaskId == task.Id
+                                    && r.RequestedBy != null
+                                    && candidateIds.Contains(r.RequestedBy.Id))
+                        .Select(r => r.RequestedBy.Id)
+                        .Distinct()
+                        .ToListAsync()
+                    );
+
+                    var skipAllDiscountsBecauseSharedCloseRequest =
+                        task.IsShared && closeRequestIds.Any();
+
+                    if (!skipAllDiscountsBecauseSharedCloseRequest)
+                    {
+                        foreach (var assignment in task.Assignments)
+                        {
+                            if (exemptIds.Contains(assignment.EmployeeId))
+                                continue;
+
+                            if (closeRequestIds.Contains(assignment.EmployeeId))
+                                continue;
+
+                            var alreadyDiscounted = await _db.Discounts.AnyAsync(d =>
+                                d.TaskId == task.Id &&
+                                d.EmployeeId == assignment.EmployeeId &&
+                                d.discountType == DiscountType.AutoCloseTaskDiscount &&
+                                d.AutoDiscount);
+
+                            if (alreadyDiscounted)
+                                continue;
+
+                            var discount = new Discount
+                            {
+                                TaskId = task.Id,
+                                EmployeeId = assignment.EmployeeId,
+                                Reason = "خصم نتيجة الاغلاق التلقائي للمهمة",
+                                Amount = task.PenaltyOnAutoClose,
+                                AutoDiscount = true,
+                                CreatedDate = DateTime.UtcNow,
+                                ViolationDate = DateTime.UtcNow,
+                                discountType = DiscountType.AutoCloseTaskDiscount
+                            };
+
+                            await _db.Discounts.AddAsync(discount);
+                            discountsToPublish.Add(discount);
+                        }
+
+                        if (task.CreatedByEmployeeId.HasValue)
+                        {
+                            var creatorId = task.CreatedByEmployeeId.Value;
+
+                            var creatorCommented = await _db.TaskComments.AnyAsync(c =>
+                                c.TaskId == task.Id &&
+                                c.EmployeeId == creatorId);
+
+                            var creatorAddedPenalty = await _db.Discounts.AnyAsync(d =>
+                                d.TaskId == task.Id &&
+                                d.CreatedByEmployeeId == creatorId &&
+                                !d.AutoDiscount);
+
+                            var creatorAddedWarning = await _db.Warnings.AnyAsync(w =>
+                                w.TaskId == task.Id &&
+                                w.CreatedBy == creatorId);
+
+                            var managerDidSomething = creatorCommented || creatorAddedPenalty || creatorAddedWarning;
+
+                            if (!managerDidSomething && !exemptIds.Contains(creatorId))
                             {
                                 var alreadyDiscounted = await _db.Discounts.AnyAsync(d =>
                                     d.TaskId == task.Id &&
@@ -198,9 +189,8 @@ namespace TaskMangment.Hangfire.Jobs
                                     {
                                         TaskId = task.Id,
                                         EmployeeId = creatorId,
-                                        Reason = "manager negligence on overdue task",
+                                        Reason = "إهمال جهة التكليف في متابعة مهمة متأخرة",
                                         Amount = task.PenaltyOnAutoClose,
-                                        //CreatedByEmployeeId = 0,
                                         AutoDiscount = true,
                                         CreatedDate = DateTime.UtcNow,
                                         discountType = DiscountType.AutoCloseTaskDiscount
@@ -213,7 +203,6 @@ namespace TaskMangment.Hangfire.Jobs
                         }
                     }
                 }
-
                 await _db.SaveChangesAsync();
 
                 foreach (var discount in discountsToPublish)
@@ -235,12 +224,6 @@ namespace TaskMangment.Hangfire.Jobs
                             })
                             .FirstOrDefaultAsync();
 
-                        var branch = issuedEmployee.BranchId.HasValue
-                            ? await _db.Branches
-                                .Include(b => b.Manager)
-                                .FirstOrDefaultAsync(b => b.Id == issuedEmployee.BranchId.Value)
-                            : null;
-
                         var managerId = await _getHigherManager.GetDirectHigherManagerIdAsync(discount.EmployeeId);
 
                         var sendToIds = new List<int> { discount.EmployeeId };
@@ -260,9 +243,8 @@ namespace TaskMangment.Hangfire.Jobs
                             )
                         );
                     }
-                    catch (Exception ex)
+                    catch
                     {
-                        // intentionally ignored (same as original behavior)
                     }
                 }
             }

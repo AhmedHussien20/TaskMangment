@@ -47,7 +47,8 @@ export class DepartmentService {
       `PageIndex=${req.pageIndex}`,
       `PageSize=${req.pageSize}`,
       `SortColumn=${req.sortColumn}`,
-      `SortDirection=${req.sortDirection}`
+      `SortDirection=${req.sortDirection}`,
+      `branchId=${req.branchId ?? ''}`
     ].join('&');
   }
 }

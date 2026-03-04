@@ -8,6 +8,6 @@ namespace TaskMangment.Application.Interfaces.Services
 {
     public interface IWhatsAppService
     {
-        Task SendMessageAsync(string phoneNumber, string message);
+        Task SendTaskAssignedNotification(string phone, string userName, string message);
     }
 }

@@ -275,7 +275,8 @@ namespace TaskMangment.Infrastructure.Services
                                 TaskNumber = d.Task.Id.ToString(),
                                 TaskTitle = d.Task.Title,
                                 d.Reason,
-                                d.Amount
+                                d.Amount,
+                                d.ViolationDate
                             })
                             .FirstOrDefaultAsync();
 
@@ -289,6 +290,7 @@ namespace TaskMangment.Infrastructure.Services
                             ["TaskTitle"] = deduction.TaskTitle,
                             ["DeductionReason"] = deduction.Reason,
                             ["DeductionAmount"] = deduction.Amount.ToString("N2"),
+                            ["ViolationDate"] = deduction.ViolationDate.ToString("yyyy-MM-dd")
 
                         };
                     }

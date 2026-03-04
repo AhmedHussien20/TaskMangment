@@ -7,6 +7,7 @@ import { TaskCommentService } from 'app/core/services/task-comment.service';
 import { ToastrService } from 'ngx-toastr';
 import { CalendarEventService } from 'app/core/services/calendar-events.service';
 import { CalendarEventType } from 'app/core/models/event/calendar';
+import { AuthService } from 'app/core/services/auth.service';
 
 @Component({
   selector: 'app-comment-modal',
@@ -18,6 +19,7 @@ export class CommentModalComponent implements OnInit {
 
   @Input() taskId!: number;
   @Input() requireUploadFile: boolean = false;
+  @Input() createdByMe: boolean = false;
 
   form!: FormGroup;
   files: File[] = [];
@@ -29,7 +31,8 @@ export class CommentModalComponent implements OnInit {
     private commentService: TaskCommentService,
     private toastr: ToastrService,
     private translate: TranslateService,
-    private calendarService: CalendarEventService
+    private calendarService: CalendarEventService,
+    private auth: AuthService
     
   ) {}
 
@@ -64,13 +67,12 @@ onFileChange(event: any) {
   this.files = input.files ? Array.from(input.files) : [];
 
   this.updateCommentValidators();
-
-  // ✅ مهم عشان الـ form-level validator
   this.form.updateValueAndValidity({ emitEvent: false });
 }
 
 
 private updateCommentValidators() {
+const regex = /^(?!.*\..*\.)[a-zA-Z0-9\u0600-\u06FF .]+$/;
   const commentControl = this.form.get('comment');
   if (!commentControl) return;
 
@@ -78,12 +80,14 @@ private updateCommentValidators() {
     commentControl.clearValidators();
   }
   else {
-    if (this.files.length > 0) {
+    if (this.files.length > 0 || this.createdByMe) {
       commentControl.clearValidators();
     } else {
       commentControl.setValidators([
         Validators.required,
-        Validators.minLength(200)
+        Validators.minLength(200),
+        Validators.pattern(regex)
+
       ]);
     }
   }

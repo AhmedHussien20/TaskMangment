@@ -1,11 +1,11 @@
-import { NgbActiveModal } from "@ng-bootstrap/ng-bootstrap";
-import { Component, Input } from "@angular/core";
+import { Component, Input, OnInit } from "@angular/core";
+import { NgbActiveModal, NgbModal } from "@ng-bootstrap/ng-bootstrap";
 import { CommonModule } from "@angular/common";
 import { TranslateModule } from "@ngx-translate/core";
 import { GenericTableComponent, TableColumn } from "app/shared/components/generic-table/generic-table.component";
+import { TaskDetailsShellComponent } from "app/components/tasks/task-details/task-details-shell/task-details-shell.component";
+import { DashboardService } from "app/core/services/dashboar.service";
 import { DiscountGetDto } from "app/core/models/task/task-penalty";
-
-
 
 @Component({
   standalone: true,
@@ -20,13 +20,19 @@ import { DiscountGetDto } from "app/core/models/task/task-penalty";
       <app-generic-table
         [columns]="columns"
         [data]="rows"
-        [entries]="rows.length"
-        [totalItems]="rows.length"
+        [page]="request.pageIndex"
+        [entries]="request.pageSize"
+        [totalItems]="totalItems"
         [showAddButton]="false"
         [showEditButton]="false"
         [showDeleteButton]="false"
         [showFilters]="false"
-        [showPagination]="false"
+        [showPagination]="true"
+        [rowClickable]="true"
+        [rowClickableCondition]="checkRowClickable"
+        (edit)="onEdit($event)"
+        (pageChange)="onPageChange($event)"
+        (entriesChange)="onEntriesChange($event)"
       >
       </app-generic-table>
     </div>
@@ -38,8 +44,13 @@ import { DiscountGetDto } from "app/core/models/task/task-penalty";
     </div>
   `
 })
-export class DiscountsPopupComponent {
-  @Input() discounts: DiscountGetDto[] = [];
+export class DiscountsPopupComponent implements OnInit {
+  @Input() request: any = { pageIndex: 1, pageSize: 20, period: null };
+  @Input() branchId?: number;
+
+  discounts: DiscountGetDto[] = [];
+  rows: any[] = [];
+  totalItems = 0;
 
   columns: TableColumn[] = [
     { key: 'employeeName', label: 'TASK.PENALTY_EMPLOYEE_NAME' },
@@ -49,18 +60,68 @@ export class DiscountsPopupComponent {
     { key: 'amount', label: 'TASK.PENALTY_AMOUNT' }
   ];
 
-  rows: any[] = [];
-
-  constructor(public activeModal: NgbActiveModal) {}
+  constructor(
+    public activeModal: NgbActiveModal,
+    private modalService: NgbModal,
+    private dashboardService: DashboardService
+  ) {}
 
   ngOnInit() {
-  this.rows = this.discounts.map(d => ({
-    employeeName: d.employeeName, 
-    task: d.taskTitle,            
-    createdDate: d.createdDate,
-    reason: d.reason,
-    amount: d.amount + ' SAR'
-  }));
-}
+    this.loadPageData();
+  }
 
+  loadPageData() {
+    this.dashboardService
+      .getAdminDiscounts(this.request, this.branchId)
+      .subscribe(res => {
+        const data = res.data;
+        this.discounts = data.data || [];
+        this.totalItems = data.totalCount || 0;
+        this.request.pageIndex = data.pageIndex || this.request.pageIndex;
+        this.request.pageSize = data.pageSize || this.request.pageSize;
+
+        this.mapRows();
+      });
+  }
+
+  private mapRows() {
+    this.rows = this.discounts.map(d => ({
+      id: d.taskId,
+      taskId: d.taskId,
+      employeeName: d.employeeName,
+      task: `[${d.taskId}] ${d.taskTitle}`,
+      createdDate: d.createdDate,
+      reason: d.reason,
+      amount: d.amount + ' SAR',
+    }));
+  }
+
+  onPageChange(page: number) {
+    this.request.pageIndex = page;
+    this.loadPageData();
+  }
+
+  onEntriesChange(entries: number) {
+    this.request.pageSize = entries;
+    this.request.pageIndex = 1;
+    this.loadPageData();
+  }
+
+  checkRowClickable(item: any): boolean {
+    return true;
+  }
+
+  onEdit(taskId: number) {
+    const task = this.rows.find(x => x.taskId === taskId);
+
+    const modalRef = this.modalService.open(TaskDetailsShellComponent, {
+      size: 'xl',
+      backdrop: 'static',
+      scrollable: true
+    });
+
+    modalRef.componentInstance.taskId = taskId;
+    modalRef.componentInstance.readonly = true;
+    modalRef.componentInstance.createdByMe = task?.createdByMe ?? false;
+  }
 }

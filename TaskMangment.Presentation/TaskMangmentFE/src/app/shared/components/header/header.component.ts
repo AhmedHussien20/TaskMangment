@@ -13,6 +13,8 @@ import { SignalRService } from 'app/core/services/signalr.service';
 import { NotificationApiService } from 'app/core/services/notification.service';
 import { Router } from '@angular/router';
 import { TaskDetailsShellComponent } from 'app/components/tasks/task-details/task-details-shell/task-details-shell.component';
+import { ToastrService } from 'ngx-toastr';
+import { TranslateService } from '@ngx-translate/core';
 
 interface Item {
   user: any;
@@ -30,7 +32,7 @@ export interface HeaderShortcut {
   alwaysEnabled?: boolean;
 
 }
-interface HeaderNotification {
+export interface HeaderNotification {
   id: string;
   message: string;
   createdAt: Date;
@@ -164,7 +166,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
     private translate: TranslationService,
     private signalR: SignalRService,
     private notificationService: NotificationApiService,
-    private router: Router
+    private router: Router,
+    private toastr: ToastrService,
+    private translationService: TranslateService
   ) {
     this.layoutSubscription = layoutService.changeEmitted.subscribe(
       direction => {
@@ -417,43 +421,91 @@ export class HeaderComponent implements OnInit, OnDestroy {
   public SearchResultEmpty: boolean = false;
 
 
-  ngOnInit(): void {
-    this.user = this.authService.getCurrentUser();
-    this.roleLevel = this.authService.getRoleLevel();
-    this.menuitemsSubscribe$ = this.navServices.getMenuItems().subscribe({
-      next: (menuItems) => {
-        if (menuItems) {
-          this.menuItems = menuItems; // Assign only if menuItems is valid
-        }
-      },
-      error: (err) => {
-        console.error('Error fetching menu items:', err);
+ ngOnInit(): void {
+
+  this.user = this.authService.getCurrentUser();
+  this.roleLevel = this.authService.getRoleLevel();
+
+  this.menuitemsSubscribe$ = this.navServices.getMenuItems().subscribe({
+    next: (menuItems) => {
+      if (menuItems) {
+        this.menuItems = menuItems;
       }
-    });
-    this.translate.getCurrentLang().subscribe(lang => {
-      this.countryFlag = this.mapLangToFlag(lang);
-    });
-    this.signalR.notification$
-      .pipe(filter(n => n !== null))
-      .subscribe((n) => {
+    },
+    error: (err) => {
+      console.error('Error fetching menu items:', err);
+    }
+  });
+
+  this.translate.getCurrentLang().subscribe(lang => {
+    this.countryFlag = this.mapLangToFlag(lang);
+  });
+
+
+  this.notificationService.getUnread().subscribe({
+    next: (res) => {
+
+      const unread = res?.data ?? [];
+      unread.forEach(n => {
+        const exists = this.notifications.some(x =>
+          x.taskId === n.taskId &&
+          x.message === n.message
+        );
+         this.toastr.info(n.message, this.translationService.instant('nav.notifications.notification'));
+
+        if (!exists) {
+          console.log('Adding notification:', n.taskId, n.message);
+          this.notifications.unshift({
+            id: crypto.randomUUID(),
+            message: n.message,
+            createdAt: new Date(n.createdAt),
+            isRead: false,
+            link: n.link || '/pages/notifications-list',
+            type: 'task',
+            taskId: n!.taskId
+          });
+        }
+
+      });
+
+      this.notificationCount =
+        this.notifications.filter(x => !x.isRead).length;
+    },
+    error: (err) => {
+      console.error('Error loading unread notifications:', err);
+    }
+  });
+
+  this.signalR.notification$
+    .pipe(filter(n => !!n))
+    .subscribe((n) => {
+
+      const exists = this.notifications.some(x =>
+        x.taskId === n!.taskId &&
+        x.message === n!.message
+      );
+
+      if (!exists) {
+
 
         const notification: HeaderNotification = {
           id: crypto.randomUUID(),
           message: n!.message,
-          createdAt: n!.createdAt,
+          createdAt: new Date(n!.createdAt),
           isRead: false,
           link: n!.link || '/pages/notifications-list',
           type: 'task',
           taskId: n!.taskId
         };
+         this.toastr.info(n.message, this.translationService.instant('nav.notifications.notification'));
 
         this.notifications.unshift(notification);
-        this.notificationCount = this.notifications.filter(x => !x.isRead).length;
-      });
 
-
-  }
-
+        this.notificationCount =
+          this.notifications.filter(x => !x.isRead).length;
+      }
+    });
+}
   removeNotification(id: string) {
     this.notifications = this.notifications.filter(n => n.id !== id);
     this.notificationCount = this.notifications.filter(x => !x.isRead).length;

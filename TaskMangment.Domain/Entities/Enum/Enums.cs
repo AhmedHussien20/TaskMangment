@@ -128,7 +128,8 @@ namespace TaskMangment.Domain.Entities
     {
         Operations=1,
         Accounting,
-        HR
+        HR,
+        GeneralAffairs
     }
 
 

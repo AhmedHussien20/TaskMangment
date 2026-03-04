@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.SignalR;
-using TaskMangment.Infrastructure.SignalR;
-using TaskMangment.Application.Interfaces.Services;
-using TaskMangment.Application.Interfaces.IRepository;
-using TaskMangment.Domain.Entities;
 using Microsoft.Extensions.Localization;
+using TaskMangment.Application.Interfaces.IRepository;
+using TaskMangment.Application.Interfaces.Services;
+using TaskMangment.Domain.Entities;
+using TaskMangment.Infrastructure.Repositories;
+using TaskMangment.Infrastructure.Services;
+using TaskMangment.Infrastructure.SignalR;
 using TaskMangment.Utilities.Localization.Resources;
 
 
@@ -14,10 +16,15 @@ public class NotificationService : INotificationService
     private readonly INotificationSender _notificationSender;
     private readonly IOnlineUserService _onlineUserService;
     private readonly IStringLocalizer<TaskNotification> _L;
+    private readonly IRepository<Employee> _EmployeeRepo;
+    private readonly IWhatsAppService _whatsAppService;
+
 
     public NotificationService(
         INotificationRepository repo,
-        IEmailQueueService emailQueueService, INotificationSender notificationSender, IOnlineUserService onlineUserService, IStringLocalizer<TaskNotification> localizer)
+        IEmailQueueService emailQueueService, INotificationSender notificationSender, IOnlineUserService onlineUserService, IStringLocalizer<TaskNotification> localizer,
+        IWhatsAppService whatsAppService,
+        IRepository<Employee> EmployeeRepo)
 
 
     {
@@ -26,6 +33,8 @@ public class NotificationService : INotificationService
         _notificationSender = notificationSender;
         _onlineUserService = onlineUserService;
         _L = localizer;
+        _EmployeeRepo = EmployeeRepo;
+        _whatsAppService = whatsAppService;
 
     }
 
@@ -41,7 +50,9 @@ public class NotificationService : INotificationService
             Message = message,
             NotificationType = type,
             ReferenceId = referenceId,
-            IsRead = isOnline
+            IsRead = isOnline,
+            TaskId = taskId
+
         };
 
         await _repo.AddAsync(notification);
@@ -50,6 +61,19 @@ public class NotificationService : INotificationService
         {
             await _notificationSender.SendWebAsync(userId, message, taskId);
             return;
+        }
+        if (sendWhatsApp)
+        {
+            var user = await _EmployeeRepo.GetByIDAsync(userId);
+
+            if (user != null && !string.IsNullOrEmpty(user.Mobile))
+            {
+                await _whatsAppService.SendTaskAssignedNotification(
+                    user.Mobile,
+                    user.FullName,
+                    message
+                );
+            }
         }
     }
 

@@ -5,6 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TaskMangment.Application.ApiRequests;
 using TaskMangment.Domain.Entities;
 
 namespace TaskMangment.Application.DTOs.TaskDTOs
@@ -24,7 +25,7 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
     public class DiscountGetDto
     {
         public int Id { get; set; }
-        public int TaskId { get; set; }
+        public int? TaskId { get; set; }
         public string EmployeeName { get; set; }
         public string? TaskTitle { get; set; }
         public string Reason { get; set; }
@@ -36,6 +37,11 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
         public bool IsRead { get; set; }
 
 
+    }
+
+    public class DiscountsRequest : BaseApiRequest
+    {
+        public PeriodDto Period { get; set; }
     }
 
 

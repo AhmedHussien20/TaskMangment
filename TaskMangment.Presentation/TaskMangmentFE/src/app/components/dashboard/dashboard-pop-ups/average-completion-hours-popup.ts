@@ -1,10 +1,12 @@
-import { NgbActiveModal } from "@ng-bootstrap/ng-bootstrap";
+import { NgbActiveModal, NgbModal } from "@ng-bootstrap/ng-bootstrap";
 import { Component, Input } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { TranslateModule } from "@ngx-translate/core";
 import { GenericTableComponent, TableColumn } from "app/shared/components/generic-table/generic-table.component";
+import { TaskDetailsShellComponent } from "app/components/tasks/task-details/task-details-shell/task-details-shell.component";
 
 export interface CompletedTaskDetail {
+  taskId: number;
   taskTitle: string;
   employeeNames: string;
   createdAt: string;
@@ -33,6 +35,9 @@ export interface CompletedTaskDetail {
         [showDeleteButton]="false"
         [showFilters]="false"
         [showPagination]="false"
+        [rowClickable]="true"
+        [rowClickableCondition]="checkRowClickable"
+        (edit)="onEdit($event)"
       >
       </app-generic-table>
     </div>
@@ -57,10 +62,11 @@ export class CompletedTasksPopupComponent {
 
   rows: any[] = [];
 
-  constructor(public activeModal: NgbActiveModal) {}
+  constructor(public activeModal: NgbActiveModal, private modalService: NgbModal) {}
 
  ngOnInit() {
   this.rows = this.tasks.map(t => ({
+    id: t.taskId,
     taskTitle: t.taskTitle,       
     employeeNames: t.employeeNames, 
     createdAt: t.createdAt,
@@ -68,5 +74,22 @@ export class CompletedTasksPopupComponent {
     duration: t.durationHours + 'h'
   }));
 }
+checkRowClickable(item: any): boolean {
+    console.log('Row:', item);    
+    return true;
+  }
 
+  onEdit(id: number) {
+    const task = this.rows.find(x => x.taskId === id);
+
+    const modalRef = this.modalService.open(TaskDetailsShellComponent, {
+      size: 'xl',
+      backdrop: 'static',
+      scrollable: true
+    });
+
+    modalRef.componentInstance.taskId = id;
+    modalRef.componentInstance.readonly = true;
+    modalRef.componentInstance.createdByMe = task?.createdByMe ?? false;
+  }
 }

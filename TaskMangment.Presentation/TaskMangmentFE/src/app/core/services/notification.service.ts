@@ -5,6 +5,7 @@ import { ApiService } from "./api.service";
 import { BaseResponse } from "app/models/base.response.model";
 import { Observable } from "rxjs";
 import { Notification } from "../models/notification/notification";
+import { HeaderNotification } from "app/shared/components/header/header.component";
 
 @Injectable({ providedIn: 'root' })
 export class NotificationApiService {
@@ -12,8 +13,8 @@ export class NotificationApiService {
 
     constructor(  private api: ApiService) { }
   
-    getUnread(): Observable<BaseResponse<Notification[]>> {
-        return this.api.get<BaseResponse<Notification[]>>(this.service,'unread');
+    getUnread(): Observable<BaseResponse<HeaderNotification[]>> {
+        return this.api.get<BaseResponse<HeaderNotification[]>>(this.service,'unread');
     }
 
     markAsRead(id: number):Observable<BaseResponse<any>> {

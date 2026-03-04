@@ -65,6 +65,12 @@ namespace TaskMangment.Hangfire.Jobs
                 if (task.PenaltyOnStopComment <= 0)
                     continue;
 
+                bool hasCloseRequest = await _db.TaskCloseRequests
+                    .AnyAsync(r => r.TaskId == task.Id);
+
+                if (hasCloseRequest)
+                    continue;
+
                 var periodDays = (int)task.CommentAllowPeriodDays!.Value;
                 if (periodDays < 1) periodDays = 1;
 
@@ -132,14 +138,13 @@ namespace TaskMangment.Hangfire.Jobs
                         ? assignment.AssignedAt.Date
                         : lastComment.CreatedDate.Date;
 
-                    var dueDate = (periodDays == 1 && lastComment != null)
+                    var dueDate = (periodDays == 1)
                         ? baseDate.AddDays(periodDays)     
                         : baseDate.AddDays(periodDays - 1); 
 
                     if (dueDate > yesterday)
                         continue;
 
-                    // ✅ بدل AnyAsync
                     if (lastComment != null && lastComment.CreatedDate.Date == dueDate)
                         continue;
 
@@ -198,11 +203,11 @@ namespace TaskMangment.Hangfire.Jobs
                         TaskId = task.Id,
                         EmployeeId = employeeId,
                         Amount = task.PenaltyOnStopComment,
-                        Reason = "Penalty for not commenting",
+                        Reason = "عدم التعليق فالحد المسموح",
                         AutoDiscount = true,
                         CreatedDate = DateTime.UtcNow,
                         discountType = DiscountType.StopCommentDiscount,
-                        ViolationDate = dueDate
+                        ViolationDate = DateTime.UtcNow.AddDays(-1)
                     };
 
                     await _db.Discounts.AddAsync(discount);

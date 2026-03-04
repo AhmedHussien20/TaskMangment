@@ -87,12 +87,12 @@ export interface TaskStatusDto {
     title: string;
     status: TaskStatus;
     statusText : string;
+    createdDate: Date;
     dueDate: Date | null;
     employees: string[];
     createdByMe: boolean
 
 }
-
 export interface AdminKpisExtendedDto {
   averageCompletionHours: number;
   onTimeRatePercent: number;
