@@ -40,7 +40,7 @@ export class EmployeeListComponent implements OnInit {
     'MENU.EMPLOYEES',
     'EMPLOYEE.LIST_TITLE'
   ];
-extraFilters: any = {};
+  extraFilters: any = {};
   branchOptions: { id: number; name: string }[] = [];
   // table columns
   columns: TableColumn[] = [
@@ -93,16 +93,8 @@ extraFilters: any = {};
   ) { }
 
   ngOnInit(): void {
-     this.branchOptions = [
-    { id: 1, name: 'Cairo' },
-    { id: 2, name: 'Alex' },
-    { id: 3, name: 'Giza' },
-  ];
-  this.extraFilters = {
-  branchId: this.branchOptions
-};
     this.loadData();
-    //this.loadBranches();
+    this.loadBranches();
   }
 
   loadData() {
@@ -135,6 +127,10 @@ extraFilters: any = {};
       const list = res.data.data;
       this.branchOptions = list.map((b: any) => ({ id: b.id, name: b.name }));
     });
+
+    this.extraFilters = {
+      branchId: this.branchOptions
+    };
   }
 
   onPageChange(page: number) {
