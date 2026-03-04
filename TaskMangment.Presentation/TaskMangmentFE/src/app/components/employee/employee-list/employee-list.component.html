@@ -17,10 +17,10 @@
 
         <app-generic-table [title]="title" [breadcrumbs]="breadcrumbs" [activeitem]="activeitem" [labels]="labels"
           [columns]="columns" [data]="rows" [entries]="entries" [page]="page" [totalItems]="totalItems"
-          [showAddButton]="true" [addButtonLabel]="'EMPLOYEE.ADD' | translate" (addClick)="openAdd(employeeModal)"
-          [showEditButton]="true" (edit)="openEdit($event, employeeModal)" [showFilters]="true"
+          [showAddButton]="canMakeChanges" [addButtonLabel]="'EMPLOYEE.ADD' | translate" (addClick)="openAdd(employeeModal)"
+          [showEditButton]="canMakeChanges" (edit)="openEdit($event, employeeModal)" [showFilters]="true"
           [searchCriteria]="searchCriteria" [onSearch]="applyFilters.bind(this)" (pageChange)="onPageChange($event)"
-          (entriesChange)="onEntriesChange($event)" [showDeleteButton]="true" (delete)="confirmDelete($event)" 
+          (entriesChange)="onEntriesChange($event)" [showDeleteButton]="canMakeChanges" (delete)="confirmDelete($event)" 
           [extraFilterOptions]="{ branchId: branchOptions }"
 >
         </app-generic-table>

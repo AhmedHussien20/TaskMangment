@@ -275,9 +275,19 @@ private MENUITEMS: MenuItem[] = [
       const functionCode = user.functionCode; 
 
 
-    if (item.minRoleLevel !== undefined && user.roleLevel < item.minRoleLevel) {
-      return false;
+    if (item.minRoleLevel !== undefined) {
+    
+ if (item.minRoleLevel === 80) {
+  if (user.roleLevel === 80 && user.functionCode !== 1) {
+    return false;
+  }
+}
+    else {
+      if (user.roleLevel < item.minRoleLevel) {
+        return false;
+      }
     }
+  }
 
    if (item.functionCode != null) {
   if (functionCode == null || item.functionCode !== functionCode) {

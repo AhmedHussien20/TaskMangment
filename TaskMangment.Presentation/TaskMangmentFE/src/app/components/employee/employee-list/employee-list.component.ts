@@ -15,6 +15,7 @@ import { EmployeeCreateUpdateComponent } from '../employee-create-update/employe
 import Swal from 'sweetalert2';
 import { ToastrService } from 'ngx-toastr';
 import { BranchService } from 'app/core/services/branch.service';
+import { AuthService } from 'app/core/services/auth.service';
 
 
 @Component({
@@ -83,16 +84,20 @@ branchOptions: { value: number; label: string }[] = [];
 
   selectedEmployeeId: number | null = null;
   isEdit = false;
+  canMakeChanges = false;
 
   constructor(
     private employeeService: EmployeeService,
     private modalService: NgbModal,
     private translate: TranslateService,
     private toastr: ToastrService,
-    private branchService: BranchService
+    private branchService: BranchService,
+    private auth: AuthService
   ) { }
 
   ngOnInit(): void {
+    const roleLevel = this.auth.getRoleLevel();
+    this.canMakeChanges = roleLevel == 100; 
     this.loadData();
     this.loadBranches();
   }
