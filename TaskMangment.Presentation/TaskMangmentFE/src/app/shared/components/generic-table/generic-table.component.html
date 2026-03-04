@@ -34,7 +34,7 @@
             <i class="fa" [ngClass]="filtersOpen ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
         </div>
 
-        <div class="filter-card" *ngIf="filtersOpen">
+        <div class="filter-card" [hidden]="!filtersOpen">
             <div class="filter-grid">
 
                 <div class="filter-item" *ngFor="let key of objectKeys(searchCriteria?.filterTypes)"
@@ -64,10 +64,10 @@
                             </ng-container>
 
                             <ng-template #normalDropdown>
-                                <ng-select [items]="getDropdownOptions(key)" bindValue="id"
+                                <ng-select [items]="getDropdownOptions(key)" bindValue="id" bindLabel="name"
                                     [ngModel]="searchCriteria[key]" (ngModelChange)="onFilterChange(key, $event)"
                                     [multiple]="isMultiSelect(key)" [closeOnSelect]="!isMultiSelect(key)"
-                                    [clearable]="true">
+                                    [clearable]="true" appendTo="body">
 
                                     <ng-template ng-option-tmp let-item="item">
                                         {{ item.name | translate }}
