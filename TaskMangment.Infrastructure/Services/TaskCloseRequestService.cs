@@ -17,6 +17,7 @@ using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
 using TaskMangment.Domain.Event;
+using TaskMangment.Infrastructure.Caching;
 using TaskMangment.Infrastructure.Persistence.Extensions;
 
 namespace TaskMangment.Infrastructure.Services
@@ -32,6 +33,8 @@ namespace TaskMangment.Infrastructure.Services
         private readonly ICachingService _cache;
         private readonly IDomainEventDispatcher _eventDispatcher;
         private readonly IRepository<TaskPercentage> _AchievementRepo;
+        private readonly ICacheInvalidator _cacheInvalidator;
+
 
 
 
@@ -42,7 +45,7 @@ namespace TaskMangment.Infrastructure.Services
             ICachingService cache,
             IRepository<WorkTask> taskRepo,
             IRepository<Employee> employeeRepo,
-            IDomainEventDispatcher eventDispatcher, IRepository<TaskPercentage> AchievementRepo)
+            IDomainEventDispatcher eventDispatcher, IRepository<TaskPercentage> AchievementRepo, ICacheInvalidator cacheInvalidator)
 
         {
             _requestRepo = requestRepo;
@@ -53,43 +56,54 @@ namespace TaskMangment.Infrastructure.Services
             _employeeRepo = employeeRepo;
             _eventDispatcher = eventDispatcher;
             _AchievementRepo = AchievementRepo;
+            _cacheInvalidator = cacheInvalidator;
         }
 
+        private async Task<int> GetVersionAsync(string versionKey)
+        {
+            var v = await _cache.GetAsync<int>(versionKey);
+            if (v <= 0)
+            {
+                await _cache.SetAsync(versionKey, 1, TimeSpan.FromDays(30));
+                return 1;
+            }
+            return v;
+        }
         public async Task<ApiResponse<PagedResponse<TaskCloseRequestListDto>>> GetAllAsync(TaskCloseRequestRequest request)
         {
-            //string cacheKey = $"taskCloseRequests:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}:{request.TaskId}";
-
-            //if (!request.BypassCache)
-            //{
-            //    var cached = await _cache.GetAsync<PagedResponse<TaskCloseRequestListDto>>(cacheKey);
-            //    if (cached != null)
-            //        return ApiResponse<PagedResponse<TaskCloseRequestListDto>>.Ok(cached);
-            //}
-
             var task = await _taskRepo.GetByIDAsync(request.TaskId);
             if (task == null)
                 throw new AppException(ErrorCodes.TaskNotFound, StatusCodes.Status404NotFound);
 
-            var query = _requestRepo.GetAll(c => c.TaskId == request.TaskId)
-                .Include(r => r.TaskAssignment)
-                 .Include(r => r.RequestedBy)
-                .Include(r => r.ReviewedBy)
-                .ApplySearch(request.searchKey);
+            var version = await GetVersionAsync(CacheKeys.TaskCloseRequestsVersion(request.TaskId));
+            var cacheKey = CacheKeys.TaskCloseRequestsList(request.TaskId, request, version);
 
-            var totalCount = await query.CountAsync();
+            var response = await _cache.GetOrSetAsync<PagedResponse<TaskCloseRequestListDto>>(
+                cacheKey,
+                async () =>
+                {
+                    // ===== نفس كودك بدون تغيير =====
+                    var query = _requestRepo.GetAll(c => c.TaskId == request.TaskId)
+                        .Include(r => r.TaskAssignment)
+                        .Include(r => r.RequestedBy)
+                        .Include(r => r.ReviewedBy)
+                        .ApplySearch(request.searchKey);
 
-            query = query.OrderByDynamicSafe(request.SortColumn, request.SortDirection);
+                    var totalCount = await query.CountAsync();
 
-            var list = await query
-                .Skip((request.PageIndex - 1) * request.PageSize)
-                .Take(request.PageSize)
-                .ToListAsync();
+                    query = query.OrderByDynamicSafe(request.SortColumn, request.SortDirection);
 
-            var dtos = _mapper.Map<ICollection<TaskCloseRequestListDto>>(list);
+                    var list = await query
+                        .Skip((request.PageIndex - 1) * request.PageSize)
+                        .Take(request.PageSize)
+                        .ToListAsync();
 
-            var response = new PagedResponse<TaskCloseRequestListDto>(dtos, totalCount, request.PageIndex, request.PageSize);
+                    var dtos = _mapper.Map<ICollection<TaskCloseRequestListDto>>(list);
 
-            //await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
+                    return new PagedResponse<TaskCloseRequestListDto>(dtos, totalCount, request.PageIndex, request.PageSize);
+                },
+                TimeSpan.FromMinutes(10)
+            );
 
             return ApiResponse<PagedResponse<TaskCloseRequestListDto>>.Ok(response);
         }
@@ -145,7 +159,8 @@ namespace TaskMangment.Infrastructure.Services
 
             await _requestRepo.AddAsync(request);
             await _requestRepo.SaveChangesAsync();
-            await _cache.RemoveAsync("taskCloseRequests:");
+            await _cacheInvalidator.InvalidateTaskCloseRequestsAsync(taskId);
+            //await _cache.RemoveAsync("taskCloseRequests:");
 
             var assignedEmployeeIds = await _taskAssignmentRepo
        .GetAll(a => a.TaskId == taskId && a.IsActive)
@@ -256,7 +271,11 @@ namespace TaskMangment.Infrastructure.Services
             request.ReviewedAt = DateTime.UtcNow;
 
             await _requestRepo.SaveChangesAsync();
-            await _cache.RemoveAsync("taskCloseRequests:");
+            await _cacheInvalidator.InvalidateTaskCloseRequestsAsync(request.TaskId);
+            await _cacheInvalidator.InvalidateTasksAsync(task.CompanyId);
+            if (request.Status == CloseRequestStatus.Approved)
+                await _cacheInvalidator.InvalidateDashboardAsync(task.CompanyId);
+            //await _cache.RemoveAsync("taskCloseRequests:");
 
             var updatedRequest = await _requestRepo
                 .GetAll(r => r.Id == id)

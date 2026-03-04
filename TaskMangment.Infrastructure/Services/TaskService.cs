@@ -137,6 +137,13 @@ namespace TaskMangment.Infrastructure.Services
                     }
                     else
                     {
+                        // 1) exclude archived by default unless explicitly requested
+                        if (!request.StatusId.HasValue || request.StatusId.Value != (int)WorkTaskStatus.Archived)
+                        {
+                            query = query.Where(t => t.Status != WorkTaskStatus.Archived);
+                        }
+
+
                         if (request.StatusId.HasValue)
                         {
                             query = query.Where(t => (int)t.Status == request.StatusId.Value);
@@ -272,8 +279,7 @@ namespace TaskMangment.Infrastructure.Services
             await _uow.BeginTransactionAsync();
 
             try
-            {
-                
+            {   
                 if (!dto.IsShared)
                 {
                     int? firstTaskId = null;
@@ -365,6 +371,10 @@ namespace TaskMangment.Infrastructure.Services
 
                 await _cacheInvalidator.InvalidateDashboardAsync(companyId);
                 await _cacheInvalidator.InvalidateTasksAsync(companyId);
+                foreach (var empId in dto.AssignedEmployeeIds.Distinct())
+                {
+                    await _cacheInvalidator.InvalidateEmployeeDashboardAsync(empId);
+                }
 
                 await _eventDispatcher.PublishAsync(new TaskAssignedEvent(task.Id, task.Title, dto.AssignedEmployeeIds));
 
@@ -484,8 +494,19 @@ namespace TaskMangment.Infrastructure.Services
 
             await _cacheInvalidator.InvalidateDashboardAsync(companyId);
             await _cacheInvalidator.InvalidateTasksAsync(companyId);
+            var affectedEmployeeIds = await _assignmentRepo
+                .GetAll(a => a.TaskId == id && !a.IsDeleted)
+                .Select(a => a.EmployeeId)
+                .Distinct()
+                .ToListAsync();
 
-            await _cache.RemoveAsync("tasks:");
+            foreach (var empId in affectedEmployeeIds.Distinct())
+            {
+                if (empId > 0)
+                    await _cacheInvalidator.InvalidateEmployeeDashboardAsync(empId);
+            }
+
+            //await _cache.RemoveAsync("tasks:");
 
 
             if (newlyAssignedEmployeeIds.Any())
@@ -611,9 +632,6 @@ namespace TaskMangment.Infrastructure.Services
             {
                 dto.IsRead = seenDict.TryGetValue(dto.EmployeeId, out var seen) && seen;
             }
-
-            return ApiResponse<List<TaskAssignmentDto>>.Ok(dtos);
-
 
             return ApiResponse<List<TaskAssignmentDto>>.Ok(dtos);
         }

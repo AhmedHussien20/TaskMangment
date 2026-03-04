@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,6 +17,7 @@ using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
+using TaskMangment.Infrastructure.Caching;
 using TaskMangment.Infrastructure.Persistence.Extensions;
 
 namespace TaskMangment.Infrastructure.Services
@@ -29,6 +31,8 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<ManagerBranches> _managerBranchesRepo;
         private readonly IRepository<Branch> _branchRepo;
         private readonly IRepository<EmployeeFunctionalScope> _employeeFunctionScopeRepo;
+        private readonly ICacheInvalidator _cacheInvalidator;
+
 
 
 
@@ -38,7 +42,8 @@ namespace TaskMangment.Infrastructure.Services
             ICachingService cache,
             IRepository<ManagerBranches> managerBranchesRepo,
             IRepository<Branch> branchRepo,
-            IRepository<EmployeeFunctionalScope> employeeFunctionScopeRepo)
+            IRepository<EmployeeFunctionalScope> employeeFunctionScopeRepo,
+            ICacheInvalidator cacheInvalidator)
         {
             _employeeRepo = employeeRepo;
             _roleRepo = roleRepo;
@@ -47,6 +52,7 @@ namespace TaskMangment.Infrastructure.Services
             _managerBranchesRepo = managerBranchesRepo;
             _branchRepo = branchRepo;
             _employeeFunctionScopeRepo = employeeFunctionScopeRepo;
+            _cacheInvalidator = cacheInvalidator;
         }
 
 
@@ -121,90 +127,106 @@ namespace TaskMangment.Infrastructure.Services
                     }
                 }
             }
-
             await _employeeRoleRepo.SaveChangesAsync();
+            await _cacheInvalidator.InvalidateRoleAssignmentsAsync(roleId);
+
+            var role = await _roleRepo
+    .GetAll(r => r.Id == roleId)
+    .Select(r => new { r.Id, r.CompanyId })
+    .FirstOrDefaultAsync();
+
+            if (role == null)
+                throw new AppException(ErrorCodes.RoleNotFound, StatusCodes.Status400BadRequest);
+
+            var companyId = role.CompanyId;
+            await _cacheInvalidator.InvalidateRolesAsync(companyId.Value);
+
             return ApiResponse<bool>.Ok(true, "Employees assigned/unassigned successfully");
         }
-        public async Task<ApiResponse<PagedResponse<AssignedEmployeeDto>>>GetAssignedEmployeesPagedAsync(int roleId, RoleAssignmentReguest request)
+        private async Task<int> GetVersionAsync(string versionKey)
         {
-
+            var v = await _cache.GetAsync<int>(versionKey);
+            if (v <= 0)
+            {
+                await _cache.SetAsync(versionKey, 1, TimeSpan.FromDays(30));
+                return 1;
+            }
+            return v;
+        }
+        public async Task<ApiResponse<PagedResponse<AssignedEmployeeDto>>> GetAssignedEmployeesPagedAsync(int roleId,RoleAssignmentReguest request)
+        {
             if (!await _roleRepo.IsExistAsync(roleId))
                 throw new AppException(ErrorCodes.RoleNotFound, StatusCodes.Status400BadRequest);
 
-            //string cacheKey =
-            //    $"assigned-employees:{roleId}:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}:{request.IsAssigned}";
+            var version = await GetVersionAsync(CacheKeys.RoleAssignmentsVersion(roleId));
 
+            var cacheKey = CacheKeys.RoleAssignments(roleId, request, version);
 
-            //if (!request.BypassCache)
-            //{
-            //    var cached = await _cache.GetAsync<PagedResponse<AssignedEmployeeDto>>(cacheKey);
-            //    if (cached != null)
-            //        return ApiResponse<PagedResponse<AssignedEmployeeDto>>.Ok(cached);
-            //}
-
-        
-
-            var query = _employeeRepo.GetAll()
-    .Include(e => e.Branch)
-.Include(e => e.EmployeeRoles)
-    .ThenInclude(er => er.Role)
-    .ApplySearch(request.searchKey);
-
-            if (request.IsAssigned.HasValue)
-            {
-                if (request.IsAssigned.Value)
+            var response = await _cache.GetOrSetAsync<PagedResponse<AssignedEmployeeDto>>(
+                cacheKey,
+                async () =>
                 {
-                    query = query.Where(e =>
-                        e.EmployeeRoles.Any(er =>
-                            er.RoleId == roleId &&
-                            er.IsAssigned &&
-                            !er.IsDeleted));
-                }
-                else
-                {
-                    query = query.Where(e =>
-                        !e.EmployeeRoles.Any(er =>
-                            er.RoleId == roleId &&
-                            er.IsAssigned &&
-                            !er.IsDeleted));
-                }
-            }
+                    var query = _employeeRepo.GetAll()
+                        .Include(e => e.Branch)
+                        .Include(e => e.EmployeeRoles)
+                            .ThenInclude(er => er.Role)
+                        .ApplySearch(request.searchKey);
 
+                    if (request.IsAssigned.HasValue)
+                    {
+                        if (request.IsAssigned.Value)
+                        {
+                            query = query.Where(e =>
+                                e.EmployeeRoles.Any(er =>
+                                    er.RoleId == roleId &&
+                                    er.IsAssigned &&
+                                    !er.IsDeleted));
+                        }
+                        else
+                        {
+                            query = query.Where(e =>
+                                !e.EmployeeRoles.Any(er =>
+                                    er.RoleId == roleId &&
+                                    er.IsAssigned &&
+                                    !er.IsDeleted));
+                        }
+                    }
 
-            var totalCount = await query.CountAsync();
+                    var totalCount = await query.CountAsync();
 
-            query = query.OrderByDynamicSafe(request.SortColumn, request.SortDirection);
+                    query = query.OrderByDynamicSafe(request.SortColumn, request.SortDirection);
 
-            var employees = await query
-                .Skip((request.PageIndex - 1) * request.PageSize)
-                .Take(request.PageSize)
-                .ToListAsync();
+                    var employees = await query
+                        .Skip((request.PageIndex - 1) * request.PageSize)
+                        .Take(request.PageSize)
+                        .ToListAsync();
 
-            var result = employees.Select(e => new AssignedEmployeeDto
-            {
-                EmployeeId = e.Id,
-                FullName = e.FullName,
-                Email = e.Email ?? "",
-                Mobile = e.Mobile ?? "",
-                BranchName = e.Branch?.Name,
+                    var result = employees.Select(e => new AssignedEmployeeDto
+                    {
+                        EmployeeId = e.Id,
+                        FullName = e.FullName,
+                        Email = e.Email ?? "",
+                        Mobile = e.Mobile ?? "",
+                        BranchName = e.Branch?.Name,
 
-                IsAssigned = e.EmployeeRoles.Any(er =>
-                    er.RoleId == roleId && er.IsAssigned && !er.IsDeleted),
+                        IsAssigned = e.EmployeeRoles.Any(er =>
+                            er.RoleId == roleId && er.IsAssigned && !er.IsDeleted),
 
-                RoleName = e.EmployeeRoles
-        .Where(er => er.IsAssigned && !er.IsDeleted && er.Role != null)
-        .Select(er => er.Role!.Name)
-        .FirstOrDefault()
-            }).ToList();
+                        RoleName = e.EmployeeRoles
+                            .Where(er => er.IsAssigned && !er.IsDeleted && er.Role != null)
+                            .Select(er => er.Role!.Name)
+                            .FirstOrDefault()
+                    }).ToList();
 
-            var response = new PagedResponse<AssignedEmployeeDto>(
-                result,
-                totalCount,
-                request.PageIndex,
-                request.PageSize
+                    return new PagedResponse<AssignedEmployeeDto>(
+                        result,
+                        totalCount,
+                        request.PageIndex,
+                        request.PageSize
+                    );
+                },
+                TimeSpan.FromMinutes(10)
             );
-
-           // await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
 
             return ApiResponse<PagedResponse<AssignedEmployeeDto>>.Ok(response);
         }
@@ -239,9 +261,7 @@ namespace TaskMangment.Infrastructure.Services
                 .DefaultIfEmpty(0)
                 .MaxAsync();
         }
-        public async Task<ApiResponse<ManagerBranchesDto>> SetManagerBranchesAsync(
-     int managerId,
-     SetManagerBranchesRequest request)
+        public async Task<ApiResponse<ManagerBranchesDto>> SetManagerBranchesAsync(int managerId,SetManagerBranchesRequest request)
         {
             if (!await _employeeRepo.IsExistAsync(managerId))
                 throw new AppException(ErrorCodes.EmployeeNotFound, StatusCodes.Status400BadRequest);

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,6 +17,7 @@ using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
+using TaskMangment.Infrastructure.Caching;
 using TaskMangment.Infrastructure.Persistence.Extensions;
 
 namespace TaskMangment.Infrastructure.Services
@@ -27,28 +29,53 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<Branch> _branchRepository;
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
+        private readonly ICacheInvalidator _cacheInvalidator;
+
 
         public DepartmentService(
             IRepository<Department> departmentRepository,
             IRepository<Employee> employeeRepository,
             IRepository<Branch> branchRepository,
             IMapper mapper,
-            ICachingService cache)
+            ICachingService cache,
+            ICacheInvalidator cacheInvalidator
+)
         {
             _departmentRepository = departmentRepository;
             _employeeRepository = employeeRepository;
             _branchRepository = branchRepository;
             _mapper = mapper;
             _cache = cache;
+            _cacheInvalidator = cacheInvalidator;
+
+        }
+
+        private async Task<int> GetVersionAsync(string versionKey)
+        {
+            var v = await _cache.GetAsync<int>(versionKey);
+            if (v <= 0)
+            {
+                await _cache.SetAsync(versionKey, 1, TimeSpan.FromDays(30));
+                return 1;
+            }
+            return v;
         }
 
         public async Task<ApiResponse<PagedResponse<DepartmentGetDto>>> GetAllAsync(DepartmentRequest request)
         {
-            var query = _departmentRepository.GetAll()
-                .Include(d => d.Manager)
-                .Include(d => d.Branch)
-                    .ThenInclude(b => b.Area)
-                .ApplySearch(request.searchKey);
+            var version = await GetVersionAsync(CacheKeys.DepartmentsVersion());
+            var cacheKey = CacheKeys.DepartmentsList(request, version);
+
+            var response = await _cache.GetOrSetAsync<PagedResponse<DepartmentGetDto>>(
+                cacheKey,
+                async () =>
+                {
+                    // ===== نفس كودك بالظبط =====
+                    var query = _departmentRepository.GetAll()
+                        .Include(d => d.Manager)
+                        .Include(d => d.Branch)
+                            .ThenInclude(b => b.Area)
+                        .ApplySearch(request.searchKey);
 
             if (request.BranchId.HasValue && request.BranchId.Value > 0)
             {
@@ -58,22 +85,22 @@ namespace TaskMangment.Infrastructure.Services
 
             var totalCount = await query.CountAsync();
 
-            query = query.OrderByDynamicSafe(request.SortColumn, request.SortDirection);
+                    query = query.OrderByDynamicSafe(request.SortColumn, request.SortDirection);
 
             var departments = await query
                 .Skip((request.PageIndex - 1) * request.PageSize)
                 .Take(request.PageSize)
                 .ToListAsync();
 
-            var deptIds = departments.Select(d => d.Id).ToList();
+                    var deptIds = departments.Select(d => d.Id).ToList();
 
-            var counts = await _employeeRepository.GetAll()
-                .Where(e => e.DepartmentId.HasValue && deptIds.Contains(e.DepartmentId.Value))
-                .GroupBy(e => e.DepartmentId.Value)
-                .Select(g => new { DepartmentId = g.Key, Count = g.Count() })
-                .ToListAsync();
+                    var counts = await _employeeRepository.GetAll()
+                        .Where(e => e.DepartmentId.HasValue && deptIds.Contains(e.DepartmentId.Value))
+                        .GroupBy(e => e.DepartmentId.Value)
+                        .Select(g => new { DepartmentId = g.Key, Count = g.Count() })
+                        .ToListAsync();
 
-            var countDict = counts.ToDictionary(x => x.DepartmentId, x => x.Count);
+                    var countDict = counts.ToDictionary(x => x.DepartmentId, x => x.Count);
 
             var dtos = departments.Select(d =>
             {
@@ -82,16 +109,13 @@ namespace TaskMangment.Infrastructure.Services
                 return dto;
             }).ToList();
 
-            var response = new PagedResponse<DepartmentGetDto>(
-                dtos,
-                totalCount,
-                request.PageIndex,
-                request.PageSize
+                    return new PagedResponse<DepartmentGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
+                },
+                TimeSpan.FromMinutes(5)
             );
 
             return ApiResponse<PagedResponse<DepartmentGetDto>>.Ok(response);
         }
-
 
         public async Task<ApiResponse<DepartmentGetDto>> GetByIdAsync(int id)
         {
@@ -134,7 +158,9 @@ namespace TaskMangment.Infrastructure.Services
 
             await _departmentRepository.AddAsync(department);
             await _departmentRepository.SaveChangesAsync();
-            await _cache.RemoveAsync("departments:");
+            //await _cache.RemoveAsync("departments:");
+            await _cacheInvalidator.InvalidateDepartmentsAsync();
+
 
             var fullDepartment = await _departmentRepository
       .GetAll(d => d.Id == department.Id)
@@ -171,7 +197,8 @@ namespace TaskMangment.Infrastructure.Services
 
             _mapper.Map(dto, department);
             await _departmentRepository.SaveChangesAsync();
-            await _cache.RemoveAsync("departments:");
+            //await _cache.RemoveAsync("departments:");
+            await _cacheInvalidator.InvalidateDepartmentsAsync();
 
             var fullDepartment = await _departmentRepository
                  .GetAll(d => d.Id == department.Id)
@@ -195,7 +222,8 @@ namespace TaskMangment.Infrastructure.Services
             department.ManagerEmployeeId = null;
 
             await _departmentRepository.SaveChangesAsync();
-            await _cache.RemoveAsync("departments:");
+            //await _cache.RemoveAsync("departments:");
+            await _cacheInvalidator.InvalidateDepartmentsAsync();
 
 
             return ApiResponse<bool>.Ok(true, "Department deleted successfully");

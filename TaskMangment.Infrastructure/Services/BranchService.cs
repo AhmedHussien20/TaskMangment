@@ -175,7 +175,7 @@ namespace TaskMangment.Infrastructure.Services
             await _managerBranchesRepo.AddAsync(managerBranch);
             await _managerBranchesRepo.SaveChangesAsync();
 
-            await _cache.RemoveAsync("branches:");
+            //await _cache.RemoveAsync("branches:");
 
             var branchFull = await _branchRepository.GetAll()
                 .Include(b => b.Manager)

@@ -17,7 +17,6 @@ namespace TaskMangment.Infrastructure.Persistence.Extensions
         {
             if (request.Direction.HasValue)
             {
-                // لو فيه TargetEmployeeId → فلتر عليه
                 if (request.TargetEmployeeId.HasValue)
                 {
                     var targetEmployeeId = request.TargetEmployeeId.Value;

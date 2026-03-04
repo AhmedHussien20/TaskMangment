@@ -18,6 +18,7 @@ using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
 using TaskMangment.Domain.Event;
+using TaskMangment.Infrastructure.Caching;
 using TaskMangment.Infrastructure.Persistence.Extensions;
 
 namespace TaskMangment.Infrastructure.Services
@@ -31,6 +32,8 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
         private readonly IDomainEventDispatcher _eventDispatcher;
+        private readonly ICacheInvalidator _cacheInvalidator;
+
 
 
         public TaskExtensionRequestService(
@@ -40,7 +43,8 @@ namespace TaskMangment.Infrastructure.Services
             IMapper mapper,
             ICachingService cache,
             IRepository<WorkTask> taskRepo,
-            IDomainEventDispatcher eventDispatcher)
+            IDomainEventDispatcher eventDispatcher,
+            ICacheInvalidator cacheInvalidator)
         {
             _requestRepo = requestRepo;
             _taskAssignmentRepo = taskAssignmentRepo;
@@ -49,49 +53,57 @@ namespace TaskMangment.Infrastructure.Services
             _cache = cache;
             _taskRepo = taskRepo;
             _eventDispatcher = eventDispatcher;
+            _cacheInvalidator = cacheInvalidator;
         }
 
+        private async Task<int> GetVersionAsync(string versionKey)
+        {
+            var v = await _cache.GetAsync<int>(versionKey);
+            if (v <= 0)
+            {
+                await _cache.SetAsync(versionKey, 1, TimeSpan.FromDays(30));
+                return 1;
+            }
+            return v;
+        }
         public async Task<ApiResponse<PagedResponse<TaskExtensionRequestListDto>>> GetAllAsync(TaskExtensionRequestRequest request)
         {
-            //string cacheKey = $"taskExtensionRequests:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}:{request.TaskId}";
-
-            //if (!request.BypassCache)
-            //{
-            //    var cached = await _cache.GetAsync<PagedResponse<TaskExtensionRequestListDto>>(cacheKey);
-            //    if (cached != null)
-            //        return ApiResponse<PagedResponse<TaskExtensionRequestListDto>>.Ok(cached);
-            //}
-
             var task = await _taskRepo.GetByIDAsync(request.TaskId);
             if (task == null)
                 throw new AppException(ErrorCodes.TaskNotFound, StatusCodes.Status404NotFound);
 
+            var version = await GetVersionAsync(CacheKeys.TaskExtensionRequestsVersion(request.TaskId));
+            var cacheKey = CacheKeys.TaskExtensionRequestsList(request.TaskId, request, version);
 
-            var query = _requestRepo.GetAll(c => c.TaskId == request.TaskId)
-                                                      .Include(r => r.RequestedBy)
-                                                     .Include(r => r.ReviewedBy)
+            var response = await _cache.GetOrSetAsync<PagedResponse<TaskExtensionRequestListDto>>(
+                cacheKey,
+                async () =>
+                {
+                    // ===== نفس كودك بدون تغيير =====
+                    var query = _requestRepo.GetAll(c => c.TaskId == request.TaskId)
+                        .Include(r => r.RequestedBy)
+                        .Include(r => r.ReviewedBy)
+                        .Include(r => r.TaskAssignment)
+                            .ThenInclude(a => a.Employee)
+                        .Include(r => r.TaskAssignment)
+                            .ThenInclude(a => a.Task)
+                        .ApplySearch(request.searchKey);
 
-                                                    .Include(r => r.TaskAssignment)
-                                                    .ThenInclude(a => a.Employee)
-                                                    .Include(r => r.TaskAssignment)
-                                                    .ThenInclude(a => a.Task)
+                    var totalCount = await query.CountAsync();
 
-                .ApplySearch(request.searchKey);
+                    query = query.OrderByDynamicSafe(request.SortColumn, request.SortDirection);
 
-            var totalCount = await query.CountAsync();
+                    var list = await query
+                        .Skip((request.PageIndex - 1) * request.PageSize)
+                        .Take(request.PageSize)
+                        .ToListAsync();
 
-            query = query.OrderByDynamicSafe(request.SortColumn, request.SortDirection);
+                    var dtos = _mapper.Map<ICollection<TaskExtensionRequestListDto>>(list);
 
-            var list = await query
-                .Skip((request.PageIndex - 1) * request.PageSize)
-                .Take(request.PageSize)
-                .ToListAsync();
-
-            var dtos = _mapper.Map<ICollection<TaskExtensionRequestListDto>>(list);
-
-            var response = new PagedResponse<TaskExtensionRequestListDto>(dtos, totalCount, request.PageIndex, request.PageSize);
-
-           // await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
+                    return new PagedResponse<TaskExtensionRequestListDto>(dtos, totalCount, request.PageIndex, request.PageSize);
+                },
+                TimeSpan.FromMinutes(10)
+            );
 
             return ApiResponse<PagedResponse<TaskExtensionRequestListDto>>.Ok(response);
         }
@@ -148,7 +160,8 @@ namespace TaskMangment.Infrastructure.Services
 
             await _requestRepo.AddAsync(request);
             await _requestRepo.SaveChangesAsync();
-            await _cache.RemoveAsync("taskExtensionRequests:");
+            //await _cache.RemoveAsync("taskExtensionRequests:");
+            await _cacheInvalidator.InvalidateTaskExtensionRequestsAsync(taskId);
 
 
             var assignedEmployeeIds = await _taskAssignmentRepo
@@ -261,7 +274,12 @@ namespace TaskMangment.Infrastructure.Services
             request.ReviewedAt = DateTime.UtcNow;
 
             await _requestRepo.SaveChangesAsync();
-            await _cache.RemoveAsync("taskExtensionRequests:");
+            //await _cache.RemoveAsync("taskExtensionRequests:");
+            await _cacheInvalidator.InvalidateTaskExtensionRequestsAsync(request.TaskId);
+            await _cacheInvalidator.InvalidateTasksAsync(task.CompanyId);
+
+            if (dto.Status == ExtensionRequestStatus.Approved)
+                await _cacheInvalidator.InvalidateDashboardAsync(task.CompanyId);
 
             var updatedRequest = await _requestRepo
                 .GetAll(r => r.Id == id)
