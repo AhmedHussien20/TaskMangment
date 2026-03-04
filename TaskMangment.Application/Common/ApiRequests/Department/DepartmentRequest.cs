@@ -9,6 +9,7 @@ namespace TaskMangment.Application.Common.ApiRequests.Department
 {
     public class DepartmentRequest : BaseApiRequest
     {
-    
+        public int? BranchId { get; set; }
+
     }
 }

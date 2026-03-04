@@ -50,11 +50,16 @@ namespace TaskMangment.Infrastructure.Services
                     .ThenInclude(b => b.Area)
                 .ApplySearch(request.searchKey);
 
+            if (request.BranchId.HasValue && request.BranchId.Value > 0)
+            {
+                query = query.Where(d => d.BranchId == request.BranchId.Value);
+            }
+
+
             var totalCount = await query.CountAsync();
 
             query = query.OrderByDynamicSafe(request.SortColumn, request.SortDirection);
 
-            // 1) Load paged departments
             var departments = await query
                 .Skip((request.PageIndex - 1) * request.PageSize)
                 .Take(request.PageSize)
@@ -70,7 +75,6 @@ namespace TaskMangment.Infrastructure.Services
 
             var countDict = counts.ToDictionary(x => x.DepartmentId, x => x.Count);
 
-            // 3) Map + set EmployeeCount
             var dtos = departments.Select(d =>
             {
                 var dto = _mapper.Map<DepartmentGetDto>(d);

@@ -2,10 +2,8 @@ import { Component, EventEmitter, Input, Output, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, MinLengthValidator, ReactiveFormsModule, Validators } from '@angular/forms';
 import { GenericFormComponent } from 'app/shared/components/generic-form/generic-form.component';
-
 import { EmployeeService } from 'app/core/services/employee.service';
 import { BranchService } from 'app/core/services/branch.service';
-
 import { ToastrService } from 'ngx-toastr';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { FormFieldConfig } from 'app/core/models/form-field-config';
@@ -187,9 +185,13 @@ export class EmployeeCreateUpdateComponent implements OnInit {
 
   ngOnInit() {
     this.initForm();
+    this.formGroup.get('branchId')!.valueChanges.subscribe(branchId => {
+  this.loadDepartments(Number(branchId));
+});
+
     this.listenToMobileCodeChange();
     this.loadBranches();
-    this.loadDepartments();
+    //this.loadDepartments();
     this.loadJobs();
     this.loadFunctionCodes();
     // this.loadRoles();
@@ -297,7 +299,7 @@ export class EmployeeCreateUpdateComponent implements OnInit {
       if (!res) return;
       const emp = res.data;
 
-      let mobileCode = '+966'; // default to Saudi code if not found
+      let mobileCode = '+966'; 
       let mobileNumber = emp.mobile || '';
 
       if (mobileNumber.startsWith('+966')) {
@@ -328,8 +330,11 @@ export class EmployeeCreateUpdateComponent implements OnInit {
         confirmPassword: '',
 
 
-      });
+}, { emitEvent: false });  
+    this.loadDepartments(emp.branchId, emp.departmentId);
+
     });
+    
   }
 
   loadBranches() {
@@ -364,38 +369,38 @@ export class EmployeeCreateUpdateComponent implements OnInit {
       }
     });
   }
-  loadDepartments() {
-    const req = {
-      searchKey: '',
-      pageIndex: 1,
-      pageSize: 500,
-      sortColumn: 'Id',
-      sortDirection: 'DESC'
-    };
+  loadDepartments(branchId: number, selectedDepartmentId?: number) {
 
-    this.deptService.getAll(req).subscribe(res => {
-      const list: { id: number; name: string }[] = res.data.data;
+  const req = {
+    searchKey: '',
+    pageIndex: 1,
+    pageSize: 300,
+    sortColumn: 'Id',
+    sortDirection: 'DESC',
+    branchId: branchId
+  };
 
-      const options = list.map(b => ({
-        label: b.name,
-        value: b.id
-      }));
+  this.deptService.getAll(req).subscribe(res => {
 
-      const field = this.formConfig.find(x => x.name === 'departmentId');
-      if (field) {
-        field.options = options;
-      }
+    const list: { id: number; name: string }[] = res.data.data;
 
-      if (this.isEdit && this.employeeId) {
-        const departmentId = this.formGroup.get('departmentId')?.value?.toString();
+    const options = list.map(d => ({
+      label: d.name,
+      value: d.id
+    }));
 
-        const selected = options.find(o => o.value === departmentId);
-        if (selected) {
-          this.formGroup.get('departmentId')?.setValue(selected.value);
-        }
-      }
-    });
-  }
+    const field = this.formConfig.find(x => x.name === 'departmentId');
+    if (field) {
+      field.options = options;
+    }
+
+    if (selectedDepartmentId) {
+      this.formGroup.get('departmentId')?.setValue(selectedDepartmentId);
+    } else {
+      this.formGroup.get('departmentId')?.setValue(null);
+    }
+  });
+}
   loadJobs() {
     const req = {
       searchKey: '',
