@@ -30,13 +30,9 @@ namespace TaskMangment.Infrastructure.Services
     public class TaskService: ITaskService
     {
         private readonly IRepository<WorkTask> _taskRepo;
-        private readonly IRepository<Employee> _employeeRepo;
-        private readonly IRepository<EmailQueue> _emailQueueRepo;
-        
+        private readonly IRepository<Employee> _employeeRepo;        
         private readonly IRepository<TaskAssignment> _assignmentRepo;
-        private readonly IRepository<AuditLog> _audit;
         private readonly IDomainEventDispatcher _eventDispatcher;
-
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
         private readonly AppDbContext _context;
@@ -60,11 +56,9 @@ namespace TaskMangment.Infrastructure.Services
              IRepository<WorkTask> taskRepo,
             IRepository<Employee> employeeRepo,
             IRepository<TaskAssignment> assignmentRepo,
-            IRepository<AuditLog> audit,
             IMapper mapper, 
             ICachingService cache ,
             IDomainEventDispatcher eventDispatcher,
-            IRepository<EmailQueue> emailQueueRepo,
             AppDbContext context,
             IRepository<TaskExtensionRequest> extensionRequestRepo,
            IRepository<TaskCloseRequest> closeRequestRepo,
@@ -81,11 +75,9 @@ namespace TaskMangment.Infrastructure.Services
             _taskRepo = taskRepo;
             _employeeRepo = employeeRepo;
             _assignmentRepo = assignmentRepo;
-            _audit = audit;
             _mapper = mapper;
             _cache = cache;
             _eventDispatcher = eventDispatcher;
-            _emailQueueRepo = emailQueueRepo;
             _context = context;
             _closeRequestRepo = closeRequestRepo;
             _extensionRequestRepo = extensionRequestRepo;

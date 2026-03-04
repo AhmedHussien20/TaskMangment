@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using MongoDB.Driver;
 using QuestPDF.Infrastructure;
 using Serilog; 
 using System.Globalization;
@@ -39,8 +40,15 @@ namespace TaskMangment.API
             builder .Services.Configure<WhatsAppSettings>(
                     builder.Configuration.GetSection("WhatsApp")
                 );
+            var mongoConnection = builder.Configuration.GetConnectionString("MongoConnection");
+            var mongoDbName = builder.Configuration["MongoDatabase"];
 
-
+            builder.Services.AddSingleton<IMongoClient>(sp => new MongoClient(mongoConnection));
+            builder.Services.AddScoped(sp =>
+            {
+                var client = sp.GetRequiredService<IMongoClient>();
+                return client.GetDatabase(mongoDbName); 
+            });
             //builder.Services.AddHangfire(config =>
             //config.UseSqlServerStorage(
             //builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -236,7 +244,7 @@ namespace TaskMangment.API
                         partitionKey: key,
                         factory: _ => new FixedWindowRateLimiterOptions
                         {
-                            PermitLimit = 15,
+                            PermitLimit = 100,
                             Window = TimeSpan.FromMinutes(1),
                             QueueLimit = 0
                         });

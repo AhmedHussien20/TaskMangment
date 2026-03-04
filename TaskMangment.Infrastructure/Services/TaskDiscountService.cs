@@ -146,7 +146,7 @@ namespace TaskMangment.Infrastructure.Services
 
                     return new PagedResponse<DiscountGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
                 },
-                TimeSpan.FromMinutes(10)
+                TimeSpan.FromMinutes(5)
             );
 
             return ApiResponse<PagedResponse<DiscountGetDto>>.Ok(response);

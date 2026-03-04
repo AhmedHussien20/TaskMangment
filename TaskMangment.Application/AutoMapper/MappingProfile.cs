@@ -237,8 +237,8 @@ namespace TaskMangment.Application.AutoMapper
                 .ForMember(dest => dest.EmployeeName, opt => opt.MapFrom(src => src.Employee.FullName))
                 .ForMember(dest => dest.TaskTitle, opt => opt.MapFrom(src => src.Task != null ? src.Task.Title : null));
 
-            CreateMap<AuditLog,AuditLogDTO>()
-                .ForMember(dest => dest.ChangedBy, opt => opt.MapFrom(src => src.ChangedBy != null ? src.ChangedBy : "System"));
+            //CreateMap<AuditLog,AuditLogDTO>()
+            //    .ForMember(dest => dest.ChangedBy, opt => opt.MapFrom(src => src.ChangedBy != null ? src.ChangedBy : "System"));
              
             CreateMap<RoleAddEditDto, Role>();
             //CreateMap<Role, RoleWithPermissionsDto>()

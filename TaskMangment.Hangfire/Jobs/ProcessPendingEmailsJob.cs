@@ -1,7 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TaskMangment.Application.DTOs.ReportsDTO;
+using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Domain.Entities;
+using TaskMangment.Domain.Entities.MongoDB_Entities;
 using TaskMangment.Infrastructure.DataContext;
 
 namespace TaskMangment.Hangfire.Jobs
@@ -9,26 +11,34 @@ namespace TaskMangment.Hangfire.Jobs
 
     public class ProcessPendingEmailsJob
     {
+        private readonly IMongoRepository<EmailQueueMongo> _emailRepo;
         private readonly AppDbContext _db;
         private readonly IEmailService _emailService;
         private readonly IEmailTemplateRenderer _renderer;
         private readonly IOfferSendService _offerPdfService;
 
 
-        public ProcessPendingEmailsJob(AppDbContext db, IEmailService emailService, IEmailTemplateRenderer renderer, IOfferSendService offerPdfService)
+        public ProcessPendingEmailsJob(AppDbContext db, IEmailService emailService, IEmailTemplateRenderer renderer, IOfferSendService offerPdfService,
+            IMongoRepository<EmailQueueMongo> emailRepo)
         {
             _db = db;
             _emailService = emailService;
             _renderer = renderer;
             _offerPdfService = offerPdfService;
+            _emailRepo = emailRepo;
         }
 
         public async Task ExecuteAsync()
         {
-            var emails = await _db.EmailQueue
-                .Where(x => x.Status == EmailStatus.Pending && x.ScheduledAt <= DateTime.UtcNow)
-                .Take(50)
-                .ToListAsync();
+            //var emails = await _db.EmailQueue
+            //    .Where(x => x.Status == EmailStatus.Pending && x.ScheduledAt <= DateTime.UtcNow)
+            //    .Take(50)
+            //    .ToListAsync();
+            var emails = (await _emailRepo.FindAsync(x =>
+    x.Status == EmailStatus.Pending &&
+    x.ScheduledAt <= DateTime.UtcNow))
+    .Take(50)
+    .ToList();
 
             foreach (var email in emails)
             {
@@ -54,12 +64,14 @@ namespace TaskMangment.Hangfire.Jobs
                     email.RetryCount++;
                     email.ErrorMessage = ex.Message;
                 }
+                await _emailRepo.UpdateAsync(email.Id, email);
+
             }
 
-            await _db.SaveChangesAsync();
+            //await _db.SaveChangesAsync();
         }
 
-        private async Task SendSingleQueuedEmailAsync(EmailQueue email)
+        private async Task SendSingleQueuedEmailAsync(EmailQueueMongo email)
         {
             if (email.TemplateKey == "DeveloperErrorAlert")
             {
@@ -100,7 +112,7 @@ namespace TaskMangment.Hangfire.Jobs
             }
         }
 
-        private async Task SendToAllEmployeesAsync(EmailQueue batchEmail)
+        private async Task SendToAllEmployeesAsync(EmailQueueMongo batchEmail)
         {
             const int chunkSize = 200;
             int lastId = 0;

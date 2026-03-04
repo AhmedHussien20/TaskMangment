@@ -355,33 +355,47 @@ namespace TaskMangment.Infrastructure.Services
         // ==========================
         // Deductions
         // ==========================
-        public async Task<ApiResponse<List<DeductionDto>>> GetDeductionsAsync(int employeeId, PeriodDto? period = null)
+        public async Task<ApiResponse<List<DeductionDto>>> GetDeductionsAsync(
+    int employeeId,
+    PeriodDto? period = null)
         {
             var companyId = await GetCompanyIdAsync(employeeId);
 
-            var version = await GetVersionAsync(CacheKeys.EmployeeDashboardVersion(companyId));
+            var version = await GetVersionAsync(
+                CacheKeys.EmployeeDashboardVersion(companyId)
+            );
+
             var range = PeriodHelper.GetRange(period);
             var periodKey = BuildPeriodKey(period);
 
-            var cacheKey = CacheKeys.EmployeeDeductions(companyId, employeeId, periodKey, version);
+            var cacheKey = CacheKeys.EmployeeDeductions(
+                companyId,
+                employeeId,
+                periodKey,
+                version
+            );
 
-            var deductions = await _deductionRepo
-                .GetAll(d =>
-                    d.EmployeeId == employeeId &&
-                    d.ViolationDate >= range.Start && d.ViolationDate <= range.End)
-                .Select(d => new DeductionDto
+            var result = await _cache.GetOrSetAsync<List<DeductionDto>>(
+                cacheKey,
+                async () =>
                 {
-                    Id = d.Id,
-                    Amount = d.Amount,
-                    Reason = d.Reason,
-                    TaskTitle = d.Task.Title,
-                    CreatedDate = d.ViolationDate,
-                    AutoDiscount = d.AutoDiscount,
-                    DiscountType = d.discountType
-
-                })
-                .OrderByDescending(d => d.CreatedDate)
-                .ToListAsync();
+                    var list = await _deductionRepo
+                        .GetAll(d =>
+                            d.EmployeeId == employeeId &&
+                            d.ViolationDate >= range.Start &&
+                            d.ViolationDate <= range.End)
+                        .Select(d => new DeductionDto
+                        {
+                            Id = d.Id,
+                            Amount = d.Amount,
+                            Reason = d.Reason,
+                            TaskTitle = d.Task.Title,
+                            CreatedDate = d.ViolationDate,
+                            AutoDiscount = d.AutoDiscount,
+                            DiscountType = d.discountType
+                        })
+                        .OrderByDescending(d => d.CreatedDate)
+                        .ToListAsync();
 
                     foreach (var item in list)
                     {
@@ -394,7 +408,7 @@ namespace TaskMangment.Infrastructure.Services
                 TimeSpan.FromMinutes(2)
             );
 
-            return ApiResponse<List<DeductionDto>>.Ok(deductions);
+            return ApiResponse<List<DeductionDto>>.Ok(result);
         }
 
         // ==========================

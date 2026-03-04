@@ -20,6 +20,8 @@ namespace TaskMangment.Infrastructure.Caching
 
         #region Dashboard cache keys
         public static string DashboardVersion(int companyId) => $"v:dashboard:{companyId}";
+        public static string BranchesForFilter(int companyId, int roleLevel, int employeeId)
+    => $"dashboard:branches:company{companyId}:role{roleLevel}:emp{employeeId}";
 
         public static string AdminDashboard(int companyId, int roleLevel, int? employeeId, int? branchId, string periodKey, int version)
             => $"dashboard:admin:{companyId}:v{version}:role{roleLevel}:emp{employeeId ?? 0}:branch{branchId ?? 0}:{periodKey}";
@@ -27,11 +29,11 @@ namespace TaskMangment.Infrastructure.Caching
         public static string AdminKpisExtended(int companyId, int roleLevel, int? employeeId, int? branchId, string periodKey, int version)
             => $"dashboard:kpisx:{companyId}:v{version}:role{roleLevel}:emp{employeeId ?? 0}:branch{branchId ?? 0}:{periodKey}";
 
-        public static string AdminDiscounts(int companyId, int roleLevel, int? employeeId, int? branchId, string periodKey, int version)
-            => $"dashboard:discounts:{companyId}:v{version}:role{roleLevel}:emp{employeeId ?? 0}:branch{branchId ?? 0}:{periodKey}";
+        public static string AdminDiscounts(int companyId, int roleLevel, int? employeeId, int? branchId, string periodKey, int version, int pageIndex,int pageSize)
+            => $"dashboard:discounts:{companyId}:v{version}:role{roleLevel}:emp{employeeId ?? 0}:branch{branchId ?? 0}:{periodKey}:p{pageIndex}:s{pageSize}";
 
-        public static string AdminHighPriority(int companyId, int roleLevel, int? employeeId, int? branchId, int version)
-            => $"dashboard:highprio:{companyId}:v{version}:role{roleLevel}:emp{employeeId ?? 0}:branch{branchId ?? 0}";
+        public static string AdminHighPriority(int companyId, int roleLevel, int? employeeId, int? branchId, int version, int pageIndex,int pageSize)
+            => $"dashboard:highprio:{companyId}:v{version}:role{roleLevel}:emp{employeeId ?? 0}:branch{branchId ?? 0}:p{pageIndex}:s{pageSize}";
         public static string UpdatedTodayTasks(int companyId,int roleLevel,int? employeeId,int? branchId,string periodKey,int pageIndex,int pageSize,int version)
             => $"dashboard:todayupd:{companyId}:v{version}:role{roleLevel}:emp{employeeId ?? 0}:branch{branchId ?? 0}:{periodKey}:p{pageIndex}:s{pageSize}";
 
@@ -42,8 +44,10 @@ namespace TaskMangment.Infrastructure.Caching
             int companyId, int roleLevel, int? employeeId, int? branchId, string periodKey, int version)
             => $"dashboard:pendingClose:{companyId}:v{version}:role{roleLevel}:emp{employeeId ?? 0}:branch{branchId ?? 0}:{periodKey}";
 
-        public static string TasksByStatus(int companyId, string status, int roleLevel, int? employeeId, int? branchId, string periodKey, int version)
-            => $"dashboard:tasksByStatus:{companyId}:v{version}:status{status}:role{roleLevel}:emp{employeeId ?? 0}:branch{branchId ?? 0}:{periodKey}";
+        public static string TasksByStatus(int companyId,string status,int roleLevel,int? employeeId,int? branchId,string periodKey,int version,int pageIndex,int pageSize)
+        {
+            return $"dashboard:tasksByStatus:{companyId}:v{version}:status{status}:role{roleLevel}:emp{employeeId ?? 0}:branch{branchId ?? 0}:{periodKey}:p{pageIndex}:s{pageSize}";
+        }
 
         public static string CompletedTasksDetails(int companyId, int roleLevel, int? employeeId, int? branchId, string periodKey, int version)
             => $"dashboard:completedDetails:{companyId}:v{version}:role{roleLevel}:emp{employeeId ?? 0}:branch{branchId ?? 0}:{periodKey}";
@@ -170,10 +174,11 @@ namespace TaskMangment.Infrastructure.Caching
 
 
         #region Departments cache keys (by branch)
-        public static string DepartmentsVersion() => $"v:departments";
-
+        public static string DepartmentsVersion(int? branchId)
+            => $"v:departments:branch:{branchId ?? 0}";
         public static string DepartmentsList(DepartmentRequest request, int version)
             => $"departments:list:v{version}:" +
+               $"branch{request.BranchId ?? 0}:" +
                $"p{request.PageIndex}:s{request.PageSize}:" +
                $"sort{request.SortColumn}:{request.SortDirection}:" +
                $"q{request.searchKey}";

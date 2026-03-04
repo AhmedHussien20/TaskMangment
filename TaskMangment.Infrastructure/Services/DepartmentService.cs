@@ -63,14 +63,14 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<PagedResponse<DepartmentGetDto>>> GetAllAsync(DepartmentRequest request)
         {
-            var version = await GetVersionAsync(CacheKeys.DepartmentsVersion());
+            var version = await GetVersionAsync(CacheKeys.DepartmentsVersion(request.BranchId));
+
             var cacheKey = CacheKeys.DepartmentsList(request, version);
 
             var response = await _cache.GetOrSetAsync<PagedResponse<DepartmentGetDto>>(
                 cacheKey,
                 async () =>
                 {
-                    // ===== نفس كودك بالظبط =====
                     var query = _departmentRepository.GetAll()
                         .Include(d => d.Manager)
                         .Include(d => d.Branch)
@@ -159,7 +159,7 @@ namespace TaskMangment.Infrastructure.Services
             await _departmentRepository.AddAsync(department);
             await _departmentRepository.SaveChangesAsync();
             //await _cache.RemoveAsync("departments:");
-            await _cacheInvalidator.InvalidateDepartmentsAsync();
+            await _cacheInvalidator.InvalidateDepartmentsAsync(null);
 
 
             var fullDepartment = await _departmentRepository
@@ -198,7 +198,7 @@ namespace TaskMangment.Infrastructure.Services
             _mapper.Map(dto, department);
             await _departmentRepository.SaveChangesAsync();
             //await _cache.RemoveAsync("departments:");
-            await _cacheInvalidator.InvalidateDepartmentsAsync();
+            await _cacheInvalidator.InvalidateDepartmentsAsync(null);
 
             var fullDepartment = await _departmentRepository
                  .GetAll(d => d.Id == department.Id)
@@ -223,7 +223,7 @@ namespace TaskMangment.Infrastructure.Services
 
             await _departmentRepository.SaveChangesAsync();
             //await _cache.RemoveAsync("departments:");
-            await _cacheInvalidator.InvalidateDepartmentsAsync();
+            await _cacheInvalidator.InvalidateDepartmentsAsync(null);
 
 
             return ApiResponse<bool>.Ok(true, "Department deleted successfully");

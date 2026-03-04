@@ -41,8 +41,8 @@ namespace TaskMangment.Infrastructure.Caching
         public Task InvalidateEmployeeDashboardAsync(int employeeId)
             => BumpAsync(CacheKeys.EmployeeDashboardVersion(employeeId));
 
-        public Task InvalidateDepartmentsAsync() 
-            => BumpAsync(CacheKeys.DepartmentsVersion());
+        public Task InvalidateDepartmentsAsync(int? branchId)
+    => BumpAsync(CacheKeys.DepartmentsVersion(branchId));
 
         public Task InvalidateTaskCommentsAsync(int taskId)
             => BumpAsync(CacheKeys.TaskCommentsVersion(taskId));

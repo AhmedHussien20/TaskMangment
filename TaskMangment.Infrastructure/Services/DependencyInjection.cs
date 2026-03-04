@@ -46,6 +46,7 @@ namespace TaskMangment.Infrastructure.Services
             services.AddScoped<ITaskService, TaskService>();
             //services.AddSingleton<ICachingService, NoCacheService>();
 
+
             services.AddScoped<IDepartmentService, DepartmentService>();
             services.AddScoped<ICourseService, CourseService>();
             services.AddScoped<IStudentService, StudentService>();
@@ -149,6 +150,7 @@ namespace TaskMangment.Infrastructure.Services
             services.AddScoped<IWhatsAppService, WhatsAppService>();
 
             services.AddScoped<ICacheInvalidator, CacheInvalidator>();
+            services.AddScoped(typeof(IMongoRepository<>), typeof(MongoRepository<>));
 
 
             return services;

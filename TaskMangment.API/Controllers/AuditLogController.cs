@@ -11,46 +11,46 @@ namespace TaskMangment.API.Controllers
     {
         private readonly IAuditLogService _service;
 
-        public AuditLogController(IAuditLogService service)
-        {
-            _service = service;
-        }
+        //public AuditLogController(IAuditLogService service)
+        //{
+        //    _service = service;
+        //}
 
-        [HttpGet]
-        public async Task<IActionResult> GetAll([FromQuery] AuditLogRequest request)
-        {
-            var result = await _service.GetAllAsync(request);
+        //[HttpGet]
+        //public async Task<IActionResult> GetAll([FromQuery] AuditLogRequest request)
+        //{
+        //    var result = await _service.GetAllAsync(request);
 
-            if (!result.Success)
-                return Fail(result.Message!);
+        //    if (!result.Success)
+        //        return Fail(result.Message!);
 
-            // Optional: Cache header
-            SetCacheHeader(600);
+        //    // Optional: Cache header
+        //    SetCacheHeader(600);
 
-            return Success(result.Data);
-        }
+        //    return Success(result.Data);
+        //}
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
-        {
-            var result = await _service.GetByIdAsync(id);
+        //[HttpGet("{id}")]
+        //public async Task<IActionResult> GetById(int id)
+        //{
+        //    var result = await _service.GetByIdAsync(id);
 
-            if (!result.Success)
-                return Fail(result.Message!, 404);
+        //    if (!result.Success)
+        //        return Fail(result.Message!, 404);
 
-            return Success(result.Data);
-        }
+        //    return Success(result.Data);
+        //}
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
-        {
-            var result = await _service.DeleteAsync(id);
+        //[HttpDelete("{id}")]
+        //public async Task<IActionResult> Delete(int id)
+        //{
+        //    var result = await _service.DeleteAsync(id);
 
-            if (!result.Success)
-                return Fail(result.Message, 404);
+        //    if (!result.Success)
+        //        return Fail(result.Message, 404);
 
-            return Success(true, "Employee deleted successfully");
-        }
+        //    return Success(true, "Employee deleted successfully");
+        //}
 
     }
 }

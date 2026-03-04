@@ -164,6 +164,8 @@ namespace TaskMangment.Infrastructure.Services
             await _branchRepository.SaveChangesAsync();
 
             await _cacheInvalidator.InvalidateBranchAsync(CampanyId);
+            await _cacheInvalidator.InvalidateDashboardAsync(CampanyId);
+
 
             var managerBranch = new ManagerBranches
             {
@@ -295,6 +297,7 @@ namespace TaskMangment.Infrastructure.Services
                 foreach (var mb in managerBranches)
                 {
                     mb.IsActive = false;
+
                 }
     
                 await _managerBranchesRepo.SaveChangesAsync();

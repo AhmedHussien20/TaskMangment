@@ -14,7 +14,7 @@ namespace TaskMangment.Application.Common.Interfaces
         Task InvalidateAreasAsync(int companyId);
         Task InvalidateBranchAsync(int companyId);
         Task InvalidateEmployeeDashboardAsync(int employeeId);
-        Task InvalidateDepartmentsAsync();
+        Task InvalidateDepartmentsAsync(int? branchId);
         Task InvalidateTaskCommentsAsync(int taskId);
         Task InvalidateTaskCloseRequestsAsync(int taskId);
         Task InvalidateTaskDiscountsAsync(int taskId);

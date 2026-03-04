@@ -3,6 +3,7 @@ using Hangfire.Dashboard;
 using Hangfire.SqlServer;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
+using MongoDB.Driver;
 using QuestPDF.Infrastructure;
 using System.Globalization;
 using TaskMangment.Application.Common;
@@ -11,6 +12,7 @@ using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Hangfire;
 using TaskMangment.Hangfire.Jobs;
 using TaskMangment.Infrastructure;
+using TaskMangment.Infrastructure.Caching;
 using TaskMangment.Infrastructure.DataContext;
 using TaskMangment.Infrastructure.Services;
 
@@ -34,6 +36,7 @@ builder.Services.AddScoped<ICurrentUserService, HangfireCurrentUserService>();
 builder.Services.AddScoped<IEmailTemplateRenderer, EmailTemplateRenderer>();
 builder.Services.AddScoped<IBlobStorageService, BlobStorageService>();
 builder.Services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
+builder.Services.AddScoped<ICachingService, NoCacheService>();
 
 
 builder.Services.AddLocalization();
@@ -45,6 +48,16 @@ builder.Services.AddLocalization();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection")));
+
+var mongoConnection = builder.Configuration.GetConnectionString("MongoConnection");
+var mongoDbName = builder.Configuration["MongoDatabase"];
+
+builder.Services.AddSingleton<IMongoClient>(sp => new MongoClient(mongoConnection));
+builder.Services.AddScoped(sp =>
+{
+    var client = sp.GetRequiredService<IMongoClient>();
+    return client.GetDatabase(mongoDbName);
+});
 
 QuestPDF.Settings.License = LicenseType.Community;
 
