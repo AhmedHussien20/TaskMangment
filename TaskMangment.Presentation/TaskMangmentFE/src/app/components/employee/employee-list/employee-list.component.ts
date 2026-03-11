@@ -61,7 +61,7 @@ export class EmployeeListComponent implements OnInit {
 
   searchCriteria: SearchCriteria = {
     searchKey: '',
-    branchId: null as any,
+branchId: null as number | null,
     pageIndex: this.page,
     pageSize: this.entries,
     sortColumn: 'Id',
@@ -114,24 +114,24 @@ export class EmployeeListComponent implements OnInit {
   }
 
 
-  loadBranches() {
-    const req = {
-      searchKey: '',
-      pageIndex: 1,
-      pageSize: 500,
-      sortColumn: 'Id',
-      sortDirection: 'DESC'
-    };
+ loadBranches() {
+  const req = {
+    searchKey: '',
+    pageIndex: 1,
+    pageSize: 500,
+    sortColumn: 'Id',
+    sortDirection: 'DESC'
+  };
 
-    this.branchService.getAll(req).subscribe(res => {
-      const list = res.data.data;
-      this.branchOptions = list.map((b: any) => ({ id: b.id, name: b.name }));
-    });
+  this.branchService.getAll(req).subscribe(res => {
+    const list = res.data.data;
 
-    this.extraFilters = {
-      branchId: this.branchOptions
-    };
-  }
+    this.branchOptions = list.map((b: any) => ({
+      id: b.id,
+      name: b.name
+    }));
+  });
+}
 
   onPageChange(page: number) {
     this.page = page;

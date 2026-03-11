@@ -78,6 +78,9 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
         public string Role { get; set; } = string.Empty;
         public string Status { get; set; } = "Active";
         public bool IsRead { get; set; }
+        public string? Email { get; set; } = string.Empty;
+        public string? Mobile {  get; set; }
+
 
     }
 

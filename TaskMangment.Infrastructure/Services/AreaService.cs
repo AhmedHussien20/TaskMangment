@@ -100,7 +100,7 @@ namespace TaskMangment.Infrastructure.Services
                     return new PagedResponse<AreaGetDto>(
                         dtoList, totalCount, request.PageIndex, request.PageSize);
                 },
-                TimeSpan.FromMinutes(5)
+                TimeSpan.FromMinutes(2)
             );
 
             return ApiResponse<PagedResponse<AreaGetDto>>.Ok(response);

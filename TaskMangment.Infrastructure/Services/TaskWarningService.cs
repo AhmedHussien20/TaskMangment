@@ -131,7 +131,7 @@ namespace TaskMangment.Infrastructure.Services
 
                     return new PagedResponse<WarningGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
                 },
-                TimeSpan.FromMinutes(10)
+                TimeSpan.FromMinutes(2)
             );
 
             return ApiResponse<PagedResponse<WarningGetDto>>.Ok(response);

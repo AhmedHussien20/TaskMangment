@@ -224,7 +224,7 @@ namespace TaskMangment.Infrastructure.Services
         {
             var companyId = await GetCompanyIdAsync(employeeId);
 
-            var version = await GetVersionAsync(CacheKeys.EmployeeDashboardVersion(companyId));
+            var version = await GetVersionAsync(CacheKeys.EmployeeDashboardVersion(employeeId));
             var cacheKey = CacheKeys.EmployeeTasksWithoutCommentsToday(companyId, employeeId, roleLevel, request, version);
 
             var result = await _cache.GetOrSetAsync<PagedResponse<TodayCommentTaskDto>>(
@@ -308,7 +308,7 @@ namespace TaskMangment.Infrastructure.Services
 
                     return new PagedResponse<TodayCommentTaskDto>(list, totalCount, request.PageIndex, request.PageSize);
                 },
-                TimeSpan.FromSeconds(45)
+                TimeSpan.FromMinutes(2)
             );
 
             return ApiResponse<PagedResponse<TodayCommentTaskDto>>.Ok(result);

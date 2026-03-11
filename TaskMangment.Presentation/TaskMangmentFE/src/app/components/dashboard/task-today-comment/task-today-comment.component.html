@@ -1,12 +1,14 @@
 <div class="col-12 col-lg-12">
   <div class="card custom-card overflow-hidden">
 
+    <div class="d-flex justify-content-end p-2">
+      <button class="btn btn-outline-primary btn-sm" (click)="refresh()"><i class="fa fa-refresh me-1"></i></button>
+    </div>
       <!-- LOADING -->
       <div *ngIf="isLoading" class="text-center my-3">
         <div class="spinner-border" role="status"></div>
       </div>
 
-      <!-- TABLE -->
       <div *ngIf="!isLoading">
         <app-generic-table
           [title]="title"

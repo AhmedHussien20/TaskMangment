@@ -38,7 +38,6 @@ export class EmployeeCreateUpdateComponent implements OnInit {
   activeitem = 'EMPLOYEE.CREATE';
 
   formGroup!: FormGroup;
-
   formConfig: FormFieldConfig[] = [
     {
       type: 'input',

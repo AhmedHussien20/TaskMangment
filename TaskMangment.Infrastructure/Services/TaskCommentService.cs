@@ -121,7 +121,7 @@ namespace TaskMangment.Infrastructure.Services
 
                     return new PagedResponse<TaskCommentGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
                 },
-                TimeSpan.FromMinutes(8)
+                TimeSpan.FromMinutes(2)
             );
 
             return ApiResponse<PagedResponse<TaskCommentGetDto>>.Ok(response);
@@ -225,6 +225,12 @@ namespace TaskMangment.Infrastructure.Services
                 }
 
                 await _cacheInvalidator.InvalidateTaskCommentsAsync(taskId);
+                await _cacheInvalidator.InvalidateTasksAsync(task.CompanyId);
+                await _cacheInvalidator.InvalidateDashboardAsync(task.CompanyId);
+
+                await _cacheInvalidator.InvalidateEmployeeDashboardAsync(employeeId);
+                await _cacheInvalidator.InvalidateEmployeeDashboardAsync(task.CreatedByEmployeeId.Value);
+
                 //await _cache.RemoveAsync("taskComments:");
                 await _uow.CommitAsync();
 

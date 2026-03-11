@@ -105,6 +105,7 @@ export class GenericTableComponent<T> implements OnDestroy,OnChanges {
   @Input() searchCriteria!: SearchCriteria<T>;
   @Input() labels: { [key: string]: string } = {};
   @Input() statusOptions: { id: any; name: string }[] = [];
+  @Input() branchOptions: { id: any; name: string }[] = [];
   // @Input() employeeOptions: { id: number; name: string }[] = [];
   // callback من الـ parent (زى Expiry)
   @Input() onSearch?: (criteria: SearchCriteria<T>) => void;
@@ -228,26 +229,30 @@ ngOnChanges(): void {
   }
 
   getDropdownOptions(key: string) {
-    switch (key) {
-      case 'statusId':
-        return this.statusOptions;
 
-      case 'isAssigned':
-        return this.statusOptions;
+  switch (key) {
 
-      default:
-        if (!this.extraOptionsCache[key]) {
-          const raw = this.extraFilterOptions?.[key] ?? [];
-          this.extraOptionsCache[key] = raw.map((x: any) => ({
-            id: x.id ?? x.value,
-            name: x.name ?? x.label
-          }));
-        }
-        return this.extraOptionsCache[key];
+    case 'branchId':
+      return this.branchOptions;
 
-    }
+    case 'statusId':
+      return this.statusOptions;
+
+    case 'isAssigned':
+      return this.statusOptions;
+
+    default:
+      if (!this.extraOptionsCache[key]) {
+        const raw = this.extraFilterOptions?.[key] ?? [];
+        this.extraOptionsCache[key] = raw.map((x: any) => ({
+          id: x.id ?? x.value,
+          name: x.name ?? x.label
+        }));
+      }
+      return this.extraOptionsCache[key];
   }
 
+}
   getSelectedEmployeeId(): number | undefined {
     const ids = (this.searchCriteria as any)?.['employeeIds'];
     if (Array.isArray(ids) && ids.length > 0) return Number(ids[0]);

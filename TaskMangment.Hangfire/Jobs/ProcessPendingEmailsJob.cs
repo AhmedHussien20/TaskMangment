@@ -39,7 +39,7 @@ namespace TaskMangment.Hangfire.Jobs
     x.ScheduledAt <= DateTime.UtcNow))
     .Take(50)
     .ToList();
-
+            Console.WriteLine("UTC Now: " + DateTime.UtcNow);
             foreach (var email in emails)
             {
                 try

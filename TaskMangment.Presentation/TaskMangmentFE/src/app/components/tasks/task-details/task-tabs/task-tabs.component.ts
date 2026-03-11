@@ -18,6 +18,7 @@ import { TaskCommentsComponent } from '../tabs/comments/task-comments/task-comme
 export class TaskTabsComponent {
 
   @Input() taskId!: number;
+  @Input() createdByMe: boolean = false;
   @Input() readonly = false;
 
   activeTab = 'basic';

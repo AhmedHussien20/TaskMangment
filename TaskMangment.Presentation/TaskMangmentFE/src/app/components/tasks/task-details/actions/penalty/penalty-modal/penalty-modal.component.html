@@ -10,10 +10,14 @@
     <!-- Employee Dropdown -->
     <div class="mb-3">
       <label class="form-label">{{ 'TASK.ASSIGNED_EMPLOYEES' | translate }}</label>
-      <select class="form-select" formControlName="selectedEmployeeId">
-        <option [ngValue]="null" disabled>{{ 'TASK.SELECT_EMPLOYEE' | translate }}</option>
-        <option *ngFor="let emp of employees" [ngValue]="emp.id">{{ emp.fullName }}</option>
-      </select>
+      <app-employee-ng-select
+  [options]="assignedEmployees"
+  [selectedEmployeeId]="form.controls['selectedEmployeeId'].value"
+  (selectedEmployeeIdChange)="form.controls['selectedEmployeeId'].setValue($event)"
+  [disabled]="false"
+  [showLabel]="false"
+></app-employee-ng-select>
+
       <div class="text-danger small mt-1" *ngIf="form.controls['selectedEmployeeId'].touched && form.controls['selectedEmployeeId'].invalid">
         {{ 'TASK.SELECT_EMPLOYEE' | translate }}
       </div>

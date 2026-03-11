@@ -140,7 +140,7 @@ namespace TaskMangment.Infrastructure.Services
                         .OrderBy(b => b.Name)
                         .ToListAsync();
                 },
-                TimeSpan.FromMinutes(5) // مدة الكاش، ممكن تغيريها
+                TimeSpan.FromMinutes(2)
             );
 
             return ApiResponse<List<BranchFilterDto>>.Ok(branches);
@@ -281,7 +281,7 @@ namespace TaskMangment.Infrastructure.Services
                         TopDelayedEmployees = topDelayedEmployees
                     };
                 },
-                TimeSpan.FromMinutes(1)
+                TimeSpan.FromMinutes(2)
             );
 
             return ApiResponse<AdminDashboardDto>.Ok(dto);
@@ -363,7 +363,7 @@ namespace TaskMangment.Infrastructure.Services
 
                     return new PagedResponse<UpdatedTodayTaskDto>(list, totalCount, request.PageIndex, request.PageSize);
                 },
-                TimeSpan.FromMinutes(5)
+                TimeSpan.FromMinutes(2)
                 );
 
             return ApiResponse<PagedResponse<UpdatedTodayTaskDto>>.Ok(cachedResult);
@@ -419,7 +419,7 @@ namespace TaskMangment.Infrastructure.Services
 
                     return list;
                 },
-                TimeSpan.FromSeconds(45)
+                TimeSpan.FromMinutes(2)
             );
 
             foreach (var item in result)
@@ -483,7 +483,7 @@ namespace TaskMangment.Infrastructure.Services
 
                     return list;
                 },
-                TimeSpan.FromSeconds(45)
+                TimeSpan.FromMinutes(2)
             );
 
             return ApiResponse<List<PendingCloseRequestTaskDto>>.Ok(result);
@@ -597,7 +597,7 @@ namespace TaskMangment.Infrastructure.Services
                         request.PageSize
                     );
                 },
-                TimeSpan.FromMinutes(5)
+                TimeSpan.FromMinutes(2)
             );
 
             return ApiResponse<PagedResponse<TaskStatusDto>>.Ok(result);
@@ -751,7 +751,7 @@ namespace TaskMangment.Infrastructure.Services
                         request.PageSize
                     );
                 },
-                TimeSpan.FromMinutes(5)
+                TimeSpan.FromMinutes(2)
             );
 
             return ApiResponse<PagedResponse<DiscountGetDto>>.Ok(result);

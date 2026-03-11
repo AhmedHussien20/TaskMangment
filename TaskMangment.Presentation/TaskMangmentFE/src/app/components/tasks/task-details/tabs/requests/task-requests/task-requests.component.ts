@@ -5,24 +5,28 @@ import { forkJoin } from 'rxjs';
 import { TaskExtensionRequestService } from 'app/core/services/task-extension-request.service';
 import { TaskCloseRequestService } from 'app/core/services/task-close-request.service';
 import { BaseResponse } from 'app/models/base.response.model';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslateModule, TranslateService} from '@ngx-translate/core';
 import { ExtensionRequestStatus, TaskExtensionRequestGet, TaskExtensionReviewDto } from 'app/core/models/task/task-extension-request';
 import { FormsModule } from '@angular/forms';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ToastrService } from 'ngx-toastr';
 import { CloseRequestStatus, TaskCloseRequestGet } from 'app/core/models/task/task-close-request';
 import { TaskService } from 'app/core/services/task.service';
+import { NgSelectModule } from '@ng-select/ng-select';
+import { DatePickerComponent } from 'app/components/date-picker/date-picker.component';
 
 
 @Component({
   selector: 'app-task-requests',
   standalone: true,
-  imports: [CommonModule, GenericTableComponent, TranslateModule, FormsModule],
+  imports: [CommonModule, GenericTableComponent, TranslateModule, FormsModule,NgSelectModule,DatePickerComponent],
   templateUrl: './task-requests.component.html'
 })
 export class TaskRequestsComponent implements OnInit, OnChanges, AfterViewInit {
 
   @Input() taskId!: number;
+  @Input() createdByMe: boolean = false;
+  canReview: boolean = false;
 
   isLoading = false;
   rows: any[] = [];
@@ -61,45 +65,71 @@ export class TaskRequestsComponent implements OnInit, OnChanges, AfterViewInit {
     { key: 'sender', label: 'TASK.REQUEST_SENDER' },
     { key: 'createdAt', label: 'TASK.DATE', type: 'date' },
     { key: 'comment', label: 'TASK.REQUEST_COMMENT' },
-    { key: 'response', label: 'TASK.REQUEST_REPLY' },
-    { key: 'responseDate',label: 'TASK.REQUEST_REPLY_DATE' , type: 'date'},
-    { key: 'review', label: 'TABLE.ACTIONS', type: 'icon-action', icon: 'bi bi-pencil-square' },
+{
+  key: 'response',
+  label: 'TASK.REQUEST_REPLY',
+  type: 'badge',
+  badgeMap: {
+    Pending: { text: 'TASK.REQUEST_STATUS_PENDING', class: 'bg-warning' },
+    Approved: { text: 'TASK.REQUEST_STATUS_APPROVED', class: 'bg-success' },
+    Rejected: { text: 'TASK.REQUEST_STATUS_REJECTED', class: 'bg-danger' },
+    Unknown: { text: 'TASK.REQUEST_STATUS_UNKNOWN', class: 'bg-dark' },
+  }
+},    { key: 'responseDate',label: 'TASK.REQUEST_REPLY_DATE' , type: 'date'},
 
   ];
 
   private initialized = false;
 
+ 
   constructor(
     private extensionService: TaskExtensionRequestService,
     private closeService: TaskCloseRequestService,
     private translate: TranslateService,
     private modalService: NgbModal,
     private toastr: ToastrService,
-    private taskService: TaskService
+    private taskService: TaskService,
 
   ) { }
 
-  ngOnInit(): void {
-    console.log('TaskRequestsComponent ngOnInit, taskId:', this.taskId);
-  }
+ extensionStatusOptions: { label: string; value: ExtensionRequestStatus }[] = [];
+closeStatusOptions: { label: string; value: CloseRequestStatus }[] = [];
 
+ngOnInit(): void {
+  this.canReview= this.createdByMe;
+  this.extensionStatusOptions = [
+    { label: this.translate.instant('TASK.STATUS_APPROVED'), value: ExtensionRequestStatus.Approved },
+    { label: this.translate.instant('TASK.STATUS_REJECTED'), value: ExtensionRequestStatus.Rejected },
+  ];
+
+  this.closeStatusOptions = [
+    { label: this.translate.instant('TASK.STATUS_APPROVED'), value: CloseRequestStatus.Approved },
+    { label: this.translate.instant('TASK.STATUS_REJECTED'), value: CloseRequestStatus.Rejected },
+  ];
+
+  console.log('CreatedByMe:', this.createdByMe);
+    if (this.createdByMe) {
+    this.columns.push({
+      key: 'review',
+      label: 'TABLE.ACTIONS',
+      type: 'icon-action',
+      icon: 'bi bi-pencil-square'
+    });
+  }
+}
   ngOnChanges(changes: SimpleChanges): void {
-    console.log('TaskRequestsComponent ngOnChanges, taskId:', this.taskId);
 
     if (changes['taskId'] && this.taskId && this.initialized) {
-      console.log('Task ID changed, reloading...');
       this.page = 1;
       this.loadRequests();
     }
   }
 
   ngAfterViewInit(): void {
-    console.log('TaskRequestsComponent ngAfterViewInit');
 
     setTimeout(() => {
       this.initialized = true;
       if (this.taskId) {
-        console.log('Loading requests after view init');
         this.loadRequests();
       }
     }, 0);
@@ -111,7 +141,6 @@ export class TaskRequestsComponent implements OnInit, OnChanges, AfterViewInit {
     return;
   }
 
-  console.log('Loading requests for taskId:', this.taskId);
   this.isLoading = true;
 
   this.taskService.getTaskRequests(this.taskId).subscribe({
@@ -123,16 +152,14 @@ export class TaskRequestsComponent implements OnInit, OnChanges, AfterViewInit {
         return;
       }
 
-      // Extension Requests
-     // Extension Requests
-// Extension Requests
+
 const extensionRows = res.data.extensionRequests.map((x: TaskExtensionRequestGet) => ({
   requestNo: x.id,
   type: 'extend',
   sender: x.requestedByName || '',
   createdAt: x.requestedAt,
   comment: x.reason || '',
-  response: this.translate.instant(this.getStatusText(x.extendRequestText)), 
+  response: x.extendRequestText || 'Unknown', 
   responseDate: x.reviewedAt || null
 }));
 
@@ -142,7 +169,7 @@ const closeRows = res.data.closeRequests.map((x: TaskCloseRequestGet) => ({
   sender: x.requestedByName || '',
   createdAt: x.requestedAt,
   comment: x.message || '',
-  response: this.translate.instant(this.getStatusText(x.closeRequestText)), // استخدم closeRequestText
+  response: x.closeRequestText || 'Unknown', 
   responseDate: x.reviewedAt || null
 }));
 
@@ -208,7 +235,7 @@ const closeRows = res.data.closeRequests.map((x: TaskCloseRequestGet) => ({
   this.requestType = requestType;
   this.reviewModel = { status: null };
   this.selectedCloseStatus = null;
-  this.modalService.open(modal, { size: 'lg', centered: true });
+  this.modalService.open(modal, { size: 'm', centered: true });
 }
 
 

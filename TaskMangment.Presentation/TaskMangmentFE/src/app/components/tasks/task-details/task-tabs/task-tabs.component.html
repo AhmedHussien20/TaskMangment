@@ -61,7 +61,7 @@
 <li ngbNavItem="requests">
   <a ngbNavLink>{{ 'TASK.REQUESTS_TAB' | translate }}</a>
   <ng-template ngbNavContent>
-    <app-task-requests [taskId]="taskId"></app-task-requests>
+    <app-task-requests [taskId]="taskId" [createdByMe]="createdByMe"></app-task-requests>
   </ng-template>
 </li>
 

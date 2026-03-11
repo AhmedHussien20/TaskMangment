@@ -82,7 +82,6 @@ namespace TaskMangment.Infrastructure.Services
                 cacheKey,
                 async () =>
                 {
-                    // ===== نفس كودك بدون تغيير =====
                     var query = _requestRepo.GetAll(c => c.TaskId == request.TaskId)
                         .Include(r => r.TaskAssignment)
                         .Include(r => r.RequestedBy)
@@ -102,7 +101,7 @@ namespace TaskMangment.Infrastructure.Services
 
                     return new PagedResponse<TaskCloseRequestListDto>(dtos, totalCount, request.PageIndex, request.PageSize);
                 },
-                TimeSpan.FromMinutes(10)
+                TimeSpan.FromMinutes(2)
             );
 
             return ApiResponse<PagedResponse<TaskCloseRequestListDto>>.Ok(response);
@@ -218,6 +217,14 @@ namespace TaskMangment.Infrastructure.Services
             if (request.Status != CloseRequestStatus.Pending)
                 throw new AppException(ErrorCodes.AlreadyReviewed, StatusCodes.Status400BadRequest);
 
+            var taskAssignments = await _taskAssignmentRepo
+                    .GetAll(a => a.TaskId == task.Id && a.IsActive)
+                    .ToListAsync();
+
+            var assignedEmployeeIds = taskAssignments
+                    .Select(a => a.EmployeeId)
+                    .ToList();
+
             if (status == CloseRequestStatus.Approved)
             {
 
@@ -235,16 +242,12 @@ namespace TaskMangment.Infrastructure.Services
                 task.ClosedByUserId = reviewerId;
                 task.CloseReason = CloseReason.Manual;
 
-                var taskAssignments = await _taskAssignmentRepo
-                    .GetAll(a => a.TaskId == task.Id && a.IsActive)
-                    .ToListAsync();
+                
 
                 foreach (var assignment in taskAssignments)
                     assignment.IsClosed = true;
 
-                var assignedEmployeeIds = taskAssignments
-                    .Select(a => a.EmployeeId)
-                    .ToList();
+                
 
                 if (task.AssignedByEmployeeId.HasValue &&!assignedEmployeeIds.Contains(task.AssignedByEmployeeId.Value))
                 {
@@ -274,7 +277,14 @@ namespace TaskMangment.Infrastructure.Services
             await _cacheInvalidator.InvalidateTaskCloseRequestsAsync(request.TaskId);
             await _cacheInvalidator.InvalidateTasksAsync(task.CompanyId);
             if (request.Status == CloseRequestStatus.Approved)
+            {
                 await _cacheInvalidator.InvalidateDashboardAsync(task.CompanyId);
+                foreach(var empId in assignedEmployeeIds)
+                {
+                    await _cacheInvalidator.InvalidateEmployeeDashboardAsync(empId);
+                }
+            }
+
             //await _cache.RemoveAsync("taskCloseRequests:");
 
             var updatedRequest = await _requestRepo

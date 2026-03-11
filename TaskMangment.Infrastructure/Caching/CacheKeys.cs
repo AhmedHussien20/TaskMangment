@@ -107,6 +107,7 @@ namespace TaskMangment.Infrastructure.Caching
                 $"p{request.PageIndex}:s{request.PageSize}:" +
                 $"sc{Norm(request.SortColumn)}:{Norm(request.SortDirection)}:" +
                 $"q{Norm(request.searchKey)}:" +
+                $"b{IdKey(request.BranchId)}:" +
                 $"perm{perm}";
         }
 

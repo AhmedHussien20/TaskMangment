@@ -33,8 +33,7 @@ export class EmployeeNgSelectComponent implements OnInit {
 
   @Input() selectedEmployeeId?: number;
   @Output() selectedEmployeeIdChange = new EventEmitter<number | undefined>();
-
-  options: EmployeeOption[] = [];
+  @Input() options: EmployeeOption[] = [];
   isLoading = false;
 
   private currentTerm = '';

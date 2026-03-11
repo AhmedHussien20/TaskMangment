@@ -271,95 +271,82 @@ namespace TaskMangment.Infrastructure.Services
             await _uow.BeginTransactionAsync();
 
             try
-            {   
+            {
+                var tasksToAdd = new List<WorkTask>();
+
                 if (!dto.IsShared)
                 {
-                    int? firstTaskId = null;
-
-                    var tasks = new List<WorkTask>();
-
                     foreach (var empId in dto.AssignedEmployeeIds)
                     {
                         if (!await _employeeRepo.IsExistAsync(empId))
                             throw new AppException(ErrorCodes.NotFound, StatusCodes.Status400BadRequest);
 
-                        var t = _mapper.Map<WorkTask>(dto);
-                        t.CreatedByEmployeeId = createdUser;
-                        t.CompanyId = companyId;
-                        t.AssignedByEmployeeId = createdUser;
-                        t.AssignedBy = await _employeeRepo.GetByIDAsync(createdUser);
+                        var task = _mapper.Map<WorkTask>(dto);
+                        task.CreatedByEmployeeId = createdUser;
+                        task.CompanyId = companyId;
+                        task.AssignedByEmployeeId = createdUser;
+                        task.AssignedBy = await _employeeRepo.GetByIDAsync(createdUser);
 
-                        await _taskRepo.AddAsync(t);
-                        tasks.Add(t);
+                        tasksToAdd.Add(task);
                     }
+                }
+                else
+                {
+                    var task = _mapper.Map<WorkTask>(dto);
+                    task.CreatedByEmployeeId = createdUser;
+                    task.CompanyId = companyId;
+                    task.AssignedByEmployeeId = createdUser;
+                    task.AssignedBy = await _employeeRepo.GetByIDAsync(createdUser);
 
-                    await _taskRepo.SaveChangesAsync();
+                    tasksToAdd.Add(task);
+                }
 
-                    firstTaskId = tasks.FirstOrDefault()?.Id;
+                await _taskRepo.AddRangeAsync(tasksToAdd);
+                await _taskRepo.SaveChangesAsync();
 
-                    for (int i = 0; i < tasks.Count; i++)
+                for (int i = 0; i < tasksToAdd.Count; i++)
+                {
+                    var assignedEmployees = !dto.IsShared
+                        ? new List<int> { dto.AssignedEmployeeIds[i] }
+                        : dto.AssignedEmployeeIds;
+
+                    foreach (var empId in assignedEmployees)
                     {
+                        if (!await _employeeRepo.IsExistAsync(empId))
+                            throw new AppException(ErrorCodes.NotFound, StatusCodes.Status400BadRequest);
+
                         var assignment = new TaskAssignment
                         {
-                            TaskId = tasks[i].Id,
-                            EmployeeId = dto.AssignedEmployeeIds[i],
+                            TaskId = tasksToAdd[i].Id,
+                            EmployeeId = empId,
                             IsActive = true
                         };
 
                         await _assignmentRepo.AddAsync(assignment);
                     }
-
-                    await _assignmentRepo.SaveChangesAsync();
-
-                
-
-                    //await _cache.RemoveAsync("tasks:");
-
-
-                    for (int i = 0; i < tasks.Count; i++)
-                    {
-                        await _eventDispatcher.PublishAsync(
-                            new TaskAssignedEvent(tasks[i].Id, tasks[i].Title, new List<int> { dto.AssignedEmployeeIds[i] })
-                        );
-                    }
-
-                    var fullTask = await _taskRepo.GetAll(t => t.Id == firstTaskId.Value)
-                                 .Include(t => t.CreatedBy)
-                                 .Include(t => t.AssignedBy)
-                                 .Include(t => t.Assignments).ThenInclude(a => a.Employee)
-                                 .AsNoTracking()
-                                 .FirstOrDefaultAsync();
-
-                    var taskDto = _mapper.Map<TaskGetDto>(fullTask);
-
-                    await _uow.CommitAsync();
-                    return ApiResponse<TaskGetDto>.Ok(taskDto, "Task added successfully");
                 }
 
-                
-                var task = _mapper.Map<WorkTask>(dto);
-                task.CreatedByEmployeeId = createdUser;
-                task.CompanyId = companyId;
-                task.AssignedByEmployeeId = createdUser;
-                task.AssignedBy = await _employeeRepo.GetByIDAsync(createdUser);
-
-                await _taskRepo.AddAsync(task);
-                await _taskRepo.SaveChangesAsync();
-
-                foreach (var empId in dto.AssignedEmployeeIds)
-                {
-                    if (!await _employeeRepo.IsExistAsync(empId))
-                        throw new AppException(ErrorCodes.NotFound, StatusCodes.Status400BadRequest);
-
-                    var assignment = new TaskAssignment
-                    {
-                        TaskId = task.Id,
-                        EmployeeId = empId,
-                        IsActive = true
-                    };
-                    await _assignmentRepo.AddAsync(assignment);
-                }
                 await _assignmentRepo.SaveChangesAsync();
+
+                foreach (var task in tasksToAdd)
+                {
+                    var empIds = !dto.IsShared
+                        ? new List<int> { dto.AssignedEmployeeIds[tasksToAdd.IndexOf(task)] }
+                        : dto.AssignedEmployeeIds;
+
+                    await _eventDispatcher.PublishAsync(new TaskAssignedEvent(task.Id, task.Title, empIds));
+                }
+
+                var firstTaskId = tasksToAdd.First().Id;
+
+                var fullTask = await _taskRepo.GetAll(t => t.Id == firstTaskId)
+                    .Include(t => t.CreatedBy)
+                    .Include(t => t.AssignedBy)
+                    .Include(t => t.Assignments).ThenInclude(a => a.Employee)
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync();
+
+                var taskDto = _mapper.Map<TaskGetDto>(fullTask);
 
                 await _cacheInvalidator.InvalidateDashboardAsync(companyId);
                 await _cacheInvalidator.InvalidateTasksAsync(companyId);
@@ -368,19 +355,8 @@ namespace TaskMangment.Infrastructure.Services
                     await _cacheInvalidator.InvalidateEmployeeDashboardAsync(empId);
                 }
 
-                await _eventDispatcher.PublishAsync(new TaskAssignedEvent(task.Id, task.Title, dto.AssignedEmployeeIds));
-
-                var fullTaskShared = await _taskRepo.GetAll(t => t.Id == task.Id)
-                             .Include(t => t.CreatedBy)
-                             .Include(t => t.AssignedBy)
-                             .Include(t => t.Assignments).ThenInclude(a => a.Employee)
-                             .AsNoTracking()
-                             .FirstOrDefaultAsync();
-
-                var taskDtoShared = _mapper.Map<TaskGetDto>(fullTaskShared); ;
-
                 await _uow.CommitAsync();
-                return ApiResponse<TaskGetDto>.Ok(taskDtoShared, "Task added successfully");
+                return ApiResponse<TaskGetDto>.Ok(taskDto, "Task added successfully");
             }
             catch
             {
@@ -388,7 +364,6 @@ namespace TaskMangment.Infrastructure.Services
                 throw;
             }
         }
-
         public async Task<ApiResponse<TaskGetDto>> UpdateAsync(int id, TaskAddEditDto dto, int modifierUser)
         {
             var task = await _taskRepo.GetByIDAsync(id);
@@ -604,7 +579,10 @@ namespace TaskMangment.Infrastructure.Services
                 EmployeeName = a.Employee.FullName,
                 Role = string.Join(", ", a.Employee.EmployeeRoles.Select(er => er.Role.Name)),
                 Status = a.IsActive ? "Active" : "Inactive",
-                IsRead = false
+                IsRead = false,
+                Email= a.Employee.Email,
+                Mobile = a.Employee.Mobile
+
             }).ToList();
 
             var employeeIds = dtos.Select(x => x.EmployeeId).Distinct().ToList();

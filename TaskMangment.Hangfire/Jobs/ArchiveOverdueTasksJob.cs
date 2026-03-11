@@ -31,7 +31,7 @@ namespace TaskMangment.Hangfire.Jobs
                 .Where(t => t.DueDate < DateTime.UtcNow
                             && t.Status != WorkTaskStatus.Closed
                             && t.Status != WorkTaskStatus.Archived
-                            && t.Status != WorkTaskStatus.AutoClose)
+                            && t.Status != WorkTaskStatus.AutoClose && !t.IsDeleted)
                 .ToListAsync();
 
             if (!overdueTasks.Any()) return;

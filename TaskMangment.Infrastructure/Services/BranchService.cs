@@ -109,7 +109,7 @@ namespace TaskMangment.Infrastructure.Services
 
                     return new PagedResponse<BranchGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
                 },
-                TimeSpan.FromMinutes(5)
+                TimeSpan.FromMinutes(2)
             );
 
             return ApiResponse<PagedResponse<BranchGetDto>>.Ok(response);

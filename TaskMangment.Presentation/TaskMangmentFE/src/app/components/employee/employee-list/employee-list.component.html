@@ -7,14 +7,32 @@
   <div class="card-body pt-2">
  
 
-        <app-generic-table [title]="title" [breadcrumbs]="breadcrumbs" [activeitem]="activeitem" [labels]="labels"
-          [columns]="columns" [data]="rows" [entries]="entries" [page]="page" [totalItems]="totalItems"
-          [showAddButton]="canMakeChanges" [addButtonLabel]="'EMPLOYEE.ADD' | translate" (addClick)="openAdd(employeeModal)"
-          [showEditButton]="canMakeChanges" (edit)="openEdit($event, employeeModal)" [showFilters]="true"
-          [searchCriteria]="searchCriteria" [onSearch]="applyFilters.bind(this)" (pageChange)="onPageChange($event)"
-          (entriesChange)="onEntriesChange($event)" [showDeleteButton]="true" (delete)="confirmDelete($event)" 
-          [extraFilterOptions]="extraFilters">
-        </app-generic-table>
+        <app-generic-table
+  [title]="title"
+  [breadcrumbs]="breadcrumbs"
+  [activeitem]="activeitem"
+  [labels]="labels"
+  [columns]="columns"
+  [data]="rows"
+  [entries]="entries"
+  [page]="page"
+  [totalItems]="totalItems"
+  [showAddButton]="canMakeChanges"
+  [addButtonLabel]="'EMPLOYEE.ADD' | translate"
+  (addClick)="openAdd(employeeModal)"
+  [showEditButton]="canMakeChanges"
+  (edit)="openEdit($event, employeeModal)"
+  [showFilters]="true"
+  [searchCriteria]="searchCriteria"
+  [onSearch]="applyFilters.bind(this)"
+  (pageChange)="onPageChange($event)"
+  (entriesChange)="onEntriesChange($event)"
+  [showDeleteButton]="true"
+  (delete)="confirmDelete($event)"
+
+  [branchOptions]="branchOptions"  
+>
+</app-generic-table>
 
     
     </div>
