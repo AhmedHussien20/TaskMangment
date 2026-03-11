@@ -50,11 +50,10 @@ namespace TaskMangment.Infrastructure.Services
             bool canViewAllTasks = false;
             bool canViewCreatedTasks = false;
 
+            canViewAllTasks =
+                    await _permissionChecker.HasPermissionAsync(currentEmployeeId, "VIEW_ALL_TASKS");
             if (roleLevel < 60)
             {
-                canViewAllTasks =
-                    await _permissionChecker.HasPermissionAsync(currentEmployeeId, "VIEW_ALL_TASKS");
-
                 canViewCreatedTasks =
                     await _permissionChecker.HasPermissionAsync(currentEmployeeId, "CREATE_TASK");
             }
