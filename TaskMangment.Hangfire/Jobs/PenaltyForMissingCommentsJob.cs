@@ -31,7 +31,7 @@ namespace TaskMangment.Hangfire.Jobs
             var yesterday = today.AddDays(-1);
 
             // الجمعة مفيش خصومات
-            if (yesterday.DayOfWeek == DayOfWeek.Friday)
+            if (yesterday.DayOfWeek == DayOfWeek.Friday || yesterday.DayOfWeek == DayOfWeek.Saturday)
                 return;
 
             // أجازة رسمية
