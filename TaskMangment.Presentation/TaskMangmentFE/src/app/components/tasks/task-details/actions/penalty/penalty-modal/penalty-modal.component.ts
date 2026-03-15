@@ -8,12 +8,13 @@ import { TaskService } from 'app/core/services/task.service';
 import { DiscountAddEditDto } from 'app/core/models/task/task-penalty';
 import { SimpleEmployee } from 'app/core/models/task/task';
 import { ToastrService } from 'ngx-toastr';
-import { EmployeeNgSelectComponent } from 'app/components/employee-select/employee-select.component';
+import { EmployeeNgSelectComponent, EmployeeOption } from 'app/components/employee-select/employee-select.component';
+import { select } from '@ngrx/store';
 
 @Component({
   selector: 'app-penalty-modal',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslateModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslateModule,EmployeeNgSelectComponent],
   templateUrl: './penalty-modal.component.html'
 })
 export class PenaltyModalComponent implements OnInit {
@@ -30,8 +31,11 @@ export class PenaltyModalComponent implements OnInit {
     private penaltyService: TaskPenaltyService,
     private employeeService: TaskService,
     private toastr: ToastrService,
-    private translate: TranslateService
+    private translate: TranslateService,
+    private taskService: TaskService
   ) {}
+
+    assignedEmployees: EmployeeOption[] = [];
 
   ngOnInit(): void {
     this.form = this.fb.group({
@@ -40,8 +44,14 @@ export class PenaltyModalComponent implements OnInit {
       reason: ['', [Validators.required, Validators.minLength(5)]]
     });
 
-    this.loadEmployees();
-  }
+ this.taskService.getAssignedEmployees(this.taskId).subscribe(res => {
+    this.assignedEmployees = res.data.map(e => ({
+      value: e.employeeId,
+      label: e.employeeName,
+      email: e.email,
+      mobile: e.mobile
+    }));
+  });  }
 
   loadEmployees(): void {
     this.employeeService.getAssignedEmployees(this.taskId).subscribe(res => {

@@ -2,12 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NgbModal, NgbModalModule, NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
-
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
 import { GenericTableComponent, TableColumn } from '../../../shared/components/generic-table/generic-table.component';
-
 import { EmployeeService } from 'app/core/services/employee.service';
-
 import { SearchCriteria } from 'app/core/models/search-criteria.model';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Employee } from 'app/core/models/employee/employee';
@@ -39,12 +36,12 @@ export class EmployeeListComponent implements OnInit {
   title = 'EMPLOYEE.LIST_TITLE';
   activeitem = 'EMPLOYEE.LIST_TITLE';
   breadcrumbs = [
-  'MENU.HOME',
-  'MENU.EMPLOYEES',
-  'EMPLOYEE.LIST_TITLE'
-];
-branchOptions: { value: number; label: string }[] = [];
-
+    'MENU.HOME',
+    'MENU.EMPLOYEES',
+    'EMPLOYEE.LIST_TITLE'
+  ];
+  extraFilters: any = {};
+  branchOptions: { id: number; name: string }[] = [];
   // table columns
   columns: TableColumn[] = [
     { key: 'id', label: 'EMPLOYEE.ID' },
@@ -64,21 +61,21 @@ branchOptions: { value: number; label: string }[] = [];
 
   searchCriteria: SearchCriteria = {
     searchKey: '',
-    branchId: null as any,
+branchId: null as number | null,
     pageIndex: this.page,
     pageSize: this.entries,
     sortColumn: 'Id',
     sortDirection: 'DESC',
     filterTypes: {
       searchKey: 'text',
-       branchId: 'dropdown',
+      branchId: 'dropdown',
     }
   };
 
- labels = {
-  searchKey: 'EMPLOYEE.searchKey',
-  branchId: 'EMPLOYEE.BRANCH'
-};
+  labels = {
+    searchKey: 'EMPLOYEE.searchKey',
+    branchId: 'EMPLOYEE.BRANCH'
+  };
 
   isLoading = false;
 
@@ -96,8 +93,6 @@ branchOptions: { value: number; label: string }[] = [];
   ) { }
 
   ngOnInit(): void {
-    const roleLevel = this.auth.getRoleLevel();
-    this.canMakeChanges = roleLevel == 100; 
     this.loadData();
     this.loadBranches();
   }
@@ -117,27 +112,27 @@ branchOptions: { value: number; label: string }[] = [];
       }
     });
   }
-  
 
-  loadBranches() {
-    const req = {
-      searchKey: '',
-      pageIndex: 1,
-      pageSize: 500,
-      sortColumn: 'Id',
-      sortDirection: 'DESC'
-    };
 
-    this.branchService.getAll(req).subscribe(res => {
-      const list = res.data.data;
-      this.branchOptions = list.map((b: { id: number; name: string }) => ({
-  value: b.id,
-  label: b.name
-}));
+ loadBranches() {
+  const req = {
+    searchKey: '',
+    pageIndex: 1,
+    pageSize: 500,
+    sortColumn: 'Id',
+    sortDirection: 'DESC'
+  };
 
-    });
-  }
-        
+  this.branchService.getAll(req).subscribe(res => {
+    const list = res.data.data;
+
+    this.branchOptions = list.map((b: any) => ({
+      id: b.id,
+      name: b.name
+    }));
+  });
+}
+
   onPageChange(page: number) {
     this.page = page;
     this.searchCriteria.pageIndex = page;
@@ -192,7 +187,7 @@ branchOptions: { value: number; label: string }[] = [];
     this.loadData();
   }
 
-   confirmDelete(empId: number) {
+  confirmDelete(empId: number) {
     Swal.fire({
       title: this.translate.instant('COMMON.CONFIRM_DELETE_TITLE'),
       text: this.translate.instant('COMMON.CONFIRM_DELETE_TEXT'),
@@ -208,15 +203,15 @@ branchOptions: { value: number; label: string }[] = [];
       }
     });
   }
-  
+
   deleteEmployee(empId: number) {
     this.isLoading = true;
 
     this.employeeService.delete(empId).subscribe({
       next: () => {
-      this.toastr.success(this.translate.instant('COMMON.DELETE_SUCCESS'));
-  
-  
+        this.toastr.success(this.translate.instant('COMMON.DELETE_SUCCESS'));
+
+
         this.isLoading = false;
         this.loadData();
       },
@@ -225,5 +220,5 @@ branchOptions: { value: number; label: string }[] = [];
       }
     });
   }
-  
+
 }

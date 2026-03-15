@@ -8,11 +8,12 @@ import { TaskWarningService } from 'app/core/services/task-warning.service';
 import { WarningAddEditDto } from 'app/core/models/task/task-warning';
 import { SimpleEmployee } from 'app/core/models/task/task';
 import { ToastrService } from 'ngx-toastr';
+import { EmployeeNgSelectComponent, EmployeeOption } from 'app/components/employee-select/employee-select.component';
 
 @Component({
   selector: 'app-warning-modal',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslateModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslateModule,EmployeeNgSelectComponent],
   templateUrl: './warning-modal.component.html'
 })
 export class WarningModalComponent implements OnInit {
@@ -32,23 +33,23 @@ export class WarningModalComponent implements OnInit {
     private translate: TranslateService
   ) {}
 
-  ngOnInit(): void {
-    this.form = this.fb.group({
-      selectedEmployeeId: [null, Validators.required],
-      reason: ['', [Validators.required, Validators.minLength(5)]]
-    });
+  assignedEmployees: EmployeeOption[] = [];
 
-    this.loadEmployees();
-  }
 
-  loadEmployees(): void {
-    this.taskService.getAssignedEmployees(this.taskId).subscribe(res => {
-      this.employees = res.data.map(e => ({
-        id: e.employeeId,
-        fullName: e.employeeName
-      }));
-    });
-  }
+ngOnInit(): void {
+  this.form = this.fb.group({
+    selectedEmployeeId: [null, Validators.required],
+    reason: ['', [Validators.required, Validators.minLength(5)]]
+  });
+  this.taskService.getAssignedEmployees(this.taskId).subscribe(res => {
+    this.assignedEmployees = res.data.map(e => ({
+      value: e.employeeId,
+      label: e.employeeName,
+      email: e.email,
+      mobile: e.mobile,
+    }));
+  });
+}
 
   submit(): void {
     if (this.form.invalid || this.isSubmitting) return;

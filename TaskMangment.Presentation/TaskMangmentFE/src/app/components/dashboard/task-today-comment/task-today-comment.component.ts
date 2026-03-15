@@ -151,7 +151,7 @@ onEdit(id: number) {
     modalRef.componentInstance.taskId = id;
     modalRef.componentInstance.readonly = true;
   }
+  refresh() {
+  this.loadData();
 }
-
-
-
+}
