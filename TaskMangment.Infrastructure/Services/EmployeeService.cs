@@ -107,6 +107,10 @@ namespace TaskMangment.Infrastructure.Services
                  .ApplyAccessScope(access)
                 .AsNoTracking();
 
+            if (request.BranchId.HasValue)
+            {
+                empQuery = empQuery.Where(e => e.BranchId == request.BranchId.Value);
+            }
 
 
             if (!access.BranchIds.Any() && !access.FunctionCodes.Any() && roleLevel != 100 && string.IsNullOrWhiteSpace(request.PermissionCode))

@@ -46,7 +46,7 @@ ngOnInit(): void {
       value: e.employeeId,
       label: e.employeeName,
       email: e.email,
-      mobile: e.mobile,
+      mobile: e.mobile
     }));
   });
 }
