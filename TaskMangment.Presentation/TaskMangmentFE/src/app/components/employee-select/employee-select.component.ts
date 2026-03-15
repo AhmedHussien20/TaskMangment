@@ -52,7 +52,6 @@ export class EmployeeNgSelectComponent implements OnInit {
 
   ngOnInit(): void {
         this.canCreateTask = this.authService.hasPermission('CREATE_TASK');
-
   }
 
   onOpen(): void {

@@ -559,7 +559,9 @@ namespace TaskMangment.Infrastructure.Services
                 EmployeeName = a.Employee.FullName,
                 Role = string.Join(", ", a.Employee.EmployeeRoles.Select(er => er.Role.Name)),
                 Status = a.IsActive ? "Active" : "Inactive",
-                IsRead = false
+                IsRead = false,
+                Email = a.Employee.Email,
+                Mobile = a.Employee.Mobile
             }).ToList();
 
             var employeeIds = dtos.Select(x => x.EmployeeId).Distinct().ToList();

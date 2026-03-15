@@ -38,20 +38,23 @@ export class PenaltyModalComponent implements OnInit {
     assignedEmployees: EmployeeOption[] = [];
 
   ngOnInit(): void {
-    this.form = this.fb.group({
-      selectedEmployeeId: [null, Validators.required],
-      amount: [null, [Validators.required, Validators.min(1)]],
-      reason: ['', [Validators.required, Validators.minLength(5)]]
-    });
 
- this.taskService.getAssignedEmployees(this.taskId).subscribe(res => {
+    this.taskService.getAssignedEmployees(this.taskId).subscribe(res => {
     this.assignedEmployees = res.data.map(e => ({
       value: e.employeeId,
       label: e.employeeName,
       email: e.email,
       mobile: e.mobile
     }));
-  });  }
+  });
+  
+    this.form = this.fb.group({
+      selectedEmployeeId: [null, Validators.required],
+      amount: [null, [Validators.required, Validators.min(1)]],
+      reason: ['', [Validators.required, Validators.minLength(5)]]
+    });
+
+}
 
   loadEmployees(): void {
     this.employeeService.getAssignedEmployees(this.taskId).subscribe(res => {

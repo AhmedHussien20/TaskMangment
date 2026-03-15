@@ -37,10 +37,6 @@ export class WarningModalComponent implements OnInit {
 
 
 ngOnInit(): void {
-  this.form = this.fb.group({
-    selectedEmployeeId: [null, Validators.required],
-    reason: ['', [Validators.required, Validators.minLength(5)]]
-  });
   this.taskService.getAssignedEmployees(this.taskId).subscribe(res => {
     this.assignedEmployees = res.data.map(e => ({
       value: e.employeeId,
@@ -48,6 +44,11 @@ ngOnInit(): void {
       email: e.email,
       mobile: e.mobile
     }));
+  });
+
+   this.form = this.fb.group({
+    selectedEmployeeId: [null, Validators.required],
+    reason: ['', [Validators.required, Validators.minLength(5)]]
   });
 }
 

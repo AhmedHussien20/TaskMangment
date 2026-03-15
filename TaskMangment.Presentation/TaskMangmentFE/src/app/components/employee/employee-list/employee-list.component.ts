@@ -93,6 +93,8 @@ branchId: null as number | null,
   ) { }
 
   ngOnInit(): void {
+    const roleLevel = this.auth.getRoleLevel();
+    this.canMakeChanges = roleLevel >= 100; 
     this.loadData();
     this.loadBranches();
   }
