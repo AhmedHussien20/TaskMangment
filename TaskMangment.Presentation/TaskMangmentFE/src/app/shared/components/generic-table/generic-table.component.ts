@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output, OnDestroy, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, Output, OnDestroy, OnInit, OnChanges } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { NgbDropdownModule, NgbPaginationModule, NgbTooltipModule } from '@ng-bootstrap/ng-bootstrap';
 import { NgSelectModule } from '@ng-select/ng-select';
@@ -10,7 +10,9 @@ import { SearchCriteria } from 'app/core/models/search-criteria.model';
 import { Subject } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 
-
+type SelectOption =
+  | { id: any; name: string }
+  | { value: any; label: string };
 export type ColumnType =
   | 'text'
   | 'icon-action'
@@ -35,12 +37,12 @@ export interface TableColumn {
   badgeMap?: Record<string, BadgeConfig>;
   icon?: string;
   displayField?: string;
-  
+
 }
 export interface ExtraMenuItem {
-  label: string;     
-  value: any;      
-  iconClass?: string; 
+  label: string;
+  value: any;
+  iconClass?: string;
   divider?: boolean;
   disabled?: boolean;
 }
@@ -56,13 +58,13 @@ interface HasId {
   imports: [
     CommonModule,
     FormsModule,
-    NgbPaginationModule, TranslateModule, MyDatePipe, NgbTooltipModule, NgSelectModule,NgbDropdownModule,EmployeeNgSelectComponent
+    NgbPaginationModule, TranslateModule, MyDatePipe, NgbTooltipModule, NgSelectModule, NgbDropdownModule, EmployeeNgSelectComponent
   ],
   styleUrls: ['./generic-table.component.scss'],
-  
+
 
 })
-export class GenericTableComponent<T> implements OnDestroy{
+export class GenericTableComponent<T> implements OnDestroy,OnChanges {
   private filtersChanged$ = new Subject<void>();
   @Output() exportPdfClick = new EventEmitter<void>();
   @Output() exportExcelClick = new EventEmitter<void>();
@@ -97,13 +99,14 @@ export class GenericTableComponent<T> implements OnDestroy{
   @Input() addButtonLabel: string = '';
   @Input() disableActions: boolean = false;
   @Input() disableEditFn?: (row: T) => boolean;
-@Input() disableDeleteFn?: (row: T) => boolean;
-@Input() disableDetailsFn?: (row: T) => boolean;
+  @Input() disableDeleteFn?: (row: T) => boolean;
+  @Input() disableDetailsFn?: (row: T) => boolean;
 
   @Input() searchCriteria!: SearchCriteria<T>;
   @Input() labels: { [key: string]: string } = {};
   @Input() statusOptions: { id: any; name: string }[] = [];
- // @Input() employeeOptions: { id: number; name: string }[] = [];
+  @Input() branchOptions: { id: any; name: string }[] = [];
+  // @Input() employeeOptions: { id: number; name: string }[] = [];
   // callback من الـ parent (زى Expiry)
   @Input() onSearch?: (criteria: SearchCriteria<T>) => void;
   @Input() onAddClick?: () => void;
@@ -118,11 +121,11 @@ export class GenericTableComponent<T> implements OnDestroy{
   @Input() rowClickable: boolean = false;
   @Input() showEmployeeFilter: boolean = true;
   @Input() BranchFilter: boolean = false;
-  @Input() extraFilterOptions: Record<string, { value: any; label: string }[]> = {};
   @Output() cleared = new EventEmitter<void>();
 
-  // ---------- UI State ----------
-  loading: boolean = false;             
+  @Input() extraFilterOptions: Record<string, SelectOption[]> = {};
+
+  loading: boolean = false;
   filtersOpen: boolean = true;
 
   sortColumn: string = '';
@@ -147,13 +150,13 @@ export class GenericTableComponent<T> implements OnDestroy{
 
   @Input() showExtraButton: boolean = false;
 
-    @Input() showSecondButton: boolean = false;
-    @Input() disableSecondButton: boolean = false;  
-    @Input() secondButtonLabel: string = '';       
-   
+  @Input() showSecondButton: boolean = false;
+  @Input() disableSecondButton: boolean = false;
+  @Input() secondButtonLabel: string = '';
 
-    @Output() secondButtonClick = new EventEmitter<void>();
-onSecondButtonClick(): void {
+
+  @Output() secondButtonClick = new EventEmitter<void>();
+  onSecondButtonClick(): void {
     this.secondButtonClick.emit();
   }
   @Input() extraMenuItems: ExtraMenuItem[] = [];
@@ -161,6 +164,8 @@ onSecondButtonClick(): void {
   @Output() extraMenuSelect = new EventEmitter<ExtraMenuItem>();
 
   @Output() extraClick = new EventEmitter<void>();
+
+  private extraOptionsCache: Record<string, { id: any; name: string }[]> = {};
 
   onExtraMenuItemClick(item: ExtraMenuItem) {
     if (item?.disabled) return;
@@ -181,7 +186,9 @@ onFilterChange(key: string, value: any) {
 
   this.filtersChanged$.next();
 } */
-
+ngOnChanges(): void {
+  this.extraOptionsCache = {};
+}
   objectKeys(obj: any): string[] {
     return obj ? Object.keys(obj) : [];
   }
@@ -212,17 +219,22 @@ onFilterChange(key: string, value: any) {
       .substring(0, 2)
       .toUpperCase();
   }
-getExtraOptions(key: string) {
-  return this.extraFilterOptions?.[key] ?? [];
-}
+  getExtraOptions(key: string) {
+    return this.extraFilterOptions?.[key] ?? [];
+  }
 
-  getInputType(key: string): 'text' | 'dropdown' | 'date' | 'dateTime' | 'number'|'toggle' {
+  getInputType(key: string): 'text' | 'dropdown' | 'date' | 'dateTime' | 'number' | 'toggle' {
     const filterTypes = (this.searchCriteria?.filterTypes || {}) as any;
     return filterTypes[key] || 'text';
   }
 
- getDropdownOptions(key: string) {
+  getDropdownOptions(key: string) {
+
   switch (key) {
+
+    case 'branchId':
+      return this.branchOptions;
+
     case 'statusId':
       return this.statusOptions;
 
@@ -230,24 +242,27 @@ getExtraOptions(key: string) {
       return this.statusOptions;
 
     default:
-      return (this.extraFilterOptions?.[key] ?? []).map(x => ({
-        id: x.value,
-        name: x.label
-      }));
-      
+      if (!this.extraOptionsCache[key]) {
+        const raw = this.extraFilterOptions?.[key] ?? [];
+        this.extraOptionsCache[key] = raw.map((x: any) => ({
+          id: x.id ?? x.value,
+          name: x.name ?? x.label
+        }));
+      }
+      return this.extraOptionsCache[key];
   }
-}
 
-getSelectedEmployeeId(): number | undefined {
-  const ids = (this.searchCriteria as any)?.['employeeIds'];
-  if (Array.isArray(ids) && ids.length > 0) return Number(ids[0]);
-  return undefined;
 }
+  getSelectedEmployeeId(): number | undefined {
+    const ids = (this.searchCriteria as any)?.['employeeIds'];
+    if (Array.isArray(ids) && ids.length > 0) return Number(ids[0]);
+    return undefined;
+  }
 
-setSelectedEmployeeId(id: number | undefined) {
-  const value = (id === null || id === undefined) ? [] : [Number(id)];
-  this.onFilterChange('employeeIds', value);
-}
+  setSelectedEmployeeId(id: number | undefined) {
+    const value = (id === null || id === undefined) ? [] : [Number(id)];
+    this.onFilterChange('employeeIds', value);
+  }
 
   // ---------- Filters ----------
 
@@ -260,7 +275,7 @@ setSelectedEmployeeId(id: number | undefined) {
       });
   }
 
-   onFilterChange(key: string, value: any) {
+  onFilterChange(key: string, value: any) {
     (this.searchCriteria as any)[key] = value;
     this.filtersChanged$.next();
   }
@@ -275,8 +290,8 @@ setSelectedEmployeeId(id: number | undefined) {
   }
 
   isMultiSelect(key: string): boolean {
-    if (key === 'employeeIds') return true; 
-    if (key === 'statusId') return false; 
+    if (key === 'employeeIds') return true;
+    if (key === 'statusId') return false;
     return false;
   }
 
@@ -309,11 +324,11 @@ setSelectedEmployeeId(id: number | undefined) {
       if (type === 'text' || type === 'number') {
         (this.searchCriteria as any)[key] = '';
       } else if (type === 'dropdown' || type === 'radio') {
-  if (this.isMultiSelect(key)) {
-    (this.searchCriteria as any)[key] = [];
-  } else {
-    (this.searchCriteria as any)[key] = (key === 'statusId') ? 0 : null;
-  }
+        if (this.isMultiSelect(key)) {
+          (this.searchCriteria as any)[key] = [];
+        } else {
+          (this.searchCriteria as any)[key] = (key === 'statusId') ? 0 : null;
+        }
 
       } else if (type === 'date') {
         (this.searchCriteria as any)[key] = null;
@@ -437,34 +452,34 @@ setSelectedEmployeeId(id: number | undefined) {
     document.removeEventListener('mouseup', this.onMouseUp);
   }
 
-@Input() rowClickableCondition?: (item: T) => boolean;
+  @Input() rowClickableCondition?: (item: T) => boolean;
 
-onRowClick(item: T, event: MouseEvent) {
+  onRowClick(item: T, event: MouseEvent) {
 
-  if (!this.rowClickable) return;
+    if (!this.rowClickable) return;
 
-  const target = event.target as HTMLElement;
-  if (
-    target.closest('button') ||
-    target.closest('input') ||
-    target.closest('a')
-  ) {
-    return;
+    const target = event.target as HTMLElement;
+    if (
+      target.closest('button') ||
+      target.closest('input') ||
+      target.closest('a')
+    ) {
+      return;
+    }
+
+    if (this.rowClickableCondition && !this.rowClickableCondition(item)) {
+      return;
+    }
+
+    const id = this.getItemId(item);
+    if (id !== undefined && id !== null) {
+      this.edit.emit(id);
+
+    }
   }
 
-  if (this.rowClickableCondition && !this.rowClickableCondition(item)) {
-    return;
-  }
 
-  const id = this.getItemId(item);
-  if (id !== undefined && id !== null) {
-    this.edit.emit(id); 
-
-  }
-}
-
-
-@Input() disableCheckboxFn: ((row: T) => boolean) | null = null;
+  @Input() disableCheckboxFn: ((row: T) => boolean) | null = null;
 
   onCheckboxChange(item: T, event: Event) {
     const checked = (event.target as HTMLInputElement).checked;
@@ -481,18 +496,18 @@ onRowClick(item: T, event: MouseEvent) {
     const value = (item as any)[this.checkboxKey];
     return value === true;
   }
- exportPdf() {
+  exportPdf() {
     this.exportPdfClick.emit();
   }
   exportExcell() {
     this.exportExcelClick.emit();
   }
- 
-onToggleFilterClick(key: string, value: any) {
-  (this.searchCriteria as any)[key] = value;
-  (this.searchCriteria as any).pageIndex = 1;
-  this.applyFilters();
-}
+
+  onToggleFilterClick(key: string, value: any) {
+    (this.searchCriteria as any)[key] = value;
+    (this.searchCriteria as any).pageIndex = 1;
+    this.applyFilters();
+  }
 
 
 }
