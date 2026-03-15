@@ -238,8 +238,8 @@ ngOnChanges(): void {
     case 'statusId':
       return this.statusOptions;
 
-    case 'isAssigned':
-      return this.statusOptions;
+      case 'isAssigned':
+        return this.statusOptions;
 
     default:
       if (!this.extraOptionsCache[key]) {
