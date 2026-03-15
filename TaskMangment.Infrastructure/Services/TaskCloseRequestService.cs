@@ -120,7 +120,7 @@ namespace TaskMangment.Infrastructure.Services
             if (assignment == null)
                 throw new AppException(ErrorCodes.NotAssigned, StatusCodes.Status400BadRequest);
 
-            if (assignment.IsClosed) 
+            if (assignment.IsClosed)
                 throw new AppException(ErrorCodes.TaskAlreadyClosed, StatusCodes.Status400BadRequest);
 
             var hasPendingRequest = await _requestRepo.GetAll(r =>
@@ -145,7 +145,7 @@ namespace TaskMangment.Infrastructure.Services
 
             await _requestRepo.AddAsync(request);
             await _requestRepo.SaveChangesAsync();
-            await _cache.RemoveAsync("taskCloseRequests:");
+            //await _cache.RemoveAsync("taskCloseRequests:");
 
             var assignedEmployeeIds = await _taskAssignmentRepo
        .GetAll(a => a.TaskId == taskId && a.IsActive)
@@ -181,7 +181,7 @@ namespace TaskMangment.Infrastructure.Services
         }
 
 
-        public async Task<ApiResponse<TaskCloseRequestDetailsDto>> ReviewAsync(int id,CloseRequestStatus status,int reviewerId)
+        public async Task<ApiResponse<TaskCloseRequestDetailsDto>> ReviewAsync(int id, CloseRequestStatus status, int reviewerId)
         {
             var request = await _requestRepo
                 .GetAll(r => r.Id == id)
@@ -203,10 +203,18 @@ namespace TaskMangment.Infrastructure.Services
             if (request.Status != CloseRequestStatus.Pending)
                 throw new AppException(ErrorCodes.AlreadyReviewed, StatusCodes.Status400BadRequest);
 
+            var taskAssignments = await _taskAssignmentRepo
+                    .GetAll(a => a.TaskId == task.Id && a.IsActive)
+                    .ToListAsync();
+
+            var assignedEmployeeIds = taskAssignments
+                    .Select(a => a.EmployeeId)
+                    .ToList();
+
             if (status == CloseRequestStatus.Approved)
             {
 
-                var percent = await _AchievementRepo.GetAll(p =>p.TaskId == task.Id)          
+                var percent = await _AchievementRepo.GetAll(p => p.TaskId == task.Id)
         .OrderByDescending(p => p.CreatedDate)
         .FirstOrDefaultAsync();
 
@@ -220,18 +228,14 @@ namespace TaskMangment.Infrastructure.Services
                 task.ClosedByUserId = reviewerId;
                 task.CloseReason = CloseReason.Manual;
 
-                var taskAssignments = await _taskAssignmentRepo
-                    .GetAll(a => a.TaskId == task.Id && a.IsActive)
-                    .ToListAsync();
+
 
                 foreach (var assignment in taskAssignments)
                     assignment.IsClosed = true;
 
-                var assignedEmployeeIds = taskAssignments
-                    .Select(a => a.EmployeeId)
-                    .ToList();
 
-                if (task.AssignedByEmployeeId.HasValue &&!assignedEmployeeIds.Contains(task.AssignedByEmployeeId.Value))
+
+                if (task.AssignedByEmployeeId.HasValue && !assignedEmployeeIds.Contains(task.AssignedByEmployeeId.Value))
                 {
                     assignedEmployeeIds.Add(task.AssignedByEmployeeId.Value);
                 }
@@ -256,7 +260,8 @@ namespace TaskMangment.Infrastructure.Services
             request.ReviewedAt = DateTime.UtcNow;
 
             await _requestRepo.SaveChangesAsync();
-            await _cache.RemoveAsync("taskCloseRequests:");
+
+            //await _cache.RemoveAsync("taskCloseRequests:");
 
             var updatedRequest = await _requestRepo
                 .GetAll(r => r.Id == id)
