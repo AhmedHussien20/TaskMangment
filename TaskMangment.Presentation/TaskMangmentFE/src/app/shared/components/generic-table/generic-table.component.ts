@@ -94,6 +94,7 @@ export class GenericTableComponent<T> implements OnDestroy,OnChanges {
   @Input() showCheckbox: boolean = false;
   @Input() showEditButton: boolean = false;
   @Input() showDeleteButton: boolean = false;
+  @Input() showCopyButton: boolean = false;
 
   @Input() showAddButton: boolean = false;
   @Input() addButtonLabel: string = '';
@@ -101,6 +102,7 @@ export class GenericTableComponent<T> implements OnDestroy,OnChanges {
   @Input() disableEditFn?: (row: T) => boolean;
   @Input() disableDeleteFn?: (row: T) => boolean;
   @Input() disableDetailsFn?: (row: T) => boolean;
+  @Input() disableCopyFn?: (row: T) => boolean;
 
   @Input() searchCriteria!: SearchCriteria<T>;
   @Input() labels: { [key: string]: string } = {};
@@ -118,6 +120,7 @@ export class GenericTableComponent<T> implements OnDestroy,OnChanges {
   @Output() entriesChange = new EventEmitter<number>();
   @Output() edit = new EventEmitter<number>();
   @Output() delete = new EventEmitter<number>();
+  @Output() copy = new EventEmitter<any>();
   @Input() rowClickable: boolean = false;
   @Input() showEmployeeFilter: boolean = true;
   @Input() BranchFilter: boolean = false;
@@ -397,6 +400,9 @@ ngOnChanges(): void {
 
   deleteItem(id: number) {
     this.delete.emit(id);
+  }
+  copyItem(id: number) {
+    this.copy.emit(id);
   }
 
   // ---------- Export ----------

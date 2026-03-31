@@ -16,6 +16,7 @@ import { AuthService } from "app/core/services/auth.service";
 import { SpkDashboardComponent } from "app/@spk/reusable-dashboard/spk-dashboard/spk-dashboard.component";
 import { EmployeeService } from "app/core/services/employee.service";
 import { TasksEmployeeDeepSearchComponent } from "../tasks-employee-deep-search/tasks-employee-deep-search.component";
+import { DatePickerComponent } from "app/components/date-picker/date-picker.component";
 
 @Component({
   selector: 'app-task-list',
@@ -29,7 +30,8 @@ import { TasksEmployeeDeepSearchComponent } from "../tasks-employee-deep-search/
     NgbModalModule,
     TaskCreateUpdateComponent,
     SpkDashboardComponent,
-    TasksEmployeeDeepSearchComponent
+    TasksEmployeeDeepSearchComponent,
+    DatePickerComponent
   ],
   templateUrl: './task-list.component.html'
 })
@@ -138,6 +140,9 @@ deepSearchComp?: TasksEmployeeDeepSearchComponent;
 
   isEdit = false;
   selectedTaskId: number | null = null;
+  canCopy = false;
+  isCopyMode = false;
+  
 
   constructor(
     private taskService: TaskService,
@@ -159,6 +164,7 @@ deepSearchComp?: TasksEmployeeDeepSearchComponent;
     this.canCreate = roleLevel >= 50;
     this.canEdit = roleLevel >= 70;
     this.canDelete = roleLevel >= 70;
+    this.canCopy = roleLevel >= 70;
     this.canShowExtraTasks = roleLevel == 100
 
 if (this.auth.hasPermission('CREATE_TASK')) {
@@ -187,7 +193,6 @@ if (this.auth.hasPermission('CREATE_TASK')) {
       this.totalItems = pageData?.totalCount ?? 0;
       this.page = pageData?.pageIndex ?? 1;
       this.entries = pageData?.pageSize ?? 10;
-
       this.summary = pageData?.summary;
       this.buildSummaryCards();
 
@@ -294,18 +299,26 @@ if (this.auth.hasPermission('CREATE_TASK')) {
   }
 
   openAdd(modal: any) {
-    if (!this.canCreate) return;
-    this.isEdit = false;
-    this.selectedTaskId = null;
-    this.modalService.open(modal, { size: 'lg', centered: true });
-  }
+  this.isEdit = false;
+  this.isCopyMode = false;
+  this.selectedTaskId = null;
+  this.modalService.open(modal, { size: 'lg', centered: true });
+}
 
-  openEdit(id: number, modal: any) {
-    if (!this.canEdit) return;
-    this.isEdit = true;
-    this.selectedTaskId = id;
-    this.modalService.open(modal, { size: 'lg', centered: true });
-  }
+openEdit(id: number, modal: any) {
+  this.isEdit = true;
+  this.isCopyMode = false;
+  this.selectedTaskId = id;
+  this.modalService.open(modal, { size: 'lg', centered: true });
+}
+openCopy(id: number, modal: any) {
+    console.log('copy event:', id);
+  this.selectedTaskId = id;
+  this.isEdit = false;
+  this.isCopyMode = true;
+  this.modalService.open(modal, { size: 'lg', centered: true });
+}
+
 
   onFormSubmitted() {
     this.modalService.dismissAll();
@@ -358,16 +371,17 @@ if (this.auth.hasPermission('CREATE_TASK')) {
     });
   }
 
-  disableEditRow = (row: TaskGet) => {
+ disableEditRow = (row: TaskGet) => {
   return !row.createdByMe || row.status === 3 || row.status === 4 || row.status === 5;
-  
 };
 
 disableDeleteRow = (row: TaskGet) => {
   return !row.createdByMe || row.status === 3 || row.status === 4 || row.status === 5;
 };
 
-
+disableCopyRow = (row: TaskGet): boolean => {
+  return !row.createdByMe;
+};
 deepSearchTitleKey: string = 'TASK.DEEP_SEARCH';
 extraMenuItems = [
   { label: 'TASK.OUTGOING_NEW', value: { direction: 2, statusId: 1 } },
@@ -485,4 +499,6 @@ disableArchiveCheckbox = (row: TaskGet) =>
 this.clearTrigger++; 
   this.loadData();
 }
+
+
 }

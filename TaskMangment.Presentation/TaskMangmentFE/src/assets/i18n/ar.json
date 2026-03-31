@@ -600,7 +600,10 @@
     "ARCHIVE_TASKS": "ارشفة المهام",
   "ARCHIVE_SUCCESS": "تم أرشفة المهام بنجاح",
   "CONFIRM_BUTTON": "تاكيد",
-  "PENALTY_DATE": "تاريخ الخصم"
+  "PENALTY_DATE": "تاريخ الخصم",
+  "COPY": "نسخ"
+
+
 
   },
   "EMPLOYEE": {

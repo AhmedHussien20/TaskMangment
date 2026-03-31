@@ -267,7 +267,7 @@
 
 
                     <!-- ACTIONS -->
-                    <td *ngIf="showEditButton || showDeleteButton || showDetailsButton" class="text-center">
+                    <td *ngIf="showEditButton || showDeleteButton || showDetailsButton || showCopyButton" class="text-center">
 
                         <!-- DETAILS -->
                         <button *ngIf="showDetailsButton" class="btn btn-outline-info btn-sm me-1"
@@ -288,6 +288,13 @@
                             [disabled]="disableDeleteFn ? disableDeleteFn(item) : false"
                             (click)="deleteItem(getItemId(item))">
                             <i class="bi bi-trash"></i>
+                        </button>
+
+                        <!-- COPY -->
+                        <button *ngIf="showCopyButton" class="btn btn-outline-secondary btn-sm ms-1"
+                            [disabled]="disableCopyFn ? disableCopyFn(item) : false"
+                            (click)="copyItem(getItemId(item))">
+                            <i class="bi bi-files"></i>
                         </button>
 
                     </td>

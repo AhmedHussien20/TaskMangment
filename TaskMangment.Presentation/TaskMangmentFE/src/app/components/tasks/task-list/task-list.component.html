@@ -25,8 +25,10 @@
   [totalItems]="totalItems"
   [showAddButton]="canCreate"
   [showEditButton]="canEdit"
+  [showCopyButton]="canCopy"
   [showDeleteButton]="canDelete"
   (addClick)="openAdd(taskModal)"
+  (copy)="openCopy($event, taskModal)"
   [showDetailsButton]="true"
   [showFilters]="true"
   [searchCriteria]="searchCriteria"
@@ -40,6 +42,7 @@
   (delete)="confirmDelete($event)"
   [disableEditFn]="disableEditRow"
   [disableDeleteFn]="disableDeleteRow"
+  [disableCopyFn]="disableCopyRow"
   [showExtraButton]="canShowExtraTasks"
   [extraMenuItems]="extraMenuItems"
   (extraMenuSelect)="onExtraMenuSelect($event, deepSearchModal)"
@@ -72,10 +75,11 @@
 
   <div class="modal-body">
     <app-task-create-update
-      [isEdit]="isEdit"
-      [taskId]="selectedTaskId"
-      (formSubmitted)="onFormSubmitted()">
-    </app-task-create-update>
+  [isEdit]="isEdit"
+  [isCopy]="isCopyMode"
+  [taskId]="selectedTaskId"
+  (formSubmitted)="onFormSubmitted()">
+</app-task-create-update>
   </div>
 </ng-template>
 
@@ -98,3 +102,4 @@
     </app-tasks-employee-deep-search>
   </div>
 </ng-template>
+

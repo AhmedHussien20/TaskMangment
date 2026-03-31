@@ -27,7 +27,7 @@ export class TaskCreateUpdateComponent implements OnInit {
   @Input() isEdit: boolean = false;
   @Input() taskId: number | null = null;
   @Output() formSubmitted = new EventEmitter<void>();
-
+  @Input() isCopy: boolean = false;
   formGroup!: FormGroup;
 
   title = 'TASK.ADD';
@@ -178,13 +178,13 @@ export class TaskCreateUpdateComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.initForm();
-    this.loadEmployees();
+  this.initForm();
+  this.loadEmployees();
 
-    if (this.isEdit && this.taskId) {
-      this.loadTask();
-    }
+  if ((this.isEdit || this.isCopy) && this.taskId) {
+    this.loadTask();
   }
+}
 
   initForm() {
     this.formGroup = this.fb.group({
@@ -242,6 +242,13 @@ export class TaskCreateUpdateComponent implements OnInit {
       dueDate,
       
     });
+    if (this.isCopy) {
+  this.formGroup.patchValue({
+    status: TaskStatus.New,
+    title: `${task.title} - ${this.translate.instant('TASK.COPY')}`,
+    dueDate: null
+  });
+}
     if (this.isEdit) {
   this.formGroup.get('status')!.enable();
 }
@@ -294,10 +301,10 @@ export class TaskCreateUpdateComponent implements OnInit {
       const day = String(d.getDate()).padStart(2, '0');
       payload.dueDate = `${y}-${m}-${day}`;
     }
-    const request$ = this.isEdit && this.taskId
-      ? this.taskService.update(this.taskId, payload)
-      : this.taskService.create(payload);
-
+    const request$ =
+  this.isEdit && !this.isCopy && this.taskId
+    ? this.taskService.update(this.taskId, payload)
+    : this.taskService.create(payload);
 
     request$.subscribe({
       next: () => {

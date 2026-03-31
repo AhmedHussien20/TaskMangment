@@ -26,8 +26,5 @@ namespace TaskMangment.Application.Interfaces.Services
         Task<ApiResponse<bool>> ArchiveClosedTasksAsync(List<int> taskIds);
 
 
-
-
-
     }
 }
