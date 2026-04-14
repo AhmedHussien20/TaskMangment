@@ -19,7 +19,7 @@ namespace TaskMangment.API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll([FromQuery] OfferRequest request)
         {
-            var result = await _service.GetAllAsync(request);
+            var result = await _service.GetAllAsync(request, this.CurrentUserId, this.RoleLevel);
             if (!result.Success)
                 return Fail(result.Message!);
 
@@ -37,7 +37,7 @@ namespace TaskMangment.API.Controllers
         [HttpPost]
         public async Task<IActionResult> Add([FromBody] OfferAddEditDto dto)
         {
-            var result = await _service.AddAsync(dto);
+            var result = await _service.AddAsync(dto, this.CurrentUserId);
             return Success(result.Data, "Offer added successfully");
         }
 

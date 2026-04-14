@@ -107,31 +107,31 @@ private MENUITEMS: MenuItem[] = [
   },
 
   // ================= Education =================
-  { headTitle: 'nav.apps.education.header', minRoleLevel: 60 , functionCode:1 },
+  { headTitle: 'nav.apps.education.header', minRoleLevel: 10 , functionCode:1 },
   {
     title: 'nav.apps.education.title',
     icon: 'ti-book',
     type: 'sub',
-    minRoleLevel: 60,
+    minRoleLevel: 10,
     functionCode: 1,
     children: [
       {
         title: 'nav.apps.student.list',
         path: '/student/student-list',
         type: 'link',
-        minRoleLevel: 50
+        minRoleLevel: 10
       },
       {
         title: 'nav.apps.course.list',
         path: '/course/course-list',
         type: 'link',
-        minRoleLevel: 50
+        minRoleLevel: 10
       },
       {
         title: 'nav.apps.course.offer_list',
         path: '/offer/offer-list',
         type: 'link',
-        minRoleLevel: 50
+        minRoleLevel: 10
       }
     ]
   },

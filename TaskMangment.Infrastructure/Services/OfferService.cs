@@ -12,6 +12,7 @@ using TaskMangment.Application.Common.Errors;
 using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Responses;
+using TaskMangment.Application.Common.Security;
 using TaskMangment.Application.DTOs;
 using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
@@ -28,7 +29,9 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<Student> _studentRepo;
         private readonly IRepository<Course> _courseRepo;
         private readonly IRepository<CourseSubject> _subjectRepo;
+        private readonly IRepository<Employee> _employeeRepo;
         private readonly IDomainEventDispatcher _eventDispatcher;
+        private readonly IUserAccessContextProvider _accessProvider;
 
 
 
@@ -39,7 +42,8 @@ namespace TaskMangment.Infrastructure.Services
             IMapper mapper,
             ICachingService cache,
             IRepository<CourseSubject> subjectRepo,
-            IRepository<Course> courseRepo, IDomainEventDispatcher eventDispatcher)
+            IRepository<Course> courseRepo, IDomainEventDispatcher eventDispatcher,
+            IRepository<Employee> employeeRepo, IUserAccessContextProvider accessProvider)
         {
             _offerRepo = offerRepo;
             _studentRepo = studentRepo;
@@ -48,18 +52,20 @@ namespace TaskMangment.Infrastructure.Services
             _subjectRepo = subjectRepo;
             _courseRepo = courseRepo;
             _eventDispatcher = eventDispatcher;
+            _employeeRepo = employeeRepo;
+            _accessProvider = accessProvider;
         }
 
-        public async Task<ApiResponse<PagedResponse<OfferGetDto>>> GetAllAsync(OfferRequest request)
+        public async Task<ApiResponse<PagedResponse<OfferGetDto>>> GetAllAsync(
+            OfferRequest request,
+            int employeeId,
+            int roleLevel)
         {
-            //string cacheKey = $"offers:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
+            var access = await _accessProvider.GetAsync(employeeId);
 
-            //if (!request.BypassCache)
-            //{
-            //    var cached = await _cache.GetAsync<PagedResponse<OfferGetDto>>(cacheKey);
-            //    if (cached != null)
-            //        return ApiResponse<PagedResponse<OfferGetDto>>.Ok(cached);
-            //}
+            var myBranchId = await _employeeRepo.GetAll(e => e.Id == employeeId)
+                .Select(e => e.BranchId)
+                .FirstOrDefaultAsync();
 
             var query = _offerRepo.GetAll()
                 .Include(o => o.Course)
@@ -67,8 +73,17 @@ namespace TaskMangment.Infrastructure.Services
                 .Include(o => o.Assignments).ThenInclude(a => a.Student)
                 .ApplySearch(request.searchKey);
 
+            if (access.BranchIds.Any())
+            {
+                query = query.Where(o => o.BranchId.HasValue && access.BranchIds.Contains(o.BranchId.Value));
+            }
+            else if (roleLevel != 100)
+            {
+                query = query.Where(o => o.BranchId == myBranchId);
+            }
 
             var totalCount = await query.CountAsync();
+
             query = query.OrderByDynamicSafe(request.SortColumn, request.SortDirection);
 
             var list = await query
@@ -80,14 +95,19 @@ namespace TaskMangment.Infrastructure.Services
 
             foreach (var dto in dtos)
             {
-                var offer = list.FirstOrDefault(o => o.Id == dto.Id);
-                dto.AssignedStudents = offer.Assignments.Select(a => a.Student.FullName).ToList();
+                var offer = list.First(o => o.Id == dto.Id);
+
+                dto.AssignedStudents = offer.Assignments
+                    .Select(a => a.Student.FullName)
+                    .ToList();
+
                 dto.CourseTitle = offer.Course?.Title;
                 dto.SubjectTitle = offer.Subject?.Title;
 
                 if (!string.IsNullOrWhiteSpace(offer.Body))
                 {
                     var body = JsonSerializer.Deserialize<Dictionary<string, string>>(offer.Body);
+
                     if (body != null)
                     {
                         dto.PaymentMethod = body.GetValueOrDefault("PaymentMethod");
@@ -102,12 +122,16 @@ namespace TaskMangment.Infrastructure.Services
                 }
             }
 
-            var response = new PagedResponse<OfferGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
-            //await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
+            // 9. Response
+            var response = new PagedResponse<OfferGetDto>(
+                dtos,
+                totalCount,
+                request.PageIndex,
+                request.PageSize
+            );
 
             return ApiResponse<PagedResponse<OfferGetDto>>.Ok(response);
         }
-
         public async Task<ApiResponse<OfferGetDto>> GetByIdAsync(int id)
         {
             var offer = await _offerRepo.GetAll(o => o.Id == id)
@@ -145,7 +169,7 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<OfferGetDto>.Ok(dto);
         }
 
-        public async Task<ApiResponse<OfferGetDto>> AddAsync(OfferAddEditDto dto)
+        public async Task<ApiResponse<OfferGetDto>> AddAsync(OfferAddEditDto dto, int CreatedById)
          {
 
             if (dto.AssignedStudentIds != null && dto.AssignedStudentIds.Any())
@@ -175,8 +199,9 @@ namespace TaskMangment.Infrastructure.Services
                         StatusCodes.Status404NotFound);
             }
 
-
+            var employee = await _employeeRepo.GetByIDAsync(CreatedById);
             var offer = _mapper.Map<Offer>(dto);
+            offer.BranchId = employee.BranchId;
 
             var bodyObj = new
             {

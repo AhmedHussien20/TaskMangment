@@ -34,6 +34,8 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<ManagerBranches> _managerBranchesRepo;
         private readonly IUserAccessContextProvider _accessProvider;
         private readonly IRepository<Employee> _employeeRepo;
+        private readonly IRepository<Role> _RoleRepo;
+        private readonly IRepository<EmployeeRole> _employeeRolesRepository;
 
 
 
@@ -47,8 +49,9 @@ namespace TaskMangment.Infrastructure.Services
             ICachingService cache,
             IRepository<ManagerBranches> managerBranchesRepo,
             IUserAccessContextProvider accessProvider,
-            IRepository<Employee> employeeRepo
-)
+            IRepository<Employee> employeeRepo,
+            IRepository<Role> roleRepo, IRepository<EmployeeRole> employeeRolesRepository
+        )
         {
             _branchRepository = branchRepository;
             _employeeRepository = employeeRepository;
@@ -59,7 +62,8 @@ namespace TaskMangment.Infrastructure.Services
             _managerBranchesRepo = managerBranchesRepo;
             _accessProvider = accessProvider;
             _employeeRepo = employeeRepo;
-
+            _RoleRepo = roleRepo;
+            _employeeRolesRepository = employeeRolesRepository;
         }
 
         public async Task<ApiResponse<PagedResponse<BranchGetDto>>> GetAllAsync(
@@ -120,6 +124,15 @@ namespace TaskMangment.Infrastructure.Services
             if (!await _employeeRepository.IsExistAsync(dto.ResponsibleId))
                 throw new AppException(ErrorCodes.ManagerNotFound, StatusCodes.Status404NotFound);
 
+            var managerRoleLevel = await _employeeRolesRepository.GetAll(er => er.EmployeeId == dto.ManagerId)
+                .Join(_RoleRepo.GetAll(),
+          er => er.RoleId,
+          r => r.Id,
+          (er, r) => r.Level)
+    .FirstOrDefaultAsync();
+
+            if (managerRoleLevel != 70)
+                throw new AppException(ErrorCodes.InvalidManagerRoleLevel, StatusCodes.Status400BadRequest);
             if (dto.AreaId.HasValue)
             {
                 if (!await _areaRepository.IsExistAsync(dto.AreaId.Value))

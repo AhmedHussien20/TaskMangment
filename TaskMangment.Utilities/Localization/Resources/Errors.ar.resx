@@ -249,4 +249,7 @@
   <data name="TASK_HAS_NO_PERCENTAGE" xml:space="preserve">
     <value>يجب تقييم المهمة قبل قبول طلب الاغلاق</value>
   </data>
+  <data name="INVALID_MANAGER_ROLE_LEVEL" xml:space="preserve">
+    <value>ليس لديه صلاحية مدير فرع</value>
+  </data>
 </root>

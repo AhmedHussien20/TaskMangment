@@ -58,6 +58,7 @@ namespace TaskMangment.Application.Common.Errors
 
         public const string InvalidOperation = "INVALID_OPERATION";
         public const string CloseRequestAlreadyPending = "CLOSEREQUESTALREADYREQUESTED";
+        public const string InvalidManagerRoleLevel = "INVALID_MANAGER_ROLE_LEVEL";
     }
 
 }

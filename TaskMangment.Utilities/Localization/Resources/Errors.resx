@@ -250,4 +250,7 @@
   <data name="TASK_HAS_NO_PERCENTAGE" xml:space="preserve">
     <value>please add valuation to task before accept close request</value>
   </data>
+  <data name="INVALID_MANAGER_ROLE_LEVEL" xml:space="preserve">
+    <value>this employee hasn't branch manager role</value>
+  </data>
 </root>

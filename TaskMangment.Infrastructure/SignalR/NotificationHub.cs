@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.SignalR;
-
+﻿
 namespace TaskMangment.Infrastructure.SignalR
 {
     using Microsoft.AspNetCore.SignalR;
