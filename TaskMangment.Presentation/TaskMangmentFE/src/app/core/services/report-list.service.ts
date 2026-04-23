@@ -2,7 +2,7 @@ import { Injectable } from "@angular/core";
 import { ApiService } from "./api.service";
 import { Observable } from "rxjs";
 import { ApiResponse } from "../models/event/calendar";
-import { BranchTaskReportRowDto, EmployeeArchivedTasksReportDto, EmployeeAssignmentsReportDto, EmployeeCommentsReportDto, EmployeeOnTimeReportDto, EmployeeTaskTrackingReportDto, ExportType, TaskActivityReportDto, TaskDiscountReportDto, TaskMovementReportDto, TasksClosingSoonDto } from "../models/reports/reports";
+import { BranchTaskReportRowDto, EmployeeArchivedTasksReportDto, EmployeeAssignedTaskOptionDto, EmployeeAssignmentsReportDto, EmployeeCommentsReportDto, EmployeeOnTimeReportDto, EmployeeTaskCommentRowDto, EmployeeTaskTrackingReportDto, ExportType, TaskActivityReportDto, TaskDiscountReportDto, TaskMovementReportDto, TasksClosingSoonDto } from "../models/reports/reports";
 
 @Injectable({ providedIn: 'root' })
 export class ReportListService {
@@ -57,6 +57,16 @@ getEmployeeTaskTracking(employeeId: number | undefined, fromDate: string, toDate
 getBranchTasks(branchId: number, fromDate: string, toDate?: string): Observable<ApiResponse<BranchTaskReportRowDto[]>> {
   const query = this.buildQuery({ branchId, fromDate, toDate });
   return this.api.get<ApiResponse<BranchTaskReportRowDto[]>>(this.service, `branch-tasks${query}`);
+}
+
+getEmployeeAssignedTasks(employeeId: number): Observable<ApiResponse<EmployeeAssignedTaskOptionDto[]>> {
+  const query = this.buildQuery({ employeeId });
+  return this.api.get<ApiResponse<EmployeeAssignedTaskOptionDto[]>>(this.service, `employee-assigned-tasks${query}`);
+}
+
+getEmployeeTaskComments(employeeId: number, taskId: number): Observable<ApiResponse<EmployeeTaskCommentRowDto[]>> {
+  const query = this.buildQuery({ employeeId, exportType: ExportType.Excel }) + `&taskId=${taskId}`;
+  return this.api.get<ApiResponse<EmployeeTaskCommentRowDto[]>>(this.service, `employee-task-comments${query}`);
 }
 
 

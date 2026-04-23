@@ -24,6 +24,17 @@ namespace TaskMangment.Application.Interfaces.Services
         Task<List<EmployeeTaskTrackingReportDto>> GetEmployeeTaskTrackingAsync(int currentEmployeeId,int roleLevel,int? employeeId,DateTime fromDate,DateTime? toDate = null);
         Task<List<BranchTaskReportRowDto>> GetBranchTasksReportAsync(int currentEmployeeId,int roleLevel, BranchTasksReportFilterDto dto);
 
+        Task<List<EmployeeAssignedTaskOptionDto>> GetEmployeeAssignedTasksAsync(
+            int currentEmployeeId,
+            int roleLevel,
+            int employeeId);
+
+        Task<List<EmployeeTaskCommentRowDto>> GetEmployeeTaskCommentsAsync(
+            int currentEmployeeId,
+            int roleLevel,
+            int employeeId,
+            int taskId,
+            ExportType exportType);
 
     }
 }

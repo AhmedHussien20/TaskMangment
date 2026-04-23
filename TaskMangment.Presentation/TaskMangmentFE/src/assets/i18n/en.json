@@ -917,7 +917,9 @@
     "EMPLOYEE_REQUIRED" : "Employee is required",
     "BRANCH_TASK_TRACKING" : "Branchs tasks tracking",
     "BRANCH" : "Branch",
-    "BRANCH_REQUIRED" : "Branch is required"
+    "BRANCH_REQUIRED" : "Branch is required",
+    "EMPLOYEE_TASK_COMMENTS": "Employee Task Comments",
+    "TASK_REQUIRED": "Task is required"
 
 
   },

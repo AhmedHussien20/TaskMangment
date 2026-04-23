@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using QuestPDF.Fluent;
 using System.Reflection.Metadata;
 using TaskMangment.API.Reports.Task;
+using TaskMangment.API.Reports.Excel;
 using TaskMangment.Application.DTOs.ReportsDTO;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Application.Responses;
@@ -253,6 +254,30 @@ namespace TaskMangment.API.Controllers
                 xlsxBytes,
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 "branch-tasks-report.xlsx");
+        }
+
+        [HttpGet("employee-task-comments/pdf")]
+        public async Task<IActionResult> GetEmployeeTaskCommentsPdf(ExportType exportType, int employeeId, int taskId)
+        {
+            var data = await _reportService.GetEmployeeTaskCommentsAsync(
+                this.CurrentUserId,
+                this.RoleLevel,
+                employeeId,
+                taskId,
+                exportType);
+
+            if (exportType == ExportType.Pdf)
+            {
+                var report = new EmployeeTaskCommentsPdfReport(data);
+                var pdf = report.GeneratePdf();
+                return File(pdf, "application/pdf", "employee-task-comments.pdf");
+            }
+
+            var xlsxBytes = EmployeeTaskCommentsExcelReport.Build(data);
+            return File(
+                xlsxBytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "employee-task-comments.xlsx");
         }
 
 

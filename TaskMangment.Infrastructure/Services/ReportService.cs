@@ -1083,6 +1083,117 @@ namespace TaskMangment.Infrastructure.Services
             return result;
         }
 
+        public async Task<List<EmployeeAssignedTaskOptionDto>> GetEmployeeAssignedTasksAsync(
+            int currentEmployeeId,
+            int roleLevel,
+            int employeeId)
+        {
+            if (employeeId <= 0)
+                return new List<EmployeeAssignedTaskOptionDto>();
+
+            var (scopedEmployeeIds, canViewAllTasks, canViewCreatedTasks) =
+                await GetScopedEmployeeIdsAsync(currentEmployeeId, roleLevel);
+
+            // Must be within scope
+            if (!await scopedEmployeeIds.ContainsAsync(employeeId))
+                return new List<EmployeeAssignedTaskOptionDto>();
+
+            IQueryable<TaskAssignment> query = _context.TaskAssignments
+                .Include(a => a.Task)
+                .Where(a =>
+                    a.IsActive &&
+                    a.EmployeeId == employeeId &&
+                    !a.Task.IsDeleted);
+
+            if (!canViewAllTasks)
+            {
+                if (canViewCreatedTasks)
+                {
+                    // Allow viewing tasks you created assigned to that employee
+                    if (employeeId != currentEmployeeId)
+                        query = query.Where(a => a.Task.CreatedByEmployeeId == currentEmployeeId);
+                }
+                else
+                {
+                    // Only self
+                    if (employeeId != currentEmployeeId)
+                        return new List<EmployeeAssignedTaskOptionDto>();
+                }
+            }
+
+            var tasks = await query
+                .Select(a => new EmployeeAssignedTaskOptionDto
+                {
+                    TaskId = a.TaskId,
+                    Title = a.Task.Title
+                })
+                .Distinct()
+                .OrderBy(x => x.TaskId)
+                .AsNoTracking()
+                .ToListAsync();
+
+            return tasks;
+        }
+
+        public async Task<List<EmployeeTaskCommentRowDto>> GetEmployeeTaskCommentsAsync(
+            int currentEmployeeId,
+            int roleLevel,
+            int employeeId,
+            int taskId,
+            ExportType exportType)
+        {
+            if (employeeId <= 0 || taskId <= 0)
+                return new List<EmployeeTaskCommentRowDto>();
+
+            var (scopedEmployeeIds, canViewAllTasks, canViewCreatedTasks) =
+                await GetScopedEmployeeIdsAsync(currentEmployeeId, roleLevel);
+
+            // Must be within scope
+            if (!await scopedEmployeeIds.ContainsAsync(employeeId))
+                return new List<EmployeeTaskCommentRowDto>();
+
+            var commentsQuery = _context.TaskComments
+                .Include(c => c.Task)
+                .Where(c =>
+                    c.EmployeeId.HasValue &&
+                    c.EmployeeId.Value == employeeId &&
+                    c.TaskId == taskId &&
+                    !c.Task.IsDeleted)
+                .AsQueryable();
+
+            if (!canViewAllTasks)
+            {
+                if (canViewCreatedTasks)
+                {
+                    if (employeeId != currentEmployeeId)
+                        commentsQuery = commentsQuery.Where(c => c.Task.CreatedByEmployeeId == currentEmployeeId);
+                }
+                else
+                {
+                    if (employeeId != currentEmployeeId)
+                        return new List<EmployeeTaskCommentRowDto>();
+                }
+            }
+
+            var result = await commentsQuery
+                .OrderByDescending(c => c.CreatedDate)
+                .ThenByDescending(c => c.Id)
+                .Select(c => new EmployeeTaskCommentRowDto
+                {
+                    CommentId = c.Id,
+                    CommentDate = c.CreatedDate,
+                    CommentText =
+                        exportType == ExportType.Pdf
+                            ? (string.IsNullOrWhiteSpace(c.CommentText)
+                                ? "رفع ملف"
+                                : (c.CommentText.Length > 50 ? c.CommentText.Substring(0, 50) : c.CommentText))
+                            : (string.IsNullOrWhiteSpace(c.CommentText) ? "رفع ملف" : c.CommentText)
+                })
+                .AsNoTracking()
+                .ToListAsync();
+
+            return result;
+        }
 
     }
 }

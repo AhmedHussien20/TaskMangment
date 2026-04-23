@@ -138,3 +138,14 @@ export interface BranchTaskReportRowDto {
   isShared: boolean;
   isMergedByTitle: boolean;
 }
+
+export interface EmployeeAssignedTaskOptionDto {
+  taskId: number;
+  title: string;
+}
+
+export interface EmployeeTaskCommentRowDto {
+  commentId: number;
+  commentDate: string;
+  commentText: string;
+}

@@ -63,6 +63,15 @@ getBranchTasksPdf(
   return this.api.getBlob(this.service, `branch-tasks/pdf${query}`);
 }
 
+getEmployeeTaskCommentsPdf(
+  exportType: ExportType,
+  employeeId: number,
+  taskId: number
+): Observable<Blob> {
+  const query = this.buildQuery({ exportType, employeeId }) + `&taskId=${taskId}`;
+  return this.api.getBlob(this.service, `employee-task-comments/pdf${query}`);
+}
+
 
  private buildQuery(params: {
   fromDate?: string;

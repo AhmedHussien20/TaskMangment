@@ -112,6 +112,13 @@ export class ReportsDashboardComponent implements OnInit { // إضافة impleme
       svg: this.REPORT_ICON_SVG,
       clickable: true,
       url: '/report/branch-task-tracking'
+    },
+    {
+      title: 'REPORTS.EMPLOYEE_TASK_COMMENTS',
+      value: '',
+      svg: this.REPORT_ICON_SVG,
+      clickable: true,
+      url: '/report/employee-task-comments'
     }
   ];
 

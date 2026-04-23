@@ -110,6 +110,30 @@ namespace TaskMangment.API.Controllers
             return Success(data);
         }
 
+        [HttpGet("employee-assigned-tasks")]
+        public async Task<IActionResult> GetEmployeeAssignedTasks([FromQuery] int employeeId)
+        {
+            var data = await _reportService.GetEmployeeAssignedTasksAsync(
+                this.CurrentUserId,
+                this.RoleLevel,
+                employeeId);
+
+            return Success(data);
+        }
+
+        [HttpGet("employee-task-comments")]
+        public async Task<IActionResult> GetEmployeeTaskComments([FromQuery] int employeeId, [FromQuery] int taskId)
+        {
+            var data = await _reportService.GetEmployeeTaskCommentsAsync(
+                this.CurrentUserId,
+                this.RoleLevel,
+                employeeId,
+                taskId,
+                ExportType.Excel);
+
+            return Success(data);
+        }
+
 
     }
 }
