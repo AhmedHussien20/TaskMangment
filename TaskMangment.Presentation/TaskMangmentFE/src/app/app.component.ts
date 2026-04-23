@@ -6,7 +6,6 @@ import { Store } from '@ngrx/store';
 import * as NavActions from './store/nav/nav.actions';
 import { TranslationService } from './shared/services/translation.service';
 import { SignalRService } from './core/services/signalr.service';
-import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-root',
@@ -17,17 +16,17 @@ import { TranslateService } from '@ngx-translate/core';
 })
 export class AppComponent {
   title = 'Task-Portal';
-  constructor(private appState: AppStateService, private store: Store, private translationService: TranslationService, private signalR: SignalRService,private translate: TranslateService) { }
+  constructor(
+    private appState: AppStateService,
+    private store: Store,
+    private translationService: TranslationService,
+    private signalR: SignalRService
+  ) { }
 
   ngOnInit(): void {
     const userId = 4
     this.store.dispatch(NavActions.initializeMenu());
     this.appState.updateState();
-    const savedLang = localStorage.getItem('lang') || 'ar';
-
-    this.translate.use(savedLang);
-
-    document.documentElement.lang = savedLang;
-    document.documentElement.dir = savedLang === 'ar' ? 'rtl' : 'ltr';
+    // Language + direction are handled centrally in TranslationService (storage key: 'lang')
   }
 }
