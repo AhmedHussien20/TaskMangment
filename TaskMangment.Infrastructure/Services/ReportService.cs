@@ -302,7 +302,7 @@ namespace TaskMangment.Infrastructure.Services
                 else
                 {
                     query = query.Where(a =>
-                        scopedEmployeeIds.Contains(a.EmployeeId)
+                        a.EmployeeId == currentEmployeeId
                     );
                 }
             }
@@ -712,7 +712,7 @@ namespace TaskMangment.Infrastructure.Services
                 {
                     query = query.Where(c =>
                         c.Task.Assignments.Any(a =>
-                            a.IsActive && scopedEmployeeIds.Contains(a.EmployeeId)));
+                            a.IsActive && a.EmployeeId == currentEmployeeId));
                 }
             }
 
@@ -868,9 +868,7 @@ namespace TaskMangment.Infrastructure.Services
                 }
                 else
                 {
-                    query = query.Where(a =>
-                        scopedEmployeeIds.Contains(a.EmployeeId)
-                    );
+                    query = query.Where(a =>a.EmployeeId == currentEmployeeId);
                 }
             }
             else
