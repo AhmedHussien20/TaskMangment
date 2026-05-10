@@ -102,22 +102,22 @@ namespace TaskMangment.Hangfire.Jobs
                               .Select(x => x.EmployeeId)
                 );
 
-                var level80Ids = roleLevels
-                    .Where(x => x.RoleLevel == 80)
-                    .Select(x => x.EmployeeId)
-                    .ToList();
+                //var level80Ids = roleLevels
+                //    .Where(x => x.RoleLevel == 80)
+                //    .Select(x => x.EmployeeId)
+                //    .ToList();
 
-                if (level80Ids.Any())
-                {
-                    var ops80Ids = await _db.Employees
-                        .Where(e => level80Ids.Contains(e.Id)
-                                    && e.FunctionCode == FunctionCode.Operations)
-                        .Select(e => e.Id)
-                        .ToListAsync();
+                //if (level80Ids.Any())
+                //{
+                //    var ops80Ids = await _db.Employees
+                //        .Where(e => level80Ids.Contains(e.Id)
+                //                    && e.FunctionCode == FunctionCode.Operations)
+                //        .Select(e => e.Id)
+                //        .ToListAsync();
 
-                    foreach (var id in ops80Ids)
-                        exemptIds.Add(id);
-                }
+                //    foreach (var id in ops80Ids)
+                //        exemptIds.Add(id);
+                //}
 
                 foreach (var assignment in task.Assignments)
                 {

@@ -26,9 +26,11 @@ namespace TaskMangment.Hangfire.Jobs
 
         public async Task ExecuteAsync()
         {
+            var todayUtc = DateTime.UtcNow.Date;
+
             var overdueTasks = await _db.Tasks
                 .Include(t => t.Assignments)
-                .Where(t => t.DueDate < DateTime.UtcNow
+                .Where(t => t.DueDate < todayUtc
                             && t.Status != WorkTaskStatus.Closed
                             && t.Status != WorkTaskStatus.Archived
                             && t.Status != WorkTaskStatus.AutoClose && !t.IsDeleted)
@@ -92,22 +94,22 @@ namespace TaskMangment.Hangfire.Jobs
                                   .Select(x => x.EmployeeId)
                     );
 
-                    var level80Ids = roleLevels
-                        .Where(x => x.RoleLevel == 80)
-                        .Select(x => x.EmployeeId)
-                        .ToList();
+                    //var level80Ids = roleLevels
+                    //    .Where(x => x.RoleLevel == 80)
+                    //    .Select(x => x.EmployeeId)
+                    //    .ToList();
 
-                    if (level80Ids.Any())
-                    {
-                        var ops80Ids = await _db.Employees
-                            .Where(e => level80Ids.Contains(e.Id)
-                                        && e.FunctionCode == FunctionCode.Operations)
-                            .Select(e => e.Id)
-                            .ToListAsync();
+                    //if (level80Ids.Any())
+                    //{
+                    //    var ops80Ids = await _db.Employees
+                    //        .Where(e => level80Ids.Contains(e.Id)
+                    //                    && e.FunctionCode == FunctionCode.Operations)
+                    //        .Select(e => e.Id)
+                    //        .ToListAsync();
 
-                        foreach (var id in ops80Ids)
-                            exemptIds.Add(id);
-                    }
+                    //    foreach (var id in ops80Ids)
+                    //        exemptIds.Add(id);
+                    //}
 
                     var closeRequestIds = new HashSet<int>(
                         await _db.TaskCloseRequests

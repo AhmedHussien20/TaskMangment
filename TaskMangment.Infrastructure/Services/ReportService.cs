@@ -469,7 +469,7 @@ namespace TaskMangment.Infrastructure.Services
             }
 
             if (dto.FromDate.HasValue)
-                query = query.Where(d => d.Task.DueDate >= dto.FromDate.Value);
+                query = query.Where(d => d.CreatedDate >= dto.FromDate.Value);
 
             if (dto.ToDate.HasValue)
             {
@@ -526,10 +526,14 @@ namespace TaskMangment.Infrastructure.Services
                 .ToListAsync();
 
             var groups = flatRows
-                .GroupBy(x => x.GroupEmployeeName)
+                        .GroupBy(x => new
+                        {
+                            x.EmployeeName,
+                            x.GroupEmployeeName
+                        })
                 .Select(g => new EmployeeDiscountAuditGroupDto
                 {
-                    EmployeeName = g.Key,
+                    EmployeeName = g.Key.GroupEmployeeName,
                     Tasks = g.OrderBy(x => x.ClosedDate).ToList()
                 })
                 .OrderByDescending(g => g.TotalDiscount)
