@@ -117,6 +117,11 @@ namespace TaskMangment.Infrastructure.Services
             {
                 empQuery = empQuery.Where(e => e.Id == employeeId);
             }
+            if (!access.BranchIds.Any() && !access.FunctionCodes.Any() && roleLevel >= 70 && roleLevel < 100)
+            {
+                empQuery = empQuery.Where(e => e.Id == employeeId);
+            }
+
             if (!string.IsNullOrWhiteSpace(request.PermissionCode) &&request.PermissionCode == "CREATE_TASK" && roleLevel < 60)
             {
                 empQuery = empQuery
@@ -127,6 +132,7 @@ namespace TaskMangment.Infrastructure.Services
                         er.Role != null &&
                         er.Role.Level < 60));
             }
+
             else
             {
                 if (roleLevel != 100)

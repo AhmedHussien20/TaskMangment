@@ -34,28 +34,55 @@ namespace TaskMangment.Infrastructure.Services
             var access = await _accessProvider.GetAsync(currentEmployeeId);
 
             var companyId = await _context.Employees
-                .Where(e => e.Id == currentEmployeeId)
-                .Select(e => e.CompanyId)
-                .FirstAsync();
+         .Where(e => e.Id == currentEmployeeId)
+         .Select(e => e.CompanyId)
+         .FirstAsync();
 
-            IQueryable<Employee> scopedEmployeesQuery = _context.Employees
-                .Where(e => e.CompanyId == companyId && e.IsActive)
-                .ApplyAccessScope(access);
+            IQueryable<Employee> scopedEmployeesQuery;
 
-            if (roleLevel != 100)
-                scopedEmployeesQuery = scopedEmployeesQuery.ApplyRoleHierarchy(roleLevel);
+            if (roleLevel >= 70 &&
+                !access.BranchIds.Any() &&
+                !access.FunctionCodes.Any())
+            {
+                scopedEmployeesQuery = _context.Employees
+                    .Where(e =>
+                        e.Id == currentEmployeeId &&
+                        e.IsActive);
+            }
+            else
+            {
+                scopedEmployeesQuery = _context.Employees
+                    .Where(e =>
+                        e.CompanyId == companyId &&
+                        e.IsActive)
+                    .ApplyAccessScope(access);
 
-            var scopedEmployeeIds = scopedEmployeesQuery.Select(e => e.Id);
+                if (roleLevel != 100)
+                {
+                    scopedEmployeesQuery =
+                        scopedEmployeesQuery
+                            .ApplyRoleHierarchy(roleLevel);
+                }
+            }
 
-            bool canViewAllTasks = false;
+            var scopedEmployeeIds =
+                scopedEmployeesQuery.Select(e => e.Id);
+
+            bool canViewAllTasks =
+                await _permissionChecker
+                    .HasPermissionAsync(
+                        currentEmployeeId,
+                        "VIEW_ALL_TASKS");
+
             bool canViewCreatedTasks = false;
 
-            canViewAllTasks =
-                    await _permissionChecker.HasPermissionAsync(currentEmployeeId, "VIEW_ALL_TASKS");
             if (roleLevel < 60)
             {
                 canViewCreatedTasks =
-                    await _permissionChecker.HasPermissionAsync(currentEmployeeId, "CREATE_TASK");
+                    await _permissionChecker
+                        .HasPermissionAsync(
+                            currentEmployeeId,
+                            "CREATE_TASK");
             }
 
             return (scopedEmployeeIds, canViewAllTasks, canViewCreatedTasks);
@@ -469,12 +496,12 @@ namespace TaskMangment.Infrastructure.Services
             }
 
             if (dto.FromDate.HasValue)
-                query = query.Where(d => d.CreatedDate >= dto.FromDate.Value);
+                query = query.Where(d => d.ViolationDate >= dto.FromDate.Value);
 
             if (dto.ToDate.HasValue)
             {
                 var toDateExclusive = dto.ToDate.Value.Date.AddDays(1);
-                query = query.Where(x => x.CreatedDate < toDateExclusive);
+                query = query.Where(x => x.ViolationDate < toDateExclusive);
             }
 
             if (dto.Status.HasValue)
@@ -606,12 +633,12 @@ namespace TaskMangment.Infrastructure.Services
             }
 
             if (dto.FromDate.HasValue)
-                query = query.Where(d => d.CreatedDate >= dto.FromDate.Value);
+                query = query.Where(d => d.ViolationDate >= dto.FromDate.Value);
 
             if (dto.ToDate.HasValue)
             {
                 var toDateExclusive = dto.ToDate.Value.Date.AddDays(1);
-                query = query.Where(x => x.CreatedDate < toDateExclusive);
+                query = query.Where(x => x.ViolationDate < toDateExclusive);
             }
 
             if (dto.Status.HasValue)

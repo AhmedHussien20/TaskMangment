@@ -30,8 +30,7 @@ import { DatePickerComponent } from "app/components/date-picker/date-picker.comp
     NgbModalModule,
     TaskCreateUpdateComponent,
     SpkDashboardComponent,
-    TasksEmployeeDeepSearchComponent,
-    DatePickerComponent
+    TasksEmployeeDeepSearchComponent
   ],
   templateUrl: './task-list.component.html'
 })
