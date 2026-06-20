@@ -919,7 +919,12 @@
     "BRANCH" : "Branch",
     "BRANCH_REQUIRED" : "Branch is required",
     "EMPLOYEE_TASK_COMMENTS": "Employee Task Comments",
-    "TASK_REQUIRED": "Task is required"
+    "TASK_REQUIRED": "Task is required",
+    "EMPLOYEE_TOTAL_DISCOUNTS": "Employee Total Discounts",
+    "ROLE_TITLE": "Role",
+    "TOTAL_DISCOUNT": "Total Discount",
+    "ALL_ROLES": "All Roles",
+    "FROM_DATE_REQUIRED": "From date is required when To date is selected"
 
 
   },

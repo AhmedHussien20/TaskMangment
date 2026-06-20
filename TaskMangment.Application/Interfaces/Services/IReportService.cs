@@ -20,6 +20,7 @@ namespace TaskMangment.Application.Interfaces.Services
         Task<List<TasksClosingSoonDto>> GetTasksClosingSoonAsync(int currentEmployeeId, int roleLevel, int? employeeId, DateTime fromDate, DateTime toDate);
         Task<List<EmployeeCommentsActivityReportDto>> GetEmployeesCommentsActivityAsync(int currentEmployeeId, int roleLevel, DateTime? fromDate, DateTime? toDate);
         Task<TaskDiscountAuditReportDto> GetTaskDiscountAuditReportAsync(int currentEmployeeId, int roleLevel, TaskDiscountReportFilterDto dto);
+        Task<List<EmployeeTotalDiscountReportRowDto>> GetEmployeeTotalDiscountReportAsync(int currentEmployeeId, int roleLevel, EmployeeTotalDiscountReportFilterDto dto);
 
         Task<List<EmployeeTaskTrackingReportDto>> GetEmployeeTaskTrackingAsync(int currentEmployeeId,int roleLevel,int? employeeId,DateTime fromDate,DateTime? toDate = null);
         Task<List<BranchTaskReportRowDto>> GetBranchTasksReportAsync(int currentEmployeeId,int roleLevel, BranchTasksReportFilterDto dto);

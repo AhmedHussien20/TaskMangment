@@ -40,6 +40,12 @@ namespace TaskMangment.Hangfire.Jobs
 
             foreach (var task in overdueTasks)
             {
+                bool hasCloseRequest = await _db.TaskCloseRequests
+                   .AnyAsync(r => r.TaskId == task.Id);
+
+                if (hasCloseRequest)
+                    continue;
+
                 var approvedExtension = await _db.TaskExtensionRequests
                     .Where(r => r.TaskId == task.Id
                          && r.Status == ExtensionRequestStatus.Approved

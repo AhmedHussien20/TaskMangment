@@ -941,6 +941,11 @@
     "BRANCH_REQUIRED" : "الفرع مطلوب",
     "EMPLOYEE_TASK_COMMENTS": "تعليقات الموظف على المهمة",
     "TASK_REQUIRED": "المهمة مطلوبة"
+    ,"EMPLOYEE_TOTAL_DISCOUNTS": "تقرير اجمالي خصومات الموظفين",
+    "ROLE_TITLE": "الصلاحية",
+    "TOTAL_DISCOUNT": "إجمالي الخصومات",
+    "ALL_ROLES": "كل الصلاحيات",
+    "FROM_DATE_REQUIRED": "يجب اختيار تاريخ البداية عند اختيار تاريخ النهاية"
   },
   "LEAVE" : 
   {

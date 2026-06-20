@@ -62,6 +62,19 @@ namespace TaskMangment.API.Controllers
             return Success(data);
         }
 
+        [HttpGet("employee-total-discounts")]
+        public async Task<IActionResult> GetEmployeeTotalDiscounts([FromQuery] EmployeeTotalDiscountReportFilterDto filter)
+        {
+            if (this.RoleLevel < 100)
+                return Forbid();
+
+            if (filter.ToDate.HasValue && !filter.FromDate.HasValue)
+                return BadRequest("fromDate is required when toDate is selected.");
+
+            var data = await _reportService.GetEmployeeTotalDiscountReportAsync(this.CurrentUserId, this.RoleLevel, filter);
+            return Success(data);
+        }
+
 
         [HttpGet("task-activities")]
         public async Task<IActionResult> GetTaskActivities(DateTime? fromDate,DateTime? toDate, ExportType exportType)

@@ -193,7 +193,8 @@ namespace TaskMangment.Hangfire.Jobs
                         d.EmployeeId == employeeId &&
                         d.discountType == DiscountType.StopCommentDiscount &&
                         d.AutoDiscount &&
-                        d.CreatedDate.Date == today);
+                        //d.CreatedDate.Date == today);
+                        d.ViolationDate.Date == dueDate);
 
                     if (alreadyDiscounted)
                         continue;

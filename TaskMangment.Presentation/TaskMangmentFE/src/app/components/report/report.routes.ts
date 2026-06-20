@@ -80,6 +80,12 @@ export const ReportRoutes: Routes = [
     loadComponent: () =>
       import('./employee-task-comments-report/employee-task-comments-report.component')
         .then(m => m.EmployeeTaskCommentsReportComponent)
+  },
+  {
+    path: 'employee-total-discounts',
+    loadComponent: () =>
+      import('./employee-total-discounts/employee-total-discounts.component')
+        .then(m => m.EmployeeTotalDiscountsComponent)
   }
 ];
 

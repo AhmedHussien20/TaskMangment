@@ -2,7 +2,7 @@ import { Injectable } from "@angular/core";
 import { ApiService } from "./api.service";
 import { Observable } from "rxjs";
 import { ApiResponse } from "../models/event/calendar";
-import { BranchTaskReportRowDto, EmployeeArchivedTasksReportDto, EmployeeAssignedTaskOptionDto, EmployeeAssignmentsReportDto, EmployeeCommentsReportDto, EmployeeOnTimeReportDto, EmployeeTaskCommentRowDto, EmployeeTaskTrackingReportDto, ExportType, TaskActivityReportDto, TaskDiscountReportDto, TaskMovementReportDto, TasksClosingSoonDto } from "../models/reports/reports";
+import { BranchTaskReportRowDto, EmployeeArchivedTasksReportDto, EmployeeAssignedTaskOptionDto, EmployeeAssignmentsReportDto, EmployeeCommentsReportDto, EmployeeOnTimeReportDto, EmployeeTaskCommentRowDto, EmployeeTaskTrackingReportDto, EmployeeTotalDiscountReportRowDto, ExportType, TaskActivityReportDto, TaskDiscountReportDto, TaskMovementReportDto, TasksClosingSoonDto } from "../models/reports/reports";
 
 @Injectable({ providedIn: 'root' })
 export class ReportListService {
@@ -69,6 +69,11 @@ getEmployeeTaskComments(employeeId: number, taskId: number): Observable<ApiRespo
   return this.api.get<ApiResponse<EmployeeTaskCommentRowDto[]>>(this.service, `employee-task-comments${query}`);
 }
 
+getEmployeeTotalDiscounts(roleId?: number, roleTitle?: string, fromDate?: string, toDate?: string): Observable<ApiResponse<EmployeeTotalDiscountReportRowDto[]>> {
+  const query = this.buildQuery({ roleId, roleTitle, fromDate, toDate });
+  return this.api.get<ApiResponse<EmployeeTotalDiscountReportRowDto[]>>(this.service, `employee-total-discounts${query}`);
+}
+
 
 
  private buildQuery(params: {
@@ -79,7 +84,9 @@ getEmployeeTaskComments(employeeId: number, taskId: number): Observable<ApiRespo
   movementType?: number;
   reportTitle?: string;
   exportType?: ExportType;
-  branchId?: number;           
+  branchId?: number;
+  roleId?: number;
+  roleTitle?: string;
 }): string {
   const q: string[] = [];
 
@@ -88,9 +95,11 @@ getEmployeeTaskComments(employeeId: number, taskId: number): Observable<ApiRespo
   if (params.status) q.push(`status=${encodeURIComponent(params.status)}`);
   if (params.employeeId !== undefined) q.push(`employeeId=${params.employeeId}`);
   if (params.branchId !== undefined) q.push(`branchId=${params.branchId}`);   // ✅ NEW
+  if (params.roleId !== undefined) q.push(`roleId=${params.roleId}`);
   if (params.movementType !== undefined) q.push(`movementType=${params.movementType}`);
   if (params.exportType !== undefined) q.push(`exportType=${params.exportType}`);
   if (params.reportTitle) q.push(`reportTitle=${encodeURIComponent(params.reportTitle)}`);
+  if (params.roleTitle) q.push(`roleTitle=${encodeURIComponent(params.roleTitle)}`);
 
   return q.length ? `?${q.join('&')}` : '';
 }

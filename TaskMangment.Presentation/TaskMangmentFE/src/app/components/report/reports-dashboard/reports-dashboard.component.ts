@@ -119,6 +119,14 @@ export class ReportsDashboardComponent implements OnInit { // إضافة impleme
       svg: this.REPORT_ICON_SVG,
       clickable: true,
       url: '/report/employee-task-comments'
+    },
+    {
+      title: 'REPORTS.EMPLOYEE_TOTAL_DISCOUNTS',
+      value: '',
+      svg: this.REPORT_ICON_SVG,
+      clickable: true,
+      url: '/report/employee-total-discounts',
+      minRoleLevel: 100
     }
   ];
 
@@ -130,11 +138,12 @@ export class ReportsDashboardComponent implements OnInit { // إضافة impleme
 
   private filterCardsByRole(): void {
   const roleLevel = this.authService.getRoleLevel() ?? 0;
+  const visibleCards = this.allCards.filter(card => !card.minRoleLevel || roleLevel >= card.minRoleLevel);
   
   if (roleLevel >= 70) {
-    this.filteredCards = [...this.allCards];
+    this.filteredCards = [...visibleCards];
   } else if (this.authService.hasPermission('CREATE_TASK')) {
-    this.filteredCards = this.allCards.filter(card => card.title !== 'REPORTS.BRANCH_TASK_TRACKING');
+    this.filteredCards = visibleCards.filter(card => card.title !== 'REPORTS.BRANCH_TASK_TRACKING');
   } else {
     const restrictedCards = [
       'REPORTS.TOP_COMMENTER',
@@ -143,7 +152,7 @@ export class ReportsDashboardComponent implements OnInit { // إضافة impleme
       'REPORTS.BRANCH_TASK_TRACKING'
     ];
 
-    this.filteredCards = this.allCards.filter(card => !restrictedCards.includes(card.title));
+    this.filteredCards = visibleCards.filter(card => !restrictedCards.includes(card.title));
   }
 }
 }

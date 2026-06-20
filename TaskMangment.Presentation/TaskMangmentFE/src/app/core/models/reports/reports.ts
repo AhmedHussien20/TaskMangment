@@ -149,3 +149,9 @@ export interface EmployeeTaskCommentRowDto {
   commentDate: string;
   commentText: string;
 }
+
+export interface EmployeeTotalDiscountReportRowDto {
+  employeeName: string;
+  totalDiscount: number;
+  roleTitle: string;
+}

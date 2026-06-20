@@ -72,6 +72,17 @@ getEmployeeTaskCommentsPdf(
   return this.api.getBlob(this.service, `employee-task-comments/pdf${query}`);
 }
 
+getEmployeeTotalDiscountsPdf(
+  exportType: ExportType,
+  roleId?: number,
+  roleTitle?: string,
+  fromDate?: string,
+  toDate?: string
+): Observable<Blob> {
+  const query = this.buildQuery({ exportType, roleId, roleTitle, fromDate, toDate });
+  return this.api.getBlob(this.service, `employee-total-discounts/pdf${query}`);
+}
+
 
  private buildQuery(params: {
   fromDate?: string;
@@ -81,7 +92,9 @@ getEmployeeTaskCommentsPdf(
   movementType?: number;
   reportTitle?: string;
   exportType?: ExportType;
-  branchId?: number;           
+  branchId?: number;
+  roleId?: number;
+  roleTitle?: string;
 }): string {
   const q: string[] = [];
 
@@ -90,9 +103,11 @@ getEmployeeTaskCommentsPdf(
   if (params.status) q.push(`status=${encodeURIComponent(params.status)}`);
   if (params.employeeId !== undefined) q.push(`employeeId=${params.employeeId}`);
   if (params.branchId !== undefined) q.push(`branchId=${params.branchId}`);   // ✅ NEW
+  if (params.roleId !== undefined) q.push(`roleId=${params.roleId}`);
   if (params.movementType !== undefined) q.push(`movementType=${params.movementType}`);
   if (params.exportType !== undefined) q.push(`exportType=${params.exportType}`);
   if (params.reportTitle) q.push(`reportTitle=${encodeURIComponent(params.reportTitle)}`);
+  if (params.roleTitle) q.push(`roleTitle=${encodeURIComponent(params.roleTitle)}`);
 
   return q.length ? `?${q.join('&')}` : '';
 }

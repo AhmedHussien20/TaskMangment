@@ -145,6 +145,32 @@ namespace TaskMangment.API.Controllers
                 "task-discount-audit.xlsx");
         }
 
+        [HttpGet("employee-total-discounts/pdf")]
+        public async Task<IActionResult> GetEmployeeTotalDiscountsPdf(ExportType exportType, [FromQuery] EmployeeTotalDiscountReportFilterDto filter)
+        {
+            if (this.RoleLevel < 100)
+                return Forbid();
+
+            if (filter.ToDate.HasValue && !filter.FromDate.HasValue)
+                return BadRequest("fromDate is required when toDate is selected.");
+
+            var data = await _reportService.GetEmployeeTotalDiscountReportAsync(this.CurrentUserId, this.RoleLevel, filter);
+            var roleTitle = filter.RoleId.HasValue ? filter.RoleTitle : null;
+
+            if (exportType == ExportType.Pdf)
+            {
+                var report = new EmployeeTotalDiscountPdfReport(data, filter.FromDate, filter.ToDate, roleTitle);
+                var pdf = report.GeneratePdf();
+                return File(pdf, "application/pdf", "employee-total-discounts.pdf");
+            }
+
+            var xlsx = EmployeeTotalDiscountExcelReport.Build(data, filter.FromDate, filter.ToDate, roleTitle);
+            return File(
+                xlsx,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "employee-total-discounts.xlsx");
+        }
+
         [HttpGet("task-activities/pdf")]
         public async Task<IActionResult> GetTaskActivitiesPdf(DateTime? fromDate, ExportType exportType, DateTime? toDate)
         {

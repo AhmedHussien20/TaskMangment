@@ -576,6 +576,77 @@ namespace TaskMangment.Infrastructure.Services
         }
 
 
+        public async Task<List<EmployeeTotalDiscountReportRowDto>> GetEmployeeTotalDiscountReportAsync(
+            int currentEmployeeId,
+            int roleLevel,
+            EmployeeTotalDiscountReportFilterDto dto)
+        {
+            if (roleLevel < 100)
+                return new List<EmployeeTotalDiscountReportRowDto>();
+
+            var currentEmployeeCompanyId = await _context.Employees
+                .Where(e => e.Id == currentEmployeeId)
+                .Select(e => e.CompanyId)
+                .FirstAsync();
+
+            var effectiveFromDate = dto.FromDate?.Date;
+            var effectiveToDate = dto.ToDate.HasValue
+                ? dto.ToDate.Value.Date.AddDays(1)
+                : (dto.FromDate.HasValue ? DateTime.Now : (DateTime?)null);
+
+            var query = _context.Discounts
+                .Where(d =>
+                    !d.IsDeleted &&
+                    d.Amount > 0 &&
+                    d.Employee != null &&
+                    d.Employee.IsActive &&
+                    d.Employee.CompanyId == currentEmployeeCompanyId)
+                .SelectMany(
+                    d => d.Employee.EmployeeRoles.Where(er =>
+                        er.IsAssigned &&
+                        !er.IsDeleted &&
+                        er.Role != null &&
+                        !er.Role.IsDeleted &&
+                        (!er.Role.CompanyId.HasValue || er.Role.CompanyId == currentEmployeeCompanyId) &&
+                        (!dto.RoleId.HasValue || er.RoleId == dto.RoleId.Value)),
+                    (d, er) => new
+                    {
+                        d.EmployeeId,
+                        EmployeeName = d.Employee.FullName,
+                        d.Amount,
+                        d.ViolationDate,
+                        RoleId = er.RoleId,
+                        RoleTitle = er.Role.Name
+                    });
+
+            if (effectiveFromDate.HasValue)
+                query = query.Where(x => x.ViolationDate >= effectiveFromDate.Value);
+
+            if (effectiveToDate.HasValue)
+                query = query.Where(x => x.ViolationDate < effectiveToDate.Value);
+
+            return await query
+                .GroupBy(x => new
+                {
+                    x.EmployeeId,
+                    x.EmployeeName,
+                    x.RoleId,
+                    x.RoleTitle
+                })
+                .Select(g => new EmployeeTotalDiscountReportRowDto
+                {
+                    EmployeeName = g.Key.EmployeeName ?? "غير معروف",
+                    RoleTitle = g.Key.RoleTitle ?? "-",
+                    TotalDiscount = g.Sum(x => x.Amount)
+                })
+                .OrderBy(x => x.RoleTitle)
+                .ThenByDescending(x => x.TotalDiscount)
+                .ThenBy(x => x.EmployeeName)
+                .AsNoTracking()
+                .ToListAsync();
+        }
+
+
         public async Task<List<TaskDiscountReportDto>> GetTaskDiscountReportAsync(
     int currentEmployeeId,
     int roleLevel,
