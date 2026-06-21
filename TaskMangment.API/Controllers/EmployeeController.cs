@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using TaskMangment.API.Reports.Excel;
 using TaskMangment.Application.Common.ApiRequests.Employee;
 using TaskMangment.Application.DTOs;
 using TaskMangment.Application.Interfaces.Services;
@@ -65,6 +66,21 @@ namespace TaskMangment.API.Controllers
         [HttpGet("function-codes")]
         public async Task<ApiResponse<List<FunctionCodeEnumDto>>> GetFunctionCodes()
             => await _service.GetFunctionCodesAsync();
+
+        [HttpGet("export/excel")]
+        public async Task<IActionResult> ExportExcel([FromQuery] EmployeeRequest request)
+        {
+            var result = await _service.GetAllForExportAsync(request, this.CurrentUserId, this.RoleLevel);
+
+            if (!result.Success)
+                return Fail(result.Message!);
+
+            var xlsxBytes = EmployeesExcelReport.Build(result.Data ?? new List<EmployeeGetDto>());
+            return File(
+                xlsxBytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "employees.xlsx");
+        }
 
     }
 }

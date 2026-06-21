@@ -29,6 +29,9 @@
   (entriesChange)="onEntriesChange($event)"
   [showDeleteButton]="true"
   (delete)="confirmDelete($event)"
+  [showExportExcel]="false"
+  [showExportReportExcel]="true"
+  (exportExcelClick)="onExportExcel()"
 
   [branchOptions]="branchOptions"  
 >

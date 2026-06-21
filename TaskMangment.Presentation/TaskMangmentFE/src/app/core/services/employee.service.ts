@@ -45,6 +45,11 @@ getFunctionCodes(): Observable<BaseResponse<EnumItemDto[]>> {
   return this.api.get<BaseResponse<EnumItemDto[]>>(this.service, 'function-codes');
 }
 
+exportExcel(request: SearchCriteria): Observable<Blob> {
+  const query = this.buildQuery(request);
+  return this.api.getBlob(this.service, `export/excel?${query}`);
+}
+
 
 
   // Build Query String

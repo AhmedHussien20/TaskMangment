@@ -88,71 +88,7 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<PagedResponse<EmployeeGetDto>>> GetAllAsync(EmployeeRequest request,int employeeId,int roleLevel) 
         {
-            var access = await _accessProvider.GetAsync(employeeId);
-
-            var myBranchId = await _employeeRepo.GetAll(e => e.Id == employeeId)
-       .Select(e => e.BranchId)
-       .FirstOrDefaultAsync();
-
-            if (myBranchId == 0)
-                throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
-
-            var empQuery = _employeeRepo.GetAll()
-                .Include(e => e.Branch)
-                .Include(e => e.Department)
-                .Include(e => e.Job)
-                .Include(e => e.EmployeeRoles.Where(er => er.IsAssigned && !er.IsDeleted))
-                    .ThenInclude(er => er.Role)
-                .ApplySearch(request.searchKey)
-                 .ApplyAccessScope(access)
-                .AsNoTracking();
-
-            if (request.BranchId.HasValue)
-            {
-                empQuery = empQuery.Where(e => e.BranchId == request.BranchId.Value);
-            }
-
-
-            if (!access.BranchIds.Any() && !access.FunctionCodes.Any() && roleLevel != 100 && string.IsNullOrWhiteSpace(request.PermissionCode))
-            {
-                empQuery = empQuery.Where(e => e.Id == employeeId);
-            }
-            if (!access.BranchIds.Any() && !access.FunctionCodes.Any() && roleLevel >= 70 && roleLevel < 100)
-            {
-                empQuery = empQuery.Where(e => e.Id == employeeId);
-            }
-
-            if (!string.IsNullOrWhiteSpace(request.PermissionCode) &&request.PermissionCode == "CREATE_TASK" && roleLevel < 60)
-            {
-                empQuery = empQuery
-                    .Where(e => e.BranchId == myBranchId)
-                    .Where(e => e.EmployeeRoles.Any(er =>
-                        er.IsAssigned &&
-                        !er.IsDeleted &&
-                        er.Role != null &&
-                        er.Role.Level < 60));
-            }
-
-            else
-            {
-                if (roleLevel != 100)
-                    empQuery = empQuery.ApplyRoleHierarchy(roleLevel);
-            }
-
-            //if (request.RoleLevel.HasValue)
-            //{
-            //    var level = request.RoleLevel.Value;
-
-            //    empQuery = empQuery.Where(e =>
-            //        e.EmployeeRoles.Any(er =>
-            //            er.IsAssigned &&
-            //            !er.IsDeleted &&
-            //            er.Role != null &&
-            //            er.Role.Level == level
-            //        )
-            //    );
-            //}
-
+            var empQuery = await BuildEmployeeQueryAsync(request, employeeId, roleLevel);
 
             var totalCount = await empQuery.CountAsync();
 
@@ -195,7 +131,72 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<PagedResponse<EmployeeGetDto>>.Ok(response);
         }
 
+        public async Task<ApiResponse<List<EmployeeGetDto>>> GetAllForExportAsync(
+            EmployeeRequest request,
+            int employeeId,
+            int roleLevel)
+        {
+            var empQuery = await BuildEmployeeQueryAsync(request, employeeId, roleLevel);
 
+            empQuery = empQuery.OrderByDynamicSafe(request.SortColumn, request.SortDirection);
+
+            var employees = await empQuery.ToListAsync();
+            var dtos = _mapper.Map<List<EmployeeGetDto>>(employees);
+
+            return ApiResponse<List<EmployeeGetDto>>.Ok(dtos);
+        }
+
+        private async Task<IQueryable<Employee>> BuildEmployeeQueryAsync(
+            EmployeeRequest request,
+            int employeeId,
+            int roleLevel)
+        {
+            var access = await _accessProvider.GetAsync(employeeId);
+
+            var myBranchId = await _employeeRepo.GetAll(e => e.Id == employeeId)
+                .Select(e => e.BranchId)
+                .FirstOrDefaultAsync();
+
+            if (myBranchId == 0)
+                throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
+
+            var empQuery = _employeeRepo.GetAll()
+                .Include(e => e.Branch)
+                .Include(e => e.Department)
+                .Include(e => e.Job)
+                .Include(e => e.EmployeeRoles.Where(er => er.IsAssigned && !er.IsDeleted))
+                    .ThenInclude(er => er.Role)
+                .ApplySearch(request.searchKey)
+                .ApplyAccessScope(access)
+                .AsNoTracking();
+
+            if (request.BranchId.HasValue)
+                empQuery = empQuery.Where(e => e.BranchId == request.BranchId.Value);
+
+            if (!access.BranchIds.Any() && !access.FunctionCodes.Any() && roleLevel != 100 && string.IsNullOrWhiteSpace(request.PermissionCode))
+                empQuery = empQuery.Where(e => e.Id == employeeId);
+
+            if (!access.BranchIds.Any() && !access.FunctionCodes.Any() && roleLevel >= 70 && roleLevel < 100)
+                empQuery = empQuery.Where(e => e.Id == employeeId);
+
+            if (!string.IsNullOrWhiteSpace(request.PermissionCode) && request.PermissionCode == "CREATE_TASK" && roleLevel < 60)
+            {
+                empQuery = empQuery
+                    .Where(e => e.BranchId == myBranchId)
+                    .Where(e => e.EmployeeRoles.Any(er =>
+                        er.IsAssigned &&
+                        !er.IsDeleted &&
+                        er.Role != null &&
+                        er.Role.Level < 60));
+            }
+            else
+            {
+                if (roleLevel != 100)
+                    empQuery = empQuery.ApplyRoleHierarchy(roleLevel);
+            }
+
+            return empQuery;
+        }
 
 
 
