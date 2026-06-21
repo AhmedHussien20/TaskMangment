@@ -29,28 +29,45 @@ namespace TaskMangment.Infrastructure.Services
         /// <summary>
         /// Helper
         /// </summary>
-        private async Task<(IQueryable<int> ScopedEmployeeIds,bool CanViewAllTasks,bool CanViewCreatedTasks)>GetScopedEmployeeIdsAsync(int currentEmployeeId, int roleLevel)
+        private async Task<(IQueryable<int> ScopedEmployeeIds, bool CanViewAllTasks, bool CanViewCreatedTasks)> GetScopedEmployeeIdsAsync(int currentEmployeeId, int roleLevel)
         {
             var access = await _accessProvider.GetAsync(currentEmployeeId);
 
             var companyId = await _context.Employees
-         .Where(e => e.Id == currentEmployeeId)
-         .Select(e => e.CompanyId)
-         .FirstAsync();
+                .Where(e => e.Id == currentEmployeeId)
+                .Select(e => e.CompanyId)
+                .FirstAsync();
+
+            bool canViewAllTasks = false;
+
+            if (roleLevel >= 100)
+            {
+                canViewAllTasks =
+                    await _permissionChecker
+                        .HasPermissionAsync(
+                            currentEmployeeId,
+                            "VIEW_ALL_TASKS");
+            }
+
+            bool canViewCreatedTasks =
+                await _permissionChecker
+                    .HasPermissionAsync(
+                        currentEmployeeId,
+                        "CREATE_TASK");
 
             IQueryable<Employee> scopedEmployeesQuery;
 
-            if (roleLevel >= 70 &&
-                !access.BranchIds.Any() &&
-                !access.FunctionCodes.Any())
+            if (roleLevel >= 100 && canViewAllTasks)
             {
+                // يشوف كل الشركة
                 scopedEmployeesQuery = _context.Employees
                     .Where(e =>
-                        e.Id == currentEmployeeId &&
+                        e.CompanyId == companyId &&
                         e.IsActive);
             }
-            else
+            else if (access.BranchIds.Any() || access.FunctionCodes.Any())
             {
+                // يشوف الـ Access
                 scopedEmployeesQuery = _context.Employees
                     .Where(e =>
                         e.CompanyId == companyId &&
@@ -64,26 +81,31 @@ namespace TaskMangment.Infrastructure.Services
                             .ApplyRoleHierarchy(roleLevel);
                 }
             }
+            else if (canViewCreatedTasks)
+            {
+                // يشوف موظفي الفرع
+                var branchId = await _context.Employees
+                    .Where(e => e.Id == currentEmployeeId)
+                    .Select(e => e.BranchId)
+                    .FirstAsync();
+
+                scopedEmployeesQuery = _context.Employees
+                    .Where(e =>
+                        e.CompanyId == companyId &&
+                        e.BranchId == branchId &&
+                        e.IsActive);
+            }
+            else
+            {
+                // يشوف نفسه فقط
+                scopedEmployeesQuery = _context.Employees
+                    .Where(e =>
+                        e.Id == currentEmployeeId &&
+                        e.IsActive);
+            }
 
             var scopedEmployeeIds =
                 scopedEmployeesQuery.Select(e => e.Id);
-
-            bool canViewAllTasks =
-                await _permissionChecker
-                    .HasPermissionAsync(
-                        currentEmployeeId,
-                        "VIEW_ALL_TASKS");
-
-            bool canViewCreatedTasks = false;
-
-            if (roleLevel < 60)
-            {
-                canViewCreatedTasks =
-                    await _permissionChecker
-                        .HasPermissionAsync(
-                            currentEmployeeId,
-                            "CREATE_TASK");
-            }
 
             return (scopedEmployeeIds, canViewAllTasks, canViewCreatedTasks);
         }
