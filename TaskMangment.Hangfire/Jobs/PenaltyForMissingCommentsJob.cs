@@ -134,9 +134,21 @@ namespace TaskMangment.Hangfire.Jobs
                         .OrderByDescending(c => c.CreatedDate)
                         .FirstOrDefaultAsync();
 
-                    var baseDate = lastComment == null
-                        ? assignment.AssignedAt.Date
-                        : lastComment.CreatedDate.Date;
+                    var lastDiscount = await _db.Discounts
+                        .Where(d => d.TaskId == task.Id &&
+                                    d.EmployeeId == employeeId &&
+                                    d.discountType == DiscountType.StopCommentDiscount &&
+                                    d.AutoDiscount)
+                        .OrderByDescending(d => d.ViolationDate)
+                        .FirstOrDefaultAsync();
+
+                    var baseDate = assignment.AssignedAt.Date;
+
+                    if (lastComment != null && lastComment.CreatedDate.Date > baseDate)
+                        baseDate = lastComment.CreatedDate.Date;
+
+                    if (lastDiscount != null && lastDiscount.ViolationDate.Date > baseDate)
+                        baseDate = lastDiscount.ViolationDate.Date;
 
                     var dueDate = (periodDays == 1)
                         ? baseDate.AddDays(periodDays)     
