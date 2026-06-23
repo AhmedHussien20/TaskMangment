@@ -46,6 +46,7 @@ namespace TaskMangment.Application.Common.Errors
 
 
         public const string EmployeeNotFound = "EMPLOYEE_NOT_FOUND";
+        public const string EmployeeInactive = "EMPLOYEE_INACTIVE";
 
         public const string RoleNotFound = "ROLE_NOT_FOUND";
         public const string PermissionNotFound = "PERMISSION_NOT_FOUND";

@@ -4,6 +4,7 @@ namespace TaskMangment.Application.DTOs.ReportsDTO
 {
     public class EmployeeTotalDiscountReportFilterDto
     {
+        public int? BranchId { get; set; }
         public int? RoleId { get; set; }
         public string? RoleTitle { get; set; }
         public DateTime? FromDate { get; set; }

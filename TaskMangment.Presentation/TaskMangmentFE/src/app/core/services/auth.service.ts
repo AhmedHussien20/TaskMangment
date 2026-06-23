@@ -53,7 +53,7 @@ export class AuthService {
         }
       }),
       catchError(error => {
-        let errorMessage = error.message;
+        let errorMessage = error?.error?.message || error.message;
         if (error.errorList) {
           errorMessage = error.errorList.join('\n');
         }

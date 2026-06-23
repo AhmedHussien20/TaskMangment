@@ -7,6 +7,14 @@
       <div class="card-header border-bottom-0">
         <div class="d-flex justify-content-center gap-3 flex-wrap">
           <div class="d-flex flex-column">
+            <label class="form-label small">{{ 'REPORTS.BRANCH' | translate }}</label>
+            <select class="form-select form-select-sm" [(ngModel)]="selectedBranchId">
+              <option [ngValue]="undefined">{{ 'COMMON.ALL' | translate }}</option>
+              <option *ngFor="let b of branches" [ngValue]="b.id">{{ b.name }}</option>
+            </select>
+          </div>
+
+          <div class="d-flex flex-column">
             <label class="form-label small">{{ 'REPORTS.ROLE_TITLE' | translate }}</label>
             <select class="form-select form-select-sm" [(ngModel)]="selectedRoleId">
               <option [ngValue]="undefined">{{ 'REPORTS.ALL_ROLES' | translate }}</option>

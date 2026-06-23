@@ -8,7 +8,7 @@ export interface Employee {
   mobile?: string;
   roles: string[];
   lastLoginDate?: string;
-  
+  isActive?: boolean;
 }
 export interface EnumItemDto {
   id: number;
@@ -30,9 +30,9 @@ export interface EmployeeAddEdit {
   roleIds: number[];
   email?: string;
   password?: string;
-  attachments?: File; 
-  functionCode?: EnumItemDto
-  
+  attachments?: File;
+  functionCode?: EnumItemDto;
+  isActive?: boolean;
 }
 
 export interface EmployeeRequest {

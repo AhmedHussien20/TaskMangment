@@ -48,6 +48,8 @@ namespace TaskMangment.Application.DTOs
         public IFormFile? Attachments { get; set; }
         public FunctionCode? FunctionCode { get; set; }
 
+        public bool IsActive { get; set; } = true;
+
 
     }
 
@@ -74,6 +76,7 @@ namespace TaskMangment.Application.DTOs
         public string ImageUrl { get; set; }
         public List<string> Roles { get; set; } = new();
         public DateTime? LastLoginDate { get; set; }
+        public bool IsActive { get; set; }
 
         public FunctionCode? FunctionCode { get; set; }
 

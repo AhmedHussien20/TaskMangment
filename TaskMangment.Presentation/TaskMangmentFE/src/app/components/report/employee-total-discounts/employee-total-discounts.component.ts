@@ -13,6 +13,7 @@ import { SearchCriteria } from 'app/core/models/search-criteria.model';
 import { AuthService } from 'app/core/services/auth.service';
 import { ReportListService } from 'app/core/services/report-list.service';
 import { ReportPdfService } from 'app/core/services/report-pdf.service';
+import { BranchService } from 'app/core/services/branch.service';
 import { RoleService } from 'app/core/services/role.service';
 import { GenericTableComponent, TableColumn } from 'app/shared/components/generic-table/generic-table.component';
 import { PageHeaderComponent } from 'app/shared/components/page-header/page-header.component';
@@ -46,11 +47,13 @@ export class EmployeeTotalDiscountsComponent implements OnInit {
 
   rows: EmployeeTotalDiscountReportRowDto[] = [];
   roles: Role[] = [];
+  branches: { id: number; name: string }[] = [];
   totalItems = 0;
 
   page = 1;
   entries = 10;
 
+  selectedBranchId?: number;
   selectedRoleId?: number;
   fromDate?: string;
   toDate?: string;
@@ -60,6 +63,7 @@ export class EmployeeTotalDiscountsComponent implements OnInit {
   constructor(
     private reportService: ReportListService,
     private reportPdfService: ReportPdfService,
+    private branchService: BranchService,
     private roleService: RoleService,
     private authService: AuthService,
     private router: Router,
@@ -73,8 +77,32 @@ export class EmployeeTotalDiscountsComponent implements OnInit {
       return;
     }
 
+    this.loadBranches();
     this.loadRoles();
     this.loadData();
+  }
+
+  loadBranches(): void {
+    const req = {
+      searchKey: '',
+      pageIndex: 1,
+      pageSize: 500,
+      sortColumn: 'Id',
+      sortDirection: 'DESC'
+    };
+
+    this.branchService.getAll(req).subscribe({
+      next: (res) => {
+        const list = res?.data?.data ?? [];
+        this.branches = list.map((b: any) => ({
+          id: Number(b.id),
+          name: b.name
+        }));
+      },
+      error: () => {
+        this.toastr.error(this.translate.instant('COMMON.ERROR_LOADING_DATA'));
+      }
+    });
   }
 
   loadRoles(): void {
@@ -98,7 +126,7 @@ export class EmployeeTotalDiscountsComponent implements OnInit {
 
     this.isLoading = true;
     this.reportService
-      .getEmployeeTotalDiscounts(this.selectedRoleId, this.selectedRoleTitle, this.fromDate, this.toDate)
+      .getEmployeeTotalDiscounts(this.selectedBranchId, this.selectedRoleId, this.selectedRoleTitle, this.fromDate, this.toDate)
       .subscribe({
         next: (res) => {
           this.rows = res.data ?? [];
@@ -138,7 +166,7 @@ export class EmployeeTotalDiscountsComponent implements OnInit {
     if (!this.validateDateRange()) return;
 
     this.reportPdfService
-      .getEmployeeTotalDiscountsPdf(exportType, this.selectedRoleId, this.selectedRoleTitle, this.fromDate, this.toDate)
+      .getEmployeeTotalDiscountsPdf(exportType, this.selectedBranchId, this.selectedRoleId, this.selectedRoleTitle, this.fromDate, this.toDate)
       .subscribe({
         next: (blob) => {
           const url = window.URL.createObjectURL(blob);

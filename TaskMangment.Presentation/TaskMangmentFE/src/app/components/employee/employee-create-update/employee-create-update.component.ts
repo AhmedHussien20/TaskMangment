@@ -169,6 +169,12 @@ export class EmployeeCreateUpdateComponent implements OnInit {
       options: [],
       validations: { required: true },
     },
+    {
+      type: 'checkbox',
+      label: 'EMPLOYEE.IS_ACTIVE',
+      name: 'isActive',
+      defaultValue: true
+    },
   ];
 
   constructor(
@@ -244,6 +250,7 @@ export class EmployeeCreateUpdateComponent implements OnInit {
       confirmPassword: [''],
       attachments: [null],
       functionCode: [null,Validators.required],
+      isActive: [true],
 
 
     }, {
@@ -323,6 +330,7 @@ export class EmployeeCreateUpdateComponent implements OnInit {
         roleIds: emp.roleIds || [],
         email: emp.email,
         functionCode: emp.functionCode,
+        isActive: emp.isActive ?? true,
 
 
         password: '',
@@ -450,6 +458,8 @@ export class EmployeeCreateUpdateComponent implements OnInit {
         formData.append(key, formValue[key]);
       }
     });
+
+    formData.set('isActive', String(!!formValue.isActive));
 
     if (formValue.mobileCode && formValue.mobile) {
       formData.set('mobile', formValue.mobileCode + formValue.mobile);

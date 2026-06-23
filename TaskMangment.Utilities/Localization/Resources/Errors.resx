@@ -139,6 +139,9 @@
   <data name="EMPLOYEE_NOT_FOUND" xml:space="preserve">
     <value>employee not found</value>
   </data>
+  <data name="EMPLOYEE_INACTIVE" xml:space="preserve">
+    <value>employee account is inactive</value>
+  </data>
   <data name="OFFER_NOT_FOUND" xml:space="preserve">
     <value>offer not found</value>
   </data>

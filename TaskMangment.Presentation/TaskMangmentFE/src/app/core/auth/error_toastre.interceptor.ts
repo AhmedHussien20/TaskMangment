@@ -20,11 +20,14 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
       }
     }),
     catchError((err: any) => {
-      const message = err?.error?.message || 'حدث خطأ. يرجى المحاولة مرة أخرى.';
-      toastr.error(message, 'خطأ', {
-        timeOut: 3000,
-        positionClass: 'toast-top-right'
-      });
+      const isLoginRequest = /\/auth\/login/i.test(req.url);
+      if (!isLoginRequest) {
+        const message = err?.error?.message || 'حدث خطأ. يرجى المحاولة مرة أخرى.';
+        toastr.error(message, 'خطأ', {
+          timeOut: 3000,
+          positionClass: 'toast-top-right'
+        });
+      }
       return throwError(() => err);
     })
   );

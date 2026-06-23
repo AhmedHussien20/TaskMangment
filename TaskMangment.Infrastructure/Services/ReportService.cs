@@ -616,13 +616,18 @@ namespace TaskMangment.Infrastructure.Services
                 ? dto.ToDate.Value.Date.AddDays(1)
                 : (dto.FromDate.HasValue ? DateTime.Now : (DateTime?)null);
 
-            var query = _context.Discounts
+            var discountsQuery = _context.Discounts
                 .Where(d =>
                     !d.IsDeleted &&
                     d.Amount > 0 &&
                     d.Employee != null &&
                     d.Employee.IsActive &&
-                    d.Employee.CompanyId == currentEmployeeCompanyId)
+                    d.Employee.CompanyId == currentEmployeeCompanyId);
+
+            if (dto.BranchId.HasValue && dto.BranchId.Value > 0)
+                discountsQuery = discountsQuery.Where(d => d.Employee.BranchId == dto.BranchId.Value);
+
+            var query = discountsQuery
                 .SelectMany(
                     d => d.Employee.EmployeeRoles.Where(er =>
                         er.IsAssigned &&

@@ -186,6 +186,7 @@ namespace TaskMangment.API
                 builder.Services.AddControllers(options =>
                 {
                     options.Filters.Add<RoleAuthorizationFilter>();
+                    options.Filters.Add<ActiveEmployeeFilter>();
                 });
 
                 // =======================

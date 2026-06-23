@@ -53,6 +53,11 @@ public class AuthService : IAuthService
                  ErrorCodes.Invalid,
                 StatusCodes.Status400BadRequest);
 
+        if (!user.IsActive || user.IsDeleted)
+            throw new AppException(
+                ErrorCodes.EmployeeInactive,
+                StatusCodes.Status403Forbidden);
+
         var profileImageWithoutSas = await _db.Attachments
             .Where(a =>
                 a.ReferenceId == user.Id &&
@@ -124,6 +129,11 @@ public class AuthService : IAuthService
                 ErrorCodes.EmailNotFound,
                 StatusCodes.Status404NotFound);
 
+        if (!user.IsActive || user.IsDeleted)
+            throw new AppException(
+                ErrorCodes.EmployeeInactive,
+                StatusCodes.Status403Forbidden);
+
         var random = new Random();
         string resetCode = random.Next(100000, 999999).ToString();
 
@@ -150,6 +160,11 @@ public class AuthService : IAuthService
                 ErrorCodes.EmailNotFound,
                 StatusCodes.Status404NotFound);
 
+        if (!user.IsActive || user.IsDeleted)
+            throw new AppException(
+                ErrorCodes.EmployeeInactive,
+                StatusCodes.Status403Forbidden);
+
         bool isValidCode = BCrypt.Net.BCrypt.Verify(request.Token, user.ResetPasswordToken);
         if (!isValidCode)
             throw new AppException(ErrorCodes.InvalidToken, StatusCodes.Status400BadRequest);
@@ -169,6 +184,11 @@ public class AuthService : IAuthService
             throw new AppException(
                 ErrorCodes.EmailNotFound,
                 StatusCodes.Status404NotFound);
+
+        if (!user.IsActive || user.IsDeleted)
+            throw new AppException(
+                ErrorCodes.EmployeeInactive,
+                StatusCodes.Status403Forbidden);
 
         user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
 

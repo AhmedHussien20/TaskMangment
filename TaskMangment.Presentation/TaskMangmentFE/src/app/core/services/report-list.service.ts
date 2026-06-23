@@ -69,8 +69,8 @@ getEmployeeTaskComments(employeeId: number, taskId: number): Observable<ApiRespo
   return this.api.get<ApiResponse<EmployeeTaskCommentRowDto[]>>(this.service, `employee-task-comments${query}`);
 }
 
-getEmployeeTotalDiscounts(roleId?: number, roleTitle?: string, fromDate?: string, toDate?: string): Observable<ApiResponse<EmployeeTotalDiscountReportRowDto[]>> {
-  const query = this.buildQuery({ roleId, roleTitle, fromDate, toDate });
+getEmployeeTotalDiscounts(branchId?: number, roleId?: number, roleTitle?: string, fromDate?: string, toDate?: string): Observable<ApiResponse<EmployeeTotalDiscountReportRowDto[]>> {
+  const query = this.buildQuery({ branchId, roleId, roleTitle, fromDate, toDate });
   return this.api.get<ApiResponse<EmployeeTotalDiscountReportRowDto[]>>(this.service, `employee-total-discounts${query}`);
 }
 

@@ -66,7 +66,8 @@
     "LOADING": "Loading",
     "APPLY": "Apply",
     "ERROR_LOADING_DATA": "An error occurred while loading data",
-    "SELECT_FROM_DATE" : "Select From date"
+    "SELECT_FROM_DATE" : "Select From date",
+    "ALL" : "All"
   },
   "validation": {
     "required": "This field is required",
@@ -210,7 +211,8 @@
     "FORGOT_PASSWORD": "Forgot password?",
     "DONT_HAVE_ACCOUNT": "Don't have an account?",
     "REGISTER_HERE": "Register here",
-    "SUBTITLE": "Please login to continue"
+    "SUBTITLE": "Please login to continue",
+    "FAILED": "Login failed"
   },
   "FORGOT_PASSWORD": {
     "TITLE": "Forgot Password?",
@@ -621,8 +623,9 @@
     "JOB": "Job",
     "LAST_LOGIN": "Last Login",
     "DEPARTMENT": "Department",
-    "FUNCTION_CODE": "Employee type"
-    
+    "FUNCTION_CODE": "Employee type",
+    "IS_ACTIVE": "Active employee"
+
   },
   "STUDENT": {
     "TITLE": "Students",

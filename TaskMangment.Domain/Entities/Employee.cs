@@ -50,6 +50,7 @@ namespace TaskMangment.Domain.Entities
 
         public DateTime? LastLoginDate { get; set; }
         public FunctionCode FunctionCode { get; set; } = FunctionCode.Operations;
+        
 
         // Navigation
         public Company Company { get; set; }

@@ -124,7 +124,14 @@ export class LoginComponent {
       });
  */
       this.router.navigate(['/dashboard']);
-    }, 
+    },
+    error: (err) => {
+      const message = err?.message || this.translate.instant('LOGIN.FAILED');
+      this.toastr.error(message, '', {
+        timeOut: 4000,
+        positionClass: 'toast-top-right',
+      });
+    }
   });
 }
 

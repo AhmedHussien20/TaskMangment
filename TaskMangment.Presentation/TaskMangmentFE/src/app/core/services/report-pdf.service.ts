@@ -74,12 +74,13 @@ getEmployeeTaskCommentsPdf(
 
 getEmployeeTotalDiscountsPdf(
   exportType: ExportType,
+  branchId?: number,
   roleId?: number,
   roleTitle?: string,
   fromDate?: string,
   toDate?: string
 ): Observable<Blob> {
-  const query = this.buildQuery({ exportType, roleId, roleTitle, fromDate, toDate });
+  const query = this.buildQuery({ exportType, branchId, roleId, roleTitle, fromDate, toDate });
   return this.api.getBlob(this.service, `employee-total-discounts/pdf${query}`);
 }
 

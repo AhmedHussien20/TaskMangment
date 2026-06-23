@@ -20,15 +20,29 @@ export const AuthInterceptor: HttpInterceptorFn = (req, next) => {
   return next(req).pipe(
     tap({
       error: (err) => {
-        if (err.status === 401) {
+        const isAuthRequest = /\/auth\/(login|forgot-password|verify-reset-code|reset-password)/i.test(req.url);
+
+        const isInactiveAccount =
+          err.status === 403 && err.error?.errorCode === 'EMPLOYEE_INACTIVE';
+
+        // Let the login page show the error; don't reload while already on login.
+        if (isAuthRequest) {
+          return;
+        }
+
+        if (err.status === 401 || isInactiveAccount) {
 
           // Clear token
           localStorage.clear();
 
           // Show toast
           toastr.error(
-            getMessage('SESSION_EXPIRED'),
-            getMessage('UNAUTHORIZED'),
+            isInactiveAccount
+              ? getMessage('ACCOUNT_INACTIVE')
+              : getMessage('SESSION_EXPIRED'),
+            isInactiveAccount
+              ? getMessage('ACCOUNT_DISABLED')
+              : getMessage('UNAUTHORIZED'),
             {
               timeOut: 3000,
               positionClass: 'toast-top-right'
@@ -54,6 +68,14 @@ function getMessage(key: string): string {
     UNAUTHORIZED: {
       en: 'Unauthorized',
       ar: 'غير مصرح'
+    },
+    ACCOUNT_INACTIVE: {
+      en: 'Your account is inactive. Please contact the administrator.',
+      ar: 'حسابك غير نشط. يرجى التواصل مع المسؤول.'
+    },
+    ACCOUNT_DISABLED: {
+      en: 'Account disabled',
+      ar: 'الحساب معطل'
     }
   };
 

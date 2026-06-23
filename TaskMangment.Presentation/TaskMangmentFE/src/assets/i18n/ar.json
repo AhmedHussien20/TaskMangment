@@ -68,7 +68,8 @@
     "APPLY": "تطبيق",
     "ERROR_LOADING_DATA": "حدث خطأ أثناء تحميل البيانات",
     "SELECT_FROM_DATE" : "اختر وقت البداية ",
-    "SELECT": "اختر"
+    "SELECT": "اختر",
+    "ALL" : "الكل"
   },
   "validation": {
     "required": "هذا الحقل مطلوب",
@@ -212,7 +213,8 @@
     "FORGOT_PASSWORD": "نسيت كلمة السر؟",
     "DONT_HAVE_ACCOUNT": "ليس لديك حساب؟",
     "REGISTER_HERE": "سجل هنا",
-    "SUBTITLE": "الرجاء تسجيل الدخول للمتابعة"
+    "SUBTITLE": "الرجاء تسجيل الدخول للمتابعة",
+    "FAILED": "فشل تسجيل الدخول"
   },
   "FORGOT_PASSWORD":
   {
@@ -643,9 +645,10 @@
     "JOB": "الوظيفة",
     "LAST_LOGIN": "آخر تسجيل دخول",
     "DEPARTMENT": "القسم",
-    "FUNCTION_CODE" : "نوع الموظف"
+    "FUNCTION_CODE" : "نوع الموظف",
+    "IS_ACTIVE": "موظف نشط"
 
-   
+
   },
   "STUDENT": {
     "TITLE": "الطلاب",
