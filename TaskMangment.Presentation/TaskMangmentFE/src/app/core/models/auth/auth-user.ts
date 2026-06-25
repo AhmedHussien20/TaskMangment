@@ -7,5 +7,6 @@ export interface AuthUser {
   roles: string[];
   permissions: string[];
   token: string;
-  functionCode?: number
+  functionCode?: number;
+  hasAccessScope?: boolean;
 }

@@ -383,6 +383,8 @@
     "IN_PROGRESS_TASKS": "المهام قيد التنفيذ",
     "CREATED_BY_ME": "المهام التي أنشأتها",
     "MY_TASKS": "مهامي",
+    "ALL_TASKS": "كل المهام",
+    "TASK_SCOPE": "نطاق المهام",
     "UPDATED_BY": "تم التحديث بواسطة",
     "UPDATED_AT": "وقت التحديث",
     "LIST_TITLE": "المهام",

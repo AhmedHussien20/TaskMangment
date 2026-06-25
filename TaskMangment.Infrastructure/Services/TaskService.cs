@@ -147,8 +147,10 @@ namespace TaskMangment.Infrastructure.Services
                 }
 
                 var access = await _accessProvider.GetAsync(employeeId);
+                var hasAccessScope = access.BranchIds.Any() || access.FunctionCodes.Any();
+                var viewScopedTasks = request.ViewScopedTasks == true && hasAccessScope;
 
-                if (access.BranchIds.Any() || access.FunctionCodes.Any())
+                if (viewScopedTasks)
                 {
                     var scopedEmployeesQuery = _employeeRepo
                         .GetAll(e => e.CompanyId == CompanyId && e.IsActive)
@@ -189,6 +191,8 @@ namespace TaskMangment.Infrastructure.Services
 
             var dtos = _mapper.Map<ICollection<TaskGetDto>>(list);
 
+            var hasCreatorPrivileges = await HasCreatorPrivilegesAsync(roleLevel, employeeId);
+
             foreach (var dto in dtos)
             {
                 var task = list.FirstOrDefault(t => t.Id == dto.Id);
@@ -205,8 +209,7 @@ namespace TaskMangment.Infrastructure.Services
 
                 dto.AssignedByName = task.AssignedBy?.FullName;
                 dto.CreatedByMe =
-                    roleLevel == 100 ||
-                    roleLevel == 80 ||
+                    hasCreatorPrivileges ||
                     task.CreatedByEmployeeId == employeeId;
 
             }
@@ -277,10 +280,10 @@ namespace TaskMangment.Infrastructure.Services
 
             dto.AssignedByName = task.AssignedBy?.FullName;
 
+            var hasCreatorPrivileges = await HasCreatorPrivilegesAsync(roleLevel, employeeId);
             dto.CreatedByMe =
-    roleLevel == 100 ||
-    roleLevel == 80 ||
-    task.CreatedByEmployeeId == employeeId;
+                hasCreatorPrivileges ||
+                task.CreatedByEmployeeId == employeeId;
 
             return ApiResponse<TaskGetDto>.Ok(dto);
         }
@@ -872,6 +875,22 @@ namespace TaskMangment.Infrastructure.Services
            // await _cache.RemoveAsync("tasks:");
 
             return ApiResponse<bool>.Ok(true);
+        }
+
+        private async Task<bool> HasCreatorPrivilegesAsync(int roleLevel, int employeeId)
+        {
+            if (roleLevel == 100)
+                return true;
+
+            if (roleLevel == 80)
+            {
+                var functionCode = await _employeeRepo.GetAll(e => e.Id == employeeId)
+                    .Select(e => e.FunctionCode)
+                    .FirstOrDefaultAsync();
+                return functionCode == FunctionCode.Operations;
+            }
+
+            return false;
         }
 
         

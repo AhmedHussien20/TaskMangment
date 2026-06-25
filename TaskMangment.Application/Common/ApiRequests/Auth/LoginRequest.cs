@@ -52,6 +52,8 @@ namespace TaskMangment.Application.Common.ApiRequests.Auth
         public string? ProfileImage { get; set; }
         public FunctionCode FunctionCode { get; set; } = FunctionCode.Operations;
 
+        public bool HasAccessScope { get; set; }
+
 
     }
 

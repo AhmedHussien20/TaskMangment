@@ -28,7 +28,9 @@ namespace TaskMangment.Application.Common.ApiRequests.Task
         public DateTime? DueFrom { get; set; }
         public DateTime? DueTo { get; set; }
 
-        public List<int>? EmployeeIds { get; set; } 
+        public List<int>? EmployeeIds { get; set; }
+
+        public bool? ViewScopedTasks { get; set; }
     }
 
 }

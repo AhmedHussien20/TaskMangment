@@ -35,6 +35,7 @@
   [onSearch]="applyFilters.bind(this)"
   [statusOptions]="status"
   [showEmployeeFilter]="showEmployeeFilter"
+  [extraFilterOptions]="showTaskScopeFilter ? taskScopeFilterOptions : {}"
   (pageChange)="onPageChange($event)"
   [addButtonLabel]="'TASK.ADD' | translate"
   (edit)="openEdit($event, taskModal)"

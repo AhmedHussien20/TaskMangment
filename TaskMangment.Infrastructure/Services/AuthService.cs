@@ -5,6 +5,7 @@ using System.Linq;
 using TaskMangment.Application.Common.ApiRequests.Auth;
 using TaskMangment.Application.Common.Errors;
 using TaskMangment.Application.Common.Exceptions;
+using TaskMangment.Application.Common.Security;
 using TaskMangment.Application.Interfaces;
 using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
@@ -22,8 +23,9 @@ public class AuthService : IAuthService
     private readonly IRolePermissionService _permissionService;
     private readonly IRepository<RolePermission> _rolePerRepo;
     private readonly IBlobStorageService _blobStorageService;
+    private readonly IUserAccessContextProvider _accessProvider;
 
-    public AuthService(AppDbContext db, IJwtService jwt, IEmailService email, IRepository<RolePermission> rolePerRepo, IRoleAssignmentService roleService, IRolePermissionService permissionService, IBlobStorageService blobStorageService)
+    public AuthService(AppDbContext db, IJwtService jwt, IEmailService email, IRepository<RolePermission> rolePerRepo, IRoleAssignmentService roleService, IRolePermissionService permissionService, IBlobStorageService blobStorageService, IUserAccessContextProvider accessProvider)
     {
         _db = db;
         _jwt = jwt;
@@ -32,6 +34,7 @@ public class AuthService : IAuthService
         _roleService = roleService;
         _permissionService = permissionService;
         _blobStorageService = blobStorageService;
+        _accessProvider = accessProvider;
     }
 
     public async Task<ApiResponse<LoginResponse>> LoginAsync(LoginRequest request)
@@ -86,6 +89,9 @@ public class AuthService : IAuthService
         var permissions = await _permissionService
                             .GetUserPermissionsAsync(user.Id);
 
+        var access = await _accessProvider.GetAsync(user.Id);
+        var hasAccessScope = access.BranchIds.Any() || access.FunctionCodes.Any();
+
         var token = await _jwt.GenerateTokenAsync(user);
 
         user.LastLoginDate = DateTime.UtcNow;
@@ -114,6 +120,7 @@ public class AuthService : IAuthService
             RoleLevel = roleLevel,
             RoleLevelName = roleLevelName,
             FunctionCode= user.FunctionCode,
+            HasAccessScope = hasAccessScope,
 
             Token = token
         });

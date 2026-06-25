@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output, OnDestroy, OnInit, OnChanges } from '@angular/core';
+import { Component, EventEmitter, Input, Output, OnDestroy, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { NgbDropdownModule, NgbPaginationModule, NgbTooltipModule } from '@ng-bootstrap/ng-bootstrap';
 import { NgSelectModule } from '@ng-select/ng-select';
@@ -189,8 +189,10 @@ onFilterChange(key: string, value: any) {
 
   this.filtersChanged$.next();
 } */
-ngOnChanges(): void {
-  this.extraOptionsCache = {};
+ngOnChanges(changes: SimpleChanges): void {
+  if (changes['extraFilterOptions']) {
+    this.extraOptionsCache = {};
+  }
 }
   objectKeys(obj: any): string[] {
     return obj ? Object.keys(obj) : [];
@@ -280,6 +282,11 @@ ngOnChanges(): void {
 
   onFilterChange(key: string, value: any) {
     (this.searchCriteria as any)[key] = value;
+    if (key === 'viewScopedTasks') {
+      (this.searchCriteria as any).pageIndex = 1;
+      this.applyFilters();
+      return;
+    }
     this.filtersChanged$.next();
   }
   applyFilters() {
@@ -330,7 +337,7 @@ ngOnChanges(): void {
         if (this.isMultiSelect(key)) {
           (this.searchCriteria as any)[key] = [];
         } else {
-          (this.searchCriteria as any)[key] = (key === 'statusId') ? 0 : null;
+          (this.searchCriteria as any)[key] = (key === 'statusId') ? 0 : (key === 'viewScopedTasks') ? 'my' : null;
         }
 
       } else if (type === 'date') {

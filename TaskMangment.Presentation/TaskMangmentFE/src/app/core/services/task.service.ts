@@ -92,6 +92,10 @@ private buildQuery(req: any): string {
     params.push(`dueTo=${encodeURIComponent(req.dueTo)}`);
   }
 
+  if (req.viewScopedTasks === 'scoped' || req.viewScopedTasks === true || req.viewScopedTasks === 1) {
+    params.push('viewScopedTasks=true');
+  }
+
   return params.join('&');
 }
 

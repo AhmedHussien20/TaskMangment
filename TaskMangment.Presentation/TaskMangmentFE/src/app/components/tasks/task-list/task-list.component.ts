@@ -45,6 +45,7 @@ deepSearchComp?: TasksEmployeeDeepSearchComponent;
   canDelete = false;
   canShowExtraTasks= false
   showEmployeeFilter = false;
+  showTaskScopeFilter = false;
   deepSearchInitial: any = null;
   summary!: {
     myTasks: number;
@@ -134,7 +135,15 @@ deepSearchComp?: TasksEmployeeDeepSearchComponent;
   labels = {
     searchKey: 'TASK.searchKey',
     employeeIds: 'TASK.employee',
-    statusId: 'TASK.STATUS'
+    statusId: 'TASK.STATUS',
+    viewScopedTasks: 'TASK.TASK_SCOPE'
+  };
+
+  taskScopeFilterOptions: Record<string, { id: string; name: string }[]> = {
+    viewScopedTasks: [
+      { id: 'my', name: 'TASK.MY_TASKS' },
+      { id: 'scoped', name: 'TASK.ALL_TASKS' }
+    ]
   };
 
   isEdit = false;
@@ -156,9 +165,23 @@ deepSearchComp?: TasksEmployeeDeepSearchComponent;
     const roleLevel = this.auth.getRoleLevel();
     this.showEmployeeFilter = roleLevel >= 50;
 
-    this.showEmployeeFilter = roleLevel >= 50;
-
     this.status = this.statusOptions;
+
+    const user = this.auth.getUser() ?? this.auth.getCurrentUser();
+    this.showTaskScopeFilter = !!user?.hasAccessScope;
+
+    if (this.showTaskScopeFilter) {
+      this.searchCriteria = {
+        ...this.searchCriteria,
+        viewScopedTasks: 'my',
+        filterTypes: {
+          viewScopedTasks: 'dropdown',
+          searchKey: 'text',
+          employeeIds: 'dropdown',
+          statusId: 'dropdown',
+        }
+      };
+    }
 
     this.canCreate = roleLevel >= 50;
     this.canEdit = roleLevel >= 70;
@@ -288,11 +311,7 @@ if (this.auth.hasPermission('CREATE_TASK')) {
   }
 
   applyFilters(filters: any) {
-    this.searchCriteria = {
-      ...this.searchCriteria,
-      ...filters,
-      pageIndex: 1
-    };
+    Object.assign(this.searchCriteria, filters, { pageIndex: 1 });
     this.page = 1;
     this.loadData();
   }
@@ -495,7 +514,10 @@ disableArchiveCheckbox = (row: TaskGet) =>
   (this.searchCriteria as any).dueFrom = null;
   (this.searchCriteria as any).dueTo = null;
   (this.searchCriteria as any).searchKey = '';
-this.clearTrigger++; 
+  if (this.showTaskScopeFilter) {
+    (this.searchCriteria as any).viewScopedTasks = 'my';
+  }
+this.clearTrigger++;
   this.loadData();
 }
 
