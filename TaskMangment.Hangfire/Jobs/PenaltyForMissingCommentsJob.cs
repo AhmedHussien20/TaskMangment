@@ -150,16 +150,13 @@ namespace TaskMangment.Hangfire.Jobs
                     if (lastDiscount != null && lastDiscount.ViolationDate.Date > baseDate)
                         baseDate = lastDiscount.ViolationDate.Date;
 
-                    var dueDate = (periodDays == 1)
-                        ? baseDate.AddDays(periodDays)     
-                        : baseDate.AddDays(periodDays - 1); 
+                    var dueDate = baseDate.AddDays(periodDays);
 
                     if (dueDate > yesterday)
                         continue;
 
                     if (lastComment != null && lastComment.CreatedDate.Date == dueDate)
-                        continue;
-
+                        continue; 
 
                     var hasLeave = await _db.Leaves
                       .Where(l => l.EmployeeId == employeeId &&

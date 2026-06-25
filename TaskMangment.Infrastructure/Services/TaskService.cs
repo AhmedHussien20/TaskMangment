@@ -12,6 +12,7 @@ using TaskMangment.Application.Common.Errors;
 using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Responses;
+using TaskMangment.Application.Common.Security;
 using TaskMangment.Application.DTOs;
 using TaskMangment.Application.DTOs.TaskDTOs;
 using TaskMangment.Application.Interfaces.IRepository;
@@ -50,6 +51,7 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<Notification> _notificationRepo;
 
         private readonly IAppUnitOfWork _uow;
+        private readonly IUserAccessContextProvider _accessProvider;
 
 
 
@@ -73,7 +75,8 @@ namespace TaskMangment.Infrastructure.Services
            IRepository<Attachment> attachmentRepo,
            IRepository<TaskPercentage> percentRepo,
            IRepository<Notification> notificationRepo,
-           IAppUnitOfWork uow
+           IAppUnitOfWork uow,
+           IUserAccessContextProvider accessProvider
 
 
 
@@ -97,6 +100,7 @@ namespace TaskMangment.Infrastructure.Services
             _percentRepo = percentRepo;
             _notificationRepo = notificationRepo;
             _uow = uow;
+            _accessProvider = accessProvider;
         }
 
         public async Task<ApiResponse<PagedResponse<TaskGetDto>>> GetAllAsync(TaskRequest request, int CompanyId, int roleLevel, int employeeId)
@@ -142,9 +146,29 @@ namespace TaskMangment.Infrastructure.Services
                     query = query.Where(t => (int)t.Status == request.StatusId.Value);
                 }
 
-                query = query.Where(t =>
-                    t.Assignments.Any(a => a.EmployeeId == employeeId && a.IsActive) ||
-                    t.CreatedByEmployeeId == employeeId);
+                var access = await _accessProvider.GetAsync(employeeId);
+
+                if (access.BranchIds.Any() || access.FunctionCodes.Any())
+                {
+                    var scopedEmployeesQuery = _employeeRepo
+                        .GetAll(e => e.CompanyId == CompanyId && e.IsActive)
+                        .ApplyAccessScope(access);
+
+                    if (roleLevel != 100)
+                        scopedEmployeesQuery = scopedEmployeesQuery.ApplyRoleHierarchy(roleLevel);
+
+                    var scopedEmployeeIds = scopedEmployeesQuery.Select(e => e.Id);
+
+                    query = query.Where(t =>
+                        t.Assignments.Any(a => a.IsActive && scopedEmployeeIds.Contains(a.EmployeeId)) ||
+                        (t.CreatedByEmployeeId.HasValue && scopedEmployeeIds.Contains(t.CreatedByEmployeeId.Value)));
+                }
+                else
+                {
+                    query = query.Where(t =>
+                        t.Assignments.Any(a => a.EmployeeId == employeeId && a.IsActive) ||
+                        t.CreatedByEmployeeId == employeeId);
+                }
 
                 if (request.EmployeeIds != null && request.EmployeeIds.Any())
                 {
