@@ -30,3 +30,5 @@ dist/
 # Environment & secrets
 .env
 firebase-config.json
+/TaskMangment.API/Properties/PublishProfiles
+/TaskMangment.Hangfire/Properties/PublishProfiles
