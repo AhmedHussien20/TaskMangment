@@ -33,7 +33,7 @@ export interface HeaderShortcut {
 
 }
 export interface HeaderNotification {
-  id: string;
+  id: number;
   message: string;
   createdAt: Date;
   isRead: boolean;
@@ -444,28 +444,19 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   this.notificationService.getUnread().subscribe({
     next: (res) => {
-
       const unread = res?.data ?? [];
-      unread.forEach(n => {
-        const exists = this.notifications.some(x =>
-          x.taskId === n.taskId &&
-          x.message === n.message
-        );
-         this.toastr.info(n.message, this.translationService.instant('nav.notifications.notification'));
+      unread.forEach((n: any) => {
+        if (this.notifications.some(x => x.id === n.id)) return;
 
-        if (!exists) {
-          console.log('Adding notification:', n.taskId, n.message);
-          this.notifications.unshift({
-            id: crypto.randomUUID(),
-            message: n.message,
-            createdAt: new Date(n.createdAt),
-            isRead: false,
-            link: n.link || '/pages/notifications-list',
-            type: 'task',
-            taskId: n!.taskId
-          });
-        }
-
+        this.notifications.unshift({
+          id: n.id,
+          message: n.message,
+          createdAt: new Date(n.createdDate ?? n.createdAt),
+          isRead: false,
+          link: n.link || '/pages/notifications-list',
+          type: n.taskId ? 'task' : 'other',
+          taskId: n.taskId ?? undefined
+        });
       });
 
       this.notificationCount =
@@ -479,34 +470,26 @@ export class HeaderComponent implements OnInit, OnDestroy {
   this.signalR.notification$
     .pipe(filter(n => !!n))
     .subscribe((n) => {
+      if (n!.id && this.notifications.some(x => x.id === n!.id)) return;
 
-      const exists = this.notifications.some(x =>
-        x.taskId === n!.taskId &&
-        x.message === n!.message
-      );
+      const notification: HeaderNotification = {
+        id: n!.id ?? 0,
+        message: n!.message,
+        createdAt: new Date(n!.createdAt),
+        isRead: false,
+        link: n!.link || '/pages/notifications-list',
+        type: n!.taskId ? 'task' : 'other',
+        taskId: n!.taskId
+      };
+      this.toastr.info(n!.message, this.translationService.instant('nav.notifications.notification'));
 
-      if (!exists) {
+      this.notifications.unshift(notification);
 
-
-        const notification: HeaderNotification = {
-          id: crypto.randomUUID(),
-          message: n!.message,
-          createdAt: new Date(n!.createdAt),
-          isRead: false,
-          link: n!.link || '/pages/notifications-list',
-          type: 'task',
-          taskId: n!.taskId
-        };
-         this.toastr.info(n.message, this.translationService.instant('nav.notifications.notification'));
-
-        this.notifications.unshift(notification);
-
-        this.notificationCount =
-          this.notifications.filter(x => !x.isRead).length;
-      }
+      this.notificationCount =
+        this.notifications.filter(x => !x.isRead).length;
     });
 }
-  removeNotification(id: string) {
+  removeNotification(id: number) {
     this.notifications = this.notifications.filter(n => n.id !== id);
     this.notificationCount = this.notifications.filter(x => !x.isRead).length;
   }
@@ -593,16 +576,19 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
 handleNotificationClick(notification: HeaderNotification, event: Event) {
   event.stopPropagation();
-  //event.preventDefault();
 
-  if (notification.type === 'task' && notification.taskId !== undefined) {
-    this.onEdit(notification.taskId); 
-  } 
-  /*else {
-    this.router.navigate([notification.link]);
-    console.log('Navigating:', notification);
+  if (!notification.isRead && notification.id > 0) {
+    this.notificationService.markAsRead(notification.id).subscribe({
+      next: () => {
+        notification.isRead = true;
+        this.notificationCount = this.notifications.filter(x => !x.isRead).length;
+      }
+    });
+  }
 
-  }*/
+  if (notification.taskId != null) {
+    this.onEdit(notification.taskId);
+  }
 }
 
 rows: { taskId: number; [key: string]: any }[] = [];

@@ -3,6 +3,7 @@ import * as signalR from '@microsoft/signalr';
 import { ToastrService } from 'ngx-toastr';
 import { BehaviorSubject } from 'rxjs';
 export interface SignalRNotification {
+  id?: number;
   message: string;
   link?: string;
   createdAt: Date;
@@ -45,8 +46,9 @@ export class SignalRService {
 
     if (this.isListenerRegistered) return;
 
-    this.hubConnection.on('ReceiveNotification', (data: { message: string, taskId?: number }) => {
+    this.hubConnection.on('ReceiveNotification', (data: { id?: number; message: string; taskId?: number }) => {
       const notification: SignalRNotification = {
+        id: data.id,
         message: data.message,
         createdAt: new Date(),
         link: '/pages/notifications-list',

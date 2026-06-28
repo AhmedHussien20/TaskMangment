@@ -50,7 +50,7 @@ public class NotificationService : INotificationService
             Message = message,
             NotificationType = type,
             ReferenceId = referenceId,
-            IsRead = isOnline,
+            IsRead = false,
             TaskId = taskId
 
         };
@@ -59,7 +59,7 @@ public class NotificationService : INotificationService
 
         if (isOnline)
         {
-            await _notificationSender.SendWebAsync(userId, message, taskId);
+            await _notificationSender.SendWebAsync(userId, message, taskId, notification.Id);
             return;
         }
         if (sendWhatsApp)

@@ -17,8 +17,8 @@ export class NotificationApiService {
         return this.api.get<BaseResponse<HeaderNotification[]>>(this.service,'unread');
     }
 
-    markAsRead(id: number):Observable<BaseResponse<any>> {
-        return this.api.post<BaseResponse<any>>(this.service, '', `/${id}/read`);
+    markAsRead(id: number): Observable<BaseResponse<any>> {
+        return this.api.post<BaseResponse<any>>(this.service, `${id}/read`, {});
     }
 }
  
