@@ -144,7 +144,7 @@ namespace TaskMangment.Infrastructure.Services
                          && a.IsActive)
                 .FirstOrDefaultAsync();
 
-            if (assignment == null && roleLevel != 100 && roleLevel != 80)
+            if (assignment == null && roleLevel != 100 && roleLevel != 80 && roleLevel != 70)
                 throw new AppException(ErrorCodes.NotAssigned, StatusCodes.Status400BadRequest);
 
             if (assignment != null && assignment.IsClosed)
