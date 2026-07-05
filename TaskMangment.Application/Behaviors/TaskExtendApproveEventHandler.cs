@@ -47,7 +47,7 @@ namespace TaskMangment.Application.Behaviors
                     empId,
                     message,
                     sendEmail: true,
-                    sendWhatsApp: false,
+                    sendWhatsApp: true,
                     ev.TaskId,
                     NotificationType.ExtensionRequestApproved,
                     ev.RequestId

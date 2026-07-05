@@ -45,7 +45,7 @@ namespace TaskMangment.Application.Behaviors
                 ev.EmployeeId,
                 message,
                 sendEmail: false,
-                sendWhatsApp: false,
+                sendWhatsApp: true,
                 null,
                 NotificationType.leaverejected,
                 ev.LeaveId

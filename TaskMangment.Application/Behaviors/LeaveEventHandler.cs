@@ -44,7 +44,7 @@ namespace TaskMangment.Application.Behaviors
                 userId: ev.EmployeeId,   
                 message: message,
                 sendEmail: false,
-                sendWhatsApp: false,
+                sendWhatsApp: true,
                 null,
                 NotificationType.LeaveRequest,
                 ev.LeaveId

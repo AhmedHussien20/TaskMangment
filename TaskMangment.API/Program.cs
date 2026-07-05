@@ -34,9 +34,14 @@ namespace TaskMangment.API
                 builder.Services.Configure<EmailSettings>(
                     builder.Configuration.GetSection("EmailSettings")
                 );
-            builder .Services.Configure<WhatsAppSettings>(
-                    builder.Configuration.GetSection("WhatsApp")
-                );
+            builder.Services.Configure<WhatsAppSettings>(opts =>
+            {
+                builder.Configuration.GetSection("WhatsApp").Bind(opts);
+                var instanceId = Environment.GetEnvironmentVariable("WHATSAPP_INSTANCE_ID");
+                var token = Environment.GetEnvironmentVariable("WHATSAPP_API_TOKEN");
+                if (!string.IsNullOrWhiteSpace(instanceId)) opts.InstanceId = instanceId;
+                if (!string.IsNullOrWhiteSpace(token)) opts.Token = token;
+            });
 
 
             //builder.Services.AddHangfire(config =>
