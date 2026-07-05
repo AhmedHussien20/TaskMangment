@@ -32,6 +32,7 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
         private readonly IRepository<ManagerBranches> _managerBranchesRepo;
+        private readonly IRepository<Department> _departmentRepository;
         private readonly IUserAccessContextProvider _accessProvider;
         private readonly IRepository<Employee> _employeeRepo;
         private readonly IRepository<Role> _RoleRepo;
@@ -48,6 +49,7 @@ namespace TaskMangment.Infrastructure.Services
             IMapper mapper,
             ICachingService cache,
             IRepository<ManagerBranches> managerBranchesRepo,
+            IRepository<Department> departmentRepository,
             IUserAccessContextProvider accessProvider,
             IRepository<Employee> employeeRepo,
             IRepository<Role> roleRepo, IRepository<EmployeeRole> employeeRolesRepository
@@ -60,6 +62,7 @@ namespace TaskMangment.Infrastructure.Services
             _mapper = mapper;
             _cache = cache;
             _managerBranchesRepo = managerBranchesRepo;
+            _departmentRepository = departmentRepository;
             _accessProvider = accessProvider;
             _employeeRepo = employeeRepo;
             _RoleRepo = roleRepo;
@@ -269,6 +272,20 @@ namespace TaskMangment.Infrastructure.Services
                 throw new AppException(
                     ErrorCodes.BranchNotFound,
                     StatusCodes.Status404NotFound);
+
+            var hasEmployees = await _employeeRepository
+                .GetAll(e => e.BranchId == id)
+                .AnyAsync();
+
+            if (hasEmployees)
+                throw new AppException(ErrorCodes.BranchHasEmployees, StatusCodes.Status400BadRequest);
+
+            var hasDepartments = await _departmentRepository
+                .GetAll(d => d.BranchId == id)
+                .AnyAsync();
+
+            if (hasDepartments)
+                throw new AppException(ErrorCodes.BranchHasDepartments, StatusCodes.Status400BadRequest);
 
             _branchRepository.SoftDelete(branch);
             await _branchRepository.SaveChangesAsync();

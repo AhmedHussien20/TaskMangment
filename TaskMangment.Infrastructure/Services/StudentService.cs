@@ -23,12 +23,18 @@ namespace TaskMangment.Infrastructure.Services
     public class StudentService : IStudentService
     {
         private readonly IRepository<Student> _studentRepository;
+        private readonly IRepository<OfferAssignment> _offerAssignmentRepository;
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
 
-        public StudentService(IRepository<Student> studentRepository, IMapper mapper, ICachingService cache)
+        public StudentService(
+            IRepository<Student> studentRepository,
+            IRepository<OfferAssignment> offerAssignmentRepository,
+            IMapper mapper,
+            ICachingService cache)
         {
             _studentRepository = studentRepository;
+            _offerAssignmentRepository = offerAssignmentRepository;
             _mapper = mapper;
             _cache = cache;
         }
@@ -126,6 +132,9 @@ namespace TaskMangment.Infrastructure.Services
             var student = await _studentRepository.GetByIDAsync(id);
             if (student == null)
                 throw new AppException(ErrorCodes.StudentNotFound, StatusCodes.Status400BadRequest);
+
+            if (await _offerAssignmentRepository.GetAll(a => a.StudentId == id).AnyAsync())
+                throw new AppException(ErrorCodes.StudentHasOfferAssignments, StatusCodes.Status400BadRequest);
 
             _studentRepository.SoftDelete(student);
             await _studentRepository.SaveChangesAsync();

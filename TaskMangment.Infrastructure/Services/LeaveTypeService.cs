@@ -15,17 +15,20 @@ namespace TaskMangment.Infrastructure.Services
     public class LeaveTypeService : ILeaveTypeService
     {
         private readonly IRepository<LeaveType> _repo;
+        private readonly IRepository<Leave> _leaveRepo;
         private readonly IRepository<Company> _companyRepo;
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
 
         public LeaveTypeService(
             IRepository<LeaveType> repo,
+            IRepository<Leave> leaveRepo,
             IRepository<Company> companyRepo,
             IMapper mapper,
             ICachingService cache)
         {
             _repo = repo;
+            _leaveRepo = leaveRepo;
             _companyRepo = companyRepo;
             _mapper = mapper;
             _cache = cache;
@@ -109,6 +112,13 @@ namespace TaskMangment.Infrastructure.Services
                 throw new AppException(
                     ErrorCodes.NotFound,
                     StatusCodes.Status404NotFound);
+
+            var hasLeaves = await _leaveRepo
+                .GetAll(l => l.LeaveTypeId == id)
+                .AnyAsync();
+
+            if (hasLeaves)
+                throw new AppException(ErrorCodes.LeaveTypeHasLeaves, StatusCodes.Status400BadRequest);
 
             _repo.SoftDelete(entity);
             await _repo.SaveChangesAsync();

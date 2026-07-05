@@ -24,17 +24,20 @@ namespace TaskMangment.Infrastructure.Services
     {
         private readonly IRepository<Course> _courseRepository;
         private readonly IRepository<CourseSubject> _subjectRepository;
+        private readonly IRepository<Offer> _offerRepository;
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
 
         public CourseService(
             IRepository<Course> courseRepository,
             IRepository<CourseSubject> subjectRepository,
+            IRepository<Offer> offerRepository,
             IMapper mapper,
             ICachingService cache)
         {
             _courseRepository = courseRepository;
             _subjectRepository = subjectRepository;
+            _offerRepository = offerRepository;
             _mapper = mapper;
             _cache = cache;
         }
@@ -180,6 +183,12 @@ namespace TaskMangment.Infrastructure.Services
                 throw new AppException(
                     ErrorCodes.CourseNotFound,
                     StatusCodes.Status404NotFound);
+
+            if (await _subjectRepository.GetAll(s => s.CourseId == id).AnyAsync())
+                throw new AppException(ErrorCodes.CourseHasSubjects, StatusCodes.Status400BadRequest);
+
+            if (await _offerRepository.GetAll(o => o.CourseId == id).AnyAsync())
+                throw new AppException(ErrorCodes.CourseHasOffers, StatusCodes.Status400BadRequest);
 
             _courseRepository.SoftDelete(course);
             await _courseRepository.SaveChangesAsync();

@@ -19,17 +19,26 @@ namespace TaskMangment.Infrastructure.Services
     {
         private readonly IRepository<Company> _companyRepository;
         private readonly IRepository<Employee> _employeeRepository;
+        private readonly IRepository<Area> _areaRepository;
+        private readonly IRepository<Branch> _branchRepository;
+        private readonly IRepository<Role> _roleRepository;
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
 
         public CompanyService(
             IRepository<Company> companyRepository,
             IRepository<Employee> employeeRepository,
+            IRepository<Area> areaRepository,
+            IRepository<Branch> branchRepository,
+            IRepository<Role> roleRepository,
             IMapper mapper,
             ICachingService cache)
         {
             _companyRepository = companyRepository;
             _employeeRepository = employeeRepository;
+            _areaRepository = areaRepository;
+            _branchRepository = branchRepository;
+            _roleRepository = roleRepository;
             _mapper = mapper;
             _cache = cache;
         }
@@ -128,6 +137,18 @@ namespace TaskMangment.Infrastructure.Services
             var company = await _companyRepository.GetByIDAsync(id);
             if (company == null)
                 throw new AppException(ErrorCodes.CompanyNotFound, StatusCodes.Status404NotFound);
+
+            if (await _employeeRepository.GetAll(e => e.CompanyId == id).AnyAsync())
+                throw new AppException(ErrorCodes.CompanyHasEmployees, StatusCodes.Status400BadRequest);
+
+            if (await _areaRepository.GetAll(a => a.CompanyId == id).AnyAsync())
+                throw new AppException(ErrorCodes.CompanyHasAreas, StatusCodes.Status400BadRequest);
+
+            if (await _branchRepository.GetAll(b => b.CompanyId == id).AnyAsync())
+                throw new AppException(ErrorCodes.CompanyHasBranches, StatusCodes.Status400BadRequest);
+
+            if (await _roleRepository.GetAll(r => r.CompanyId == id).AnyAsync())
+                throw new AppException(ErrorCodes.CompanyHasRoles, StatusCodes.Status400BadRequest);
 
             _companyRepository.SoftDelete(company);
             await _companyRepository.SaveChangesAsync();

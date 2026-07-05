@@ -201,6 +201,13 @@ namespace TaskMangment.Infrastructure.Services
                     ErrorCodes.AreaNotFound,
                     StatusCodes.Status404NotFound);
 
+            var hasBranches = await _branchRepository
+                .GetAll(b => b.AreaId == id)
+                .AnyAsync();
+
+            if (hasBranches)
+                throw new AppException(ErrorCodes.AreaHasBranches, StatusCodes.Status400BadRequest);
+
             _areaRepository.SoftDelete(area);
             await _areaRepository.SaveChangesAsync();
             await _cache.RemoveAsync("areas:");

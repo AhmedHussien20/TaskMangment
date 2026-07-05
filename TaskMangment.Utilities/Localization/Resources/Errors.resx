@@ -133,6 +133,57 @@
   <data name="BRANCH_NOT_FOUND" xml:space="preserve">
     <value>branch not found</value>
   </data>
+  <data name="BRANCH_HAS_EMPLOYEES" xml:space="preserve">
+    <value>cannot delete branch because it has employees</value>
+  </data>
+  <data name="AREA_HAS_BRANCHES" xml:space="preserve">
+    <value>cannot delete area because it has branches</value>
+  </data>
+  <data name="BRANCH_HAS_DEPARTMENTS" xml:space="preserve">
+    <value>cannot delete branch because it has departments</value>
+  </data>
+  <data name="DEPARTMENT_HAS_JOBS" xml:space="preserve">
+    <value>cannot delete department because it has jobs</value>
+  </data>
+  <data name="DEPARTMENT_HAS_EMPLOYEES" xml:space="preserve">
+    <value>cannot delete department because it has employees</value>
+  </data>
+  <data name="JOB_HAS_EMPLOYEES" xml:space="preserve">
+    <value>cannot delete job because it has employees</value>
+  </data>
+  <data name="COMPANY_HAS_EMPLOYEES" xml:space="preserve">
+    <value>cannot delete company because it has employees</value>
+  </data>
+  <data name="COMPANY_HAS_AREAS" xml:space="preserve">
+    <value>cannot delete company because it has areas</value>
+  </data>
+  <data name="COMPANY_HAS_BRANCHES" xml:space="preserve">
+    <value>cannot delete company because it has branches</value>
+  </data>
+  <data name="COMPANY_HAS_ROLES" xml:space="preserve">
+    <value>cannot delete company because it has roles</value>
+  </data>
+  <data name="ROLE_HAS_EMPLOYEES" xml:space="preserve">
+    <value>cannot delete role because it is assigned to employees</value>
+  </data>
+  <data name="PERMISSION_HAS_ROLES" xml:space="preserve">
+    <value>cannot delete permission because it is assigned to roles</value>
+  </data>
+  <data name="LEAVE_TYPE_HAS_LEAVES" xml:space="preserve">
+    <value>cannot delete leave type because it has leave requests</value>
+  </data>
+  <data name="COURSE_HAS_SUBJECTS" xml:space="preserve">
+    <value>cannot delete course because it has subjects</value>
+  </data>
+  <data name="COURSE_HAS_OFFERS" xml:space="preserve">
+    <value>cannot delete course because it has offers</value>
+  </data>
+  <data name="OFFER_HAS_ASSIGNMENTS" xml:space="preserve">
+    <value>cannot delete offer because it has student assignments</value>
+  </data>
+  <data name="STUDENT_HAS_OFFER_ASSIGNMENTS" xml:space="preserve">
+    <value>cannot delete student because it has offer assignments</value>
+  </data>
   <data name="COURSE_NOT_FOUND" xml:space="preserve">
     <value>course not found</value>
   </data>

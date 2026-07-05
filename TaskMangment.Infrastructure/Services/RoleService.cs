@@ -203,7 +203,7 @@ namespace TaskMangment.Infrastructure.Services
        .AnyAsync();
 
             if (hasEmployees)
-                throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status400BadRequest);
+                throw new AppException(ErrorCodes.RoleHasEmployees, StatusCodes.Status400BadRequest);
 
 
             _roleRepo.SoftDelete(role);

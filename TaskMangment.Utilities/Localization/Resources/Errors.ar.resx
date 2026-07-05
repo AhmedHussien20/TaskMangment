@@ -132,6 +132,57 @@
   <data name="BRANCH_NOT_FOUND" xml:space="preserve">
     <value>الفرع غير موجود</value>
   </data>
+  <data name="BRANCH_HAS_EMPLOYEES" xml:space="preserve">
+    <value>لا يمكن حذف الفرع لأنه يحتوي على موظفين</value>
+  </data>
+  <data name="AREA_HAS_BRANCHES" xml:space="preserve">
+    <value>لا يمكن حذف المنطقة لأنها تحتوي على فروع</value>
+  </data>
+  <data name="BRANCH_HAS_DEPARTMENTS" xml:space="preserve">
+    <value>لا يمكن حذف الفرع لأنه يحتوي على أقسام</value>
+  </data>
+  <data name="DEPARTMENT_HAS_JOBS" xml:space="preserve">
+    <value>لا يمكن حذف القسم لأنه يحتوي على وظائف</value>
+  </data>
+  <data name="DEPARTMENT_HAS_EMPLOYEES" xml:space="preserve">
+    <value>لا يمكن حذف القسم لأنه يحتوي على موظفين</value>
+  </data>
+  <data name="JOB_HAS_EMPLOYEES" xml:space="preserve">
+    <value>لا يمكن حذف الوظيفة لأنها مرتبطة بموظفين</value>
+  </data>
+  <data name="COMPANY_HAS_EMPLOYEES" xml:space="preserve">
+    <value>لا يمكن حذف الشركة لأنها تحتوي على موظفين</value>
+  </data>
+  <data name="COMPANY_HAS_AREAS" xml:space="preserve">
+    <value>لا يمكن حذف الشركة لأنها تحتوي على مناطق</value>
+  </data>
+  <data name="COMPANY_HAS_BRANCHES" xml:space="preserve">
+    <value>لا يمكن حذف الشركة لأنها تحتوي على فروع</value>
+  </data>
+  <data name="COMPANY_HAS_ROLES" xml:space="preserve">
+    <value>لا يمكن حذف الشركة لأنها تحتوي على أدوار</value>
+  </data>
+  <data name="ROLE_HAS_EMPLOYEES" xml:space="preserve">
+    <value>لا يمكن حذف الدور لأنه مُسند إلى موظفين</value>
+  </data>
+  <data name="PERMISSION_HAS_ROLES" xml:space="preserve">
+    <value>لا يمكن حذف الصلاحية لأنها مُسندة إلى أدوار</value>
+  </data>
+  <data name="LEAVE_TYPE_HAS_LEAVES" xml:space="preserve">
+    <value>لا يمكن حذف نوع الإجازة لأنه مرتبط بطلبات إجازة</value>
+  </data>
+  <data name="COURSE_HAS_SUBJECTS" xml:space="preserve">
+    <value>لا يمكن حذف الدورة لأنها تحتوي على مواد</value>
+  </data>
+  <data name="COURSE_HAS_OFFERS" xml:space="preserve">
+    <value>لا يمكن حذف الدورة لأنها مرتبطة بعروض</value>
+  </data>
+  <data name="OFFER_HAS_ASSIGNMENTS" xml:space="preserve">
+    <value>لا يمكن حذف العرض لأنه مرتبط بطلاب</value>
+  </data>
+  <data name="STUDENT_HAS_OFFER_ASSIGNMENTS" xml:space="preserve">
+    <value>لا يمكن حذف الطالب لأنه مرتبط بعروض</value>
+  </data>
   <data name="COURSE_NOT_FOUND" xml:space="preserve">
     <value>الكورس غير موجود</value>
   </data>

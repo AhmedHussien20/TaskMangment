@@ -25,6 +25,7 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<Department> _departmentRepository;
         private readonly IRepository<Employee> _employeeRepository;
         private readonly IRepository<Branch> _branchRepository;
+        private readonly IRepository<Job> _jobRepository;
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
 
@@ -32,12 +33,14 @@ namespace TaskMangment.Infrastructure.Services
             IRepository<Department> departmentRepository,
             IRepository<Employee> employeeRepository,
             IRepository<Branch> branchRepository,
+            IRepository<Job> jobRepository,
             IMapper mapper,
             ICachingService cache)
         {
             _departmentRepository = departmentRepository;
             _employeeRepository = employeeRepository;
             _branchRepository = branchRepository;
+            _jobRepository = jobRepository;
             _mapper = mapper;
             _cache = cache;
         }
@@ -191,6 +194,21 @@ namespace TaskMangment.Infrastructure.Services
                 throw new AppException(
                                     ErrorCodes.DepartmentNotFound,
                                     StatusCodes.Status400BadRequest);
+
+            var hasJobs = await _jobRepository
+                .GetAll(j => j.DepartmentId == id)
+                .AnyAsync();
+
+            if (hasJobs)
+                throw new AppException(ErrorCodes.DepartmentHasJobs, StatusCodes.Status400BadRequest);
+
+            var hasEmployees = await _employeeRepository
+                .GetAll(e => e.DepartmentId == id)
+                .AnyAsync();
+
+            if (hasEmployees)
+                throw new AppException(ErrorCodes.DepartmentHasEmployees, StatusCodes.Status400BadRequest);
+
             _departmentRepository.SoftDelete(department);
             department.ManagerEmployeeId = null;
 

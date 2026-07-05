@@ -167,6 +167,13 @@ namespace TaskMangment.Infrastructure.Services
             if (job == null)
                 throw new AppException(ErrorCodes.JobNotFound, StatusCodes.Status400BadRequest);
 
+            var hasEmployees = await _employeeRepository
+                .GetAll(e => e.JobId == id)
+                .AnyAsync();
+
+            if (hasEmployees)
+                throw new AppException(ErrorCodes.JobHasEmployees, StatusCodes.Status400BadRequest);
+
             _jobRepository.SoftDelete(job);
             await _jobRepository.SaveChangesAsync();
             await _cache.RemoveAsync("jobs:");

@@ -31,17 +31,31 @@ namespace TaskMangment.Application.Common.Errors
 
 
         public const string AreaNotFound = "AREA_NOT_FOUND";
+        public const string AreaHasBranches = "AREA_HAS_BRANCHES";
         public const string ManagerNotFound = "MANAGER_NOT_FOUND";
         public const string CompanyNotFound = "COMPANY_NOT_FOUND";
+        public const string CompanyHasEmployees = "COMPANY_HAS_EMPLOYEES";
+        public const string CompanyHasAreas = "COMPANY_HAS_AREAS";
+        public const string CompanyHasBranches = "COMPANY_HAS_BRANCHES";
+        public const string CompanyHasRoles = "COMPANY_HAS_ROLES";
 
         public const string BranchNotFound = "BRANCH_NOT_FOUND";
+        public const string BranchHasEmployees = "BRANCH_HAS_EMPLOYEES";
+        public const string BranchHasDepartments = "BRANCH_HAS_DEPARTMENTS";
         public const string DepartmentNotFound = "DEPARTMENT_NOT_FOUND";
+        public const string DepartmentHasJobs = "DEPARTMENT_HAS_JOBS";
+        public const string DepartmentHasEmployees = "DEPARTMENT_HAS_EMPLOYEES";
         public  const string JobNotFound = "JOB_NOT_FOUND";
+        public const string JobHasEmployees = "JOB_HAS_EMPLOYEES";
 
         public const string CourseNotFound = "COURSE_NOT_FOUND";
+        public const string CourseHasSubjects = "COURSE_HAS_SUBJECTS";
+        public const string CourseHasOffers = "COURSE_HAS_OFFERS";
         public const string OfferNotFound = "OFFER_NOT_FOUND";
+        public const string OfferHasAssignments = "OFFER_HAS_ASSIGNMENTS";
         public const string OfferExpired = "OFFER_EXPIRED";
         public const string StudentNotFound = "STUDENT_NOT_FOUND";
+        public const string StudentHasOfferAssignments = "STUDENT_HAS_OFFER_ASSIGNMENTS";
         public const string SubjectNotFound = "SUBJECT_NOT_FOUND";
 
 
@@ -49,7 +63,9 @@ namespace TaskMangment.Application.Common.Errors
         public const string EmployeeInactive = "EMPLOYEE_INACTIVE";
 
         public const string RoleNotFound = "ROLE_NOT_FOUND";
+        public const string RoleHasEmployees = "ROLE_HAS_EMPLOYEES";
         public const string PermissionNotFound = "PERMISSION_NOT_FOUND";
+        public const string PermissionHasRoles = "PERMISSION_HAS_ROLES";
         public const string AlreadyExists = "ALREADY_EXISTS";
         public const string AlreadyAssigned = "ALREADY_ASSIGNED";
 
@@ -60,6 +76,7 @@ namespace TaskMangment.Application.Common.Errors
         public const string InvalidOperation = "INVALID_OPERATION";
         public const string CloseRequestAlreadyPending = "CLOSEREQUESTALREADYREQUESTED";
         public const string InvalidManagerRoleLevel = "INVALID_MANAGER_ROLE_LEVEL";
+        public const string LeaveTypeHasLeaves = "LEAVE_TYPE_HAS_LEAVES";
     }
 
 }

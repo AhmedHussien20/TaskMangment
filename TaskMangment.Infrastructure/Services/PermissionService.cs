@@ -137,6 +137,13 @@ namespace TaskMangment.Infrastructure.Services
             if (permission == null)
                 throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
 
+            var hasRoles = await _rolePermissionRepo
+                .GetAll(rp => rp.PermissionId == id && rp.IsAssigned)
+                .AnyAsync();
+
+            if (hasRoles)
+                throw new AppException(ErrorCodes.PermissionHasRoles, StatusCodes.Status400BadRequest);
+
             _permissionRepo.SoftDelete(permission);
             await _permissionRepo.SaveChangesAsync();
             await _cache.RemoveAsync("permissions:");

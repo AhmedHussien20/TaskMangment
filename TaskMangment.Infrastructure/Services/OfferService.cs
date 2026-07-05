@@ -26,6 +26,7 @@ namespace TaskMangment.Infrastructure.Services
     public class OfferService : IOfferService
     {
         private readonly IRepository<Offer> _offerRepo;
+        private readonly IRepository<OfferAssignment> _offerAssignmentRepo;
         private readonly IRepository<Student> _studentRepo;
         private readonly IRepository<Course> _courseRepo;
         private readonly IRepository<CourseSubject> _subjectRepo;
@@ -38,7 +39,7 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
 
-        public OfferService(IRepository<Offer> offerRepo, IRepository<Student> studentRepo,
+        public OfferService(IRepository<Offer> offerRepo, IRepository<OfferAssignment> offerAssignmentRepo, IRepository<Student> studentRepo,
             IMapper mapper,
             ICachingService cache,
             IRepository<CourseSubject> subjectRepo,
@@ -46,6 +47,7 @@ namespace TaskMangment.Infrastructure.Services
             IRepository<Employee> employeeRepo, IUserAccessContextProvider accessProvider)
         {
             _offerRepo = offerRepo;
+            _offerAssignmentRepo = offerAssignmentRepo;
             _studentRepo = studentRepo;
             _mapper = mapper;
             _cache = cache;
@@ -372,6 +374,9 @@ namespace TaskMangment.Infrastructure.Services
             var offer = await _offerRepo.GetByIDAsync(id);
             if (offer == null)
                 throw new AppException(ErrorCodes.OfferNotFound, StatusCodes.Status400BadRequest);
+
+            if (await _offerAssignmentRepo.GetAll(a => a.OfferId == id).AnyAsync())
+                throw new AppException(ErrorCodes.OfferHasAssignments, StatusCodes.Status400BadRequest);
 
             _offerRepo.SoftDelete(offer);
             await _offerRepo.SaveChangesAsync();
