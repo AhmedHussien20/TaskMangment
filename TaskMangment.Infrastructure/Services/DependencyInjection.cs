@@ -70,7 +70,6 @@ namespace TaskMangment.Infrastructure.Services
             // ------------------------------
             services.AddScoped<IPermissionService, PermissionService>();
             services.AddScoped<IRoleService, RoleService>();
-            services.AddScoped<IWhatsAppService, WhatsAppService>();
             services.AddScoped<INotificationRepository, NotificationRepository>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IJwtService, JwtService>();
@@ -146,7 +145,6 @@ namespace TaskMangment.Infrastructure.Services
             
             services.AddScoped<IPermissionChecker, PermissionChecker>();
             services.AddScoped<IGetHigherManager, GetHigherManager>();
-            services.AddScoped<IWhatsAppService, WhatsAppService>();
 
             return services;
         }

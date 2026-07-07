@@ -9,8 +9,9 @@ namespace TaskMangment.Application.Common.Exceptions
 
         public AppException(
             string errorCode,
-            int statusCode = StatusCodes.Status400BadRequest)
-            : base(errorCode)
+            int statusCode = StatusCodes.Status400BadRequest,
+            string? detail = null)
+            : base(detail ?? errorCode)
         {
             ErrorCode = errorCode;
             StatusCode = statusCode;

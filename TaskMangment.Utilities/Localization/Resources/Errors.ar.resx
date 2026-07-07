@@ -120,6 +120,15 @@
   <data name="SAVE_FAILED" xml:space="preserve">
     <value>فشل</value>
   </data>
+  <data name="WHATSAPP_NOT_CONFIGURED" xml:space="preserve">
+    <value>إعدادات واتساب غير مكتملة</value>
+  </data>
+  <data name="WHATSAPP_SEND_FAILED" xml:space="preserve">
+    <value>تعذر إرسال رسالة واتساب</value>
+  </data>
+  <data name="NOTIFICATION_SEND_FAILED" xml:space="preserve">
+    <value>تعذر إرسال الإشعار</value>
+  </data>
   <data name="EMAIL_NOT_FOUND" xml:space="preserve">
     <value>البريد الالكتروني غير موجود</value>
   </data>

@@ -28,6 +28,9 @@ namespace TaskMangment.Application.Common.Errors
         public const string NotAuthorized = "NOT_AUTHORIZED";
         public const string ValidationError = "VALIDATION_ERROR";
         public const string SaveFailed = "SAVE_FAILED";
+        public const string WhatsAppNotConfigured = "WHATSAPP_NOT_CONFIGURED";
+        public const string WhatsAppSendFailed = "WHATSAPP_SEND_FAILED";
+        public const string NotificationSendFailed = "NOTIFICATION_SEND_FAILED";
 
 
         public const string AreaNotFound = "AREA_NOT_FOUND";

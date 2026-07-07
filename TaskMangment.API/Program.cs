@@ -14,6 +14,7 @@ using TaskMangment.Infrastructure.DataContext;
 using TaskMangment.Infrastructure.Seeding;
 using TaskMangment.Infrastructure.Services;
 using TaskMangment.Infrastructure.SignalR;
+using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Utilities.Localization;
 
 namespace TaskMangment.API
@@ -53,6 +54,7 @@ namespace TaskMangment.API
             builder.Services.AddDI();
 
             builder.Services.AddHttpClient();
+            builder.Services.AddHttpClient<IWhatsAppService, WhatsAppService>();
 
 
 

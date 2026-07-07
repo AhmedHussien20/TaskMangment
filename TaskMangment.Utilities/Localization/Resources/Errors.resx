@@ -120,6 +120,15 @@
   <data name="SAVE_FAILED" xml:space="preserve">
     <value>save failed</value>
   </data>
+  <data name="WHATSAPP_NOT_CONFIGURED" xml:space="preserve">
+    <value>WhatsApp is not configured</value>
+  </data>
+  <data name="WHATSAPP_SEND_FAILED" xml:space="preserve">
+    <value>WhatsApp message could not be sent</value>
+  </data>
+  <data name="NOTIFICATION_SEND_FAILED" xml:space="preserve">
+    <value>Notification could not be delivered</value>
+  </data>
   <data name="EMAIL_NOT_FOUND" xml:space="preserve">
     <value>email not fond</value>
   </data>

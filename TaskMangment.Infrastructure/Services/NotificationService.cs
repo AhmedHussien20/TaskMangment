@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Logging;
 using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Domain.Entities;
@@ -18,13 +19,15 @@ public class NotificationService : INotificationService
     private readonly IStringLocalizer<TaskNotification> _L;
     private readonly IRepository<Employee> _EmployeeRepo;
     private readonly IWhatsAppService _whatsAppService;
+    private readonly ILogger<NotificationService> _logger;
 
 
     public NotificationService(
         INotificationRepository repo,
         IEmailQueueService emailQueueService, INotificationSender notificationSender, IOnlineUserService onlineUserService, IStringLocalizer<TaskNotification> localizer,
         IWhatsAppService whatsAppService,
-        IRepository<Employee> EmployeeRepo)
+        IRepository<Employee> EmployeeRepo,
+        ILogger<NotificationService> logger)
 
 
     {
@@ -35,6 +38,7 @@ public class NotificationService : INotificationService
         _L = localizer;
         _EmployeeRepo = EmployeeRepo;
         _whatsAppService = whatsAppService;
+        _logger = logger;
 
     }
 
@@ -59,20 +63,34 @@ public class NotificationService : INotificationService
 
         if (isOnline)
         {
-            await _notificationSender.SendWebAsync(userId, message, taskId, notification.Id);
+            try
+            {
+                await _notificationSender.SendWebAsync(userId, message, taskId, notification.Id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "SignalR notification failed for user {UserId}", userId);
+            }
             return;
         }
         if (sendWhatsApp)
         {
-            var user = await _EmployeeRepo.GetByIDAsync(userId);
-
-            if (user != null && !string.IsNullOrEmpty(user.Mobile))
+            try
             {
-                await _whatsAppService.SendTaskAssignedNotification(
-                    user.Mobile,
-                    user.FullName,
-                    message
-                );
+                var user = await _EmployeeRepo.GetByIDAsync(userId);
+
+                if (user != null && !string.IsNullOrEmpty(user.Mobile))
+                {
+                    await _whatsAppService.SendTaskAssignedNotification(
+                        user.Mobile,
+                        user.FullName,
+                        message
+                    );
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "WhatsApp notification failed for user {UserId}", userId);
             }
         }
     }
@@ -88,5 +106,4 @@ public class NotificationService : INotificationService
 
 
 }
-
 

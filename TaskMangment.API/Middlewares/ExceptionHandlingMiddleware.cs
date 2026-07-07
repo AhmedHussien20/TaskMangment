@@ -40,7 +40,7 @@ public class ExceptionHandlingMiddleware
 
             QueueDevEmailSafe(ex, context, ex.ErrorCode, (int)ex.StatusCode);
 
-            await WriteError(context, ex.ErrorCode, (int)ex.StatusCode);
+            await WriteError(context, ex.ErrorCode, (int)ex.StatusCode, ex);
         }
         catch (UnauthorizedAccessException ex)
         {
@@ -62,21 +62,26 @@ public class ExceptionHandlingMiddleware
             await WriteError(
                 context,
                 ErrorCodes.SaveFailed,
-                StatusCodes.Status500InternalServerError);
+                StatusCodes.Status500InternalServerError,
+                ex);
         }
     }
 
-    private async Task WriteError(HttpContext context, string errorCode, int statusCode)
+    private async Task WriteError(HttpContext context, string errorCode, int statusCode, Exception? ex = null)
     {
         context.Response.StatusCode = statusCode;
         context.Response.ContentType = "application/json";
+
+        string message = _L[errorCode];
+        if (ex != null && !string.IsNullOrWhiteSpace(ex.Message) && ex.Message != errorCode)
+            message = $"{message}: {ex.Message}";
 
         var response = new ApiResponse<object>
         {
             Success = false,
             Error = true,
             ErrorCode = errorCode,
-            Message = _L[errorCode],
+            Message = message,
             Data = null
         };
 

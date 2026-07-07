@@ -4,6 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using TaskMangment.Application.Common.Errors;
+using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Interfaces.Services;
 
 namespace TaskMangment.Infrastructure.Services
@@ -21,6 +24,18 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task SendTaskAssignedNotification(string phone, string userName, string message)
         {
+            if (string.IsNullOrWhiteSpace(_settings.InstanceId) || string.IsNullOrWhiteSpace(_settings.Token))
+                throw new AppException(
+                    ErrorCodes.WhatsAppNotConfigured,
+                    StatusCodes.Status500InternalServerError,
+                    "WhatsApp InstanceId or Token is missing");
+
+            if (string.IsNullOrWhiteSpace(phone))
+                throw new AppException(
+                    ErrorCodes.WhatsAppSendFailed,
+                    StatusCodes.Status400BadRequest,
+                    "Employee mobile number is missing");
+
             var url = $"https://api.ultramsg.com/{_settings.InstanceId}/messages/chat";
             var text = string.IsNullOrWhiteSpace(userName) ? message : $"{userName}\n{message}";
 
@@ -31,11 +46,26 @@ namespace TaskMangment.Infrastructure.Services
                 new KeyValuePair<string, string>("body", text)
             });
 
-            var response = await _httpClient.PostAsync(url, form);
+            HttpResponseMessage response;
+            try
+            {
+                response = await _httpClient.PostAsync(url, form);
+            }
+            catch (Exception ex)
+            {
+                throw new AppException(
+                    ErrorCodes.WhatsAppSendFailed,
+                    StatusCodes.Status502BadGateway,
+                    ex.Message);
+            }
+
             var result = await response.Content.ReadAsStringAsync();
 
             if (!response.IsSuccessStatusCode)
-                throw new Exception($"Ultramsg API Error: {response.StatusCode} - {result}");
+                throw new AppException(
+                    ErrorCodes.WhatsAppSendFailed,
+                    StatusCodes.Status502BadGateway,
+                    $"{response.StatusCode}: {result}");
         }
 
         private static string NormalizePhone(string phone)
