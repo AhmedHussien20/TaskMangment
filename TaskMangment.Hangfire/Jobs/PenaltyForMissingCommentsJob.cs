@@ -123,6 +123,8 @@ namespace TaskMangment.Hangfire.Jobs
                 {
                     if (!assignment.IsActive)
                         continue;
+                    if (assignment.Employee == null || !assignment.Employee.IsActive)
+                        continue;
 
                     var employeeId = assignment.EmployeeId;
 

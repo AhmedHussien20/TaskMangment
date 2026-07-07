@@ -161,6 +161,9 @@ namespace TaskMangment.Infrastructure.Services
 
             if (!await _employeeRepo.IsExistAsync(dto.EmployeeId))
                 throw new AppException(ErrorCodes.NotAssigned, StatusCodes.Status404NotFound);
+            var isActiveEmployee = await _employeeRepo.GetAll(e => e.Id == dto.EmployeeId && e.IsActive).AnyAsync();
+            if (!isActiveEmployee)
+                throw new AppException(ErrorCodes.EmployeeInactive, StatusCodes.Status400BadRequest);
 
             if (task.Status == WorkTaskStatus.Closed|| task.Status == WorkTaskStatus.AutoClose|| task.Status == WorkTaskStatus.Archived)
             {

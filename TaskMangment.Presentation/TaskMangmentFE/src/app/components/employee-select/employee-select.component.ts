@@ -95,6 +95,7 @@ export class EmployeeNgSelectComponent implements OnInit {
 
     if (this.canCreateTask) {
       request.permissionCode = 'CREATE_TASK';
+      request.isActive = true;
     }
 
     this.employeeService.getAll(request).subscribe({

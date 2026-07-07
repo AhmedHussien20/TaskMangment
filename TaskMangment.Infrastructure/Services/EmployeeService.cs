@@ -173,6 +173,9 @@ namespace TaskMangment.Infrastructure.Services
             if (request.BranchId.HasValue)
                 empQuery = empQuery.Where(e => e.BranchId == request.BranchId.Value);
 
+            if (request.IsActive.HasValue)
+                empQuery = empQuery.Where(e => e.IsActive == request.IsActive.Value);
+
             if (!access.BranchIds.Any() && !access.FunctionCodes.Any() && roleLevel != 100 && string.IsNullOrWhiteSpace(request.PermissionCode))
                 empQuery = empQuery.Where(e => e.Id == employeeId);
 
@@ -182,6 +185,7 @@ namespace TaskMangment.Infrastructure.Services
             if (!string.IsNullOrWhiteSpace(request.PermissionCode) && request.PermissionCode == "CREATE_TASK" && roleLevel < 60)
             {
                 empQuery = empQuery
+                    .Where(e => e.IsActive)
                     .Where(e => e.BranchId == myBranchId)
                     .Where(e => e.EmployeeRoles.Any(er =>
                         er.IsAssigned &&
@@ -191,6 +195,9 @@ namespace TaskMangment.Infrastructure.Services
             }
             else
             {
+                if (!string.IsNullOrWhiteSpace(request.PermissionCode) && request.PermissionCode == "CREATE_TASK")
+                    empQuery = empQuery.Where(e => e.IsActive);
+
                 if (roleLevel != 100)
                     empQuery = empQuery.ApplyRoleHierarchy(roleLevel);
             }

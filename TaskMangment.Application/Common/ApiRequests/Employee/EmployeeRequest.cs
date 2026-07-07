@@ -12,6 +12,7 @@ namespace TaskMangment.Application.Common.ApiRequests.Employee
         public int? RoleLevel { get; set; }
         public string? PermissionCode { get; set; }
         public int? BranchId { get; set; }
+        public bool? IsActive { get; set; }
 
     }
 

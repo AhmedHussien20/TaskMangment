@@ -302,8 +302,9 @@ namespace TaskMangment.Infrastructure.Services
                 {
                     foreach (var empId in dto.AssignedEmployeeIds)
                     {
-                        if (!await _employeeRepo.IsExistAsync(empId))
-                            throw new AppException(ErrorCodes.NotFound, StatusCodes.Status400BadRequest);
+                        var employee = await _employeeRepo.GetAll(e => e.Id == empId).Select(e => new { e.Id, e.IsActive }).FirstOrDefaultAsync();
+                        if (employee == null || !employee.IsActive)
+                            throw new AppException(ErrorCodes.EmployeeInactive, StatusCodes.Status400BadRequest);
 
                         var task = _mapper.Map<WorkTask>(dto);
                         task.CreatedByEmployeeId = createdUser;
@@ -336,8 +337,9 @@ namespace TaskMangment.Infrastructure.Services
 
                     foreach (var empId in assignedEmployees)
                     {
-                        if (!await _employeeRepo.IsExistAsync(empId))
-                            throw new AppException(ErrorCodes.NotFound, StatusCodes.Status400BadRequest);
+                        var employee = await _employeeRepo.GetAll(e => e.Id == empId).Select(e => new { e.Id, e.IsActive }).FirstOrDefaultAsync();
+                        if (employee == null || !employee.IsActive)
+                            throw new AppException(ErrorCodes.EmployeeInactive, StatusCodes.Status400BadRequest);
 
                         var assignment = new TaskAssignment
                         {
@@ -454,6 +456,10 @@ namespace TaskMangment.Infrastructure.Services
 
             foreach (var empId in newEmployeeIds)
             {
+                var isActiveEmployee = await _employeeRepo.GetAll(e => e.Id == empId && e.IsActive).AnyAsync();
+                if (!isActiveEmployee)
+                    throw new AppException(ErrorCodes.EmployeeInactive, StatusCodes.Status400BadRequest);
+
                 var assignment = existingAssignments
                     .FirstOrDefault(a => a.EmployeeId == empId);
 

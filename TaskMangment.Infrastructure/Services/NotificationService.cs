@@ -45,6 +45,9 @@ public class NotificationService : INotificationService
     public async Task SendAsync(int userId, string messageKey, bool sendEmail, bool sendWhatsApp, int? taskId, NotificationType type, int referenceId)
     {
         var message = messageKey;
+        var user = await _EmployeeRepo.GetByIDAsync(userId);
+        if (user == null || !user.IsActive)
+            return;
 
         bool isOnline = _onlineUserService.IsUserOnline(userId);
 
@@ -77,9 +80,7 @@ public class NotificationService : INotificationService
         {
             try
             {
-                var user = await _EmployeeRepo.GetByIDAsync(userId);
-
-                if (user != null && !string.IsNullOrEmpty(user.Mobile))
+                if (!string.IsNullOrEmpty(user.Mobile))
                 {
                     await _whatsAppService.SendTaskAssignedNotification(
                         user.Mobile,

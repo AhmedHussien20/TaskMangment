@@ -157,6 +157,9 @@ namespace TaskMangment.Infrastructure.Services
 
             if (assignment == null)
                 throw new AppException(ErrorCodes.NotAssigned, StatusCodes.Status400BadRequest);
+            var isActiveEmployee = await _employeeRepo.GetAll(e => e.Id == dto.IssuedEmployeeId && e.IsActive).AnyAsync();
+            if (!isActiveEmployee)
+                throw new AppException(ErrorCodes.EmployeeInactive, StatusCodes.Status400BadRequest);
 
             if (assignment.IsClosed)
                 throw new AppException(ErrorCodes.TaskAlreadyClosed, StatusCodes.Status400BadRequest);

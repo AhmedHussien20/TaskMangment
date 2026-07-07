@@ -37,7 +37,7 @@ namespace TaskMangment.Infrastructure.Services
                 {
                     t.Id,
                     UserIds = t.Assignments
-                        .Where(a => a.IsActive)
+                        .Where(a => a.IsActive && a.Employee != null && a.Employee.IsActive)
                         .Select(a => a.EmployeeId)
                         .ToList(),
                        AssignedByEmployeeId = t.AssignedByEmployeeId

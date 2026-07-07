@@ -40,7 +40,12 @@ export class EmployeeListComponent implements OnInit {
     'MENU.EMPLOYEES',
     'EMPLOYEE.LIST_TITLE'
   ];
-  extraFilters: any = {};
+  extraFilters: any = {
+    isActive: [
+      { id: true, name: 'TABLE.ACTIVE' },
+      { id: false, name: 'TABLE.INACTIVE' }
+    ]
+  };
   branchOptions: { id: number; name: string }[] = [];
   // table columns
   columns: TableColumn[] = [
@@ -61,7 +66,8 @@ export class EmployeeListComponent implements OnInit {
 
   searchCriteria: SearchCriteria = {
     searchKey: '',
-branchId: null as number | null,
+    branchId: null as number | null,
+    isActive: null as boolean | null,
     pageIndex: this.page,
     pageSize: this.entries,
     sortColumn: 'Id',
@@ -69,12 +75,14 @@ branchId: null as number | null,
     filterTypes: {
       searchKey: 'text',
       branchId: 'dropdown',
+      isActive: 'dropdown'
     }
   };
 
   labels = {
     searchKey: 'EMPLOYEE.searchKey',
-    branchId: 'EMPLOYEE.BRANCH'
+    branchId: 'EMPLOYEE.BRANCH',
+    isActive: 'TABLE.SELECT_ACTIVE_STATUS'
   };
 
   isLoading = false;

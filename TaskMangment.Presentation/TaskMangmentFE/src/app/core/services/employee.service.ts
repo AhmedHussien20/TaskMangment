@@ -62,7 +62,8 @@ exportExcel(request: SearchCriteria): Observable<Blob> {
       `SortDirection=${req.sortDirection}`,
       `roleLevel=${(req as any).roleLevel ?? ''}`,
       `permissionCode=${(req as any).permissionCode ?? ''}`,
-      `branchId=${(req as any).branchId ?? ''}`
+      `branchId=${(req as any).branchId ?? ''}`,
+      `isActive=${(req as any).isActive ?? ''}`
 
 
     ].join('&');
