@@ -43,7 +43,7 @@ public class AuthService : IAuthService
     .Include(u => u.Company)
     .Include(u => u.Branch)
     .Include(u => u.Department)
-    .FirstOrDefaultAsync(u => u.Email == request.Email);
+    .FirstOrDefaultAsync(u => u.Email == request.Email && !u.IsDeleted);
 
 
         if (user == null)
@@ -95,6 +95,8 @@ public class AuthService : IAuthService
         var token = await _jwt.GenerateTokenAsync(user);
 
         user.LastLoginDate = DateTime.UtcNow;
+        await _db.SaveChangesAsync();
+
         return ApiResponse<LoginResponse>.Ok(new LoginResponse
         {
             UserId = user.Id,

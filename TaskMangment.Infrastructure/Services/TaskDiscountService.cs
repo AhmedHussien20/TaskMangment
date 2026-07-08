@@ -206,12 +206,18 @@ namespace TaskMangment.Infrastructure.Services
             var sendToIds = new List<int> { dto.EmployeeId };
             if (managerId.HasValue && !sendToIds.Contains(managerId.Value))
                 sendToIds.Add(managerId.Value);
+            sendToIds = await _employeeRepo.GetAll(e => sendToIds.Contains(e.Id) && e.IsActive)
+                .Select(e => e.Id)
+                .ToListAsync();
 
             var IssuedToName = issuedEmployee.FullName;
 
-            await _eventDispatcher.PublishAsync(
-                     new TaskPenaltyEvent(discount.Id, TaskID, employeeName, sendToIds, IssuedToName, task.Title)
-                 );
+            if (sendToIds.Any())
+            {
+                await _eventDispatcher.PublishAsync(
+                         new TaskPenaltyEvent(discount.Id, TaskID, employeeName, sendToIds, IssuedToName, task.Title)
+                     );
+            }
 
 
             var fullDiscount = await _discountRepo

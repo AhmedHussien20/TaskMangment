@@ -140,8 +140,12 @@ namespace TaskMangment.Infrastructure.Services
                 assignedEmployeeIds.Add(task.AssignedByEmployeeId.Value);
             }
             assignedEmployeeIds.Remove(employeeId);
+            assignedEmployeeIds = await _employeeRepo.GetAll(e => assignedEmployeeIds.Contains(e.Id) && e.IsActive)
+                .Select(e => e.Id)
+                .ToListAsync();
 
-            await _eventDispatcher.PublishAsync(new TaskAchievePercentEvent(entity.Id,dto.AchievementPercent, task.Id,task.Title, employeeName, assignedEmployeeIds));
+            if (assignedEmployeeIds.Any())
+                await _eventDispatcher.PublishAsync(new TaskAchievePercentEvent(entity.Id,dto.AchievementPercent, task.Id,task.Title, employeeName, assignedEmployeeIds));
 
             var saved = await _repo.GetAll()
                 .Include(tp => tp.Task)

@@ -163,11 +163,17 @@ namespace TaskMangment.Infrastructure.Services
                 assignedEmployeeIds.Add(task.AssignedByEmployeeId.Value);
             }
             assignedEmployeeIds.Remove(employeeId);
+            assignedEmployeeIds = await _employeeRepo.GetAll(e => assignedEmployeeIds.Contains(e.Id) && e.IsActive)
+                .Select(e => e.Id)
+                .ToListAsync();
 
 
-            await _eventDispatcher.PublishAsync(
-                new TaskExtensionRequestEvent(request.Id, taskId, employeeName, assignedEmployeeIds, task.Title)
-            );
+            if (assignedEmployeeIds.Any())
+            {
+                await _eventDispatcher.PublishAsync(
+                    new TaskExtensionRequestEvent(request.Id, taskId, employeeName, assignedEmployeeIds, task.Title)
+                );
+            }
 
 
             var savedRequest = await _requestRepo.GetAll(r => r.Id == request.Id)
@@ -240,17 +246,23 @@ namespace TaskMangment.Infrastructure.Services
                 }
 
                 assignedEmployeeIds.Remove(reviewerId);
+                assignedEmployeeIds = await _employeeRepo.GetAll(e => assignedEmployeeIds.Contains(e.Id) && e.IsActive)
+                    .Select(e => e.Id)
+                    .ToListAsync();
 
-                await _eventDispatcher.PublishAsync(
-                    new TaskExtendApproveEvent(
-                        request.Id,
-                        task.Id,
-                        task.Title,
-                        task.DueDate,
-                        dto.NewDueDate,
-                        assignedEmployeeIds
-                    )
-                );
+                if (assignedEmployeeIds.Any())
+                {
+                    await _eventDispatcher.PublishAsync(
+                        new TaskExtendApproveEvent(
+                            request.Id,
+                            task.Id,
+                            task.Title,
+                            task.DueDate,
+                            dto.NewDueDate,
+                            assignedEmployeeIds
+                        )
+                    );
+                }
             }
             else
             {

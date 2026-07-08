@@ -489,9 +489,28 @@ export class HeaderComponent implements OnInit, OnDestroy {
         this.notifications.filter(x => !x.isRead).length;
     });
 }
-  removeNotification(id: number) {
-    this.notifications = this.notifications.filter(n => n.id !== id);
-    this.notificationCount = this.notifications.filter(x => !x.isRead).length;
+  removeNotification(notification: HeaderNotification, event?: Event) {
+    event?.stopPropagation();
+
+    const removeLocally = () => {
+      this.notifications = this.notifications.filter(n => n.id !== notification.id);
+      this.notificationCount = this.notifications.filter(x => !x.isRead).length;
+    };
+
+    if (!notification.isRead && notification.id > 0) {
+      this.notificationService.markAsRead(notification.id).subscribe({
+        next: () => {
+          notification.isRead = true;
+          removeLocally();
+        },
+        error: () => {
+          removeLocally();
+        }
+      });
+      return;
+    }
+
+    removeLocally();
   }
 
   ngOnDestroy() {

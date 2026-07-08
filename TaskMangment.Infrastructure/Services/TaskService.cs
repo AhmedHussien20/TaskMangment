@@ -360,7 +360,12 @@ namespace TaskMangment.Infrastructure.Services
                         ? new List<int> { dto.AssignedEmployeeIds[tasksToAdd.IndexOf(task)] }
                         : dto.AssignedEmployeeIds;
 
-                    await _eventDispatcher.PublishAsync(new TaskAssignedEvent(task.Id, task.Title, empIds));
+                    empIds = await _employeeRepo.GetAll(e => empIds.Contains(e.Id) && e.IsActive)
+                        .Select(e => e.Id)
+                        .ToListAsync();
+
+                    if (empIds.Any())
+                        await _eventDispatcher.PublishAsync(new TaskAssignedEvent(task.Id, task.Title, empIds));
                 }
 
                 var firstTaskId = tasksToAdd.First().Id;
@@ -497,20 +502,38 @@ namespace TaskMangment.Infrastructure.Services
 
             if (newlyAssignedEmployeeIds.Any())
             {
-                await _eventDispatcher.PublishAsync(
-                    new TaskAssignedEvent(task.Id, task.Title, newlyAssignedEmployeeIds)
-                );
+                var activeNewlyAssignedEmployeeIds = await _employeeRepo
+                    .GetAll(e => newlyAssignedEmployeeIds.Contains(e.Id) && e.IsActive)
+                    .Select(e => e.Id)
+                    .ToListAsync();
+
+                if (activeNewlyAssignedEmployeeIds.Any())
+                    await _eventDispatcher.PublishAsync(
+                        new TaskAssignedEvent(task.Id, task.Title, activeNewlyAssignedEmployeeIds)
+                    );
             }
 
             if (reactivatedEmployeeIds.Any())
             {
-                await _eventDispatcher.PublishAsync(
-                    new TaskAssignedEvent(task.Id, task.Title, reactivatedEmployeeIds)
-                );
+                var activeReactivatedEmployeeIds = await _employeeRepo
+                    .GetAll(e => reactivatedEmployeeIds.Contains(e.Id) && e.IsActive)
+                    .Select(e => e.Id)
+                    .ToListAsync();
+
+                if (activeReactivatedEmployeeIds.Any())
+                    await _eventDispatcher.PublishAsync(
+                        new TaskAssignedEvent(task.Id, task.Title, activeReactivatedEmployeeIds)
+                    );
             }
             if (unAssignedEmployeeIds.Any())
             {
-                await _eventDispatcher.PublishAsync(new TaskUnAssignedEvent(task.Id, task.Title, unAssignedEmployeeIds));
+                var activeUnAssignedEmployeeIds = await _employeeRepo
+                    .GetAll(e => unAssignedEmployeeIds.Contains(e.Id) && e.IsActive)
+                    .Select(e => e.Id)
+                    .ToListAsync();
+
+                if (activeUnAssignedEmployeeIds.Any())
+                    await _eventDispatcher.PublishAsync(new TaskUnAssignedEvent(task.Id, task.Title, activeUnAssignedEmployeeIds));
             }
 
             var fullTask = await _taskRepo.GetAll(t => t.Id == task.Id)

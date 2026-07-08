@@ -371,7 +371,7 @@ export class EmployeeCreateUpdateComponent implements OnInit {
 
         const selected = options.find(o => o.value === branchId);
         if (selected) {
-          this.formGroup.get('branchId')?.setValue(selected.value);
+          this.formGroup.get('branchId')?.setValue(selected.value, { emitEvent: false });
         }
       }
     });
@@ -432,13 +432,11 @@ export class EmployeeCreateUpdateComponent implements OnInit {
       }
 
       if (this.isEdit && this.employeeId) {
-        const jobId = this.formGroup.get('jobId')?.value?.toString();
-        console.log('Job:', jobId);
-        console.log('form:', this.formGroup.value);
+        const jobId = Number(this.formGroup.get('jobId')?.value);
 
         const selected = options.find(o => o.value === jobId);
         if (selected) {
-          this.formGroup.get('jobId')?.setValue(selected.value);
+          this.formGroup.get('jobId')?.setValue(selected.value, { emitEvent: false });
         }
       }
     });

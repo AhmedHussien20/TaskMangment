@@ -250,6 +250,11 @@ namespace TaskMangment.Hangfire.Jobs
                     var sendToIds = new List<int> { discount.EmployeeId };
                     if (managerId.HasValue && !sendToIds.Contains(managerId.Value))
                         sendToIds.Add(managerId.Value);
+                    sendToIds = await _db.Employees
+                        .Where(e => sendToIds.Contains(e.Id) && e.IsActive && !e.IsDeleted)
+                        .Select(e => e.Id)
+                        .ToListAsync();
+                    if (!sendToIds.Any()) continue;
 
                     var issuedToName = issuedEmployee.FullName;
 

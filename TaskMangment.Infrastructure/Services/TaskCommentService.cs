@@ -229,10 +229,16 @@ namespace TaskMangment.Infrastructure.Services
                 }
 
                 assignedEmployeeIds.Remove(employeeId);
+                assignedEmployeeIds = await _employeeRepo.GetAll(e => assignedEmployeeIds.Contains(e.Id) && e.IsActive)
+                    .Select(e => e.Id)
+                    .ToListAsync();
 
-                await _eventDispatcher.PublishAsync(
-                    new TaskCommentAddedEvent(comment.Id, taskId, employeeName, assignedEmployeeIds, task.Title)
-                );
+                if (assignedEmployeeIds.Any())
+                {
+                    await _eventDispatcher.PublishAsync(
+                        new TaskCommentAddedEvent(comment.Id, taskId, employeeName, assignedEmployeeIds, task.Title)
+                    );
+                }
 
                 // ==== Return DTO ====
                 var savedComment = await _commentRepo
