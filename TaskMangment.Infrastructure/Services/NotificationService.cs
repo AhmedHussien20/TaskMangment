@@ -42,7 +42,7 @@ public class NotificationService : INotificationService
 
     }
 
-    public async Task SendAsync(int userId, string messageKey, bool sendEmail, bool sendWhatsApp, int? taskId, NotificationType type, int referenceId)
+    public async Task SendAsync(int userId, string messageKey, bool sendEmail, bool sendWhatsApp, int? taskId, NotificationType type, int referenceId, string? whatsAppMessage = null)
     {
         var message = messageKey;
         var user = await _EmployeeRepo.GetByIDAsync(userId);
@@ -74,7 +74,6 @@ public class NotificationService : INotificationService
             {
                 _logger.LogError(ex, "SignalR notification failed for user {UserId}", userId);
             }
-            return;
         }
         if (sendWhatsApp)
         {
@@ -85,7 +84,7 @@ public class NotificationService : INotificationService
                     await _whatsAppService.SendTaskAssignedNotification(
                         user.Mobile,
                         user.FullName,
-                        message
+                        whatsAppMessage ?? message
                     );
                 }
             }

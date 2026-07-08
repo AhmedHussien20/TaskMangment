@@ -9,7 +9,7 @@ namespace TaskMangment.Application.Interfaces.Services
 {
     public interface INotificationService
     {
-        Task SendAsync(int userId, string message, bool sendEmail, bool sendWhatsApp, int? taskId, NotificationType type,int referenceId);
+        Task SendAsync(int userId, string message, bool sendEmail, bool sendWhatsApp, int? taskId, NotificationType type, int referenceId, string? whatsAppMessage = null);
         Task<List<Notification>> GetUnreadAsync(int userId);
         Task MarkAsReadAsync(int notificationId);
         Task MarkAllAsReadAsync(int userId);

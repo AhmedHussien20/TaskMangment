@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Localization;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Notification;
+using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Domain.Entities;
 using TaskMangment.Domain.Event;
@@ -17,13 +19,16 @@ namespace TaskMangment.Application.Behaviors
     {
         private readonly INotificationService _notificationService;
         private readonly IStringLocalizer<TaskNotification> _localizer;
+        private readonly IRepository<TaskComment> _commentRepo;
 
         public TaskCommentEventHandler(
             INotificationService notificationService,
-             IStringLocalizer<TaskNotification> localizer)
+             IStringLocalizer<TaskNotification> localizer,
+             IRepository<TaskComment> commentRepo)
         {
             _notificationService = notificationService;
             _localizer = localizer;
+            _commentRepo = commentRepo;
            // _localizer = factory.Create("TaskNotification", "TaskMangment.API");
         }
 
@@ -38,6 +43,14 @@ namespace TaskMangment.Application.Behaviors
                 ev.taskTitle,
                 ev.EmployeeName
             );
+            var commentText = await _commentRepo
+                .GetAll(c => c.Id == ev.CommentId)
+                .Select(c => c.CommentText)
+                .FirstOrDefaultAsync();
+            var commentLabel = _localizer["COMMENT_LABEL"];
+            var whatsAppMessage = string.IsNullOrWhiteSpace(commentText)
+                ? message
+                : $"{message}\n{commentLabel}: {commentText}";
 
             foreach (var empId in ev.Recipients)
             {
@@ -48,7 +61,8 @@ namespace TaskMangment.Application.Behaviors
                     sendWhatsApp: true,
                     ev.TaskId,
                     NotificationType.Comments,
-                    ev.CommentId
+                    ev.CommentId,
+                    whatsAppMessage
                 );
             }
         }

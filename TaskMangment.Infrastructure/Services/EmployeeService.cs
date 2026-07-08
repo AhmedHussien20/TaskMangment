@@ -239,7 +239,10 @@ namespace TaskMangment.Infrastructure.Services
             if (string.IsNullOrWhiteSpace(dto.Password))
                 throw new AppException(ErrorCodes.Invalid, StatusCodes.Status400BadRequest);
 
-            if (await _employeeRepo.GetAll(e => e.Email == dto.Email).AnyAsync())
+            var existingByEmail = await _db.Employees
+                .FirstOrDefaultAsync(e => e.Email == dto.Email);
+
+            if (existingByEmail != null && !existingByEmail.IsDeleted)
                 throw new AppException(ErrorCodes.EmailAlreadyExists, StatusCodes.Status400BadRequest);
 
             await _uow.BeginTransactionAsync();
@@ -247,12 +250,24 @@ namespace TaskMangment.Infrastructure.Services
 
             try
             {
-                var employee = _mapper.Map<Employee>(dto);
-                employee.CompanyId = CampanyId;
-                employee.CreatedDate = DateTime.UtcNow;
-                employee.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+                var employee = existingByEmail ?? _mapper.Map<Employee>(dto);
 
-                await _employeeRepo.AddAsync(employee);
+                if (existingByEmail != null)
+                {
+                    _mapper.Map(dto, employee);
+                    employee.IsDeleted = false;
+                    employee.DeletedDate = null;
+                    employee.DeletedBy = null;
+                    employee.ModifiedDate = DateTime.UtcNow;
+                }
+                else
+                {
+                    employee.CreatedDate = DateTime.UtcNow;
+                    await _employeeRepo.AddAsync(employee);
+                }
+
+                employee.CompanyId = CampanyId;
+                employee.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
 
                 await _employeeRepo.SaveChangesAsync();
 
