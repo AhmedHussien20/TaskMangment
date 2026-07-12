@@ -123,6 +123,9 @@
   <data name="COMMENT_LABEL" xml:space="preserve">
     <value>Comment</value>
   </data>
+  <data name="TASK_LINK_LABEL" xml:space="preserve">
+    <value>Task link</value>
+  </data>
   <data name="TASK_PENALTY_NOTIFICATION" xml:space="preserve">
     <value>a new penalty on task: {0} from {1}</value>
   </data>

@@ -40,8 +40,10 @@ namespace TaskMangment.API
                 builder.Configuration.GetSection("WhatsApp").Bind(opts);
                 var instanceId = Environment.GetEnvironmentVariable("WHATSAPP_INSTANCE_ID");
                 var token = Environment.GetEnvironmentVariable("WHATSAPP_API_TOKEN");
+                var frontendUrl = Environment.GetEnvironmentVariable("FRONTEND_URL");
                 if (!string.IsNullOrWhiteSpace(instanceId)) opts.InstanceId = instanceId;
                 if (!string.IsNullOrWhiteSpace(token)) opts.Token = token;
+                if (!string.IsNullOrWhiteSpace(frontendUrl)) opts.FrontendUrl = frontendUrl;
             });
 
 

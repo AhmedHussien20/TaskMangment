@@ -123,6 +123,9 @@
   <data name="COMMENT_LABEL" xml:space="preserve">
     <value>التعليق</value>
   </data>
+  <data name="TASK_LINK_LABEL" xml:space="preserve">
+    <value>رابط المهمة</value>
+  </data>
   <data name="TASK_PENALTY_NOTIFICATION" xml:space="preserve">
     <value>جزاء جديد علي المهمة:{0} من {1}</value>
   </data>

@@ -1,9 +1,13 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using System.Collections.Generic;
+using TaskMangment.Application.Common.Notification;
 using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Domain.Entities;
+using TaskMangment.Infrastructure;
 using TaskMangment.Infrastructure.Repositories;
 using TaskMangment.Infrastructure.Services;
 using TaskMangment.Infrastructure.SignalR;
@@ -19,6 +23,7 @@ public class NotificationService : INotificationService
     private readonly IStringLocalizer<TaskNotification> _L;
     private readonly IRepository<Employee> _EmployeeRepo;
     private readonly IWhatsAppService _whatsAppService;
+    private readonly WhatsAppSettings _whatsAppSettings;
     private readonly ILogger<NotificationService> _logger;
 
 
@@ -26,6 +31,7 @@ public class NotificationService : INotificationService
         INotificationRepository repo,
         IEmailQueueService emailQueueService, INotificationSender notificationSender, IOnlineUserService onlineUserService, IStringLocalizer<TaskNotification> localizer,
         IWhatsAppService whatsAppService,
+        IOptions<WhatsAppSettings> whatsAppOptions,
         IRepository<Employee> EmployeeRepo,
         ILogger<NotificationService> logger)
 
@@ -38,11 +44,12 @@ public class NotificationService : INotificationService
         _L = localizer;
         _EmployeeRepo = EmployeeRepo;
         _whatsAppService = whatsAppService;
+        _whatsAppSettings = whatsAppOptions.Value;
         _logger = logger;
 
     }
 
-    public async Task SendAsync(int userId, string messageKey, bool sendEmail, bool sendWhatsApp, int? taskId, NotificationType type, int referenceId, string? whatsAppMessage = null)
+    public async Task SendAsync(int userId, string messageKey, bool sendEmail, bool sendWhatsApp, int? taskId, NotificationType type, int referenceId, string? whatsAppMessage = null, IReadOnlyList<WhatsAppAttachment>? whatsAppAttachments = null)
     {
         var message = messageKey;
         var user = await _EmployeeRepo.GetByIDAsync(userId);
@@ -81,10 +88,12 @@ public class NotificationService : INotificationService
             {
                 if (!string.IsNullOrEmpty(user.Mobile))
                 {
-                    await _whatsAppService.SendTaskAssignedNotification(
+                    var whatsAppBody = BuildWhatsAppMessage(whatsAppMessage ?? message, taskId);
+                    await _whatsAppService.SendNotificationAsync(
                         user.Mobile,
                         user.FullName,
-                        whatsAppMessage ?? message
+                        whatsAppBody,
+                        whatsAppAttachments
                     );
                 }
             }
@@ -103,6 +112,16 @@ public class NotificationService : INotificationService
 
     public Task MarkAllAsReadAsync(int userId)
         => _repo.MarkAllAsReadAsync(userId);
+
+    private string BuildWhatsAppMessage(string message, int? taskId)
+    {
+        if (!taskId.HasValue || string.IsNullOrWhiteSpace(_whatsAppSettings.FrontendUrl))
+            return message;
+
+        var taskUrl = $"{_whatsAppSettings.FrontendUrl.TrimEnd('/')}/task/details/{taskId.Value}";
+        var taskLinkLabel = _L["TASK_LINK_LABEL"];
+        return $"{message}\n\n{taskLinkLabel}:\n{taskUrl}";
+    }
 
 
 }

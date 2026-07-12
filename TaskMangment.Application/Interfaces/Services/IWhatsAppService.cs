@@ -1,13 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using TaskMangment.Application.Common.Notification;
 
 namespace TaskMangment.Application.Interfaces.Services
 {
     public interface IWhatsAppService
     {
-        Task SendTaskAssignedNotification(string phone, string userName, string message);
+        Task SendNotificationAsync(
+            string phone,
+            string userName,
+            string message,
+            IReadOnlyList<WhatsAppAttachment>? attachments = null);
     }
 }

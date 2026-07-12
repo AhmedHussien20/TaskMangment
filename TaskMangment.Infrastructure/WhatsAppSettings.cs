@@ -4,5 +4,6 @@
     {
         public string InstanceId { get; set; } = string.Empty;
         public string Token { get; set; } = string.Empty;
+        public string FrontendUrl { get; set; } = string.Empty;
     }
 }
