@@ -17,13 +17,16 @@ namespace TaskMangment.Application.Behaviors
     {
         private readonly INotificationService _notificationService;
         private readonly IStringLocalizer<TaskNotification> _localizer;
+        private readonly IGetHigherManager _getHigherManager;
 
         public LeaveRejectedEventHandler(
             INotificationService notificationService,
-           IStringLocalizer<TaskNotification> localizer)
+           IStringLocalizer<TaskNotification> localizer,
+           IGetHigherManager getHigherManager)
         {
             _notificationService = notificationService;
             _localizer = localizer;
+            _getHigherManager = getHigherManager;
 
             //_localizer = factory.Create("LeaveNotification", "TaskMangment.API");
         }
@@ -50,6 +53,20 @@ namespace TaskMangment.Application.Behaviors
                 NotificationType.leaverejected,
                 ev.LeaveId
             );
+
+            var managerId = await _getHigherManager.GetDirectHigherManagerIdAsync(ev.EmployeeId);
+            if (managerId.HasValue && managerId.Value != ev.EmployeeId)
+            {
+                await _notificationService.SendAsync(
+                    managerId.Value,
+                    message,
+                    sendEmail: false,
+                    sendWhatsApp: true,
+                    null,
+                    NotificationType.leaverejected,
+                    ev.LeaveId
+                );
+            }
         }
     }
 

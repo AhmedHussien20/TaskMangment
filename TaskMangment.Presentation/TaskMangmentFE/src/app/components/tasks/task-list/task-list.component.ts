@@ -320,21 +320,21 @@ if (this.auth.hasPermission('CREATE_TASK')) {
   this.isEdit = false;
   this.isCopyMode = false;
   this.selectedTaskId = null;
-  this.modalService.open(modal, { size: 'lg', centered: true, backdrop: 'static' });
+  this.modalService.open(modal, { size: 'xl', centered: true, backdrop: 'static' });
 }
 
 openEdit(id: number, modal: any) {
   this.isEdit = true;
   this.isCopyMode = false;
   this.selectedTaskId = id;
-  this.modalService.open(modal, { size: 'lg', centered: true, backdrop: 'static' });
+  this.modalService.open(modal, { size: 'xl', centered: true, backdrop: 'static' });
 }
 openCopy(id: number, modal: any) {
     console.log('copy event:', id);
   this.selectedTaskId = id;
   this.isEdit = false;
   this.isCopyMode = true;
-  this.modalService.open(modal, { size: 'lg', centered: true, backdrop: 'static' });
+  this.modalService.open(modal, { size: 'xl', centered: true, backdrop: 'static' });
 }
 
 

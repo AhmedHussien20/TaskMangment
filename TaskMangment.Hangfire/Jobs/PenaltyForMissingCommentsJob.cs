@@ -10,6 +10,8 @@ namespace TaskMangment.Hangfire.Jobs
 {
     public class PenaltyForMissingCommentsJob
     {
+        private const string StopCommentWarningReason = "عدم التعليق في فترة السماح";
+
         private readonly AppDbContext _db;
         private readonly IDomainEventDispatcher _eventDispatcher;
         private readonly IGetHigherManager _getHigherManager;
@@ -59,12 +61,18 @@ namespace TaskMangment.Hangfire.Jobs
                 .ToListAsync();
 
             var discountsToPublish = new List<(Discount discount, string employeeName, int taskId, string taskTitle)>();
+            var warningsToPublish = new List<(Warning warning, string employeeName, int taskId, string taskTitle)>();
 
             foreach (var task in tasks)
             {
-                if (task.PenaltyOnStopComment <= 0)
+                if (task.Id != 2978
+                   && task.Id != 2976
+                   && task.Id != 2972
+                   && task.Id != 2971
+                   && task.Id != 2970)
+                {
                     continue;
-
+                }
                 bool hasCloseRequest = await _db.TaskCloseRequests
                     .AnyAsync(r => r.TaskId == task.Id);
 
@@ -73,6 +81,10 @@ namespace TaskMangment.Hangfire.Jobs
 
                 var periodDays = (int)task.CommentAllowPeriodDays!.Value;
                 if (periodDays < 1) periodDays = 1;
+
+                var maxWarningsBeforeDiscount = task.MaxWarningsBeforeDiscount;
+                if (maxWarningsBeforeDiscount < 0) maxWarningsBeforeDiscount = 0;
+                if (maxWarningsBeforeDiscount > 3) maxWarningsBeforeDiscount = 3;
 
                 var candidateIds = task.Assignments
                     .Select(a => a.EmployeeId)
@@ -136,21 +148,10 @@ namespace TaskMangment.Hangfire.Jobs
                         .OrderByDescending(c => c.CreatedDate)
                         .FirstOrDefaultAsync();
 
-                    var lastDiscount = await _db.Discounts
-                        .Where(d => d.TaskId == task.Id &&
-                                    d.EmployeeId == employeeId &&
-                                    d.discountType == DiscountType.StopCommentDiscount &&
-                                    d.AutoDiscount)
-                        .OrderByDescending(d => d.ViolationDate)
-                        .FirstOrDefaultAsync();
-
                     var baseDate = assignment.AssignedAt.Date;
 
                     if (lastComment != null && lastComment.CreatedDate.Date > baseDate)
                         baseDate = lastComment.CreatedDate.Date;
-
-                    if (lastDiscount != null && lastDiscount.ViolationDate.Date > baseDate)
-                        baseDate = lastDiscount.ViolationDate.Date;
 
                     var dueDate = baseDate.AddDays(periodDays);
 
@@ -158,7 +159,9 @@ namespace TaskMangment.Hangfire.Jobs
                         continue;
 
                     if (lastComment != null && lastComment.CreatedDate.Date == dueDate)
-                        continue; 
+                        continue;
+
+                    var daysOverdue = (yesterday - dueDate).Days;
 
                     var hasLeave = await _db.Leaves
                       .Where(l => l.EmployeeId == employeeId &&
@@ -197,15 +200,44 @@ namespace TaskMangment.Hangfire.Jobs
                         }
                     }
 
-                  
+                    if (daysOverdue < maxWarningsBeforeDiscount)
+                    {
+                        var alreadyWarned = await _db.Warnings.AnyAsync(w =>
+                            w.TaskId == task.Id &&
+                            w.IssuedEmployeeId == employeeId &&
+                            w.AutoWarning &&
+                            !w.IsDeleted &&
+                            w.ViolationDate != null &&
+                            w.ViolationDate.Value.Date == yesterday);
+
+                        if (alreadyWarned)
+                            continue;
+
+                        var warning = new Warning
+                        {
+                            TaskId = task.Id,
+                            TaskAssignmentId = assignment.Id,
+                            IssuedEmployeeId = employeeId,
+                            Reason = StopCommentWarningReason,
+                            IssuedAt = DateTime.UtcNow,
+                            AutoWarning = true,
+                            ViolationDate = yesterday
+                        };
+
+                        await _db.Warnings.AddAsync(warning);
+                        warningsToPublish.Add((warning, assignment.Employee?.FullName ?? "", task.Id, task.Title));
+                        continue;
+                    }
+
+                    if (task.PenaltyOnStopComment <= 0)
+                        continue;
 
                     var alreadyDiscounted = await _db.Discounts.AnyAsync(d =>
                         d.TaskId == task.Id &&
                         d.EmployeeId == employeeId &&
                         d.discountType == DiscountType.StopCommentDiscount &&
                         d.AutoDiscount &&
-                        //d.CreatedDate.Date == today);
-                        d.ViolationDate.Date == dueDate);
+                        d.ViolationDate.Date == yesterday);
 
                     if (alreadyDiscounted)
                         continue;
@@ -219,7 +251,7 @@ namespace TaskMangment.Hangfire.Jobs
                         AutoDiscount = true,
                         CreatedDate = DateTime.UtcNow,
                         discountType = DiscountType.StopCommentDiscount,
-                        ViolationDate = DateTime.UtcNow.AddDays(-1)
+                        ViolationDate = yesterday
                     };
 
                     await _db.Discounts.AddAsync(discount);
@@ -228,6 +260,50 @@ namespace TaskMangment.Hangfire.Jobs
             }
 
             await _db.SaveChangesAsync();
+
+            foreach (var (warning, employeeName, taskId, taskTitle) in warningsToPublish)
+            {
+                try
+                {
+                    var issuedEmployee = await _db.Employees
+                        .Where(e => e.Id == warning.IssuedEmployeeId)
+                        .Select(e => new
+                        {
+                            e.Id,
+                            e.FullName,
+                            e.BranchId
+                        })
+                        .FirstOrDefaultAsync();
+
+                    if (issuedEmployee == null) continue;
+
+                    var managerId = await _getHigherManager.GetDirectHigherManagerIdAsync(warning.IssuedEmployeeId!.Value);
+
+                    var sendToIds = new List<int> { warning.IssuedEmployeeId!.Value };
+                    if (managerId.HasValue && !sendToIds.Contains(managerId.Value))
+                        sendToIds.Add(managerId.Value);
+                    sendToIds = await _db.Employees
+                        .Where(e => sendToIds.Contains(e.Id) && e.IsActive && !e.IsDeleted)
+                        .Select(e => e.Id)
+                        .ToListAsync();
+                    if (!sendToIds.Any()) continue;
+
+                    await _eventDispatcher.PublishAsync(
+                        new TaskWarningEvent(
+                            warning.Id,
+                            taskId,
+                            "النظام",
+                            sendToIds,
+                            issuedEmployee.FullName,
+                            taskTitle
+                        )
+                    );
+                }
+                catch
+                {
+                    // intentionally ignored (same as original behavior)
+                }
+            }
 
             foreach (var (discount, employeeName, taskId, taskTitle) in discountsToPublish)
             {

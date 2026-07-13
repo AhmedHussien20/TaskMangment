@@ -36,6 +36,7 @@ export interface TaskAddEdit {
   title: string;
   description: string;
   commentAllowPeriodDays?: number;
+  maxWarningsBeforeDiscount: number;
   maxWarnings: number;
   penaltyAtMaxWarnings: number;
   penaltyOnAutoClose: number;
@@ -63,6 +64,7 @@ export interface TaskGet {
   status: TaskStatus;
   dueDate?: string;
   commentAllowPeriodDays?: number;
+  maxWarningsBeforeDiscount?: number;
   maxWarnings?: number;
   penaltyAtMaxWarnings?: number;
   penaltyOnAutoClose?: number;

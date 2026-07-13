@@ -178,7 +178,8 @@ namespace TaskMangment.Infrastructure.Services
 
             var warningCount = await _warningRepo.GetAll(w =>
         w.TaskId == taskId &&
-        w.IssuedEmployeeId == dto.IssuedEmployeeId
+        w.IssuedEmployeeId == dto.IssuedEmployeeId &&
+        !w.AutoWarning
     ).CountAsync() + 1;
 
             Discount? discount = null;

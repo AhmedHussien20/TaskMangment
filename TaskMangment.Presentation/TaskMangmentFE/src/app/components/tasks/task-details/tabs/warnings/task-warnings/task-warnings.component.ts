@@ -24,13 +24,19 @@ export class TaskWarningsComponent implements OnInit, OnDestroy {
   totalItems = 0;
 
   columns: TableColumn[] = [
-     { key: 'issuedAt', label: 'TASK.DATE', type: 'date' },
+    { key: 'issuedAt', label: 'TASK.DATE', type: 'date' },
     { key: 'reason', label: 'TASK.WARNING_RESON' },
     { key: 'issuedEmployeeName', label: 'TASK.WARNED_EMPLOYEE' },
-    { key: 'issuedByName', label: 'TASK.WARNED_BY' },
+    {
+      key: 'autoWarning',
+      label: 'TASK.WARNING_TYPE',
+      type: 'badge',
+      badgeMap: {
+        true: { text: 'TASK.STATUS_AUTOWARNING', class: 'bg-warning' },
+        false: { text: 'TASK.STATUS_WARNING', class: 'bg-success' }
+      }
+    },
     { key: 'isRead', label: 'TASK.READED', type: 'seen' }
-
-
   ];
 
   private sub!: Subscription;

@@ -46,6 +46,13 @@ namespace TaskMangment.Infrastructure.Services
                 return currentEmployeeId;
             }
 
+            if (currentUser.Level == (int)RoleLevelEnum.BranchesManager)
+            {
+                var adminId = await FindAdminInCompanyAsync(currentUser.CompanyId, currentEmployeeId);
+                if (adminId.HasValue)
+                    return adminId.Value;
+            }
+
             int? higherManagerId = null;
 
             if (currentUser.FunctionCode == FunctionCode.Operations)
@@ -65,6 +72,19 @@ namespace TaskMangment.Infrastructure.Services
             var topEmployeeInCompany = await FindTopLevelEmployeeAsync(currentUser.CompanyId, currentUser.Id);
 
             return topEmployeeInCompany ?? currentEmployeeId;
+        }
+
+        private async Task<int?> FindAdminInCompanyAsync(int companyId, int currentEmployeeId)
+        {
+            return await _employeeRepo.GetAll(e =>
+                    e.CompanyId == companyId &&
+                    e.IsActive &&
+                    e.Id != currentEmployeeId &&
+                    e.EmployeeRoles.Any(er =>
+                        er.IsAssigned && !er.IsDeleted &&
+                        er.Role != null && er.Role.Level == (int)RoleLevelEnum.Admin))
+                .Select(e => (int?)e.Id)
+                .FirstOrDefaultAsync();
         }
 
         private async Task<int?> FindHigherManagerInBranchAsync(int currentEmployeeId, int companyId, int? employeeBranchId, int currentLevel)

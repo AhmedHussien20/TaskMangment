@@ -56,7 +56,6 @@ namespace TaskMangment.API
             builder.Services.AddDI();
 
             builder.Services.AddHttpClient();
-            builder.Services.AddHttpClient<IWhatsAppService, WhatsAppService>();
 
 
 

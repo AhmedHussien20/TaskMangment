@@ -11,15 +11,7 @@ namespace TaskMangment.Infrastructure.DataContext
     {
         public AppDbContext CreateDbContext(string[] args)
         {
-            var basePath = Directory.GetCurrentDirectory();
-
-            if (!File.Exists(Path.Combine(basePath, "appsettings.json")))
-            {
-                basePath = Directory.GetParent(basePath)
-                                    ?.Parent?
-                                    .Parent?
-                                    .FullName!;
-            }
+            var basePath = ResolveConfigPath();
 
             var config = new ConfigurationBuilder()
                 .SetBasePath(basePath)
@@ -36,6 +28,27 @@ namespace TaskMangment.Infrastructure.DataContext
                 builder.Options,
                 new DesignTimeCurrentUserService()
             );
+        }
+
+        private static string ResolveConfigPath()
+        {
+            var current = Directory.GetCurrentDirectory();
+            var candidates = new[]
+            {
+                current,
+                Path.Combine(current, "TaskMangment.API"),
+                Path.Combine(current, "..", "TaskMangment.API"),
+                Path.Combine(current, "..", "..", "TaskMangment.API"),
+            };
+
+            foreach (var candidate in candidates)
+            {
+                var fullPath = Path.GetFullPath(candidate);
+                if (File.Exists(Path.Combine(fullPath, "appsettings.json")))
+                    return fullPath;
+            }
+
+            throw new InvalidOperationException("Could not locate appsettings.json for design-time DbContext creation.");
         }
     }
 

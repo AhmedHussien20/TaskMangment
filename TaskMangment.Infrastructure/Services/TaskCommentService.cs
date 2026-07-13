@@ -36,6 +36,7 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IDomainEventDispatcher _eventDispatcher;
         private readonly IBlobStorageService _blobStorageService;
         private readonly IAppUnitOfWork _uow;
+        private readonly IGetHigherManager _getHigherManager;
 
 
 
@@ -49,7 +50,8 @@ namespace TaskMangment.Infrastructure.Services
             IDomainEventDispatcher eventDispatcher,
             IRepository<Employee> employeeRepo,
             IBlobStorageService blobStorageService,
-            IAppUnitOfWork uow
+            IAppUnitOfWork uow,
+            IGetHigherManager getHigherManager
             )
         {
             _commentRepo = commentRepo;
@@ -62,6 +64,7 @@ namespace TaskMangment.Infrastructure.Services
             _employeeRepo = employeeRepo;
             _blobStorageService = blobStorageService;
             _uow = uow;
+            _getHigherManager = getHigherManager;
 
         }
 
@@ -229,6 +232,17 @@ namespace TaskMangment.Infrastructure.Services
                 }
 
                 assignedEmployeeIds.Remove(employeeId);
+                assignedEmployeeIds = await _employeeRepo.GetAll(e => assignedEmployeeIds.Contains(e.Id) && e.IsActive)
+                    .Select(e => e.Id)
+                    .ToListAsync();
+
+                foreach (var recipientId in assignedEmployeeIds.ToList())
+                {
+                    var managerId = await _getHigherManager.GetDirectHigherManagerIdAsync(recipientId);
+                    if (managerId.HasValue && !assignedEmployeeIds.Contains(managerId.Value))
+                        assignedEmployeeIds.Add(managerId.Value);
+                }
+
                 assignedEmployeeIds = await _employeeRepo.GetAll(e => assignedEmployeeIds.Contains(e.Id) && e.IsActive)
                     .Select(e => e.Id)
                     .ToListAsync();

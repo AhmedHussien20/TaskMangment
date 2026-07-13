@@ -145,6 +145,9 @@ namespace TaskMangment.Infrastructure.Services
             
             services.AddScoped<IPermissionChecker, PermissionChecker>();
             services.AddScoped<IGetHigherManager, GetHigherManager>();
+            services.AddHttpClient<IWhatsAppService, WhatsAppService>();
+
+
 
             return services;
         }

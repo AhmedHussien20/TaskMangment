@@ -21,6 +21,8 @@ namespace TaskMangment.Domain.Entities
         [MaxLength(1000)] 
         public string Reason { get; set; }
         public DateTime IssuedAt { get; set; } = DateTime.UtcNow;
+        public bool AutoWarning { get; set; } = false;
+        public DateTime? ViolationDate { get; set; }
 
         [ForeignKey(nameof(TaskAssignmentId))] 
         public TaskAssignment TaskAssignment { get; set; }

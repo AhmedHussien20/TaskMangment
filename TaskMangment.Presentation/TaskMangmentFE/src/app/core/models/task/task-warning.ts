@@ -11,6 +11,8 @@ export interface WarningGetDto {
   issuedAt: string;
   issuedEmployeeName: string;
   issuedByName: string;
+  autoWarning: boolean;
+  violationDate?: string | null;
   isRead: boolean | false
 }
 

@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, Output, OnInit } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
-import { FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { AbstractControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { NgSelectModule } from '@ng-select/ng-select';
 import { DropzoneComponent, DropzoneConfigInterface, DropzoneModule } from 'ngx-dropzone-wrapper';
@@ -165,7 +165,7 @@ export class GenericFormComponent implements OnInit {
           })
         }));
         
-        field.options = options;
+        field.options = this.mergeSelectedOptions(field, options);
         field.isLoading = false;
       },
       error: () => {
@@ -180,5 +180,49 @@ export class GenericFormComponent implements OnInit {
     if (!field.options || field.options.length === 0) {
       this.onSearch('', field);
     }
+  }
+
+  onSelectChange(field: FormFieldConfig): void {
+    if (!field.isPaginated || !field.searchFunction) return;
+    this.onSearch('', field);
+  }
+
+  isFieldRequired(field: FormFieldConfig): boolean {
+    if (field.validations?.required === true) return true;
+
+    const control = this.formGroup?.get(field.name);
+    if (!control) return false;
+
+    if (control.hasValidator?.(Validators.required)) return true;
+
+    if (!control.validator) return false;
+    const result = control.validator({ value: null } as AbstractControl);
+    return !!result?.['required'];
+  }
+
+  isFieldInvalid(fieldName: string): boolean {
+    const control = this.formGroup.get(fieldName);
+    return !!control && control.invalid && (control.dirty || control.touched);
+  }
+
+  private getSelectedValues(fieldName: string): any[] {
+    const value = this.formGroup.get(fieldName)?.value;
+    if (value == null || value === '') return [];
+    return Array.isArray(value) ? value : [value];
+  }
+
+  private mergeSelectedOptions(field: FormFieldConfig, incomingOptions: any[]): any[] {
+    const selectedValues = this.getSelectedValues(field.name);
+    const currentOptions = field.options || [];
+    const preserved = currentOptions.filter(o => selectedValues.includes(o.value));
+    const merged = [...preserved];
+
+    for (const option of incomingOptions) {
+      if (!merged.some(o => o.value === option.value)) {
+        merged.push(option);
+      }
+    }
+
+    return merged.length ? merged : incomingOptions;
   }
 }

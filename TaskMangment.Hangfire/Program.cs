@@ -25,6 +25,17 @@ builder.Services.AddHttpClient();
 builder.Services.Configure<EmailSettings>(
                   builder.Configuration.GetSection("EmailSettings")
               );
+
+builder.Services.Configure<WhatsAppSettings>(opts =>
+{
+    builder.Configuration.GetSection("WhatsApp").Bind(opts);
+    var instanceId = Environment.GetEnvironmentVariable("WHATSAPP_INSTANCE_ID");
+    var token = Environment.GetEnvironmentVariable("WHATSAPP_API_TOKEN");
+    var frontendUrl = Environment.GetEnvironmentVariable("FRONTEND_URL");
+    if (!string.IsNullOrWhiteSpace(instanceId)) opts.InstanceId = instanceId;
+    if (!string.IsNullOrWhiteSpace(token)) opts.Token = token;
+    if (!string.IsNullOrWhiteSpace(frontendUrl)) opts.FrontendUrl = frontendUrl;
+});
 builder.Services.AddDI();
 builder.Services.Configure<BlobStorageService>(builder.Configuration.GetSection("Blob"));
 // =======================
@@ -34,6 +45,7 @@ builder.Services.AddScoped<ICurrentUserService, HangfireCurrentUserService>();
 builder.Services.AddScoped<IEmailTemplateRenderer, EmailTemplateRenderer>();
 builder.Services.AddScoped<IBlobStorageService, BlobStorageService>();
 builder.Services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
+
 
 
 builder.Services.AddLocalization();

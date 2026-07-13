@@ -9,7 +9,7 @@ import { Employee } from 'app/core/models/employee/employee';
 import { ToastrService } from 'ngx-toastr';
 import { FormFieldConfig } from 'app/core/models/form-field-config';
 import { CommentAllowPeriod, TaskPriority, TaskStatus } from 'app/core/models/task/task';
-import { decimalValidator } from 'app/shared/validations/numberVlidator';
+import { decimalValidator, penaltyAmountValidator } from 'app/shared/validations/numberVlidator';
 
 @Component({
   selector: 'app-task-create-update',
@@ -121,6 +121,15 @@ export class TaskCreateUpdateComponent implements OnInit {
     {
       type: 'input',
       inputType: 'number',
+      label: 'TASK.MAX_WARNINGS_BEFORE_DISCOUNT',
+      name: 'maxWarningsBeforeDiscount',
+      validations: { required: true, min: 0, max: 3 },
+      defaultValue: 3
+    },
+
+    {
+      type: 'input',
+      inputType: 'number',
       label: 'TASK.MAX_WARNINGS',
       name: 'maxWarnings',
       defaultValue: 3
@@ -139,14 +148,16 @@ export class TaskCreateUpdateComponent implements OnInit {
       inputType: 'number',
       label: 'TASK.PENALTY_ON_AUTO_CLOSE',
       name: 'penaltyOnAutoClose',
-      defaultValue: 0
+      validations: { required: true, minPenalty: 50 },
+      defaultValue: null
     },
     {
       type: 'input',
       inputType: 'number',
       label: 'TASK.PENALTY_ON_STOP_COMMENT',
       name: 'penaltyOnStopComment',
-      defaultValue: 0
+      validations: { required: true, minPenalty: 50 },
+      defaultValue: null
     },
     {
       type: 'checkbox',
@@ -198,11 +209,12 @@ export class TaskCreateUpdateComponent implements OnInit {
       priority: [TaskPriority.Low, Validators.required],
     status: [{ value: TaskStatus.New, disabled: !this.isEdit }, Validators.required], 
       dueDate: [null, Validators.required],
-      commentAllowPeriodDays: ['', Validators.required],
+      commentAllowPeriodDays: [CommentAllowPeriod.Daily, Validators.required],
+      maxWarningsBeforeDiscount: [3, [Validators.required, Validators.min(0), Validators.max(3)]],
       maxWarnings: [3, [decimalValidator()]],
       penaltyAtMaxWarnings: [0, [decimalValidator()]],
-      penaltyOnAutoClose: [0, [decimalValidator()]],
-      penaltyOnStopComment : [0, [decimalValidator()]],
+      penaltyOnAutoClose: [50, [Validators.required, decimalValidator(), penaltyAmountValidator()]],
+      penaltyOnStopComment : [50, [Validators.required, decimalValidator(), penaltyAmountValidator()]],
       isShared: [false],
       requireUploadFile: [false]
     });

@@ -16,6 +16,8 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
 
         public int? CommentAllowPeriodDays { get; set; }
 
+        public int MaxWarningsBeforeDiscount { get; set; } = 3;
+
         public int MaxWarnings { get; set; } = 3;
 
         public decimal PenaltyAtMaxWarnings { get; set; } = 0;
@@ -47,6 +49,7 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
         public string PriorityText => Priority.ToString();
         public string StatusText => Status.ToString();
 
+        public int MaxWarningsBeforeDiscount { get; set; } = 3;
         public int MaxWarnings { get; set; } = 3;
         public decimal PenaltyAtMaxWarnings { get; set; } = 0;
         public decimal PenaltyOnAutoClose { get; set; } = 0;

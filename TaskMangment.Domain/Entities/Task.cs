@@ -13,6 +13,7 @@ namespace TaskMangment.Domain.Entities
         public string Description { get; set; }
 
         public CommentAllowPeriod? CommentAllowPeriodDays { get; set; }
+        public int MaxWarningsBeforeDiscount { get; set; } = 3;
         public int MaxWarnings { get; set; } = 3;
         [Column(TypeName = "decimal(18,2)")] public decimal PenaltyAtMaxWarnings { get; set; } = 0;
         [Column(TypeName = "decimal(18,2)")] public decimal PenaltyOnAutoClose { get; set; } = 0;

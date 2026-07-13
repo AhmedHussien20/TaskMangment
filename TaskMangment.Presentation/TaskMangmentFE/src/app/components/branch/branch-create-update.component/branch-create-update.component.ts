@@ -99,11 +99,12 @@ export class BranchCreateUpdateComponent implements OnInit {
 
   ngOnInit() {
     this.initForm();
-    this.loadEmployees();
     this.loadAreas();
-    if (this.isEdit && this.branchId) {
-      this.loadBranch();
-    }
+    this.loadEmployees(() => {
+      if (this.isEdit && this.branchId) {
+        this.loadBranch();
+      }
+    });
   }
 
   initForm() {
@@ -149,6 +150,12 @@ Validators.pattern('^\\+?[0-9]+$')
     this.branchService.getById(this.branchId).subscribe(res => {
       const b = res.data;
 
+      const managerField = this.formConfig.find(x => x.name === 'managerId');
+      const responsibleField = this.formConfig.find(x => x.name === 'responsibleId');
+
+      this.ensureEmployeeOption(managerField, b.managerID, b.managerName);
+      this.ensureEmployeeOption(responsibleField, b.responsibleID, b.responsibleName);
+
       this.formGroup.patchValue({
         name: b.name,
         address: b.address,
@@ -159,9 +166,18 @@ Validators.pattern('^\\+?[0-9]+$')
         areaId: b.areaId,
         managerId: b.managerID,
         responsibleId: b.responsibleID,
-        mainBranch:b.mainBranch
+        mainBranch: b.mainBranch
       });
     });
+  }
+
+  private ensureEmployeeOption(field: FormFieldConfig | undefined, id?: number, name?: string): void {
+    if (!field || !id || !name) return;
+
+    field.options = field.options || [];
+    if (!field.options.some(o => o.value === id)) {
+      field.options = [{ label: name, value: id }, ...field.options];
+    }
   }
 
   loadAreas() {
@@ -186,7 +202,7 @@ Validators.pattern('^\\+?[0-9]+$')
     });
   }
 
- loadEmployees(): void {
+ loadEmployees(onReady?: () => void): void {
   const managerField = this.formConfig.find(f => f.name === 'managerId');
   const responsibleField = this.formConfig.find(f => f.name === 'responsibleId');
 
@@ -210,38 +226,34 @@ Validators.pattern('^\\+?[0-9]+$')
       email: emp.email
     }));
 
-  const loadFirstPage = (field: any, afterLoad?: () => void) => {
+  let pending = 0;
+  let completed = 0;
+  const fields = [managerField, responsibleField].filter(Boolean);
+
+  const done = () => {
+    completed++;
+    if (completed >= pending) {
+      onReady?.();
+    }
+  };
+
+  const loadFirstPage = (field: FormFieldConfig) => {
+    pending++;
     field.isPaginated = true;
     field.searchFunction = searchFn;
 
     field.searchFunction('', 1).subscribe((res: any) => {
       field.options = mapOptions(res);
-      afterLoad?.();
+      done();
     });
   };
 
-  if (managerField) loadFirstPage(managerField);
-  if (responsibleField) loadFirstPage(responsibleField);
-
-  if (this.isEdit && this.branchId) {
-    const patch = () => {
-      this.branchService.getById(this.branchId!).subscribe(bRes => {
-        const branch = bRes?.data;
-        this.formGroup.patchValue({
-          managerId: branch?.managerID ?? null,
-          responsibleId: branch?.responsibleID ?? null,
-          areaId: branch?.areaId ?? null
-        });
-      });
-    };
-
-    if (managerField) {
-      loadFirstPage(managerField, patch);
-      if (responsibleField) loadFirstPage(responsibleField);
-    } else if (responsibleField) {
-      loadFirstPage(responsibleField, patch);
-    }
+  if (!fields.length) {
+    onReady?.();
+    return;
   }
+
+  fields.forEach(field => loadFirstPage(field!));
 }
 
   onSubmit(formValue: any) {

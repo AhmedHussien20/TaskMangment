@@ -31,6 +31,7 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
         private readonly IDomainEventDispatcher _eventDispatcher;
+        private readonly IGetHigherManager _getHigherManager;
 
 
         public TaskExtensionRequestService(
@@ -40,7 +41,8 @@ namespace TaskMangment.Infrastructure.Services
             IMapper mapper,
             ICachingService cache,
             IRepository<WorkTask> taskRepo,
-            IDomainEventDispatcher eventDispatcher)
+            IDomainEventDispatcher eventDispatcher,
+            IGetHigherManager getHigherManager)
         {
             _requestRepo = requestRepo;
             _taskAssignmentRepo = taskAssignmentRepo;
@@ -49,6 +51,7 @@ namespace TaskMangment.Infrastructure.Services
             _cache = cache;
             _taskRepo = taskRepo;
             _eventDispatcher = eventDispatcher;
+            _getHigherManager = getHigherManager;
         }
 
         public async Task<ApiResponse<PagedResponse<TaskExtensionRequestListDto>>> GetAllAsync(TaskExtensionRequestRequest request)
@@ -167,6 +170,17 @@ namespace TaskMangment.Infrastructure.Services
                 .Select(e => e.Id)
                 .ToListAsync();
 
+            foreach (var recipientId in assignedEmployeeIds.ToList())
+            {
+                var managerId = await _getHigherManager.GetDirectHigherManagerIdAsync(recipientId);
+                if (managerId.HasValue && !assignedEmployeeIds.Contains(managerId.Value))
+                    assignedEmployeeIds.Add(managerId.Value);
+            }
+
+            assignedEmployeeIds = await _employeeRepo.GetAll(e => assignedEmployeeIds.Contains(e.Id) && e.IsActive)
+                .Select(e => e.Id)
+                .ToListAsync();
+
 
             if (assignedEmployeeIds.Any())
             {
@@ -246,6 +260,17 @@ namespace TaskMangment.Infrastructure.Services
                 }
 
                 assignedEmployeeIds.Remove(reviewerId);
+                assignedEmployeeIds = await _employeeRepo.GetAll(e => assignedEmployeeIds.Contains(e.Id) && e.IsActive)
+                    .Select(e => e.Id)
+                    .ToListAsync();
+
+                foreach (var recipientId in assignedEmployeeIds.ToList())
+                {
+                    var managerId = await _getHigherManager.GetDirectHigherManagerIdAsync(recipientId);
+                    if (managerId.HasValue && !assignedEmployeeIds.Contains(managerId.Value))
+                        assignedEmployeeIds.Add(managerId.Value);
+                }
+
                 assignedEmployeeIds = await _employeeRepo.GetAll(e => assignedEmployeeIds.Contains(e.Id) && e.IsActive)
                     .Select(e => e.Id)
                     .ToListAsync();

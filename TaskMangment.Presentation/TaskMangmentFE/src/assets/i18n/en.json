@@ -309,7 +309,10 @@
     "INVALID_MOBILE": "Please enter a valid mobile number",
     "MOBILE_IS_REQUIRED": "Mobile number is required",
     "MOBILE_CODE_REQUIRED" : "Country code required",
-    "INVALID_SAUDI_MOBILE" : "Enter valid saudi mobile "
+    "INVALID_SAUDI_MOBILE" : "Enter valid saudi mobile ",
+    "MIN_PENALTY_AMOUNT": "Minimum amount is 50",
+    "MIN_VALUE": "Minimum value is",
+    "MAX_VALUE": "Maximum value is"
   },
   "VALIDATION": {
     "REQUIRED": "This field is required",
@@ -400,6 +403,8 @@
     "STATUS_AUTOCLOSE": "Auto closed",
     "TASK_DETAILS": "Task Details",
     "COMMENT_ALLOW_PERIOD": "Comment Allow Period",
+    "MAX_WARNINGS_BEFORE_DISCOUNT": "Maximum Warnings Before Discount",
+    "MAX_WARNINGS_BEFORE_DISCOUNT_RANGE": "Must be between 0 and 3",
     "MAX_WARNINGS": "Maximum Warnings",
     "PENALTY_AT_MAX_WARNINGS": "Penalty at Maximum Warnings",
     "PENALTY_ON_AUTO_CLOSE": "Penalty on Auto Close",
@@ -477,6 +482,9 @@
     "WARNED_DATES": "Warning Dates",
     "WARNED_EMPLOYEE": "Warned Employee",
     "WARNED_BY": "Warned By",
+    "WARNING_TYPE": "Warning Type",
+    "STATUS_AUTOWARNING": "Auto Warning",
+    "STATUS_WARNING": "Warning",
     "SUBMIT_WARNING": "Submit Warning",
     "PENALTY_REASON": "Penalty Reason",
     "PENALTY_AMOUNT_LABEL": "Penalty Amount",

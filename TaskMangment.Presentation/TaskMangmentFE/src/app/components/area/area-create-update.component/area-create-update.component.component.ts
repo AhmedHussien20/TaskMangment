@@ -91,11 +91,11 @@ export class AreaCreateUpdateComponent implements OnInit {
 
   ngOnInit() {
     this.initForm();
-    this.loadManagers();
-
-    if (this.isEdit && this.areaId) {
-      this.loadArea();
-    }
+    this.loadManagers(() => {
+      if (this.isEdit && this.areaId) {
+        this.loadArea();
+      }
+    });
   }
 
   initForm() {
@@ -114,19 +114,33 @@ export class AreaCreateUpdateComponent implements OnInit {
     this.areaService.getById(this.areaId).subscribe(res => {
       if (!res) return;
       const area = res.data;
+      const managerField = this.formConfig.find(f => f.name === 'managerEmployeeId');
+
+      this.ensureEmployeeOption(managerField, area.managerEmployeeId, area.managerName ?? undefined);
+
       this.formGroup.patchValue({
         name: area.name,
         address: area.address,
         managerEmployeeId: area.managerEmployeeId
       });
-
-      console.log('Loaded area data: ', res);
     });
   }
 
- loadManagers(): void {
+  private ensureEmployeeOption(field: FormFieldConfig | undefined, id?: number, name?: string): void {
+    if (!field || !id || !name) return;
+
+    field.options = field.options || [];
+    if (!field.options.some(o => o.value === id)) {
+      field.options = [{ label: name, value: id }, ...field.options];
+    }
+  }
+
+ loadManagers(onReady?: () => void): void {
   const field = this.formConfig.find(f => f.name === 'managerEmployeeId');
-  if (!field) return;
+  if (!field) {
+    onReady?.();
+    return;
+  }
 
   field.isPaginated = true;
 
@@ -150,6 +164,7 @@ export class AreaCreateUpdateComponent implements OnInit {
       mobile: emp.mobile,
       email: emp.email
     }));
+    onReady?.();
   });
 }
 

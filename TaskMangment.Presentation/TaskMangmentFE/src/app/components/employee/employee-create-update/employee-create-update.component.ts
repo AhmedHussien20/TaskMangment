@@ -235,7 +235,7 @@ export class EmployeeCreateUpdateComponent implements OnInit {
       mobile: ['', [Validators.required, Validators.pattern(/^\d+$/)]],
       mobileCode: [null, Validators.required],
 
-      address: ['', Validators.maxLength(500)],
+      address: ['', [Validators.required,Validators.maxLength(500)]],
 
       qualification: ['', [Validators.required, Validators.maxLength(200)]],
 

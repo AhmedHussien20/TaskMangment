@@ -1,6 +1,6 @@
 <div class="card">
   <div class="card-body">
-    <form [formGroup]="formGroup" (ngSubmit)="onSubmit()" class="row gy-2 gx-3 align-items-center generic-form"
+    <form [formGroup]="formGroup" (ngSubmit)="onSubmit()" class="row gy-1 gx-3 align-items-start generic-form"
       [dir]="'rtl'">
       <div class="d-flex justify-content-end mb-4">
 
@@ -16,10 +16,12 @@
   <div *ngIf="!field.hidden"
        [ngClass]="{
          'col-md-4': field.type !== 'file' && field.type !== 'textarea',
-         'col-md-12': field.type === 'file' || field.type === 'textarea'
+         'col-md-12': field.type === 'file' || field.type === 'textarea',
+         'gf-col-multiselect': field.type === 'select' && field.multiple
        }">
         <label *ngIf="field.type !== 'file' && field.type !== 'checkbox'" [for]="field.name">
           {{ field.label | translate }}
+          <span *ngIf="isFieldRequired(field)" class="text-danger ms-1">*</span>
         </label>
         <div
           *ngIf="field.inputType !== 'mobile' && (field.type === 'input' || field.type === 'text' || field.type === 'number' || field.inputType === 'password')"
@@ -51,9 +53,6 @@
               (formGroup.controls[field.name].dirty ||
                 formGroup.controls[field.name].touched)
             " class="invalid-feedback">
-            <div *ngIf="formGroup.controls[field.name].errors?.['required']">
-              {{ field.label | translate }} {{ 'FORM.IS_REQUIRED' | translate }}
-            </div>
             <div *ngIf="formGroup.controls[field.name].errors?.['minlength']">
               {{ 'FORM.MINIMUM_LENGTH' | translate }}
               {{ formGroup.controls[field.name].errors?.['minlength'].requiredLength }}
@@ -125,20 +124,10 @@
     </option>
   </select>
 
-  <div *ngIf="
-    formGroup.get('mobileCode')?.invalid &&
-    (formGroup.get('mobileCode')?.dirty || formGroup.get('mobileCode')?.touched)
-  " class="invalid-feedback d-block">
-  {{ 'FORM.MOBILE_CODE_REQUIRED' | translate }}
-</div>
-
 <div *ngIf="
     formGroup.get('mobile')?.invalid &&
     (formGroup.get('mobile')?.dirty || formGroup.get('mobile')?.touched)
   " class="invalid-feedback d-block">
-  <div *ngIf="formGroup.get('mobile')?.errors?.['required']">
-    {{ 'FORM.MOBILE_IS_REQUIRED' | translate }}
-  </div>
   <div *ngIf="formGroup.get('mobile')?.errors?.['pattern']">
     {{ 'FORM.INVALID_MOBILE' | translate }}
   </div>
@@ -152,27 +141,27 @@
         <div *ngIf="field.type === 'textarea'" class="mb-3 col-md-8">
 
           <textarea class="form-control" rows="4" [formControlName]="field.name" [placeholder]="field.label | translate"
-            style="direction: rtl; text-align: right"></textarea>
+            style="direction: rtl; text-align: right"
+            [ngClass]="{ 'is-invalid': isFieldInvalid(field.name) }"></textarea>
 
-          <div *ngIf="formGroup.get(field.name)?.invalid && formGroup.get(field.name)?.touched"
-            class="text-danger mt-1">
-            {{ 'VALIDATION.REQUIRED' | translate }}
-          </div>
         </div>
 
 
         <!-- ================= SELECT FIELD ================= -->
-        <div *ngIf="field.type === 'select'"  class="mb-3">
+        <div *ngIf="field.type === 'select'" class="gf-field-control">
 
 
 
           <ng-select [items]="field.options" bindLabel="label" bindValue="value" [multiple]="field.multiple"
-            [searchable]="true" [closeOnSelect]="!field.multiple" [clearable]="true" [loading]="field.isLoading"
+            [searchable]="true" [closeOnSelect]="!field.multiple" [clearable]="true" [clearSearchOnAdd]="true"
+            [loading]="field.isLoading"
             (open)="onSelectOpen(field)" (scrollToEnd)="onSelectScrollToEnd(field)" appendTo=".modal"
-            (search)="onSearch($event.term, field)" placeholder="{{ 'FORM.SELECT' | translate }}"
-            [formControlName]="field.name" class="custom-ng-select">
+            (search)="onSearch($event.term, field)" (change)="onSelectChange(field)"
+            placeholder="{{ 'FORM.SELECT' | translate }}"
+            [formControlName]="field.name" class="custom-ng-select"
+            [ngClass]="{ 'gf-field-invalid': isFieldInvalid(field.name) }">
 
-            <ng-template ng-multi-label-tmp let-items="items" let-clear="clear">
+            <ng-template *ngIf="field.multiple" ng-multi-label-tmp let-items="items" let-clear="clear">
               <div class="d-flex flex-wrap gap-1">
                 <span class="badge bg-light text-dark border d-inline-flex align-items-center" *ngFor="let it of items">
                   {{ it.label }}
@@ -210,10 +199,10 @@
             </ng-template>
 
             <ng-template *ngIf="field.selectType === 'employee'" ng-label-tmp let-item="item">
-              <div class="d-flex align-items-center">
+              <div class="d-flex align-items-center gf-employee-label">
                 <img [src]="item.imageUrl || 'assets/images/user.png'" (error)="onImageError($event)" width="20"
                   height="20" class="rounded-circle border me-2" />
-                {{ item.label }}
+                <span class="gf-employee-label-text">{{ item.label }}</span>
               </div>
             </ng-template>
 
@@ -228,12 +217,6 @@
 
           </ng-select>
 
-          <!-- ================= VALIDATION ================= -->
-          <div *ngIf="formGroup.get(field.name)?.invalid && formGroup.get(field.name)?.touched"
-            class="text-danger mt-1">
-            {{ 'VALIDATION.REQUIRED' | translate }}
-          </div>
-
         </div>
 
 
@@ -247,30 +230,17 @@
 
           <label class="form-check-label fw-semibold fs-15 mb-0" [for]="field.name" style="cursor: pointer;">
             {{ field.label | translate }}
+            <span *ngIf="isFieldRequired(field)" class="text-danger ms-1">*</span>
           </label>
 
-          <div
-            *ngIf="formGroup.controls[field.name].invalid && (formGroup.controls[field.name].dirty || formGroup.controls[field.name].touched)"
-            class="invalid-feedback d-inline-block ms-2 w-auto">
-            <div *ngIf="formGroup.controls[field.name].errors?.['required']">
-              <small>({{ 'FORM.IS_REQUIRED' | translate }})</small>
-            </div>
-          </div>
         </div>
-        <mat-form-field *ngIf="field.type === 'date'" appearance="outline" class="w-100">
-
-          <mat-label>{{ field.label | translate }}</mat-label>
-
+        <mat-form-field *ngIf="field.type === 'date'" appearance="outline" class="w-100 gf-date-field"
+          [ngClass]="{ 'gf-invalid': isFieldInvalid(field.name) }">
           <input matInput [id]="field.name" [formControlName]="field.name" [matDatepicker]="picker"
             [min]="field.minDate" [max]="field.maxDate" [disabled]="field.disabled">
 
           <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
           <mat-datepicker #picker></mat-datepicker>
-
-          <!-- Validation -->
-          <mat-error *ngIf="formGroup.get(field.name)?.hasError('required')">
-            {{ field.label | translate }} {{ 'FORM.IS_REQUIRED' | translate }}
-          </mat-error>
 
         </mat-form-field>
 
@@ -281,19 +251,12 @@
 
           <label class="mb-2 d-block">
             {{ field.label | translate }}
+            <span *ngIf="isFieldRequired(field)" class="text-danger ms-1">*</span>
           </label>
 
           <dropzone class="dropzone-container" [config]="getDropzoneConfig(field)"
             (addedFile)="onFileAdded($event, field)" (removedFile)="onFileRemoved($event, field)">
           </dropzone>
-
-          <!-- Validation -->
-          <div *ngIf="
-    formGroup.get(field.name)?.invalid &&
-    formGroup.get(field.name)?.touched
-  " class="text-danger mt-1">
-            {{ field.label | translate }} {{ 'FORM.IS_REQUIRED' | translate }}
-          </div>
 
         </div>
 

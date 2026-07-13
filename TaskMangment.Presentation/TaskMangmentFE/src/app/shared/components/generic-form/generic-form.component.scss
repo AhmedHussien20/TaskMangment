@@ -1,3 +1,7 @@
+$gf-label-height: 1.5rem;
+$gf-control-height: 42px;
+$gf-error-height: 1rem;
+
 .generic-form input[ng-reflect-is-disabled="true"],
 .generic-form select[ng-reflect-is-disabled="true"],
 .generic-form textarea[ng-reflect-is-disabled="true"] {
@@ -6,29 +10,378 @@
   opacity: 0.65;
 }
 
-textarea.form-control {
-  resize: vertical;
-  min-height: 100px;
-  line-height: 1.8;
-}
-
 .generic-form {
-
-  label {
-    font-size: 0.95rem;
-    font-weight: 600;
-    margin-bottom: 6px;
+  ng-container {
+    display: contents;
   }
 
-  .form-control,
-  .ng-select {
+  [class*='col-md-4'] {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: calc(#{$gf-label-height} + #{$gf-control-height} + #{$gf-error-height});
+    padding-bottom: $gf-error-height;
+    margin-bottom: 0;
+  }
+
+  [class*='col-md-12'] {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: $gf-error-height;
+    margin-bottom: 0;
+  }
+
+  label:not(.form-check-label):not(.mat-mdc-floating-label) {
+    display: block;
+    min-height: $gf-label-height;
+    line-height: 1.25;
     font-size: 0.95rem;
-    min-height: 42px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .form-control:not(textarea) {
+    height: $gf-control-height;
+    min-height: $gf-control-height;
+    padding-top: 0.375rem;
+    padding-bottom: 0.375rem;
+    font-size: 0.95rem;
+  }
+
+  .input-group {
+    flex-wrap: nowrap;
+    align-items: stretch;
+    width: 100%;
+
+    > .form-control {
+      flex: 1 1 auto;
+    }
+
+    > .btn {
+      height: $gf-control-height;
+    }
+  }
+
+  .gf-field-control,
+  .input-group {
+    width: 100%;
+  }
+
+  .invalid-feedback,
+  .text-danger.mt-1 {
+    position: absolute;
+    right: calc(var(--bs-gutter-x, 0.75rem) * 0.5);
+    left: calc(var(--bs-gutter-x, 0.75rem) * 0.5);
+    bottom: 0.1rem;
+    display: block;
+    width: auto;
+    margin-top: 0;
+    font-size: 0.8rem;
+    line-height: 1.2;
+  }
+
+  .mb-3 {
+    margin-bottom: 0 !important;
+  }
+
+  [class*='col-md-4'].gf-col-multiselect {
+    min-height: auto;
+  }
+
+  .custom-ng-select {
+    width: 100%;
+
+    ::ng-deep .ng-select-container {
+      min-height: $gf-control-height !important;
+      height: $gf-control-height !important;
+      align-items: center;
+      border-radius: 0.375rem;
+    }
+
+    ::ng-deep .ng-value-container {
+      display: flex;
+      align-items: center !important;
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+    }
+
+    ::ng-deep .ng-input {
+      position: relative !important;
+      top: auto !important;
+      bottom: auto !important;
+      transform: none !important;
+      flex: 1 1 auto;
+      min-width: 2rem;
+      padding: 0 !important;
+      margin: 0 !important;
+      display: flex;
+      align-items: center;
+
+      > input {
+        height: calc(#{$gf-control-height} - 4px);
+        line-height: calc(#{$gf-control-height} - 4px);
+        padding: 0 4px !important;
+        margin: 0;
+        color: var(--bs-body-color, #212529) !important;
+        opacity: 1 !important;
+        background: transparent;
+      }
+    }
+
+    ::ng-deep .ng-clear-wrapper,
+    ::ng-deep .ng-arrow-wrapper {
+      align-self: center;
+    }
+  }
+
+  ng-select.custom-ng-select.ng-select-multiple ::ng-deep {
+    .ng-select-container {
+      min-height: $gf-control-height !important;
+      height: auto !important;
+      align-items: center;
+    }
+
+    .ng-select-container .ng-value-container {
+      flex-wrap: wrap !important;
+      overflow: visible !important;
+      align-items: center;
+      gap: 4px;
+      padding-top: 2px !important;
+      padding-bottom: 2px !important;
+
+      .ng-value,
+      .ng-placeholder {
+        margin-bottom: 0 !important;
+        margin-top: 0 !important;
+      }
+    }
+
+    .ng-input {
+      flex: 1 1 80px;
+      min-width: 80px;
+
+      > input {
+        width: 100% !important;
+      }
+    }
+  }
+
+  // Closed single select: selected label takes the full width, search input collapsed
+  ng-select.custom-ng-select.ng-select-single:not(.ng-select-opened):not(.ng-select-filtered) ::ng-deep {
+    .ng-select-container .ng-value-container {
+      overflow: hidden;
+
+      .ng-value {
+        flex: 1 1 auto;
+        min-width: 0;
+        max-width: 100%;
+        overflow: hidden;
+
+        .ng-value-label {
+          display: block;
+          min-width: 0;
+          width: 100%;
+          overflow: hidden;
+
+          &:not(:has(.gf-employee-label)) {
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+
+          .gf-employee-label {
+            display: flex !important;
+            align-items: center;
+            min-width: 0;
+            width: 100%;
+            overflow: hidden;
+
+            img {
+              flex-shrink: 0;
+            }
+
+            .gf-employee-label-text {
+              flex: 1 1 auto;
+              min-width: 0;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+            }
+          }
+        }
+      }
+
+      .ng-input {
+        flex: 0 0 0 !important;
+        width: 0 !important;
+        min-width: 0 !important;
+        padding: 0 !important;
+        overflow: hidden;
+      }
+    }
+  }
+
+  // Open single select: label shares the row with the search input
+  ng-select.custom-ng-select.ng-select-single.ng-select-opened ::ng-deep {
+    .ng-select-container .ng-value-container {
+      .ng-value {
+        flex: 0 1 auto;
+        min-width: 0;
+        overflow: hidden;
+
+        .ng-value-label {
+          display: block;
+          min-width: 0;
+          width: 100%;
+          overflow: hidden;
+
+          &:not(:has(.gf-employee-label)) {
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+
+          .gf-employee-label {
+            display: flex !important;
+            align-items: center;
+            min-width: 0;
+            width: 100%;
+            overflow: hidden;
+
+            img {
+              flex-shrink: 0;
+            }
+
+            .gf-employee-label-text {
+              flex: 1 1 auto;
+              min-width: 0;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+            }
+          }
+        }
+      }
+
+      .ng-input {
+        flex: 1 1 2rem !important;
+        min-width: 2rem !important;
+
+        > input {
+          width: 100% !important;
+          opacity: 1 !important;
+          color: var(--bs-body-color, #212529) !important;
+        }
+      }
+    }
+  }
+
+  // Typing in single select: hide the old label so typed text is fully visible
+  ng-select.custom-ng-select.ng-select-single.ng-select-filtered ::ng-deep {
+    .ng-select-container .ng-value-container {
+      .ng-value {
+        display: none;
+      }
+
+      .ng-input {
+        flex: 1 1 auto !important;
+        width: 100% !important;
+
+        > input {
+          width: 100% !important;
+          opacity: 1 !important;
+          color: var(--bs-body-color, #212529) !important;
+        }
+      }
+    }
+  }
+
+  ng-select.custom-ng-select.gf-field-invalid ::ng-deep .ng-select-container {
+    border-color: var(--bs-form-invalid-border-color, #dc3545) !important;
+    box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
+  }
+
+  ng-select.custom-ng-select.ng-invalid:not(.gf-field-invalid) ::ng-deep .ng-select-container {
+    border-color: #ced4da !important;
+    box-shadow: none !important;
+  }
+
+  .gf-date-field.gf-invalid ::ng-deep {
+    .mdc-notched-outline__leading,
+    .mdc-notched-outline__notch,
+    .mdc-notched-outline__trailing {
+      border-color: var(--bs-form-invalid-border-color, #dc3545) !important;
+    }
+
+    .mat-mdc-form-field-subscript-wrapper {
+      display: none;
+    }
+  }
+
+  .gf-date-field {
+    width: 100%;
+    margin-top: 0;
+    margin-bottom: 0;
+
+    ::ng-deep {
+      .mat-mdc-text-field-wrapper {
+        height: $gf-control-height;
+        padding: 0 12px;
+      }
+
+      .mat-mdc-form-field-flex {
+        height: $gf-control-height;
+        align-items: center;
+      }
+
+      .mat-mdc-form-field-infix {
+        min-height: $gf-control-height;
+        width: 100%;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        display: flex;
+        align-items: center;
+      }
+
+      .mat-mdc-form-field-icon-suffix {
+        align-self: center;
+      }
+
+      .mdc-notched-outline__notch {
+        border-top: none;
+      }
+
+      .mat-mdc-floating-label {
+        display: none;
+      }
+
+      .mat-mdc-form-field-subscript-wrapper {
+        position: absolute;
+        right: calc(var(--bs-gutter-x, 0.75rem) * 0.5);
+        left: calc(var(--bs-gutter-x, 0.75rem) * 0.5);
+        bottom: calc(-1 * #{$gf-error-height} + 0.1rem);
+        min-height: $gf-error-height;
+        margin: 0;
+        padding: 0;
+      }
+
+      .mat-mdc-form-field-bottom-align::before {
+        display: none;
+      }
+    }
+  }
+
+  .form-check.form-switch {
+    min-height: calc(#{$gf-label-height} + #{$gf-control-height});
+    margin-top: 0;
+    margin-bottom: 0 !important;
+    padding-top: calc(#{$gf-label-height} + 4px);
+    align-items: center;
   }
 
   textarea.form-control {
     min-height: 120px;
     resize: vertical;
+    line-height: 1.8;
   }
 
   .dropzone-container {
@@ -69,14 +422,3 @@ textarea.form-control {
   font-size: 13px;
   color: #374151;
 }
-
-.custom-ng-select ::ng-deep .ng-select-container {
-  min-height: 38px;
-}
-
-.custom-ng-select ::ng-deep .ng-value-container {
-  padding-top: 4px;
-  padding-bottom: 4px;
-}
-
-

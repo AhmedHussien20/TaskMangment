@@ -21,6 +21,7 @@ namespace TaskMangment.Infrastructure.Services
         public async Task SendEmailAsync(string to, string subject, string body, List<EmailAttachment>? attachments = null)
         {
 
+            
             if (string.IsNullOrWhiteSpace(_settings.BrevoApiKey))
                 throw new Exception("BrevoApiKey is missing in EmailSettings.");
 

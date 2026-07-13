@@ -32,6 +32,7 @@ namespace TaskMangment.Infrastructure.Services
         private readonly ICachingService _cache;
         private readonly IDomainEventDispatcher _eventDispatcher;
         private readonly IRepository<TaskAssignment> _taskAssignmentRepo;
+        private readonly IGetHigherManager _getHigherManager;
 
 
         public TaskPercentageService(
@@ -41,7 +42,8 @@ namespace TaskMangment.Infrastructure.Services
             IMapper mapper,
             ICachingService cache,
             IDomainEventDispatcher eventDispatcher,
-            IRepository<TaskAssignment> taskAssignmentRepo)
+            IRepository<TaskAssignment> taskAssignmentRepo,
+            IGetHigherManager getHigherManager)
         {
             _repo = repo;
             _taskRepo = taskRepo;
@@ -50,6 +52,7 @@ namespace TaskMangment.Infrastructure.Services
             _cache = cache;
             _eventDispatcher = eventDispatcher;
             _taskAssignmentRepo = taskAssignmentRepo;
+            _getHigherManager = getHigherManager;
         }
 
         public async Task<ApiResponse<PagedResponse<TaskPercentageGetDto>>> GetAllAsync(TaskPercentRequest request)
@@ -140,6 +143,17 @@ namespace TaskMangment.Infrastructure.Services
                 assignedEmployeeIds.Add(task.AssignedByEmployeeId.Value);
             }
             assignedEmployeeIds.Remove(employeeId);
+            assignedEmployeeIds = await _employeeRepo.GetAll(e => assignedEmployeeIds.Contains(e.Id) && e.IsActive)
+                .Select(e => e.Id)
+                .ToListAsync();
+
+            foreach (var recipientId in assignedEmployeeIds.ToList())
+            {
+                var managerId = await _getHigherManager.GetDirectHigherManagerIdAsync(recipientId);
+                if (managerId.HasValue && !assignedEmployeeIds.Contains(managerId.Value))
+                    assignedEmployeeIds.Add(managerId.Value);
+            }
+
             assignedEmployeeIds = await _employeeRepo.GetAll(e => assignedEmployeeIds.Contains(e.Id) && e.IsActive)
                 .Select(e => e.Id)
                 .ToListAsync();
