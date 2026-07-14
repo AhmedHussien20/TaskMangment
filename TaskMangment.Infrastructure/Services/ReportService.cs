@@ -110,10 +110,16 @@ namespace TaskMangment.Infrastructure.Services
             return (scopedEmployeeIds, canViewAllTasks, canViewCreatedTasks);
         }
 
-        private static int? ResolveRoleFilter(int roleLevel, int? roleId) =>
-            roleLevel >= 100 ? roleId : null;
+        private static int? ResolveRoleFilter(int roleLevel, int? roleId)
+        {
+            // Level 100: any role. Level 70/80: allowed (results stay limited by access/branch scope).
+            if (!roleId.HasValue)
+                return null;
 
-        private IQueryable<int> ApplyRoleFilter(IQueryable<int> scopedEmployeeIds, int? roleId)
+            return roleLevel >= 70 ? roleId : null;
+        }
+
+        private IQueryable<int> ApplyRoleFilter(IQueryable<int> scopedEmployeeIds, int? roleId, int roleLevel)
         {
             if (!roleId.HasValue)
                 return scopedEmployeeIds;
@@ -123,7 +129,54 @@ namespace TaskMangment.Infrastructure.Services
                     er.EmployeeId == employeeId &&
                     er.IsAssigned &&
                     !er.IsDeleted &&
-                    er.RoleId == roleId.Value));
+                    er.RoleId == roleId.Value &&
+                    er.Role != null &&
+                    !er.Role.IsDeleted &&
+                    (roleLevel >= 100 || er.Role.Level <= roleLevel)));
+        }
+
+        public async Task<List<ReportRoleOptionDto>> GetReportFilterRolesAsync(int currentEmployeeId, int roleLevel)
+        {
+            if (roleLevel < 70)
+                return new List<ReportRoleOptionDto>();
+
+            if (roleLevel == 80)
+            {
+                var functionCode = await _context.Employees
+                    .Where(e => e.Id == currentEmployeeId)
+                    .Select(e => e.FunctionCode)
+                    .FirstOrDefaultAsync();
+
+                if (functionCode != FunctionCode.Operations)
+                    return new List<ReportRoleOptionDto>();
+            }
+
+            var (scopedEmployeeIds, _, _) =
+                await GetScopedEmployeeIdsAsync(currentEmployeeId, roleLevel);
+
+            var rolesQuery = _context.EmployeeRoles
+                .Where(er =>
+                    er.IsAssigned &&
+                    !er.IsDeleted &&
+                    scopedEmployeeIds.Contains(er.EmployeeId) &&
+                    er.Role != null &&
+                    !er.Role.IsDeleted);
+
+            if (roleLevel < 100)
+                rolesQuery = rolesQuery.Where(er => er.Role.Level <= roleLevel);
+
+            return await rolesQuery
+                .Select(er => new ReportRoleOptionDto
+                {
+                    Id = er.RoleId,
+                    Name = er.Role.Name,
+                    Level = er.Role.Level
+                })
+                .Distinct()
+                .OrderBy(r => r.Level)
+                .ThenBy(r => r.Name)
+                .AsNoTracking()
+                .ToListAsync();
         }
 
 
@@ -152,7 +205,7 @@ namespace TaskMangment.Infrastructure.Services
             var (scopedEmployeeIds, canViewAllTasks, canViewCreatedTasks) =
                 await GetScopedEmployeeIdsAsync(currentEmployeeId, roleLevel);
 
-            scopedEmployeeIds = ApplyRoleFilter(scopedEmployeeIds, roleId);
+            scopedEmployeeIds = ApplyRoleFilter(scopedEmployeeIds, roleId, roleLevel);
 
             query = query.Where(a => scopedEmployeeIds.Contains(a.EmployeeId.Value));
 
@@ -218,7 +271,7 @@ namespace TaskMangment.Infrastructure.Services
             var (scopedEmployeeIds, canViewAllTasks, canViewCreatedTasks) =
                 await GetScopedEmployeeIdsAsync(currentEmployeeId, roleLevel);
 
-            scopedEmployeeIds = ApplyRoleFilter(scopedEmployeeIds, roleId);
+            scopedEmployeeIds = ApplyRoleFilter(scopedEmployeeIds, roleId, roleLevel);
 
             query = query.Where(a => scopedEmployeeIds.Contains(a.EmployeeId.Value));
 
@@ -289,7 +342,7 @@ namespace TaskMangment.Infrastructure.Services
             var (scopedEmployeeIds, canViewAllTasks, canViewCreatedTasks) =
                 await GetScopedEmployeeIdsAsync(currentEmployeeId, roleLevel);
 
-            scopedEmployeeIds = ApplyRoleFilter(scopedEmployeeIds, roleId);
+            scopedEmployeeIds = ApplyRoleFilter(scopedEmployeeIds, roleId, roleLevel);
 
             query = query.Where(a => scopedEmployeeIds.Contains(a.EmployeeId));
 
@@ -373,7 +426,7 @@ namespace TaskMangment.Infrastructure.Services
             var (scopedEmployeeIds, canViewAllTasks, canViewCreatedTasks) =
      await GetScopedEmployeeIdsAsync(currentEmployeeId, roleLevel);
 
-            scopedEmployeeIds = ApplyRoleFilter(scopedEmployeeIds, roleId);
+            scopedEmployeeIds = ApplyRoleFilter(scopedEmployeeIds, roleId, roleLevel);
 
             query = query.Where(a => scopedEmployeeIds.Contains(a.EmployeeId));
 
@@ -448,7 +501,7 @@ namespace TaskMangment.Infrastructure.Services
             var (scopedEmployeeIds, canViewAllTasks, canViewCreatedTasks) =
     await GetScopedEmployeeIdsAsync(currentEmployeeId, roleLevel);
 
-            scopedEmployeeIds = ApplyRoleFilter(scopedEmployeeIds, roleId);
+            scopedEmployeeIds = ApplyRoleFilter(scopedEmployeeIds, roleId, roleLevel);
 
             query = query.Where(a => scopedEmployeeIds.Contains(a.EmployeeId));
 
@@ -846,7 +899,7 @@ namespace TaskMangment.Infrastructure.Services
                 return new List<TaskActivityReportDto>();
 
             var (scopedEmployeeIds, canViewAllTasks, canViewCreatedTasks) = await GetScopedEmployeeIdsAsync(currentEmployeeId, roleLevel);
-            scopedEmployeeIds = ApplyRoleFilter(scopedEmployeeIds, roleId);
+            scopedEmployeeIds = ApplyRoleFilter(scopedEmployeeIds, roleId, roleLevel);
 
             var lastCommentIds = await _context.TaskComments
                 .Where(c =>

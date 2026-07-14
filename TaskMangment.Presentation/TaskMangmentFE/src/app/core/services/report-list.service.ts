@@ -74,6 +74,10 @@ getEmployeeTotalDiscounts(branchId?: number, roleId?: number, roleTitle?: string
   return this.api.get<ApiResponse<EmployeeTotalDiscountReportRowDto[]>>(this.service, `employee-total-discounts${query}`);
 }
 
+getFilterRoles(): Observable<ApiResponse<{ id: number; name: string; level: number }[]>> {
+  return this.api.get<ApiResponse<{ id: number; name: string; level: number }[]>>(this.service, 'filter-roles');
+}
+
 
 
  private buildQuery(params: {

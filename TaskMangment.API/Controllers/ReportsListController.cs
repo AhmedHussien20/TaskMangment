@@ -17,6 +17,16 @@ namespace TaskMangment.API.Controllers
             _reportService = reportService;
         }
 
+        [HttpGet("filter-roles")]
+        public async Task<IActionResult> GetFilterRoles()
+        {
+            if (this.RoleLevel < 70)
+                return Forbid();
+
+            var data = await _reportService.GetReportFilterRolesAsync(this.CurrentUserId, this.RoleLevel);
+            return Success(data);
+        }
+
         [HttpGet("top-commenters")]
         public async Task<IActionResult> GetTopCommenters([FromQuery] DateRangeReportFilterDto filter)
         {

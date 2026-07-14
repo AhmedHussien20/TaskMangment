@@ -19,6 +19,7 @@ namespace TaskMangment.Application.Interfaces.Services
         Task<List<TaskMovementReportDto>> GetTaskMovementReportAsync(int currentEmployeeId, int roleLevel, TaskMovementReportFilterDto dto, ExportType exportTypee);
         Task<List<TasksClosingSoonDto>> GetTasksClosingSoonAsync(int currentEmployeeId, int roleLevel, int? employeeId, DateTime fromDate, DateTime toDate);
         Task<List<EmployeeCommentsActivityReportDto>> GetEmployeesCommentsActivityAsync(int currentEmployeeId, int roleLevel, DateRangeReportFilterDto filter);
+        Task<List<ReportRoleOptionDto>> GetReportFilterRolesAsync(int currentEmployeeId, int roleLevel);
         Task<TaskDiscountAuditReportDto> GetTaskDiscountAuditReportAsync(int currentEmployeeId, int roleLevel, TaskDiscountReportFilterDto dto);
         Task<List<EmployeeTotalDiscountReportRowDto>> GetEmployeeTotalDiscountReportAsync(int currentEmployeeId, int roleLevel, EmployeeTotalDiscountReportFilterDto dto);
 

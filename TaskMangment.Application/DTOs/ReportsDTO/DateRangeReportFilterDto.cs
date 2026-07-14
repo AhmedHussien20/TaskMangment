@@ -9,4 +9,11 @@ namespace TaskMangment.Application.DTOs.ReportsDTO
         public int? RoleId { get; set; }
         public string? RoleTitle { get; set; }
     }
+
+    public class ReportRoleOptionDto
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public int Level { get; set; }
+    }
 }
