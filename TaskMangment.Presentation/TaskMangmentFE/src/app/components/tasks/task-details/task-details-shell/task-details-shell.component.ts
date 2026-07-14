@@ -1,5 +1,4 @@
-import { Component, Input, OnInit, SimpleChanges } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import { TaskTabsComponent } from '../task-tabs/task-tabs.component';
 import { PageHeaderComponent } from 'app/shared/components/page-header/page-header.component';
 import { TranslateModule } from '@ngx-translate/core';
@@ -28,36 +27,33 @@ import { PercentageModalComponent } from '../actions/task-percentage/percentage-
     CommonModule
   ]
 })
-export class TaskDetailsShellComponent implements OnInit {
+export class TaskDetailsShellComponent implements OnInit, OnChanges {
 
   @Input() taskId!: number;
   @Input() createdByMe: boolean = false;
   requireUploadFile = false;
- 
+
   readonly = false;
   showAdminPages = true;
 
   constructor(
-    private route: ActivatedRoute, private modal: NgbModal, private refreshService: TaskDetailsRefreshService,
-    private taskService: TaskService,    public modall: NgbActiveModal,private auth: AuthService
-     ) { }
+    private modal: NgbModal,
+    private refreshService: TaskDetailsRefreshService,
+    private taskService: TaskService,
+    public modall: NgbActiveModal,
+    private auth: AuthService
+  ) { }
 
-  
   taskInfo: TaskGet | null = null;
 
- ngOnInit(): void {
+  ngOnInit(): void {
+    const roleLevel = this.auth.getRoleLevel();
+    this.showAdminPages = this.createdByMe || roleLevel >= 80;
 
-  const roleLevel = this.auth.getRoleLevel();
-
-  this.showAdminPages = this.createdByMe || roleLevel >= 80;
-
-  console.log(this.showAdminPages);
-
-  if (this.taskId) {
-    this.loadTask();
+    if (this.taskId) {
+      this.loadTask();
+    }
   }
-}
-
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['taskId'] && this.taskId) {
@@ -65,30 +61,29 @@ export class TaskDetailsShellComponent implements OnInit {
     }
   }
 
+  loadTask() {
+    this.taskService.getById(this.taskId).subscribe({
+      next: res => {
+        this.taskInfo = res.data;
+        this.requireUploadFile = this.taskInfo.requireUploadFile;
+        this.createdByMe = !!this.taskInfo.createdByMe;
 
- loadTask() {
-  this.taskService.getById(this.taskId).subscribe({
-    next: res => {
-      this.taskInfo = res.data;
-      this.requireUploadFile = this.taskInfo.requireUploadFile;
-      this.createdByMe = !!this.taskInfo.createdByMe;
+        const roleLevel = this.auth.getRoleLevel();
+        this.showAdminPages = this.createdByMe || roleLevel >= 80;
+      },
+      error: err => {
+        console.error('Failed to load task', err);
+        this.modall.dismiss();
+      }
+    });
+  }
 
-      const roleLevel = this.auth.getRoleLevel();
-      this.showAdminPages = this.createdByMe || roleLevel >= 80;
-
-      console.log('createdByMe from API:', this.createdByMe);
-      console.log('showAdminPages:', this.showAdminPages);
-    },
-    error: err => console.error('Failed to load task', err)
-  });
-}
-
-get isTaskClosed(): boolean {
-  const status = this.taskInfo?.status;
-  return status === 5
+  get isTaskClosed(): boolean {
+    const status = this.taskInfo?.status;
+    return status === 5
       || status === 4
       || status === 3;
-}
+  }
 
   openAction(action: string) {
     if (this.isTaskClosed) return;
@@ -120,11 +115,9 @@ get isTaskClosed(): boolean {
         ok => ok && this.refreshService.trigger('warning'),
         () => { }
       );
-    } 
+    }
 
-
-
-     if (action === 'percent') {
+    if (action === 'percent') {
       const ref = this.modal.open(PercentageModalComponent, {
         size: 'lg',
         backdrop: 'static'
@@ -152,30 +145,30 @@ get isTaskClosed(): boolean {
       );
     }
     if (action === 'extend') {
-    const ref = this.modal.open(ExtendRequestComponent, {
-      size: 'lg',
-      backdrop: 'static'
-    });
+      const ref = this.modal.open(ExtendRequestComponent, {
+        size: 'lg',
+        backdrop: 'static'
+      });
 
-    ref.componentInstance.taskId = this.taskId;
-    return;
-  }
+      ref.componentInstance.taskId = this.taskId;
+      return;
+    }
     if (action === 'close') {
-    const ref = this.modal.open(CloseRequestModalComponent, {
-      size: 'lg',
-      backdrop: 'static'
-    });
+      const ref = this.modal.open(CloseRequestModalComponent, {
+        size: 'lg',
+        backdrop: 'static'
+      });
 
-    ref.componentInstance.taskId = this.taskId;
+      ref.componentInstance.taskId = this.taskId;
 
-    ref.result.then(
-      success => {
-        if (success) {
-          this.refreshService.trigger('close-request');
-        }
-      },
-      () => {}
-    );
-  }
+      ref.result.then(
+        success => {
+          if (success) {
+            this.refreshService.trigger('close-request');
+          }
+        },
+        () => { }
+      );
+    }
   }
 }

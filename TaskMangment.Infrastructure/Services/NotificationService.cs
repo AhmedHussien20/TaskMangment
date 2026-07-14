@@ -118,7 +118,7 @@ public class NotificationService : INotificationService
         if (!taskId.HasValue || string.IsNullOrWhiteSpace(_whatsAppSettings.FrontendUrl))
             return message;
 
-        var taskUrl = $"{_whatsAppSettings.FrontendUrl.TrimEnd('/')}/task/details/{taskId.Value}";
+        var taskUrl = $"{_whatsAppSettings.FrontendUrl.TrimEnd('/')}/task/task-list?taskId={taskId.Value}";
         var taskLinkLabel = _L["TASK_LINK_LABEL"];
         return $"{message}\n\n{taskLinkLabel}:\n{taskUrl}";
     }
