@@ -14,9 +14,9 @@ namespace TaskMangment.Domain.Event
         public string IssuedbyName { get; set; }
         public List<int> SendTo { get; set; }
         public string IssuedToName { get; set; }
+        public decimal Amount { get; }
 
-
-        public TaskPenaltyEvent(int discountId, int taskId, string issuedbyName, List<int> sendTo, string issuedToName, string taskTitle)
+        public TaskPenaltyEvent(int discountId, int taskId, string issuedbyName, List<int> sendTo, string issuedToName, string taskTitle, decimal amount)
         {
             DiscountId = discountId;
             TaskId = taskId;
@@ -24,6 +24,7 @@ namespace TaskMangment.Domain.Event
             SendTo = sendTo;
             IssuedToName = issuedToName;
             TaskTitle = taskTitle;
+            Amount = amount;
         }
     }
 }

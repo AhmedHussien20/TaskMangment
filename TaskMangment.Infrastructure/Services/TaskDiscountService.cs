@@ -215,7 +215,7 @@ namespace TaskMangment.Infrastructure.Services
             if (sendToIds.Any())
             {
                 await _eventDispatcher.PublishAsync(
-                         new TaskPenaltyEvent(discount.Id, TaskID, employeeName, sendToIds, IssuedToName, task.Title)
+                         new TaskPenaltyEvent(discount.Id, TaskID, employeeName, sendToIds, IssuedToName, task.Title, discount.Amount)
                      );
             }
 

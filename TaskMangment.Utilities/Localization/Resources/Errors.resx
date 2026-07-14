@@ -263,7 +263,7 @@
     <value>The task has been assigned to you</value>
   </data>
   <data name="TASK_PENALTY_NOTIFICATION" xml:space="preserve">
-    <value> A penalty has been applied to the task</value>
+    <value>A penalty of {2} has been applied to the task {0} from {1}</value>
   </data>
   <data name="TASK_UNASSIGNED_NOTIFICATION" xml:space="preserve">
     <value>The task has been unassigned from you</value>

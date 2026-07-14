@@ -247,7 +247,8 @@ namespace TaskMangment.Hangfire.Jobs
                                 employeeName ?? "",
                                 sendToIds,
                                 issuedToName,
-                                task.Title
+                                task.Title,
+                                discount.Amount
                             )
                         );
                     }

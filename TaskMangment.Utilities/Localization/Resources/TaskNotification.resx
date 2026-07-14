@@ -127,7 +127,7 @@
     <value>Task link</value>
   </data>
   <data name="TASK_PENALTY_NOTIFICATION" xml:space="preserve">
-    <value>a new penalty on task: {0} from {1}</value>
+    <value>a new penalty of {2} on task: {0} from {1}</value>
   </data>
   <data name="TASK_EXTENSION_REQUEST_NOTIFICATION" xml:space="preserve">
     <value>A new extension request on task: {0} from {1}</value>

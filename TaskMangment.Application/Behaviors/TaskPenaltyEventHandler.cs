@@ -36,7 +36,8 @@ namespace TaskMangment.Application.Behaviors
             var message = string.Format(
                 messageTemplate,
                 ev.TaskTitle,
-                ev.IssuedbyName
+                ev.IssuedbyName,
+                ev.Amount.ToString("0.##")
             );
 
             foreach (var empId in ev.SendTo)

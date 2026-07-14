@@ -262,7 +262,7 @@
     <value>تم إسناد المهمة إليك</value>
   </data>
   <data name="TASK_PENALTY_NOTIFICATION" xml:space="preserve">
-    <value>تم تطبيق جزاء على المهمة</value>
+    <value>تم تطبيق جزاء بقيمة {2} على المهمة {0} من {1}</value>
   </data>
   <data name="TASK_UNASSIGNED_NOTIFICATION" xml:space="preserve">
     <value>تم إلغاء إسناد المهمة منك</value>
