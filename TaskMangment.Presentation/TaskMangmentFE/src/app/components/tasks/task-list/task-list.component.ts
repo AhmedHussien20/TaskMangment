@@ -2,6 +2,7 @@ import { TaskGet } from "app/core/models/task/task";
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 import { NgbModal, NgbModalModule } from '@ng-bootstrap/ng-bootstrap';
 import { GenericTableComponent, TableColumn } from 'app/shared/components/generic-table/generic-table.component';
 import { PageHeaderComponent } from 'app/shared/components/page-header/page-header.component';
@@ -158,7 +159,9 @@ deepSearchComp?: TasksEmployeeDeepSearchComponent;
     private toastr: ToastrService,
     private translate: TranslateService,
     private auth: AuthService,
-    private employeeService: EmployeeService
+    private employeeService: EmployeeService,
+    private route: ActivatedRoute,
+    private router: Router
   ) { }
 
   ngOnInit() {
@@ -195,6 +198,23 @@ if (this.auth.hasPermission('CREATE_TASK')) {
 }
 
     this.loadData();
+    this.openTaskFromQueryIfAny();
+  }
+
+  private openTaskFromQueryIfAny(): void {
+    const taskId = Number(this.route.snapshot.queryParamMap.get('taskId'));
+    if (Number.isNaN(taskId) || taskId <= 0) {
+      return;
+    }
+
+    // Open as popup only; API getById enforces that the user can access this task.
+    this.openDetails(taskId);
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { taskId: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true
+    });
   }
 
   
@@ -346,15 +366,24 @@ openCopy(id: number, modal: any) {
  openDetails(taskId: number) {
   const task = this.rows.find(x => x.id === taskId);
 
-  const modalRef = this.modalService.open(TaskDetailsShellComponent, {
-    size: 'xl',
-    backdrop: 'static',
-    scrollable: true
-  });
+  // Verify access before opening popup so users can't open tasks that aren't theirs.
+  this.taskService.getById(taskId).subscribe({
+    next: (res) => {
+      const modalRef = this.modalService.open(TaskDetailsShellComponent, {
+        size: 'xl',
+        backdrop: 'static',
+        scrollable: true
+      });
 
-  modalRef.componentInstance.taskId = taskId;
-  modalRef.componentInstance.readonly = true;
-  modalRef.componentInstance.createdByMe = task?.createdByMe ?? false;
+      modalRef.componentInstance.taskId = taskId;
+      modalRef.componentInstance.readonly = true;
+      modalRef.componentInstance.createdByMe =
+        res?.data?.createdByMe ?? task?.createdByMe ?? false;
+    },
+    error: () => {
+      this.toastr.error(this.translate.instant('COMMON.ERROR_LOADING_DATA'));
+    }
+  });
 }
 
   confirmDelete(taskId: number) {
