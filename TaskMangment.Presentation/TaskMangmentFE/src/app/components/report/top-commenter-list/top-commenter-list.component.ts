@@ -11,7 +11,7 @@ import { EmployeeCommentsReportDto, ExportType } from 'app/core/models/reports/r
 import { PageHeaderComponent } from 'app/shared/components/page-header/page-header.component';
 import { ReportPdfService } from 'app/core/services/report-pdf.service';
 import { DatePickerComponent } from 'app/components/date-picker/date-picker.component';
-import { ReportRoleFilterComponent } from '../shared/report-role-filter/report-role-filter.component';
+import { ReportRoleFilterComponent } from '../shared/report-role-filter.component';
 import { getReportRoleFilterParams } from '../shared/report-role-filter.helper';
 
 @Component({

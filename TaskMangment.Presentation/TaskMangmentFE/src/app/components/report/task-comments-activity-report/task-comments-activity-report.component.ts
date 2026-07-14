@@ -12,7 +12,7 @@ import { ReportPdfService } from 'app/core/services/report-pdf.service';
 import { ExportType, TaskActivityReportDto } from 'app/core/models/reports/reports';
 import { ApiResponse } from 'app/core/models/event/calendar';
 import { DatePickerComponent } from 'app/components/date-picker/date-picker.component';
-import { ReportRoleFilterComponent } from '../shared/report-role-filter/report-role-filter.component';
+import { ReportRoleFilterComponent } from '../shared/report-role-filter.component';
 import { getReportRoleFilterParams } from '../shared/report-role-filter.helper';
 import { TaskDetailsShellComponent } from 'app/components/tasks/task-details/task-details-shell/task-details-shell.component';
 

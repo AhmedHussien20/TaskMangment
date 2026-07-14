@@ -11,7 +11,7 @@ import { ReportListService } from 'app/core/services/report-list.service';
 import { ReportPdfService } from 'app/core/services/report-pdf.service';
 import { EmployeeArchivedTasksReportDto, ExportType } from 'app/core/models/reports/reports';
 import { DatePickerComponent } from 'app/components/date-picker/date-picker.component';
-import { ReportRoleFilterComponent } from '../shared/report-role-filter/report-role-filter.component';
+import { ReportRoleFilterComponent } from '../shared/report-role-filter.component';
 import { getReportRoleFilterParams } from '../shared/report-role-filter.helper';
 
 @Component({

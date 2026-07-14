@@ -28,12 +28,12 @@ using TaskMangment.Infrastructure.SignalR;
 
 namespace TaskMangment.Infrastructure.Services
 {
-    public class TaskService: ITaskService
+    public class TaskService : ITaskService
     {
         private readonly IRepository<WorkTask> _taskRepo;
         private readonly IRepository<Employee> _employeeRepo;
         private readonly IRepository<EmailQueue> _emailQueueRepo;
-        
+
         private readonly IRepository<TaskAssignment> _assignmentRepo;
         private readonly IRepository<AuditLog> _audit;
         private readonly IDomainEventDispatcher _eventDispatcher;
@@ -52,7 +52,6 @@ namespace TaskMangment.Infrastructure.Services
 
         private readonly IAppUnitOfWork _uow;
         private readonly IUserAccessContextProvider _accessProvider;
-        private readonly IGetHigherManager _getHigherManager;
 
 
 
@@ -63,8 +62,8 @@ namespace TaskMangment.Infrastructure.Services
             IRepository<Employee> employeeRepo,
             IRepository<TaskAssignment> assignmentRepo,
             IRepository<AuditLog> audit,
-            IMapper mapper, 
-            ICachingService cache ,
+            IMapper mapper,
+            ICachingService cache,
             IDomainEventDispatcher eventDispatcher,
             IRepository<EmailQueue> emailQueueRepo,
             AppDbContext context,
@@ -77,8 +76,7 @@ namespace TaskMangment.Infrastructure.Services
            IRepository<TaskPercentage> percentRepo,
            IRepository<Notification> notificationRepo,
            IAppUnitOfWork uow,
-           IUserAccessContextProvider accessProvider,
-           IGetHigherManager getHigherManager
+           IUserAccessContextProvider accessProvider
 
 
 
@@ -103,7 +101,6 @@ namespace TaskMangment.Infrastructure.Services
             _notificationRepo = notificationRepo;
             _uow = uow;
             _accessProvider = accessProvider;
-            _getHigherManager = getHigherManager;
         }
 
         public async Task<ApiResponse<PagedResponse<TaskGetDto>>> GetAllAsync(TaskRequest request, int CompanyId, int roleLevel, int employeeId)
@@ -211,9 +208,7 @@ namespace TaskMangment.Infrastructure.Services
                     .ToList();
 
                 dto.AssignedByName = task.AssignedBy?.FullName;
-                dto.CreatedByMe =
-                    hasCreatorPrivileges ||
-                    task.CreatedByEmployeeId == employeeId;
+                dto.CreatedByMe = ResolveCreatedByMe(roleLevel, employeeId, task, hasCreatorPrivileges);
 
             }
 
@@ -284,9 +279,7 @@ namespace TaskMangment.Infrastructure.Services
             dto.AssignedByName = task.AssignedBy?.FullName;
 
             var hasCreatorPrivileges = await HasCreatorPrivilegesAsync(roleLevel, employeeId);
-            dto.CreatedByMe =
-                hasCreatorPrivileges ||
-                task.CreatedByEmployeeId == employeeId;
+            dto.CreatedByMe = ResolveCreatedByMe(roleLevel, employeeId, task, hasCreatorPrivileges);
 
             return ApiResponse<TaskGetDto>.Ok(dto);
         }
@@ -295,7 +288,6 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<TaskGetDto>> AddAsync(TaskAddEditDto dto, int createdUser, int companyId)
         {
-            ValidateTaskPenalties(dto);
             await _uow.BeginTransactionAsync();
 
             try
@@ -368,17 +360,6 @@ namespace TaskMangment.Infrastructure.Services
                         .Select(e => e.Id)
                         .ToListAsync();
 
-                    foreach (var empId in empIds.ToList())
-                    {
-                        var managerId = await _getHigherManager.GetDirectHigherManagerIdAsync(empId);
-                        if (managerId.HasValue && !empIds.Contains(managerId.Value))
-                            empIds.Add(managerId.Value);
-                    }
-
-                    empIds = await _employeeRepo.GetAll(e => empIds.Contains(e.Id) && e.IsActive)
-                        .Select(e => e.Id)
-                        .ToListAsync();
-
                     if (empIds.Any())
                         await _eventDispatcher.PublishAsync(new TaskAssignedEvent(task.Id, task.Title, empIds));
                 }
@@ -394,7 +375,7 @@ namespace TaskMangment.Infrastructure.Services
 
                 var taskDto = _mapper.Map<TaskGetDto>(fullTask);
 
-               
+
                 await _uow.CommitAsync();
                 return ApiResponse<TaskGetDto>.Ok(taskDto, "Task added successfully");
             }
@@ -406,7 +387,6 @@ namespace TaskMangment.Infrastructure.Services
         }
         public async Task<ApiResponse<TaskGetDto>> UpdateAsync(int id, TaskAddEditDto dto, int modifierUser)
         {
-            ValidateTaskPenalties(dto);
             var task = await _taskRepo.GetByIDAsync(id);
             if (task == null)
                 throw new AppException(ErrorCodes.TaskNotFound, StatusCodes.Status400BadRequest);
@@ -504,14 +484,14 @@ namespace TaskMangment.Infrastructure.Services
 
             var companyId = task.CompanyId;
 
-       
+
             var affectedEmployeeIds = await _assignmentRepo
                 .GetAll(a => a.TaskId == id && !a.IsDeleted)
                 .Select(a => a.EmployeeId)
                 .Distinct()
                 .ToListAsync();
 
-            
+
 
             //await _cache.RemoveAsync("tasks:");
 
@@ -524,23 +504,9 @@ namespace TaskMangment.Infrastructure.Services
                     .ToListAsync();
 
                 if (activeNewlyAssignedEmployeeIds.Any())
-                {
-                    foreach (var empId in activeNewlyAssignedEmployeeIds.ToList())
-                    {
-                        var managerId = await _getHigherManager.GetDirectHigherManagerIdAsync(empId);
-                        if (managerId.HasValue && !activeNewlyAssignedEmployeeIds.Contains(managerId.Value))
-                            activeNewlyAssignedEmployeeIds.Add(managerId.Value);
-                    }
-
-                    activeNewlyAssignedEmployeeIds = await _employeeRepo
-                        .GetAll(e => activeNewlyAssignedEmployeeIds.Contains(e.Id) && e.IsActive)
-                        .Select(e => e.Id)
-                        .ToListAsync();
-
                     await _eventDispatcher.PublishAsync(
                         new TaskAssignedEvent(task.Id, task.Title, activeNewlyAssignedEmployeeIds)
                     );
-                }
             }
 
             if (reactivatedEmployeeIds.Any())
@@ -551,23 +517,9 @@ namespace TaskMangment.Infrastructure.Services
                     .ToListAsync();
 
                 if (activeReactivatedEmployeeIds.Any())
-                {
-                    foreach (var empId in activeReactivatedEmployeeIds.ToList())
-                    {
-                        var managerId = await _getHigherManager.GetDirectHigherManagerIdAsync(empId);
-                        if (managerId.HasValue && !activeReactivatedEmployeeIds.Contains(managerId.Value))
-                            activeReactivatedEmployeeIds.Add(managerId.Value);
-                    }
-
-                    activeReactivatedEmployeeIds = await _employeeRepo
-                        .GetAll(e => activeReactivatedEmployeeIds.Contains(e.Id) && e.IsActive)
-                        .Select(e => e.Id)
-                        .ToListAsync();
-
                     await _eventDispatcher.PublishAsync(
                         new TaskAssignedEvent(task.Id, task.Title, activeReactivatedEmployeeIds)
                     );
-                }
             }
             if (unAssignedEmployeeIds.Any())
             {
@@ -577,21 +529,7 @@ namespace TaskMangment.Infrastructure.Services
                     .ToListAsync();
 
                 if (activeUnAssignedEmployeeIds.Any())
-                {
-                    foreach (var empId in activeUnAssignedEmployeeIds.ToList())
-                    {
-                        var managerId = await _getHigherManager.GetDirectHigherManagerIdAsync(empId);
-                        if (managerId.HasValue && !activeUnAssignedEmployeeIds.Contains(managerId.Value))
-                            activeUnAssignedEmployeeIds.Add(managerId.Value);
-                    }
-
-                    activeUnAssignedEmployeeIds = await _employeeRepo
-                        .GetAll(e => activeUnAssignedEmployeeIds.Contains(e.Id) && e.IsActive)
-                        .Select(e => e.Id)
-                        .ToListAsync();
-
                     await _eventDispatcher.PublishAsync(new TaskUnAssignedEvent(task.Id, task.Title, activeUnAssignedEmployeeIds));
-                }
             }
 
             var fullTask = await _taskRepo.GetAll(t => t.Id == task.Id)
@@ -660,8 +598,8 @@ namespace TaskMangment.Infrastructure.Services
 
             var assignments = await _assignmentRepo.GetAll(a => a.TaskId == taskId)
             .Include(a => a.Employee)
-           .ThenInclude(e => e.EmployeeRoles)   
-               .ThenInclude(er => er.Role)   
+           .ThenInclude(e => e.EmployeeRoles)
+               .ThenInclude(er => er.Role)
                 .ToListAsync();
 
             if (!assignments.Any())
@@ -703,9 +641,9 @@ namespace TaskMangment.Infrastructure.Services
         }
 
 
-        public async Task<List<TaskReportDto>> GetTasksForReportAsync(int? assignedUserId = null, int? status = null,DateTime? fromDate = null,DateTime? toDate = null)
+        public async Task<List<TaskReportDto>> GetTasksForReportAsync(int? assignedUserId = null, int? status = null, DateTime? fromDate = null, DateTime? toDate = null)
         {
-            IQueryable<WorkTask> query = _context.Tasks.Include(t => t.Assignments) .ThenInclude(a => a.Employee);
+            IQueryable<WorkTask> query = _context.Tasks.Include(t => t.Assignments).ThenInclude(a => a.Employee);
             if (assignedUserId.HasValue)
             {
                 query = query.Where(t =>
@@ -959,21 +897,19 @@ namespace TaskMangment.Infrastructure.Services
             }
 
             await _taskRepo.SaveChangesAsync();
-           // await _cache.RemoveAsync("tasks:");
+            // await _cache.RemoveAsync("tasks:");
 
             return ApiResponse<bool>.Ok(true);
         }
 
-        private static void ValidateTaskPenalties(TaskAddEditDto dto)
+        private static bool ResolveCreatedByMe(int roleLevel, int employeeId, WorkTask task, bool hasCreatorPrivileges)
         {
-            if (dto.MaxWarningsBeforeDiscount < 0 || dto.MaxWarningsBeforeDiscount > 3)
-                throw new AppException(ErrorCodes.ValidationError, StatusCodes.Status400BadRequest);
+            if (roleLevel == 80
+                && task.CreatedByEmployeeId != employeeId
+                && task.Assignments.Any(a => a.EmployeeId == employeeId && a.IsActive))
+                return false;
 
-            if (dto.PenaltyOnStopComment < 50)
-                throw new AppException(ErrorCodes.ValidationError, StatusCodes.Status400BadRequest);
-
-            if (dto.PenaltyOnAutoClose < 50)
-                throw new AppException(ErrorCodes.ValidationError, StatusCodes.Status400BadRequest);
+            return hasCreatorPrivileges || task.CreatedByEmployeeId == employeeId;
         }
 
         private async Task<bool> HasCreatorPrivilegesAsync(int roleLevel, int employeeId)
@@ -992,6 +928,6 @@ namespace TaskMangment.Infrastructure.Services
             return false;
         }
 
-        
+
     }
 }
