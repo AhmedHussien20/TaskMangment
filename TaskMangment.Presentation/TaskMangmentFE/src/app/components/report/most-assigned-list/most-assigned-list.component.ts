@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
@@ -11,6 +11,8 @@ import { ReportPdfService } from 'app/core/services/report-pdf.service';
 import { EmployeeAssignmentsReportDto, ExportType } from 'app/core/models/reports/reports';
 import { PageHeaderComponent } from 'app/shared/components/page-header/page-header.component';
 import { DatePickerComponent } from 'app/components/date-picker/date-picker.component';
+import { ReportRoleFilterComponent } from '../shared/report-role-filter/report-role-filter.component';
+import { getReportRoleFilterParams } from '../shared/report-role-filter.helper';
 
 @Component({
   selector: 'app-most-assigned-list',
@@ -22,12 +24,15 @@ import { DatePickerComponent } from 'app/components/date-picker/date-picker.comp
     TranslateModule,
     GenericTableComponent,
     PageHeaderComponent,
-    DatePickerComponent
+    DatePickerComponent,
+    ReportRoleFilterComponent
   ],
   templateUrl: './most-assigned-list.component.html',
   styleUrls: ['./most-assigned-list.component.scss']
 })
 export class MostAssignedListComponent implements OnInit {
+
+  @ViewChild(ReportRoleFilterComponent) roleFilter?: ReportRoleFilterComponent;
 
   title = 'REPORTS.MOST_ASSIGNED';
   activeitem = 'EMPLOYEE.LIST_TITLE';
@@ -52,6 +57,7 @@ export class MostAssignedListComponent implements OnInit {
 
   fromDate?: string;
   toDate?: string;
+  selectedRoleId?: number;
 
   isLoading = false;
 
@@ -68,7 +74,8 @@ export class MostAssignedListComponent implements OnInit {
 
   loadData(): void {
     this.isLoading = true;
-    this.reportService.getMostAssigned(this.fromDate, this.toDate).subscribe({
+    const { roleId, roleTitle } = getReportRoleFilterParams(this.roleFilter, this.selectedRoleId);
+    this.reportService.getMostAssigned(this.fromDate, this.toDate, roleId, roleTitle).subscribe({
       next: (res) => {
         this.rows = res.data;
         this.totalItems = res.data.length;
@@ -96,7 +103,8 @@ export class MostAssignedListComponent implements OnInit {
   }
 
   onExportPdf(): void {
-    this.reportPdfService.getMostAssignedPdf( ExportType.Pdf, this.fromDate, this.toDate).subscribe({
+    const { roleId, roleTitle } = getReportRoleFilterParams(this.roleFilter, this.selectedRoleId);
+    this.reportPdfService.getMostAssignedPdf(ExportType.Pdf, this.fromDate, this.toDate, roleId, roleTitle).subscribe({
       next: (blob) => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -113,7 +121,8 @@ export class MostAssignedListComponent implements OnInit {
     });
   }
   onExportExcel(): void {
-    this.reportPdfService.getMostAssignedPdf( ExportType.Excel, this.fromDate, this.toDate).subscribe({
+    const { roleId, roleTitle } = getReportRoleFilterParams(this.roleFilter, this.selectedRoleId);
+    this.reportPdfService.getMostAssignedPdf(ExportType.Excel, this.fromDate, this.toDate, roleId, roleTitle).subscribe({
       next: (blob) => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');

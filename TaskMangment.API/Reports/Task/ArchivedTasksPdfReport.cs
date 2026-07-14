@@ -1,4 +1,4 @@
-﻿using QuestPDF.Fluent;
+using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using TaskMangment.Application.DTOs.ReportsDTO;
@@ -8,10 +8,20 @@ namespace TaskMangment.API.Reports.Task
     public class ArchivedTasksPdfReport : IDocument
     {
         private readonly List<EmployeeArchivedTasksReportDto> _data;
+        private readonly DateTime? _fromDate;
+        private readonly DateTime? _toDate;
+        private readonly string? _roleTitle;
 
-        public ArchivedTasksPdfReport(List<EmployeeArchivedTasksReportDto> data)
+        public ArchivedTasksPdfReport(
+            List<EmployeeArchivedTasksReportDto> data,
+            DateTime? fromDate = null,
+            DateTime? toDate = null,
+            string? roleTitle = null)
         {
             _data = data;
+            _fromDate = fromDate;
+            _toDate = toDate;
+            _roleTitle = roleTitle;
         }
 
         public DocumentMetadata GetMetadata() => DocumentMetadata.Default;
@@ -44,6 +54,13 @@ namespace TaskMangment.API.Reports.Task
                         .Text("تقرير تحليل أرشفة المهام حسب الموظفين")
                         .FontSize(20)
                         .Bold();
+
+                    if (_fromDate.HasValue)
+                    {
+                        column.Item().AlignCenter()
+                            .Text(BuildPeriodText())
+                            .FontSize(10);
+                    }
 
                     column.Item().AlignCenter()
                         .Text($"تاريخ إنشاء التقرير: {DateTime.Now:dd/MM/yyyy}")
@@ -170,6 +187,15 @@ namespace TaskMangment.API.Reports.Task
                 .Padding(6)
                 .AlignCenter()
                 .Text(text);
+        }
+
+        private string BuildPeriodText()
+        {
+            var toText = _toDate.HasValue ? _toDate.Value.ToString("dd/MM/yyyy") : "-";
+            var text = $"الفترة: من {_fromDate:dd/MM/yyyy} إلى {toText}";
+            if (!string.IsNullOrWhiteSpace(_roleTitle))
+                text += $" | صلاحية: {_roleTitle}";
+            return text;
         }
     }
 }

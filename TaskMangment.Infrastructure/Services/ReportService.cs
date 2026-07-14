@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -110,13 +110,32 @@ namespace TaskMangment.Infrastructure.Services
             return (scopedEmployeeIds, canViewAllTasks, canViewCreatedTasks);
         }
 
+        private static int? ResolveRoleFilter(int roleLevel, int? roleId) =>
+            roleLevel >= 100 ? roleId : null;
+
+        private IQueryable<int> ApplyRoleFilter(IQueryable<int> scopedEmployeeIds, int? roleId)
+        {
+            if (!roleId.HasValue)
+                return scopedEmployeeIds;
+
+            return scopedEmployeeIds.Where(employeeId =>
+                _context.EmployeeRoles.Any(er =>
+                    er.EmployeeId == employeeId &&
+                    er.IsAssigned &&
+                    !er.IsDeleted &&
+                    er.RoleId == roleId.Value));
+        }
+
 
         public async Task<List<EmployeeCommentsActivityReportDto>> GetEmployeesCommentsActivityAsync(
             int currentEmployeeId,
             int roleLevel,
-            DateTime? fromDate,
-            DateTime? toDate)
+            DateRangeReportFilterDto filter)
         {
+            var fromDate = filter?.FromDate;
+            var toDate = filter?.ToDate;
+            var roleId = ResolveRoleFilter(roleLevel, filter?.RoleId);
+
             var query = _context.TaskComments
                 .Include(c => c.Employee)
                 .AsQueryable();
@@ -132,6 +151,8 @@ namespace TaskMangment.Infrastructure.Services
 
             var (scopedEmployeeIds, canViewAllTasks, canViewCreatedTasks) =
                 await GetScopedEmployeeIdsAsync(currentEmployeeId, roleLevel);
+
+            scopedEmployeeIds = ApplyRoleFilter(scopedEmployeeIds, roleId);
 
             query = query.Where(a => scopedEmployeeIds.Contains(a.EmployeeId.Value));
 
@@ -175,9 +196,12 @@ namespace TaskMangment.Infrastructure.Services
         public async Task<List<EmployeeCommentsReportDto>> GetTopEmployeesByCommentsAsync(
             int currentEmployeeId,
             int roleLevel,
-            DateTime? fromDate = null,
-            DateTime? toDate = null)
+            DateRangeReportFilterDto filter)
         {
+            var fromDate = filter?.FromDate;
+            var toDate = filter?.ToDate;
+            var roleId = ResolveRoleFilter(roleLevel, filter?.RoleId);
+
             var query = _context.TaskComments
                 .Include(c => c.Employee)
                 .AsQueryable();
@@ -193,6 +217,8 @@ namespace TaskMangment.Infrastructure.Services
 
             var (scopedEmployeeIds, canViewAllTasks, canViewCreatedTasks) =
                 await GetScopedEmployeeIdsAsync(currentEmployeeId, roleLevel);
+
+            scopedEmployeeIds = ApplyRoleFilter(scopedEmployeeIds, roleId);
 
             query = query.Where(a => scopedEmployeeIds.Contains(a.EmployeeId.Value));
 
@@ -240,9 +266,12 @@ namespace TaskMangment.Infrastructure.Services
         public async Task<List<EmployeeAssignmentsReportDto>> GetMostAssignedEmployeesAsync(
     int currentEmployeeId,
     int roleLevel,
-    DateTime? fromDate = null,
-    DateTime? toDate = null)
+    DateRangeReportFilterDto filter)
         {
+            var fromDate = filter?.FromDate;
+            var toDate = filter?.ToDate;
+            var roleId = ResolveRoleFilter(roleLevel, filter?.RoleId);
+
             var query = _context.TaskAssignments
                 .Include(a => a.Employee)
                 .Include(a => a.Task)
@@ -259,6 +288,8 @@ namespace TaskMangment.Infrastructure.Services
 
             var (scopedEmployeeIds, canViewAllTasks, canViewCreatedTasks) =
                 await GetScopedEmployeeIdsAsync(currentEmployeeId, roleLevel);
+
+            scopedEmployeeIds = ApplyRoleFilter(scopedEmployeeIds, roleId);
 
             query = query.Where(a => scopedEmployeeIds.Contains(a.EmployeeId));
 
@@ -319,9 +350,12 @@ namespace TaskMangment.Infrastructure.Services
         public async Task<List<EmployeeOnTimeReportDto>> GetOnTimeCompletionReportAsync(
             int currentEmployeeId,
             int roleLevel,
-            DateTime? fromDate = null,
-            DateTime? toDate = null)
+            DateRangeReportFilterDto filter)
         {
+            var fromDate = filter?.FromDate;
+            var toDate = filter?.ToDate;
+            var roleId = ResolveRoleFilter(roleLevel, filter?.RoleId);
+
             var query = _context.TaskAssignments
                 .Include(a => a.Employee)
                 .Include(a => a.Task)
@@ -338,6 +372,8 @@ namespace TaskMangment.Infrastructure.Services
 
             var (scopedEmployeeIds, canViewAllTasks, canViewCreatedTasks) =
      await GetScopedEmployeeIdsAsync(currentEmployeeId, roleLevel);
+
+            scopedEmployeeIds = ApplyRoleFilter(scopedEmployeeIds, roleId);
 
             query = query.Where(a => scopedEmployeeIds.Contains(a.EmployeeId));
 
@@ -389,9 +425,12 @@ namespace TaskMangment.Infrastructure.Services
         public async Task<List<EmployeeArchivedTasksReportDto>> GetMostArchivedEmployeesAsync(
             int currentEmployeeId,
             int roleLevel,
-            DateTime? fromDate = null,
-            DateTime? toDate = null)
+            DateRangeReportFilterDto filter)
         {
+            var fromDate = filter?.FromDate;
+            var toDate = filter?.ToDate;
+            var roleId = ResolveRoleFilter(roleLevel, filter?.RoleId);
+
             var query = _context.TaskAssignments
                 .Include(a => a.Employee)
                 .Include(a => a.Task)
@@ -408,6 +447,8 @@ namespace TaskMangment.Infrastructure.Services
 
             var (scopedEmployeeIds, canViewAllTasks, canViewCreatedTasks) =
     await GetScopedEmployeeIdsAsync(currentEmployeeId, roleLevel);
+
+            scopedEmployeeIds = ApplyRoleFilter(scopedEmployeeIds, roleId);
 
             query = query.Where(a => scopedEmployeeIds.Contains(a.EmployeeId));
 
@@ -795,13 +836,17 @@ namespace TaskMangment.Infrastructure.Services
             int currentEmployeeId,
             int roleLevel,
             ExportType exportType,
-            DateTime? fromDate = null,
-            DateTime? toDate = null)
+            DateRangeReportFilterDto filter)
         {
+            var fromDate = filter?.FromDate;
+            var toDate = filter?.ToDate;
+            var roleId = ResolveRoleFilter(roleLevel, filter?.RoleId);
+
             if (!fromDate.HasValue && !toDate.HasValue)
                 return new List<TaskActivityReportDto>();
 
             var (scopedEmployeeIds, canViewAllTasks, canViewCreatedTasks) = await GetScopedEmployeeIdsAsync(currentEmployeeId, roleLevel);
+            scopedEmployeeIds = ApplyRoleFilter(scopedEmployeeIds, roleId);
 
             var lastCommentIds = await _context.TaskComments
                 .Where(c =>

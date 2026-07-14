@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using TaskMangment.Application.DTOs.ReportsDTO;
 using TaskMangment.Application.Interfaces.Services;
@@ -18,38 +18,30 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpGet("top-commenters")]
-        public async Task<IActionResult> GetTopCommenters(
-            DateTime? fromDate,
-            DateTime? toDate)
+        public async Task<IActionResult> GetTopCommenters([FromQuery] DateRangeReportFilterDto filter)
         {
-            var data = await _reportService.GetTopEmployeesByCommentsAsync(this.CurrentUserId,this.RoleLevel, fromDate, toDate);
+            var data = await _reportService.GetTopEmployeesByCommentsAsync(this.CurrentUserId,this.RoleLevel, filter);
             return Success(data); 
         }
 
         [HttpGet("most-assigned")]
-        public async Task<IActionResult> GetMostAssignedEmployees(
-            DateTime? fromDate,
-            DateTime? toDate)
+        public async Task<IActionResult> GetMostAssignedEmployees([FromQuery] DateRangeReportFilterDto filter)
         {
-            var data = await _reportService.GetMostAssignedEmployeesAsync(this.CurrentUserId, this.RoleLevel, fromDate, toDate);
+            var data = await _reportService.GetMostAssignedEmployeesAsync(this.CurrentUserId, this.RoleLevel, filter);
             return Success(data);
         }
 
         [HttpGet("on-time-completion")]
-        public async Task<IActionResult> GetOnTimeCompletion(
-            DateTime? fromDate,
-            DateTime? toDate)
+        public async Task<IActionResult> GetOnTimeCompletion([FromQuery] DateRangeReportFilterDto filter)
         {
-            var data = await _reportService.GetOnTimeCompletionReportAsync(this.CurrentUserId,this.RoleLevel, fromDate, toDate);
+            var data = await _reportService.GetOnTimeCompletionReportAsync(this.CurrentUserId,this.RoleLevel, filter);
             return Success(data);
         }
 
         [HttpGet("archived-tasks")]
-        public async Task<IActionResult> GetArchivedTasks(
-            DateTime? fromDate,
-            DateTime? toDate)
+        public async Task<IActionResult> GetArchivedTasks([FromQuery] DateRangeReportFilterDto filter)
         {
-            var data = await _reportService.GetMostArchivedEmployeesAsync(this.CurrentUserId, this.RoleLevel, fromDate, toDate);
+            var data = await _reportService.GetMostArchivedEmployeesAsync(this.CurrentUserId, this.RoleLevel, filter);
             return Success(data);
         }
 
@@ -77,9 +69,9 @@ namespace TaskMangment.API.Controllers
 
 
         [HttpGet("task-activities")]
-        public async Task<IActionResult> GetTaskActivities(DateTime? fromDate,DateTime? toDate, ExportType exportType)
+        public async Task<IActionResult> GetTaskActivities([FromQuery] DateRangeReportFilterDto filter, ExportType exportType)
         {
-            var data = await _reportService.GetTaskActivityReportAsync(this.CurrentUserId, this.RoleLevel, exportType, fromDate, toDate);
+            var data = await _reportService.GetTaskActivityReportAsync(this.CurrentUserId, this.RoleLevel, exportType, filter);
             return Success(data);
         }
 

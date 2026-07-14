@@ -1,4 +1,4 @@
-﻿using QuestPDF.Fluent;
+using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using TaskMangment.Application.DTOs.ReportsDTO;
@@ -10,15 +10,18 @@ namespace TaskMangment.API.Reports.Task
         private readonly List<EmployeeOnTimeReportDto> _data;
         private readonly DateTime _fromDate;
         private readonly DateTime? _toDate;
+        private readonly string? _roleTitle;
 
         public OnTimeCompletionPdfReport(
             List<EmployeeOnTimeReportDto> data,
             DateTime fromDate,
-            DateTime? toDate)
+            DateTime? toDate,
+            string? roleTitle = null)
         {
             _data = data;
             _fromDate = fromDate;
             _toDate = toDate;
+            _roleTitle = roleTitle;
         }
 
         public DocumentMetadata GetMetadata() => DocumentMetadata.Default;
@@ -48,7 +51,7 @@ namespace TaskMangment.API.Reports.Task
                         .Bold();
 
                     column.Item().AlignCenter()
-                        .Text($"الفترة: من {_fromDate:dd/MM/yyyy} إلى {_toDate:dd/MM/yyyy}")
+                        .Text(BuildPeriodText())
                         .FontSize(10);
 
                     column.Item().AlignCenter()
@@ -177,6 +180,15 @@ namespace TaskMangment.API.Reports.Task
                 .AlignRight()
                 .Text(text)
                 .FontSize(9);
+        }
+
+        private string BuildPeriodText()
+        {
+            var toText = _toDate.HasValue ? _toDate.Value.ToString("dd/MM/yyyy") : "-";
+            var text = $"الفترة: من {_fromDate:dd/MM/yyyy} إلى {toText}";
+            if (!string.IsNullOrWhiteSpace(_roleTitle))
+                text += $" | صلاحية: {_roleTitle}";
+            return text;
         }
     }
 }

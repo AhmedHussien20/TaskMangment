@@ -1,4 +1,4 @@
-﻿using ClosedXML.Excel;
+using ClosedXML.Excel;
 using TaskMangment.Application.DTOs.ReportsDTO;
 
 namespace TaskMangment.API.Reports.Task
@@ -8,7 +8,8 @@ namespace TaskMangment.API.Reports.Task
         public static byte[] Build(
             List<EmployeeOnTimeReportDto> data,
             DateTime fromDate,
-            DateTime? toDate)
+            DateTime? toDate,
+            string? roleTitle = null)
         {
             using var wb = new XLWorkbook();
             var ws = wb.Worksheets.Add("On Time Completion");
@@ -34,7 +35,10 @@ namespace TaskMangment.API.Reports.Task
                 .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
 
             var toText = toDate.HasValue ? toDate.Value.ToString("dd/MM/yyyy") : "-";
-            ws.Cell(3, 1).Value = $"الفترة: من {fromDate:dd/MM/yyyy} إلى {toText}";
+            var periodText = $"الفترة: من {fromDate:dd/MM/yyyy} إلى {toText}";
+            if (!string.IsNullOrWhiteSpace(roleTitle))
+                periodText += $" | صلاحية: {roleTitle}";
+            ws.Cell(3, 1).Value = periodText;
             ws.Range(3, 1, 3, 6).Merge().Style
                 .Font.SetFontSize(10)
                 .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
@@ -11,6 +11,8 @@ import { ReportListService } from 'app/core/services/report-list.service';
 import { ReportPdfService } from 'app/core/services/report-pdf.service';
 import { EmployeeOnTimeReportDto, ExportType } from 'app/core/models/reports/reports';
 import { DatePickerComponent } from 'app/components/date-picker/date-picker.component';
+import { ReportRoleFilterComponent } from '../shared/report-role-filter/report-role-filter.component';
+import { getReportRoleFilterParams } from '../shared/report-role-filter.helper';
 
 @Component({
   selector: 'app-on-time-completion-list',
@@ -22,12 +24,15 @@ import { DatePickerComponent } from 'app/components/date-picker/date-picker.comp
     TranslateModule,
     GenericTableComponent,
     PageHeaderComponent,
-    DatePickerComponent
+    DatePickerComponent,
+    ReportRoleFilterComponent
   ],
   templateUrl: './on-time-completion-list.component.html',
   styleUrls: ['./on-time-completion-list.component.scss']
 })
 export class OnTimeCompletionListComponent implements OnInit {
+
+  @ViewChild(ReportRoleFilterComponent) roleFilter?: ReportRoleFilterComponent;
 
   title = 'REPORTS.ON_TIME_COMPLETION';
   activeitem = 'EMPLOYEE.LIST_TITLE';
@@ -49,6 +54,7 @@ export class OnTimeCompletionListComponent implements OnInit {
 
   fromDate?: string;
   toDate?: string;
+  selectedRoleId?: number;
 
   isLoading = false;
 
@@ -66,8 +72,9 @@ export class OnTimeCompletionListComponent implements OnInit {
   loadData(): void {
     this.isLoading = true;
 
+    const { roleId, roleTitle } = getReportRoleFilterParams(this.roleFilter, this.selectedRoleId);
     this.reportService
-      .getOnTimeCompletion(this.fromDate, this.toDate)
+      .getOnTimeCompletion(this.fromDate, this.toDate, roleId, roleTitle)
       .subscribe({
         next: (res) => {
           this.rows = res.data;
@@ -98,8 +105,9 @@ export class OnTimeCompletionListComponent implements OnInit {
   }
 
   onExportPdf(): void {
+    const { roleId, roleTitle } = getReportRoleFilterParams(this.roleFilter, this.selectedRoleId);
     this.reportPdfService
-      .getOnTimeCompletionPdf(ExportType.Pdf, this.fromDate, this.toDate)
+      .getOnTimeCompletionPdf(ExportType.Pdf, this.fromDate, this.toDate, roleId, roleTitle)
       .subscribe({
         next: (blob) => {
           const url = window.URL.createObjectURL(blob);
@@ -119,8 +127,9 @@ export class OnTimeCompletionListComponent implements OnInit {
       });
   }
   onExportExcel(): void {
+    const { roleId, roleTitle } = getReportRoleFilterParams(this.roleFilter, this.selectedRoleId);
     this.reportPdfService
-      .getOnTimeCompletionPdf(ExportType.Excel, this.fromDate, this.toDate)
+      .getOnTimeCompletionPdf(ExportType.Excel, this.fromDate, this.toDate, roleId, roleTitle)
       .subscribe({
         next: (blob) => {
           const url = window.URL.createObjectURL(blob);

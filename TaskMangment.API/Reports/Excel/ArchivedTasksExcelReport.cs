@@ -1,11 +1,15 @@
-﻿using ClosedXML.Excel;
+using ClosedXML.Excel;
 using TaskMangment.Application.DTOs.ReportsDTO;
 
 namespace TaskMangment.API.Reports.Task
 {
     public static class ArchivedTasksExcelReport
     {
-        public static byte[] Build(List<EmployeeArchivedTasksReportDto> data)
+        public static byte[] Build(
+            List<EmployeeArchivedTasksReportDto> data,
+            DateTime? fromDate = null,
+            DateTime? toDate = null,
+            string? roleTitle = null)
         {
             using var wb = new XLWorkbook();
             var ws = wb.Worksheets.Add("Archived Tasks");
@@ -30,8 +34,22 @@ namespace TaskMangment.API.Reports.Task
                 .Font.SetFontSize(18)
                 .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
 
-            ws.Cell(3, 1).Value = $"تاريخ إنشاء التقرير: {DateTime.Now:dd/MM/yyyy}";
-            ws.Range(3, 1, 3, 5).Merge().Style
+            var headerRow = 3;
+            if (fromDate.HasValue)
+            {
+                var toText = toDate.HasValue ? toDate.Value.ToString("dd/MM/yyyy") : "-";
+                var periodText = $"الفترة: من {fromDate:dd/MM/yyyy} إلى {toText}";
+                if (!string.IsNullOrWhiteSpace(roleTitle))
+                    periodText += $" | صلاحية: {roleTitle}";
+                ws.Cell(3, 1).Value = periodText;
+                ws.Range(3, 1, 3, 5).Merge().Style
+                    .Font.SetFontSize(10)
+                    .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                headerRow = 4;
+            }
+
+            ws.Cell(headerRow, 1).Value = $"تاريخ إنشاء التقرير: {DateTime.Now:dd/MM/yyyy}";
+            ws.Range(headerRow, 1, headerRow, 5).Merge().Style
                 .Font.SetFontSize(10)
                 .Font.SetFontColor(XLColor.Gray)
                 .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
@@ -46,15 +64,15 @@ namespace TaskMangment.API.Reports.Task
             WriteCard(ws, cardsRow, 4, 5, "أعلى نسبة أرشفة", $"{maxArchiveRate:0.##}%", "#FFD6D6");          // Red Light
 
             // ===== Table Header =====
-            int headerRow = 8;
+            int tableHeaderRow = 8;
 
-            ws.Cell(headerRow, 1).Value = "ترتيب";
-            ws.Cell(headerRow, 2).Value = "اسم الموظف";
-            ws.Cell(headerRow, 3).Value = "إجمالي المهام";
-            ws.Cell(headerRow, 4).Value = "المؤرشفة";
-            ws.Cell(headerRow, 5).Value = "نسبة الأرشفة %";
+            ws.Cell(tableHeaderRow, 1).Value = "ترتيب";
+            ws.Cell(tableHeaderRow, 2).Value = "اسم الموظف";
+            ws.Cell(tableHeaderRow, 3).Value = "إجمالي المهام";
+            ws.Cell(tableHeaderRow, 4).Value = "المؤرشفة";
+            ws.Cell(tableHeaderRow, 5).Value = "نسبة الأرشفة %";
 
-            var headerRange = ws.Range(headerRow, 1, headerRow, 5);
+            var headerRange = ws.Range(tableHeaderRow, 1, tableHeaderRow, 5);
             headerRange.Style
                 .Font.SetBold()
                 .Fill.SetBackgroundColor(XLColor.FromHtml("#E5E5E5"))
@@ -64,7 +82,7 @@ namespace TaskMangment.API.Reports.Task
                 .Alignment.SetVertical(XLAlignmentVerticalValues.Center);
 
             // ===== Data =====
-            int row = headerRow + 1;
+            int row = tableHeaderRow + 1;
             int index = 1;
 
             foreach (var item in data.OrderByDescending(x => x.ArchiveRate))

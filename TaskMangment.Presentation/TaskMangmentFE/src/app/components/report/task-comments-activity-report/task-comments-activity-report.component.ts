@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NgbModal, NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
@@ -12,6 +12,8 @@ import { ReportPdfService } from 'app/core/services/report-pdf.service';
 import { ExportType, TaskActivityReportDto } from 'app/core/models/reports/reports';
 import { ApiResponse } from 'app/core/models/event/calendar';
 import { DatePickerComponent } from 'app/components/date-picker/date-picker.component';
+import { ReportRoleFilterComponent } from '../shared/report-role-filter/report-role-filter.component';
+import { getReportRoleFilterParams } from '../shared/report-role-filter.helper';
 import { TaskDetailsShellComponent } from 'app/components/tasks/task-details/task-details-shell/task-details-shell.component';
 
 @Component({
@@ -24,12 +26,15 @@ import { TaskDetailsShellComponent } from 'app/components/tasks/task-details/tas
     TranslateModule,
     GenericTableComponent,
     PageHeaderComponent,
-    DatePickerComponent
+    DatePickerComponent,
+    ReportRoleFilterComponent
   ],
   templateUrl: './task-comments-activity-report.component.html',
   styleUrls: ['./task-comments-activity-report.component.scss']
 })
 export class TaskCommentsActivityReportComponent implements OnInit {
+
+  @ViewChild(ReportRoleFilterComponent) roleFilter?: ReportRoleFilterComponent;
 
   title = 'REPORTS.TASK_ACTIVITY_REPORT';
   activeitem = 'REPORTS.TASK_ACTIVITY_REPORT';
@@ -51,6 +56,7 @@ export class TaskCommentsActivityReportComponent implements OnInit {
 
   fromDate?: string;
   toDate?: string | null;
+  selectedRoleId?: number;
 
   isLoading = false;
 
@@ -69,8 +75,9 @@ export class TaskCommentsActivityReportComponent implements OnInit {
   loadData(): void {
     this.isLoading = true;
 
+    const { roleId, roleTitle } = getReportRoleFilterParams(this.roleFilter, this.selectedRoleId);
     this.reportService
-      .getTaskActivities(this.fromDate!, this.toDate!)
+      .getTaskActivities(this.fromDate!, this.toDate!, roleId, roleTitle)
       .subscribe({
         next: (res: ApiResponse<TaskActivityReportDto[]>) => {
 this.rows = res.data.map(t => ({
@@ -108,8 +115,9 @@ this.rows = res.data.map(t => ({
   }
 
   onExportPdf(): void {
+    const { roleId, roleTitle } = getReportRoleFilterParams(this.roleFilter, this.selectedRoleId);
     this.reportPdfService
-      .getTaskActivitiesPdf(this.fromDate!, this.toDate!, this.exportType)
+      .getTaskActivitiesPdf(this.fromDate!, this.toDate!, this.exportType, roleId, roleTitle)
       .subscribe({
         next: (blob) => {
           const url = window.URL.createObjectURL(blob);
@@ -130,8 +138,9 @@ this.rows = res.data.map(t => ({
   }
 
   onExportExcel(): void {
+  const { roleId, roleTitle } = getReportRoleFilterParams(this.roleFilter, this.selectedRoleId);
   this.reportPdfService
-    .getTaskActivitiesPdf(this.fromDate!, this.toDate!, ExportType.Excel)
+    .getTaskActivitiesPdf(this.fromDate!, this.toDate!, ExportType.Excel, roleId, roleTitle)
     .subscribe({
       next: (blob) => {
         const url = window.URL.createObjectURL(blob);

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
@@ -11,6 +11,8 @@ import { EmployeeCommentsReportDto, ExportType } from 'app/core/models/reports/r
 import { PageHeaderComponent } from 'app/shared/components/page-header/page-header.component';
 import { ReportPdfService } from 'app/core/services/report-pdf.service';
 import { DatePickerComponent } from 'app/components/date-picker/date-picker.component';
+import { ReportRoleFilterComponent } from '../shared/report-role-filter/report-role-filter.component';
+import { getReportRoleFilterParams } from '../shared/report-role-filter.helper';
 
 @Component({
   selector: 'app-top-commenters-list',
@@ -22,13 +24,15 @@ import { DatePickerComponent } from 'app/components/date-picker/date-picker.comp
     TranslateModule,
     GenericTableComponent,
     PageHeaderComponent,
-    DatePickerComponent
-    
+    DatePickerComponent,
+    ReportRoleFilterComponent
   ],
   templateUrl: './top-commenter-list.component.html',
   styleUrls: ['./top-commenter-list.component.scss']
 })
 export class TopCommenterListComponent implements OnInit {
+
+  @ViewChild(ReportRoleFilterComponent) roleFilter?: ReportRoleFilterComponent;
 
   title = 'REPORTS.TOP_COMMENTERS';
   activeitem = 'EMPLOYEE.LIST_TITLE';
@@ -50,6 +54,7 @@ export class TopCommenterListComponent implements OnInit {
 
   fromDate?: string;
   toDate?: string;
+  selectedRoleId?: number;
 
   isLoading = false;
 
@@ -68,7 +73,8 @@ export class TopCommenterListComponent implements OnInit {
   loadData(): void {
     this.isLoading = true;
 
-    this.reportService.getTopCommenters(this.fromDate, this.toDate).subscribe({
+    const { roleId, roleTitle } = getReportRoleFilterParams(this.roleFilter, this.selectedRoleId);
+    this.reportService.getTopCommenters(this.fromDate, this.toDate, roleId, roleTitle).subscribe({
       next: (res) => {
         this.rows = res.data;
         this.totalItems = res.data.length;
@@ -90,7 +96,8 @@ export class TopCommenterListComponent implements OnInit {
 
 
   onExportPdf(): void {
-  this.reportPdfService.getTopCommentersPdf(ExportType.Pdf,this.fromDate, this.toDate).subscribe({
+  const { roleId, roleTitle } = getReportRoleFilterParams(this.roleFilter, this.selectedRoleId);
+  this.reportPdfService.getTopCommentersPdf(ExportType.Pdf, this.fromDate, this.toDate, roleId, roleTitle).subscribe({
     next: (blob) => {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -107,7 +114,8 @@ export class TopCommenterListComponent implements OnInit {
   });
 }
  onExportExcel(): void {
-  this.reportPdfService.getTopCommentersPdf(ExportType.Excel,this.fromDate, this.toDate).subscribe({
+  const { roleId, roleTitle } = getReportRoleFilterParams(this.roleFilter, this.selectedRoleId);
+  this.reportPdfService.getTopCommentersPdf(ExportType.Excel, this.fromDate, this.toDate, roleId, roleTitle).subscribe({
     next: (blob) => {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');

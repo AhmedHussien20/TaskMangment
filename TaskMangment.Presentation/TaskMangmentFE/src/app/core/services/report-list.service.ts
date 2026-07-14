@@ -11,31 +11,31 @@ export class ReportListService {
 
   constructor(private api: ApiService) {}
 
-  getTopCommenters(fromDate?: string, toDate?: string): Observable<ApiResponse<EmployeeCommentsReportDto[]>> {
-    const query = this.buildQuery({ fromDate, toDate });
+  getTopCommenters(fromDate?: string, toDate?: string, roleId?: number, roleTitle?: string): Observable<ApiResponse<EmployeeCommentsReportDto[]>> {
+    const query = this.buildQuery({ fromDate, toDate, roleId, roleTitle });
     return this.api.get<ApiResponse<EmployeeCommentsReportDto[]>>(this.service, `top-commenters${query}`);
   }
 
-  getMostAssigned(fromDate?: string, toDate?: string): Observable<ApiResponse<EmployeeAssignmentsReportDto[]>> {
-    const query = this.buildQuery({ fromDate, toDate });
+  getMostAssigned(fromDate?: string, toDate?: string, roleId?: number, roleTitle?: string): Observable<ApiResponse<EmployeeAssignmentsReportDto[]>> {
+    const query = this.buildQuery({ fromDate, toDate, roleId, roleTitle });
     return this.api.get<ApiResponse<EmployeeAssignmentsReportDto[]>>(this.service, `most-assigned${query}`);
   }
 
-  getOnTimeCompletion(fromDate?: string, toDate?: string): Observable<ApiResponse<EmployeeOnTimeReportDto[]>> {
-    const query = this.buildQuery({ fromDate, toDate });
+  getOnTimeCompletion(fromDate?: string, toDate?: string, roleId?: number, roleTitle?: string): Observable<ApiResponse<EmployeeOnTimeReportDto[]>> {
+    const query = this.buildQuery({ fromDate, toDate, roleId, roleTitle });
     return this.api.get<ApiResponse<EmployeeOnTimeReportDto[]>>(this.service, `on-time-completion${query}`);
   }
 
-  getArchivedTasks(fromDate?: string, toDate?: string): Observable<ApiResponse<EmployeeArchivedTasksReportDto[]>> {
-    const query = this.buildQuery({ fromDate, toDate });
+  getArchivedTasks(fromDate?: string, toDate?: string, roleId?: number, roleTitle?: string): Observable<ApiResponse<EmployeeArchivedTasksReportDto[]>> {
+    const query = this.buildQuery({ fromDate, toDate, roleId, roleTitle });
     return this.api.get<ApiResponse<EmployeeArchivedTasksReportDto[]>>(this.service, `archived-tasks${query}`);
   }
   getTaskDiscounts(employeeId: number,movementType: number, fromDate: string, toDate?: string, status?: string): Observable<ApiResponse<TaskDiscountReportDto[]>> {
   const query = this.buildQuery({ employeeId,movementType, fromDate, toDate, status });
   return this.api.get<ApiResponse<TaskDiscountReportDto[]>>(this.service, `task-discounts${query}`);
 }
-  getTaskActivities(fromDate: string, toDate: string): Observable<ApiResponse<TaskActivityReportDto[]>> {
-    const query = this.buildQuery({ fromDate, toDate, exportType: ExportType.Pdf });
+  getTaskActivities(fromDate: string, toDate: string, roleId?: number, roleTitle?: string): Observable<ApiResponse<TaskActivityReportDto[]>> {
+    const query = this.buildQuery({ fromDate, toDate, roleId, roleTitle, exportType: ExportType.Pdf });
     return this.api.get<ApiResponse<TaskActivityReportDto[]>>(this.service, `task-activities${query}`);
   }
   

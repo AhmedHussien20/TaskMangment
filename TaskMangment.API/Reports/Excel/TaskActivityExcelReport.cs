@@ -1,11 +1,15 @@
-﻿using ClosedXML.Excel;
+using ClosedXML.Excel;
 using TaskMangment.Application.DTOs.ReportsDTO;
 
 namespace TaskMangment.API.Reports.Task
 {
     public static class TaskActivityExcelReport
     {
-        public static byte[] Build(List<TaskActivityReportDto> activities)
+        public static byte[] Build(
+            List<TaskActivityReportDto> activities,
+            DateTime? fromDate = null,
+            DateTime? toDate = null,
+            string? roleTitle = null)
         {
             using var wb = new XLWorkbook();
             var ws = wb.Worksheets.Add("Task Activities");
@@ -20,15 +24,29 @@ namespace TaskMangment.API.Reports.Task
                 .Font.SetFontSize(16)
                 .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Right);
 
+            var reportDateRow = 2;
+            if (fromDate.HasValue)
+            {
+                var toText = toDate.HasValue ? toDate.Value.ToString("dd/MM/yyyy") : "-";
+                var periodText = $"الفترة: من {fromDate:dd/MM/yyyy} إلى {toText}";
+                if (!string.IsNullOrWhiteSpace(roleTitle))
+                    periodText += $" | صلاحية: {roleTitle}";
+                ws.Cell(2, 1).Value = periodText;
+                ws.Range(2, 1, 2, 5).Merge().Style
+                    .Font.SetFontSize(10)
+                    .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Right);
+                reportDateRow = 3;
+            }
+
             // Report date
-            ws.Cell(2, 1).Value = $"تاريخ التقرير: {DateTime.Now:yyyy/MM/dd}";
-            ws.Range(2, 1, 2, 5).Merge().Style
+            ws.Cell(reportDateRow, 1).Value = $"تاريخ التقرير: {DateTime.Now:yyyy/MM/dd}";
+            ws.Range(reportDateRow, 1, reportDateRow, 5).Merge().Style
                 .Font.SetFontSize(10)
                 .Font.SetFontColor(XLColor.Gray)
                 .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Right);
 
             // Headers
-            var headerRow = 4;
+            var headerRow = reportDateRow + 1;
             ws.Cell(headerRow, 1).Value = "المهمة";
             ws.Cell(headerRow, 2).Value = "جهة التكليف";
             ws.Cell(headerRow, 3).Value = "التعليق";

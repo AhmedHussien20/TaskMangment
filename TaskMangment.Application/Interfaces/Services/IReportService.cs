@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,15 +10,15 @@ namespace TaskMangment.Application.Interfaces.Services
 {
     public interface IReportService
     {
-        Task<List<EmployeeCommentsReportDto>> GetTopEmployeesByCommentsAsync(int currentEmployeeId, int roleLevel, DateTime? fromDate = null,DateTime? toDate = null);
-        Task<List<EmployeeAssignmentsReportDto>> GetMostAssignedEmployeesAsync(int currentEmployeeId, int roleLevel, DateTime? fromDate = null, DateTime? toDate = null);
-        Task<List<EmployeeOnTimeReportDto>> GetOnTimeCompletionReportAsync(int employeeId, int roleLevel, DateTime? fromDate = null,DateTime? toDate = null);
-        Task<List<EmployeeArchivedTasksReportDto>> GetMostArchivedEmployeesAsync(int currentEmployeeId, int roleLevel, DateTime? fromDate = null, DateTime? toDate = null);
+        Task<List<EmployeeCommentsReportDto>> GetTopEmployeesByCommentsAsync(int currentEmployeeId, int roleLevel, DateRangeReportFilterDto filter);
+        Task<List<EmployeeAssignmentsReportDto>> GetMostAssignedEmployeesAsync(int currentEmployeeId, int roleLevel, DateRangeReportFilterDto filter);
+        Task<List<EmployeeOnTimeReportDto>> GetOnTimeCompletionReportAsync(int employeeId, int roleLevel, DateRangeReportFilterDto filter);
+        Task<List<EmployeeArchivedTasksReportDto>> GetMostArchivedEmployeesAsync(int currentEmployeeId, int roleLevel, DateRangeReportFilterDto filter);
         Task<List<TaskDiscountReportDto>> GetTaskDiscountReportAsync( int currentEmployeeId, int roleLevel, TaskDiscountReportFilterDto dto);
-        Task<List<TaskActivityReportDto>> GetTaskActivityReportAsync(int employeeId, int roleLevel, ExportType exportType, DateTime? fromDate = null, DateTime? toDate = null);
+        Task<List<TaskActivityReportDto>> GetTaskActivityReportAsync(int employeeId, int roleLevel, ExportType exportType, DateRangeReportFilterDto filter);
         Task<List<TaskMovementReportDto>> GetTaskMovementReportAsync(int currentEmployeeId, int roleLevel, TaskMovementReportFilterDto dto, ExportType exportTypee);
         Task<List<TasksClosingSoonDto>> GetTasksClosingSoonAsync(int currentEmployeeId, int roleLevel, int? employeeId, DateTime fromDate, DateTime toDate);
-        Task<List<EmployeeCommentsActivityReportDto>> GetEmployeesCommentsActivityAsync(int currentEmployeeId, int roleLevel, DateTime? fromDate, DateTime? toDate);
+        Task<List<EmployeeCommentsActivityReportDto>> GetEmployeesCommentsActivityAsync(int currentEmployeeId, int roleLevel, DateRangeReportFilterDto filter);
         Task<TaskDiscountAuditReportDto> GetTaskDiscountAuditReportAsync(int currentEmployeeId, int roleLevel, TaskDiscountReportFilterDto dto);
         Task<List<EmployeeTotalDiscountReportRowDto>> GetEmployeeTotalDiscountReportAsync(int currentEmployeeId, int roleLevel, EmployeeTotalDiscountReportFilterDto dto);
 

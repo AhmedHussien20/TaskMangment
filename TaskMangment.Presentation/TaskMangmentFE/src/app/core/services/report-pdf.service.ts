@@ -10,31 +10,31 @@ export class ReportPdfService {
 
   constructor(private api: ApiService) {}
 
-  getTopCommentersPdf(exportType: ExportType,fromDate?: string, toDate?: string): Observable<Blob> {
-    const query = this.buildQuery({ exportType,fromDate, toDate });
+  getTopCommentersPdf(exportType: ExportType, fromDate?: string, toDate?: string, roleId?: number, roleTitle?: string): Observable<Blob> {
+    const query = this.buildQuery({ exportType, fromDate, toDate, roleId, roleTitle });
     return this.api.getBlob(this.service, `top-commenters/pdf${query}`);
   }
 
-  getMostAssignedPdf(exportType: ExportType,fromDate?: string, toDate?: string): Observable<Blob> {
-    const query = this.buildQuery({ exportType,fromDate, toDate });
+  getMostAssignedPdf(exportType: ExportType, fromDate?: string, toDate?: string, roleId?: number, roleTitle?: string): Observable<Blob> {
+    const query = this.buildQuery({ exportType, fromDate, toDate, roleId, roleTitle });
     return this.api.getBlob(this.service, `most-assigned/pdf${query}`);
   }
 
-  getOnTimeCompletionPdf(exportType: ExportType,fromDate?: string, toDate?: string): Observable<Blob> {
-    const query = this.buildQuery({ exportType, fromDate, toDate });
+  getOnTimeCompletionPdf(exportType: ExportType, fromDate?: string, toDate?: string, roleId?: number, roleTitle?: string): Observable<Blob> {
+    const query = this.buildQuery({ exportType, fromDate, toDate, roleId, roleTitle });
     return this.api.getBlob(this.service, `on-time-completion/pdf${query}`);
   }
 
-  getArchivedTasksPdf(exportType: ExportType,fromDate?: string, toDate?: string): Observable<Blob> {
-    const query = this.buildQuery({exportType, fromDate, toDate });
+  getArchivedTasksPdf(exportType: ExportType, fromDate?: string, toDate?: string, roleId?: number, roleTitle?: string): Observable<Blob> {
+    const query = this.buildQuery({ exportType, fromDate, toDate, roleId, roleTitle });
     return this.api.getBlob(this.service, `archived-tasks/pdf${query}`);
   }
  getTaskDiscountsPdf(exportType: ExportType, employeeId: number,movementType: number,fromDate?: string,toDate?: string,status?: string): Observable<Blob> {
     const query = this.buildQuery({exportType, employeeId,movementType,fromDate, toDate, status });
     return this.api.getBlob(this.service, `task-discounts/pdf${query}`);
   }
-  getTaskActivitiesPdf(fromDate: string, toDate: string,exportType: ExportType): Observable<Blob> {
-    const query = this.buildQuery({ fromDate, toDate, exportType});
+  getTaskActivitiesPdf(fromDate: string, toDate: string, exportType: ExportType, roleId?: number, roleTitle?: string): Observable<Blob> {
+    const query = this.buildQuery({ fromDate, toDate, exportType, roleId, roleTitle });
     return this.api.getBlob(this.service, `task-activities/pdf${query}`);
   }
   getTaskMovementReportsPdf( exportType: ExportType,employeeId: number | undefined, movementType: number, reportTitle?: string): Observable<Blob> {

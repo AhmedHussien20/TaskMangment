@@ -1,4 +1,4 @@
-﻿using DocumentFormat.OpenXml.Bibliography;
+using DocumentFormat.OpenXml.Bibliography;
 using Microsoft.AspNetCore.Mvc;
 using QuestPDF.Fluent;
 using System.Reflection.Metadata;
@@ -46,18 +46,19 @@ namespace TaskMangment.API.Controllers
 
 
         [HttpGet("top-commenters/pdf")]
-        public async Task<IActionResult> GetTopCommentersPdf(ExportType exportType,DateTime? fromDate,DateTime? toDate)
+        public async Task<IActionResult> GetTopCommentersPdf(ExportType exportType, [FromQuery] DateRangeReportFilterDto filter)
         {
-            var data = await _reportService.GetEmployeesCommentsActivityAsync(this.CurrentUserId, this.RoleLevel, fromDate, toDate);
+            var data = await _reportService.GetEmployeesCommentsActivityAsync(this.CurrentUserId, this.RoleLevel, filter);
+            var roleTitle = filter.RoleId.HasValue ? filter.RoleTitle : null;
 
             if (exportType == ExportType.Pdf)
             {
-                var report = new EmployeeCommentsActivityPdfReport(data, fromDate.Value, toDate);
+                var report = new EmployeeCommentsActivityPdfReport(data, filter.FromDate!.Value, filter.ToDate, roleTitle);
                 var pdf = report.GeneratePdf();
 
                 return File(pdf, "application/pdf", "top-commenters-report.pdf");
             }
-            var xlsxBytes = EmployeeCommentsActivityExcelReport.Build(data, fromDate.Value, toDate);
+            var xlsxBytes = EmployeeCommentsActivityExcelReport.Build(data, filter.FromDate!.Value, filter.ToDate, roleTitle);
             return File(
                 xlsxBytes,
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -67,35 +68,37 @@ namespace TaskMangment.API.Controllers
 
 
         [HttpGet("most-assigned/pdf")]
-        public async Task<IActionResult> GetMostAssignedEmployeesPdf(ExportType exportType, DateTime? fromDate,DateTime? toDate)
+        public async Task<IActionResult> GetMostAssignedEmployeesPdf(ExportType exportType, [FromQuery] DateRangeReportFilterDto filter)
         {
-            var data = await _reportService.GetMostAssignedEmployeesAsync(this.CurrentUserId, this.RoleLevel, fromDate, toDate);
+            var data = await _reportService.GetMostAssignedEmployeesAsync(this.CurrentUserId, this.RoleLevel, filter);
+            var roleTitle = filter.RoleId.HasValue ? filter.RoleTitle : null;
 
             if (exportType == ExportType.Pdf)
             {
-                var report = new MostAssignedEmployeesPdfReport(data, fromDate.Value, toDate);
+                var report = new MostAssignedEmployeesPdfReport(data, filter.FromDate!.Value, filter.ToDate, roleTitle);
                 var pdf = report.GeneratePdf();
 
                 return File(pdf, "application/pdf", "most-assigned-employees.pdf");
             }
-            var xlsx = MostAssignedEmployeesExcelReport.Build(data, fromDate.Value, toDate);
+            var xlsx = MostAssignedEmployeesExcelReport.Build(data, filter.FromDate!.Value, filter.ToDate, roleTitle);
             return File(xlsx,
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 "most-assigned.xlsx");
         }
 
         [HttpGet("on-time-completion/pdf")]
-        public async Task<IActionResult> GetOnTimeCompletionPdf(ExportType exportType,DateTime? fromDate,DateTime? toDate)
+        public async Task<IActionResult> GetOnTimeCompletionPdf(ExportType exportType, [FromQuery] DateRangeReportFilterDto filter)
         {
-            var data = await _reportService.GetOnTimeCompletionReportAsync( this.CurrentUserId, this.RoleLevel, fromDate, toDate);
+            var data = await _reportService.GetOnTimeCompletionReportAsync( this.CurrentUserId, this.RoleLevel, filter);
+            var roleTitle = filter.RoleId.HasValue ? filter.RoleTitle : null;
 
             if (exportType == ExportType.Pdf)
             {
-                var report = new OnTimeCompletionPdfReport(data, fromDate.Value, toDate);
+                var report = new OnTimeCompletionPdfReport(data, filter.FromDate!.Value, filter.ToDate, roleTitle);
                 var pdf = report.GeneratePdf();
                 return File(pdf, "application/pdf", "on-time-completion-report.pdf");
             }
-            var xlsx = OnTimeCompletionExcelReport.Build(data, fromDate.Value, toDate);
+            var xlsx = OnTimeCompletionExcelReport.Build(data, filter.FromDate!.Value, filter.ToDate, roleTitle);
             return File(
                 xlsx,
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -103,18 +106,19 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpGet("archived-tasks/pdf")]
-        public async Task<IActionResult> GetArchivedTasksPdf(ExportType exportType,DateTime? fromDate,DateTime? toDate)
+        public async Task<IActionResult> GetArchivedTasksPdf(ExportType exportType, [FromQuery] DateRangeReportFilterDto filter)
         {
-            var data = await _reportService.GetMostArchivedEmployeesAsync(this.CurrentUserId, this.RoleLevel, fromDate, toDate);
+            var data = await _reportService.GetMostArchivedEmployeesAsync(this.CurrentUserId, this.RoleLevel, filter);
+            var roleTitle = filter.RoleId.HasValue ? filter.RoleTitle : null;
 
             if (exportType == ExportType.Pdf)
             {
-                var doc = new ArchivedTasksPdfReport(data);
+                var doc = new ArchivedTasksPdfReport(data, filter.FromDate, filter.ToDate, roleTitle);
                 var pdfBytes = doc.GeneratePdf();
                 return File(pdfBytes, "application/pdf", "archived-tasks.pdf");
             }
 
-            var xlsxBytes = ArchivedTasksExcelReport.Build(data);
+            var xlsxBytes = ArchivedTasksExcelReport.Build(data, filter.FromDate, filter.ToDate, roleTitle);
             return File(
                 xlsxBytes,
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -172,19 +176,20 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpGet("task-activities/pdf")]
-        public async Task<IActionResult> GetTaskActivitiesPdf(DateTime? fromDate, ExportType exportType, DateTime? toDate)
+        public async Task<IActionResult> GetTaskActivitiesPdf([FromQuery] DateRangeReportFilterDto filter, ExportType exportType)
         {
-            var data = await _reportService.GetTaskActivityReportAsync(this.CurrentUserId, this.RoleLevel, exportType, fromDate, toDate);
+            var data = await _reportService.GetTaskActivityReportAsync(this.CurrentUserId, this.RoleLevel, exportType, filter);
+            var roleTitle = filter.RoleId.HasValue ? filter.RoleTitle : null;
 
             if (exportType == ExportType.Pdf)
             {
-                var report = new TaskActivityPdfReport(data);
+                var report = new TaskActivityPdfReport(data, filter.FromDate, filter.ToDate, roleTitle);
                 var pdf = report.GeneratePdf();
                 return File(pdf, "application/pdf", "task-activities-report.pdf");
             }
             else
             {
-                var xlsxBytes = TaskActivityExcelReport.Build(data);
+                var xlsxBytes = TaskActivityExcelReport.Build(data, filter.FromDate, filter.ToDate, roleTitle);
                 return File(
                     xlsxBytes,
                     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

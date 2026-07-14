@@ -1,4 +1,4 @@
-﻿using QuestPDF.Fluent;
+using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using TaskMangment.Application.DTOs.ReportsDTO;
@@ -8,10 +8,20 @@ namespace TaskMangment.API.Reports.Task
     public class TaskActivityPdfReport : IDocument
     {
         private readonly List<TaskActivityReportDto> _activities;
+        private readonly DateTime? _fromDate;
+        private readonly DateTime? _toDate;
+        private readonly string? _roleTitle;
 
-        public TaskActivityPdfReport(List<TaskActivityReportDto> activities)
+        public TaskActivityPdfReport(
+            List<TaskActivityReportDto> activities,
+            DateTime? fromDate = null,
+            DateTime? toDate = null,
+            string? roleTitle = null)
         {
             _activities = activities;
+            _fromDate = fromDate;
+            _toDate = toDate;
+            _roleTitle = roleTitle;
         }
 
         public DocumentMetadata GetMetadata() => DocumentMetadata.Default;
@@ -28,6 +38,10 @@ namespace TaskMangment.API.Reports.Task
                 page.Header().PaddingBottom(10).Column(column =>
                 {
                     column.Item().AlignRight().Text("تقرير عن حركات المهام").FontSize(20).Bold();
+                    if (_fromDate.HasValue)
+                    {
+                        column.Item().AlignRight().Text(BuildPeriodText()).FontSize(10);
+                    }
                     column.Item().AlignRight().Text($"تاريخ التقرير: {DateTime.Now:yyyy/MM/dd}").FontSize(10).FontColor(Colors.Grey.Darken1);
                     column.Item().PaddingTop(5).LineHorizontal(1).LineColor(Colors.Grey.Lighten2);
                 });
@@ -82,5 +96,14 @@ namespace TaskMangment.API.Reports.Task
 
         static IContainer DataCellStyle(IContainer container, string backgroundColor) =>
             container.Border(1).BorderColor(Colors.Grey.Lighten2).Background(backgroundColor).Padding(6).AlignRight();
+
+        private string BuildPeriodText()
+        {
+            var toText = _toDate.HasValue ? _toDate.Value.ToString("dd/MM/yyyy") : "-";
+            var text = $"الفترة: من {_fromDate:dd/MM/yyyy} إلى {toText}";
+            if (!string.IsNullOrWhiteSpace(_roleTitle))
+                text += $" | صلاحية: {_roleTitle}";
+            return text;
+        }
     }
 }
