@@ -385,7 +385,7 @@ namespace TaskMangment.Infrastructure.Services
                 throw new AppException(ErrorCodes.EmployeeNotFound, StatusCodes.Status400BadRequest);
 
             var currentBranchIds = await _managerBranchesRepo
-                .GetAll(x => x.ManagerId == managerId && x.IsActive)
+                .GetAll(x => x.ManagerId == managerId && x.IsActive && !x.Branch.IsDeleted)
                 .Select(x => x.BranchId)
                 .ToListAsync();
 
@@ -402,7 +402,7 @@ namespace TaskMangment.Infrastructure.Services
                 .FirstAsync();
 
             var activeAssignments = await _managerBranchesRepo
-                .GetAll(x => x.IsActive && x.ManagerId != managerId)
+                .GetAll(x => x.IsActive && x.ManagerId != managerId && !x.Branch.IsDeleted)
                 .Select(x => new { x.BranchId, x.ManagerId })
                 .Distinct()
                 .ToListAsync();

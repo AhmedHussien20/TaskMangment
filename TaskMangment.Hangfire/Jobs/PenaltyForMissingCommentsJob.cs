@@ -161,8 +161,6 @@ namespace TaskMangment.Hangfire.Jobs
                     if (lastComment != null && lastComment.CreatedDate.Date == dueDate)
                         continue;
 
-                    var daysOverdue = (yesterday - dueDate).Days;
-
                     var hasLeave = await _db.Leaves
                       .Where(l => l.EmployeeId == employeeId &&
                                   l.StartDate.Date <= yesterday &&
@@ -200,7 +198,15 @@ namespace TaskMangment.Hangfire.Jobs
                         }
                     }
 
-                    if (daysOverdue < maxWarningsBeforeDiscount)
+                    var existingAutoWarningCount = await _db.Warnings.CountAsync(w =>
+                        w.TaskId == task.Id &&
+                        w.IssuedEmployeeId == employeeId &&
+                        w.AutoWarning &&
+                        !w.IsDeleted);
+
+                    // Prefer warning count so a missed run can catch up warnings
+                    // before applying a discount.
+                    if (existingAutoWarningCount < maxWarningsBeforeDiscount)
                     {
                         var alreadyWarned = await _db.Warnings.AnyAsync(w =>
                             w.TaskId == task.Id &&
