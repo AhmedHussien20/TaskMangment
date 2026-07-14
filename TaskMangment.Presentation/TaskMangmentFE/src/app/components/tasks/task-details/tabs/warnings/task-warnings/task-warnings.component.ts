@@ -24,7 +24,7 @@ export class TaskWarningsComponent implements OnInit, OnDestroy {
   totalItems = 0;
 
   columns: TableColumn[] = [
-    { key: 'issuedAt', label: 'TASK.DATE', type: 'date' },
+    { key: 'violationDate', label: 'TASK.DATE', type: 'date' },
     { key: 'reason', label: 'TASK.WARNING_RESON' },
     { key: 'issuedEmployeeName', label: 'TASK.WARNED_EMPLOYEE' },
     {
