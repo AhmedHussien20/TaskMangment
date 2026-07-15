@@ -36,6 +36,7 @@ namespace TaskMangment.Application.Behaviors
 
             var message = string.Format(
                 messageTemplate,
+                ev.TaskId,
                 ev.taskTitle,
                 ev.EmployeeName
             );

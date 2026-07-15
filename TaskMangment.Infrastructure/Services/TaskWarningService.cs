@@ -32,7 +32,6 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
         private readonly IDomainEventDispatcher _eventDispatcher;
-        private readonly IRepository<Discount> _discountRepo;
         private readonly IRepository<Notification> _notificationRepo;
         private readonly IGetHigherManager _getHigherManager;
 
@@ -47,7 +46,6 @@ namespace TaskMangment.Infrastructure.Services
             ICachingService cache,
             IRepository<WorkTask> taskRepo,
             IDomainEventDispatcher eventDispatcher,
-            IRepository<Discount> discountRepo,
             IRepository<Branch> branchRepo,
             IRepository<Notification> notificationRepo,
             IGetHigherManager getHigherManager)
@@ -59,7 +57,6 @@ namespace TaskMangment.Infrastructure.Services
             _cache = cache;
             _taskRepo = taskRepo;
             _eventDispatcher = eventDispatcher;
-            _discountRepo = discountRepo;
             _branchRepo = branchRepo;
             _notificationRepo = notificationRepo;
             _getHigherManager = getHigherManager;
@@ -175,31 +172,6 @@ namespace TaskMangment.Infrastructure.Services
 
             await _warningRepo.AddAsync(warning);
 
-
-            var warningCount = await _warningRepo.GetAll(w =>
-        w.TaskId == taskId &&
-        w.IssuedEmployeeId == dto.IssuedEmployeeId &&
-        !w.AutoWarning
-    ).CountAsync() + 1;
-
-            Discount? discount = null;
-            if (warningCount > task.MaxWarnings)
-            {
-                discount = new Discount
-                {
-                    TaskId = taskId,
-                    EmployeeId = dto.IssuedEmployeeId,
-                    Amount = task.PenaltyAtMaxWarnings,
-                    Reason = "Max warning discount",
-                    AutoDiscount = true,
-                    CreatedDate = DateTime.UtcNow,
-                    discountType= DiscountType.MaxWarningDiscount
-                   
-                };
-                await _discountRepo.AddAsync(discount);
-
-            }
-
             await _warningRepo.SaveChangesAsync();
 
                 await _cache.RemoveAsync("warnings:");
@@ -236,16 +208,6 @@ namespace TaskMangment.Infrastructure.Services
                 await _eventDispatcher.PublishAsync(
                         new TaskWarningEvent(warning.Id, taskId, employeeName, sendToIds, IssuedToName, task.Title)
                     );
-            }
-
-            if (discount != null)
-            {
-                if (sendToIds.Any())
-                {
-                    await _eventDispatcher.PublishAsync(
-                        new TaskPenaltyEvent(discount.Id, taskId, employeeName, sendToIds, IssuedToName, task.Title, discount.Amount)
-                    );
-                }
             }
 
             var savedWarning = await _warningRepo.GetAll(w => w.Id == warning.Id)

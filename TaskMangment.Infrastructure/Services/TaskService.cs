@@ -303,6 +303,8 @@ namespace TaskMangment.Infrastructure.Services
                             throw new AppException(ErrorCodes.EmployeeInactive, StatusCodes.Status400BadRequest);
 
                         var task = _mapper.Map<WorkTask>(dto);
+                        task.PenaltyAtMaxWarnings = 0;
+                        task.MaxWarnings = 3;
                         task.CreatedByEmployeeId = createdUser;
                         task.CompanyId = companyId;
                         task.AssignedByEmployeeId = createdUser;
@@ -314,6 +316,8 @@ namespace TaskMangment.Infrastructure.Services
                 else
                 {
                     var task = _mapper.Map<WorkTask>(dto);
+                    task.PenaltyAtMaxWarnings = 0;
+                    task.MaxWarnings = 3;
                     task.CreatedByEmployeeId = createdUser;
                     task.CompanyId = companyId;
                     task.AssignedByEmployeeId = createdUser;
@@ -405,6 +409,8 @@ namespace TaskMangment.Infrastructure.Services
                     throw new AppException(ErrorCodes.TaskMustBeClosedBeforeArchive, StatusCodes.Status400BadRequest);
             }
             _mapper.Map(dto, task);
+            task.PenaltyAtMaxWarnings = 0;
+            task.MaxWarnings = 3;
 
             if (dto.Status == WorkTaskStatus.Closed)
             {

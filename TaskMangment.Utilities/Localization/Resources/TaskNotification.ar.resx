@@ -118,7 +118,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="TASK_COMMENT_NOTIFICATION" xml:space="preserve">
-    <value>تعليق جديد علي المهمة : {0} من {1}</value>
+    <value>تعليق جديد على مهمة رقم {0} بعنوان {1} من {2}</value>
   </data>
   <data name="COMMENT_LABEL" xml:space="preserve">
     <value>التعليق</value>
@@ -127,32 +127,32 @@
     <value>رابط المهمة</value>
   </data>
   <data name="TASK_PENALTY_NOTIFICATION" xml:space="preserve">
-    <value>جزاء جديد بقيمة {2} علي المهمة: {0} من {1}</value>
+    <value>جزاء جديد بقيمة {3} على مهمة رقم {0} بعنوان {1} من {2}</value>
   </data>
   <data name="TASK_EXTENSION_REQUEST_NOTIFICATION" xml:space="preserve">
-    <value>طلب تمديد جديد على المهمة: {0} من {1}</value>
+    <value>طلب تمديد جديد على مهمة رقم {0} بعنوان {1} من {2}</value>
   </data>
   <data name="TASK_WARNING_NOTIFICATION" xml:space="preserve">
-    <value>تحذير علي المهمة {0} من {1}</value>
+    <value>تحذير على مهمة رقم {0} بعنوان {1} من {2}</value>
   </data>
   <data name="TASK_CLOSE_REQUEST_NOTIFICATION" xml:space="preserve">
-    <value>طلب غلق جديد على المهمة: {0} من {1}</value>
+    <value>طلب غلق جديد على مهمة رقم {0} بعنوان {1} من {2}</value>
   </data>
   <data name="TASK_ASSIGNED_NOTIFICATION" xml:space="preserve">
-    <value>تم إسناد مهمة جديدة إليك: {0} رقم {1}</value>
+    <value>تم إسناد مهمة جديدة إليك: مهمة رقم {0} بعنوان {1}</value>
   </data>
   <data name="TASK_UNASSIGNED_NOTIFICATION" xml:space="preserve">
-    <value>تم ازالتك من المهمة : {0}</value>
+    <value>تم إزالتك من مهمة رقم {0} بعنوان {1}</value>
   </data>
   <data name="EXTENDAPPROVED" xml:space="preserve">
-    <value>تم تمديد مهمة "{0}" من تاريخ {1} إلى تاريخ {2} بناءً على طلب .
+    <value>تم تمديد مهمة رقم {0} بعنوان {1} من تاريخ {2} إلى تاريخ {3} بناءً على طلب .
 </value>
   </data>
   <data name="CLOSEAPPROVED" xml:space="preserve">
-    <value>تم غلق مهمة {0} وفقا لطلب</value>
+    <value>تم غلق مهمة رقم {0} بعنوان {1} وفقاً لطلب</value>
   </data>
   <data name="TASKACHIEVEMENT" xml:space="preserve">
-    <value>قام {0} بانجاز {1} من مهمة {2}</value>
+    <value>قام {2} بإنجاز {3} من مهمة رقم {0} بعنوان {1}</value>
   </data>
   <data name="LEAVEREQUESTCREATED" xml:space="preserve">
     <value>طلب {0} من {1} بداية من {2} الي {3}</value>

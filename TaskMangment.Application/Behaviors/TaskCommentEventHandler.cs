@@ -92,6 +92,8 @@ namespace TaskMangment.Application.Behaviors
 
                 messageTemplate,
 
+                ev.TaskId,
+
                 ev.taskTitle,
 
                 ev.EmployeeName

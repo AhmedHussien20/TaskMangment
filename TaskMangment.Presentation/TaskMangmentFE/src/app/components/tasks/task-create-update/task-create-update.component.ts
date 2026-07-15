@@ -130,22 +130,6 @@ export class TaskCreateUpdateComponent implements OnInit {
     {
       type: 'input',
       inputType: 'number',
-      label: 'TASK.MAX_WARNINGS',
-      name: 'maxWarnings',
-      defaultValue: 3
-    },
-
-    {
-      type: 'input',
-      inputType: 'number',
-      label: 'TASK.PENALTY_AT_MAX_WARNINGS',
-      name: 'penaltyAtMaxWarnings',
-      defaultValue: 0
-    },
-
-    {
-      type: 'input',
-      inputType: 'number',
       label: 'TASK.PENALTY_ON_AUTO_CLOSE',
       name: 'penaltyOnAutoClose',
       validations: { required: true, minPenalty: 50 },
@@ -211,8 +195,6 @@ export class TaskCreateUpdateComponent implements OnInit {
       dueDate: [null, Validators.required],
       commentAllowPeriodDays: [CommentAllowPeriod.Daily, Validators.required],
       maxWarningsBeforeDiscount: [3, [Validators.required, Validators.min(0), Validators.max(3)]],
-      maxWarnings: [3, [decimalValidator()]],
-      penaltyAtMaxWarnings: [0, [decimalValidator()]],
       penaltyOnAutoClose: [50, [Validators.required, decimalValidator(), penaltyAmountValidator()]],
       penaltyOnStopComment : [50, [Validators.required, decimalValidator(), penaltyAmountValidator()]],
       isShared: [false],
@@ -305,7 +287,7 @@ export class TaskCreateUpdateComponent implements OnInit {
       this.toastr.error(this.translate.instant('FORM.VALIDATION_ERROR'));
       return;
     }
-    const payload = { ...this.formGroup.value };
+    const payload = { ...this.formGroup.value, penaltyAtMaxWarnings: 0, maxWarnings: 3 };
     if (payload.dueDate instanceof Date) {
       const d: Date = payload.dueDate;
       const y = d.getFullYear();
