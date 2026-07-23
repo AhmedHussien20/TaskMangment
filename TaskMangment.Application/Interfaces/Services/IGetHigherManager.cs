@@ -8,7 +8,6 @@ namespace TaskMangment.Application.Interfaces.Services
 {
     public interface IGetHigherManager
     {
-        Task<int?> GetDirectHigherManagerIdAsync(int currentEmployeeId);
-
+        Task<List<int>> GetDirectHigherManagerIdsAsync(int currentEmployeeId);
     }
 }

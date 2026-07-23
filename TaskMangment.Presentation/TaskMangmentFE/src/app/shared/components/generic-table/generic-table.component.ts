@@ -395,8 +395,11 @@ ngOnChanges(changes: SimpleChanges): void {
     this.pageChange.emit(page);
   }
 
-  onEntriesChangeInternal() {
-    this.entriesChange.emit(this.entries);
+  onEntriesChangeInternal(value: number) {
+    const newEntries = Number(value);
+    this.entries = newEntries;
+    this.page = 1;
+    this.entriesChange.emit(newEntries);
   }
 
   // ---------- Actions ----------

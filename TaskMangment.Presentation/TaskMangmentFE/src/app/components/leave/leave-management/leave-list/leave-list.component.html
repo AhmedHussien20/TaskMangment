@@ -12,7 +12,7 @@
           <app-generic-table [title]="title" [breadcrumbs]="breadcrumbs" [columns]="columns" [data]="rows"
             [entries]="entries" [page]="page" [labels]="labels" [totalItems]="totalItems" [showAddButton]="canCreate"
             [showDetailsButton]="true" [showFilters]="true" [searchCriteria]="searchCriteria"
-            [onSearch]="applyFilters.bind(this)" (pageChange)="onPageChange($event)" (addClick)="openAdd(leaveModal)"
+            [onSearch]="applyFilters.bind(this)" (pageChange)="onPageChange($event)" (entriesChange)="onEntriesChange($event)" (addClick)="openAdd(leaveModal)"
             (details)="openDetailsModal($event)" [addButtonLabel]="'LEAVE.ADD' | translate"  [statusOptions]="status"
             >
           </app-generic-table>

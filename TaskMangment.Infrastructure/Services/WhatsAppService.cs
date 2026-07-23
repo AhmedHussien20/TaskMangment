@@ -17,6 +17,8 @@ namespace TaskMangment.Infrastructure.Services
     public class WhatsAppService : IWhatsAppService
     {
         private const int MaxAttachmentBytes = 15 * 1024 * 1024; // UltraMsg practical limit
+        private const string AutoSystemDisclaimer =
+            "تم إرسال هذه الرسالة تلقائيًا من النظام لإشعارك بالمهمة أو التنبيه. يُرجى عدم الرد على هذه الرسالة، واستخدام النظام لمتابعة المهمة أو إضافة أي تعليق. شكرًا لك.";
 
         private readonly HttpClient _httpClient;
         private readonly WhatsAppSettings _settings;
@@ -98,10 +100,14 @@ namespace TaskMangment.Infrastructure.Services
         private static string FormatTextMessage(string? userName, string message)
         {
             var body = message?.Trim() ?? string.Empty;
-            if (string.IsNullOrWhiteSpace(userName))
-                return body;
+            var withDisclaimer = string.IsNullOrWhiteSpace(body)
+                ? AutoSystemDisclaimer
+                : $"{body}\n\n{AutoSystemDisclaimer}";
 
-            return $"{userName.Trim()}\n\n{body}";
+            if (string.IsNullOrWhiteSpace(userName))
+                return withDisclaimer;
+
+            return $"{userName.Trim()}\n\n{withDisclaimer}";
         }
 
         private async Task SendChatAsync(string phone, string text)

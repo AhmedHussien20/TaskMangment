@@ -54,9 +54,8 @@ namespace TaskMangment.Domain.Entities
         TaskAchieve = 12,
         Leave = 13,
         OfficialHoliday = 14,
-        DevelopmentException = 15
-
-
+        DevelopmentException = 15,
+        MonthlyEmployeeDiscounts = 16
     }
     public enum RecipientType
     {

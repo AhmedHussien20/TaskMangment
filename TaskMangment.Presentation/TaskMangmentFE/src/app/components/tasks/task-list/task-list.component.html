@@ -37,6 +37,7 @@
   [showEmployeeFilter]="showEmployeeFilter"
   [extraFilterOptions]="showTaskScopeFilter ? taskScopeFilterOptions : {}"
   (pageChange)="onPageChange($event)"
+  (entriesChange)="onEntriesChange($event)"
   [addButtonLabel]="'TASK.ADD' | translate"
   (edit)="openEdit($event, taskModal)"
   (details)="openDetails($event)"

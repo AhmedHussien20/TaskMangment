@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using TaskMangment.Application.DTOs.ReportsDTO;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Domain.Entities;
@@ -6,21 +7,32 @@ using TaskMangment.Infrastructure.DataContext;
 
 namespace TaskMangment.Hangfire.Jobs
 {
-
     public class ProcessPendingEmailsJob
     {
         private readonly AppDbContext _db;
         private readonly IEmailService _emailService;
         private readonly IEmailTemplateRenderer _renderer;
         private readonly IOfferSendService _offerPdfService;
+        private readonly IBlobStorageService _blobStorage;
+        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly ILogger<ProcessPendingEmailsJob> _logger;
 
-
-        public ProcessPendingEmailsJob(AppDbContext db, IEmailService emailService, IEmailTemplateRenderer renderer, IOfferSendService offerPdfService)
+        public ProcessPendingEmailsJob(
+            AppDbContext db,
+            IEmailService emailService,
+            IEmailTemplateRenderer renderer,
+            IOfferSendService offerPdfService,
+            IBlobStorageService blobStorage,
+            IHttpClientFactory httpClientFactory,
+            ILogger<ProcessPendingEmailsJob> logger)
         {
             _db = db;
             _emailService = emailService;
             _renderer = renderer;
             _offerPdfService = offerPdfService;
+            _blobStorage = blobStorage;
+            _httpClientFactory = httpClientFactory;
+            _logger = logger;
         }
 
         public async Task ExecuteAsync()
@@ -38,7 +50,7 @@ namespace TaskMangment.Hangfire.Jobs
 
                     if (email.ForAll)
                     {
-                        await SendToAllEmployeesAsync(email);  
+                        await SendToAllEmployeesAsync(email);
                     }
                     else
                     {
@@ -53,6 +65,11 @@ namespace TaskMangment.Hangfire.Jobs
                     email.Status = EmailStatus.Failed;
                     email.RetryCount++;
                     email.ErrorMessage = ex.Message;
+                    _logger.LogError(
+                        ex,
+                        "Failed processing email queue item {EmailId} template {TemplateKey}",
+                        email.Id,
+                        email.TemplateKey);
                 }
             }
 
@@ -79,25 +96,13 @@ namespace TaskMangment.Hangfire.Jobs
                 email.ReferenceId,
                 email.UserId);
 
-            if (email.TemplateKey == "OfferSent")
-            {
-                var pdfBytes = await _offerPdfService.GenerateOfferPdfBytesAsync(email.ReferenceId);
-                var attachments = new List<EmailAttachment>
-                {
-                         new EmailAttachment
-                         {
-                             Name = $"Offer-{email.ReferenceId}.pdf",
-                             ContentBase64 = Convert.ToBase64String(pdfBytes)
-                         }
-                };
+            var attachments = await BuildAttachmentsAsync(email);
 
-                await _emailService.SendEmailAsync(email.ToEmail!, rendered.Subject, rendered.Body, attachments);
-            }
-
-            else
-            {
-                await _emailService.SendEmailAsync(email.ToEmail!, rendered.Subject, rendered.Body);
-            }
+            await _emailService.SendEmailAsync(
+                email.ToEmail!,
+                rendered.Subject,
+                rendered.Body,
+                attachments);
         }
 
         private async Task SendToAllEmployeesAsync(EmailQueue batchEmail)
@@ -105,26 +110,13 @@ namespace TaskMangment.Hangfire.Jobs
             const int chunkSize = 200;
             int lastId = 0;
 
-           
             var rendered = await _renderer.RenderAsync(
                 batchEmail.TemplateKey,
                 batchEmail.ReferenceType,
                 batchEmail.ReferenceId,
                 null);
 
-            List<EmailAttachment>? attachments = null;
-            if (batchEmail.TemplateKey == "OfferSent")
-            {
-                var pdfBytes = await _offerPdfService.GenerateOfferPdfBytesAsync(batchEmail.ReferenceId);
-                attachments = new List<EmailAttachment>
-        {
-            new EmailAttachment
-            {
-                Name = $"Offer-{batchEmail.ReferenceId}.pdf",
-                ContentBase64 = Convert.ToBase64String(pdfBytes)
-            }
-        };
-            }
+            var attachments = await BuildAttachmentsAsync(batchEmail);
 
             while (true)
             {
@@ -145,15 +137,148 @@ namespace TaskMangment.Hangfire.Jobs
                         r.Email!,
                         rendered.Subject,
                         rendered.Body,
-                        attachments
-                    );
+                        attachments);
 
                     lastId = r.Id;
                 }
             }
         }
 
+        private async Task<List<EmailAttachment>?> BuildAttachmentsAsync(EmailQueue email)
+        {
+            if (email.TemplateKey == "OfferSent")
+            {
+                var pdfBytes = await _offerPdfService.GenerateOfferPdfBytesAsync(email.ReferenceId);
+                return new List<EmailAttachment>
+                {
+                    new EmailAttachment
+                    {
+                        Name = $"Offer-{email.ReferenceId}.pdf",
+                        ContentBase64 = Convert.ToBase64String(pdfBytes)
+                    }
+                };
+            }
+
+            if (email.TemplateKey == "TaskCommentAdded"
+                || email.ReferenceType == ReferenceType.TaskComment)
+            {
+                return await LoadCommentAttachmentsAsync(email.ReferenceId);
+            }
+
+            return null;
+        }
+
+        private async Task<List<EmailAttachment>?> LoadCommentAttachmentsAsync(int commentId)
+        {
+            var files = await _db.Attachments
+                .AsNoTracking()
+                .Where(a =>
+                    a.ReferenceId == commentId &&
+                    a.AttachmentType == AttachmentType.Comment &&
+                    !a.IsDeleted)
+                .Select(a => new { a.FileName, a.FilePath, a.BlobUrl, a.ContentType })
+                .ToListAsync();
+
+            if (files.Count == 0)
+            {
+                _logger.LogInformation("No attachments found for comment {CommentId}", commentId);
+                return null;
+            }
+
+            var result = new List<EmailAttachment>();
+
+            foreach (var file in files)
+            {
+                var path = !string.IsNullOrWhiteSpace(file.BlobUrl) ? file.BlobUrl : file.FilePath;
+                if (string.IsNullOrWhiteSpace(path))
+                {
+                    _logger.LogWarning(
+                        "Comment {CommentId} attachment {FileName} has empty path",
+                        commentId,
+                        file.FileName);
+                    continue;
+                }
+
+                var name = string.IsNullOrWhiteSpace(file.FileName)
+                    ? $"attachment-{result.Count + 1}{GuessExtension(file.ContentType)}"
+                    : file.FileName;
+
+                try
+                {
+                    // Prefer Azure SDK download (works reliably in Azure App Service).
+                    var bytes = await _blobStorage.DownloadBytesAsync(path);
+                    if (bytes == null || bytes.Length == 0)
+                    {
+                        // Fallback: HTTP + SAS (same as local/WhatsApp path).
+                        var url = _blobStorage.WithSas(path);
+                        if (UriLooksAbsolute(url))
+                        {
+                            var http = _httpClientFactory.CreateClient();
+                            http.Timeout = TimeSpan.FromMinutes(2);
+                            using var response = await http.GetAsync(url);
+                            if (response.IsSuccessStatusCode)
+                                bytes = await response.Content.ReadAsByteArrayAsync();
+                        }
+                    }
+
+                    if (bytes == null || bytes.Length == 0)
+                    {
+                        _logger.LogWarning(
+                            "Could not download comment {CommentId} attachment {FileName} from {Path}",
+                            commentId,
+                            file.FileName,
+                            path);
+                        continue;
+                    }
+
+                    result.Add(new EmailAttachment
+                    {
+                        Name = name,
+                        ContentBase64 = Convert.ToBase64String(bytes),
+                        Url = _blobStorage.WithSas(path)
+                    });
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(
+                        ex,
+                        "Exception downloading comment {CommentId} attachment {FileName}",
+                        commentId,
+                        file.FileName);
+                }
+            }
+
+            _logger.LogInformation(
+                "Prepared {Count}/{Total} attachment(s) as base64 for comment {CommentId}",
+                result.Count,
+                files.Count,
+                commentId);
+
+            return result.Count > 0 ? result : null;
+        }
+
+        private static bool UriLooksAbsolute(string url)
+            => Uri.TryCreate(url, UriKind.Absolute, out var uri)
+               && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
+
+        private static string GuessExtension(string? contentType)
+        {
+            if (string.IsNullOrWhiteSpace(contentType))
+                return ".bin";
+
+            return contentType.ToLowerInvariant() switch
+            {
+                "application/pdf" => ".pdf",
+                "image/jpeg" => ".jpg",
+                "image/png" => ".png",
+                "image/gif" => ".gif",
+                "image/webp" => ".webp",
+                "application/msword" => ".doc",
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document" => ".docx",
+                "application/vnd.ms-excel" => ".xls",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" => ".xlsx",
+                _ => ".bin"
+            };
+        }
     }
-
-
 }

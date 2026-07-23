@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -32,9 +32,7 @@ namespace TaskMangment.API
                 builder.Services.AddDbContext<AppDbContext>(options =>
                     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-                builder.Services.Configure<EmailSettings>(
-                    builder.Configuration.GetSection("EmailSettings")
-                );
+                builder.Services.ConfigureEmailSettings(builder.Configuration);
             builder.Services.Configure<WhatsAppSettings>(opts =>
             {
                 builder.Configuration.GetSection("WhatsApp").Bind(opts);

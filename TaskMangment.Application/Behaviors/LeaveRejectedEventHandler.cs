@@ -54,11 +54,11 @@ namespace TaskMangment.Application.Behaviors
                 ev.LeaveId
             );
 
-            var managerId = await _getHigherManager.GetDirectHigherManagerIdAsync(ev.EmployeeId);
-            if (managerId.HasValue && managerId.Value != ev.EmployeeId)
+            var managerIds = await _getHigherManager.GetDirectHigherManagerIdsAsync(ev.EmployeeId);
+            foreach (var managerId in managerIds.Where(id => id != ev.EmployeeId))
             {
                 await _notificationService.SendAsync(
-                    managerId.Value,
+                    managerId,
                     message,
                     sendEmail: false,
                     sendWhatsApp: true,

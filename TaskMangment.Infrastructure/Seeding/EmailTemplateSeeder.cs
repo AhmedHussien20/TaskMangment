@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq;
 using TaskMangment.Domain.Entities;
 using TaskMangment.Infrastructure.DataContext;
 
@@ -11,645 +7,591 @@ namespace TaskMangment.Infrastructure.Seeding
     public static class EmailTemplateSeeder
     {
         const string LayoutHeader = @"
-<div dir='rtl' style='background-color:#f4f6f8;padding:20px;font-family:Tahoma,Arial'>
-  <div style='max-width:600px;margin:auto;background:#ffffff;border-radius:8px;overflow:hidden'>
-    <div style='background:#0d6efd;color:#ffffff;padding:15px;text-align:center;font-size:18px;font-weight:bold'>
-      نظام إدارة المهام | Task Management System
+<div dir='rtl' style='background-color:#eef2f6;padding:24px 12px;font-family:Tahoma,Arial,sans-serif'>
+  <div style='max-width:600px;margin:0 auto;background:#ffffff;border-radius:10px;overflow:hidden;border:1px solid #e3e8ef'>
+    <div style='background:#0d6efd;color:#ffffff;padding:18px 20px;text-align:center'>
+      <div style='font-size:17px;font-weight:bold;letter-spacing:0.2px'>نظام إدارة المهام</div>
+      <div style='font-size:12px;opacity:0.9;margin-top:4px'>Task Management System</div>
     </div>
-    <div style='padding:20px;color:#333;font-size:14px;line-height:1.8'>
+    <div style='padding:24px 22px;color:#1f2937;font-size:14px;line-height:1.9'>
 ";
 
         const string LayoutFooter = @"
     </div>
-    <div style='background:#f1f1f1;padding:10px;text-align:center;font-size:12px;color:#777'>
-      هذا البريد مرسل تلقائيًا – يرجى عدم الرد<br/>
-      This is an automated email – please do not reply
+    <div style='background:#f8fafc;padding:14px 20px;text-align:center;font-size:11px;color:#6b7280;border-top:1px solid #e5e7eb;line-height:1.6'>
+      هذا البريد مرسل تلقائيًا من نظام إدارة المهام – يرجى عدم الرد<br/>
+      This is an automated message from Task Management System – please do not reply
     </div>
   </div>
 </div>";
 
+        // Inline clickable task number — filled by EmailTemplateRenderer as {{TaskNumberLink}}.
+
         public static void Seed(AppDbContext context)
         {
-//            if (context.EmailTemplates.Any())
-//                return;
-
-            context.EmailTemplates.AddRange(
-
-                           //                // 🟢 Task Assigned
-                           //                new EmailTemplate
-                           //                {
-                           //                    Key = "TaskAssigned",
-                           //                    SubjectTemplate = "تم إسناد مهمة جديدة | New Task Assigned",
-                           //                    BodyTemplate = LayoutHeader + @"
-                           //مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
-                           //تم إسناد مهمة جديدة إليك.<br/><br/>
-
-                           //<strong>عنوان المهمة:</strong> {{TaskTitle}}<br/>
-                           //<strong>تاريخ الاستحقاق:</strong> {{DueDate}}<br/><br/>
-
-                           //يرجى الدخول إلى النظام لمتابعة تفاصيل المهمة.<br/><br/>
-
-                           //<hr/>
-
-                           //<strong>Hello {{UserName}},</strong><br/><br/>
-                           //A new task has been assigned to you.<br/><br/>
-
-                           //<strong>Task Title:</strong> {{TaskTitle}}<br/>
-                           //<strong>Due Date:</strong> {{DueDate}}<br/><br/>
-
-                           //Please log in to the system to view task details.
-                           //" + LayoutFooter
-                           //                },
-
-                           //                // 💬 Task Comment Added
-                           //                new EmailTemplate
-                           //                {
-                           //                    Key = "TaskCommentAdded",
-                           //                    SubjectTemplate = "تعليق جديد على المهمة | New Task Comment",
-                           //                    BodyTemplate = LayoutHeader + @"
-                           //مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
-                           //تمت إضافة تعليق جديد على المهمة:<br/><br/>
-
-                           //<strong>{{TaskTitle}}</strong><br/>
-                           //<div style='background:#f8f9fa;padding:10px;border-right:4px solid #0d6efd'>
-                           //{{CommentText}}
-                           //</div><br/>
-
-                           //<hr/>
-
-                           //<strong>Hello {{UserName}},</strong><br/><br/>
-                           //A new comment has been added to the following task:<br/><br/>
-
-                           //<strong>{{TaskTitle}}</strong><br/>
-                           //<div style='background:#f8f9fa;padding:10px;border-left:4px solid #0d6efd'>
-                           //{{CommentText}}
-                           //</div>
-                           //" + LayoutFooter
-                           //                },
-
-                           //                // 📅 Event Reminder
-                           //                new EmailTemplate
-                           //                {
-                           //                    Key = "EventReminder",
-                           //                    SubjectTemplate = "تذكير بموعد حدث | Event Reminder",
-                           //                    BodyTemplate = LayoutHeader + @"
-                           //مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
-                           //هذا تذكير بموعد الحدث التالي:<br/><br/>
-
-                           //<strong>اسم الحدث:</strong> {{EventTitle}}<br/>
-                           //<strong>التاريخ والوقت:</strong> {{EventDate}}<br/><br/>
-
-                           //<hr/>
-
-                           //<strong>Hello {{UserName}},</strong><br/><br/>
-                           //This is a reminder for the following event:<br/><br/>
-
-                           //<strong>Event Title:</strong> {{EventTitle}}<br/>
-                           //<strong>Date & Time:</strong> {{EventDate}}
-                           //" + LayoutFooter
-                           //                },
-
-                           //                // ⏳ Task Extension Request
-                           //                new EmailTemplate
-                           //                {
-                           //                    Key = "TaskExtensionRequest",
-                           //                    SubjectTemplate = "طلب تمديد موعد المهمة | Task Extension Request",
-                           //                    BodyTemplate = LayoutHeader + @"
-                           //مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
-                           //تم تقديم طلب لتمديد موعد المهمة التالية:<br/><br/>
-
-                           //<strong>عنوان المهمة:</strong> {{TaskTitle}}<br/>
-                           //<strong>سبب الطلب:</strong> {{ExtensionReason}}<br/><br/>
-
-                           //<hr/>
-
-                           //<strong>Hello {{UserName}},</strong><br/><br/>
-                           //A request has been submitted to extend the deadline of the following task:<br/><br/>
-
-                           //<strong>Task Title:</strong> {{TaskTitle}}<br/>
-                           //<strong>Reason:</strong> {{ExtensionReason}}
-                           //" + LayoutFooter
-                           //                },
-
-                           //                // ✅ Task Close Request
-                           //                new EmailTemplate
-                           //                {
-                           //                    Key = "TaskCloseRequest",
-                           //                    SubjectTemplate = "طلب إغلاق المهمة | Task Close Request",
-                           //                    BodyTemplate = LayoutHeader + @"
-                           //مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
-                           //تم تقديم طلب لإغلاق المهمة التالية:<br/><br/>
-
-                           //<strong>عنوان المهمة:</strong> {{TaskTitle}}<br/>
-                           //<strong>ملاحظات الإغلاق:</strong> {{CloseNotes}}<br/><br/>
-
-                           //<hr/>
-
-                           //<strong>Hello {{UserName}},</strong><br/><br/>
-                           //A request has been submitted to close the following task:<br/><br/>
-
-                           //<strong>Task Title:</strong> {{TaskTitle}}<br/>
-                           //<strong>Close Notes:</strong> {{CloseNotes}}
-                           //" + LayoutFooter
-                           //                },
-
-                           //                // ⚠️ Warning
-                           //                new EmailTemplate
-                           //                {
-                           //                    Key = "EmployeeWarning",
-                           //                    SubjectTemplate = "تحذير إداري | Administrative Warning",
-                           //                    BodyTemplate = LayoutHeader + @"
-                           //مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
-                           //نود تنبيهكم بوجود ملاحظة تتعلق بالأداء الوظيفي:<br/><br/>
-
-                           //<div style='background:#fff3cd;padding:10px;border-right:4px solid #ffc107'>
-                           //{{WarningReason}}
-                           //</div><br/>
-
-                           //<hr/>
-
-                           //<strong>Hello {{UserName}},</strong><br/><br/>
-                           //This is an administrative warning regarding the following issue:<br/><br/>
-
-                           //<div style='background:#fff3cd;padding:10px;border-left:4px solid #ffc107'>
-                           //{{WarningReason}}
-                           //</div>
-                           //" + LayoutFooter
-                           //                },
-
-                           //                // 💸 Employee Deduction (عدم الإنجاز)
-//                           new EmailTemplate
-//                           {
-//                               Key = "EmployeeDeduction",
-//                               SubjectTemplate = "إشعار بخصم إداري تلقائي | Automated Deduction Notice",
-//                               BodyTemplate = LayoutHeader + @"
-//           مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
-
-//نود إحاطتكم علمًا بأنه تم <strong>تطبيق خصم إداري تلقائي</strong> على إحدى المهام. تفاصيل المهمة كالتالي:<br/><br/>
-
-//<strong>اسم الموظف المجذي:</strong> {{EmployeeName}}<br/>
-//<strong>تاريخ الخصم:</strong> {{ViolationDate}}<br/>
-//<strong>رقم المهمة:</strong> {{TaskNumber}}<br/>
-//<strong>عنوان المهمة:</strong> {{TaskTitle}}<br/>
-//<strong>قيمة الخصم:</strong> {{DeductionAmount}}<br/><br/>
-//<strong>سبب الخصم:</strong> {{DeductionReason}}<br/><br/>
-
-
-//يرجى العلم أن هذا الإجراء تم <strong>آليًا بالكامل من خلال النظام</strong>، وذلك لأغراض التوثيق والمتابعة الإدارية.<br/><br/>
-
-//<hr/>
-
-//<strong>Hello {{UserName}},</strong><br/><br/>
-
-//This email is to inform you that an <strong>automatic administrative deduction</strong> has been applied to a task. Task details are as follows:<br/><br/>
-
-//<strong>Deducted Employee Name:</strong> {{EmployeeName}}<br/>
-//<strong>Violation Date:</strong> {{ViolationDate}}<br/>
-//<strong>Task Number:</strong> {{TaskNumber}}<br/>
-//<strong>Task Title:</strong> {{TaskTitle}}<br/>
-//<strong>Deduction Amount:</strong> {{DeductionAmount}}<br/><br/>
-//<strong>Deduction Reason:</strong> {{DeductionReason}}<br/><br/>
-
-
-//Please note that this action was <strong>automatically generated by the system</strong> for documentation and administrative tracking purposes. This email is not monitored for replies.
-
-//           " + LayoutFooter
-//                           }
-           //                new EmailTemplate
-           //                {
-           //                    Key = "TaskDueTodayReminder",
-           //                    SubjectTemplate = "تذكير هام: موعد انتهاء المهمة اليوم | Task Due Today",
-           //                    BodyTemplate = LayoutHeader + @"
-           //مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
-
-           //نود تذكيرك بأن موعد انتهاء المهمة التالية هو <strong>اليوم</strong>.<br/><br/>
-
-           //<strong>عنوان المهمة:</strong> {{TaskTitle}}<br/>
-           //<strong>تاريخ الاستحقاق:</strong> {{DueDate}}<br/><br/>
-
-           //يرجى التأكد من إنهاء المهمة في الموعد المحدد أو اتخاذ الإجراء اللازم.<br/><br/>
-
-           //<hr/>
-
-           //<strong>Hello {{UserName}},</strong><br/><br/>
-
-           //This is a reminder that the due date for the following task is <strong>today</strong>.<br/><br/>
-
-           //<strong>Task Title:</strong> {{TaskTitle}}<br/>
-           //<strong>Due Date:</strong> {{DueDate}}<br/><br/>
-
-           //Please ensure the task is completed on time or take the necessary action.
-           //" + LayoutFooter
-           //                },
-           //                new EmailTemplate
-           //                {
-           //                    Key = "TaskAssignedToExistingTask",
-           //                    SubjectTemplate = "تم إسنادك إلى مهمة | Assigned to Existing Task",
-           //                    BodyTemplate = LayoutHeader + @"
-           //مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
-
-           //نود إعلامك بأنه تم <strong>إسنادك</strong> إلى مهمة موجودة بالفعل ضمن النظام.<br/><br/>
-
-           //<strong>تفاصيل المهمة:</strong><br/>
-           //<strong>عنوان المهمة:</strong> {{TaskTitle}}<br/>
-           //<strong>الوصف:</strong> {{TaskDescription}}<br/>
-           //<strong>تاريخ الاستحقاق:</strong> {{DueDate}}<br/><br/>
-
-           //يرجى مراجعة تفاصيل المهمة والبدء في تنفيذها في أقرب وقت ممكن.<br/><br/>
-
-           //<hr/>
-
-           //<strong>Hello {{UserName}},</strong>،<br/><br/>
-
-           //You have been <strong>assigned</strong> to an existing task in the system.<br/><br/>
-
-           //<strong>Task Details:</strong><br/>
-           //<strong>Task Title:</strong> {{TaskTitle}}<br/>
-           //<strong>Description:</strong> {{TaskDescription}}<br/>
-           //<strong>Due Date:</strong> {{DueDate}}<br/><br/>
-
-           //Please review the task details and start working on it as soon as possible.
-           //" + LayoutFooter
-           //                },
-           //                new EmailTemplate
-           //                {
-           //                    Key = "TaskUnAssignedFromExistingTask",
-           //                    SubjectTemplate = "تم إلغاء إسنادك من المهمة | Unassigned from Task",
-           //                    BodyTemplate = LayoutHeader + @"
-           //مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
-
-           //نود إعلامك بأنه تم <strong>إلغاء إسنادك</strong> من المهمة التالية:<br/><br/>
-
-           //<strong>تفاصيل المهمة:</strong><br/>
-           //<strong>عنوان المهمة:</strong> {{TaskTitle}}<br/>
-           //<strong>الوصف:</strong> {{TaskDescription}}<br/><br/>
-
-           //لم يعد مطلوبًا منك العمل على هذه المهمة حاليًا.<br/><br/>
-
-           //<hr/>
-
-           //<strong>Hello {{UserName}},</strong><br/><br/>
-
-           //You have been <strong>unassigned</strong> from the following task:<br/><br/>
-
-           //<strong>Task Details:</strong><br/>
-           //<strong>Task Title:</strong> {{TaskTitle}}<br/>
-           //<strong>Description:</strong> {{TaskDescription}}<br/><br/>
-
-           //You are no longer required to work on this task at this time.
-           //" + LayoutFooter
-           //                },
-
-
-
-
-
-           ////////////Extension request approved/////
-           //                new EmailTemplate
-           //                {
-           //                    Key = "TaskExtensionApproved",
-           //                    SubjectTemplate = "تمت الموافقة على تمديد المهمة | Task Extension Approved",
-           //                    BodyTemplate = LayoutHeader + @"
-           //مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
-
-           //نود إعلامك بأنه تمت الموافقة على طلب تمديد المهمة.<br/><br/>
-
-           //<strong>عنوان المهمة:</strong> {{TaskTitle}}<br/>
-           //<strong>تاريخ الاستحقاق السابق:</strong> {{OldDueDate}}<br/>
-           //<strong>تاريخ الاستحقاق الجديد:</strong> {{NewDueDate}}<br/><br/>
-
-           //يرجى متابعة المهمة وفقًا للتاريخ الجديد.<br/><br/>
-
-           //<hr/>
-
-           //<strong>Hello {{UserName}},</strong><br/><br/>
-
-           //We would like to inform you that your task extension request has been approved.<br/><br/>
-
-           //<strong>Task Title:</strong> {{TaskTitle}}<br/>
-           //<strong>Previous Due Date:</strong> {{OldDueDate}}<br/>
-           //<strong>New Due Date:</strong> {{NewDueDate}}<br/><br/>
-
-           //Please proceed with the task according to the updated due date.
-           //" + LayoutFooter
-           //                },
-
-
-
-           //                new EmailTemplate
-           //                {
-           //                    Key = "TaskCloseApproved",
-           //                    SubjectTemplate = "تمت الموافقة على إغلاق المهمة | Task Closure Approved",
-           //                    BodyTemplate = LayoutHeader + @"
-           //مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
-
-           //نود إعلامك بأنه تمت الموافقة على طلب إغلاق المهمة.<br/><br/>
-
-           //<strong>عنوان المهمة:</strong> {{TaskTitle}}<br/>
-
-           //شكرًا لالتزامك وإنجازك للمهمة.<br/><br/>
-
-           //<hr/>
-
-           //<strong>Hello {{UserName}},</strong><br/><br/>
-
-           //We are pleased to inform you that your task closure request has been approved.<br/><br/>
-
-           //<strong>Task Title:</strong> {{TaskTitle}}<br/>
-
-           //Thank you for completing the task successfully.
-           //" + LayoutFooter
-           //                }
-
-
-
-           //                new EmailTemplate
-           //                {
-           //                    Key = "LeaveRequestCreated",
-           //                    SubjectTemplate = "طلب إجازة جديد | New Leave Request",
-           //                    BodyTemplate = LayoutHeader + @"
-           //مرحبًا،<br/><br/>
-
-           //تم تقديم <strong>طلب إجازة جديد</strong> من الموظف:<br/><br/>
-
-           //<strong>اسم الموظف:</strong> {{EmployeeName}}<br/>
-           //<strong>نوع الإجازة:</strong> {{LeaveType}}<br/>
-           //<strong>من:</strong> {{StartDate}}<br/>
-           //<strong>إلى:</strong> {{EndDate}}<br/><br/>
-
-           //يرجى مراجعة الطلب من النظام.<br/><br/>
-
-           //<hr/>
-
-           //<strong>Hello,</strong><br/><br/>
-
-           //A <strong>new leave request</strong> has been submitted:<br/><br/>
-
-           //<strong>Employee:</strong> {{EmployeeName}}<br/>
-           //<strong>Leave Type:</strong> {{LeaveType}}<br/>
-           //<strong>From:</strong> {{StartDate}}<br/>
-           //<strong>To:</strong> {{EndDate}}<br/>
-           //" + LayoutFooter
-           //                }
-
-//           new EmailTemplate
-//           {
-//               Key = "LeaveApproved",
-//               SubjectTemplate = "تمت الموافقة على طلب الإجازة | Leave Approved",
-//               BodyTemplate = LayoutHeader + @"
-//مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
-
-//نود إعلامك بأنه تم <strong>الموافقة</strong> على طلب الإجازة الخاص بك.<br/><br/>
-
-//<strong>نوع الإجازة:</strong> {{LeaveType}}<br/>
-//<strong>من:</strong> {{StartDate}}<br/>
-//<strong>إلى:</strong> {{EndDate}}<br/>
-//<strong>تمت الموافقة بواسطة:</strong> {{ApprovedBy}}<br/><br/>
-
-//<hr/>
-
-//<strong>Hello {{UserName}},</strong><br/><br/>
-
-//We are pleased to inform you that your <strong>leave request has been approved</strong>.<br/><br/>
-
-//<strong>Leave Type:</strong> {{LeaveType}}<br/>
-//<strong>From:</strong> {{StartDate}}<br/>
-//<strong>To:</strong> {{EndDate}}<br/>
-//<strong>Approved By:</strong> {{ApprovedBy}}<br/><br/>
-
-//" + LayoutFooter
-//           },
-
-//           new EmailTemplate
-//           {
-//               Key = "LeaveRejected",
-//               SubjectTemplate = "تم رفض طلب الإجازة | Leave Rejected",
-//               BodyTemplate = LayoutHeader + @"
-//مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
-
-//نأسف لإبلاغك بأنه تم <strong>رفض</strong> طلب الإجازة الخاص بك.<br/><br/>
-
-//<strong>نوع الإجازة:</strong> {{LeaveType}}<br/>
-//<strong>من:</strong> {{StartDate}}<br/>
-//<strong>إلى:</strong> {{EndDate}}<br/>
-//<strong>سبب الرفض:</strong> {{RejectReason}}<br/>
-//<strong>تم الرفض بواسطة:</strong> {{RejectedBy}}<br/><br/>
-
-//<hr/>
-
-//<strong>Hello {{UserName}},</strong><br/><br/>
-
-//We regret to inform you that your <strong>leave request has been rejected</strong>.<br/><br/>
-
-//<strong>Leave Type:</strong> {{LeaveType}}<br/>
-//<strong>From:</strong> {{StartDate}}<br/>
-//<strong>To:</strong> {{EndDate}}<br/>
-//<strong>Reject Reason:</strong> {{RejectReason}}<br/>
-//<strong>Rejected By:</strong> {{RejectedBy}}<br/><br/>
-
-//" + LayoutFooter
-//           }
-
-
-
-
-
-            //Task Achievement
-            //                          new EmailTemplate
-            //                          {
-            //                              Key = "TaskAchievement",
-            //                              SubjectTemplate = "إضافة نسبة إنجاز على المهمة | Task Achievement Added",
-            //                              BodyTemplate = LayoutHeader + @"
-            //مرحبًا <strong>{{UserName}}</strong>،<br/><br/>
-
-            //قام الموظف <strong>{{EmployeeName}}</strong> بإضافة نسبة إنجاز جديدة على المهمة التالية:<br/><br/>
-
-            //<strong>المهمة:</strong> {{TaskTitle}}<br/>
-            //<strong>نسبة الإنجاز:</strong> {{Percent}}<br/><br/>
-
-            //<hr/>
-
-            //<strong>Hello {{UserName}},</strong><br/><br/>
-
-            //Employee <strong>{{EmployeeName}}</strong> has added a new achievement rate to the following task:<br/><br/>
-
-            //<strong>Task:</strong> {{TaskTitle}}<br/>
-            //<strong>Achievement Rate:</strong> {{Percent}}<br/><br/>
-            //" + LayoutFooter
-            //                          }
-
-
-
-
-
-
-
+            // 🟢 Task Assigned (legacy key)
+            UpsertTemplate(context, new EmailTemplate
+            {
+                Key = "TaskAssigned",
+                SubjectTemplate = "تم إسناد مهمة جديدة | New Task Assigned",
+                BodyTemplate = LayoutHeader + @"
+            <p style='margin:0 0 14px'>مرحبًا <strong>{{UserName}}</strong>،</p>
+            <p style='margin:0 0 14px'>تم إسناد مهمة جديدة إليك: مهمة رقم {{TaskNumberLink}} بعنوان <strong>{{TaskTitle}}</strong>.</p>
+            <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
+              <div><strong>تاريخ الاستحقاق:</strong> {{DueDate}}</div>
+            </div>
+            <p style='margin:0 0 18px'>يرجى فتح المهمة من رقم المهمة أعلاه لمتابعة التفاصيل.</p>
+            <hr style='border:none;border-top:1px solid #e5e7eb;margin:20px 0'/>
+            <p style='margin:0 0 14px'><strong>Hello {{UserName}},</strong></p>
+            <p style='margin:0 0 14px'>A new task has been assigned to you: task number {{TaskNumberLink}} titled <strong>{{TaskTitle}}</strong>.</p>
+            <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
+              <div><strong>Due Date:</strong> {{DueDate}}</div>
+            </div>
+            <p style='margin:0'>Please open the task from the task number above to view the details.</p>
+            " + LayoutFooter
+            });
+
+            // Assigned to existing task (used by TaskAssignedEmailHandler)
+            UpsertTemplate(context, new EmailTemplate
+            {
+                Key = "TaskAssignedToExistingTask",
+                SubjectTemplate = "تم إسنادك إلى مهمة | Assigned to Existing Task",
+                BodyTemplate = LayoutHeader + @"
+            <p style='margin:0 0 14px'>مرحبًا <strong>{{UserName}}</strong>،</p>
+            <p style='margin:0 0 14px'>تم إسنادك إلى مهمة رقم {{TaskNumberLink}} بعنوان <strong>{{TaskTitle}}</strong>.</p>
+            <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
+              <div style='margin-bottom:6px'><strong>الوصف:</strong> {{TaskDescription}}</div>
+              <div><strong>تاريخ الاستحقاق:</strong> {{DueDate}}</div>
+            </div>
+            <p style='margin:0 0 18px'>يرجى مراجعة تفاصيل المهمة والبدء في تنفيذها في أقرب وقت ممكن.</p>
+            <hr style='border:none;border-top:1px solid #e5e7eb;margin:20px 0'/>
+            <p style='margin:0 0 14px'><strong>Hello {{UserName}},</strong></p>
+            <p style='margin:0 0 14px'>You have been assigned to task number {{TaskNumberLink}} titled <strong>{{TaskTitle}}</strong>.</p>
+            <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
+              <div style='margin-bottom:6px'><strong>Description:</strong> {{TaskDescription}}</div>
+              <div><strong>Due Date:</strong> {{DueDate}}</div>
+            </div>
+            <p style='margin:0'>Please review the task details and start working on it as soon as possible.</p>
+            " + LayoutFooter
+            });
+
+            // Unassigned
+            UpsertTemplate(context, new EmailTemplate
+            {
+                Key = "TaskUnAssignedFromExistingTask",
+                SubjectTemplate = "تم إلغاء إسنادك من المهمة | Unassigned from Task",
+                BodyTemplate = LayoutHeader + @"
+            <p style='margin:0 0 14px'>مرحبًا <strong>{{UserName}}</strong>،</p>
+            <p style='margin:0 0 14px'>تم إزالتك من مهمة رقم {{TaskNumberLink}} بعنوان <strong>{{TaskTitle}}</strong>.</p>
+            <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
+              <div><strong>الوصف:</strong> {{TaskDescription}}</div>
+            </div>
+            <p style='margin:0 0 18px'>لم يعد مطلوبًا منك العمل على هذه المهمة حاليًا.</p>
+            <hr style='border:none;border-top:1px solid #e5e7eb;margin:20px 0'/>
+            <p style='margin:0 0 14px'><strong>Hello {{UserName}},</strong></p>
+            <p style='margin:0 0 14px'>You have been removed from task number {{TaskNumberLink}} titled <strong>{{TaskTitle}}</strong>.</p>
+            <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
+              <div><strong>Description:</strong> {{TaskDescription}}</div>
+            </div>
+            <p style='margin:0'>You are no longer required to work on this task at this time.</p>
+            " + LayoutFooter
+            });
+
+            // 💬 Task Comment Added
+            UpsertTemplate(context, new EmailTemplate
+            {
+                Key = "TaskCommentAdded",
+                SubjectTemplate = "تعليق جديد على المهمة | New Task Comment",
+                BodyTemplate = LayoutHeader + @"
+            <p style='margin:0 0 14px'>مرحبًا <strong>{{UserName}}</strong>،</p>
+            <p style='margin:0 0 14px'>تعليق جديد على مهمة رقم {{TaskNumberLink}} بعنوان <strong>{{TaskTitle}}</strong> من <strong>{{EmployeeName}}</strong>.</p>
+            <div style='background:#f8fafc;border:1px solid #e5e7eb;border-right:4px solid #0d6efd;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
+              <div style='font-size:12px;color:#6b7280;margin-bottom:6px'><strong>التعليق</strong></div>
+              <div>{{CommentText}}</div>
+            </div>
+            <hr style='border:none;border-top:1px solid #e5e7eb;margin:20px 0'/>
+            <p style='margin:0 0 14px'><strong>Hello {{UserName}},</strong></p>
+            <p style='margin:0 0 14px'>A new comment on task number {{TaskNumberLink}} titled <strong>{{TaskTitle}}</strong> from <strong>{{EmployeeName}}</strong>.</p>
+            <div style='background:#f8fafc;border:1px solid #e5e7eb;border-left:4px solid #0d6efd;border-radius:8px;padding:12px 14px;margin:0'>
+              <div style='font-size:12px;color:#6b7280;margin-bottom:6px'><strong>Comment</strong></div>
+              <div>{{CommentText}}</div>
+            </div>
+            " + LayoutFooter
+            });
+            // 📅 Event Reminder
+            UpsertTemplate(context, new EmailTemplate
+            {
+                Key = "EventReminder",
+                SubjectTemplate = "تذكير بموعد حدث | Event Reminder",
+                BodyTemplate = LayoutHeader + @"
+            <p style='margin:0 0 14px'>مرحبًا <strong>{{UserName}}</strong>،</p>
+            <p style='margin:0 0 14px'>هذا تذكير بموعد الحدث التالي:</p>
+            <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
+              <div style='margin-bottom:6px'><strong>اسم الحدث:</strong> {{EventTitle}}</div>
+              <div><strong>التاريخ والوقت:</strong> {{EventDate}}</div>
+            </div>
+            <hr style='border:none;border-top:1px solid #e5e7eb;margin:20px 0'/>
+            <p style='margin:0 0 14px'><strong>Hello {{UserName}},</strong></p>
+            <p style='margin:0 0 14px'>This is a reminder for the following event:</p>
+            <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0'>
+              <div style='margin-bottom:6px'><strong>Event Title:</strong> {{EventTitle}}</div>
+              <div><strong>Date &amp; Time:</strong> {{EventDate}}</div>
+            </div>
+            " + LayoutFooter
+            });
+
+            // ⏳ Task Extension Request
+            UpsertTemplate(context, new EmailTemplate
+            {
+                Key = "TaskExtensionRequest",
+                SubjectTemplate = "طلب تمديد موعد المهمة | Task Extension Request",
+                BodyTemplate = LayoutHeader + @"
+            <p style='margin:0 0 14px'>مرحبًا <strong>{{UserName}}</strong>،</p>
+            <p style='margin:0 0 14px'>طلب تمديد جديد على مهمة رقم {{TaskNumberLink}} بعنوان <strong>{{TaskTitle}}</strong> من <strong>{{EmployeeName}}</strong>.</p>
+            <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
+              <div><strong>سبب الطلب:</strong> {{ExtensionReason}}</div>
+            </div>
+            <hr style='border:none;border-top:1px solid #e5e7eb;margin:20px 0'/>
+            <p style='margin:0 0 14px'><strong>Hello {{UserName}},</strong></p>
+            <p style='margin:0 0 14px'>A new extension request on task number {{TaskNumberLink}} titled <strong>{{TaskTitle}}</strong> from <strong>{{EmployeeName}}</strong>.</p>
+            <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0'>
+              <div><strong>Reason:</strong> {{ExtensionReason}}</div>
+            </div>
+            " + LayoutFooter
+            });
+
+            // ✅ Task Close Request
+            UpsertTemplate(context, new EmailTemplate
+            {
+                Key = "TaskCloseRequest",
+                SubjectTemplate = "طلب إغلاق المهمة | Task Close Request",
+                BodyTemplate = LayoutHeader + @"
+            <p style='margin:0 0 14px'>مرحبًا <strong>{{UserName}}</strong>،</p>
+            <p style='margin:0 0 14px'>طلب غلق جديد على مهمة رقم {{TaskNumberLink}} بعنوان <strong>{{TaskTitle}}</strong> من <strong>{{EmployeeName}}</strong>.</p>
+            <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
+              <div><strong>ملاحظات الإغلاق:</strong> {{CloseNotes}}</div>
+            </div>
+            <hr style='border:none;border-top:1px solid #e5e7eb;margin:20px 0'/>
+            <p style='margin:0 0 14px'><strong>Hello {{UserName}},</strong></p>
+            <p style='margin:0 0 14px'>A new close request on task number {{TaskNumberLink}} titled <strong>{{TaskTitle}}</strong> from <strong>{{EmployeeName}}</strong>.</p>
+            <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0'>
+              <div><strong>Close Notes:</strong> {{CloseNotes}}</div>
+            </div>
+            " + LayoutFooter
+            });
+
+            // ⚠️ Warning
+            UpsertTemplate(context, new EmailTemplate
+            {
+                Key = "EmployeeWarning",
+                SubjectTemplate = "تحذير إداري | Administrative Warning",
+                BodyTemplate = LayoutHeader + @"
+            <p style='margin:0 0 14px'>مرحبًا <strong>{{UserName}}</strong>،</p>
+            <p style='margin:0 0 14px'>تحذير على مهمة رقم {{TaskNumberLink}} بعنوان <strong>{{TaskTitle}}</strong> من <strong>{{IssuedByName}}</strong>.</p>
+            <div style='background:#fff8e6;border:1px solid #fde68a;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
+              <div style='margin-bottom:6px'><strong>اسم الموظف:</strong> {{EmployeeName}}</div>
+              <div style='margin-bottom:6px'><strong>تاريخ التحذير:</strong> {{ViolationDate}}</div>
+              <div><strong>سبب التحذير:</strong> {{WarningReason}}</div>
+            </div>
+            <hr style='border:none;border-top:1px solid #e5e7eb;margin:20px 0'/>
+            <p style='margin:0 0 14px'><strong>Hello {{UserName}},</strong></p>
+            <p style='margin:0 0 14px'>Warning on task number {{TaskNumberLink}} titled <strong>{{TaskTitle}}</strong> from <strong>{{IssuedByName}}</strong>.</p>
+            <div style='background:#fff8e6;border:1px solid #fde68a;border-radius:8px;padding:12px 14px;margin:0'>
+              <div style='margin-bottom:6px'><strong>Employee Name:</strong> {{EmployeeName}}</div>
+              <div style='margin-bottom:6px'><strong>Warning Date:</strong> {{ViolationDate}}</div>
+              <div><strong>Warning Reason:</strong> {{WarningReason}}</div>
+            </div>
+            " + LayoutFooter
+            });
+
+            // 💸 Employee Deduction
+            UpsertTemplate(context, new EmailTemplate
+            {
+                Key = "EmployeeDeduction",
+                SubjectTemplate = "إشعار بخصم إداري | Deduction Notice",
+                BodyTemplate = LayoutHeader + @"
+            <p style='margin:0 0 14px'>مرحبًا <strong>{{UserName}}</strong>،</p>
+            <p style='margin:0 0 14px'>جزاء جديد بقيمة <strong>{{DeductionAmount}}</strong> على مهمة رقم {{TaskNumberLink}} بعنوان <strong>{{TaskTitle}}</strong> من <strong>{{IssuedByName}}</strong>.</p>
+            <div style='background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
+              <div style='margin-bottom:6px'><strong>اسم الموظف:</strong> {{EmployeeName}}</div>
+              <div style='margin-bottom:6px'><strong>تاريخ الخصم:</strong> {{ViolationDate}}</div>
+              <div><strong>سبب الخصم:</strong> {{DeductionReason}}</div>
+            </div>
+            <hr style='border:none;border-top:1px solid #e5e7eb;margin:20px 0'/>
+            <p style='margin:0 0 14px'><strong>Hello {{UserName}},</strong></p>
+            <p style='margin:0 0 14px'>A new penalty of <strong>{{DeductionAmount}}</strong> on task number {{TaskNumberLink}} titled <strong>{{TaskTitle}}</strong> from <strong>{{IssuedByName}}</strong>.</p>
+            <div style='background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px 14px;margin:0'>
+              <div style='margin-bottom:6px'><strong>Employee Name:</strong> {{EmployeeName}}</div>
+              <div style='margin-bottom:6px'><strong>Violation Date:</strong> {{ViolationDate}}</div>
+              <div><strong>Deduction Reason:</strong> {{DeductionReason}}</div>
+            </div>
+            " + LayoutFooter
+            });
+
+            // Task due today
+            UpsertTemplate(context, new EmailTemplate
+            {
+                Key = "TaskDueTodayReminder",
+                SubjectTemplate = "تذكير هام: موعد انتهاء المهمة اليوم | Task Due Today",
+                BodyTemplate = LayoutHeader + @"
+            <p style='margin:0 0 14px'>مرحبًا <strong>{{UserName}}</strong>،</p>
+            <p style='margin:0 0 14px'>نود تذكيرك بأن موعد انتهاء مهمة رقم {{TaskNumberLink}} بعنوان <strong>{{TaskTitle}}</strong> هو <strong>اليوم</strong>.</p>
+            <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
+              <div><strong>تاريخ الاستحقاق:</strong> {{DueDate}}</div>
+            </div>
+            <p style='margin:0 0 18px'>يرجى التأكد من إنهاء المهمة في الموعد المحدد أو اتخاذ الإجراء اللازم.</p>
+            <hr style='border:none;border-top:1px solid #e5e7eb;margin:20px 0'/>
+            <p style='margin:0 0 14px'><strong>Hello {{UserName}},</strong></p>
+            <p style='margin:0 0 14px'>This is a reminder that the due date for task number {{TaskNumberLink}} titled <strong>{{TaskTitle}}</strong> is <strong>today</strong>.</p>
+            <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
+              <div><strong>Due Date:</strong> {{DueDate}}</div>
+            </div>
+            <p style='margin:0'>Please ensure the task is completed on time or take the necessary action.</p>
+            " + LayoutFooter
+            });
+
+            // Extension approved
+            UpsertTemplate(context, new EmailTemplate
+            {
+                Key = "TaskExtensionApproved",
+                SubjectTemplate = "تمت الموافقة على تمديد المهمة | Task Extension Approved",
+                BodyTemplate = LayoutHeader + @"
+            <p style='margin:0 0 14px'>مرحبًا <strong>{{UserName}}</strong>،</p>
+            <p style='margin:0 0 14px'>تم تمديد مهمة رقم {{TaskNumberLink}} بعنوان <strong>{{TaskTitle}}</strong>.</p>
+            <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
+              <div style='margin-bottom:6px'><strong>من تاريخ:</strong> {{OldDueDate}}</div>
+              <div><strong>إلى تاريخ:</strong> {{NewDueDate}}</div>
+            </div>
+            <p style='margin:0 0 18px'>يرجى متابعة المهمة وفقًا للتاريخ الجديد.</p>
+            <hr style='border:none;border-top:1px solid #e5e7eb;margin:20px 0'/>
+            <p style='margin:0 0 14px'><strong>Hello {{UserName}},</strong></p>
+            <p style='margin:0 0 14px'>Task number {{TaskNumberLink}} titled <strong>{{TaskTitle}}</strong> has been extended.</p>
+            <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
+              <div style='margin-bottom:6px'><strong>From:</strong> {{OldDueDate}}</div>
+              <div><strong>To:</strong> {{NewDueDate}}</div>
+            </div>
+            <p style='margin:0'>Please proceed with the task according to the updated due date.</p>
+            " + LayoutFooter
+            });
+
+            // Close approved
+            UpsertTemplate(context, new EmailTemplate
+            {
+                Key = "TaskCloseApproved",
+                SubjectTemplate = "تمت الموافقة على إغلاق المهمة | Task Closure Approved",
+                BodyTemplate = LayoutHeader + @"
+            <p style='margin:0 0 14px'>مرحبًا <strong>{{UserName}}</strong>،</p>
+            <p style='margin:0 0 14px'>تم غلق مهمة رقم {{TaskNumberLink}} بعنوان <strong>{{TaskTitle}}</strong> وفقًا للطلب.</p>
+            <p style='margin:0 0 18px'>شكرًا لالتزامك وإنجازك للمهمة.</p>
+            <hr style='border:none;border-top:1px solid #e5e7eb;margin:20px 0'/>
+            <p style='margin:0 0 14px'><strong>Hello {{UserName}},</strong></p>
+            <p style='margin:0 0 14px'>Task number {{TaskNumberLink}} titled <strong>{{TaskTitle}}</strong> has been closed according to the request.</p>
+            <p style='margin:0'>Thank you for completing the task successfully.</p>
+            " + LayoutFooter
+            });
+
+            // Leave request
+            UpsertTemplate(context, new EmailTemplate
+            {
+                Key = "LeaveRequestCreated",
+                SubjectTemplate = "طلب إجازة جديد | New Leave Request",
+                BodyTemplate = LayoutHeader + @"
+            <p style='margin:0 0 14px'>مرحبًا،</p>
+            <p style='margin:0 0 14px'>طلب <strong>{{LeaveType}}</strong> من <strong>{{EmployeeName}}</strong>.</p>
+            <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
+              <div style='margin-bottom:6px'><strong>من:</strong> {{StartDate}}</div>
+              <div><strong>إلى:</strong> {{EndDate}}</div>
+            </div>
+            <p style='margin:0 0 18px'>يرجى مراجعة الطلب من النظام.</p>
+            <hr style='border:none;border-top:1px solid #e5e7eb;margin:20px 0'/>
+            <p style='margin:0 0 14px'><strong>Hello,</strong></p>
+            <p style='margin:0 0 14px'>New leave request <strong>{{LeaveType}}</strong> from <strong>{{EmployeeName}}</strong>.</p>
+            <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0'>
+              <div style='margin-bottom:6px'><strong>From:</strong> {{StartDate}}</div>
+              <div><strong>To:</strong> {{EndDate}}</div>
+            </div>
+            " + LayoutFooter
+            });
+
+            // Leave approved
+            UpsertTemplate(context, new EmailTemplate
+            {
+                Key = "LeaveApproved",
+                SubjectTemplate = "تمت الموافقة على طلب الإجازة | Leave Approved",
+                BodyTemplate = LayoutHeader + @"
+            <p style='margin:0 0 14px'>مرحبًا <strong>{{UserName}}</strong>،</p>
+            <p style='margin:0 0 14px'>تم الموافقة على <strong>{{LeaveType}}</strong> بواسطة <strong>{{ApprovedBy}}</strong>.</p>
+            <div style='background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
+              <div style='margin-bottom:6px'><strong>من:</strong> {{StartDate}}</div>
+              <div><strong>إلى:</strong> {{EndDate}}</div>
+            </div>
+            <hr style='border:none;border-top:1px solid #e5e7eb;margin:20px 0'/>
+            <p style='margin:0 0 14px'><strong>Hello {{UserName}},</strong></p>
+            <p style='margin:0 0 14px'>The leave request <strong>{{LeaveType}}</strong> has been approved by <strong>{{ApprovedBy}}</strong>.</p>
+            <div style='background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px 14px;margin:0'>
+              <div style='margin-bottom:6px'><strong>From:</strong> {{StartDate}}</div>
+              <div><strong>To:</strong> {{EndDate}}</div>
+            </div>
+            " + LayoutFooter
+            });
+
+            // Leave rejected
+            UpsertTemplate(context, new EmailTemplate
+            {
+                Key = "LeaveRejected",
+                SubjectTemplate = "تم رفض طلب الإجازة | Leave Rejected",
+                BodyTemplate = LayoutHeader + @"
+            <p style='margin:0 0 14px'>مرحبًا <strong>{{UserName}}</strong>،</p>
+            <p style='margin:0 0 14px'>تم رفض طلب <strong>{{LeaveType}}</strong> بواسطة <strong>{{RejectedBy}}</strong>.</p>
+            <div style='background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
+              <div style='margin-bottom:6px'><strong>السبب:</strong> {{RejectReason}}</div>
+              <div style='margin-bottom:6px'><strong>من:</strong> {{StartDate}}</div>
+              <div><strong>إلى:</strong> {{EndDate}}</div>
+            </div>
+            <hr style='border:none;border-top:1px solid #e5e7eb;margin:20px 0'/>
+            <p style='margin:0 0 14px'><strong>Hello {{UserName}},</strong></p>
+            <p style='margin:0 0 14px'>Request <strong>{{LeaveType}}</strong> has been rejected by <strong>{{RejectedBy}}</strong>.</p>
+            <div style='background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px 14px;margin:0'>
+              <div style='margin-bottom:6px'><strong>Reason:</strong> {{RejectReason}}</div>
+              <div style='margin-bottom:6px'><strong>From:</strong> {{StartDate}}</div>
+              <div><strong>To:</strong> {{EndDate}}</div>
+            </div>
+            " + LayoutFooter
+            });
+
+            // Task Achievement
+            UpsertTemplate(context, new EmailTemplate
+            {
+                Key = "TaskAchievement",
+                SubjectTemplate = "إضافة نسبة إنجاز على المهمة | Task Achievement Added",
+                BodyTemplate = LayoutHeader + @"
+            <p style='margin:0 0 14px'>مرحبًا <strong>{{UserName}}</strong>،</p>
+            <p style='margin:0 0 14px'>قام <strong>{{EmployeeName}}</strong> بإنجاز <strong>{{Percent}}</strong> من مهمة رقم {{TaskNumberLink}} بعنوان <strong>{{TaskTitle}}</strong>.</p>
+            <hr style='border:none;border-top:1px solid #e5e7eb;margin:20px 0'/>
+            <p style='margin:0 0 14px'><strong>Hello {{UserName}},</strong></p>
+            <p style='margin:0'><strong>{{EmployeeName}}</strong> achieved <strong>{{Percent}}</strong> from task number {{TaskNumberLink}} titled <strong>{{TaskTitle}}</strong>.</p>
+            " + LayoutFooter
+            });
 
             // 💼 Offer Sent To Student
-            //new EmailTemplate
-            //{
-            //    Key = "OfferSent",
-            //    SubjectTemplate = "عرض سعر جديد | New Price Offer",
-            //    BodyTemplate = LayoutHeader + @"
-            //مرحبًا <strong>{{StudentName}}</strong>،<br/><br/>
+            UpsertTemplate(context, new EmailTemplate
+            {
+                Key = "OfferSent",
+                SubjectTemplate = "عرض سعر جديد | New Price Offer",
+                            BodyTemplate = LayoutHeader + @"
+            مرحبًا <strong>{{StudentName}}</strong>،<br/><br/>
 
-            //نود إبلاغكم بأنه تم إرسال <strong>عرض سعر جديد</strong> لكم، وفق التفاصيل التالية:<br/><br/>
+            نود إبلاغكم بأنه تم إرسال <strong>عرض سعر جديد</strong> لكم، وفق التفاصيل التالية:<br/><br/>
 
-            //<table style='width:100%;border-collapse:collapse;font-size:14px'>
-            //  <tr>
-            //    <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>عنوان العرض</strong></td>
-            //    <td style='padding:6px;border:1px solid #ddd'>{{OfferTitle}}</td>
-            //  </tr>
-            //  <tr>
-            //    <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>الوصف</strong></td>
-            //    <td style='padding:6px;border:1px solid #ddd'>{{OfferDescription}}</td>
-            //  </tr>
-            //<tr>
-            //    <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>الكورس</strong></td>
-            //    <td style='padding:6px;border:1px solid #ddd'>{{CourseName}}</td>
-            //  </tr>
-            //<tr>
-            //    <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>مادة الكورس</strong></td>
-            //    <td style='padding:6px;border:1px solid #ddd'>{{SubjectName}}</td>
-            //  </tr>
-            //  <tr>
-            //    <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>تاريخ البداية</strong></td>
-            //    <td style='padding:6px;border:1px solid #ddd'>{{StartDate}}</td>
-            //  </tr>
-            //  <tr>
-            //    <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>تاريخ الانتهاء</strong></td>
-            //    <td style='padding:6px;border:1px solid #ddd'>{{EndDate}}</td>
-            //  </tr>
-            //  <tr>
-            //    <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>طريقة الدفع</strong></td>
-            //    <td style='padding:6px;border:1px solid #ddd'>{{PaymentMethod}}</td>
-            //  </tr>
-            //  <tr>
-            //    <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>السعر</strong></td>
-            //    <td style='padding:6px;border:1px solid #ddd'>{{Price}}</td>
-            //  </tr>
-            //  <tr>
-            //    <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>معدل الفائدة</strong></td>
-            //    <td style='padding:6px;border:1px solid #ddd'>{{InterestRate}}</td>
-            //  </tr>
-            //  <tr>
-            //    <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>نسبة الخصم</strong></td>
-            //    <td style='padding:6px;border:1px solid #ddd'>{{DiscountRate}}</td>
-            //  </tr>
-            //  <tr>
-            //    <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>قيمة القسط</strong></td>
-            //    <td style='padding:6px;border:1px solid #ddd'>{{InstallmentValue}}</td>
-            //  </tr>
-            //  <tr>
-            //    <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>المبلغ الصافي</strong></td>
-            //    <td style='padding:6px;border:1px solid #ddd'>{{NetAmount}}</td>
-            //  </tr>
-            //  <tr>
-            //    <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>مالك العرض</strong></td>
-            //    <td style='padding:6px;border:1px solid #ddd'>{{OfferOwner}}</td>
-            //  </tr>
-            //  <tr>
-            //    <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>التخصص</strong></td>
-            //    <td style='padding:6px;border:1px solid #ddd'>{{Specialization}}</td>
-            //  </tr>
+            <table style='width:100%;border-collapse:collapse;font-size:14px'>
+              <tr>
+                <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>عنوان العرض</strong></td>
+                <td style='padding:6px;border:1px solid #ddd'>{{OfferTitle}}</td>
+              </tr>
+              <tr>
+                <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>الوصف</strong></td>
+                <td style='padding:6px;border:1px solid #ddd'>{{OfferDescription}}</td>
+              </tr>
+              <tr>
+                <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>الكورس</strong></td>
+                <td style='padding:6px;border:1px solid #ddd'>{{CourseName}}</td>
+              </tr>
+              <tr>
+                <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>مادة الكورس</strong></td>
+                <td style='padding:6px;border:1px solid #ddd'>{{SubjectName}}</td>
+              </tr>
+              <tr>
+                <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>تاريخ البداية</strong></td>
+                <td style='padding:6px;border:1px solid #ddd'>{{StartDate}}</td>
+              </tr>
+              <tr>
+                <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>تاريخ الانتهاء</strong></td>
+                <td style='padding:6px;border:1px solid #ddd'>{{EndDate}}</td>
+              </tr>
+              <tr>
+                <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>طريقة الدفع</strong></td>
+                <td style='padding:6px;border:1px solid #ddd'>{{PaymentMethod}}</td>
+              </tr>
+              <tr>
+                <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>السعر</strong></td>
+                <td style='padding:6px;border:1px solid #ddd'>{{Price}}</td>
+              </tr>
+              <tr>
+                <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>معدل الفائدة</strong></td>
+                <td style='padding:6px;border:1px solid #ddd'>{{InterestRate}}</td>
+              </tr>
+              <tr>
+                <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>نسبة الخصم</strong></td>
+                <td style='padding:6px;border:1px solid #ddd'>{{DiscountRate}}</td>
+              </tr>
+              <tr>
+                <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>قيمة القسط</strong></td>
+                <td style='padding:6px;border:1px solid #ddd'>{{InstallmentValue}}</td>
+              </tr>
+              <tr>
+                <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>المبلغ الصافي</strong></td>
+                <td style='padding:6px;border:1px solid #ddd'>{{NetAmount}}</td>
+              </tr>
+              <tr>
+                <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>مالك العرض</strong></td>
+                <td style='padding:6px;border:1px solid #ddd'>{{OfferOwner}}</td>
+              </tr>
+              <tr>
+                <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>التخصص</strong></td>
+                <td style='padding:6px;border:1px solid #ddd'>{{Specialization}}</td>
+              </tr>
+            </table>
 
-            //</table>
+            <br/>
 
-            //<br/>
+            <div style='margin-top:15px;padding:10px;background:#fff3cd;border-right:4px solid #ffc107;color:#856404'>
+            <strong>تنويه:</strong> هذا العرض ساري لمدة <strong>أسبوع واحد فقط</strong> من تاريخ الإرسال.
+            </div>
 
-            //<div style='margin-top:15px;padding:10px;background:#fff3cd;border-right:4px solid #ffc107;color:#856404'>
-            //<strong>تنويه:</strong> هذا العرض ساري لمدة <strong>أسبوع واحد فقط</strong> من تاريخ الإرسال.
-            //</div>
+            <br/>
 
-            //<br/>
+            يرجى مراجعة العرض والتواصل معنا في حال وجود أي استفسارات.<br/><br/>
 
-            //يرجى مراجعة العرض والتواصل معنا في حال وجود أي استفسارات.<br/><br/>
+            <hr/>
 
-            //<hr/>
+            <strong>Hello {{StudentName}},</strong><br/><br/>
 
-            //<strong>Hello {{StudentName}},</strong><br/><br/>
+            We are pleased to inform you that a <strong>new price offer</strong> has been sent to you with the following details:<br/><br/>
 
-            //We are pleased to inform you that a <strong>new price offer</strong> has been sent to you with the following details:<br/><br/>
+            <table style='width:100%;border-collapse:collapse;font-size:14px'>
+              <tr>
+                <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>Offer Title</strong></td>
+                <td style='padding:6px;border:1px solid #ddd'>{{OfferTitle}}</td>
+              </tr>
+              <tr>
+                <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>Description</strong></td>
+                <td style='padding:6px;border:1px solid #ddd'>{{OfferDescription}}</td>
+              </tr>
+              <tr>
+                <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>Course</strong></td>
+                <td style='padding:6px;border:1px solid #ddd'>{{CourseName}}</td>
+              </tr>
+              <tr>
+                <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>Course subject</strong></td>
+                <td style='padding:6px;border:1px solid #ddd'>{{SubjectName}}</td>
+              </tr>
+              <tr>
+                <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>Start Date</strong></td>
+                <td style='padding:6px;border:1px solid #ddd'>{{StartDate}}</td>
+              </tr>
+              <tr>
+                <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>End Date</strong></td>
+                <td style='padding:6px;border:1px solid #ddd'>{{EndDate}}</td>
+              </tr>
+              <tr>
+                <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>Payment Method</strong></td>
+                <td style='padding:6px;border:1px solid #ddd'>{{PaymentMethod}}</td>
+              </tr>
+              <tr>
+                <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>Price</strong></td>
+                <td style='padding:6px;border:1px solid #ddd'>{{Price}}</td>
+              </tr>
+              <tr>
+                <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>Interest Rate</strong></td>
+                <td style='padding:6px;border:1px solid #ddd'>{{InterestRate}}</td>
+              </tr>
+              <tr>
+                <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>Discount Rate</strong></td>
+                <td style='padding:6px;border:1px solid #ddd'>{{DiscountRate}}</td>
+              </tr>
+              <tr>
+                <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>Installment Value</strong></td>
+                <td style='padding:6px;border:1px solid #ddd'>{{InstallmentValue}}</td>
+              </tr>
+              <tr>
+                <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>Net Amount</strong></td>
+                <td style='padding:6px;border:1px solid #ddd'>{{NetAmount}}</td>
+              </tr>
+              <tr>
+                <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>Offer Owner</strong></td>
+                <td style='padding:6px;border:1px solid #ddd'>{{OfferOwner}}</td>
+              </tr>
+              <tr>
+                <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>Specialization</strong></td>
+                <td style='padding:6px;border:1px solid #ddd'>{{Specialization}}</td>
+              </tr>
+            </table>
 
-            //<table style='width:100%;border-collapse:collapse;font-size:14px'>
-            //  <tr>
-            //    <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>Offer Title</strong></td>
-            //    <td style='padding:6px;border:1px solid #ddd'>{{OfferTitle}}</td>
-            //  </tr>
-            //  <tr>
-            //    <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>Description</strong></td>
-            //    <td style='padding:6px;border:1px solid #ddd'>{{OfferDescription}}</td>
-            //  </tr>
-            //<tr>
-            //    <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>Course</strong></td>
-            //    <td style='padding:6px;border:1px solid #ddd'>{{CourseName}}</td>
-            //  </tr>
-            //<tr>
-            //    <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>Course subject</strong></td>
-            //    <td style='padding:6px;border:1px solid #ddd'>{{SubjectName}}</td>
-            //  </tr>
-            //  <tr>
-            //    <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>Start Date</strong></td>
-            //    <td style='padding:6px;border:1px solid #ddd'>{{StartDate}}</td>
-            //  </tr>
-            //  <tr>
-            //    <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>End Date</strong></td>
-            //    <td style='padding:6px;border:1px solid #ddd'>{{EndDate}}</td>
-            //  </tr>
-            //  <tr>
-            //    <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>Payment Method</strong></td>
-            //    <td style='padding:6px;border:1px solid #ddd'>{{PaymentMethod}}</td>
-            //  </tr>
-            //  <tr>
-            //    <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>Price</strong></td>
-            //    <td style='padding:6px;border:1px solid #ddd'>{{Price}}</td>
-            //  </tr>
-            //  <tr>
-            //    <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>Interest Rate</strong></td>
-            //    <td style='padding:6px;border:1px solid #ddd'>{{InterestRate}}</td>
-            //  </tr>
-            //  <tr>
-            //    <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>Discount Rate</strong></td>
-            //    <td style='padding:6px;border:1px solid #ddd'>{{DiscountRate}}</td>
-            //  </tr>
-            //  <tr>
-            //    <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>Installment Value</strong></td>
-            //    <td style='padding:6px;border:1px solid #ddd'>{{InstallmentValue}}</td>
-            //  </tr>
-            //  <tr>
-            //    <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>Net Amount</strong></td>
-            //    <td style='padding:6px;border:1px solid #ddd'>{{NetAmount}}</td>
-            //  </tr>
-            //  <tr>
-            //    <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>Offer Owner</strong></td>
-            //    <td style='padding:6px;border:1px solid #ddd'>{{OfferOwner}}</td>
-            //  </tr>
-            //  <tr>
-            //    <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>Specialization</strong></td>
-            //    <td style='padding:6px;border:1px solid #ddd'>{{Specialization}}</td>
-            //  </tr>
+            <br/>
 
-            //</table>
+            <div style='margin-top:15px;padding:10px;background:#fff3cd;border-left:4px solid #ffc107;color:#856404'>
+            <strong>Note:</strong> This offer is valid for <strong>one week only</strong> from the sending date.
+            </div>
 
-            //<br/>
+            <br/>
 
-            //<div style='margin-top:15px;padding:10px;background:#fff3cd;border-left:4px solid #ffc107;color:#856404'>
-            //<strong>Note:</strong> This offer is valid for <strong>one week only</strong> from the sending date.
-            //</div>
+            Please review the offer and contact us if you have any questions.
+            " + LayoutFooter
+                        });
 
-            //<br/>
+            // Official Holiday
+            UpsertTemplate(context, new EmailTemplate
+            {
+                Key = "OfficialHoliday",
+                SubjectTemplate = "إجازة رسمية | Official Holiday",
+                BodyTemplate = LayoutHeader + @"
+            <p style='margin:0 0 14px'>مرحبًا،</p>
+            <p style='margin:0 0 14px'>نود إعلامكم بوجود إجازة رسمية:</p>
+            <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
+              <div style='margin-bottom:6px'><strong>العنوان:</strong> {{HolidayTitle}}</div>
+              <div style='margin-bottom:6px'><strong>من:</strong> {{StartDate}}</div>
+              <div style='margin-bottom:6px'><strong>إلى:</strong> {{EndDate}}</div>
+              <div><strong>ملاحظات:</strong> {{HolidayNotes}}</div>
+            </div>
+            <hr style='border:none;border-top:1px solid #e5e7eb;margin:20px 0'/>
+            <p style='margin:0 0 14px'><strong>Hello,</strong></p>
+            <p style='margin:0 0 14px'>Please be informed of an official holiday:</p>
+            <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0'>
+              <div style='margin-bottom:6px'><strong>Title:</strong> {{HolidayTitle}}</div>
+              <div style='margin-bottom:6px'><strong>From:</strong> {{StartDate}}</div>
+              <div style='margin-bottom:6px'><strong>To:</strong> {{EndDate}}</div>
+              <div><strong>Notes:</strong> {{HolidayNotes}}</div>
+            </div>
+            " + LayoutFooter
+            });
 
-            //Please review the offer and contact us if you have any questions.
-            //" + LayoutFooter
-
-            //}
-
-
-            );
+            // Monthly employee discounts (Hangfire job)
+            UpsertTemplate(context, new EmailTemplate
+            {
+                Key = "MonthlyEmployeeDiscounts",
+                SubjectTemplate = "خصومات الموظفين طوال الشهر - {{BranchName}} | Monthly Employee Discounts",
+                BodyTemplate = LayoutHeader + @"
+            <p style='margin:0 0 14px'>مرحبًا <strong>{{UserName}}</strong>،</p>
+            <p style='margin:0 0 14px'>مرفق لكم تقرير <strong>{{ReportTitle}}</strong> لفرع <strong>{{BranchName}}</strong>.</p>
+            <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
+              <div><strong>الفترة:</strong> من {{FromDate}} إلى {{ToDate}}</div>
+            </div>
+            <p style='margin:0 0 18px'>يحتوي التقرير على اسم كل موظف وإجمالي الخصومات خلال الفترة المحددة.</p>
+            <hr style='border:none;border-top:1px solid #e5e7eb;margin:20px 0'/>
+            <p style='margin:0 0 14px'><strong>Hello {{UserName}},</strong></p>
+            <p style='margin:0 0 14px'>Please find attached the report <strong>{{ReportTitle}}</strong> for branch <strong>{{BranchName}}</strong>.</p>
+            <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
+              <div><strong>Period:</strong> from {{FromDate}} to {{ToDate}}</div>
+            </div>
+            <p style='margin:0'>The report includes each employee name and their total discounts for the specified period.</p>
+            " + LayoutFooter
+            });
 
             context.SaveChanges();
         }
+
+        private static void UpsertTemplate(AppDbContext context, EmailTemplate template)
+        {
+            var existing = context.EmailTemplates.FirstOrDefault(x => x.Key == template.Key);
+            if (existing == null)
+            {
+                context.EmailTemplates.Add(template);
+                return;
+            }
+
+            existing.SubjectTemplate = template.SubjectTemplate;
+            existing.BodyTemplate = template.BodyTemplate;
+            existing.IsActive = true;
+        }
     }
-
-
 }

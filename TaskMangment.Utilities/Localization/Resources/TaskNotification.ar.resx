@@ -133,7 +133,7 @@
     <value>طلب تمديد جديد على مهمة رقم {0} بعنوان {1} من {2}</value>
   </data>
   <data name="TASK_WARNING_NOTIFICATION" xml:space="preserve">
-    <value>تحذير على مهمة رقم {0} بعنوان {1} من {2}</value>
+    <value>تحذير للموظف {3} على مهمة رقم {0} بعنوان {1} من {2}</value>
   </data>
   <data name="TASK_CLOSE_REQUEST_NOTIFICATION" xml:space="preserve">
     <value>طلب غلق جديد على مهمة رقم {0} بعنوان {1} من {2}</value>

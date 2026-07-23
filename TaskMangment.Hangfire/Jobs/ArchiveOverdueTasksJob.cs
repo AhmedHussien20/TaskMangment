@@ -232,11 +232,10 @@ namespace TaskMangment.Hangfire.Jobs
                             })
                             .FirstOrDefaultAsync();
 
-                        var managerId = await _getHigherManager.GetDirectHigherManagerIdAsync(discount.EmployeeId);
+                        var managerIds = await _getHigherManager.GetDirectHigherManagerIdsAsync(discount.EmployeeId);
 
                         var sendToIds = new List<int> { discount.EmployeeId };
-                        if (managerId.HasValue && !sendToIds.Contains(managerId.Value))
-                            sendToIds.Add(managerId.Value);
+                        sendToIds.AddRange(managerIds.Where(id => !sendToIds.Contains(id)));
 
                         var issuedToName = issuedEmployee.FullName;
 

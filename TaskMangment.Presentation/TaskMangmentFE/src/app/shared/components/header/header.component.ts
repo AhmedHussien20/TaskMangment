@@ -56,6 +56,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   notifications: HeaderNotification[] = [];
 
   notificationCount = 0;
+  private notificationSubscription$?: Subscription;
 
   get profileImage(): string {
     if (this.user?.profileImage) {
@@ -467,7 +468,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     }
   });
 
-  this.signalR.notification$
+  this.notificationSubscription$ = this.signalR.notification$
     .pipe(filter(n => !!n))
     .subscribe((n) => {
       if (n!.id && this.notifications.some(x => x.id === n!.id)) return;
@@ -489,6 +490,14 @@ export class HeaderComponent implements OnInit, OnDestroy {
         this.notifications.filter(x => !x.isRead).length;
     });
 }
+
+  private clearNotificationsUi() {
+    this.notifications = [];
+    this.notificationCount = 0;
+    this.isNotifyEmpty = true;
+    this.signalR.clearPendingNotification();
+    this.toastr.clear();
+  }
   removeNotification(notification: HeaderNotification, event?: Event) {
     event?.stopPropagation();
 
@@ -514,6 +523,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    this.clearNotificationsUi();
+    this.notificationSubscription$?.unsubscribe();
     if (this.menuitemsSubscribe$) {
       this.menuitemsSubscribe$.unsubscribe();
     }
@@ -590,6 +601,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   Logout() {
+    this.clearNotificationsUi();
+    this.notificationSubscription$?.unsubscribe();
     this.authService.logout();
   }
 

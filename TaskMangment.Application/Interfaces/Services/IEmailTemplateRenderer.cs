@@ -10,10 +10,8 @@ namespace TaskMangment.Application.Interfaces.Services
 {
     public interface IEmailTemplateRenderer
     {
-        Task<RenderedEmail> RenderAsync(string templateKey,ReferenceType referenceType,int referenceId, int? userId);
-             
-            
-           
-    }
+        Task<RenderedEmail> RenderAsync(string templateKey, ReferenceType referenceType, int referenceId, int? userId);
 
+        Task<RenderedEmail> RenderWithTokensAsync(string templateKey, Dictionary<string, string> tokens);
+    }
 }

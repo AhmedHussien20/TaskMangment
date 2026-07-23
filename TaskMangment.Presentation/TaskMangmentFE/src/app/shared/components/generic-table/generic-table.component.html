@@ -326,9 +326,9 @@
         <div class="d-flex align-items-center gap-2">
             <span>{{ 'TABLE.SHOW' | translate }}</span>
 
-            <select class="form-select form-select-sm w-auto" [(ngModel)]="entries"
-                (ngModelChange)="onEntriesChangeInternal()">
-                <option *ngFor="let n of [5,10,20,50]" [value]="n">{{ n }}</option>
+            <select class="form-select form-select-sm w-auto" [ngModel]="entries"
+                (ngModelChange)="onEntriesChangeInternal($event)">
+                <option *ngFor="let n of [5,10,20,50]" [ngValue]="n">{{ n }}</option>
             </select>
 
             <span>{{ 'TABLE.ENTRIES' | translate }}</span>

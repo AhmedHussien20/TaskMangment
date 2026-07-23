@@ -200,12 +200,10 @@ namespace TaskMangment.Infrastructure.Services
                     .FirstOrDefaultAsync(b => b.Id == issuedEmployee.BranchId.Value)
                 : null;
 
-            //var managerId = branch?.ManagerID;
-            var managerId = await _getHigherManager.GetDirectHigherManagerIdAsync(dto.EmployeeId);
+            var managerIds = await _getHigherManager.GetDirectHigherManagerIdsAsync(dto.EmployeeId);
 
             var sendToIds = new List<int> { dto.EmployeeId };
-            if (managerId.HasValue && !sendToIds.Contains(managerId.Value))
-                sendToIds.Add(managerId.Value);
+            sendToIds.AddRange(managerIds.Where(id => !sendToIds.Contains(id)));
             sendToIds = await _employeeRepo.GetAll(e => sendToIds.Contains(e.Id) && e.IsActive)
                 .Select(e => e.Id)
                 .ToListAsync();

@@ -12,6 +12,9 @@ import { Router } from '@angular/router';
 import { AuthUser } from '../models/auth/auth-user';
 import * as NavActions from '../../store/nav/nav.actions';
 import { ApiService } from './api.service';
+import { SignalRService } from './signalr.service';
+import { ToastrService } from 'ngx-toastr';
+
 @Injectable({
   providedIn: 'root',
 })
@@ -22,7 +25,9 @@ export class AuthService {
     private authRepository: AuthRepository,
     private store: Store<AppState>,
     private router: Router,
-    private apiService: ApiService
+    private apiService: ApiService,
+    private signalRService: SignalRService,
+    private toastr: ToastrService
   ) {
     this.store.pipe(select(selectAuthLoading)).subscribe(loading => {
       this.showLoader = loading;
@@ -64,13 +69,16 @@ export class AuthService {
   }
 
   logout() {
+    this.signalRService.stop();
+    this.toastr.clear();
+
     localStorage.removeItem('authToken');
     localStorage.removeItem('userData');
-     localStorage.removeItem('userRole');
-  localStorage.removeItem('currentUser');
-  
-    
-    this.store.dispatch(NavActions.clearMenu());  
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('currentUser');
+
+    this.store.dispatch(logout());
+    this.store.dispatch(NavActions.clearMenu());
 
     this.router.navigate(['/auth/login'], { replaceUrl: true });
   }

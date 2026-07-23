@@ -27,41 +27,95 @@ namespace TaskMangment.Infrastructure.Persistence.Extensions
                 return query.OrderBy(e => EF.Property<object>(e, "Id"));
             }
         }
+
         public static IQueryable<T> ApplySearch<T>(this IQueryable<T> query, string? searchKey)
         {
             if (string.IsNullOrWhiteSpace(searchKey))
                 return query;
 
+            searchKey = searchKey.Trim();
+
             var properties = typeof(T)
                 .GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                .Where(p => p.PropertyType == typeof(string));
+                .Where(p => p.CanRead && IsSearchableProperty(p))
+                .ToList();
 
             if (!properties.Any())
                 return query;
 
             Expression? finalExpression = null;
             var parameter = Expression.Parameter(typeof(T), "x");
+            var searchValue = Expression.Constant(searchKey);
+            var containsMethod = typeof(string).GetMethod(nameof(string.Contains), new[] { typeof(string) })!;
 
             foreach (var property in properties)
             {
                 var propertyAccess = Expression.Property(parameter, property);
-                var searchValue = Expression.Constant(searchKey);
+                Expression? condition = null;
 
-                var containsMethod = typeof(string).GetMethod("Contains", new[] { typeof(string) });
+                if (property.PropertyType == typeof(string))
+                {
+                    condition = Expression.Call(propertyAccess, containsMethod, searchValue);
+                }
+                else
+                {
+                    // Id (and other numeric key fields): convert to string then Contains
+                    condition = BuildNumericContainsExpression(propertyAccess, property.PropertyType, containsMethod, searchValue);
+                }
 
-                var containsExpression = Expression.Call(propertyAccess, containsMethod!, searchValue);
+                if (condition == null)
+                    continue;
 
                 finalExpression = finalExpression == null
-                    ? containsExpression
-                    : Expression.OrElse(finalExpression, containsExpression);
+                    ? condition
+                    : Expression.OrElse(finalExpression, condition);
             }
 
             if (finalExpression == null)
                 return query;
 
             var lambda = Expression.Lambda<Func<T, bool>>(finalExpression, parameter);
-
             return query.Where(lambda);
+        }
+
+        private static bool IsSearchableProperty(PropertyInfo property)
+        {
+            if (property.PropertyType == typeof(string))
+                return true;
+
+            // Allow searching by primary Id (int/long/guid)
+            if (!property.Name.Equals("Id", StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            var underlying = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
+            return underlying == typeof(int)
+                || underlying == typeof(long)
+                || underlying == typeof(short)
+                || underlying == typeof(byte)
+                || underlying == typeof(Guid);
+        }
+
+        private static Expression? BuildNumericContainsExpression(
+            Expression propertyAccess,
+            Type propertyType,
+            MethodInfo containsMethod,
+            ConstantExpression searchValue)
+        {
+            var underlying = Nullable.GetUnderlyingType(propertyType);
+
+            if (underlying != null)
+            {
+                var hasValue = Expression.Property(propertyAccess, nameof(Nullable<int>.HasValue));
+                var value = Expression.Property(propertyAccess, nameof(Nullable<int>.Value));
+                var toString = Expression.Call(value, underlying.GetMethod(nameof(ToString), Type.EmptyTypes)!);
+                var contains = Expression.Call(toString, containsMethod, searchValue);
+                return Expression.AndAlso(hasValue, contains);
+            }
+
+            var toStringNonNull = Expression.Call(
+                propertyAccess,
+                propertyType.GetMethod(nameof(ToString), Type.EmptyTypes)!);
+            return Expression.Call(toStringNonNull, containsMethod, searchValue);
         }
     }
 }

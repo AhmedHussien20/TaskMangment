@@ -149,9 +149,8 @@ namespace TaskMangment.Infrastructure.Services
 
             foreach (var recipientId in assignedEmployeeIds.ToList())
             {
-                var managerId = await _getHigherManager.GetDirectHigherManagerIdAsync(recipientId);
-                if (managerId.HasValue && !assignedEmployeeIds.Contains(managerId.Value))
-                    assignedEmployeeIds.Add(managerId.Value);
+                var managerIds = await _getHigherManager.GetDirectHigherManagerIdsAsync(recipientId);
+                assignedEmployeeIds.AddRange(managerIds.Where(id => !assignedEmployeeIds.Contains(id)));
             }
 
             assignedEmployeeIds = await _employeeRepo.GetAll(e => assignedEmployeeIds.Contains(e.Id) && e.IsActive)

@@ -32,7 +32,7 @@ namespace TaskMangment.Hangfire.Jobs
             var today = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, tz).Date;
             var yesterday = today.AddDays(-1);
 
-            // الجمعة مفيش خصومات
+            // do not add discount in friday and saturday
             if (yesterday.DayOfWeek == DayOfWeek.Friday || yesterday.DayOfWeek == DayOfWeek.Saturday)
                 return;
 
@@ -65,14 +65,7 @@ namespace TaskMangment.Hangfire.Jobs
 
             foreach (var task in tasks)
             {
-                if (task.Id != 2978
-                   && task.Id != 2976
-                   && task.Id != 2972
-                   && task.Id != 2971
-                   && task.Id != 2970)
-                {
-                    continue;
-                }
+              
                 bool hasCloseRequest = await _db.TaskCloseRequests
                     .AnyAsync(r => r.TaskId == task.Id);
 
@@ -283,11 +276,10 @@ namespace TaskMangment.Hangfire.Jobs
 
                     if (issuedEmployee == null) continue;
 
-                    var managerId = await _getHigherManager.GetDirectHigherManagerIdAsync(warning.IssuedEmployeeId!.Value);
+                    var managerIds = await _getHigherManager.GetDirectHigherManagerIdsAsync(warning.IssuedEmployeeId!.Value);
 
                     var sendToIds = new List<int> { warning.IssuedEmployeeId!.Value };
-                    if (managerId.HasValue && !sendToIds.Contains(managerId.Value))
-                        sendToIds.Add(managerId.Value);
+                    sendToIds.AddRange(managerIds.Where(id => !sendToIds.Contains(id)));
                     sendToIds = await _db.Employees
                         .Where(e => sendToIds.Contains(e.Id) && e.IsActive && !e.IsDeleted)
                         .Select(e => e.Id)
@@ -327,11 +319,10 @@ namespace TaskMangment.Hangfire.Jobs
 
                     if (issuedEmployee == null) continue;
 
-                    var managerId = await _getHigherManager.GetDirectHigherManagerIdAsync(discount.EmployeeId);
+                    var managerIds = await _getHigherManager.GetDirectHigherManagerIdsAsync(discount.EmployeeId);
 
                     var sendToIds = new List<int> { discount.EmployeeId };
-                    if (managerId.HasValue && !sendToIds.Contains(managerId.Value))
-                        sendToIds.Add(managerId.Value);
+                    sendToIds.AddRange(managerIds.Where(id => !sendToIds.Contains(id)));
                     sendToIds = await _db.Employees
                         .Where(e => sendToIds.Contains(e.Id) && e.IsActive && !e.IsDeleted)
                         .Select(e => e.Id)

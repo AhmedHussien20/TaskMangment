@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,10 +16,12 @@ namespace TaskMangment.Infrastructure.Services
     public class EmailTemplateRenderer : IEmailTemplateRenderer
     {
         private readonly AppDbContext _db;
+        private readonly WhatsAppSettings _frontendSettings;
 
-        public EmailTemplateRenderer(AppDbContext db)
+        public EmailTemplateRenderer(AppDbContext db, IOptions<WhatsAppSettings> frontendSettings)
         {
             _db = db;
+            _frontendSettings = frontendSettings.Value;
         }
 
         public async Task<RenderedEmail> RenderAsync(string templateKey, ReferenceType referenceType, int referenceId, int? userId)
@@ -32,6 +35,9 @@ namespace TaskMangment.Infrastructure.Services
 
             //course offer is the only key that need student name so if the key is anything else use employee normaly
             var data = await LoadDataAsync(referenceType, referenceId);
+            await EnsureTaskNumberAsync(data, referenceType, referenceId);
+            EnsureTaskLink(data);
+
             if (userId.HasValue)
             {
                 if (referenceType == ReferenceType.CourseOffer)
@@ -64,27 +70,172 @@ namespace TaskMangment.Infrastructure.Services
             return new RenderedEmail
             {
                 Subject = Replace(template.SubjectTemplate, data),
-                Body = Replace(template.BodyTemplate, data)
+                Body = AppendTaskLinkFallback(Replace(template.BodyTemplate, data), data)
+            };
+        }
+
+        public async Task<RenderedEmail> RenderWithTokensAsync(string templateKey, Dictionary<string, string> tokens)
+        {
+            var template = await _db.EmailTemplates
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.Key == templateKey && x.IsActive);
+
+            if (template == null)
+                throw new Exception($"Email template '{templateKey}' not found.");
+
+            tokens ??= new Dictionary<string, string>();
+            EnsureTaskLink(tokens);
+
+            return new RenderedEmail
+            {
+                Subject = Replace(template.SubjectTemplate, tokens),
+                Body = AppendTaskLinkFallback(Replace(template.BodyTemplate, tokens), tokens)
             };
         }
         private static string Replace(string template, Dictionary<string, string> data)
         {
-            if (string.IsNullOrEmpty(template))
+            if (string.IsNullOrEmpty(template) || data == null || data.Count == 0)
                 return template;
-            foreach (var item in data)
+
+            // Longer keys first so TaskNumber is not affected by shorter overlapping keys.
+            foreach (var item in data.OrderByDescending(x => x.Key.Length))
             {
+                if (string.IsNullOrWhiteSpace(item.Key))
+                    continue;
+
                 template = template.Replace(
-                    $"{{{{{item.Key}}}}}",   // {{Key}}
-                    item.Value ?? string.Empty
-                );
+                    "{{" + item.Key + "}}",
+                    item.Value ?? string.Empty,
+                    StringComparison.OrdinalIgnoreCase);
             }
 
             return template;
         }
 
+        private void EnsureTaskLink(Dictionary<string, string> data)
+        {
+            if (data == null)
+                return;
+
+            if (!data.ContainsKey("TaskLink"))
+                data["TaskLink"] = string.Empty;
+            if (!data.ContainsKey("TaskLinkBlock"))
+                data["TaskLinkBlock"] = string.Empty;
+
+            var taskNumberLabel = data.TryGetValue("TaskNumber", out var rawNumber) && !string.IsNullOrWhiteSpace(rawNumber)
+                ? rawNumber.Trim()
+                : null;
+
+            // Default: plain number (no link) — used when FrontendUrl/task id is missing.
+            if (!data.ContainsKey("TaskNumberLink"))
+            {
+                data["TaskNumberLink"] = string.IsNullOrWhiteSpace(taskNumberLabel)
+                    ? string.Empty
+                    : $"<strong>{taskNumberLabel}</strong>";
+            }
+
+            if (!TryGetTaskId(data, out var taskId))
+                return;
+
+            var frontendUrl = _frontendSettings?.FrontendUrl;
+            if (string.IsNullOrWhiteSpace(frontendUrl))
+                return;
+
+            var taskUrl = $"{frontendUrl.TrimEnd('/')}/task/task-list?taskId={taskId}";
+            var display = taskNumberLabel ?? taskId.ToString();
+            data["TaskLink"] = taskUrl;
+            // Keep empty for old templates; new templates embed the link in the sentence.
+            data["TaskLinkBlock"] = string.Empty;
+            data["TaskNumberLink"] =
+                $"<a href='{taskUrl}' style='color:#0d6efd;text-decoration:underline;font-weight:bold'>{display}</a>";
+        }
+
+        private static bool TryGetTaskId(Dictionary<string, string> data, out int taskId)
+        {
+            taskId = 0;
+            if (!data.TryGetValue("TaskNumber", out var raw) || string.IsNullOrWhiteSpace(raw) || raw == "-")
+                return false;
+
+            return int.TryParse(raw.Trim(), out taskId) && taskId > 0;
+        }
+
+        private static string AppendTaskLinkFallback(string body, Dictionary<string, string> data)
+        {
+            // Task link is embedded inline via {{TaskNumberLink}} in seeded templates.
+            // Do not inject a separate footer link block.
+            return body;
+        }
+
+        private async Task EnsureTaskNumberAsync(
+            Dictionary<string, string> data,
+            ReferenceType referenceType,
+            int referenceId)
+        {
+            if (data == null || referenceId <= 0)
+                return;
+
+            if (data.TryGetValue("TaskNumber", out var existing) &&
+                !string.IsNullOrWhiteSpace(existing) &&
+                existing != "-")
+            {
+                return;
+            }
+
+            int? taskId = referenceType switch
+            {
+                ReferenceType.Task => referenceId,
+                ReferenceType.TaskDueTodayReminder => referenceId,
+
+                ReferenceType.TaskComment => await _db.TaskComments
+                    .Where(c => c.Id == referenceId)
+                    .Select(c => (int?)c.TaskId)
+                    .FirstOrDefaultAsync(),
+
+                ReferenceType.TaskAchieve => await _db.TaskPercentages
+                    .Where(p => p.Id == referenceId)
+                    .Select(p => (int?)p.TaskId)
+                    .FirstOrDefaultAsync(),
+
+                ReferenceType.TaskExtensionRequest => await _db.TaskExtensionRequests
+                    .Where(r => r.Id == referenceId)
+                    .Select(r => (int?)r.TaskId)
+                    .FirstOrDefaultAsync(),
+
+                ReferenceType.TaskExtensionRequestApproved => await _db.TaskExtensionRequests
+                    .Where(r => r.Id == referenceId)
+                    .Select(r => (int?)r.TaskId)
+                    .FirstOrDefaultAsync(),
+
+                ReferenceType.TaskCloseRequest => await _db.TaskCloseRequests
+                    .Where(r => r.Id == referenceId)
+                    .Select(r => (int?)r.TaskId)
+                    .FirstOrDefaultAsync(),
+
+                ReferenceType.TaskCloseRequestApproved => await _db.TaskCloseRequests
+                    .Where(r => r.Id == referenceId)
+                    .Select(r => (int?)r.TaskId)
+                    .FirstOrDefaultAsync(),
+
+                ReferenceType.EmployeeWarning => await _db.Warnings
+                    .Where(w => w.Id == referenceId)
+                    .Select(w => (int?)w.TaskId)
+                    .FirstOrDefaultAsync(),
+
+                ReferenceType.EmployeeDeduction => await _db.Discounts
+                    .Where(d => d.Id == referenceId)
+                    .Select(d => d.TaskId)
+                    .FirstOrDefaultAsync(),
+
+                _ => null
+            };
+
+            if (taskId.HasValue && taskId.Value > 0)
+                data["TaskNumber"] = taskId.Value.ToString();
+        }
+
         private async Task<Dictionary<string, string>> LoadDataAsync(
-     ReferenceType referenceType,
-     int referenceId)
+            ReferenceType referenceType,
+            int referenceId)
         {
             switch (referenceType)
             {
@@ -97,10 +248,10 @@ namespace TaskMangment.Infrastructure.Services
                             .Where(t => t.Id == referenceId)
                             .Select(t => new
                             {
+                                TaskNumber = t.Id,
                                 t.Title,
                                 t.DueDate,
                                 t.Description
-
                             })
                             .FirstOrDefaultAsync();
 
@@ -109,10 +260,11 @@ namespace TaskMangment.Infrastructure.Services
 
                         return new Dictionary<string, string>
                         {
-                            ["TaskTitle"] = task.Title,
+                            // Prefer queued referenceId so TaskNumber never comes back empty.
+                            ["TaskNumber"] = (referenceId > 0 ? referenceId : task.TaskNumber).ToString(),
+                            ["TaskTitle"] = task.Title ?? "-",
                             ["DueDate"] = task.DueDate?.ToString("yyyy-MM-dd") ?? "-",
-                            ["TaskDescription"] = task.Description
-
+                            ["TaskDescription"] = task.Description ?? "-"
                         };
                     }
 
@@ -149,7 +301,9 @@ namespace TaskMangment.Infrastructure.Services
                             .Where(c => c.Id == referenceId)
                             .Select(c => new
                             {
+                                TaskNumber = c.TaskId,
                                 TaskTitle = c.Task.Title,
+                                EmployeeName = c.Employee != null ? c.Employee.FullName : "موظف",
                                 c.CommentText
                             })
                             .FirstOrDefaultAsync();
@@ -159,36 +313,40 @@ namespace TaskMangment.Infrastructure.Services
 
                         return new Dictionary<string, string>
                         {
+                            ["TaskNumber"] = comment.TaskNumber.ToString(),
                             ["TaskTitle"] = comment.TaskTitle,
-                            ["CommentText"] = comment.CommentText
+                            ["EmployeeName"] = comment.EmployeeName ?? "موظف",
+                            ["CommentText"] = string.IsNullOrWhiteSpace(comment.CommentText)
+                                ? "رفع ملف"
+                                : comment.CommentText
                         };
                     }
-
-
 
                 // =========================
                 //  Task Achievement
                 // =========================
                 case ReferenceType.TaskAchieve:
                     {
-                        var Percent = await _db.TaskPercentages
+                        var percent = await _db.TaskPercentages
                             .Where(c => c.Id == referenceId)
                             .Select(c => new
                             {
+                                TaskNumber = c.TaskId,
                                 TaskTitle = c.Task.Title,
                                 EmployeeName = c.Employee.FullName,
                                 Percent = c.AchievementPercent
                             })
                             .FirstOrDefaultAsync();
 
-                        if (Percent == null)
+                        if (percent == null)
                             throw new Exception($"Task Percent with Id {referenceId} not found.");
 
                         return new Dictionary<string, string>
                         {
-                            ["TaskTitle"] = Percent.TaskTitle,
-                            ["EmployeeName"] = Percent.EmployeeName,
-                            ["Percent"] = Percent.Percent
+                            ["TaskNumber"] = percent.TaskNumber.ToString(),
+                            ["TaskTitle"] = percent.TaskTitle,
+                            ["EmployeeName"] = percent.EmployeeName,
+                            ["Percent"] = percent.Percent
                         };
                     }
 
@@ -201,7 +359,9 @@ namespace TaskMangment.Infrastructure.Services
                             .Where(r => r.Id == referenceId)
                             .Select(r => new
                             {
+                                TaskNumber = r.TaskId,
                                 TaskTitle = r.Task.Title,
+                                EmployeeName = r.RequestedBy != null ? r.RequestedBy.FullName : "موظف",
                                 r.Reason
                             })
                             .FirstOrDefaultAsync();
@@ -211,13 +371,15 @@ namespace TaskMangment.Infrastructure.Services
 
                         return new Dictionary<string, string>
                         {
+                            ["TaskNumber"] = request.TaskNumber.ToString(),
                             ["TaskTitle"] = request.TaskTitle,
-                            ["ExtensionReason"] = request.Reason
+                            ["EmployeeName"] = request.EmployeeName ?? "موظف",
+                            ["ExtensionReason"] = request.Reason ?? "-"
                         };
                     }
 
                 // =========================
-                // ✅Task Close Request
+                // ✅ Task Close Request
                 // =========================
                 case ReferenceType.TaskCloseRequest:
                     {
@@ -225,7 +387,9 @@ namespace TaskMangment.Infrastructure.Services
                             .Where(r => r.Id == referenceId)
                             .Select(r => new
                             {
+                                TaskNumber = r.TaskId,
                                 TaskTitle = r.Task.Title,
+                                EmployeeName = r.RequestedBy != null ? r.RequestedBy.FullName : "موظف",
                                 r.Message
                             })
                             .FirstOrDefaultAsync();
@@ -235,8 +399,10 @@ namespace TaskMangment.Infrastructure.Services
 
                         return new Dictionary<string, string>
                         {
+                            ["TaskNumber"] = close.TaskNumber.ToString(),
                             ["TaskTitle"] = close.TaskTitle,
-                            ["CloseNotes"] = close.Message
+                            ["EmployeeName"] = close.EmployeeName ?? "موظف",
+                            ["CloseNotes"] = close.Message ?? "-"
                         };
                     }
 
@@ -249,16 +415,33 @@ namespace TaskMangment.Infrastructure.Services
                             .Where(w => w.Id == referenceId)
                             .Select(w => new
                             {
-                                w.Reason
+                                TaskNumber = w.TaskId,
+                                TaskTitle = w.Task.Title,
+                                EmployeeName = w.Issued != null
+                                    ? w.Issued.FullName
+                                    : (w.TaskAssignment != null && w.TaskAssignment.Employee != null
+                                        ? w.TaskAssignment.Employee.FullName
+                                        : null),
+                                IssuedByName = w.IssuedBy != null ? w.IssuedBy.FullName : "النظام",
+                                w.Reason,
+                                w.ViolationDate,
+                                w.IssuedAt
                             })
                             .FirstOrDefaultAsync();
 
                         if (warning == null)
                             throw new Exception($"Employee warning with Id {referenceId} not found.");
 
+                        var warningDate = warning.ViolationDate ?? warning.IssuedAt;
+
                         return new Dictionary<string, string>
                         {
-                            ["WarningReason"] = warning.Reason
+                            ["TaskNumber"] = warning.TaskNumber.ToString(),
+                            ["TaskTitle"] = warning.TaskTitle ?? "-",
+                            ["EmployeeName"] = string.IsNullOrWhiteSpace(warning.EmployeeName) ? "-" : warning.EmployeeName,
+                            ["IssuedByName"] = string.IsNullOrWhiteSpace(warning.IssuedByName) ? "النظام" : warning.IssuedByName,
+                            ["WarningReason"] = string.IsNullOrWhiteSpace(warning.Reason) ? "-" : warning.Reason,
+                            ["ViolationDate"] = warningDate.ToString("yyyy-MM-dd")
                         };
                     }
 
@@ -272,8 +455,9 @@ namespace TaskMangment.Infrastructure.Services
                             .Select(d => new
                             {
                                 EmployeeName = d.Employee.FullName,
-                                TaskNumber = d.Task.Id.ToString(),
-                                TaskTitle = d.Task.Title,
+                                TaskNumber = d.TaskId.HasValue ? d.TaskId.Value.ToString() : "-",
+                                TaskTitle = d.Task != null ? d.Task.Title : "-",
+                                IssuedByName = d.CreatedBy != null ? d.CreatedBy.FullName : "النظام",
                                 d.Reason,
                                 d.Amount,
                                 d.ViolationDate
@@ -288,32 +472,32 @@ namespace TaskMangment.Infrastructure.Services
                             ["EmployeeName"] = deduction.EmployeeName,
                             ["TaskNumber"] = deduction.TaskNumber,
                             ["TaskTitle"] = deduction.TaskTitle,
-                            ["DeductionReason"] = deduction.Reason,
+                            ["IssuedByName"] = string.IsNullOrWhiteSpace(deduction.IssuedByName) ? "النظام" : deduction.IssuedByName,
+                            ["DeductionReason"] = deduction.Reason ?? "-",
                             ["DeductionAmount"] = deduction.Amount.ToString("N2"),
                             ["ViolationDate"] = deduction.ViolationDate.ToString("yyyy-MM-dd")
-
                         };
                     }
-
 
                 // =========================
                 // Task Due Today Reminder
                 // =========================
                 case ReferenceType.TaskDueTodayReminder:
-                    { 
-                    var taskDue = await _db.Tasks
-                        .Where(t => t.Id == referenceId)
-                        .Select(t => new { t.Title, t.DueDate })
-                        .FirstOrDefaultAsync();
-
-                    if (taskDue == null)
-                        throw new Exception($"Task with Id {referenceId} not found.");
-
-                    return new Dictionary<string, string>
                     {
-                        ["TaskTitle"] = taskDue.Title,
-                        ["DueDate"] = taskDue.DueDate?.ToString("yyyy-MM-dd") ?? "-"
-                    };
+                        var taskDue = await _db.Tasks
+                            .Where(t => t.Id == referenceId)
+                            .Select(t => new { t.Id, t.Title, t.DueDate })
+                            .FirstOrDefaultAsync();
+
+                        if (taskDue == null)
+                            throw new Exception($"Task with Id {referenceId} not found.");
+
+                        return new Dictionary<string, string>
+                        {
+                            ["TaskNumber"] = (referenceId > 0 ? referenceId : taskDue.Id).ToString(),
+                            ["TaskTitle"] = taskDue.Title,
+                            ["DueDate"] = taskDue.DueDate?.ToString("yyyy-MM-dd") ?? "-"
+                        };
                     }
 
                 // =========================
@@ -329,7 +513,7 @@ namespace TaskMangment.Infrastructure.Services
                                 a.Description,
                                 a.StartDate,
                                 a.EndDate,
-                                a.Body, 
+                                a.Body,
                                 SubjectName = a.Subject.Title,
                                 CourseName = a.Course.Title
                             })
@@ -367,25 +551,25 @@ namespace TaskMangment.Infrastructure.Services
                 case ReferenceType.TaskExtensionRequestApproved:
                     {
                         var request = await _db.TaskExtensionRequests
-                            //.Include(r => r.Task)
                             .Where(r => r.Id == referenceId)
                             .Select(r => new
                             {
+                                TaskNumber = r.TaskId,
                                 TaskTitle = r.Task.Title,
                                 OldDueDate = r.Task.DueDate,
                                 NewDueDate = r.NewDueDate
                             })
                             .FirstOrDefaultAsync();
 
-
                         if (request == null)
                             throw new Exception($"Task extension request with Id {referenceId} not found.");
 
                         return new Dictionary<string, string>
                         {
+                            ["TaskNumber"] = request.TaskNumber.ToString(),
                             ["TaskTitle"] = request.TaskTitle,
                             ["OldDueDate"] = request.OldDueDate?.ToString("yyyy-MM-dd") ?? "-",
-                            ["NewDueDate"] = request.NewDueDate.ToString("yyyy-MM-dd") ?? "-"
+                            ["NewDueDate"] = request.NewDueDate.ToString("yyyy-MM-dd")
                         };
                     }
 
@@ -398,7 +582,8 @@ namespace TaskMangment.Infrastructure.Services
                             .Where(r => r.Id == referenceId)
                             .Select(r => new
                             {
-                                TaskTitle = r.Task.Title,
+                                TaskNumber = r.TaskId,
+                                TaskTitle = r.Task.Title
                             })
                             .FirstOrDefaultAsync();
 
@@ -407,11 +592,43 @@ namespace TaskMangment.Infrastructure.Services
 
                         return new Dictionary<string, string>
                         {
-                            ["TaskTitle"] = request.TaskTitle,
+                            ["TaskNumber"] = request.TaskNumber.ToString(),
+                            ["TaskTitle"] = request.TaskTitle
                         };
                     }
 
+                // =========================
+                // Leave
+                // =========================
+                case ReferenceType.Leave:
+                    {
+                        var leave = await _db.Leaves
+                            .Where(l => l.Id == referenceId)
+                            .Select(l => new
+                            {
+                                EmployeeName = l.Employee.FullName,
+                                LeaveType = l.LeaveType.NameAr,
+                                l.StartDate,
+                                l.EndDate,
+                                ApprovedBy = l.ApprovedBy != null ? l.ApprovedBy.FullName : "-",
+                                RejectReason = l.RejectionReason
+                            })
+                            .FirstOrDefaultAsync();
 
+                        if (leave == null)
+                            throw new Exception($"Leave with Id {referenceId} not found.");
+
+                        return new Dictionary<string, string>
+                        {
+                            ["EmployeeName"] = leave.EmployeeName,
+                            ["LeaveType"] = leave.LeaveType ?? "-",
+                            ["StartDate"] = leave.StartDate.ToString("yyyy-MM-dd"),
+                            ["EndDate"] = leave.EndDate.ToString("yyyy-MM-dd"),
+                            ["ApprovedBy"] = leave.ApprovedBy ?? "-",
+                            ["RejectedBy"] = leave.ApprovedBy ?? "-",
+                            ["RejectReason"] = leave.RejectReason ?? "-"
+                        };
+                    }
 
                 case ReferenceType.OfficialHoliday:
                     {
@@ -439,12 +656,10 @@ namespace TaskMangment.Infrastructure.Services
                         };
                     }
 
-
                 // =========================
                 default:
                     return new Dictionary<string, string>();
             }
         }
-
     }
-    }
+}

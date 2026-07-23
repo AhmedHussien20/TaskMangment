@@ -83,24 +83,24 @@ namespace TaskMangment.Infrastructure.Services
                 .Include(l => l.LeaveType)
                 .FirstAsync();
 
-            var managerId = await _getHigherManager.GetDirectHigherManagerIdAsync(employeeId);
+            var managerIds = await _getHigherManager.GetDirectHigherManagerIdsAsync(employeeId);
 
-            //var managerId = full.Employee?.Branch?.ManagerID;
-
-             if (!managerId.HasValue)
+            if (managerIds == null || !managerIds.Any())
             {
                 throw new AppException(ErrorCodes.Invalid, StatusCodes.Status400BadRequest);
             }
 
-
-            await _eventDispatcher.PublishAsync(new LeaveEvent(
-                                                  leave.Id,
-                                                  managerId.Value,
-                                                  full.Employee.FullName,
-                                                  full.LeaveType.NameAr,
-                                                  leave.StartDate,
-                                                  leave.EndDate
-                                                ));
+            foreach (var managerId in managerIds)
+            {
+                await _eventDispatcher.PublishAsync(new LeaveEvent(
+                                                      leave.Id,
+                                                      managerId,
+                                                      full.Employee.FullName,
+                                                      full.LeaveType.NameAr,
+                                                      leave.StartDate,
+                                                      leave.EndDate
+                                                    ));
+            }
 
             var result = _mapper.Map<LeaveGetDto>(full);
 

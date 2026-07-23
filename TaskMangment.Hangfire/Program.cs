@@ -1,4 +1,4 @@
-﻿using Hangfire;
+using Hangfire;
 using Hangfire.Dashboard;
 using Hangfire.SqlServer;
 using Microsoft.AspNetCore.Localization;
@@ -22,9 +22,7 @@ builder.Configuration.AddEnvironmentVariables();
 builder.Services.AddOptions();
 builder.Services.AddHttpClient();
 
-builder.Services.Configure<EmailSettings>(
-                  builder.Configuration.GetSection("EmailSettings")
-              );
+builder.Services.ConfigureEmailSettings(builder.Configuration);
 
 builder.Services.Configure<WhatsAppSettings>(opts =>
 {
@@ -37,7 +35,6 @@ builder.Services.Configure<WhatsAppSettings>(opts =>
     if (!string.IsNullOrWhiteSpace(frontendUrl)) opts.FrontendUrl = frontendUrl;
 });
 builder.Services.AddDI();
-builder.Services.Configure<BlobStorageService>(builder.Configuration.GetSection("Blob"));
 // =======================
 // Services
 // =======================
@@ -59,6 +56,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         builder.Configuration.GetConnectionString("DefaultConnection")));
 
 QuestPDF.Settings.License = LicenseType.Community;
+QuestPDF.Settings.CheckIfAllTextGlyphsAreAvailable = false;
 
 // =======================
 // Hangfire
@@ -88,6 +86,13 @@ builder.Services.AddHangfireServer();
 // =======================
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    TaskMangment.Infrastructure.Seeding.EmailTemplateSeeder.Seed(db);
+}
+
 var defaultCulture = new CultureInfo("ar");
 
 CultureInfo.DefaultThreadCurrentCulture = defaultCulture;
@@ -132,7 +137,8 @@ RecurringJob.AddOrUpdate<ProcessPendingEmailsJob>(
 //    job => job.ExecuteAsync(),
 //    Cron.Minutely);
 
-var saudiTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Arabian Standard Time");
+var saudiTimeZone = TimeZoneHelper.GetSaudiArabia();
+Console.WriteLine("Saudi timezone for Hangfire cron = " + saudiTimeZone.Id);
 
 RecurringJob.AddOrUpdate<PenaltyForMissingCommentsJob>(
     "penalty-missing-comments",
@@ -153,6 +159,13 @@ RecurringJob.AddOrUpdate<TaskDueTodayEmailsProcessorJob>(
                job => job.ExecuteAsync(),
                Cron.Minutely
                );
+
+RecurringJob.AddOrUpdate<SendMonthlyEmployeeDiscountsJob>(
+    "send-monthly-employee-discounts",
+    job => job.ExecuteAsync(),
+    Cron.Monthly(25, 8, 0),
+    saudiTimeZone
+);
 
 
 app.Run();

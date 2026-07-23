@@ -32,7 +32,8 @@ namespace TaskMangment.Application.Behaviors
                 messageTemplate,
                 ev.TaskId,
                 ev.TaskTitle,
-                ev.IssuedbyName
+                ev.IssuedbyName,
+                string.IsNullOrWhiteSpace(ev.IssuedToName) ? "-" : ev.IssuedToName
             );
 
             foreach (var empId in ev.SendTo)

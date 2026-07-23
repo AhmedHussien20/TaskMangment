@@ -66,6 +66,7 @@ export class FullLayoutComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    this.signalR.stop();
     if (this.menuitemsSubscribe$) {
       this.menuitemsSubscribe$.unsubscribe();
     }

@@ -38,6 +38,9 @@ namespace TaskMangment.Application.DTOs.ReportsDTO
     public class EmailAttachment
     {
         public string Name { get; set; } = default!;
-        public string ContentBase64 { get; set; } = default!;
+        /// <summary>Base64 file content. Preferred for SMTP; also used by Brevo when set.</summary>
+        public string? ContentBase64 { get; set; }
+        /// <summary>Public absolute URL (e.g. blob + SAS). Used by Brevo when content is not set.</summary>
+        public string? Url { get; set; }
     }
 }

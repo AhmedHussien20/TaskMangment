@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,7 +27,7 @@ namespace TaskMangment.Infrastructure.Services
     {
         public static IServiceCollection AddDI(this IServiceCollection services)
         {
-            services.AddScoped<IEmailService, EmailService>();
+            services.AddHttpClient<IEmailService, EmailService>();
             services.AddSingleton<LocalizationService>();
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
             services.AddAutoMapper(cfg =>
