@@ -39,31 +39,30 @@ export const content: Routes = [
          loadChildren: () => import('../../../app/components/area/area.routes').then(r => r.AreaRoutingModule),
           canActivate: [AuthGuard],
           canLoad: [AuthGuard],
-          data: { roleLevel: 100 }
+          data: { permissions: ['CREATE_AREA', 'UPDATE_AREA'] }
        },
       { path: 'branch',
          loadChildren: () => import('../../../app/components/branch/branch.routes').then(r => r.BranchRoutingModule),
           canActivate: [AuthGuard],
           canLoad: [AuthGuard],
-          data: { roleLevel: 80 }
+          data: { permissions: ['CREATE_BRANCH', 'UPDATE_BRANCH'] }
          },
       { path: 'department', loadChildren: () => import('../../../app/components/department/department.routes').then(r => r.DepartmentRoutingModule),
           canActivate: [AuthGuard],
           canLoad: [AuthGuard],
-          data: { roleLevel: 100 }
+          data: { permissions: ['CREATE_DEPARTMENT', 'UPDATE_DEPARTMENT'] }
        },
       { path: 'task', loadChildren: () => import('../../../app/components/tasks/task.routes').then(r => r.TaskRoutingModule) },
       {path: 'employee',
          loadChildren: () => import('../../../app/components/employee/employee.routes').then(r => r.EmployeeRoutingModule),
           canActivate: [AuthGuard],
           canLoad: [AuthGuard],
-          data: { roleLevel: 70 }
+          data: { permissions: ['VIEW_EMPLOYEES', 'CREATE_EMPLOYEE', 'UPDATE_EMPLOYEE'] }
         },
       {path: 'role',
          loadChildren: () => import('../../../app/components/role/role.routes').then(r => r.RoleRoutingModule),
          canActivate: [AuthGuard],
-          //canLoad: [AuthGuard],
-          data: { roleLevel: 100 }
+          data: { permissions: ['ASSIGN_ROLE', 'CREATE_PERMISSION'] }
         },
       {path: 'student', loadChildren: () => import('../../../app/components/student/student.routes').then(r => r.StudentRoutingModule)},
       {path: 'course', loadChildren: () => import('../../../app/components/course/course.routes').then(r => r.CourseRoutingModule)},

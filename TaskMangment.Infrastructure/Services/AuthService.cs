@@ -90,7 +90,11 @@ public class AuthService : IAuthService
                             .GetUserPermissionsAsync(user.Id);
 
         var access = await _accessProvider.GetAsync(user.Id);
-        var hasAccessScope = access.BranchIds.Any() || access.FunctionCodes.Any();
+        var hasAccessScope = access.BranchIds.Any() || access.FunctionCodes.Any()
+            || permissions.Any(p =>
+                string.Equals(p, PermissionCodes.ViewCompanyTasks, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(p, PermissionCodes.ViewAllTasks, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(p, PermissionCodes.ViewScopedTasks, StringComparison.OrdinalIgnoreCase));
 
         var token = await _jwt.GenerateTokenAsync(user);
 

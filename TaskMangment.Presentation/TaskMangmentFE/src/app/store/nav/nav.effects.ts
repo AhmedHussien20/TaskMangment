@@ -26,59 +26,59 @@ private MENUITEMS: MenuItem[] = [
   },
 
   // ================= Organization =================
-  { headTitle: 'nav.apps.organization.title', minRoleLevel: 100 },
+  { headTitle: 'nav.apps.organization.title', requiredPermission: 'CREATE_AREA' },
   {
     title: 'nav.apps.organization.title',
     icon: 'ti-map',
     type: 'sub',
-    minRoleLevel: 80,
+    requiredPermission: 'UPDATE_BRANCH',
     children: [
       {
         title: 'nav.apps.area.list',
         path: '/area/area-list',
         type: 'link',
-        minRoleLevel: 100
+        requiredPermission: 'CREATE_AREA'
       },
       {
         title: 'nav.apps.branch.list',
         path: '/branch/branch-list',
         type: 'link',
-        minRoleLevel: 80
+        requiredPermission: 'UPDATE_BRANCH'
       },
       {
         title: 'nav.apps.department.list',
         path: '/department/department-list',
         type: 'link',
-        minRoleLevel: 100
+        requiredPermission: 'CREATE_DEPARTMENT'
       }
     ]
   },
 
   // ================= Users =================
-  { headTitle: 'nav.apps.employee.header', minRoleLevel: 70 },
+  { headTitle: 'nav.apps.employee.header', requiredPermission: 'VIEW_EMPLOYEES' },
   {
     title: 'nav.apps.employee.title',
     icon: 'ti-user',
     type: 'sub',
-    minRoleLevel: 70,
+    requiredPermission: 'VIEW_EMPLOYEES',
     children: [
       {
         title: 'nav.apps.employee.list',
         path: '/employee/employee-list',
         type: 'link',
-        minRoleLevel: 70
+        requiredPermission: 'VIEW_EMPLOYEES'
       },
       {
         title: 'nav.apps.role.list',
         path: '/role/role-list',
         type: 'link',
-        minRoleLevel: 100
+        requiredPermission: 'ASSIGN_ROLE'
       },
       {
         title: 'nav.apps.permission.list',
         path: '/role/permission-list',
         type: 'link',
-        minRoleLevel: 100
+        requiredPermission: 'CREATE_PERMISSION'
       }
     ]
   },
@@ -272,36 +272,39 @@ private MENUITEMS: MenuItem[] = [
   private canShow(item: MenuItem): boolean {
     const user = this.auth.getUser();
     if (!user) return false;
-      const functionCode = user.functionCode; 
+    const functionCode = user.functionCode;
 
+    if (item.requiredPermission && !this.auth.hasPermission(item.requiredPermission)) {
+      return false;
+    }
 
-    if (item.minRoleLevel !== undefined) {
-    
- if (item.minRoleLevel === 80) {
-  if (user.roleLevel === 80 && user.functionCode !== 1) {
-    return false;
-  }
-}
-    else {
-      if (user.roleLevel < item.minRoleLevel) {
+    if (item.requiredPermissions?.length && !this.auth.hasAnyPermission(...item.requiredPermissions)) {
+      return false;
+    }
+
+    if (item.requiresAccessScope && !this.auth.hasAccessScope()) {
+      return false;
+    }
+
+    // Dual-read: legacy minRoleLevel only when no permission keys are set
+    if (
+      item.minRoleLevel !== undefined &&
+      !item.requiredPermission &&
+      !item.requiredPermissions?.length
+    ) {
+      if (item.minRoleLevel === 80) {
+        if (user.roleLevel === 80 && user.functionCode !== 1) {
+          return false;
+        }
+      } else if (user.roleLevel < item.minRoleLevel) {
         return false;
       }
     }
-  }
 
-   if (item.functionCode != null) {
-  if (functionCode == null || item.functionCode !== functionCode) {
-    return false;
-  }
-}
-
-
-
-    if (
-      item.requiredPermission &&
-      (!user.permissions || !user.permissions.includes(item.requiredPermission))
-    ) {
-      return false;
+    if (item.functionCode != null) {
+      if (functionCode == null || item.functionCode !== functionCode) {
+        return false;
+      }
     }
 
     return true;

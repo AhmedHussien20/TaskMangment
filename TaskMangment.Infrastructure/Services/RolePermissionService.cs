@@ -154,16 +154,11 @@ namespace TaskMangment.Infrastructure.Services
             var permissions = await _context.EmployeeRoles
                 .Where(er =>
                     er.EmployeeId == userId &&
+                    er.IsAssigned &&
                     !er.IsDeleted)
-                .Select(er => er.RoleId)
-                .Distinct()
-                .Join(
-                    _context.RolePermissions,
-                    roleId => roleId,
-                    rp => rp.RoleId,
-                    (roleId, rp) => rp
-                )
+                .SelectMany(er => er.Role.RolePermissions)
                 .Where(rp =>
+                    rp.IsAssigned &&
                     !rp.IsDeleted &&
                     rp.Permission != null &&
                     !rp.Permission.IsDeleted)

@@ -18,12 +18,18 @@ namespace TaskMangment.Infrastructure.Services
         private readonly AppDbContext _context;
         private readonly IUserAccessContextProvider _accessProvider;
         private readonly IPermissionChecker _permissionChecker;
+        private readonly IAccessScopeResolver _scopeResolver;
 
-        public ReportService(AppDbContext context, IUserAccessContextProvider accessProvider, IPermissionChecker permissionChecker)
+        public ReportService(
+            AppDbContext context,
+            IUserAccessContextProvider accessProvider,
+            IPermissionChecker permissionChecker,
+            IAccessScopeResolver scopeResolver)
         {
             _context = context;
             _accessProvider = accessProvider;
             _permissionChecker = permissionChecker;
+            _scopeResolver = scopeResolver;
         }
 
         /// <summary>
@@ -31,85 +37,36 @@ namespace TaskMangment.Infrastructure.Services
         /// </summary>
         private async Task<(IQueryable<int> ScopedEmployeeIds, bool CanViewAllTasks, bool CanViewCreatedTasks, bool HasAccessScope)> GetScopedEmployeeIdsAsync(int currentEmployeeId, int roleLevel)
         {
-            var access = await _accessProvider.GetAsync(currentEmployeeId);
+            var scope = await _scopeResolver.ResolveAsync(currentEmployeeId);
 
-            var companyId = await _context.Employees
-                .Where(e => e.Id == currentEmployeeId)
-                .Select(e => e.CompanyId)
-                .FirstAsync();
-
-            bool canViewAllTasks = false;
-
-            if (roleLevel >= 100)
-            {
-                canViewAllTasks =
-                    await _permissionChecker
-                        .HasPermissionAsync(
-                            currentEmployeeId,
-                            "VIEW_ALL_TASKS");
-            }
+            bool canViewAllTasks = scope.IsCompanyWide ||
+                await _permissionChecker.HasPermissionAsync(currentEmployeeId, PermissionCodes.ViewAllTasks) ||
+                await _permissionChecker.HasPermissionAsync(currentEmployeeId, PermissionCodes.ViewCompanyTasks) ||
+                await _permissionChecker.HasPermissionAsync(currentEmployeeId, PermissionCodes.ViewCompanyReports);
 
             bool canViewCreatedTasks =
-                await _permissionChecker
-                    .HasPermissionAsync(
-                        currentEmployeeId,
-                        "CREATE_TASK");
+                await _permissionChecker.HasPermissionAsync(currentEmployeeId, PermissionCodes.CreateTask);
 
-            var hasAccessScope = access.BranchIds.Any() || access.FunctionCodes.Any();
+            bool canViewScoped = scope.Kind == AccessScopeKind.ManagerScoped ||
+                await _permissionChecker.HasPermissionAsync(currentEmployeeId, PermissionCodes.ViewScopedTasks) ||
+                await _permissionChecker.HasPermissionAsync(currentEmployeeId, PermissionCodes.ViewScopedReports);
 
-            IQueryable<Employee> scopedEmployeesQuery;
+            var hasAccessScope = scope.HasManagerScope || canViewScoped;
 
-            if (roleLevel >= 100 && canViewAllTasks)
+            IQueryable<Employee> scopedEmployeesQuery = _scopeResolver.FilterEmployees(
+                _context.Employees.AsQueryable(),
+                scope);
+
+            // Dual-read: if legacy admin level and company perms not migrated yet, keep company-wide
+            if (!canViewAllTasks && roleLevel >= 100)
             {
-                // يشوف كل الشركة
                 scopedEmployeesQuery = _context.Employees
-                    .Where(e =>
-                        e.CompanyId == companyId &&
-                        e.IsActive);
-            }
-            else if (hasAccessScope)
-            {
-                // يشوف الـ Access
-                scopedEmployeesQuery = _context.Employees
-                    .Where(e =>
-                        e.CompanyId == companyId &&
-                        e.IsActive)
-                    .ApplyAccessScope(access);
-
-                if (roleLevel != 100)
-                {
-                    scopedEmployeesQuery =
-                        scopedEmployeesQuery
-                            .ApplyRoleHierarchy(roleLevel);
-                }
-            }
-            else if (canViewCreatedTasks)
-            {
-                // يشوف موظفي الفرع
-                var branchId = await _context.Employees
-                    .Where(e => e.Id == currentEmployeeId)
-                    .Select(e => e.BranchId)
-                    .FirstAsync();
-
-                scopedEmployeesQuery = _context.Employees
-                    .Where(e =>
-                        e.CompanyId == companyId &&
-                        e.BranchId == branchId &&
-                        e.IsActive);
-            }
-            else
-            {
-                // يشوف نفسه فقط
-                scopedEmployeesQuery = _context.Employees
-                    .Where(e =>
-                        e.Id == currentEmployeeId &&
-                        e.IsActive);
+                    .Where(e => e.CompanyId == scope.CompanyId && e.IsActive && !e.IsDeleted);
+                canViewAllTasks = true;
             }
 
-            var scopedEmployeeIds =
-                scopedEmployeesQuery.Select(e => e.Id);
-
-            return (scopedEmployeeIds, canViewAllTasks, canViewCreatedTasks, hasAccessScope);
+            var scopedIds = scopedEmployeesQuery.Select(e => e.Id);
+            return (scopedIds, canViewAllTasks, canViewCreatedTasks, hasAccessScope || canViewAllTasks);
         }
 
         private static int? ResolveRoleFilter(int roleLevel, int? roleId)

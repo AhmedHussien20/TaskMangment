@@ -1,8 +1,10 @@
 ﻿
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR; 
+using TaskMangment.API.Middlewares;
 using TaskMangment.Application.Authorization;
-using TaskMangment.Application.Common.ApiRequests.Task; 
+using TaskMangment.Application.Common.ApiRequests.Task;
+using TaskMangment.Application.Common.Security;
 using TaskMangment.Application.DTOs.TaskDTOs;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Domain.Entities;
@@ -42,6 +44,7 @@ namespace TaskMangment.API.Controllers
             return Success(result.Data);
         }
         [HttpPost]
+        [PermissionAuthorize(PermissionCodes.CreateTask)]
         public async Task<IActionResult> Add([FromBody] TaskAddEditDto dto)
         {
            
@@ -50,6 +53,7 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpPut("{id}")]
+        [PermissionAuthorize(PermissionCodes.UpdateTask)]
         public async Task<IActionResult> Update(int id, [FromBody] TaskAddEditDto dto)
         {
             var result = await _service.UpdateAsync(id, dto, this.CurrentUserId);
@@ -57,6 +61,7 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpDelete("{id}")]
+        [PermissionAuthorize(PermissionCodes.DeleteTask)]
         public async Task<IActionResult> Delete(int id)
         {
             var result = await _service.DeleteAsync(id);

@@ -39,20 +39,20 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<bool> UserHasPermissionAsync(int userId, string permissionCode)
         {
-            var permission = await _permissionRepo.GetAll(p => p.Code == permissionCode).FirstOrDefaultAsync();
-            if (permission == null) return false;
+            if (string.IsNullOrWhiteSpace(permissionCode))
+                return false;
 
-            int permissionId = permission.Id;
-
-            var userRoles = await _employeeRoleRepo.GetAll(er => er.EmployeeId == userId).Select(er => er.RoleId).ToListAsync();
-
-            if (!userRoles.Any()) return false;
-
-            bool hasPermission = await _rolePermissionRepo
-                .GetAll(rp => userRoles.Contains(rp.RoleId) && rp.PermissionId == permissionId)
-                .AnyAsync();
-
-            return hasPermission;
+            return await _employeeRoleRepo.GetAll(er =>
+                    er.EmployeeId == userId &&
+                    er.IsAssigned &&
+                    !er.IsDeleted)
+                .SelectMany(er => er.Role.RolePermissions)
+                .AnyAsync(rp =>
+                    rp.IsAssigned &&
+                    !rp.IsDeleted &&
+                    rp.Permission != null &&
+                    !rp.Permission.IsDeleted &&
+                    rp.Permission.Code == permissionCode);
         }
 
         public async Task<ApiResponse<PagedResponse<PermissionGetDto>>> GetAllAsync(PermissionRequest request)

@@ -118,13 +118,25 @@ export class AuthService {
     return u ? JSON.parse(u) : null;
   }
   hasPermission(permission: string): boolean {
-    return this.getUser()?.permissions.includes(permission) ?? false;
+    const perms = this.getUser()?.permissions;
+    if (!perms?.length || !permission) return false;
+    return perms.some(p => p.toUpperCase() === permission.toUpperCase());
   }
 
+  hasAnyPermission(...permissions: string[]): boolean {
+    return permissions.some(p => this.hasPermission(p));
+  }
+
+  hasAccessScope(): boolean {
+    return !!this.getUser()?.hasAccessScope;
+  }
+
+  /** @deprecated Prefer hasPermission / hasAnyPermission. Kept for dual-read during migration. */
   hasMinRoleLevel(level: number): boolean {
     return (this.getUser()?.roleLevel ?? 0) >= level;
   }
 
+  /** @deprecated Prefer hasPermission. Kept for dual-read during migration. */
   getRoleLevel(): number {
     return this.getUser()?.roleLevel ?? 0;
   }

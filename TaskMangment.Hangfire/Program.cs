@@ -12,6 +12,7 @@ using TaskMangment.Hangfire;
 using TaskMangment.Hangfire.Jobs;
 using TaskMangment.Infrastructure;
 using TaskMangment.Infrastructure.DataContext;
+using TaskMangment.Infrastructure.Seeding;
 using TaskMangment.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -167,6 +168,11 @@ RecurringJob.AddOrUpdate<SendMonthlyEmployeeDiscountsJob>(
     saudiTimeZone
 );
 
+using (var scope = app.Services.CreateScope())
+{
+    var migrator = scope.ServiceProvider.GetRequiredService<RolePermissionPackMigrator>();
+    await migrator.MigrateAsync();
+}
 
 app.Run();
 

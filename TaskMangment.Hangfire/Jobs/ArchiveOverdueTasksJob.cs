@@ -82,23 +82,31 @@ namespace TaskMangment.Hangfire.Jobs
 
                     candidateIds = candidateIds.Distinct().ToList();
 
-                    var roleLevels = await _db.EmployeeRoles
+                    var companyWideEmployeeIds = await (
+                        from er in _db.EmployeeRoles
+                        where candidateIds.Contains(er.EmployeeId)
+                              && er.IsAssigned && !er.IsDeleted
+                              && er.Role != null && !er.Role.IsDeleted
+                        from rp in er.Role.RolePermissions
+                        where rp.IsAssigned && !rp.IsDeleted
+                              && rp.Permission != null && !rp.Permission.IsDeleted
+                              && (rp.Permission.Code == "VIEW_COMPANY_TASKS"
+                                  || rp.Permission.Code == "VIEW_ALL_TASKS"
+                                  || rp.Permission.Code == "RECEIVE_ORG_ESCALATIONS")
+                        select er.EmployeeId
+                    ).Distinct().ToListAsync();
+
+                    var legacyAdminIds = await _db.EmployeeRoles
                         .Where(er => candidateIds.Contains(er.EmployeeId)
                                      && er.IsAssigned
                                      && !er.IsDeleted
-                                     && er.Role != null)
-                        .GroupBy(er => er.EmployeeId)
-                        .Select(g => new
-                        {
-                            EmployeeId = g.Key,
-                            RoleLevel = g.Max(x => x.Role.Level)
-                        })
+                                     && er.Role != null
+                                     && er.Role.Level == 100)
+                        .Select(er => er.EmployeeId)
+                        .Distinct()
                         .ToListAsync();
 
-                    var exemptIds = new HashSet<int>(
-                        roleLevels.Where(x => x.RoleLevel == 100)
-                                  .Select(x => x.EmployeeId)
-                    );
+                    var exemptIds = new HashSet<int>(companyWideEmployeeIds.Concat(legacyAdminIds));
 
                     //var level80Ids = roleLevels
                     //    .Where(x => x.RoleLevel == 80)

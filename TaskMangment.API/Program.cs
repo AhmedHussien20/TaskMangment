@@ -268,6 +268,12 @@ namespace TaskMangment.API
                 // API Controllers
                 app.MapControllers();
 
+            using (var scope = app.Services.CreateScope())
+            {
+                var migrator = scope.ServiceProvider.GetRequiredService<RolePermissionPackMigrator>();
+                await migrator.MigrateAsync();
+            }
+
             //using (var scope = app.Services.CreateScope())
             //{
             //    var seeder = scope.ServiceProvider.GetRequiredService<DataSeeder>();

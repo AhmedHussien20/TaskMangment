@@ -1,31 +1,17 @@
-﻿using Microsoft.EntityFrameworkCore;
-using TaskMangment.Application.Interfaces.Services;
-using TaskMangment.Infrastructure.DataContext;
+﻿using TaskMangment.Application.Interfaces.Services;
 
 namespace TaskMangment.Infrastructure.Services
 {
     public class PermissionChecker : IPermissionChecker
     {
-        private readonly AppDbContext _context;
+        private readonly IEmployeePermissionService _permissions;
 
-        public PermissionChecker(AppDbContext context)
+        public PermissionChecker(IEmployeePermissionService permissions)
         {
-            _context = context;
+            _permissions = permissions;
         }
 
-        public async Task<bool> HasPermissionAsync(int employeeId, string permissionCode)
-        {
-            return await _context.EmployeeRoles
-                .Where(er =>
-                    er.EmployeeId == employeeId &&
-                    er.IsAssigned &&
-                    !er.IsDeleted)
-                .SelectMany(er => er.Role.RolePermissions)
-                .AnyAsync(rp =>
-                    rp.IsAssigned &&
-                    !rp.IsDeleted &&
-                    rp.Permission.Code == permissionCode);
-        }
+        public Task<bool> HasPermissionAsync(int employeeId, string permissionCode) =>
+            _permissions.HasAsync(employeeId, permissionCode);
     }
-
 }

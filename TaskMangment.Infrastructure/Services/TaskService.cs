@@ -52,10 +52,8 @@ namespace TaskMangment.Infrastructure.Services
 
         private readonly IAppUnitOfWork _uow;
         private readonly IUserAccessContextProvider _accessProvider;
-
-
-
-
+        private readonly IAccessScopeResolver _scopeResolver;
+        private readonly IEmployeePermissionService _permissions;
 
         public TaskService(
              IRepository<WorkTask> taskRepo,
@@ -76,10 +74,9 @@ namespace TaskMangment.Infrastructure.Services
            IRepository<TaskPercentage> percentRepo,
            IRepository<Notification> notificationRepo,
            IAppUnitOfWork uow,
-           IUserAccessContextProvider accessProvider
-
-
-
+           IUserAccessContextProvider accessProvider,
+           IAccessScopeResolver scopeResolver,
+           IEmployeePermissionService permissions
 )
         {
             _taskRepo = taskRepo;
@@ -101,6 +98,8 @@ namespace TaskMangment.Infrastructure.Services
             _notificationRepo = notificationRepo;
             _uow = uow;
             _accessProvider = accessProvider;
+            _scopeResolver = scopeResolver;
+            _permissions = permissions;
         }
 
         public async Task<ApiResponse<PagedResponse<TaskGetDto>>> GetAllAsync(TaskRequest request, int CompanyId, int roleLevel, int employeeId)
@@ -128,7 +127,13 @@ namespace TaskMangment.Infrastructure.Services
      request.CreatedFrom.HasValue || request.CreatedTo.HasValue ||
      request.DueFrom.HasValue || request.DueTo.HasValue;
 
-            if (roleLevel == 100 && requestedAdvanced)
+            var scope = await _scopeResolver.ResolveAsync(employeeId);
+            var canViewCompany = scope.IsCompanyWide ||
+                await _permissions.HasAnyAsync(employeeId,
+                    PermissionCodes.ViewCompanyTasks,
+                    PermissionCodes.ViewAllTasks);
+
+            if (canViewCompany && requestedAdvanced)
             {
                 query = query.ApplyTaskFilters(request, employeeId);
             }
@@ -146,18 +151,15 @@ namespace TaskMangment.Infrastructure.Services
                     query = query.Where(t => (int)t.Status == request.StatusId.Value);
                 }
 
-                var access = await _accessProvider.GetAsync(employeeId);
-                var hasAccessScope = access.BranchIds.Any() || access.FunctionCodes.Any();
-                var viewScopedTasks = request.ViewScopedTasks == true && hasAccessScope;
+                var canViewScoped = await _permissions.HasAsync(employeeId, PermissionCodes.ViewScopedTasks)
+                    || scope.Kind is AccessScopeKind.ManagerScoped or AccessScopeKind.CompanyWide;
+                var viewScopedTasks = request.ViewScopedTasks == true && canViewScoped;
 
-                if (viewScopedTasks)
+                if (viewScopedTasks || canViewCompany)
                 {
-                    var scopedEmployeesQuery = _employeeRepo
-                        .GetAll(e => e.CompanyId == CompanyId && e.IsActive)
-                        .ApplyAccessScope(access);
-
-                    if (roleLevel != 100)
-                        scopedEmployeesQuery = scopedEmployeesQuery.ApplyRoleHierarchy(roleLevel);
+                    var scopedEmployeesQuery = _scopeResolver.FilterEmployees(
+                        _employeeRepo.GetAll(e => e.CompanyId == CompanyId && e.IsActive),
+                        scope);
 
                     var scopedEmployeeIds = scopedEmployeesQuery.Select(e => e.Id);
 
@@ -191,7 +193,7 @@ namespace TaskMangment.Infrastructure.Services
 
             var dtos = _mapper.Map<ICollection<TaskGetDto>>(list);
 
-            var hasCreatorPrivileges = await HasCreatorPrivilegesAsync(roleLevel, employeeId);
+            var hasCreatorPrivileges = await HasCreatorPrivilegesAsync(employeeId);
 
             foreach (var dto in dtos)
             {
@@ -208,7 +210,7 @@ namespace TaskMangment.Infrastructure.Services
                     .ToList();
 
                 dto.AssignedByName = task.AssignedBy?.FullName;
-                dto.CreatedByMe = ResolveCreatedByMe(roleLevel, employeeId, task, hasCreatorPrivileges);
+                dto.CreatedByMe = ResolveCreatedByMe(employeeId, task, hasCreatorPrivileges, scope);
 
             }
 
@@ -278,8 +280,9 @@ namespace TaskMangment.Infrastructure.Services
 
             dto.AssignedByName = task.AssignedBy?.FullName;
 
-            var hasCreatorPrivileges = await HasCreatorPrivilegesAsync(roleLevel, employeeId);
-            dto.CreatedByMe = ResolveCreatedByMe(roleLevel, employeeId, task, hasCreatorPrivileges);
+            var hasCreatorPrivileges = await HasCreatorPrivilegesAsync(employeeId);
+            var scope = await _scopeResolver.ResolveAsync(employeeId);
+            dto.CreatedByMe = ResolveCreatedByMe(employeeId, task, hasCreatorPrivileges, scope);
 
             return ApiResponse<TaskGetDto>.Ok(dto);
         }
@@ -908,9 +911,15 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<bool>.Ok(true);
         }
 
-        private static bool ResolveCreatedByMe(int roleLevel, int employeeId, WorkTask task, bool hasCreatorPrivileges)
+        private static bool ResolveCreatedByMe(
+            int employeeId,
+            WorkTask task,
+            bool hasCreatorPrivileges,
+            ResolvedAccessScope scope)
         {
-            if (roleLevel == 80
+            // Multi-branch scoped users who are only assignees should not get creator UI.
+            if (scope.Kind == AccessScopeKind.ManagerScoped
+                && scope.BranchIds.Count > 1
                 && task.CreatedByEmployeeId != employeeId
                 && task.Assignments.Any(a => a.EmployeeId == employeeId && a.IsActive))
                 return false;
@@ -918,12 +927,15 @@ namespace TaskMangment.Infrastructure.Services
             return hasCreatorPrivileges || task.CreatedByEmployeeId == employeeId;
         }
 
-        private async Task<bool> HasCreatorPrivilegesAsync(int roleLevel, int employeeId)
+        private async Task<bool> HasCreatorPrivilegesAsync(int employeeId)
         {
-            if (roleLevel == 100)
+            if (await _permissions.HasAnyAsync(employeeId,
+                    PermissionCodes.ViewCompanyTasks,
+                    PermissionCodes.ViewAllTasks))
                 return true;
 
-            if (roleLevel == 80)
+            var scope = await _scopeResolver.ResolveAsync(employeeId);
+            if (scope.Kind == AccessScopeKind.ManagerScoped && scope.BranchIds.Count > 1)
             {
                 var functionCode = await _employeeRepo.GetAll(e => e.Id == employeeId)
                     .Select(e => e.FunctionCode)

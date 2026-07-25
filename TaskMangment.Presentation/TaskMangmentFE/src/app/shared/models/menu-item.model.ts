@@ -9,8 +9,11 @@ export interface MenuItem {
   dirchange?: boolean;
   menutype?: string;
   children?: MenuItem[];
-  
+
+  /** @deprecated Prefer requiredPermission. Dual-read during migration. */
   minRoleLevel?: number;
   requiredPermission?: string;
-  functionCode?: number
+  requiredPermissions?: string[];
+  requiresAccessScope?: boolean;
+  functionCode?: number;
 }

@@ -40,6 +40,12 @@ namespace TaskMangment.API.Controllers
         protected int RoleLevel =>
             int.Parse(User.FindFirstValue("RoleLevelId")?? throw new AppException("Unauthorized", StatusCodes.Status401Unauthorized));
 
+        protected bool HasPermission(string permissionCode) =>
+            User.FindAll("permission").Any(c =>
+                string.Equals(c.Value, permissionCode, StringComparison.OrdinalIgnoreCase));
+
+        protected bool HasAnyPermission(params string[] permissionCodes) =>
+            permissionCodes != null && permissionCodes.Any(HasPermission);
 
         protected bool IsAuthenticated => User.Identity.IsAuthenticated;
         protected IActionResult Success<T>(T data, string? message = null)

@@ -143,8 +143,12 @@ namespace TaskMangment.Infrastructure.Services
             services.AddScoped<IChartService, ChartService>();
             services.AddScoped<IUserAccessContextProvider, UserAccessContextProvider>();
             
+            services.AddScoped<IEmployeePermissionService, EmployeePermissionService>();
             services.AddScoped<IPermissionChecker, PermissionChecker>();
+            services.AddScoped<IOrgManagerResolver, OrgManagerResolver>();
+            services.AddScoped<IAccessScopeResolver, AccessScopeResolver>();
             services.AddScoped<IGetHigherManager, GetHigherManager>();
+            services.AddScoped<RolePermissionPackMigrator>();
             services.AddHttpClient<IWhatsAppService, WhatsAppService>();
 
 
