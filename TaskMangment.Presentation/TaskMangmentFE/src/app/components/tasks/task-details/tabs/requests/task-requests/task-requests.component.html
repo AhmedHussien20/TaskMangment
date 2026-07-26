@@ -23,7 +23,7 @@
 
     <div *ngIf="requestType === 'extend' && reviewModel.status === ExtensionRequestStatus.Approved" class="mt-2">
       <label>{{'TASK.NEW_DATE' | translate}}</label>
-<app-date-picker [(ngModel)]="reviewModel.newDueDate"></app-date-picker>
+<app-date-picker [(ngModel)]="reviewModel.newDueDate" [blockWeekendAndPast]="true"></app-date-picker>
 </div>
 
     <!-- Close -->

@@ -250,6 +250,12 @@
   <data name="INVALID_DATE" xml:space="preserve">
     <value>Enter the right date</value>
   </data>
+  <data name="DUE_DATE_ON_WEEKEND" xml:space="preserve">
+    <value>Task due date cannot be on Friday or Saturday.</value>
+  </data>
+  <data name="DUE_DATE_IN_PAST" xml:space="preserve">
+    <value>Task due date cannot be in the past.</value>
+  </data>
   <data name="EXTENDAPPROVED" xml:space="preserve">
     <value>The task extension request has been approved</value>
   </data>

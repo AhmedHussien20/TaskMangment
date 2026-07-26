@@ -13,6 +13,7 @@ using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Responses;
 using TaskMangment.Application.Common.Security;
+using TaskMangment.Application.Common.Validation;
 using TaskMangment.Application.DTOs;
 using TaskMangment.Application.DTOs.TaskDTOs;
 using TaskMangment.Application.Interfaces.IRepository;
@@ -114,11 +115,24 @@ namespace TaskMangment.Infrastructure.Services
             //        return ApiResponse<PagedResponse<TaskGetDto>>.Ok(cached);
             //}
 
-            var query = _taskRepo.GetAll()
+            IQueryable<WorkTask> query = _taskRepo.GetAll()
                 .Include(t => t.CreatedBy)
                 .Include(t => t.Assignments).ThenInclude(a => a.Employee)
-                .Include(t => t.AssignedBy)
-                .ApplySearch(request.searchKey);
+                .Include(t => t.AssignedBy);
+
+            if (!string.IsNullOrWhiteSpace(request.searchKey))
+            {
+                var key = request.searchKey.Trim();
+                query = query.Where(t =>
+                    t.Id.ToString().Contains(key) ||
+                    t.Title.Contains(key) ||
+                    (t.Description != null && t.Description.Contains(key)) ||
+                    (t.AssignedBy != null && t.AssignedBy.FullName.Contains(key)) ||
+                    (t.CreatedBy != null && t.CreatedBy.FullName.Contains(key)) ||
+                    t.Status.ToString().Contains(key) ||
+                    t.Priority.ToString().Contains(key) ||
+                    t.Assignments.Any(a => a.IsActive && a.Employee != null && a.Employee.FullName.Contains(key)));
+            }
 
             bool requestedAdvanced =
      request.Direction.HasValue ||
@@ -178,6 +192,31 @@ namespace TaskMangment.Infrastructure.Services
                 {
                     query = query.Where(t =>
                         t.Assignments.Any(a => a.IsActive && request.EmployeeIds.Contains(a.EmployeeId)));
+                }
+
+                if (request.PriorityId.HasValue)
+                    query = query.Where(t => (int)t.Priority == request.PriorityId.Value);
+
+                if (request.CreatedFrom.HasValue)
+                    query = query.Where(t => t.CreatedDate >= request.CreatedFrom.Value.Date);
+
+                if (request.CreatedTo.HasValue)
+                {
+                    var createdTo = request.CreatedTo.Value.TimeOfDay == TimeSpan.Zero
+                        ? request.CreatedTo.Value.Date.AddDays(1).AddTicks(-1)
+                        : request.CreatedTo.Value;
+                    query = query.Where(t => t.CreatedDate <= createdTo);
+                }
+
+                if (request.DueFrom.HasValue)
+                    query = query.Where(t => t.DueDate.HasValue && t.DueDate.Value >= request.DueFrom.Value.Date);
+
+                if (request.DueTo.HasValue)
+                {
+                    var dueTo = request.DueTo.Value.TimeOfDay == TimeSpan.Zero
+                        ? request.DueTo.Value.Date.AddDays(1).AddTicks(-1)
+                        : request.DueTo.Value;
+                    query = query.Where(t => t.DueDate.HasValue && t.DueDate.Value <= dueTo);
                 }
             }
 
@@ -291,6 +330,8 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<TaskGetDto>> AddAsync(TaskAddEditDto dto, int createdUser, int companyId)
         {
+            TaskDueDateRules.EnsureValidDueDate(dto.DueDate);
+
             await _uow.BeginTransactionAsync();
 
             try
@@ -305,6 +346,9 @@ namespace TaskMangment.Infrastructure.Services
                         if (employee == null || !employee.IsActive)
                             throw new AppException(ErrorCodes.EmployeeInactive, StatusCodes.Status400BadRequest);
 
+                        if (!await _scopeResolver.CanAssignAsync(createdUser, empId))
+                            throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
+
                         var task = _mapper.Map<WorkTask>(dto);
                         task.PenaltyAtMaxWarnings = 0;
                         task.MaxWarnings = 3;
@@ -318,6 +362,16 @@ namespace TaskMangment.Infrastructure.Services
                 }
                 else
                 {
+                    foreach (var empId in dto.AssignedEmployeeIds.Distinct())
+                    {
+                        var employee = await _employeeRepo.GetAll(e => e.Id == empId).Select(e => new { e.Id, e.IsActive }).FirstOrDefaultAsync();
+                        if (employee == null || !employee.IsActive)
+                            throw new AppException(ErrorCodes.EmployeeInactive, StatusCodes.Status400BadRequest);
+
+                        if (!await _scopeResolver.CanAssignAsync(createdUser, empId))
+                            throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
+                    }
+
                     var task = _mapper.Map<WorkTask>(dto);
                     task.PenaltyAtMaxWarnings = 0;
                     task.MaxWarnings = 3;
@@ -394,6 +448,8 @@ namespace TaskMangment.Infrastructure.Services
         }
         public async Task<ApiResponse<TaskGetDto>> UpdateAsync(int id, TaskAddEditDto dto, int modifierUser)
         {
+            TaskDueDateRules.EnsureValidDueDate(dto.DueDate);
+
             var task = await _taskRepo.GetByIDAsync(id);
             if (task == null)
                 throw new AppException(ErrorCodes.TaskNotFound, StatusCodes.Status400BadRequest);

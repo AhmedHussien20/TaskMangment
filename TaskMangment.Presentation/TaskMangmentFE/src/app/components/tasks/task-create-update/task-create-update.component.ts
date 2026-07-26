@@ -10,6 +10,12 @@ import { ToastrService } from 'ngx-toastr';
 import { FormFieldConfig } from 'app/core/models/form-field-config';
 import { CommentAllowPeriod, TaskPriority, TaskStatus } from 'app/core/models/task/task';
 import { decimalValidator, penaltyAmountValidator } from 'app/shared/validations/numberVlidator';
+import {
+  notPastDueDateValidator,
+  startOfToday,
+  taskDueDateCalendarFilter,
+  weekendDueDateValidator
+} from 'app/shared/validations/weekend-due-date.validator';
 
 @Component({
   selector: 'app-task-create-update',
@@ -28,6 +34,8 @@ export class TaskCreateUpdateComponent implements OnInit {
   @Input() taskId: number | null = null;
   @Output() formSubmitted = new EventEmitter<void>();
   @Input() isCopy: boolean = false;
+  /** Preselect assignees when creating a task from Employee 360. */
+  @Input() preselectedEmployeeIds: number[] = [];
   formGroup!: FormGroup;
 
   title = 'TASK.ADD';
@@ -102,7 +110,13 @@ export class TaskCreateUpdateComponent implements OnInit {
       type: 'date',
       label: 'TASK.DUE_DATE',
       name: 'dueDate',
-      defaultValue: null
+      defaultValue: null,
+      minDate: startOfToday(),
+      dateFilter: taskDueDateCalendarFilter,
+      errorMessages: {
+        weekendDueDate: 'TASK.DUE_DATE_WEEKEND',
+        pastDueDate: 'TASK.DUE_DATE_PAST'
+      }
     },
 
     {
@@ -178,8 +192,41 @@ export class TaskCreateUpdateComponent implements OnInit {
 
   if ((this.isEdit || this.isCopy) && this.taskId) {
     this.loadTask();
+  } else if (!this.isEdit && this.preselectedEmployeeIds?.length) {
+    this.applyPreselectedEmployees();
   }
 }
+
+  private applyPreselectedEmployees(): void {
+    const ids = [...this.preselectedEmployeeIds];
+    this.formGroup.patchValue({ assignedEmployeeIds: ids });
+
+    const field = this.formConfig.find(f => f.name === 'assignedEmployeeIds');
+    if (!field) return;
+
+    // Ensure preselected employees appear in options even if not on first page.
+    ids.forEach(id => {
+      const exists = (field.options || []).some((o: any) => o.value === id);
+      if (!exists) {
+        this.employeeService.getById(id).subscribe({
+          next: (res: any) => {
+            const emp = res?.data;
+            if (!emp) return;
+            field.options = [
+              {
+                label: emp.fullName,
+                value: emp.id ?? id,
+                mobile: emp.mobile,
+                email: emp.email
+              },
+              ...(field.options || [])
+            ];
+            this.formGroup.patchValue({ assignedEmployeeIds: ids });
+          }
+        });
+      }
+    });
+  }
 
   initForm() {
     this.formGroup = this.fb.group({
@@ -192,7 +239,7 @@ export class TaskCreateUpdateComponent implements OnInit {
       assignedEmployeeIds: [[], Validators.required],
       priority: [TaskPriority.Low, Validators.required],
     status: [{ value: TaskStatus.New, disabled: !this.isEdit }, Validators.required], 
-      dueDate: [null, Validators.required],
+      dueDate: [null, [Validators.required, weekendDueDateValidator(), notPastDueDateValidator()]],
       commentAllowPeriodDays: [CommentAllowPeriod.Daily, Validators.required],
       maxWarningsBeforeDiscount: [3, [Validators.required, Validators.min(0), Validators.max(3)]],
       penaltyOnAutoClose: [50, [Validators.required, decimalValidator(), penaltyAmountValidator()]],
@@ -277,6 +324,10 @@ export class TaskCreateUpdateComponent implements OnInit {
           mobile: emp.mobile,
           email: emp.email
         }));
+
+        if (!this.isEdit && this.preselectedEmployeeIds?.length) {
+          this.applyPreselectedEmployees();
+        }
       });
     }
   }
@@ -284,7 +335,14 @@ export class TaskCreateUpdateComponent implements OnInit {
   onSubmit(formData: any) {
     if (this.formGroup.invalid) {
       this.formGroup.markAllAsTouched();
-      this.toastr.error(this.translate.instant('FORM.VALIDATION_ERROR'));
+      const dueCtrl = this.formGroup.get('dueDate');
+      if (dueCtrl?.hasError('weekendDueDate')) {
+        this.toastr.error(this.translate.instant('TASK.DUE_DATE_WEEKEND'));
+      } else if (dueCtrl?.hasError('pastDueDate')) {
+        this.toastr.error(this.translate.instant('TASK.DUE_DATE_PAST'));
+      } else {
+        this.toastr.error(this.translate.instant('FORM.VALIDATION_ERROR'));
+      }
       return;
     }
     const payload = { ...this.formGroup.value, penaltyAtMaxWarnings: 0, maxWarnings: 3 };

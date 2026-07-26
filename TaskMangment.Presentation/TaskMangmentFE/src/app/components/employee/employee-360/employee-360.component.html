@@ -1,0 +1,710 @@
+<app-page-header
+  [title]="title | translate"
+  [title1]="breadcrumbs"
+  [activeitem]="activeitem | translate">
+</app-page-header>
+
+<!-- Skeleton -->
+<div class="e360" *ngIf="isLoading">
+  <div class="e360-skeleton header-skel"></div>
+  <div class="row g-2 mb-3">
+    <div class="col-6 col-md-3 col-xl-2" *ngFor="let i of [1,2,3,4,5,6]"><div class="e360-skeleton kpi-skel"></div></div>
+  </div>
+  <div class="e360-skeleton body-skel"></div>
+</div>
+
+<div class="e360" *ngIf="!isLoading && data && profile">
+  <!-- Sticky Header -->
+  <div class="e360-header card custom-card">
+    <div class="card-body">
+      <div class="d-flex flex-wrap gap-3 align-items-start">
+        <div class="e360-avatar">
+          <img *ngIf="profile.imageUrl" [src]="profile.imageUrl" [alt]="profile.fullName" />
+          <div *ngIf="!profile.imageUrl" class="avatar-fallback">{{ profile.fullName.charAt(0) }}</div>
+        </div>
+
+        <div class="flex-grow-1 min-w-0">
+          <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+            <h3 class="mb-0 e360-name">{{ profile.fullName }}</h3>
+            <span class="badge code-badge">{{ profile.employeeCode }}</span>
+            <span class="badge" [ngClass]="profile.isActive ? 'bg-success' : 'bg-secondary'">
+              {{ (profile.isActive ? 'TABLE.ACTIVE' : 'TABLE.INACTIVE') | translate }}
+            </span>
+          </div>
+
+          <div class="e360-meta text-muted small mb-2">
+            <span *ngIf="profile.jobName || profile.title"><i class="bi bi-briefcase me-1"></i>{{ profile.jobName || profile.title }}</span>
+            <span *ngIf="profile.departmentName"><i class="bi bi-diagram-3 me-1"></i>{{ profile.departmentName }}</span>
+            <span *ngIf="profile.branchName"><i class="bi bi-geo-alt me-1"></i>{{ profile.branchName }}</span>
+            <span *ngIf="data.directManager"><i class="bi bi-person-badge me-1"></i>{{ 'EMPLOYEE_360.DIRECT_MANAGER' | translate }}: {{ data.directManager.fullName }}</span>
+          </div>
+
+          <div class="e360-meta small">
+            <span *ngIf="profile.email"><i class="bi bi-envelope me-1"></i>{{ profile.email }}</span>
+            <span *ngIf="profile.mobile"><i class="bi bi-telephone me-1"></i>{{ profile.mobile }}</span>
+            <span *ngIf="profile.hireDate"><i class="bi bi-calendar-event me-1"></i>{{ 'EMPLOYEE_360.HIRE_DATE' | translate }}: {{ profile.hireDate | myDate:'d MMM y' }}</span>
+            <span *ngIf="profile.lastLoginDate"><i class="bi bi-clock-history me-1"></i>{{ 'EMPLOYEE.LAST_LOGIN' | translate }}: {{ profile.lastLoginDate | myDate:'d MMM y':true }}</span>
+          </div>
+        </div>
+
+        <div class="e360-actions d-flex flex-wrap gap-2">
+          <button *ngIf="canCreateTask" type="button" class="btn btn-primary btn-sm" (click)="openCreateTask(taskModal)">
+            <i class="bi bi-plus-lg me-1"></i>{{ 'EMPLOYEE_360.CREATE_TASK' | translate }}
+          </button>
+          <button *ngIf="canEditEmployee" type="button" class="btn btn-outline-primary btn-sm" (click)="goToEdit()">
+            <i class="bi bi-pencil-square me-1"></i>{{ 'EMPLOYEE.EDIT' | translate }}
+          </button>
+          <button type="button" class="btn btn-outline-secondary btn-sm" (click)="sendEmail()">
+            <i class="bi bi-envelope me-1"></i>{{ 'EMPLOYEE_360.SEND_EMAIL' | translate }}
+          </button>
+          <div ngbDropdown class="d-inline-block">
+            <button type="button" class="btn btn-outline-dark btn-sm" ngbDropdownToggle>
+              {{ 'EMPLOYEE_360.MORE_ACTIONS' | translate }}
+            </button>
+            <div ngbDropdownMenu>
+              <button ngbDropdownItem routerLink="/employee/employee-list">{{ 'COMMON.BACK' | translate }}</button>
+              <button ngbDropdownItem (click)="onTabChange('timeline')">{{ 'EMPLOYEE_360.TAB_TIMELINE' | translate }}</button>
+              <button ngbDropdownItem (click)="onTabChange('emails')">{{ 'EMPLOYEE_360.TAB_EMAILS' | translate }}</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Global date range (applies to KPIs, charts, sidebar, and all tabs) -->
+  <div class="card custom-card mb-3 e360-date-range">
+    <div class="card-body py-2">
+      <div class="d-flex flex-wrap gap-2 align-items-end">
+        <div class="me-auto">
+          <div class="fw-semibold small">{{ 'EMPLOYEE_360.DATE_RANGE' | translate }}</div>
+          <div class="text-muted smaller">{{ 'EMPLOYEE_360.DATE_RANGE_HINT' | translate }}</div>
+        </div>
+        <div style="min-width:160px">
+          <label class="form-label small mb-1">{{ 'CHART.FROM' | translate }}</label>
+          <app-date-picker [(ngModel)]="globalFrom" [placeholderKey]="'CHART.FROM'"></app-date-picker>
+        </div>
+        <div style="min-width:160px">
+          <label class="form-label small mb-1">{{ 'CHART.TO' | translate }}</label>
+          <app-date-picker [(ngModel)]="globalTo" [placeholderKey]="'CHART.TO'"></app-date-picker>
+        </div>
+        <button type="button" class="btn btn-sm btn-primary" (click)="applyGlobalDateRange()">
+          {{ 'COMMON.APPLY' | translate }}
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-secondary" (click)="clearGlobalDateRange()"
+          [disabled]="!globalFrom && !globalTo">
+          {{ 'COMMON.CLEAR' | translate }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="row g-2 mb-3">
+    <div class="col-6 col-md-4 col-lg-3 col-xl-2" *ngFor="let card of kpiCards">
+      <div class="kpi-card" [ngClass]="card.color" [class.clickable]="!!card.tab" (click)="onKpiClick(card)">
+        <div class="kpi-icon"><i class="bi" [ngClass]="card.icon"></i></div>
+        <div>
+          <div class="kpi-value">{{ card.value }}</div>
+          <div class="kpi-label">{{ card.label | translate }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <!-- Main -->
+    <div class="col-xl-9">
+      <div class="card custom-card">
+        <div class="card-body">
+          <ul ngbNav #nav="ngbNav" [(activeId)]="activeTab" (activeIdChange)="onTabChange($event)" class="nav-tabs e360-tabs mb-3 flex-wrap">
+            <li [ngbNavItem]="'overview'"><button ngbNavLink>{{ 'EMPLOYEE_360.TAB_OVERVIEW' | translate }}</button>
+              <ng-template ngbNavContent>
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <div class="panel">
+                      <h6>{{ 'EMPLOYEE_360.EMPLOYEE_INFO' | translate }}</h6>
+                      <dl class="row small mb-0">
+                        <dt class="col-5">{{ 'EMPLOYEE.QUALIFICATION' | translate }}</dt><dd class="col-7">{{ profile.qualification || '—' }}</dd>
+                        <dt class="col-5">{{ 'EMPLOYEE.NATIONALITY' | translate }}</dt><dd class="col-7">{{ profile.nationality || '—' }}</dd>
+                        <dt class="col-5">{{ 'EMPLOYEE.IDENTITY_NUMBER' | translate }}</dt><dd class="col-7">{{ profile.identityNumber || '—' }}</dd>
+                        <dt class="col-5">{{ 'EMPLOYEE.FUNCTION_CODE' | translate }}</dt><dd class="col-7">{{ profile.functionCode || '—' }}</dd>
+                        <dt class="col-5">{{ 'EMPLOYEE.ADDRESS' | translate }}</dt><dd class="col-7">{{ profile.address || '—' }}</dd>
+                      </dl>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="panel">
+                      <h6>{{ 'EMPLOYEE_360.ORG_HIERARCHY' | translate }}</h6>
+                      <div class="org-line small mb-2">{{ profile.branchName || '—' }} / {{ profile.departmentName || '—' }} / {{ profile.jobName || '—' }}</div>
+                      <h6 class="mt-3">{{ 'EMPLOYEE_360.REPORTING_MANAGERS' | translate }}</h6>
+                      <ul class="list-unstyled mb-0" *ngIf="data.reportingManagers?.length; else noMgr">
+                        <li *ngFor="let m of data.reportingManagers" class="mb-1">
+                          <strong>{{ m.fullName }}</strong>
+                          <span class="text-muted" *ngIf="m.jobName"> — {{ m.jobName }}</span>
+                        </li>
+                      </ul>
+                      <ng-template #noMgr><p class="text-muted small mb-0">{{ 'EMPLOYEE_360.NO_MANAGERS' | translate }}</p></ng-template>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="panel">
+                      <h6>{{ 'EMPLOYEE_360.CHART_STATUS' | translate }}</h6>
+                      <apx-chart *ngIf="statusChart.series?.length"
+                        [series]="statusChart.series!"
+                        [chart]="statusChart.chart!"
+                        [labels]="statusChart.labels!"
+                        [colors]="statusChart.colors!"
+                        [legend]="statusChart.legend!"
+                        [dataLabels]="statusChart.dataLabels!">
+                      </apx-chart>
+                      <div *ngIf="!statusChart.series?.length" class="empty-state">{{ 'EMPLOYEE_360.EMPTY_CHART' | translate }}</div>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="panel">
+                      <h6>{{ 'EMPLOYEE_360.CHART_PRODUCTIVITY' | translate }}</h6>
+                      <apx-chart *ngIf="productivityChart.series"
+                        [series]="productivityChart.series!"
+                        [chart]="productivityChart.chart!"
+                        [xaxis]="productivityChart.xaxis!"
+                        [colors]="productivityChart.colors!"
+                        [plotOptions]="productivityChart.plotOptions!"
+                        [dataLabels]="productivityChart.dataLabels!">
+                      </apx-chart>
+                    </div>
+                  </div>
+                  <div class="col-12">
+                    <div class="panel">
+                      <h6>{{ 'EMPLOYEE_360.RECENT_ACTIVITY' | translate }}</h6>
+                      <div *ngIf="sidebar?.recentComments?.length; else noAct">
+                        <div class="activity-row" *ngFor="let c of sidebar!.recentComments" (click)="openTaskDetails(c.taskId)">
+                          <strong>{{ c.taskTitle }}</strong>
+                          <div class="small text-muted">{{ c.date | myDate:'d MMM y':true }}</div>
+                          <div class="small">{{ c.commentText }}</div>
+                        </div>
+                      </div>
+                      <ng-template #noAct><div class="empty-state">{{ 'EMPLOYEE_360.NO_ACTIVITY' | translate }}</div></ng-template>
+                    </div>
+                  </div>
+                </div>
+              </ng-template>
+            </li>
+
+            <li [ngbNavItem]="'work'"><button ngbNavLink>{{ 'EMPLOYEE_360.TAB_WORK' | translate }}</button>
+              <ng-template ngbNavContent>
+                <div class="d-flex flex-wrap gap-2 mb-3 align-items-end">
+                  <div class="flex-grow-1">
+                    <label class="form-label small mb-1">{{ 'COMMON.SEARCH' | translate }}</label>
+                    <input class="form-control form-control-sm" [(ngModel)]="taskSearch"
+                      [placeholder]="'EMPLOYEE_360.SEARCH_ALL_COLUMNS' | translate"
+                      (keyup.enter)="applyTaskFilters()" />
+                  </div>
+                  <div style="min-width:140px">
+                    <label class="form-label small mb-1">{{ 'TASK.STATUS' | translate }}</label>
+                    <select class="form-select form-select-sm" [(ngModel)]="taskStatusId">
+                      <option [ngValue]="null">{{ 'COMMON.ALL' | translate }}</option>
+                      <option *ngFor="let s of statusOptions" [ngValue]="s.id">{{ s.name | translate }}</option>
+                    </select>
+                  </div>
+                  <div style="min-width:140px">
+                    <label class="form-label small mb-1">{{ 'TASK.PRIORITY' | translate }}</label>
+                    <select class="form-select form-select-sm" [(ngModel)]="taskPriorityId">
+                      <option [ngValue]="null">{{ 'COMMON.ALL' | translate }}</option>
+                      <option *ngFor="let p of priorityOptions" [ngValue]="p.id">{{ p.name | translate }}</option>
+                    </select>
+                  </div>
+                  <button type="button" class="btn btn-sm btn-outline-primary" (click)="applyTaskFilters()">{{ 'COMMON.FILTER' | translate }}</button>
+                  <button *ngIf="canCreateTask" type="button" class="btn btn-sm btn-primary" (click)="openCreateTask(taskModal)">
+                    <i class="bi bi-plus-lg me-1"></i>{{ 'EMPLOYEE_360.CREATE_TASK' | translate }}
+                  </button>
+                </div>
+                <div *ngIf="taskLoading" class="empty-state">{{ 'COMMON.LOADING' | translate }}</div>
+                <app-generic-table *ngIf="!taskLoading"
+                  [title]="''" [columns]="taskColumns" [data]="taskRows"
+                  [entries]="taskPageSize" [page]="taskPage" [totalItems]="taskTotal"
+                  [showAddButton]="false" [showEditButton]="false" [showDeleteButton]="false"
+                  [showDetailsButton]="true" [showFilters]="false" [showExportExcel]="false"
+                  [searchCriteria]="emptySearchCriteria"
+                  (details)="openTaskDetails($event)" (pageChange)="onTaskPageChange($event)">
+                </app-generic-table>
+              </ng-template>
+            </li>
+
+            <li [ngbNavItem]="'access'"><button ngbNavLink>{{ 'EMPLOYEE_360.TAB_ACCESS' | translate }}</button>
+              <ng-template ngbNavContent>
+                <div class="d-flex flex-wrap gap-2 mb-3 align-items-end">
+                  <div class="flex-grow-1">
+                    <label class="form-label small mb-1">{{ 'COMMON.SEARCH' | translate }}</label>
+                    <input class="form-control form-control-sm" [(ngModel)]="accessSearch"
+                      [placeholder]="'EMPLOYEE_360.SEARCH_ALL_COLUMNS' | translate" />
+                  </div>
+                </div>
+                <div *ngIf="accessLoading" class="empty-state">{{ 'COMMON.LOADING' | translate }}</div>
+                <div *ngIf="!accessLoading && access" class="row g-3">
+                  <div class="col-md-4">
+                    <div class="panel">
+                      <h6>{{ 'EMPLOYEE_360.ROLES' | translate }}</h6>
+                      <span *ngFor="let r of filteredAccessRoles" class="badge bg-primary me-1 mb-1">{{ r.name }}</span>
+                      <div *ngIf="!filteredAccessRoles.length" class="empty-state">{{ 'EMPLOYEE_360.NO_ROLES' | translate }}</div>
+                      <h6 class="mt-3">{{ 'EMPLOYEE_360.PERMISSION_GROUPS' | translate }}</h6>
+                      <span *ngFor="let g of filteredAccessGroups" class="badge bg-secondary me-1 mb-1">{{ g }}</span>
+                    </div>
+                    <div class="panel mt-3" *ngIf="access.managerScope">
+                      <h6>{{ 'EMPLOYEE_360.MANAGER_SCOPE' | translate }}</h6>
+                      <p class="small mb-1"><strong>{{ 'EMPLOYEE.FUNCTION_CODE' | translate }}:</strong> {{ access.managerScope.functionCodes.join(', ') || '—' }}</p>
+                      <span *ngFor="let b of access.managerScope.branches" class="badge bg-info text-dark me-1 mb-1">{{ b.name }}</span>
+                    </div>
+                  </div>
+                  <div class="col-md-8">
+                    <div class="panel">
+                      <h6>{{ 'EMPLOYEE_360.PERMISSIONS' | translate }}</h6>
+                      <div class="perm-grid">
+                        <code *ngFor="let p of filteredAccessPermissions">{{ p }}</code>
+                      </div>
+                      <div *ngIf="!filteredAccessPermissions.length" class="empty-state">{{ 'EMPLOYEE_360.NO_PERMISSIONS' | translate }}</div>
+                    </div>
+                  </div>
+                </div>
+              </ng-template>
+            </li>
+
+            <li [ngbNavItem]="'performance'"><button ngbNavLink>{{ 'EMPLOYEE_360.TAB_PERFORMANCE' | translate }}</button>
+              <ng-template ngbNavContent>
+                <div class="d-flex flex-wrap gap-2 mb-3 align-items-end">
+                  <div class="flex-grow-1">
+                    <label class="form-label small mb-1">{{ 'COMMON.SEARCH' | translate }}</label>
+                    <input class="form-control form-control-sm" [(ngModel)]="performanceSearch"
+                      [placeholder]="'EMPLOYEE_360.SEARCH_ALL_COLUMNS' | translate" />
+                  </div>
+                </div>
+                <div *ngIf="performanceLoading" class="empty-state">{{ 'COMMON.LOADING' | translate }}</div>
+                <div *ngIf="!performanceLoading && performance">
+                  <div class="row g-2 mb-3">
+                    <div class="col-md-3"><div class="mini-stat"><div class="v">{{ performance.kpis.performanceScore }}</div><div class="l">{{ 'EMPLOYEE_360.KPI_SCORE' | translate }}</div></div></div>
+                    <div class="col-md-3"><div class="mini-stat"><div class="v">{{ performance.kpis.onTimeRatePercent }}%</div><div class="l">{{ 'EMPLOYEE_360.KPI_ON_TIME' | translate }}</div></div></div>
+                    <div class="col-md-3"><div class="mini-stat"><div class="v">{{ performance.kpis.averageCompletionHours | number:'1.0-1' }}h</div><div class="l">{{ 'EMPLOYEE_360.AVG_COMPLETION' | translate }}</div></div></div>
+                    <div class="col-md-3"><div class="mini-stat"><div class="v">{{ filteredLateTasks.length }}</div><div class="l">{{ 'EMPLOYEE_360.LATE_TASKS' | translate }}</div></div></div>
+                  </div>
+                  <div class="row g-3">
+                    <div class="col-lg-6">
+                      <div class="panel">
+                        <h6>{{ 'EMPLOYEE_360.WARNINGS' | translate }} ({{ filteredWarnings.length }})</h6>
+                        <div *ngIf="!filteredWarnings.length" class="empty-state">{{ 'EMPLOYEE_360.NO_WARNINGS' | translate }}</div>
+                        <div *ngFor="let w of filteredWarnings" class="list-item"
+                          [class.clickable]="!!w.taskId" (click)="w.taskId && openTaskDetails(w.taskId!)">
+                          <a *ngIf="w.taskId" href="javascript:void(0)" class="task-link" (click)="openTaskFromEvent($event, w.taskId)">
+                            #{{ w.taskId }} — {{ w.taskTitle }}
+                          </a>
+                          <strong *ngIf="!w.taskId">{{ w.taskTitle || '—' }}</strong>
+                          <div class="small text-muted">{{ w.createdDate | myDate:'d MMM y':true }}</div>
+                          <div class="small">{{ w.reason }}</div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-lg-6">
+                      <div class="panel">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                          <h6 class="mb-0">{{ 'EMPLOYEE_360.DISCOUNTS' | translate }} ({{ filteredPerformanceDiscounts.length }})</h6>
+                          <button type="button" class="btn btn-link btn-sm p-0" (click)="onTabChange('discounts')">
+                            {{ 'EMPLOYEE_360.VIEW_ALL_DISCOUNTS' | translate }}
+                          </button>
+                        </div>
+                        <div *ngIf="!filteredPerformanceDiscounts.length" class="empty-state">{{ 'EMPLOYEE_360.NO_DISCOUNTS' | translate }}</div>
+                        <div *ngFor="let d of filteredPerformanceDiscounts | slice:0:5" class="list-item"
+                          [class.clickable]="!!d.taskId" (click)="d.taskId && openTaskDetails(d.taskId!)">
+                          <div class="d-flex justify-content-between gap-2">
+                            <a *ngIf="d.taskId" href="javascript:void(0)" class="task-link" (click)="openTaskFromEvent($event, d.taskId)">
+                              #{{ d.taskId }} — {{ d.taskTitle || ('TASK.ID' | translate) }}
+                            </a>
+                            <strong *ngIf="!d.taskId">{{ d.taskTitle || '—' }}</strong>
+                            <span class="text-danger">{{ d.amount | number:'1.0-2' }}</span>
+                          </div>
+                          <div class="small text-muted">{{ d.createdDate | myDate:'d MMM y':true }}</div>
+                          <div class="small">{{ d.reason }}</div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-12">
+                      <div class="panel">
+                        <h6>{{ 'EMPLOYEE_360.LATE_TASKS' | translate }}</h6>
+                        <div *ngIf="!filteredLateTasks.length" class="empty-state">{{ 'EMPLOYEE_360.NO_LATE' | translate }}</div>
+                        <div class="list-item clickable" *ngFor="let t of filteredLateTasks" (click)="openTaskDetails(t.taskId)">
+                          <strong>{{ t.title }}</strong>
+                          <span class="badge bg-danger ms-2">{{ t.dueDate | myDate:'d MMM y' }}</span>
+                          <span class="badge bg-secondary ms-1">{{ t.priority }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </ng-template>
+            </li>
+
+            <li [ngbNavItem]="'discounts'"><button ngbNavLink>{{ 'EMPLOYEE_360.TAB_DISCOUNTS' | translate }}</button>
+              <ng-template ngbNavContent>
+                <div class="d-flex flex-wrap gap-2 mb-3 align-items-end">
+                  <div class="flex-grow-1">
+                    <label class="form-label small mb-1">{{ 'COMMON.SEARCH' | translate }}</label>
+                    <input class="form-control form-control-sm" [(ngModel)]="discountSearch"
+                      [placeholder]="'EMPLOYEE_360.SEARCH_ALL_COLUMNS' | translate" />
+                  </div>
+                </div>
+                <div *ngIf="performanceLoading" class="empty-state">{{ 'COMMON.LOADING' | translate }}</div>
+                <div *ngIf="!performanceLoading && performance">
+                  <div class="row g-2 mb-3">
+                    <div class="col-md-4">
+                      <div class="mini-stat">
+                        <div class="v text-danger">{{ performance.kpis.totalDiscounts | number:'1.0-2' }}</div>
+                        <div class="l">{{ 'EMPLOYEE_360.KPI_TOTAL_DISCOUNTS' | translate }}</div>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="mini-stat">
+                        <div class="v">{{ filteredDiscounts.length }}</div>
+                        <div class="l">{{ 'EMPLOYEE_360.DISCOUNT_COUNT' | translate }}</div>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="mini-stat">
+                        <div class="v">{{ discountsWithTaskCount }}</div>
+                        <div class="l">{{ 'EMPLOYEE_360.DISCOUNTS_WITH_TASK' | translate }}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="panel">
+                    <h6>{{ 'EMPLOYEE_360.DISCOUNT_DETAILS' | translate }}</h6>
+                    <div *ngIf="!filteredDiscounts.length" class="empty-state">{{ 'EMPLOYEE_360.NO_DISCOUNTS' | translate }}</div>
+                    <div class="table-responsive" *ngIf="filteredDiscounts.length">
+                      <table class="table table-sm table-hover align-middle">
+                        <thead>
+                          <tr>
+                            <th>{{ 'EMPLOYEE_360.COL_DATE' | translate }}</th>
+                            <th>{{ 'EMPLOYEE_360.COL_TASK' | translate }}</th>
+                            <th>{{ 'EMPLOYEE_360.COL_AMOUNT' | translate }}</th>
+                            <th>{{ 'EMPLOYEE_360.COL_REASON' | translate }}</th>
+                            <th>{{ 'EMPLOYEE_360.COL_TYPE' | translate }}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr *ngFor="let d of filteredDiscounts">
+                            <td>{{ d.createdDate | myDate:'d MMM y':true }}</td>
+                            <td>
+                              <a *ngIf="d.taskId" href="javascript:void(0)" class="task-link" (click)="openTaskFromEvent($event, d.taskId)">
+                                #{{ d.taskId }} — {{ d.taskTitle || ('TASK.ID' | translate) }}
+                              </a>
+                              <span *ngIf="!d.taskId">{{ d.taskTitle || '—' }}</span>
+                            </td>
+                            <td class="text-danger fw-semibold">{{ d.amount | number:'1.0-2' }}</td>
+                            <td>{{ d.reason }}</td>
+                            <td>
+                              <span class="badge" [ngClass]="d.autoDiscount ? 'bg-warning text-dark' : 'bg-secondary'">
+                                {{ d.autoDiscount ? ('EMPLOYEE_360.AUTO_DISCOUNT' | translate) : ('EMPLOYEE_360.MANUAL_DISCOUNT' | translate) }}
+                              </span>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </ng-template>
+            </li>
+
+            <li [ngbNavItem]="'leave'"><button ngbNavLink>{{ 'EMPLOYEE_360.TAB_LEAVE' | translate }}</button>
+              <ng-template ngbNavContent>
+                <div class="d-flex flex-wrap gap-2 mb-3 align-items-end">
+                  <div class="flex-grow-1">
+                    <label class="form-label small mb-1">{{ 'COMMON.SEARCH' | translate }}</label>
+                    <input class="form-control form-control-sm" [(ngModel)]="leaveSearch"
+                      [placeholder]="'EMPLOYEE_360.SEARCH_ALL_COLUMNS' | translate" />
+                  </div>
+                </div>
+                <div *ngIf="leaveLoading" class="empty-state">{{ 'COMMON.LOADING' | translate }}</div>
+                <div *ngIf="!leaveLoading && leave">
+                  <div class="row g-2 mb-3">
+                    <div class="col-md-3"><div class="mini-stat"><div class="v">{{ leave.leaveBalance }}</div><div class="l">{{ 'EMPLOYEE_360.KPI_LEAVE_BAL' | translate }}</div></div></div>
+                    <div class="col-md-3"><div class="mini-stat"><div class="v">{{ leave.usedDays }}</div><div class="l">{{ 'EMPLOYEE_360.LEAVE_USED' | translate }}</div></div></div>
+                    <div class="col-md-2"><div class="mini-stat"><div class="v">{{ leave.pendingCount }}</div><div class="l">{{ 'LEAVE.PENDING' | translate }}</div></div></div>
+                    <div class="col-md-2"><div class="mini-stat"><div class="v">{{ leave.approvedCount }}</div><div class="l">{{ 'LEAVE.APPROVED' | translate }}</div></div></div>
+                    <div class="col-md-2"><div class="mini-stat"><div class="v">{{ leave.rejectedCount }}</div><div class="l">{{ 'LEAVE.REJECTED' | translate }}</div></div></div>
+                  </div>
+                  <div class="panel">
+                    <h6>{{ 'EMPLOYEE_360.LEAVE_HISTORY' | translate }}</h6>
+                    <div *ngIf="!filteredLeaveHistory.length" class="empty-state">{{ 'EMPLOYEE_360.NO_LEAVE' | translate }}</div>
+                    <div class="table-responsive" *ngIf="filteredLeaveHistory.length">
+                      <table class="table table-sm table-hover">
+                        <thead><tr>
+                          <th>{{ 'LEAVE.TYPE' | translate }}</th>
+                          <th>{{ 'LEAVE.START_DATE' | translate }}</th>
+                          <th>{{ 'LEAVE.END_DATE' | translate }}</th>
+                          <th>{{ 'LEAVE.STATUS' | translate }}</th>
+                        </tr></thead>
+                        <tbody>
+                          <tr *ngFor="let l of filteredLeaveHistory">
+                            <td>{{ l.leaveTypeName }}</td>
+                            <td>{{ l.startDate | myDate:'d MMM y' }}</td>
+                            <td>{{ l.endDate | myDate:'d MMM y' }}</td>
+                            <td><span class="badge" [ngClass]="statusBadgeClass(l.status)">{{ l.status }}</span></td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </ng-template>
+            </li>
+
+            <li [ngbNavItem]="'timeline'"><button ngbNavLink>{{ 'EMPLOYEE_360.TAB_TIMELINE' | translate }}</button>
+              <ng-template ngbNavContent>
+                <div class="d-flex flex-wrap gap-2 mb-3 align-items-end">
+                  <div class="flex-grow-1">
+                    <label class="form-label small mb-1">{{ 'COMMON.SEARCH' | translate }}</label>
+                    <input class="form-control form-control-sm" [(ngModel)]="timelineSearch"
+                      [placeholder]="'EMPLOYEE_360.SEARCH_ALL_COLUMNS' | translate"
+                      (keyup.enter)="applyTimelineFilters()" />
+                  </div>
+                  <button type="button" class="btn btn-sm btn-outline-primary" (click)="applyTimelineFilters()">{{ 'COMMON.FILTER' | translate }}</button>
+                </div>
+                <div *ngIf="timelineLoading" class="empty-state">{{ 'COMMON.LOADING' | translate }}</div>
+                <div *ngIf="!timelineLoading && !timeline.length" class="empty-state">{{ 'EMPLOYEE_360.NO_TIMELINE' | translate }}</div>
+                <div class="timeline" *ngIf="!timelineLoading && timeline.length">
+                  <div class="timeline-item" *ngFor="let item of timeline"
+                    [class.clickable]="!!item.taskId"
+                    (click)="item.taskId && openTaskDetails(item.taskId!)">
+                    <div class="timeline-icon"><i class="bi" [ngClass]="timelineIcon(item.type)"></i></div>
+                    <div class="timeline-body">
+                      <div class="d-flex justify-content-between gap-2">
+                        <strong>{{ item.title }}</strong>
+                        <span class="text-muted small">{{ item.date | myDate:'d MMM y':true }}</span>
+                      </div>
+                      <div class="small text-primary" *ngIf="item.taskTitle">{{ item.taskTitle }}</div>
+                      <div class="small" *ngIf="item.description">{{ item.description }}</div>
+                    </div>
+                  </div>
+                </div>
+                <ngb-pagination *ngIf="timelineTotal > 20" class="d-flex justify-content-end mt-3"
+                  [collectionSize]="timelineTotal" [(page)]="timelinePage" [pageSize]="20"
+                  (pageChange)="onTimelinePageChange($event)">
+                </ngb-pagination>
+              </ng-template>
+            </li>
+
+            <li [ngbNavItem]="'emails'"><button ngbNavLink>{{ 'EMPLOYEE_360.TAB_EMAILS' | translate }}</button>
+              <ng-template ngbNavContent>
+                <div class="d-flex flex-wrap gap-2 mb-3 align-items-end">
+                  <div class="flex-grow-1">
+                    <label class="form-label small mb-1">{{ 'COMMON.SEARCH' | translate }}</label>
+                    <input class="form-control form-control-sm" [(ngModel)]="emailSearch"
+                      [placeholder]="'EMPLOYEE_360.SEARCH_ALL_COLUMNS' | translate"
+                      (keyup.enter)="applyEmailFilters()" />
+                  </div>
+                  <div style="min-width:140px">
+                    <label class="form-label small mb-1">{{ 'EMPLOYEE_360.COL_STATUS' | translate }}</label>
+                    <select class="form-select form-select-sm" [(ngModel)]="emailStatus">
+                      <option value="">{{ 'COMMON.ALL' | translate }}</option>
+                      <option value="Queued">Queued</option>
+                      <option value="Processing">Processing</option>
+                      <option value="Sent">Sent</option>
+                      <option value="Failed">Failed</option>
+                    </select>
+                  </div>
+                  <div style="min-width:160px">
+                    <label class="form-label small mb-1">{{ 'EMPLOYEE_360.EMAIL_TYPE' | translate }}</label>
+                    <input class="form-control form-control-sm" [(ngModel)]="emailType" [placeholder]="'EMPLOYEE_360.EMAIL_TYPE' | translate" />
+                  </div>
+                  <button type="button" class="btn btn-sm btn-outline-primary" (click)="applyEmailFilters()">{{ 'COMMON.FILTER' | translate }}</button>
+                </div>
+                <div *ngIf="emailLoading" class="empty-state">{{ 'COMMON.LOADING' | translate }}</div>
+                <div *ngIf="!emailLoading && !emails.length" class="empty-state">{{ 'EMPLOYEE_360.NO_EMAILS' | translate }}</div>
+                <div class="table-responsive" *ngIf="!emailLoading && emails.length">
+                  <table class="table table-sm table-hover align-middle">
+                    <thead>
+                      <tr>
+                        <th>{{ 'EMPLOYEE_360.COL_DATE' | translate }}</th>
+                        <th>{{ 'EMPLOYEE_360.COL_SUBJECT' | translate }}</th>
+                        <th>{{ 'EMPLOYEE_360.COL_TASK' | translate }}</th>
+                        <th>{{ 'EMPLOYEE_360.EMAIL_TYPE' | translate }}</th>
+                        <th>{{ 'EMPLOYEE_360.COL_RECIPIENT' | translate }}</th>
+                        <th>{{ 'EMPLOYEE_360.COL_STATUS' | translate }}</th>
+                        <th>{{ 'EMPLOYEE_360.COL_RETRIES' | translate }}</th>
+                        <th>{{ 'EMPLOYEE_360.COL_PROVIDER' | translate }}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let e of emails">
+                        <td>{{ e.date | myDate:'d MMM y':true }}</td>
+                        <td>
+                          <div class="fw-semibold">{{ e.subject }}</div>
+                          <div class="small text-danger" *ngIf="e.failureReason">{{ e.failureReason }}</div>
+                        </td>
+                        <td>
+                          <a *ngIf="e.taskId" href="javascript:void(0)" class="task-link" (click)="openTaskFromEvent($event, e.taskId)">
+                            #{{ e.taskId }}
+                            <span *ngIf="e.taskTitle"> — {{ e.taskTitle }}</span>
+                          </a>
+                          <span *ngIf="!e.taskId" class="text-muted">—</span>
+                        </td>
+                        <td><span class="badge bg-light text-dark">{{ translateEmailType(e.emailType) }}</span></td>
+                        <td>{{ e.recipient }}</td>
+                        <td>
+                          <span class="badge" [ngClass]="statusBadgeClass(e.status)">{{ e.status }}</span>
+                          <div class="small text-muted">{{ e.deliveryStatus }}</div>
+                        </td>
+                        <td>{{ e.retries }}</td>
+                        <td>{{ e.provider || '—' }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <ngb-pagination *ngIf="emailTotal > 15" class="d-flex justify-content-end"
+                  [collectionSize]="emailTotal" [(page)]="emailPage" [pageSize]="15"
+                  (pageChange)="emailPage=$event; loadEmails()">
+                </ngb-pagination>
+              </ng-template>
+            </li>
+
+            <li [ngbNavItem]="'notifications'"><button ngbNavLink>{{ 'EMPLOYEE_360.TAB_NOTIFICATIONS' | translate }}</button>
+              <ng-template ngbNavContent>
+                <div class="d-flex flex-wrap gap-2 mb-3 align-items-end">
+                  <div class="flex-grow-1">
+                    <label class="form-label small mb-1">{{ 'COMMON.SEARCH' | translate }}</label>
+                    <input class="form-control form-control-sm" [(ngModel)]="notifSearch"
+                      [placeholder]="'EMPLOYEE_360.SEARCH_ALL_COLUMNS' | translate"
+                      (keyup.enter)="applyNotifFilters()" />
+                  </div>
+                  <div style="min-width:140px">
+                    <label class="form-label small mb-1">{{ 'EMPLOYEE_360.COL_STATUS' | translate }}</label>
+                    <select class="form-select form-select-sm" [(ngModel)]="notifStatus">
+                      <option value="">{{ 'COMMON.ALL' | translate }}</option>
+                      <option value="Read">Read</option>
+                      <option value="Unread">Unread</option>
+                    </select>
+                  </div>
+                  <div style="min-width:140px">
+                    <label class="form-label small mb-1">{{ 'EMPLOYEE_360.COL_CHANNEL' | translate }}</label>
+                    <select class="form-select form-select-sm" [(ngModel)]="notifChannel">
+                      <option value="">{{ 'COMMON.ALL' | translate }}</option>
+                      <option value="Web">In-App</option>
+                      <option value="Email">Email</option>
+                      <option value="WhatsApp">SMS</option>
+                    </select>
+                  </div>
+                  <div class="form-check mb-1">
+                    <input class="form-check-input" type="checkbox" id="unreadOnly" [(ngModel)]="notifUnreadOnly" />
+                    <label class="form-check-label small" for="unreadOnly">{{ 'EMPLOYEE_360.UNREAD_ONLY' | translate }}</label>
+                  </div>
+                  <button type="button" class="btn btn-sm btn-outline-primary" (click)="applyNotifFilters()">{{ 'COMMON.FILTER' | translate }}</button>
+                </div>
+                <div *ngIf="notifLoading" class="empty-state">{{ 'COMMON.LOADING' | translate }}</div>
+                <div *ngIf="!notifLoading && !notifications.length" class="empty-state">{{ 'EMPLOYEE_360.NO_NOTIFICATIONS' | translate }}</div>
+                <div class="table-responsive" *ngIf="!notifLoading && notifications.length">
+                  <table class="table table-sm table-hover align-middle">
+                    <thead>
+                      <tr>
+                        <th>{{ 'EMPLOYEE_360.COL_DATE' | translate }}</th>
+                        <th>{{ 'EMPLOYEE_360.COL_TITLE' | translate }}</th>
+                        <th>{{ 'EMPLOYEE_360.COL_TASK' | translate }}</th>
+                        <th>{{ 'EMPLOYEE_360.COL_TYPE' | translate }}</th>
+                        <th>{{ 'EMPLOYEE_360.COL_CHANNEL' | translate }}</th>
+                        <th>{{ 'EMPLOYEE_360.COL_STATUS' | translate }}</th>
+                        <th>{{ 'EMPLOYEE_360.COL_READ' | translate }}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let n of notifications">
+                        <td>{{ n.date | myDate:'d MMM y':true }}</td>
+                        <td>{{ n.title }}</td>
+                        <td>
+                          <a *ngIf="n.taskId" href="javascript:void(0)" class="task-link" (click)="openTaskFromEvent($event, n.taskId)">
+                            #{{ n.taskId }}
+                            <span *ngIf="n.taskTitle"> — {{ n.taskTitle }}</span>
+                          </a>
+                          <span *ngIf="!n.taskId" class="text-muted">—</span>
+                        </td>
+                        <td><span class="badge bg-light text-dark">{{ translateNotificationType(n.type) }}</span></td>
+                        <td>{{ n.channel }}</td>
+                        <td><span class="badge" [ngClass]="statusBadgeClass(n.status)">{{ n.status }}</span></td>
+                        <td>
+                          <i class="bi" [ngClass]="n.isRead ? 'bi-check2-all text-success' : 'bi-envelope'"></i>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <ngb-pagination *ngIf="notifTotal > 15" class="d-flex justify-content-end"
+                  [collectionSize]="notifTotal" [(page)]="notifPage" [pageSize]="15"
+                  (pageChange)="notifPage=$event; loadNotifications()">
+                </ngb-pagination>
+              </ng-template>
+            </li>
+          </ul>
+          <div [ngbNavOutlet]="nav"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Sidebar -->
+    <div class="col-xl-3">
+      <div class="card custom-card sidebar-card sticky-side">
+        <div class="card-body">
+          <h6 class="mb-3">{{ 'EMPLOYEE_360.QUICK_ACTIONS' | translate }}</h6>
+          <div class="d-grid gap-2 mb-4">
+            <button *ngIf="canCreateTask" type="button" class="btn btn-sm btn-primary" (click)="openCreateTask(taskModal)">
+              <i class="bi bi-plus-lg me-1"></i>{{ 'EMPLOYEE_360.CREATE_TASK' | translate }}
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" (click)="sendEmail()">
+              <i class="bi bi-envelope me-1"></i>{{ 'EMPLOYEE_360.SEND_EMAIL' | translate }}
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" (click)="onTabChange('work')">
+              <i class="bi bi-kanban me-1"></i>{{ 'EMPLOYEE_360.TAB_WORK' | translate }}
+            </button>
+          </div>
+
+          <h6>{{ 'EMPLOYEE_360.CURRENT_WORKLOAD' | translate }}
+            <span class="badge bg-primary ms-1">{{ sidebar?.activeAssignments || 0 }}</span>
+          </h6>
+          <p class="small text-muted mb-3">{{ 'EMPLOYEE_360.WORKLOAD_HINT' | translate }}</p>
+
+          <h6>{{ 'EMPLOYEE_360.UPCOMING_DEADLINES' | translate }}</h6>
+          <div *ngIf="!sidebar?.upcomingDeadlines?.length" class="empty-state small mb-3">{{ 'EMPLOYEE_360.NO_DEADLINES' | translate }}</div>
+          <div class="side-item" *ngFor="let d of sidebar?.upcomingDeadlines" (click)="openTaskDetails(d.taskId)">
+            <div class="fw-semibold small">{{ d.title }}</div>
+            <div class="text-muted smaller">{{ d.dueDate | myDate:'d MMM y' }} · {{ d.priority }}</div>
+          </div>
+
+          <h6 class="mt-3">{{ 'EMPLOYEE_360.RECENT_COMMENTS' | translate }}</h6>
+          <div *ngIf="!sidebar?.recentComments?.length" class="empty-state small mb-3">{{ 'EMPLOYEE_360.NO_ACTIVITY' | translate }}</div>
+          <div class="side-item" *ngFor="let c of sidebar?.recentComments" (click)="openTaskDetails(c.taskId)">
+            <div class="fw-semibold small">{{ c.taskTitle }}</div>
+            <div class="text-muted smaller text-truncate">{{ c.commentText }}</div>
+          </div>
+
+          <h6 class="mt-3">{{ 'EMPLOYEE_360.RECENT_NOTIFICATIONS' | translate }}
+            <span class="badge bg-danger ms-1" *ngIf="sidebar?.unreadNotifications">{{ sidebar?.unreadNotifications }}</span>
+          </h6>
+          <div *ngIf="!sidebar?.recentNotifications?.length" class="empty-state small">{{ 'EMPLOYEE_360.NO_NOTIFICATIONS' | translate }}</div>
+          <div class="side-item" *ngFor="let n of sidebar?.recentNotifications"
+            [class.clickable]="!!n.taskId"
+            (click)="n.taskId && openTaskDetails(n.taskId!)">
+            <div class="small text-truncate">{{ n.title }}</div>
+            <div class="text-muted smaller">{{ n.date | myDate:'d MMM y':true }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<ng-template #taskModal let-modal>
+  <div class="modal-header">
+    <h6 class="modal-title">{{ 'EMPLOYEE_360.CREATE_TASK' | translate }}</h6>
+    <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    <app-task-create-update *ngIf="modalKey" [isEdit]="false"
+      [preselectedEmployeeIds]="[employeeId]" (formSubmitted)="onTaskCreated()">
+    </app-task-create-update>
+  </div>
+</ng-template>

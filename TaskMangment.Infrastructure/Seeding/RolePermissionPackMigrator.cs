@@ -41,10 +41,62 @@ namespace TaskMangment.Infrastructure.Seeding
 
         public async Task MigrateAsync()
         {
+            await DeduplicatePermissionCodesAsync();
             await EnsureCatalogAsync();
             await GrantPacksByRoleLevelAsync();
             await _db.SaveChangesAsync();
             _logger.LogInformation("Role permission pack migration completed.");
+        }
+
+        /// <summary>
+        /// Soft-deletes duplicate Permission rows with the same Code (keeps lowest Id).
+        /// Older DataSeeder runs could insert the same code more than once.
+        /// </summary>
+        private async Task DeduplicatePermissionCodesAsync()
+        {
+            var rows = await _db.Permissions
+                .Where(p => !p.IsDeleted)
+                .Select(p => new { p.Id, p.Code })
+                .ToListAsync();
+
+            var duplicateIds = rows
+                .GroupBy(p => p.Code, StringComparer.OrdinalIgnoreCase)
+                .Where(g => g.Count() > 1)
+                .SelectMany(g => g.OrderBy(x => x.Id).Skip(1).Select(x => x.Id))
+                .ToList();
+
+            if (duplicateIds.Count == 0)
+                return;
+
+            var now = DateTime.UtcNow;
+            var duplicates = await _db.Permissions
+                .Where(p => duplicateIds.Contains(p.Id))
+                .ToListAsync();
+
+            foreach (var dup in duplicates)
+            {
+                dup.IsDeleted = true;
+                dup.DeletedDate = now;
+            }
+
+            // Drop RolePermission links that pointed at soft-deleted duplicates
+            var orphanLinks = await _db.RolePermissions
+                .Where(rp => duplicateIds.Contains(rp.PermissionId) && !rp.IsDeleted)
+                .ToListAsync();
+
+            foreach (var link in orphanLinks)
+            {
+                link.IsDeleted = true;
+                link.DeletedDate = now;
+                link.IsAssigned = false;
+            }
+
+            _logger.LogWarning(
+                "Soft-deleted {Count} duplicate Permission rows (and {LinkCount} role links).",
+                duplicates.Count,
+                orphanLinks.Count);
+
+            await _db.SaveChangesAsync();
         }
 
         private async Task EnsureCatalogAsync()
@@ -76,9 +128,13 @@ namespace TaskMangment.Infrastructure.Seeding
         {
             await _db.SaveChangesAsync();
 
-            var permissions = await _db.Permissions
-                .Where(p => !p.IsDeleted)
-                .ToDictionaryAsync(p => p.Code, p => p.Id, StringComparer.OrdinalIgnoreCase);
+            // DB may contain duplicate Codes from older seed runs — keep lowest Id per code.
+            var permissions = (await _db.Permissions
+                    .Where(p => !p.IsDeleted)
+                    .Select(p => new { p.Code, p.Id })
+                    .ToListAsync())
+                .GroupBy(p => p.Code, StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(g => g.Key, g => g.Min(x => x.Id), StringComparer.OrdinalIgnoreCase);
 
             var roles = await _db.Roles
                 .Where(r => !r.IsDeleted)

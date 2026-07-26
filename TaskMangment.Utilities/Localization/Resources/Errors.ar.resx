@@ -249,6 +249,12 @@
   <data name="INVALID_DATE" xml:space="preserve">
     <value>ادخل التاريخ الصحيح</value>
   </data>
+  <data name="DUE_DATE_ON_WEEKEND" xml:space="preserve">
+    <value>لا يمكن أن يكون تاريخ استحقاق المهمة يوم الجمعة أو السبت.</value>
+  </data>
+  <data name="DUE_DATE_IN_PAST" xml:space="preserve">
+    <value>لا يمكن أن يكون تاريخ استحقاق المهمة في الماضي.</value>
+  </data>
   <data name="EXTENDAPPROVED" xml:space="preserve">
     <value>تم الموافقة على تمديد المهمة</value>
   </data>

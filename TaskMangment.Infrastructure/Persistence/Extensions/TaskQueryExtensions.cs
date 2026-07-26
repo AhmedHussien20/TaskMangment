@@ -60,11 +60,19 @@ namespace TaskMangment.Infrastructure.Persistence.Extensions
                     t.Assignments.Any(a => a.IsActive && request.EmployeeIds.Contains(a.EmployeeId)));
             }
 
-            // Search
+            // Search across visible task columns
             if (!string.IsNullOrWhiteSpace(request.searchKey))
             {
                 var key = request.searchKey.Trim();
-                query = query.Where(t => t.Title.Contains(key));
+                query = query.Where(t =>
+                    t.Id.ToString().Contains(key) ||
+                    t.Title.Contains(key) ||
+                    (t.Description != null && t.Description.Contains(key)) ||
+                    (t.AssignedBy != null && t.AssignedBy.FullName.Contains(key)) ||
+                    (t.CreatedBy != null && t.CreatedBy.FullName.Contains(key)) ||
+                    t.Status.ToString().Contains(key) ||
+                    t.Priority.ToString().Contains(key) ||
+                    t.Assignments.Any(a => a.IsActive && a.Employee != null && a.Employee.FullName.Contains(key)));
             }
 
             // Priority

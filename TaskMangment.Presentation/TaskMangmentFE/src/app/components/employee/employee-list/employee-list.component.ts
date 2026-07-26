@@ -13,6 +13,7 @@ import Swal from 'sweetalert2';
 import { ToastrService } from 'ngx-toastr';
 import { BranchService } from 'app/core/services/branch.service';
 import { AuthService } from 'app/core/services/auth.service';
+import { Router } from '@angular/router';
 
 
 @Component({
@@ -97,7 +98,8 @@ export class EmployeeListComponent implements OnInit {
     private translate: TranslateService,
     private toastr: ToastrService,
     private branchService: BranchService,
-    private auth: AuthService
+    private auth: AuthService,
+    private router: Router
   ) { }
 
   ngOnInit(): void {
@@ -229,6 +231,10 @@ export class EmployeeListComponent implements OnInit {
         this.isLoading = false;
       }
     });
+  }
+
+  open360(id: number): void {
+    this.router.navigate(['/employee/360', id]);
   }
 
   onExportExcel(): void {

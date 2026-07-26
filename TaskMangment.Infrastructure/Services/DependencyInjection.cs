@@ -38,6 +38,7 @@ namespace TaskMangment.Infrastructure.Services
             services.AddScoped<IAreaService, AreaService>();
             services.AddScoped<IBranchService, BranchService>();
             services.AddScoped<IEmployeeService, EmployeeService>();
+            services.AddScoped<IEmployee360Service, Employee360Service>();
             services.AddScoped<IPermissionService, PermissionService>();
             services.AddScoped<IRoleService, RoleService>();
             services.AddScoped<IRoleAssignmentService, RoleAssignmentService>();

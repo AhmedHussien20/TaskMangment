@@ -304,6 +304,7 @@ namespace TaskMangment.Infrastructure.Services
                     Id = w.Id,
                     Reason = w.Reason,
                     CreatedDate = w.CreatedDate,
+                    TaskId = w.TaskId,
                     TaskTitle = w.TaskAssignment.Task.Title,
                     TaskStatus = w.TaskAssignment.Task.Status.ToString()
                 })
@@ -326,7 +327,8 @@ namespace TaskMangment.Infrastructure.Services
                     Id = d.Id,
                     Amount = d.Amount,
                     Reason = d.Reason,
-                    TaskTitle = d.Task.Title,
+                    TaskId = d.TaskId,
+                    TaskTitle = d.Task != null ? d.Task.Title : string.Empty,
                     CreatedDate = d.ViolationDate,
                     AutoDiscount = d.AutoDiscount,
                     DiscountType = d.discountType

@@ -237,7 +237,9 @@
         <mat-form-field *ngIf="field.type === 'date'" appearance="outline" class="w-100 gf-date-field"
           [ngClass]="{ 'gf-invalid': isFieldInvalid(field.name) }">
           <input matInput [id]="field.name" [formControlName]="field.name" [matDatepicker]="picker"
-            [min]="field.minDate" [max]="field.maxDate" [disabled]="field.disabled">
+            [min]="field.minDate" [max]="field.maxDate"
+            [matDatepickerFilter]="field.dateFilter || defaultDateFilter"
+            [disabled]="field.disabled">
 
           <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
           <mat-datepicker #picker></mat-datepicker>

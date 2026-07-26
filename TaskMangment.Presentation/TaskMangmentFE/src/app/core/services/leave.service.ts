@@ -58,7 +58,14 @@ export class LeaveService {
   }
   if (req.sortDirection) {
     params.push(`SortDirection=${req.sortDirection}`);
-  }  
+  }
+
+  if (Array.isArray(req.employeeIds) && req.employeeIds.length > 0) {
+    req.employeeIds.forEach((id: number) => {
+      params.push(`EmployeeIds=${id}`);
+    });
+  }
+
   return params.join('&');
 }
 }

@@ -14,6 +14,7 @@ import { CloseRequestStatus, TaskCloseRequestGet } from 'app/core/models/task/ta
 import { TaskService } from 'app/core/services/task.service';
 import { NgSelectModule } from '@ng-select/ng-select';
 import { DatePickerComponent } from 'app/components/date-picker/date-picker.component';
+import { isPastDueDate, isWeekendDueDate } from 'app/shared/validations/weekend-due-date.validator';
 
 
 @Component({
@@ -245,6 +246,14 @@ const closeRows = res.data.closeRequests.map((x: TaskCloseRequestGet) => ({
     if (this.reviewModel.status === ExtensionRequestStatus.Approved && !this.reviewModel.newDueDate) {
         this.toastr.warning(this.translate.instant('TASK.ENTER_NEW_DATE'));
       return;}
+    if (this.reviewModel.status === ExtensionRequestStatus.Approved && isWeekendDueDate(this.reviewModel.newDueDate)) {
+      this.toastr.error(this.translate.instant('TASK.DUE_DATE_WEEKEND'));
+      return;
+    }
+    if (this.reviewModel.status === ExtensionRequestStatus.Approved && isPastDueDate(this.reviewModel.newDueDate)) {
+      this.toastr.error(this.translate.instant('TASK.DUE_DATE_PAST'));
+      return;
+    }
     this.extensionService.review(this.selectedRequestId, this.reviewModel).subscribe({
       next: () => {
         this.toastr.success(this.translate.instant('TASK.SAVED_SUCCESS'));

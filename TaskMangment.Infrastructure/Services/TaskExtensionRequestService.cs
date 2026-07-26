@@ -11,6 +11,7 @@ using TaskMangment.Application.Common.Errors;
 using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Responses;
+using TaskMangment.Application.Common.Validation;
 using TaskMangment.Application.DTOs;
 using TaskMangment.Application.DTOs.TaskDTOs;
 using TaskMangment.Application.Interfaces.IRepository;
@@ -243,6 +244,8 @@ namespace TaskMangment.Infrastructure.Services
                 {
                     throw new AppException(ErrorCodes.InvalidDate, StatusCodes.Status400BadRequest);
                 }
+
+                TaskDueDateRules.EnsureValidDueDate(dto.NewDueDate);
 
                 request.Status = ExtensionRequestStatus.Approved;
                 request.NewDueDate = dto.NewDueDate.Value;

@@ -73,6 +73,8 @@ namespace TaskMangment.Application.Common.Errors
         public const string AlreadyAssigned = "ALREADY_ASSIGNED";
 
         public const string InvalidDate = "INVALID_DATE";
+        public const string DueDateOnWeekend = "DUE_DATE_ON_WEEKEND";
+        public const string DueDateInPast = "DUE_DATE_IN_PAST";
 
         public const string Unauthorized = "Unauthorized";
 

@@ -22,6 +22,8 @@
   (addClick)="openAdd(employeeModal)"
   [showEditButton]="canMakeChanges"
   (edit)="openEdit($event, employeeModal)"
+  [showDetailsButton]="true"
+  (details)="open360($event)"
   [showFilters]="true"
   [searchCriteria]="searchCriteria"
   [onSearch]="applyFilters.bind(this)"
