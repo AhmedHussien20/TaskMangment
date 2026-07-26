@@ -93,6 +93,12 @@ using (var scope = app.Services.CreateScope())
     TaskMangment.Infrastructure.Seeding.EmailTemplateSeeder.Seed(db);
 }
 
+if (args.Contains("--seed-email-templates-only", StringComparer.OrdinalIgnoreCase))
+{
+    Console.WriteLine("Email templates seeded successfully.");
+    return;
+}
+
 var defaultCulture = new CultureInfo("ar");
 
 CultureInfo.DefaultThreadCurrentCulture = defaultCulture;

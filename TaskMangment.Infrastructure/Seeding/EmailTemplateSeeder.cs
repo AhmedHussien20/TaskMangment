@@ -26,6 +26,8 @@ namespace TaskMangment.Infrastructure.Seeding
 </div>";
 
         // Inline clickable task number — filled by EmailTemplateRenderer as {{TaskNumberLink}}.
+        // CTA button — filled by EmailTemplateRenderer as {{TaskDetailsLink}} when a task URL exists.
+        const string TaskDetailsLinkPlaceholder = "{{TaskDetailsLink}}";
 
         public static void Seed(AppDbContext context)
         {
@@ -40,15 +42,13 @@ namespace TaskMangment.Infrastructure.Seeding
             <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
               <div><strong>تاريخ الاستحقاق:</strong> {{DueDate}}</div>
             </div>
-            <p style='margin:0 0 18px'>يرجى فتح المهمة من رقم المهمة أعلاه لمتابعة التفاصيل.</p>
             <hr style='border:none;border-top:1px solid #e5e7eb;margin:20px 0'/>
             <p style='margin:0 0 14px'><strong>Hello {{UserName}},</strong></p>
             <p style='margin:0 0 14px'>A new task has been assigned to you: task number {{TaskNumberLink}} titled <strong>{{TaskTitle}}</strong>.</p>
             <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
               <div><strong>Due Date:</strong> {{DueDate}}</div>
             </div>
-            <p style='margin:0'>Please open the task from the task number above to view the details.</p>
-            " + LayoutFooter
+            " + TaskDetailsLinkPlaceholder + LayoutFooter
             });
 
             // Assigned to existing task (used by TaskAssignedEmailHandler)
@@ -71,8 +71,8 @@ namespace TaskMangment.Infrastructure.Seeding
               <div style='margin-bottom:6px'><strong>Description:</strong> {{TaskDescription}}</div>
               <div><strong>Due Date:</strong> {{DueDate}}</div>
             </div>
-            <p style='margin:0'>Please review the task details and start working on it as soon as possible.</p>
-            " + LayoutFooter
+            <p style='margin:0 0 18px'>Please review the task details and start working on it as soon as possible.</p>
+            " + TaskDetailsLinkPlaceholder + LayoutFooter
             });
 
             // Unassigned
@@ -93,8 +93,8 @@ namespace TaskMangment.Infrastructure.Seeding
             <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
               <div><strong>Description:</strong> {{TaskDescription}}</div>
             </div>
-            <p style='margin:0'>You are no longer required to work on this task at this time.</p>
-            " + LayoutFooter
+            <p style='margin:0 0 18px'>You are no longer required to work on this task at this time.</p>
+            " + TaskDetailsLinkPlaceholder + LayoutFooter
             });
 
             // 💬 Task Comment Added
@@ -112,11 +112,11 @@ namespace TaskMangment.Infrastructure.Seeding
             <hr style='border:none;border-top:1px solid #e5e7eb;margin:20px 0'/>
             <p style='margin:0 0 14px'><strong>Hello {{UserName}},</strong></p>
             <p style='margin:0 0 14px'>A new comment on task number {{TaskNumberLink}} titled <strong>{{TaskTitle}}</strong> from <strong>{{EmployeeName}}</strong>.</p>
-            <div style='background:#f8fafc;border:1px solid #e5e7eb;border-left:4px solid #0d6efd;border-radius:8px;padding:12px 14px;margin:0'>
+            <div style='background:#f8fafc;border:1px solid #e5e7eb;border-left:4px solid #0d6efd;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
               <div style='font-size:12px;color:#6b7280;margin-bottom:6px'><strong>Comment</strong></div>
               <div>{{CommentText}}</div>
             </div>
-            " + LayoutFooter
+            " + TaskDetailsLinkPlaceholder + LayoutFooter
             });
             // 📅 Event Reminder
             UpsertTemplate(context, new EmailTemplate
@@ -154,10 +154,10 @@ namespace TaskMangment.Infrastructure.Seeding
             <hr style='border:none;border-top:1px solid #e5e7eb;margin:20px 0'/>
             <p style='margin:0 0 14px'><strong>Hello {{UserName}},</strong></p>
             <p style='margin:0 0 14px'>A new extension request on task number {{TaskNumberLink}} titled <strong>{{TaskTitle}}</strong> from <strong>{{EmployeeName}}</strong>.</p>
-            <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0'>
+            <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
               <div><strong>Reason:</strong> {{ExtensionReason}}</div>
             </div>
-            " + LayoutFooter
+            " + TaskDetailsLinkPlaceholder + LayoutFooter
             });
 
             // ✅ Task Close Request
@@ -174,10 +174,10 @@ namespace TaskMangment.Infrastructure.Seeding
             <hr style='border:none;border-top:1px solid #e5e7eb;margin:20px 0'/>
             <p style='margin:0 0 14px'><strong>Hello {{UserName}},</strong></p>
             <p style='margin:0 0 14px'>A new close request on task number {{TaskNumberLink}} titled <strong>{{TaskTitle}}</strong> from <strong>{{EmployeeName}}</strong>.</p>
-            <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0'>
+            <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
               <div><strong>Close Notes:</strong> {{CloseNotes}}</div>
             </div>
-            " + LayoutFooter
+            " + TaskDetailsLinkPlaceholder + LayoutFooter
             });
 
             // ⚠️ Warning
@@ -190,18 +190,22 @@ namespace TaskMangment.Infrastructure.Seeding
             <p style='margin:0 0 14px'>تحذير على مهمة رقم {{TaskNumberLink}} بعنوان <strong>{{TaskTitle}}</strong> من <strong>{{IssuedByName}}</strong>.</p>
             <div style='background:#fff8e6;border:1px solid #fde68a;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
               <div style='margin-bottom:6px'><strong>اسم الموظف:</strong> {{EmployeeName}}</div>
-              <div style='margin-bottom:6px'><strong>تاريخ التحذير:</strong> {{ViolationDate}}</div>
+              <div style='margin-bottom:6px'><strong>الفرع:</strong> {{BranchName}}</div>
+              <div style='margin-bottom:6px'><strong>اليوم المتعلق بالمخالفة:</strong> {{ViolationDate}}</div>
+              <div style='margin-bottom:6px'><strong>تاريخ إرسال الإشعار:</strong> {{IssuedAt}}</div>
               <div><strong>سبب التحذير:</strong> {{WarningReason}}</div>
             </div>
             <hr style='border:none;border-top:1px solid #e5e7eb;margin:20px 0'/>
             <p style='margin:0 0 14px'><strong>Hello {{UserName}},</strong></p>
             <p style='margin:0 0 14px'>Warning on task number {{TaskNumberLink}} titled <strong>{{TaskTitle}}</strong> from <strong>{{IssuedByName}}</strong>.</p>
-            <div style='background:#fff8e6;border:1px solid #fde68a;border-radius:8px;padding:12px 14px;margin:0'>
+            <div style='background:#fff8e6;border:1px solid #fde68a;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
               <div style='margin-bottom:6px'><strong>Employee Name:</strong> {{EmployeeName}}</div>
-              <div style='margin-bottom:6px'><strong>Warning Date:</strong> {{ViolationDate}}</div>
+              <div style='margin-bottom:6px'><strong>Branch:</strong> {{BranchName}}</div>
+              <div style='margin-bottom:6px'><strong>Related Violation Day:</strong> {{ViolationDate}}</div>
+              <div style='margin-bottom:6px'><strong>Notification Sent Date:</strong> {{IssuedAt}}</div>
               <div><strong>Warning Reason:</strong> {{WarningReason}}</div>
             </div>
-            " + LayoutFooter
+            " + TaskDetailsLinkPlaceholder + LayoutFooter
             });
 
             // 💸 Employee Deduction
@@ -214,18 +218,22 @@ namespace TaskMangment.Infrastructure.Seeding
             <p style='margin:0 0 14px'>جزاء جديد بقيمة <strong>{{DeductionAmount}}</strong> على مهمة رقم {{TaskNumberLink}} بعنوان <strong>{{TaskTitle}}</strong> من <strong>{{IssuedByName}}</strong>.</p>
             <div style='background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
               <div style='margin-bottom:6px'><strong>اسم الموظف:</strong> {{EmployeeName}}</div>
-              <div style='margin-bottom:6px'><strong>تاريخ الخصم:</strong> {{ViolationDate}}</div>
+              <div style='margin-bottom:6px'><strong>الفرع:</strong> {{BranchName}}</div>
+              <div style='margin-bottom:6px'><strong>اليوم المتعلق بالمخالفة:</strong> {{ViolationDate}}</div>
+              <div style='margin-bottom:6px'><strong>تاريخ إرسال الإشعار:</strong> {{IssuedAt}}</div>
               <div><strong>سبب الخصم:</strong> {{DeductionReason}}</div>
             </div>
             <hr style='border:none;border-top:1px solid #e5e7eb;margin:20px 0'/>
             <p style='margin:0 0 14px'><strong>Hello {{UserName}},</strong></p>
             <p style='margin:0 0 14px'>A new penalty of <strong>{{DeductionAmount}}</strong> on task number {{TaskNumberLink}} titled <strong>{{TaskTitle}}</strong> from <strong>{{IssuedByName}}</strong>.</p>
-            <div style='background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px 14px;margin:0'>
+            <div style='background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
               <div style='margin-bottom:6px'><strong>Employee Name:</strong> {{EmployeeName}}</div>
-              <div style='margin-bottom:6px'><strong>Violation Date:</strong> {{ViolationDate}}</div>
+              <div style='margin-bottom:6px'><strong>Branch:</strong> {{BranchName}}</div>
+              <div style='margin-bottom:6px'><strong>Related Violation Day:</strong> {{ViolationDate}}</div>
+              <div style='margin-bottom:6px'><strong>Notification Sent Date:</strong> {{IssuedAt}}</div>
               <div><strong>Deduction Reason:</strong> {{DeductionReason}}</div>
             </div>
-            " + LayoutFooter
+            " + TaskDetailsLinkPlaceholder + LayoutFooter
             });
 
             // Task due today
@@ -246,8 +254,8 @@ namespace TaskMangment.Infrastructure.Seeding
             <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
               <div><strong>Due Date:</strong> {{DueDate}}</div>
             </div>
-            <p style='margin:0'>Please ensure the task is completed on time or take the necessary action.</p>
-            " + LayoutFooter
+            <p style='margin:0 0 18px'>Please ensure the task is completed on time or take the necessary action.</p>
+            " + TaskDetailsLinkPlaceholder + LayoutFooter
             });
 
             // Extension approved
@@ -270,8 +278,8 @@ namespace TaskMangment.Infrastructure.Seeding
               <div style='margin-bottom:6px'><strong>From:</strong> {{OldDueDate}}</div>
               <div><strong>To:</strong> {{NewDueDate}}</div>
             </div>
-            <p style='margin:0'>Please proceed with the task according to the updated due date.</p>
-            " + LayoutFooter
+            <p style='margin:0 0 18px'>Please proceed with the task according to the updated due date.</p>
+            " + TaskDetailsLinkPlaceholder + LayoutFooter
             });
 
             // Close approved
@@ -286,8 +294,8 @@ namespace TaskMangment.Infrastructure.Seeding
             <hr style='border:none;border-top:1px solid #e5e7eb;margin:20px 0'/>
             <p style='margin:0 0 14px'><strong>Hello {{UserName}},</strong></p>
             <p style='margin:0 0 14px'>Task number {{TaskNumberLink}} titled <strong>{{TaskTitle}}</strong> has been closed according to the request.</p>
-            <p style='margin:0'>Thank you for completing the task successfully.</p>
-            " + LayoutFooter
+            <p style='margin:0 0 18px'>Thank you for completing the task successfully.</p>
+            " + TaskDetailsLinkPlaceholder + LayoutFooter
             });
 
             // Leave request
@@ -369,8 +377,8 @@ namespace TaskMangment.Infrastructure.Seeding
             <p style='margin:0 0 14px'>قام <strong>{{EmployeeName}}</strong> بإنجاز <strong>{{Percent}}</strong> من مهمة رقم {{TaskNumberLink}} بعنوان <strong>{{TaskTitle}}</strong>.</p>
             <hr style='border:none;border-top:1px solid #e5e7eb;margin:20px 0'/>
             <p style='margin:0 0 14px'><strong>Hello {{UserName}},</strong></p>
-            <p style='margin:0'><strong>{{EmployeeName}}</strong> achieved <strong>{{Percent}}</strong> from task number {{TaskNumberLink}} titled <strong>{{TaskTitle}}</strong>.</p>
-            " + LayoutFooter
+            <p style='margin:0 0 18px'><strong>{{EmployeeName}}</strong> achieved <strong>{{Percent}}</strong> from task number {{TaskNumberLink}} titled <strong>{{TaskTitle}}</strong>.</p>
+            " + TaskDetailsLinkPlaceholder + LayoutFooter
             });
 
             // 💼 Offer Sent To Student

@@ -311,11 +311,23 @@ namespace TaskMangment.Hangfire.Jobs
                     {
                         try
                         {
-                            await _whatsAppService.SendNotificationAsync(
-                                recipient.Mobile,
-                                recipient.FullName,
-                                whatsAppMessage,
-                                whatsAppAttachments);
+                            var maxRoleLevel = await GetEmployeeMaxRoleLevelAsync(recipient.Id);
+                            if (maxRoleLevel < (int)RoleLevelEnum.Manager)
+                            {
+                                _logger.LogInformation(
+                                    "Skipping monthly discounts WhatsApp for employee {EmployeeId} on branch {BranchId}: role level {RoleLevel} is below Manager",
+                                    recipient.Id,
+                                    branchId,
+                                    maxRoleLevel);
+                            }
+                            else
+                            {
+                                await _whatsAppService.SendNotificationAsync(
+                                    recipient.Mobile,
+                                    recipient.FullName,
+                                    whatsAppMessage,
+                                    whatsAppAttachments);
+                            }
                         }
                         catch (Exception ex)
                         {
@@ -345,6 +357,19 @@ namespace TaskMangment.Hangfire.Jobs
                     }
                 }
             }
+        }
+
+        private async Task<int> GetEmployeeMaxRoleLevelAsync(int employeeId)
+        {
+            var maxLevel = await _db.Employees
+                .AsNoTracking()
+                .Where(e => e.Id == employeeId)
+                .SelectMany(e => e.EmployeeRoles)
+                .Where(er => er.IsAssigned && !er.IsDeleted && er.Role != null)
+                .Select(er => (int?)er.Role.Level)
+                .MaxAsync();
+
+            return maxLevel ?? (int)RoleLevelEnum.Employee;
         }
     }
 }

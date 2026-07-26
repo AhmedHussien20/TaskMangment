@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -8,9 +8,7 @@ using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Domain.Entities;
 using TaskMangment.Infrastructure;
-using TaskMangment.Infrastructure.Repositories;
 using TaskMangment.Infrastructure.Services;
-using TaskMangment.Infrastructure.SignalR;
 using TaskMangment.Utilities.Localization.Resources;
 
 
@@ -86,7 +84,15 @@ public class NotificationService : INotificationService
         {
             try
             {
-                if (!string.IsNullOrEmpty(user.Mobile))
+                var maxRoleLevel = await GetEmployeeMaxRoleLevelAsync(userId);
+                if (maxRoleLevel < (int)RoleLevelEnum.Manager)
+                {
+                    _logger.LogInformation(
+                        "Skipping WhatsApp for user {UserId}: role level {RoleLevel} is below Manager",
+                        userId,
+                        maxRoleLevel);
+                }
+                else if (!string.IsNullOrEmpty(user.Mobile))
                 {
                     var whatsAppBody = BuildWhatsAppMessage(whatsAppMessage ?? message, taskId);
                     await _whatsAppService.SendNotificationAsync(
@@ -112,6 +118,17 @@ public class NotificationService : INotificationService
 
     public Task MarkAllAsReadAsync(int userId)
         => _repo.MarkAllAsReadAsync(userId);
+
+    private async Task<int> GetEmployeeMaxRoleLevelAsync(int employeeId)
+    {
+        var maxLevel = await _EmployeeRepo.GetAll(e => e.Id == employeeId)
+            .SelectMany(e => e.EmployeeRoles)
+            .Where(er => er.IsAssigned && !er.IsDeleted && er.Role != null)
+            .Select(er => (int?)er.Role.Level)
+            .MaxAsync();
+
+        return maxLevel ?? (int)RoleLevelEnum.Employee;
+    }
 
     private string BuildWhatsAppMessage(string message, int? taskId)
     {
