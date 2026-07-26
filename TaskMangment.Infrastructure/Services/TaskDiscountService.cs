@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Azure.Core;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -173,6 +173,15 @@ namespace TaskMangment.Infrastructure.Services
                 );
             }
 
+            var isAssignee = await _taskRepo.GetAll(t => t.Id == TaskID)
+                .SelectMany(t => t.Assignments)
+                .AnyAsync(a =>
+                    a.EmployeeId == createdByEmployeeId &&
+                    a.IsActive &&
+                    !a.IsDeleted);
+            if (isAssignee)
+                throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
+
             var discount = _mapper.Map<Discount>(dto);
             discount.TaskId = TaskID;
             discount.CreatedByEmployeeId = createdByEmployeeId;
@@ -244,6 +253,14 @@ namespace TaskMangment.Infrastructure.Services
             if (!await _employeeRepo.IsExistAsync(ModifiedByEmployeeId))
                 return ApiResponse<DiscountGetDto>.Fail("ModifiedByEmployee not found");
 
+            var isAssignee = await _taskRepo.GetAll(t => t.Id == TaskID)
+                .SelectMany(t => t.Assignments)
+                .AnyAsync(a =>
+                    a.EmployeeId == ModifiedByEmployeeId &&
+                    a.IsActive &&
+                    !a.IsDeleted);
+            if (isAssignee)
+                throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
 
             _mapper.Map(dto, discount);
             discount.TaskId = TaskID;

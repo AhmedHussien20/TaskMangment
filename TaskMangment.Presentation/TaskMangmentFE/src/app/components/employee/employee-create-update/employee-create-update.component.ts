@@ -10,6 +10,8 @@ import { FormFieldConfig } from 'app/core/models/form-field-config';
 import { DepartmentService } from 'app/core/services/department.service';
 import { JobService } from 'app/core/services/job.service';
 import { EnumItemDto } from 'app/core/models/employee/employee';
+import { AuthService } from 'app/core/services/auth.service';
+import { Permissions } from 'app/core/constants/permissions';
 
 @Component({
   selector: 'app-employee-create-update',
@@ -36,6 +38,11 @@ export class EmployeeCreateUpdateComponent implements OnInit {
   title = 'EMPLOYEE.TITLE';
   breadcrumbs = ['HOME', 'EMPLOYEES'];
   activeitem = 'EMPLOYEE.CREATE';
+
+  /** Original active flag when editing — used if user cannot enable/disable. */
+  private originalIsActive = true;
+  canEnableEmployee = false;
+  canDisableEmployee = false;
 
   formGroup!: FormGroup;
   formConfig: FormFieldConfig[] = [
@@ -185,11 +192,15 @@ export class EmployeeCreateUpdateComponent implements OnInit {
     private toastr: ToastrService,
     private translate: TranslateService,
     private deptService: DepartmentService,
-    private jobService: JobService
+    private jobService: JobService,
+    private auth: AuthService
   ) { }
 
   ngOnInit() {
+    this.canEnableEmployee = this.auth.hasPermission(Permissions.ENABLE_EMPLOYEE);
+    this.canDisableEmployee = this.auth.hasPermission(Permissions.DISABLE_EMPLOYEE);
     this.initForm();
+    this.applyActiveToggleVisibility();
     this.formGroup.get('branchId')!.valueChanges.subscribe(branchId => {
   this.loadDepartments(Number(branchId));
 });
@@ -202,6 +213,15 @@ export class EmployeeCreateUpdateComponent implements OnInit {
     // this.loadRoles();
     if (this.isEdit && this.employeeId) {
       this.loadEmployee();
+    }
+  }
+
+  /** Hide "موظف نشط" unless user has ENABLE_EMPLOYEE or DISABLE_EMPLOYEE. */
+  private applyActiveToggleVisibility(): void {
+    const canToggle = this.canEnableEmployee || this.canDisableEmployee;
+    const idx = this.formConfig.findIndex(f => f.name === 'isActive');
+    if (!canToggle && idx >= 0) {
+      this.formConfig.splice(idx, 1);
     }
   }
 
@@ -331,17 +351,13 @@ export class EmployeeCreateUpdateComponent implements OnInit {
         email: emp.email,
         functionCode: emp.functionCode,
         isActive: emp.isActive ?? true,
-
-
         password: '',
         confirmPassword: '',
+}, { emitEvent: false });
 
-
-}, { emitEvent: false });  
-    this.loadDepartments(emp.branchId, emp.departmentId);
-
+      this.originalIsActive = emp.isActive ?? true;
+      this.loadDepartments(emp.branchId, emp.departmentId);
     });
-    
   }
 
   loadBranches() {
@@ -449,15 +465,37 @@ export class EmployeeCreateUpdateComponent implements OnInit {
       return;
     }
 
+    // Keep previous active state when the toggle is hidden (no enable/disable permission).
+    const hasActiveField = this.formConfig.some(f => f.name === 'isActive');
+    const nextIsActive = hasActiveField
+      ? !!formValue.isActive
+      : (this.isEdit ? this.originalIsActive : true);
+
+    if (this.isEdit) {
+      if (nextIsActive !== this.originalIsActive) {
+        if (nextIsActive && !this.canEnableEmployee) {
+          this.toastr.error(this.translate.instant('COMMON.NOT_ALLOWED') || 'Not Allowed (No Permission)');
+          return;
+        }
+        if (!nextIsActive && !this.canDisableEmployee) {
+          this.toastr.error(this.translate.instant('COMMON.NOT_ALLOWED') || 'Not Allowed (No Permission)');
+          return;
+        }
+      }
+    } else if (!nextIsActive && !this.canDisableEmployee) {
+      this.toastr.error(this.translate.instant('COMMON.NOT_ALLOWED') || 'Not Allowed (No Permission)');
+      return;
+    }
+
     const formData = new FormData();
 
     Object.keys(formValue).forEach(key => {
-      if (key !== 'attachments' && formValue[key] !== null && formValue[key] !== undefined) {
+      if (key !== 'attachments' && key !== 'isActive' && formValue[key] !== null && formValue[key] !== undefined) {
         formData.append(key, formValue[key]);
       }
     });
 
-    formData.set('isActive', String(!!formValue.isActive));
+    formData.set('isActive', String(nextIsActive));
 
     if (formValue.mobileCode && formValue.mobile) {
       formData.set('mobile', formValue.mobileCode + formValue.mobile);

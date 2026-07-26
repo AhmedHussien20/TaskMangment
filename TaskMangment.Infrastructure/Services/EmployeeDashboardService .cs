@@ -9,6 +9,7 @@ using TaskMangment.Application.Dashboards.Employee;
 using TaskMangment.Application.DTOs;
 using TaskMangment.Application.DTOs.TaskDTOs;
 using TaskMangment.Application.Interfaces.IRepository;
+using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
 using TaskMangment.Infrastructure.Helpers;
@@ -30,6 +31,8 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<Employee> _employeeRepo;
         private readonly IUserAccessContextProvider _accessProvider;
         private readonly IRepository<WorkTask> _taskRepo;
+        private readonly IAccessScopeResolver _scopeResolver;
+        private readonly IEmployeePermissionService _permissions;
 
 
 
@@ -44,7 +47,9 @@ namespace TaskMangment.Infrastructure.Services
             IRepository<ManagerBranches> managerBranchesRepo,
             IRepository<Employee> employeeRepo,
             IUserAccessContextProvider accessProvider,
-            IRepository<WorkTask> taskRepo
+            IRepository<WorkTask> taskRepo,
+            IAccessScopeResolver scopeResolver,
+            IEmployeePermissionService permissions
 )
         {
             _assignmentRepo = assignmentRepo;
@@ -57,6 +62,8 @@ namespace TaskMangment.Infrastructure.Services
             _employeeRepo = employeeRepo;
             _accessProvider = accessProvider;
             _taskRepo = taskRepo;
+            _scopeResolver = scopeResolver;
+            _permissions = permissions;
         }
 
         public async Task<ApiResponse<EmployeeDashboardDto>> GetDashboardAsync(
@@ -200,6 +207,7 @@ namespace TaskMangment.Infrastructure.Services
      int employeeId,
      int roleLevel)
         {
+            _ = roleLevel;
             var today = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime.UtcNow, "Arab Standard Time").Date;
             var allowedStatuses = new[] { WorkTaskStatus.New, WorkTaskStatus.InProgress };
 
@@ -210,27 +218,22 @@ namespace TaskMangment.Infrastructure.Services
                 !a.Task.Comments.Any(c => c.CreatedDate >= today && c.EmployeeId == a.EmployeeId)
             );
 
-            if (roleLevel < 50)
+            var canViewScoped = await _permissions.HasAnyAsync(
+                employeeId,
+                PermissionCodes.ViewScopedTasks,
+                PermissionCodes.ViewCompanyTasks,
+                PermissionCodes.ViewAllTasks);
+
+            if (!canViewScoped)
             {
                 baseQuery = baseQuery.Where(a => a.EmployeeId == employeeId);
             }
             else
             {
-                var access = await _accessProvider.GetAsync(employeeId);
-
-                var companyId = await _employeeRepo.GetAll(e => e.Id == employeeId)
-                    .Select(e => e.CompanyId)
-                    .FirstAsync();
-
-                IQueryable<Employee> scopedEmployeesQuery = _employeeRepo
-                    .GetAll(e => e.CompanyId == companyId && e.IsActive)
-                    .ApplyAccessScope(access);
-
-
-                if (roleLevel != 100)
-                    scopedEmployeesQuery = scopedEmployeesQuery.ApplyRoleHierarchy(roleLevel);
-
-                var scopedEmployeeIds = scopedEmployeesQuery.Select(e => e.Id);
+                var scope = await _scopeResolver.ResolveAsync(employeeId);
+                var scopedEmployeeIds = _scopeResolver
+                    .FilterEmployees(_employeeRepo.GetAll(e => e.IsActive), scope)
+                    .Select(e => e.Id);
 
                 baseQuery = baseQuery.Where(a => scopedEmployeeIds.Contains(a.EmployeeId));
             }

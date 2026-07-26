@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { GenericTableComponent, TableColumn } from 'app/shared/components/generic-table/generic-table.component';
@@ -6,6 +6,8 @@ import { TaskDetailsRefreshService } from '../../../task-details-refresh.service
 import { TranslateModule } from '@ngx-translate/core';
 import { DiscountGetDto } from 'app/core/models/task/task-penalty';
 import { TaskPenaltyService } from 'app/core/services/task-penalty.service';
+import { AuthService } from 'app/core/services/auth.service';
+import { Permissions } from 'app/core/constants/permissions';
 
 @Component({
   selector: 'app-task-penalties',
@@ -13,10 +15,15 @@ import { TaskPenaltyService } from 'app/core/services/task-penalty.service';
   imports: [CommonModule, GenericTableComponent, TranslateModule],
   templateUrl: './task-penalties.component.html'
 })
-export class TaskPenaltiesComponent implements OnInit, OnDestroy {
+export class TaskPenaltiesComponent implements OnInit, OnDestroy, OnChanges {
 
   @Input() taskId!: number;
   @Input() readonly = false;
+  @Input() canSendPenalty = false;
+
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
 
   rows: DiscountGetDto[] = [];
   totalItems = 0;
@@ -46,12 +53,26 @@ export class TaskPenaltiesComponent implements OnInit, OnDestroy {
 
   constructor(
     private refresh: TaskDetailsRefreshService,
-    private penaltyService: TaskPenaltyService
+    private penaltyService: TaskPenaltyService,
+    private auth: AuthService
   ) { }
 
   ngOnInit(): void {
+    this.refreshActionFlags();
     this.loadPenalties();
     this.sub = this.refresh.refresh$.subscribe(() => this.loadPenalties());
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['canSendPenalty'] || changes['readonly']) {
+      this.refreshActionFlags();
+    }
+  }
+
+  private refreshActionFlags(): void {
+    this.canAdd = !this.readonly && this.canSendPenalty;
+    this.canEdit = !this.readonly && this.canSendPenalty;
+    this.canDelete = !this.readonly && this.auth.hasPermission(Permissions.DELETE_PENALTY);
   }
 
   loadPenalties(pageIndex = 1, pageSize = 10) {

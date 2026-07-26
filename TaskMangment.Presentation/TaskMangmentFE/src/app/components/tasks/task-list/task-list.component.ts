@@ -14,6 +14,7 @@ import { TaskDetailsShellComponent } from "../task-details/task-details-shell/ta
 import Swal from 'sweetalert2';
 import { ToastrService } from "ngx-toastr";
 import { AuthService } from "app/core/services/auth.service";
+import { Permissions } from "app/core/constants/permissions";
 import { SpkDashboardComponent } from "app/@spk/reusable-dashboard/spk-dashboard/spk-dashboard.component";
 import { EmployeeService } from "app/core/services/employee.service";
 import { TasksEmployeeDeepSearchComponent } from "../tasks-employee-deep-search/tasks-employee-deep-search.component";
@@ -165,8 +166,12 @@ deepSearchComp?: TasksEmployeeDeepSearchComponent;
   ) { }
 
   ngOnInit() {
-    const roleLevel = this.auth.getRoleLevel();
-    this.showEmployeeFilter = roleLevel >= 50;
+    this.showEmployeeFilter = this.auth.hasAnyPermission(
+      Permissions.VIEW_SCOPED_TASKS,
+      Permissions.VIEW_COMPANY_TASKS,
+      Permissions.VIEW_ALL_TASKS,
+      Permissions.VIEW_EMPLOYEES
+    );
 
     this.status = this.statusOptions;
 
@@ -186,16 +191,15 @@ deepSearchComp?: TasksEmployeeDeepSearchComponent;
       };
     }
 
-    this.canCreate = roleLevel >= 50;
-    this.canEdit = roleLevel >= 70;
-    this.canDelete = roleLevel >= 70;
-    this.canCopy = roleLevel >= 70;
-    this.canShowExtraTasks = roleLevel == 100
-
-if (this.auth.hasPermission('CREATE_TASK')) {
-  this.canCreate = true;
-  this.canEdit = true;
-}
+    this.canCreate = this.auth.hasPermission(Permissions.CREATE_TASK);
+    this.canEdit = this.auth.hasPermission(Permissions.UPDATE_TASK);
+    this.canDelete = this.auth.hasPermission(Permissions.DELETE_TASK);
+    this.canCopy = this.auth.hasPermission(Permissions.CREATE_TASK);
+    this.canArchive = this.auth.hasPermission(Permissions.ARCHIVE_TASK);
+    this.canShowExtraTasks = this.auth.hasAnyPermission(
+      Permissions.VIEW_COMPANY_TASKS,
+      Permissions.VIEW_ALL_TASKS
+    );
 
     this.loadData();
     this.openTaskFromQueryIfAny();

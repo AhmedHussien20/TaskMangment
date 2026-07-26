@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Microsoft.AspNetCore.Http; 
 using Microsoft.EntityFrameworkCore;
 using TaskMangment.Application.ApiRequests;
@@ -28,6 +28,8 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<Employee> _empRepo;
         private readonly IUserAccessContextProvider _accessProvider;
         private readonly IGetHigherManager _getHigherManager;
+        private readonly IAccessScopeResolver _scopeResolver;
+        private readonly IEmployeePermissionService _permissions;
 
 
         public LeaveService(
@@ -38,8 +40,9 @@ namespace TaskMangment.Infrastructure.Services
             IDomainEventDispatcher eventDispatcher,
             IRepository<Employee> empRepo,
             IUserAccessContextProvider accessProvider,
-            IGetHigherManager getHigherManager
-
+            IGetHigherManager getHigherManager,
+            IAccessScopeResolver scopeResolver,
+            IEmployeePermissionService permissions
             )
         {
             _leaveRepo = leaveRepo;
@@ -50,6 +53,8 @@ namespace TaskMangment.Infrastructure.Services
             _empRepo = empRepo;
             _accessProvider = accessProvider;
             _getHigherManager = getHigherManager;
+            _scopeResolver = scopeResolver;
+            _permissions = permissions;
         }
          
         public async Task<ApiResponse<LeaveGetDto>> CreateAsync(LeaveAddDto dto, int employeeId)
@@ -120,26 +125,22 @@ namespace TaskMangment.Infrastructure.Services
             if (request.StatusId.HasValue)
                 query = query.Where(l => l.Status == (LeaveStatus)request.StatusId.Value);
 
-            if (roleLevel < 60)
+            _ = roleLevel;
+            var canReviewLeave = await _permissions.HasAnyAsync(
+                employeeId,
+                PermissionCodes.ApproveLeave,
+                PermissionCodes.RejectLeave);
+
+            if (!canReviewLeave)
             {
                 query = query.Where(l => l.EmployeeId == employeeId);
             }
             else
             {
-                var access = await _accessProvider.GetAsync(employeeId);
-
-                var companyId = await _employeeRepo.GetAll(e => e.Id == employeeId)
-                    .Select(e => e.CompanyId)
-                    .FirstAsync();
-
-                IQueryable<Employee> scopedEmployeesQuery = _employeeRepo
-                    .GetAll(e => e.CompanyId == companyId && e.IsActive)
-                    .ApplyAccessScope(access);
-
-                if (roleLevel != 100)
-                    scopedEmployeesQuery = scopedEmployeesQuery.ApplyRoleHierarchy(roleLevel);
-
-                var scopedEmployeeIds = scopedEmployeesQuery.Select(e => e.Id);
+                var scope = await _scopeResolver.ResolveAsync(employeeId);
+                var scopedEmployeeIds = _scopeResolver
+                    .FilterEmployees(_employeeRepo.GetAll(e => e.IsActive), scope)
+                    .Select(e => e.Id);
 
                 query = query.Where(l => scopedEmployeeIds.Contains(l.EmployeeId));
 
@@ -217,15 +218,7 @@ namespace TaskMangment.Infrastructure.Services
 
 
 
-            var managerLevel = await GetEmployeeRoleLevelAsync(managerId);
-
-            if (leave.EmployeeId == managerId && managerLevel != 100)
-                throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
-
-            var employeeLevel = await GetEmployeeRoleLevelAsync(leave.EmployeeId);
-
-            if (managerLevel != 100 && employeeLevel > managerLevel)
-                throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
+            await EnsureCanReviewLeaveAsync(managerId, leave.EmployeeId);
 
             leave.Status = LeaveStatus.Approved;
             leave.ApprovedById = managerId;
@@ -269,16 +262,7 @@ namespace TaskMangment.Infrastructure.Services
             if (manager == null)
                 throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
 
-            var managerLevel = await GetEmployeeRoleLevelAsync(managerId);
-
-            if (leave.EmployeeId == managerId && managerLevel != 100)
-                throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
-
-            var employeeLevel = await GetEmployeeRoleLevelAsync(leave.EmployeeId);
-
-            if (managerLevel != 100 && employeeLevel > managerLevel)
-                throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
-
+            await EnsureCanReviewLeaveAsync(managerId, leave.EmployeeId);
 
             leave.Status = LeaveStatus.Rejected;
             leave.RejectionReason = rejectLeaveDto.reason;
@@ -317,19 +301,24 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<LeaveGetDto>.Ok(dto);
         }
 
-        private async Task<int> GetEmployeeRoleLevelAsync(int employeeId)
+        private async Task EnsureCanReviewLeaveAsync(int managerId, int leaveEmployeeId)
         {
-            var query = _empRepo.GetAll(e => e.Id == employeeId)
-                .SelectMany(e => e.EmployeeRoles)
-                .Where(er => er.IsAssigned && !er.IsDeleted && er.Role != null)
-                .Select(er => (int?)er.Role.Level); 
-            var maxLevel = await query.MaxAsync();
+            // Self-approve only for company-wide viewers (legacy admin behavior).
+            if (leaveEmployeeId == managerId)
+            {
+                var canSelfReview = await _permissions.HasAnyAsync(
+                    managerId,
+                    PermissionCodes.ViewCompanyReports,
+                    PermissionCodes.ViewCompanyTasks,
+                    PermissionCodes.ViewAllTasks);
+                if (!canSelfReview)
+                    throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
+                return;
+            }
 
-            return maxLevel ?? (int)RoleLevelEnum.Employee;
+            if (!await _scopeResolver.CanViewEmployeeAsync(managerId, leaveEmployeeId))
+                throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
         }
-
-
-
     }
 
 }

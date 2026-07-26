@@ -77,7 +77,11 @@ namespace TaskMangment.Infrastructure.Services
             ResolvedAccessScope scope,
             AccessIntent intent = AccessIntent.View)
         {
-            query = query.Where(e => e.CompanyId == scope.CompanyId && e.IsActive && !e.IsDeleted);
+            // Do not force IsActive here — callers (employee list filter, task picker) decide.
+            // Assign intent still excludes inactive employees.
+            query = query.Where(e => e.CompanyId == scope.CompanyId && !e.IsDeleted);
+            if (intent == AccessIntent.Assign)
+                query = query.Where(e => e.IsActive);
 
             switch (scope.Kind)
             {

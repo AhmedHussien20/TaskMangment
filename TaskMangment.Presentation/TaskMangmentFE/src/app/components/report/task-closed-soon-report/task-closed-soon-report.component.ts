@@ -14,6 +14,7 @@ import { SimpleEmployee } from 'app/core/models/task/task';
 import { EmployeeService } from 'app/core/services/employee.service';
 import { ExportType, TasksClosingSoonDto } from 'app/core/models/reports/reports';
 import { AuthService } from 'app/core/services/auth.service';
+import { Permissions } from 'app/core/constants/permissions';
 import { EmployeeNgSelectComponent } from 'app/components/employee-select/employee-select.component';
 import { TaskDetailsShellComponent } from 'app/components/tasks/task-details/task-details-shell/task-details-shell.component';
 
@@ -73,8 +74,14 @@ export class TaskClosedSoonReportComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    const roleLevel = this.authService.getRoleLevel() ?? 0;
-    this.isAdmin = roleLevel >= 50;
+    this.isAdmin = this.authService.hasAnyPermission(
+      Permissions.VIEW_SCOPED_REPORTS,
+      Permissions.VIEW_COMPANY_REPORTS,
+      Permissions.VIEW_SCOPED_TASKS,
+      Permissions.VIEW_COMPANY_TASKS,
+      Permissions.VIEW_EMPLOYEES,
+      Permissions.CREATE_TASK
+    ) || this.authService.hasAccessScope();
 
     if (this.isAdmin) {
       this.selectedEmployeeId = undefined; 

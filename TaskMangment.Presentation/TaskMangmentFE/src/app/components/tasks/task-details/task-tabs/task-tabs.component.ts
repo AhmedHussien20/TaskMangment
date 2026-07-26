@@ -20,6 +20,8 @@ export class TaskTabsComponent {
   @Input() taskId!: number;
   @Input() createdByMe: boolean = false;
   @Input() readonly = false;
+  @Input() canSendPenalty = false;
+  @Input() canSendWarning = false;
 
   activeTab = 'basic';
 }

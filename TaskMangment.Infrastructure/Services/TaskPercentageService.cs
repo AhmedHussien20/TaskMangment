@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis;
@@ -111,6 +111,14 @@ namespace TaskMangment.Infrastructure.Services
             if (task.Status == WorkTaskStatus.Closed || task.Status == WorkTaskStatus.Archived || task.Status == WorkTaskStatus.AutoClose)
                 throw new AppException(ErrorCodes.TaskAlreadyClosed, StatusCodes.Status400BadRequest);
 
+            var actorIsAssignee = await _taskAssignmentRepo.GetAll(a =>
+                    a.TaskId == taskId &&
+                    a.EmployeeId == employeeId &&
+                    a.IsActive &&
+                    !a.IsDeleted)
+                .AnyAsync();
+            if (actorIsAssignee)
+                throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
 
             if (role != "Manager" && task.CreatedByEmployeeId != employeeId)
                 throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
@@ -173,11 +181,20 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<TaskPercentageGetDto>.Ok(resultDto, "Percentage added successfully");
         }
 
-        public async Task<ApiResponse<TaskPercentageGetDto>> UpdateAsync(int id, TaskPercentageAddEditDto dto)
+        public async Task<ApiResponse<TaskPercentageGetDto>> UpdateAsync(int id, int modifiedByEmployeeId, TaskPercentageAddEditDto dto)
         {
             var entity = await _repo.GetByIDAsync(id);
             if (entity == null)
                 throw new AppException("TaskPercentage not found", StatusCodes.Status404NotFound);
+
+            var actorIsAssignee = await _taskAssignmentRepo.GetAll(a =>
+                    a.TaskId == entity.TaskId &&
+                    a.EmployeeId == modifiedByEmployeeId &&
+                    a.IsActive &&
+                    !a.IsDeleted)
+                .AnyAsync();
+            if (actorIsAssignee)
+                throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
 
             entity.AchievementPercent = dto.AchievementPercent;
             entity.AchievementReason = dto.AchievementReason;

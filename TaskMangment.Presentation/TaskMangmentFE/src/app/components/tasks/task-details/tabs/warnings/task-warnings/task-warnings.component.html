@@ -3,9 +3,9 @@
   [columns]="columns"
   [data]="rows"
   [totalItems]="totalItems"
-  [showAddButton]="!readonly"
-  [showEditButton]="!readonly"
-  [showDeleteButton]="!readonly"
+  [showAddButton]="canAdd"
+  [showEditButton]="canEdit"
+  [showDeleteButton]="canDelete"
   [showFilters]="false"
   [showPagination]="false">
 </app-generic-table>

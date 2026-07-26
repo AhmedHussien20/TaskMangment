@@ -5,7 +5,7 @@ namespace TaskMangment.Application.Common.Security
     /// </summary>
     public static class PermissionCodes
     {
-        // Tasks
+        // Tasks — CRUD / view
         public const string CreateTask = "CREATE_TASK";
         public const string UpdateTask = "UPDATE_TASK";
         public const string DeleteTask = "DELETE_TASK";
@@ -16,11 +16,28 @@ namespace TaskMangment.Application.Common.Security
         /// <summary>Legacy alias used by reports; treated as company-wide task visibility.</summary>
         public const string ViewAllTasks = "VIEW_ALL_TASKS";
 
+        // Tasks — workflow
+        public const string ExtendDueDate = "EXTEND_DUE_DATE";
+        public const string SubmitDueDate = "SUBMIT_DUE_DATE";
+        public const string ApproveCloseExtend = "APPROVE_CLOSE_EXTEND";
+        public const string RejectCloseExtend = "REJECT_CLOSE_EXTEND";
+        public const string CloseTaskEmployee = "CLOSE_TASK_EMPLOYEE";
+        public const string ArchiveTask = "ARCHIVE_TASK";
+        public const string TransferTask = "TRANSFER_TASK";
+        public const string ExemptEmployeeTask = "EXEMPT_EMPLOYEE_TASK";
+        public const string ReopenTaskEmployee = "REOPEN_TASK_EMPLOYEE";
+        public const string SendWarning = "SEND_WARNING";
+        public const string DeleteWarning = "DELETE_WARNING";
+        public const string SendPenalty = "SEND_PENALTY";
+        public const string DeletePenalty = "DELETE_PENALTY";
+
         // People / org management
         public const string ViewEmployees = "VIEW_EMPLOYEES";
         public const string CreateEmployee = "CREATE_EMPLOYEE";
         public const string UpdateEmployee = "UPDATE_EMPLOYEE";
         public const string DeleteEmployee = "DELETE_EMPLOYEE";
+        public const string EnableEmployee = "ENABLE_EMPLOYEE";
+        public const string DisableEmployee = "DISABLE_EMPLOYEE";
         public const string AssignRole = "ASSIGN_ROLE";
         public const string ManageManagerScope = "MANAGE_MANAGER_SCOPE";
         public const string AssignToManagers = "ASSIGN_TO_MANAGERS";
@@ -37,7 +54,8 @@ namespace TaskMangment.Application.Common.Security
         // Notifications / escalations
         public const string ReceiveOrgEscalations = "RECEIVE_ORG_ESCALATIONS";
 
-        // Org CRUD (existing)
+        // Org CRUD
+        public const string EditCompany = "EDIT_COMPANY";
         public const string CreateArea = "CREATE_AREA";
         public const string UpdateArea = "UPDATE_AREA";
         public const string DeleteArea = "DELETE_AREA";
@@ -50,6 +68,33 @@ namespace TaskMangment.Application.Common.Security
         public const string CreatePermission = "CREATE_PERMISSION";
         public const string UpdatePermission = "UPDATE_PERMISSION";
         public const string DeletePermission = "DELETE_PERMISSION";
+        public const string CreateJob = "CREATE_JOB";
+        public const string UpdateJob = "UPDATE_JOB";
+        public const string DeleteJob = "DELETE_JOB";
+
+        /// <summary>Assignee / day-to-day task participation pack.</summary>
+        public static readonly string[] AssigneeTaskActions =
+        [
+            CommentTask,
+            SubmitDueDate,
+            CloseTaskEmployee
+        ];
+
+        /// <summary>Manager / creator discipline & review pack.</summary>
+        public static readonly string[] ManagerTaskActions =
+        [
+            SendWarning,
+            DeleteWarning,
+            SendPenalty,
+            DeletePenalty,
+            ApproveCloseExtend,
+            RejectCloseExtend,
+            ExtendDueDate,
+            ArchiveTask,
+            TransferTask,
+            ExemptEmployeeTask,
+            ReopenTaskEmployee
+        ];
 
         public static readonly string[] NewCatalogCodes =
         [

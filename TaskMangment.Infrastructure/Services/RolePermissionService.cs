@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -72,7 +72,7 @@ namespace TaskMangment.Infrastructure.Services
                 .ToListAsync();
 
             var assignedIds = await _rolePermRepo
-                .GetAll(rp => rp.RoleId == roleId && !rp.IsDeleted)
+                .GetAll(rp => rp.RoleId == roleId && rp.IsAssigned && !rp.IsDeleted)
                 .Select(rp => rp.PermissionId)
                 .ToListAsync();
 
@@ -112,18 +112,20 @@ namespace TaskMangment.Infrastructure.Services
 
             foreach (var assignment in dto.Assignments)
             {
-                var existingAssignment = await _rolePermRepo
-                    .GetAll(rp => rp.PermissionId == assignment.PermissionId && rp.RoleId == roleId)
-                    .FirstOrDefaultAsync();
+                // Include soft-deleted rows so re-assign can revive instead of inserting duplicates.
+                var existingAssignment = await _context.RolePermissions
+                    .FirstOrDefaultAsync(rp =>
+                        rp.PermissionId == assignment.PermissionId &&
+                        rp.RoleId == roleId);
 
                 if (assignment.Assign)
                 {
                     if (existingAssignment != null)
                     {
-                        if (!existingAssignment.IsAssigned)
-                        {
-                            existingAssignment.IsAssigned = true;
-                        }
+                        existingAssignment.IsAssigned = true;
+                        existingAssignment.IsDeleted = false;
+                        existingAssignment.DeletedDate = null;
+                        existingAssignment.ModifiedDate = DateTime.UtcNow;
                     }
                     else
                     {
@@ -132,20 +134,21 @@ namespace TaskMangment.Infrastructure.Services
                             RoleId = roleId,
                             PermissionId = assignment.PermissionId,
                             CreatedDate = DateTime.UtcNow,
-                            IsAssigned = true
+                            IsAssigned = true,
+                            IsDeleted = false
                         });
                     }
                 }
-                else
+                else if (existingAssignment != null)
                 {
-                    if (existingAssignment != null)
-                    {
-                        existingAssignment.IsAssigned = false;
-                    }
+                    existingAssignment.IsAssigned = false;
+                    existingAssignment.IsDeleted = true;
+                    existingAssignment.DeletedDate = DateTime.UtcNow;
+                    existingAssignment.ModifiedDate = DateTime.UtcNow;
                 }
             }
 
-            await _rolePermRepo.SaveChangesAsync();
+            await _context.SaveChangesAsync();
             return ApiResponse<bool>.Ok(true, "Permissions assigned/unassigned successfully");
         }
 

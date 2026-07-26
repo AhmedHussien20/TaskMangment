@@ -13,6 +13,7 @@ import Swal from 'sweetalert2';
 import { ToastrService } from 'ngx-toastr';
 import { BranchService } from 'app/core/services/branch.service';
 import { AuthService } from 'app/core/services/auth.service';
+import { Permissions } from 'app/core/constants/permissions';
 import { Router } from '@angular/router';
 
 
@@ -102,9 +103,15 @@ export class EmployeeListComponent implements OnInit {
     private router: Router
   ) { }
 
+  canCreate = false;
+  canEdit = false;
+  canDelete = false;
+
   ngOnInit(): void {
-    const roleLevel = this.auth.getRoleLevel();
-    this.canMakeChanges = roleLevel >= 100; 
+    this.canCreate = this.auth.hasPermission(Permissions.CREATE_EMPLOYEE);
+    this.canEdit = this.auth.hasPermission(Permissions.UPDATE_EMPLOYEE);
+    this.canDelete = this.auth.hasPermission(Permissions.DELETE_EMPLOYEE);
+    this.canMakeChanges = this.canCreate || this.canEdit;
     this.loadData();
     this.loadBranches();
   }

@@ -13,6 +13,8 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AreaCreateUpdateComponent } from '../area-create-update.component/area-create-update.component.component';
 import { ToastrService } from 'ngx-toastr';
 import Swal from 'sweetalert2';
+import { AuthService } from 'app/core/services/auth.service';
+import { Permissions } from 'app/core/constants/permissions';
 
 
 declare var bootstrap: any;
@@ -77,6 +79,9 @@ export class AreaListComponent implements OnInit {
   };
 
   isLoading = false;
+  canCreate = false;
+  canEdit = false;
+  canDelete = false;
   labels = {
     searchKey: 'AREA.searchKey',
   }
@@ -87,10 +92,14 @@ export class AreaListComponent implements OnInit {
     private areaService: AreaService,
     private modalService: NgbModal, private fb: FormBuilder,
     private translate: TranslateService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private auth: AuthService
   ) { }
 
   ngOnInit(): void {
+    this.canCreate = this.auth.hasPermission(Permissions.CREATE_AREA);
+    this.canEdit = this.auth.hasPermission(Permissions.UPDATE_AREA);
+    this.canDelete = this.auth.hasPermission(Permissions.DELETE_AREA);
     this.loadData();
   }
 

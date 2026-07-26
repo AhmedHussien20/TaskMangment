@@ -35,6 +35,7 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IBlobStorageService _blobStorageService;
 
         private readonly IUserAccessContextProvider _accessProvider;
+        private readonly IAccessScopeResolver _scopeResolver;
 
         public AdminDashboardService(
             IRepository<WorkTask> taskRepo,
@@ -48,7 +49,8 @@ namespace TaskMangment.Infrastructure.Services
             IRepository<Branch> branchRepo,
             IRepository<ManagerBranches> managerBranchesRepo,
             IBlobStorageService blobStorageService,
-            IUserAccessContextProvider accessProvider
+            IUserAccessContextProvider accessProvider,
+            IAccessScopeResolver scopeResolver
         )
         {
             _taskRepo = taskRepo;
@@ -63,6 +65,7 @@ namespace TaskMangment.Infrastructure.Services
             _managerBranchesRepo = managerBranchesRepo;
             _blobStorageService = blobStorageService;
             _accessProvider = accessProvider;
+            _scopeResolver = scopeResolver;
         }
 
         private async Task<(IQueryable<Employee> ScopedEmployeesQuery, IQueryable<int> ScopedEmployeeIds)>
@@ -72,17 +75,15 @@ namespace TaskMangment.Infrastructure.Services
                 int? employeeId,
                 int? branchId = null)
         {
+            _ = roleLevel;
             IQueryable<Employee> scopedEmployeesQuery = _employeeRepo
                 .GetAll(e => e.CompanyId == companyId && e.IsActive);
 
             if (employeeId.HasValue)
             {
-                var access = await _accessProvider.GetAsync(employeeId.Value);
-                scopedEmployeesQuery = scopedEmployeesQuery.ApplyAccessScope(access);
+                var scope = await _scopeResolver.ResolveAsync(employeeId.Value);
+                scopedEmployeesQuery = _scopeResolver.FilterEmployees(scopedEmployeesQuery, scope);
             }
-
-            if (roleLevel != 100)
-                scopedEmployeesQuery = scopedEmployeesQuery.ApplyRoleHierarchy(roleLevel);
 
             if (branchId.HasValue)
                 scopedEmployeesQuery = scopedEmployeesQuery.Where(e => e.BranchId == branchId.Value);
@@ -97,17 +98,17 @@ namespace TaskMangment.Infrastructure.Services
             int roleLevel,
             int employeeId)
         {
+            _ = roleLevel;
+            var scope = await _scopeResolver.ResolveAsync(employeeId);
             var access = await _accessProvider.GetAsync(employeeId);
 
             var branchesQuery = _branchRepo
                 .GetAll(b => b.CompanyId == companyId && !b.IsDeleted);
 
-            //var employeesQuery = _employeeRepo
-            //    .GetAll(e => e.CompanyId == companyId);
-
             branchesQuery = branchesQuery.ApplyAccessScope(access);
 
-            if (!access.BranchIds.Any() && !access.FunctionCodes.Any() && roleLevel != 100)
+            // Company-wide report/task viewers see all company branches; others without manager scope get own branch.
+            if (!scope.IsCompanyWide && !access.BranchIds.Any() && !access.FunctionCodes.Any())
             {
                 var myBranch = await _employeeRepo
                     .GetAll(e => e.Id == employeeId && e.CompanyId == companyId)

@@ -15,6 +15,8 @@ import { TaskService } from 'app/core/services/task.service';
 import { NgSelectModule } from '@ng-select/ng-select';
 import { DatePickerComponent } from 'app/components/date-picker/date-picker.component';
 import { isPastDueDate, isWeekendDueDate } from 'app/shared/validations/weekend-due-date.validator';
+import { AuthService } from 'app/core/services/auth.service';
+import { Permissions } from 'app/core/constants/permissions';
 
 
 @Component({
@@ -26,6 +28,7 @@ import { isPastDueDate, isWeekendDueDate } from 'app/shared/validations/weekend-
 export class TaskRequestsComponent implements OnInit, OnChanges, AfterViewInit {
 
   @Input() taskId!: number;
+  /** When true, reviewer actions are shown (task creator or approve/reject permission). */
   @Input() createdByMe: boolean = false;
   canReview: boolean = false;
 
@@ -90,14 +93,14 @@ export class TaskRequestsComponent implements OnInit, OnChanges, AfterViewInit {
     private modalService: NgbModal,
     private toastr: ToastrService,
     private taskService: TaskService,
-
+    private auth: AuthService
   ) { }
 
  extensionStatusOptions: { label: string; value: ExtensionRequestStatus }[] = [];
 closeStatusOptions: { label: string; value: CloseRequestStatus }[] = [];
 
 ngOnInit(): void {
-  this.canReview= this.createdByMe;
+  this.refreshCanReview();
   this.extensionStatusOptions = [
     { label: this.translate.instant('TASK.STATUS_APPROVED'), value: ExtensionRequestStatus.Approved },
     { label: this.translate.instant('TASK.STATUS_REJECTED'), value: ExtensionRequestStatus.Rejected },
@@ -108,21 +111,42 @@ ngOnInit(): void {
     { label: this.translate.instant('TASK.STATUS_REJECTED'), value: CloseRequestStatus.Rejected },
   ];
 
-  console.log('CreatedByMe:', this.createdByMe);
-    if (this.createdByMe) {
-    this.columns.push({
-      key: 'review',
-      label: 'TABLE.ACTIONS',
-      type: 'icon-action',
-      icon: 'bi bi-pencil-square'
-    });
-  }
+  this.ensureReviewColumn();
 }
   ngOnChanges(changes: SimpleChanges): void {
-
+    if (changes['createdByMe']) {
+      this.refreshCanReview();
+      this.ensureReviewColumn();
+    }
     if (changes['taskId'] && this.taskId && this.initialized) {
       this.page = 1;
       this.loadRequests();
+    }
+  }
+
+  private refreshCanReview(): void {
+    // createdByMe input from shell is already permission-gated (canReviewRequests).
+    this.canReview =
+      this.createdByMe ||
+      this.auth.hasAnyPermission(
+        Permissions.APPROVE_CLOSE_EXTEND,
+        Permissions.REJECT_CLOSE_EXTEND,
+        Permissions.EXTEND_DUE_DATE
+      );
+  }
+
+  private ensureReviewColumn(): void {
+    const hasReviewCol = this.columns.some(c => c.key === 'review');
+    if (this.canReview && !hasReviewCol) {
+      this.columns.push({
+        key: 'review',
+        label: 'TABLE.ACTIONS',
+        type: 'icon-action',
+        icon: 'bi bi-pencil-square'
+      });
+    }
+    if (!this.canReview && hasReviewCol) {
+      this.columns = this.columns.filter(c => c.key !== 'review');
     }
   }
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,7 +15,7 @@ namespace TaskMangment.Application.Interfaces.Services
         Task<ApiResponse<PagedResponse<WarningGetDto>>> GetAllAsync(WarningRequest request);
         Task<ApiResponse<WarningGetDto>> GetByIdAsync(int id);
         Task<ApiResponse<WarningGetDto>> AddAsync(WarningAddEditDto dto, int taskId, int employeeId);
-        Task<ApiResponse<WarningGetDto>> UpdateAsync(int id, WarningAddEditDto dto);
+        Task<ApiResponse<WarningGetDto>> UpdateAsync(int id, WarningAddEditDto dto, int modifiedByEmployeeId);
         Task<ApiResponse<bool>> DeleteAsync(int id);
     }
 }

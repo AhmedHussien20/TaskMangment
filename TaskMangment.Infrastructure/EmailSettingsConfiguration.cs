@@ -40,6 +40,10 @@ namespace TaskMangment.Infrastructure
 
             if (!string.IsNullOrWhiteSpace(brevoApiKey))
                 opts.BrevoApiKey = brevoApiKey.Trim();
+
+            var sendEnabled = Environment.GetEnvironmentVariable("EMAIL_SEND_ENABLED");
+            if (bool.TryParse(sendEnabled, out var enabled))
+                opts.SendEnabled = enabled;
         }
     }
 }

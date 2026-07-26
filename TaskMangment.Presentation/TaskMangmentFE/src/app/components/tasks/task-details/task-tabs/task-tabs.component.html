@@ -30,7 +30,8 @@
   <ng-template ngbNavContent>
     <app-task-warnings
       [taskId]="taskId"
-      [readonly]="readonly">
+      [readonly]="readonly"
+      [canSendWarning]="canSendWarning">
     </app-task-warnings>
   </ng-template>
 </li>
@@ -40,7 +41,8 @@
   <ng-template ngbNavContent>
     <app-task-penalties
       [taskId]="taskId"
-      [readonly]="readonly">
+      [readonly]="readonly"
+      [canSendPenalty]="canSendPenalty">
     </app-task-penalties>
   </ng-template>
 </li>

@@ -48,13 +48,13 @@
   [showExtraButton]="canShowExtraTasks"
   [extraMenuItems]="extraMenuItems"
   (extraMenuSelect)="onExtraMenuSelect($event, deepSearchModal)"
-  [showCheckbox]="IsClosed"
+  [showCheckbox]="IsClosed && canArchive"
   (cleared)="onTableCleared()"
   [checkboxKey]="'__archiveChecked'"
   (checkboxChange)="onCheckboxChange($event)"
   [disableCheckboxFn]="disableArchiveCheckbox"
 
-  [showSecondButton]="TurnToArchive && selectedArchiveIds.length > 0"
+  [showSecondButton]="canArchive && TurnToArchive && selectedArchiveIds.length > 0"
   [secondButtonLabel]="'TASK.ARCHIVE'"
   (secondButtonClick)="archiveSelectedTasks()"
 >

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
@@ -7,6 +7,7 @@ using TaskMangment.API.Middlewares;
 using TaskMangment.Application.ApiRequests.Area;
 using TaskMangment.Application.Authorization;
 using TaskMangment.Application.Common.Errors;
+using TaskMangment.Application.Common.Security;
 using TaskMangment.Application.DTOs;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Application.Responses;
@@ -40,6 +41,7 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpPost]
+        [PermissionAuthorize(PermissionCodes.CreateArea)]
         public async Task<IActionResult> Add([FromBody] AreaAddEditDto dto )
         {
             var result = await _service.AddAsync(dto, this.CompanyId, this.CurrentUserId); 
@@ -47,6 +49,7 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpPut("{id}")]
+        [PermissionAuthorize(PermissionCodes.UpdateArea)]
         public async Task<IActionResult> Update(int id, [FromBody] AreaAddEditDto dto)
         {
             var result = await _service.UpdateAsync(id, dto);
@@ -54,6 +57,7 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpDelete("{id}")]
+        [PermissionAuthorize(PermissionCodes.DeleteArea)]
         public async Task<IActionResult> Delete(int id)
         {
             var result = await _service.DeleteAsync(id); 

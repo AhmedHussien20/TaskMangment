@@ -2,8 +2,10 @@ using DocumentFormat.OpenXml.Bibliography;
 using Microsoft.AspNetCore.Mvc;
 using QuestPDF.Fluent;
 using System.Reflection.Metadata;
+using TaskMangment.API.Middlewares;
 using TaskMangment.API.Reports.Task;
 using TaskMangment.API.Reports.Excel;
+using TaskMangment.Application.Common.Security;
 using TaskMangment.Application.DTOs.ReportsDTO;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Application.Responses;
@@ -150,11 +152,9 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpGet("employee-total-discounts/pdf")]
+        [PermissionAuthorize(PermissionCodes.ViewCompanyReports)]
         public async Task<IActionResult> GetEmployeeTotalDiscountsPdf(ExportType exportType, [FromQuery] EmployeeTotalDiscountReportFilterDto filter)
         {
-            if (this.RoleLevel < 100)
-                return Forbid();
-
             if (filter.ToDate.HasValue && !filter.FromDate.HasValue)
                 return BadRequest("fromDate is required when toDate is selected.");
 

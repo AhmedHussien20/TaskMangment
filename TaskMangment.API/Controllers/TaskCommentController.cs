@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using TaskMangment.API.Middlewares;
 using TaskMangment.Application.Common.ApiRequests.Task;
+using TaskMangment.Application.Common.Security;
 using TaskMangment.Application.DTOs.TaskDTOs;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Infrastructure.Services;
@@ -35,6 +37,7 @@ namespace TaskMangment.API.Controllers
 
         [HttpPost("{taskId}")]
         [Consumes("multipart/form-data")]
+        [PermissionAuthorize(PermissionCodes.CommentTask)]
         public async Task<IActionResult> Add(int taskId, [FromForm] TaskCommentAddEditDto dto)
         {
             var result = await _service.AddAsync(taskId, this.CurrentUserId,this.RoleLevel, dto);
@@ -42,6 +45,7 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpPut("{id}")]
+        [PermissionAuthorize(PermissionCodes.CommentTask)]
         public async Task<IActionResult> Update(int id, [FromBody] TaskCommentAddEditDto dto)
         {
             var result = await _service.UpdateAsync(id, dto);
@@ -49,6 +53,7 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpDelete("{id}")]
+        [PermissionAuthorize(PermissionCodes.CommentTask)]
         public async Task<IActionResult> Delete(int id)
         {
             var result = await _service.DeleteAsync(id);

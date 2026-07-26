@@ -9,40 +9,40 @@
     <app-page-header [title]="'TASK.TASK_DETAILS' | translate" [activeitem]="'TASK.TASK_DETAILS' | translate">
     </app-page-header>
 
-    <!-- ACTION ICONS -->
+    <!-- ACTION ICONS: hide when no permission; disable when task is closed -->
     <div class="d-flex justify-content-center gap-4 mb-3">
 
-      <button class="btn btn-light" ngbTooltip="{{'TASK.ADD_COMMENT' | translate}}" container="body" placement="bottom"
+      <button *ngIf="canComment" class="btn btn-light" ngbTooltip="{{'TASK.ADD_COMMENT' | translate}}" container="body" placement="bottom"
       [disabled]="isTaskClosed"
         (click)="openAction('comment')">
         <i class="bi bi-chat-dots"></i>
       </button>
 
-      <button class="btn btn-light" ngbTooltip="{{'TASK.CLOSE_REQUEST_TITLE' | translate}}" container="body" placement="bottom"
+      <button *ngIf="canCloseRequest" class="btn btn-light" ngbTooltip="{{'TASK.CLOSE_REQUEST_TITLE' | translate}}" container="body" placement="bottom"
       [disabled]="isTaskClosed"
         (click)="openAction('close')">
         <i class="bi bi-x-square"></i>
       </button>
 
-      <button class="btn btn-light" *ngIf="showAdminPages" ngbTooltip="{{'TASK.ADD_PERCENTAGE' | translate}}" container="body" placement="bottom"
+      <button class="btn btn-light" *ngIf="canSetPercentage" ngbTooltip="{{'TASK.ADD_PERCENTAGE' | translate}}" container="body" placement="bottom"
       [disabled]="isTaskClosed"
         (click)="openAction('percent')">
 <i class="bi bi-bar-chart"></i>
       </button>
 
-      <button class="btn btn-light" ngbTooltip="{{'TASK.EXTEND_REQUEST_TITLE' | translate}}" container="body" placement="bottom"
+      <button *ngIf="canExtendRequest" class="btn btn-light" ngbTooltip="{{'TASK.EXTEND_REQUEST_TITLE' | translate}}" container="body" placement="bottom"
       [disabled]="isTaskClosed"
         (click)="openAction('extend')">
         <i class="bi bi-clock-history"></i>
       </button>
 
-      <button class="btn btn-light" *ngIf="showAdminPages" ngbTooltip="{{'TASK.ADD_WARNING' | translate}}" container="body"  placement="bottom"
+      <button class="btn btn-light" *ngIf="canSendWarning" ngbTooltip="{{'TASK.ADD_WARNING' | translate}}" container="body"  placement="bottom"
       [disabled]="isTaskClosed"
         (click)="openAction('warning')">
         <i class="bi bi-exclamation-triangle"></i>
       </button>
 
-      <button class="btn btn-light" *ngIf="showAdminPages" ngbTooltip="{{'TASK.ADD_PENALTY' | translate}}" container="body"  placement="bottom"
+      <button class="btn btn-light" *ngIf="canSendPenalty" ngbTooltip="{{'TASK.ADD_PENALTY' | translate}}" container="body"  placement="bottom"
       [disabled]="isTaskClosed"
         (click)="openAction('penalty')">
         <i class="bi bi-cash-coin"></i>
@@ -51,7 +51,13 @@
     </div>
 
 
-    <app-task-tabs [taskId]="taskId" [readonly]="readonly" [createdByMe]="createdByMe"></app-task-tabs>
+    <app-task-tabs
+      [taskId]="taskId"
+      [readonly]="readonly"
+      [createdByMe]="canReviewRequests"
+      [canSendPenalty]="canSendPenalty"
+      [canSendWarning]="canSendWarning">
+    </app-task-tabs>
 
   </div>
 </div>

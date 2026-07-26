@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
+using TaskMangment.API.Middlewares;
 using TaskMangment.API.Reports.Excel;
 using TaskMangment.Application.Common.ApiRequests.Employee;
 using TaskMangment.Application.Common.Errors;
+using TaskMangment.Application.Common.Security;
 using TaskMangment.Application.Dashboards.Employee;
 using TaskMangment.Application.DTOs;
 using TaskMangment.Application.Interfaces.Services;
@@ -16,17 +18,20 @@ namespace TaskMangment.API.Controllers
         private readonly IEmployee360Service _employee360Service;
         private readonly IAccessScopeResolver _accessScopeResolver;
         private readonly IEmployeeDashboardService _dashboardService;
+        private readonly IEmployeePermissionService _permissionService;
 
         public EmployeeController(
             IEmployeeService service,
             IEmployee360Service employee360Service,
             IAccessScopeResolver accessScopeResolver,
-            IEmployeeDashboardService dashboardService)
+            IEmployeeDashboardService dashboardService,
+            IEmployeePermissionService permissionService)
         {
             _service = service;
             _employee360Service = employee360Service;
             _accessScopeResolver = accessScopeResolver;
             _dashboardService = dashboardService;
+            _permissionService = permissionService;
         }
 
         [HttpGet]
@@ -123,21 +128,46 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpPost]
+        [PermissionAuthorize(PermissionCodes.CreateEmployee)]
         public async Task<IActionResult> Add([FromForm] EmployeeAddEditDto dto)
         {
+            // Creating an inactive employee requires DISABLE_EMPLOYEE (not just UPDATE).
+            if (!dto.IsActive &&
+                !await _permissionService.HasAsync(CurrentUserId, PermissionCodes.DisableEmployee))
+            {
+                return Fail(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
+            }
+
             var result = await _service.AddAsync(dto, this.CompanyId);
             return Success(result.Data, "Employee added successfully");
         }
 
         [HttpPut("{id}")]
+        [PermissionAuthorize(PermissionCodes.UpdateEmployee)]
         public async Task<IActionResult> Update(int id, [FromForm] EmployeeAddEditDto dto)
         {
+            var existing = await _service.GetByIdAsync(id);
+            if (!existing.Success || existing.Data == null)
+                return Fail(existing.Message ?? ErrorCodes.EmployeeNotFound);
+
+            // Active toggle is gated by ENABLE_EMPLOYEE / DISABLE_EMPLOYEE, not UPDATE_EMPLOYEE alone.
+            if (existing.Data.IsActive != dto.IsActive)
+            {
+                var required = dto.IsActive
+                    ? PermissionCodes.EnableEmployee
+                    : PermissionCodes.DisableEmployee;
+
+                if (!await _permissionService.HasAsync(CurrentUserId, required))
+                    return Fail(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
+            }
+
             var result = await _service.UpdateAsync(id, dto);
             return Success(result.Data, "Employee updated successfully");
         }
 
 
         [HttpDelete("{id}")]
+        [PermissionAuthorize(PermissionCodes.DeleteEmployee)]
         public async Task<IActionResult> Delete(int id)
         {
             var result = await _service.DeleteAsync(id);

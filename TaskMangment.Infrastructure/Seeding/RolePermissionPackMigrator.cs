@@ -7,31 +7,13 @@ using TaskMangment.Infrastructure.DataContext;
 namespace TaskMangment.Infrastructure.Seeding
 {
     /// <summary>
-    /// Idempotent: ensures new permission codes exist and grants level-equivalent packs to existing roles.
-    /// Safe to run on every startup during the RoleLevel → permission cutover.
+    /// Idempotent: ensures the full permission catalog exists, removes unknown junk rows,
+    /// and grants level-equivalent packs to existing roles.
     /// </summary>
     public class RolePermissionPackMigrator
     {
         private readonly AppDbContext _db;
         private readonly ILogger<RolePermissionPackMigrator> _logger;
-
-        private static readonly Dictionary<string, (string Name, string Description)> Catalog = new()
-        {
-            [PermissionCodes.ViewOwnTasks] = ("View Own Tasks", "عرض المهام الخاصة بالموظف"),
-            [PermissionCodes.ViewScopedTasks] = ("View Scoped Tasks", "عرض مهام الموظفين ضمن نطاق الصلاحية"),
-            [PermissionCodes.ViewCompanyTasks] = ("View Company Tasks", "عرض كل مهام الشركة"),
-            [PermissionCodes.ViewAllTasks] = ("View All Tasks", "عرض كل المهام (توافق قديم)"),
-            [PermissionCodes.ViewEmployees] = ("View Employees", "عرض قائمة الموظفين ضمن النطاق"),
-            [PermissionCodes.AssignRole] = ("Assign Roles", "تعيين الأدوار للموظفين"),
-            [PermissionCodes.ManageManagerScope] = ("Manage Manager Scope", "إدارة فروع وأنواع الموظفين ضمن نطاق المدير"),
-            [PermissionCodes.AssignToManagers] = ("Assign To Managers", "إسناد مهام إلى المديرين الأعلى تنظيمياً"),
-            [PermissionCodes.AssignOutsideScope] = ("Assign Outside Scope", "إسناد مهام خارج نطاق الصلاحية"),
-            [PermissionCodes.ApproveLeave] = ("Approve Leave", "الموافقة على طلبات الإجازة"),
-            [PermissionCodes.RejectLeave] = ("Reject Leave", "رفض طلبات الإجازة"),
-            [PermissionCodes.ViewScopedReports] = ("View Scoped Reports", "عرض التقارير ضمن النطاق"),
-            [PermissionCodes.ViewCompanyReports] = ("View Company Reports", "عرض تقارير الشركة كاملة"),
-            [PermissionCodes.ReceiveOrgEscalations] = ("Receive Org Escalations", "استلام تصعيدات الإدارة العليا"),
-        };
 
         public RolePermissionPackMigrator(AppDbContext db, ILogger<RolePermissionPackMigrator> logger)
         {
@@ -41,94 +23,230 @@ namespace TaskMangment.Infrastructure.Seeding
 
         public async Task MigrateAsync()
         {
-            await DeduplicatePermissionCodesAsync();
-            await EnsureCatalogAsync();
+            await EnsureCanonicalPermissionsAsync();
+            await SoftDeleteUnknownPermissionsAsync();
             await GrantPacksByRoleLevelAsync();
             await _db.SaveChangesAsync();
             _logger.LogInformation("Role permission pack migration completed.");
         }
 
         /// <summary>
-        /// Soft-deletes duplicate Permission rows with the same Code (keeps lowest Id).
-        /// Older DataSeeder runs could insert the same code more than once.
+        /// Hard-deletes all RolePermission + Permission rows, reseeds PermissionCatalog,
+        /// then grants level packs to every role. Destructive — use intentionally.
         /// </summary>
-        private async Task DeduplicatePermissionCodesAsync()
+        public async Task ResetAndSeedAsync()
         {
-            var rows = await _db.Permissions
-                .Where(p => !p.IsDeleted)
-                .Select(p => new { p.Id, p.Code })
-                .ToListAsync();
+            _logger.LogWarning("Resetting Permissions and RolePermission tables...");
 
-            var duplicateIds = rows
+            // FK order: RolePermission first, then Permissions.
+            await _db.Database.ExecuteSqlRawAsync("DELETE FROM RolePermission");
+            await _db.Database.ExecuteSqlRawAsync("DELETE FROM Permissions");
+
+            // Reset identity so Ids start clean (SQL Server).
+            try
+            {
+                await _db.Database.ExecuteSqlRawAsync("DBCC CHECKIDENT ('Permissions', RESEED, 0)");
+                await _db.Database.ExecuteSqlRawAsync("DBCC CHECKIDENT ('RolePermission', RESEED, 0)");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Could not reseed identity (non-fatal).");
+            }
+
+            var now = DateTime.UtcNow;
+            foreach (var entry in PermissionCatalog.All)
+            {
+                _db.Permissions.Add(new Permission
+                {
+                    Code = entry.Code,
+                    Name = entry.Name,
+                    Description = entry.Description,
+                    CreatedDate = now,
+                    IsDeleted = false
+                });
+            }
+
+            await _db.SaveChangesAsync();
+            _logger.LogInformation("Seeded {Count} permissions from catalog.", PermissionCatalog.All.Count);
+
+            // After a full wipe, grant packs even if a role previously had custom removals.
+            await GrantPacksByRoleLevelAsync(forceRegrant: true);
+            await _db.SaveChangesAsync();
+            _logger.LogInformation("Permission reset + seed completed.");
+        }
+
+        /// <summary>
+        /// Restores/creates every catalog code (one active keeper per code) and remaps RolePermissions to keepers.
+        /// </summary>
+        private async Task EnsureCanonicalPermissionsAsync()
+        {
+            var now = DateTime.UtcNow;
+            var allRows = await _db.Permissions.ToListAsync();
+            var byCode = allRows
                 .GroupBy(p => p.Code, StringComparer.OrdinalIgnoreCase)
-                .Where(g => g.Count() > 1)
-                .SelectMany(g => g.OrderBy(x => x.Id).Skip(1).Select(x => x.Id))
-                .ToList();
+                .ToDictionary(g => g.Key, g => g.OrderBy(x => x.Id).ToList(), StringComparer.OrdinalIgnoreCase);
 
+            var restored = 0;
+            var created = 0;
+            var duplicateIds = new List<int>();
+
+            foreach (var entry in PermissionCatalog.All)
+            {
+                if (!byCode.TryGetValue(entry.Code, out var rows) || rows.Count == 0)
+                {
+                    _db.Permissions.Add(new Permission
+                    {
+                        Code = entry.Code,
+                        Name = entry.Name,
+                        Description = entry.Description,
+                        CreatedDate = now
+                    });
+                    created++;
+                    continue;
+                }
+
+                // Prefer already-active keeper; otherwise revive lowest Id.
+                var keeper = rows.FirstOrDefault(r => !r.IsDeleted) ?? rows[0];
+                if (keeper.IsDeleted)
+                {
+                    keeper.IsDeleted = false;
+                    keeper.DeletedDate = null;
+                    keeper.ModifiedDate = now;
+                    restored++;
+                }
+
+                if (!string.Equals(keeper.Name, entry.Name, StringComparison.Ordinal)
+                    || !string.Equals(keeper.Description, entry.Description, StringComparison.Ordinal))
+                {
+                    keeper.Name = entry.Name;
+                    keeper.Description = entry.Description;
+                    keeper.ModifiedDate = now;
+                }
+
+                foreach (var dup in rows.Where(r => r.Id != keeper.Id))
+                {
+                    if (!dup.IsDeleted)
+                    {
+                        dup.IsDeleted = true;
+                        dup.DeletedDate = now;
+                    }
+                    duplicateIds.Add(dup.Id);
+                }
+
+                if (duplicateIds.Count > 0)
+                    await RemapRolePermissionsToKeeperAsync(keeper.Id, duplicateIds, now);
+
+                duplicateIds.Clear();
+            }
+
+            await _db.SaveChangesAsync();
+            _logger.LogInformation(
+                "Permission catalog sync: restored {Restored}, created {Created}.",
+                restored,
+                created);
+        }
+
+        private async Task RemapRolePermissionsToKeeperAsync(int keeperId, List<int> duplicateIds, DateTime now)
+        {
             if (duplicateIds.Count == 0)
                 return;
 
-            var now = DateTime.UtcNow;
-            var duplicates = await _db.Permissions
-                .Where(p => duplicateIds.Contains(p.Id))
+            var links = await _db.RolePermissions
+                .Where(rp => duplicateIds.Contains(rp.PermissionId))
                 .ToListAsync();
 
-            foreach (var dup in duplicates)
+            if (links.Count == 0)
+                return;
+
+            var keeperLinks = await _db.RolePermissions
+                .Where(rp => rp.PermissionId == keeperId)
+                .ToListAsync();
+
+            var keeperByRole = keeperLinks
+                .GroupBy(rp => rp.RoleId)
+                .ToDictionary(g => g.Key, g => g.OrderBy(x => x.Id).First());
+
+            foreach (var link in links)
             {
-                dup.IsDeleted = true;
-                dup.DeletedDate = now;
+                if (keeperByRole.TryGetValue(link.RoleId, out var keeperLink))
+                {
+                    // Merge assignment onto keeper, then retire the duplicate link.
+                    if (link.IsAssigned && !link.IsDeleted)
+                    {
+                        keeperLink.IsAssigned = true;
+                        keeperLink.IsDeleted = false;
+                        keeperLink.DeletedDate = null;
+                        keeperLink.ModifiedDate = now;
+                    }
+
+                    if (!link.IsDeleted)
+                    {
+                        link.IsDeleted = true;
+                        link.DeletedDate = now;
+                        link.IsAssigned = false;
+                    }
+                }
+                else
+                {
+                    // Point this link at the keeper instead of leaving a dangling duplicate id.
+                    link.PermissionId = keeperId;
+                    link.ModifiedDate = now;
+                    if (link.IsAssigned)
+                    {
+                        link.IsDeleted = false;
+                        link.DeletedDate = null;
+                    }
+                    keeperByRole[link.RoleId] = link;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Soft-deletes permission rows (and RolePermission FKs) whose Code is not in the catalog.
+        /// </summary>
+        private async Task SoftDeleteUnknownPermissionsAsync()
+        {
+            var now = DateTime.UtcNow;
+            var junk = await _db.Permissions
+                .Where(p => !p.IsDeleted)
+                .ToListAsync();
+
+            junk = junk
+                .Where(p => !PermissionCatalog.Codes.Contains(p.Code))
+                .ToList();
+
+            if (junk.Count == 0)
+                return;
+
+            var junkIds = junk.Select(p => p.Id).ToList();
+            foreach (var p in junk)
+            {
+                p.IsDeleted = true;
+                p.DeletedDate = now;
             }
 
-            // Drop RolePermission links that pointed at soft-deleted duplicates
-            var orphanLinks = await _db.RolePermissions
-                .Where(rp => duplicateIds.Contains(rp.PermissionId) && !rp.IsDeleted)
+            var links = await _db.RolePermissions
+                .Where(rp => junkIds.Contains(rp.PermissionId) && !rp.IsDeleted)
                 .ToListAsync();
 
-            foreach (var link in orphanLinks)
+            foreach (var link in links)
             {
                 link.IsDeleted = true;
                 link.DeletedDate = now;
                 link.IsAssigned = false;
             }
 
+            await _db.SaveChangesAsync();
             _logger.LogWarning(
-                "Soft-deleted {Count} duplicate Permission rows (and {LinkCount} role links).",
-                duplicates.Count,
-                orphanLinks.Count);
-
-            await _db.SaveChangesAsync();
+                "Soft-deleted {Count} unknown Permission rows and {LinkCount} RolePermission links.",
+                junk.Count,
+                links.Count);
         }
 
-        private async Task EnsureCatalogAsync()
-        {
-            var existing = await _db.Permissions
-                .Where(p => !p.IsDeleted)
-                .Select(p => p.Code)
-                .ToListAsync();
-
-            var existingSet = existing.ToHashSet(StringComparer.OrdinalIgnoreCase);
-            var now = DateTime.UtcNow;
-
-            foreach (var (code, meta) in Catalog)
-            {
-                if (existingSet.Contains(code))
-                    continue;
-
-                _db.Permissions.Add(new Permission
-                {
-                    Code = code,
-                    Name = meta.Name,
-                    Description = meta.Description,
-                    CreatedDate = now
-                });
-            }
-        }
-
-        private async Task GrantPacksByRoleLevelAsync()
+        private async Task GrantPacksByRoleLevelAsync(bool forceRegrant = false)
         {
             await _db.SaveChangesAsync();
 
-            // DB may contain duplicate Codes from older seed runs — keep lowest Id per code.
             var permissions = (await _db.Permissions
                     .Where(p => !p.IsDeleted)
                     .Select(p => new { p.Code, p.Id })
@@ -138,7 +256,7 @@ namespace TaskMangment.Infrastructure.Seeding
 
             var roles = await _db.Roles
                 .Where(r => !r.IsDeleted)
-                .Include(r => r.RolePermissions.Where(rp => !rp.IsDeleted))
+                .Include(r => r.RolePermissions)
                 .ToListAsync();
 
             foreach (var role in roles)
@@ -147,8 +265,7 @@ namespace TaskMangment.Infrastructure.Seeding
                 if (pack.Count == 0)
                     continue;
 
-                var assignedIds = role.RolePermissions
-                    .Where(rp => rp.IsAssigned)
+                var knownPermissionIds = role.RolePermissions
                     .Select(rp => rp.PermissionId)
                     .ToHashSet();
 
@@ -157,20 +274,21 @@ namespace TaskMangment.Infrastructure.Seeding
                     if (!permissions.TryGetValue(code, out var permissionId))
                         continue;
 
-                    var existing = role.RolePermissions.FirstOrDefault(rp => rp.PermissionId == permissionId);
-                    if (existing != null)
+                    if (!forceRegrant && knownPermissionIds.Contains(permissionId))
+                        continue;
+
+                    if (forceRegrant)
                     {
-                        if (!existing.IsAssigned || existing.IsDeleted)
+                        var existing = role.RolePermissions.FirstOrDefault(rp => rp.PermissionId == permissionId);
+                        if (existing != null)
                         {
                             existing.IsAssigned = true;
                             existing.IsDeleted = false;
+                            existing.DeletedDate = null;
                             existing.ModifiedDate = DateTime.UtcNow;
+                            continue;
                         }
-                        continue;
                     }
-
-                    if (assignedIds.Contains(permissionId))
-                        continue;
 
                     role.RolePermissions.Add(new RolePermission
                     {
@@ -179,6 +297,7 @@ namespace TaskMangment.Infrastructure.Seeding
                         IsAssigned = true,
                         CreatedDate = DateTime.UtcNow
                     });
+                    knownPermissionIds.Add(permissionId);
                 }
             }
         }
@@ -190,40 +309,8 @@ namespace TaskMangment.Infrastructure.Seeding
         {
             if (level >= (int)RoleLevelEnum.Admin)
             {
-                return
-                [
-                    PermissionCodes.ViewOwnTasks,
-                    PermissionCodes.ViewScopedTasks,
-                    PermissionCodes.ViewCompanyTasks,
-                    PermissionCodes.ViewAllTasks,
-                    PermissionCodes.ViewEmployees,
-                    PermissionCodes.AssignRole,
-                    PermissionCodes.ManageManagerScope,
-                    PermissionCodes.AssignToManagers,
-                    PermissionCodes.ApproveLeave,
-                    PermissionCodes.RejectLeave,
-                    PermissionCodes.ViewScopedReports,
-                    PermissionCodes.ViewCompanyReports,
-                    PermissionCodes.ReceiveOrgEscalations,
-                    PermissionCodes.CreateArea,
-                    PermissionCodes.UpdateArea,
-                    PermissionCodes.DeleteArea,
-                    PermissionCodes.CreateBranch,
-                    PermissionCodes.UpdateBranch,
-                    PermissionCodes.DeleteBranch,
-                    PermissionCodes.CreateDepartment,
-                    PermissionCodes.UpdateDepartment,
-                    PermissionCodes.DeleteDepartment,
-                    PermissionCodes.CreatePermission,
-                    PermissionCodes.UpdatePermission,
-                    PermissionCodes.DeletePermission,
-                    PermissionCodes.CreateEmployee,
-                    PermissionCodes.UpdateEmployee,
-                    PermissionCodes.DeleteEmployee,
-                    PermissionCodes.CreateTask,
-                    PermissionCodes.UpdateTask,
-                    PermissionCodes.DeleteTask
-                ];
+                // Full catalog for admin-level roles.
+                return PermissionCatalog.All.Select(e => e.Code).ToArray();
             }
 
             if (level >= (int)RoleLevelEnum.BranchesManager)
@@ -241,7 +328,9 @@ namespace TaskMangment.Infrastructure.Seeding
                     PermissionCodes.UpdateBranch,
                     PermissionCodes.CreateTask,
                     PermissionCodes.UpdateTask,
-                    PermissionCodes.DeleteTask
+                    PermissionCodes.DeleteTask,
+                    ..PermissionCodes.AssigneeTaskActions,
+                    ..PermissionCodes.ManagerTaskActions
                 ];
             }
 
@@ -257,8 +346,12 @@ namespace TaskMangment.Infrastructure.Seeding
                     PermissionCodes.ViewScopedReports,
                     PermissionCodes.CreateEmployee,
                     PermissionCodes.UpdateEmployee,
+                    PermissionCodes.EnableEmployee,
+                    PermissionCodes.DisableEmployee,
                     PermissionCodes.CreateTask,
-                    PermissionCodes.UpdateTask
+                    PermissionCodes.UpdateTask,
+                    ..PermissionCodes.AssigneeTaskActions,
+                    ..PermissionCodes.ManagerTaskActions
                 ];
             }
 
@@ -270,7 +363,8 @@ namespace TaskMangment.Infrastructure.Seeding
                     PermissionCodes.ViewScopedTasks,
                     PermissionCodes.ViewScopedReports,
                     PermissionCodes.ApproveLeave,
-                    PermissionCodes.RejectLeave
+                    PermissionCodes.RejectLeave,
+                    ..PermissionCodes.AssigneeTaskActions
                 ];
             }
 
@@ -280,11 +374,19 @@ namespace TaskMangment.Infrastructure.Seeding
                 [
                     PermissionCodes.ViewOwnTasks,
                     PermissionCodes.CreateTask,
-                    PermissionCodes.UpdateTask
+                    PermissionCodes.UpdateTask,
+                    PermissionCodes.ApproveCloseExtend,
+                    PermissionCodes.RejectCloseExtend,
+                    PermissionCodes.ExtendDueDate,
+                    ..PermissionCodes.AssigneeTaskActions
                 ];
             }
 
-            return [PermissionCodes.ViewOwnTasks];
+            return
+            [
+                PermissionCodes.ViewOwnTasks,
+                ..PermissionCodes.AssigneeTaskActions
+            ];
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Azure.Core;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +13,7 @@ using TaskMangment.Application.Common.Errors;
 using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Responses;
+using TaskMangment.Application.Common.Security;
 using TaskMangment.Application.DTOs.TaskDTOs;
 using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
@@ -37,6 +38,7 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IBlobStorageService _blobStorageService;
         private readonly IAppUnitOfWork _uow;
         private readonly IGetHigherManager _getHigherManager;
+        private readonly IEmployeePermissionService _permissions;
 
 
 
@@ -51,7 +53,8 @@ namespace TaskMangment.Infrastructure.Services
             IRepository<Employee> employeeRepo,
             IBlobStorageService blobStorageService,
             IAppUnitOfWork uow,
-            IGetHigherManager getHigherManager
+            IGetHigherManager getHigherManager,
+            IEmployeePermissionService permissions
             )
         {
             _commentRepo = commentRepo;
@@ -65,7 +68,7 @@ namespace TaskMangment.Infrastructure.Services
             _blobStorageService = blobStorageService;
             _uow = uow;
             _getHigherManager = getHigherManager;
-
+            _permissions = permissions;
         }
 
         public async Task<ApiResponse<PagedResponse<TaskCommentGetDto>>> GetAllAsync(TaskCommentRequest request)
@@ -147,8 +150,18 @@ namespace TaskMangment.Infrastructure.Services
                          && a.IsActive)
                 .FirstOrDefaultAsync();
 
-            if (assignment == null && roleLevel != 100 && roleLevel != 80 && roleLevel != 70)
-                throw new AppException(ErrorCodes.NotAssigned, StatusCodes.Status400BadRequest);
+            // Unassigned commenters need scoped/company task visibility (replaces manager roleLevel bypass).
+            _ = roleLevel;
+            if (assignment == null)
+            {
+                var canCommentUnassigned = await _permissions.HasAnyAsync(
+                    employeeId,
+                    PermissionCodes.ViewScopedTasks,
+                    PermissionCodes.ViewCompanyTasks,
+                    PermissionCodes.ViewAllTasks);
+                if (!canCommentUnassigned)
+                    throw new AppException(ErrorCodes.NotAssigned, StatusCodes.Status400BadRequest);
+            }
 
             if (assignment != null && assignment.IsClosed)
                 throw new AppException(ErrorCodes.TaskAlreadyClosed, StatusCodes.Status400BadRequest);

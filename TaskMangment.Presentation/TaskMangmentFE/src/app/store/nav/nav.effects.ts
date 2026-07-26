@@ -163,7 +163,7 @@ private MENUITEMS: MenuItem[] = [
         title: 'nav.apps.leaves.leaves_type',
         path: '/leave/leave-type-list',
         type: 'link',
-        minRoleLevel: 10
+        requiredPermission: 'ASSIGN_ROLE'
       },
       {
         title: 'nav.apps.leaves.Leaves_requests',

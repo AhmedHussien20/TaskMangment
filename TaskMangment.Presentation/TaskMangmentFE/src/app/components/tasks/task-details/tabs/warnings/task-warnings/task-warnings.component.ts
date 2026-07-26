@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { GenericTableComponent, TableColumn } from 'app/shared/components/generic-table/generic-table.component';
@@ -7,6 +7,8 @@ import { TranslateModule } from '@ngx-translate/core';
 import { WarningGetDto} from 'app/core/models/task/task-warning';
 import { TaskWarningService } from 'app/core/services/task-warning.service';
 import { MyDatePipe } from 'app/components/utilities/pipline/MyDatePipe';
+import { AuthService } from 'app/core/services/auth.service';
+import { Permissions } from 'app/core/constants/permissions';
 
 @Component({
   selector: 'app-task-warnings',
@@ -16,9 +18,14 @@ import { MyDatePipe } from 'app/components/utilities/pipline/MyDatePipe';
 
   templateUrl: './task-warnings.component.html'
 })
-export class TaskWarningsComponent implements OnInit, OnDestroy {
+export class TaskWarningsComponent implements OnInit, OnDestroy, OnChanges {
   @Input() taskId!: number;
   @Input() readonly = false;
+  @Input() canSendWarning = false;
+
+  canAdd = false;
+  canEdit = false;
+  canDelete = false;
 
   rows: WarningGetDto[] = [];
   totalItems = 0;
@@ -44,14 +51,27 @@ export class TaskWarningsComponent implements OnInit, OnDestroy {
   constructor(
     private refresh: TaskDetailsRefreshService,
     private warningService: TaskWarningService,
-    private myDatePipe: MyDatePipe
-
+    private myDatePipe: MyDatePipe,
+    private auth: AuthService
   ) {}
 
   ngOnInit(): void {
+    this.refreshActionFlags();
     this.loadWarnings();
 
     this.sub = this.refresh.refresh$.subscribe(() => this.loadWarnings());
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['canSendWarning'] || changes['readonly']) {
+      this.refreshActionFlags();
+    }
+  }
+
+  private refreshActionFlags(): void {
+    this.canAdd = !this.readonly && this.canSendWarning;
+    this.canEdit = !this.readonly && this.canSendWarning;
+    this.canDelete = !this.readonly && this.auth.hasPermission(Permissions.DELETE_WARNING);
   }
 
   loadWarnings(pageIndex = 1, pageSize = 10) {

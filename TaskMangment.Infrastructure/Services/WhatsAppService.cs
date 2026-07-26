@@ -40,6 +40,14 @@ namespace TaskMangment.Infrastructure.Services
             string message,
             IReadOnlyList<WhatsAppAttachment>? attachments = null)
         {
+            if (!_settings.SendEnabled)
+            {
+                _logger.LogInformation(
+                    "WhatsApp send disabled (WhatsApp.SendEnabled=false). Skipping send to {Phone}",
+                    phone);
+                return;
+            }
+
             EnsureConfigured(phone);
 
             var text = FormatTextMessage(userName, message);

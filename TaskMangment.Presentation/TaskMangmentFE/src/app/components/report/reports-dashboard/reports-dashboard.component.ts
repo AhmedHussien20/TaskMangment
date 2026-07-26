@@ -4,6 +4,7 @@ import { RouterModule } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { SpkDashboardComponent } from 'app/@spk/reusable-dashboard/spk-dashboard/spk-dashboard.component';
 import { PageHeaderComponent } from 'app/shared/components/page-header/page-header.component';
+import { Permissions } from 'app/core/constants/permissions';
 import { AuthService } from 'app/core/services/auth.service'; // إضافة هذا السطر
 
 interface ReportTile {
@@ -126,7 +127,7 @@ export class ReportsDashboardComponent implements OnInit { // إضافة impleme
       svg: this.REPORT_ICON_SVG,
       clickable: true,
       url: '/report/employee-total-discounts',
-      minRoleLevel: 100
+      requiresCompanyReports: true
     }
   ];
 
@@ -137,22 +138,36 @@ export class ReportsDashboardComponent implements OnInit { // إضافة impleme
   }
 
   private filterCardsByRole(): void {
-  const roleLevel = this.authService.getRoleLevel() ?? 0;
-  const visibleCards = this.allCards.filter(card => !card.minRoleLevel || roleLevel >= card.minRoleLevel);
-  
-  if (roleLevel >= 70) {
-    this.filteredCards = [...visibleCards];
-  } else if (this.authService.hasPermission('CREATE_TASK')) {
-    this.filteredCards = visibleCards.filter(card => card.title !== 'REPORTS.BRANCH_TASK_TRACKING');
-  } else {
-    const restrictedCards = [
-      'REPORTS.TOP_COMMENTER',
-      'REPORTS.MOST_ASSIGNED',
-      'REPORTS.ARCHIVED',
-      'REPORTS.BRANCH_TASK_TRACKING'
-    ];
+    const canViewCompany = this.authService.hasPermission(Permissions.VIEW_COMPANY_REPORTS)
+      || this.authService.hasPermission(Permissions.VIEW_COMPANY_TASKS);
+    const canViewTeam = canViewCompany
+      || this.authService.hasPermission(Permissions.VIEW_SCOPED_REPORTS)
+      || this.authService.hasPermission(Permissions.VIEW_SCOPED_TASKS)
+      || this.authService.hasPermission(Permissions.VIEW_EMPLOYEES)
+      || this.authService.hasAccessScope();
+    const canCreateTask = this.authService.hasPermission(Permissions.CREATE_TASK);
+    // CREATE_TASK alone = creator reports (own + created), not full team/branch.
 
-    this.filteredCards = visibleCards.filter(card => !restrictedCards.includes(card.title));
+    // Everyone can open reports; data is scoped by the API.
+    let cards = this.allCards.filter(card =>
+      !card.requiresCompanyReports || canViewCompany
+    );
+
+    // Branch tracking needs team/company visibility.
+    if (!canViewTeam) {
+      cards = cards.filter(card => card.title !== 'REPORTS.BRANCH_TASK_TRACKING');
+    }
+
+    // Pure own-data users: hide leaderboard-style cards that only make sense for teams.
+    if (!canViewTeam && !canCreateTask) {
+      const teamOnly = [
+        'REPORTS.TOP_COMMENTER',
+        'REPORTS.MOST_ASSIGNED',
+        'REPORTS.ARCHIVED'
+      ];
+      cards = cards.filter(card => !teamOnly.includes(card.title));
+    }
+
+    this.filteredCards = cards;
   }
-}
 }

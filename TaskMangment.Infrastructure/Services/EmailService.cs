@@ -1,4 +1,4 @@
-﻿using MailKit.Net.Smtp;
+using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -39,6 +39,15 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task SendEmailAsync(string to, string subject, string body, List<EmailAttachment>? attachments = null)
         {
+            if (!_settings.SendEnabled)
+            {
+                _logger.LogInformation(
+                    "Email send disabled (EmailSettings.SendEnabled=false). Skipping send to {To}, subject: {Subject}",
+                    to,
+                    subject);
+                return;
+            }
+
             if (string.IsNullOrWhiteSpace(_settings.From))
                 throw new Exception("From email is missing in EmailSettings.");
 

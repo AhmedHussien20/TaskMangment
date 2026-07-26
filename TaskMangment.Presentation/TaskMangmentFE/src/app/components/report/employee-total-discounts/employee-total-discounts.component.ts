@@ -10,6 +10,7 @@ import { DatePickerComponent } from 'app/components/date-picker/date-picker.comp
 import { EmployeeTotalDiscountReportRowDto, ExportType } from 'app/core/models/reports/reports';
 import { Role } from 'app/core/models/roles/role';
 import { SearchCriteria } from 'app/core/models/search-criteria.model';
+import { Permissions } from 'app/core/constants/permissions';
 import { AuthService } from 'app/core/services/auth.service';
 import { ReportListService } from 'app/core/services/report-list.service';
 import { ReportPdfService } from 'app/core/services/report-pdf.service';
@@ -72,7 +73,7 @@ export class EmployeeTotalDiscountsComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    if ((this.authService.getRoleLevel() ?? 0) < 100) {
+    if (!this.authService.hasPermission(Permissions.VIEW_COMPANY_REPORTS)) {
       this.router.navigate(['/report/reports-dashboard']);
       return;
     }

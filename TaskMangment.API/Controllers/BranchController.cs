@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using TaskMangment.API.Middlewares;
 using TaskMangment.Application.Common.ApiRequests.Branch;
+using TaskMangment.Application.Common.Security;
 using TaskMangment.Application.DTOs;
 using TaskMangment.Application.Interfaces.Services;
 
@@ -38,6 +40,7 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpPost]
+        [PermissionAuthorize(PermissionCodes.CreateBranch)]
         public async Task<IActionResult> Add([FromBody] BranchAddEditDto dto)
         {
             var result = await _service.AddAsync(dto, this.CompanyId);
@@ -45,6 +48,7 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpPut("{id}")]
+        [PermissionAuthorize(PermissionCodes.UpdateBranch)]
         public async Task<IActionResult> Update(int id, [FromBody] BranchAddEditDto dto)
         {
             var result = await _service.UpdateAsync(id, dto);
@@ -52,6 +56,7 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpDelete("{id}")]
+        [PermissionAuthorize(PermissionCodes.DeleteBranch)]
         public async Task<IActionResult> Delete(int id)
         {
             var result = await _service.DeleteAsync(id);

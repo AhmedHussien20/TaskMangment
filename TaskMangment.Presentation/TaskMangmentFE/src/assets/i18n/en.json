@@ -71,7 +71,9 @@
     "ALL" : "All",
     "BACK": "Back",
     "FILTER": "Filter",
-    "SEARCH": "Search"
+    "SEARCH": "Search",
+    "NOT_ALLOWED": "Not allowed (no permission)",
+    "NOT_ALLOW": "Not allowed (no permission)"
   },
   "EMPLOYEE_360": {
     "TITLE": "Employee 360",

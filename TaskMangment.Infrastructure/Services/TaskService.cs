@@ -120,26 +120,12 @@ namespace TaskMangment.Infrastructure.Services
                 .Include(t => t.Assignments).ThenInclude(a => a.Employee)
                 .Include(t => t.AssignedBy);
 
-            if (!string.IsNullOrWhiteSpace(request.searchKey))
-            {
-                var key = request.searchKey.Trim();
-                query = query.Where(t =>
-                    t.Id.ToString().Contains(key) ||
-                    t.Title.Contains(key) ||
-                    (t.Description != null && t.Description.Contains(key)) ||
-                    (t.AssignedBy != null && t.AssignedBy.FullName.Contains(key)) ||
-                    (t.CreatedBy != null && t.CreatedBy.FullName.Contains(key)) ||
-                    t.Status.ToString().Contains(key) ||
-                    t.Priority.ToString().Contains(key) ||
-                    t.Assignments.Any(a => a.IsActive && a.Employee != null && a.Employee.FullName.Contains(key)));
-            }
-
             bool requestedAdvanced =
-     request.Direction.HasValue ||
-     request.TargetEmployeeId.HasValue ||
-     request.PriorityId.HasValue ||
-     request.CreatedFrom.HasValue || request.CreatedTo.HasValue ||
-     request.DueFrom.HasValue || request.DueTo.HasValue;
+                request.Direction.HasValue ||
+                request.TargetEmployeeId.HasValue ||
+                request.PriorityId.HasValue ||
+                request.CreatedFrom.HasValue || request.CreatedTo.HasValue ||
+                request.DueFrom.HasValue || request.DueTo.HasValue;
 
             var scope = await _scopeResolver.ResolveAsync(employeeId);
             var canViewCompany = scope.IsCompanyWide ||
@@ -147,29 +133,32 @@ namespace TaskMangment.Infrastructure.Services
                     PermissionCodes.ViewCompanyTasks,
                     PermissionCodes.ViewAllTasks);
 
+            var canViewScoped = await _permissions.HasAsync(employeeId, PermissionCodes.ViewScopedTasks)
+                || scope.Kind is AccessScopeKind.ManagerScoped or AccessScopeKind.CompanyWide
+                || canViewCompany;
+
+            // Deep search ("عرض البيانات"): company/scoped viewers may query by employee/direction/dates.
             if (canViewCompany && requestedAdvanced)
             {
                 query = query.ApplyTaskFilters(request, employeeId);
             }
             else
             {
-                // 1) exclude archived by default unless explicitly requested
+                // Default list: exclude archived unless explicitly requested
                 if (!request.StatusId.HasValue || request.StatusId.Value != (int)WorkTaskStatus.Archived)
                 {
                     query = query.Where(t => t.Status != WorkTaskStatus.Archived);
                 }
-
 
                 if (request.StatusId.HasValue)
                 {
                     query = query.Where(t => (int)t.Status == request.StatusId.Value);
                 }
 
-                var canViewScoped = await _permissions.HasAsync(employeeId, PermissionCodes.ViewScopedTasks)
-                    || scope.Kind is AccessScopeKind.ManagerScoped or AccessScopeKind.CompanyWide;
-                var viewScopedTasks = request.ViewScopedTasks == true && canViewScoped;
+                // Default = own tasks. Expand to access-scope only when نطاق المهام = كل المهام.
+                var viewAllInScope = request.ViewScopedTasks == true && canViewScoped;
 
-                if (viewScopedTasks || canViewCompany)
+                if (viewAllInScope)
                 {
                     var scopedEmployeesQuery = _scopeResolver.FilterEmployees(
                         _employeeRepo.GetAll(e => e.CompanyId == CompanyId && e.IsActive),
@@ -218,6 +207,8 @@ namespace TaskMangment.Infrastructure.Services
                         : request.DueTo.Value;
                     query = query.Where(t => t.DueDate.HasValue && t.DueDate.Value <= dueTo);
                 }
+
+                query = query.ApplyTaskSearch(request.searchKey);
             }
 
 

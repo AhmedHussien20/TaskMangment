@@ -21,6 +21,7 @@ import {
   PendingCloseRequestDto,
   WarningDto,
 } from 'app/core/models/dashboard/dashboard.model';
+import { Permissions } from 'app/core/constants/permissions';
 import { AuthService } from 'app/core/services/auth.service';
 import { TaskStatusPopupComponent } from '../dashboard-pop-ups/task-status-popup.component';
 import { PeriodDto, PeriodType } from 'app/models/period-type.model';
@@ -172,9 +173,12 @@ export class DashboardComponent {
   }
 
   private loadDashboard() {
-    const userLevel = this.authService.getRoleLevel() ?? 0;
+    const canViewAdminDashboard = this.authService.hasAnyPermission(
+      Permissions.VIEW_SCOPED_TASKS,
+      Permissions.VIEW_COMPANY_TASKS
+    );
 
-    if (userLevel > 50) {
+    if (canViewAdminDashboard) {
       this.isAdmin = true;
 
       // branches مرة واحدة

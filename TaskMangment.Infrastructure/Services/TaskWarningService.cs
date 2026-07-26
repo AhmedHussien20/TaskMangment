@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Azure.Core;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -161,6 +161,14 @@ namespace TaskMangment.Infrastructure.Services
             if (assignment.IsClosed)
                 throw new AppException(ErrorCodes.TaskAlreadyClosed, StatusCodes.Status400BadRequest);
 
+            var actorIsAssignee = await _taskAssignmentRepo.GetAll(a =>
+                    a.TaskId == taskId &&
+                    a.EmployeeId == employeeId &&
+                    a.IsActive &&
+                    !a.IsDeleted)
+                .AnyAsync();
+            if (actorIsAssignee)
+                throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
 
             var warning = _mapper.Map<Warning>(dto);
             warning.TaskAssignmentId = assignment.Id;
@@ -227,7 +235,7 @@ namespace TaskMangment.Infrastructure.Services
         
         
 
-        public async Task<ApiResponse<WarningGetDto>> UpdateAsync(int id, WarningAddEditDto dto)
+        public async Task<ApiResponse<WarningGetDto>> UpdateAsync(int id, WarningAddEditDto dto, int modifiedByEmployeeId)
         {
             var warning = await _warningRepo.GetAll(w => w.Id == id)
                 .Include(w => w.TaskAssignment)
@@ -236,9 +244,18 @@ namespace TaskMangment.Infrastructure.Services
             if (warning == null)
                 throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
 
+            var taskId = warning.TaskAssignment.TaskId;
 
+            var actorIsAssignee = await _taskAssignmentRepo.GetAll(a =>
+                    a.TaskId == taskId &&
+                    a.EmployeeId == modifiedByEmployeeId &&
+                    a.IsActive &&
+                    !a.IsDeleted)
+                .AnyAsync();
+            if (actorIsAssignee)
+                throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
 
-            var taskAssignments = await _taskAssignmentRepo.GetAll(ta => ta.TaskId == warning.TaskAssignment.TaskId)
+            var taskAssignments = await _taskAssignmentRepo.GetAll(ta => ta.TaskId == taskId)
                 .ToListAsync();
 
             var assignment = taskAssignments.FirstOrDefault(ta => ta.EmployeeId == dto.IssuedEmployeeId);

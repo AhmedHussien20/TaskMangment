@@ -18,6 +18,7 @@ import {
   TableColumn,
 } from 'app/shared/components/generic-table/generic-table.component';
 import { AuthService } from 'app/core/services/auth.service';
+import { Permissions } from 'app/core/constants/permissions';
 import { LeaveCreateUpdateComponent } from '../leave-create-update/leave-create-update.component';
 
 @Component({
@@ -129,12 +130,13 @@ export class LeaveListComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    const roleLevel = this.auth.getRoleLevel();
-
     this.status = this.statusOptions;
-    this.canCreate = roleLevel >= 10;
-    this.canEdit = roleLevel >= 70;
-    this.canDelete = roleLevel >= 70;
+    this.canCreate = true; // any authenticated user can request leave
+    this.canEdit = this.auth.hasAnyPermission(
+      Permissions.APPROVE_LEAVE,
+      Permissions.REJECT_LEAVE
+    );
+    this.canDelete = false;
 
     this.loadData();
   }

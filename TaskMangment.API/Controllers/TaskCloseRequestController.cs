@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using TaskMangment.API.Middlewares;
 using TaskMangment.Application.Common.ApiRequests.Task;
+using TaskMangment.Application.Common.Security;
 using TaskMangment.Application.DTOs.TaskDTOs;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Domain.Entities;
@@ -38,6 +40,7 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpPost("{taskId}")]
+        [PermissionAuthorize(PermissionCodes.CloseTaskEmployee)]
         public async Task<IActionResult> Add([FromBody] TaskCloseRequestAddDto dto, int taskId)
         {
             var result = await _service.AddAsync(dto, taskId, this.CurrentUserId);
@@ -45,6 +48,7 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpPatch("review/{id}")]
+        [PermissionAuthorize(PermissionCodes.ApproveCloseExtend, PermissionCodes.RejectCloseExtend)]
         public async Task<IActionResult> Review(int id, [FromBody] CloseRequestStatus status)
         {
             var result = await _service.ReviewAsync(id, status, this.CurrentUserId);

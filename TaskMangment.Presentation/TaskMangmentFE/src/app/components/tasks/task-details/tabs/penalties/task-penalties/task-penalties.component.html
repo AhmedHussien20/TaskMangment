@@ -3,10 +3,10 @@
     [columns]="columns"
     [data]="rows"
     [totalItems]="totalItems"
-    [showAddButton]="!readonly"
-    [showEditButton]="!readonly"
+    [showAddButton]="canAdd"
+    [showEditButton]="canEdit"
     [showFilters]="false"
     [showPagination]="false"
-    [showDeleteButton]="!readonly">
+    [showDeleteButton]="canDelete">
   </app-generic-table>
 </div>

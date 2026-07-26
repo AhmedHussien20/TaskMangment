@@ -14,6 +14,7 @@ import { LeaveTypeCreateUpdateComponent } from '../leave-type-create-update/leav
 import Swal from 'sweetalert2';
 import { LeaveTypeGetDto } from 'app/core/models/leave/leave-type.model';
 import { AuthService } from 'app/core/services/auth.service';
+import { Permissions } from 'app/core/constants/permissions';
 
 @Component({
   selector: 'app-leave-type',
@@ -85,10 +86,9 @@ export class LeaveTypeComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    const roleLevel = this.auth.getRoleLevel();
-    this.canCreate = roleLevel >= 100;
-    this.canEdit = roleLevel >= 100;
-    this.canDelete = roleLevel >= 100;
+    this.canCreate = this.auth.hasPermission(Permissions.ASSIGN_ROLE);
+    this.canEdit = this.auth.hasPermission(Permissions.ASSIGN_ROLE);
+    this.canDelete = this.auth.hasPermission(Permissions.ASSIGN_ROLE);
     this.loadData();
   }
 

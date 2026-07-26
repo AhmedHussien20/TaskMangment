@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using TaskMangment.API.Middlewares;
 using TaskMangment.Application.Common.ApiRequests.CalenderEvents;
 using TaskMangment.Application.Common.ApiRequests.Task;
+using TaskMangment.Application.Common.Security;
 using TaskMangment.Application.DTOs.TaskDTOs;
 using TaskMangment.Application.Interfaces.Services;
 
@@ -38,6 +40,7 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpPost("{taskId}")]
+        [PermissionAuthorize(PermissionCodes.SendPenalty)]
         public async Task<IActionResult> Add(int taskId, [FromBody] DiscountAddEditDto dto)
         {
             var result = await _service.AddAsync(this.CurrentUserId, taskId, dto);
@@ -45,6 +48,7 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpPut("{id}")]
+        [PermissionAuthorize(PermissionCodes.SendPenalty)]
         public async Task<IActionResult> Update(int id,int TaskId, [FromBody] DiscountAddEditDto dto)
         {
             var result = await _service.UpdateAsync(id,TaskId, dto,this.CurrentUserId);
@@ -52,6 +56,7 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpDelete("{id}")]
+        [PermissionAuthorize(PermissionCodes.DeletePenalty)]
         public async Task<IActionResult> Delete(int id)
         {
             var result = await _service.DeleteAsync(id);

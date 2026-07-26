@@ -1,4 +1,4 @@
-﻿
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR; 
 using TaskMangment.API.Middlewares;
@@ -93,6 +93,7 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpPost("archive-closed")]
+        [PermissionAuthorize(PermissionCodes.ArchiveTask)]
         public async Task<IActionResult> ArchiveClosed([FromBody] List<int> taskIds)
         {
             var result = await _service.ArchiveClosedTasksAsync(taskIds);

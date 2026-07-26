@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using TaskMangment.API.Middlewares;
+using TaskMangment.Application.Common.Security;
 using TaskMangment.Application.DTOs.ReportsDTO;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Domain.Entities;
@@ -20,9 +22,6 @@ namespace TaskMangment.API.Controllers
         [HttpGet("filter-roles")]
         public async Task<IActionResult> GetFilterRoles()
         {
-            if (this.RoleLevel < 70)
-                return Forbid();
-
             var data = await _reportService.GetReportFilterRolesAsync(this.CurrentUserId, this.RoleLevel);
             return Success(data);
         }
@@ -65,11 +64,9 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpGet("employee-total-discounts")]
+        [PermissionAuthorize(PermissionCodes.ViewCompanyReports)]
         public async Task<IActionResult> GetEmployeeTotalDiscounts([FromQuery] EmployeeTotalDiscountReportFilterDto filter)
         {
-            if (this.RoleLevel < 100)
-                return Forbid();
-
             if (filter.ToDate.HasValue && !filter.FromDate.HasValue)
                 return BadRequest("fromDate is required when toDate is selected.");
 

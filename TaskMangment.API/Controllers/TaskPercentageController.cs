@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using TaskMangment.Application.Common.ApiRequests.Task;
 using TaskMangment.Application.DTOs.TaskDTOs;
@@ -40,7 +40,7 @@ namespace TaskMangment.API.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] TaskPercentageAddEditDto dto)
         {
-            var result = await _service.UpdateAsync(id, dto);
+            var result = await _service.UpdateAsync(id, this.CurrentUserId, dto);
             return Success(result.Data, "Percentage updated");
         }
 
