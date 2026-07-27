@@ -10,6 +10,7 @@ namespace TaskMangment.Domain.Event
     {
         public int LeaveId { get; }
         public int EmployeeId { get; }
+        public int RejectedById { get; }
         public string EmployeeName { get; }
         public string RejectedByName { get; }
         public string LeaveTypeName { get; }
@@ -17,10 +18,11 @@ namespace TaskMangment.Domain.Event
         public DateTime StartDate { get; }
         public DateTime EndDate { get; }
 
-        public LeaveRejectedEvent(int leaveId,int employeeId,string employeeName,string rejectedByName,string leaveTypeName, string rejectReason,DateTime startDate, DateTime endDate)
+        public LeaveRejectedEvent(int leaveId,int employeeId,int rejectedById,string employeeName,string rejectedByName,string leaveTypeName, string rejectReason,DateTime startDate, DateTime endDate)
         {
             LeaveId = leaveId;
             EmployeeId = employeeId;
+            RejectedById = rejectedById;
             EmployeeName = employeeName;
             RejectedByName = rejectedByName;
             LeaveTypeName = leaveTypeName;

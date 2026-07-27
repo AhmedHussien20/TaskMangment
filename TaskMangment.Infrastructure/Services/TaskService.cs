@@ -363,6 +363,7 @@ namespace TaskMangment.Infrastructure.Services
                     empIds = await _employeeRepo.GetAll(e => empIds.Contains(e.Id) && e.IsActive)
                         .Select(e => e.Id)
                         .ToListAsync();
+                    empIds.Remove(createdUser);
 
                     if (empIds.Any())
                         await _eventDispatcher.PublishAsync(new TaskAssignedEvent(task.Id, task.Title, empIds));
@@ -505,7 +506,7 @@ namespace TaskMangment.Infrastructure.Services
             if (newlyAssignedEmployeeIds.Any())
             {
                 var activeNewlyAssignedEmployeeIds = await _employeeRepo
-                    .GetAll(e => newlyAssignedEmployeeIds.Contains(e.Id) && e.IsActive)
+                    .GetAll(e => newlyAssignedEmployeeIds.Contains(e.Id) && e.IsActive && e.Id != modifierUser)
                     .Select(e => e.Id)
                     .ToListAsync();
 
@@ -518,7 +519,7 @@ namespace TaskMangment.Infrastructure.Services
             if (reactivatedEmployeeIds.Any())
             {
                 var activeReactivatedEmployeeIds = await _employeeRepo
-                    .GetAll(e => reactivatedEmployeeIds.Contains(e.Id) && e.IsActive)
+                    .GetAll(e => reactivatedEmployeeIds.Contains(e.Id) && e.IsActive && e.Id != modifierUser)
                     .Select(e => e.Id)
                     .ToListAsync();
 
@@ -530,7 +531,7 @@ namespace TaskMangment.Infrastructure.Services
             if (unAssignedEmployeeIds.Any())
             {
                 var activeUnAssignedEmployeeIds = await _employeeRepo
-                    .GetAll(e => unAssignedEmployeeIds.Contains(e.Id) && e.IsActive)
+                    .GetAll(e => unAssignedEmployeeIds.Contains(e.Id) && e.IsActive && e.Id != modifierUser)
                     .Select(e => e.Id)
                     .ToListAsync();
 

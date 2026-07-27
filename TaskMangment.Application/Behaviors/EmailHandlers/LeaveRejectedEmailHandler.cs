@@ -17,6 +17,9 @@ namespace TaskMangment.Application.Behaviors.EmailHandlers
 
         public async Task Handle(LeaveRejectedEvent ev)
         {
+            if (ev.EmployeeId == ev.RejectedById)
+                return;
+
             await _emailQueue.QueueAsync(new EmailQueueRequest
             {
                 TemplateKey = "LeaveRejected",
