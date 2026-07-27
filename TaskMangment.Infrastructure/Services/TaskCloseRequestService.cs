@@ -172,6 +172,7 @@ namespace TaskMangment.Infrastructure.Services
                 assignedEmployeeIds.AddRange(managerIds.Where(id => !assignedEmployeeIds.Contains(id)));
             }
 
+            assignedEmployeeIds.Remove(employeeId);
             assignedEmployeeIds = await _employeeRepo.GetAll(e => assignedEmployeeIds.Contains(e.Id) && e.IsActive)
                 .Select(e => e.Id)
                 .ToListAsync();
@@ -270,6 +271,7 @@ namespace TaskMangment.Infrastructure.Services
                     assignedEmployeeIds.AddRange(managerIds.Where(id => !assignedEmployeeIds.Contains(id)));
                 }
 
+                assignedEmployeeIds.Remove(reviewerId);
                 assignedEmployeeIds = await _employeeRepo.GetAll(e => assignedEmployeeIds.Contains(e.Id) && e.IsActive)
                     .Select(e => e.Id)
                     .ToListAsync();

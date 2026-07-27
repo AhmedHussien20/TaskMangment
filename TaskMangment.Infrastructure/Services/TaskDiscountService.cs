@@ -213,6 +213,7 @@ namespace TaskMangment.Infrastructure.Services
 
             var sendToIds = new List<int> { dto.EmployeeId };
             sendToIds.AddRange(managerIds.Where(id => !sendToIds.Contains(id)));
+            sendToIds.Remove(createdByEmployeeId);
             sendToIds = await _employeeRepo.GetAll(e => sendToIds.Contains(e.Id) && e.IsActive)
                 .Select(e => e.Id)
                 .ToListAsync();

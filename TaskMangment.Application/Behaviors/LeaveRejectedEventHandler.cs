@@ -44,18 +44,21 @@ namespace TaskMangment.Application.Behaviors
                 ev.RejectedByName
             );
 
-            await _notificationService.SendAsync(
-                ev.EmployeeId,
-                message,
-                sendEmail: false,
-                sendWhatsApp: true,
-                null,
-                NotificationType.leaverejected,
-                ev.LeaveId
-            );
+            if (ev.EmployeeId != ev.RejectedById)
+            {
+                await _notificationService.SendAsync(
+                    ev.EmployeeId,
+                    message,
+                    sendEmail: false,
+                    sendWhatsApp: true,
+                    null,
+                    NotificationType.leaverejected,
+                    ev.LeaveId
+                );
+            }
 
             var managerIds = await _getHigherManager.GetDirectHigherManagerIdsAsync(ev.EmployeeId);
-            foreach (var managerId in managerIds.Where(id => id != ev.EmployeeId))
+            foreach (var managerId in managerIds.Where(id => id != ev.EmployeeId && id != ev.RejectedById))
             {
                 await _notificationService.SendAsync(
                     managerId,

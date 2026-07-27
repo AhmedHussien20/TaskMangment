@@ -89,8 +89,9 @@ namespace TaskMangment.Infrastructure.Services
                 .FirstAsync();
 
             var managerIds = await _getHigherManager.GetDirectHigherManagerIdsAsync(employeeId);
+            managerIds = managerIds?.Where(id => id != employeeId).ToList() ?? new List<int>();
 
-            if (managerIds == null || !managerIds.Any())
+            if (!managerIds.Any())
             {
                 throw new AppException(ErrorCodes.Invalid, StatusCodes.Status400BadRequest);
             }
@@ -229,6 +230,7 @@ namespace TaskMangment.Infrastructure.Services
             await _eventDispatcher.PublishAsync(new LeaveApprovedEvent(
                 leave.Id,
                 leave.EmployeeId,
+                managerId,
                 leave.Employee.FullName,
                 managerFullName,
                 leave.LeaveType.NameAr,
@@ -274,6 +276,7 @@ namespace TaskMangment.Infrastructure.Services
             await _eventDispatcher.PublishAsync(new LeaveRejectedEvent(
                 leave.Id,
                 leave.EmployeeId,
+                managerId,
                 leave.Employee.FullName,
                 manager.FullName,
                 leave.LeaveType.NameAr,

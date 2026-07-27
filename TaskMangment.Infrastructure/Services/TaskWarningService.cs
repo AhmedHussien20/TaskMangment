@@ -203,6 +203,7 @@ namespace TaskMangment.Infrastructure.Services
             var managerIds = await _getHigherManager.GetDirectHigherManagerIdsAsync(dto.IssuedEmployeeId);
             var sendToIds = new List<int> { dto.IssuedEmployeeId };
             sendToIds.AddRange(managerIds.Where(id => !sendToIds.Contains(id)));
+            sendToIds.Remove(employeeId);
             sendToIds = await _employeeRepo.GetAll(e => sendToIds.Contains(e.Id) && e.IsActive)
                 .Select(e => e.Id)
                 .ToListAsync();

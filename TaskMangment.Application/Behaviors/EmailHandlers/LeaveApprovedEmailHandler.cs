@@ -16,6 +16,9 @@ namespace TaskMangment.Application.Behaviors.EmailHandlers
 
         public async Task Handle(LeaveApprovedEvent ev)
         {
+            if (ev.EmployeeId == ev.ApprovedById)
+                return;
+
             await _emailQueue.QueueAsync(new EmailQueueRequest
             {
                 TemplateKey = "LeaveApproved",
