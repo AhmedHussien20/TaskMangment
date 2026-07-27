@@ -11,6 +11,8 @@ namespace TaskMangment.Domain.Entities
     {
         public int EmployeeId { get; set; }
         [ForeignKey(nameof(EmployeeId))] public Employee? Employee { get; set; }
-        public FunctionCode FunctionCode { get; set; }
+
+        public int EmployeeTypeId { get; set; }
+        [ForeignKey(nameof(EmployeeTypeId))] public EmployeeType? EmployeeType { get; set; }
     }
 }

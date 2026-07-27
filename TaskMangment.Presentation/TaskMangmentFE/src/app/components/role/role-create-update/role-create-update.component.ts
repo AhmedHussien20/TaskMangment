@@ -6,11 +6,8 @@ import { ToastrService } from 'ngx-toastr';
 
 import { GenericFormComponent } from 'app/shared/components/generic-form/generic-form.component';
 import { RoleService } from 'app/core/services/role.service';
-import { RoleAddEdit, RoleLevelDto } from 'app/core/models/roles/role';
+import { RoleAddEdit } from 'app/core/models/roles/role';
 import { FormFieldConfig } from 'app/core/models/form-field-config';
-import { labels1 } from 'app/components/charts/chartjs-charts/chartjs';
-
- 
 
 @Component({
   selector: 'app-role-create-update',
@@ -25,10 +22,6 @@ import { labels1 } from 'app/components/charts/chartjs-charts/chartjs';
 })
 export class RoleCreateUpdateComponent implements OnInit {
 
-roleLevelsOptions: RoleLevelDto [] = [];
-
-
-
   @Input() isEdit = false;
   @Input() roleId: number | null = null;
   @Output() formSubmitted = new EventEmitter<void>();
@@ -40,31 +33,30 @@ roleLevelsOptions: RoleLevelDto [] = [];
   formGroup!: FormGroup;
 
   formConfig: FormFieldConfig[] = [
-  {
-    type: 'input',
-    label: 'ROLE.NAME',
-    name: 'name',
-    validations: { required: true, maxlength: 100 }
-  },
-  {
-    type: 'textarea',
-    label: 'ROLE.DESCRIPTION',
-    name: 'description'
-  },
-  {
-    type: 'select',
-    label: 'ROLE.LEVEL',
-    name: 'level',
-    placeholder: 'FORM.SELECT',
-    options: this.roleLevelsOptions,
-    selectType: 'simple',
-    validations: { required: true },
-    errorMessages: {
-      required: 'FORM.REQUIRED'
+    {
+      type: 'input',
+      label: 'ROLE.NAME',
+      name: 'name',
+      validations: { required: true, maxlength: 100 }
+    },
+    {
+      type: 'textarea',
+      label: 'ROLE.DESCRIPTION',
+      name: 'description'
+    },
+    {
+      type: 'checkbox',
+      label: 'ROLE.REQUIRES_BRANCH_SCOPE',
+      name: 'requiresBranchScope',
+      defaultValue: false
+    },
+    {
+      type: 'checkbox',
+      label: 'ROLE.REQUIRES_EMPLOYEE_TYPE_SCOPE',
+      name: 'requiresEmployeeTypeScope',
+      defaultValue: false
     }
-  }
-];
-
+  ];
 
   constructor(
     private fb: FormBuilder,
@@ -74,71 +66,34 @@ roleLevelsOptions: RoleLevelDto [] = [];
   ) {}
 
   ngOnInit(): void {
-  this.initForm();
-
-  this.roleService.getRoleLevels().subscribe({
-    next: (res) => {
-      const data = res.data ?? [];
-
-      this.roleLevelsOptions = data.map(x => ({
-        value: x.value,
-        label: x.label
-      }));
-
-      const field = this.formConfig.find(f => f.name === 'level');
-      if (field) field.options = this.roleLevelsOptions;
-
-      this.formConfig = [...this.formConfig];
-
-      if (this.isEdit && this.roleId) {
-        this.loadRole();
-      }
+    this.initForm();
+    if (this.isEdit && this.roleId) {
+      this.loadRole();
     }
-  });
-}
-
+  }
 
   initForm() {
     this.formGroup = this.fb.group({
       name: ['', [Validators.required, Validators.maxLength(100)]],
       description: [''],
-      level: [null, Validators.required]
+      requiresBranchScope: [false],
+      requiresEmployeeTypeScope: [false]
     });
   }
 
-loadRole() {
-  if (!this.roleId) return;
+  loadRole() {
+    if (!this.roleId) return;
 
-  this.roleService.getById(this.roleId).subscribe(res => {
-    const role = res.data;
-
-    this.formGroup.patchValue({
-      name: role.name,
-      description: role.description,
-      level: role.level   
+    this.roleService.getById(this.roleId).subscribe(res => {
+      const role = res.data;
+      this.formGroup.patchValue({
+        name: role.name,
+        description: role.description,
+        requiresBranchScope: role.requiresBranchScope ?? false,
+        requiresEmployeeTypeScope: role.requiresEmployeeTypeScope ?? false
+      });
     });
-  });
-}
-
-
-loadRoleLevels() {
-  this.roleService.getRoleLevels().subscribe({
-    next: (res) => {
-      this.roleLevelsOptions = res.data ?? [];
-
-      const field = this.formConfig.find(f => f.name === 'level');
-      if (field) {
-        field.options = this.roleLevelsOptions;
-      }
-
-      this.formConfig = [...this.formConfig];
-    },
-    error: () => {
-      this.toastr.error(this.translate.instant('COMMON.LOAD_FAILED'));
-    }
-  });
-}
-
+  }
 
   onSubmit(formValue: RoleAddEdit) {
     if (this.formGroup.invalid) {
@@ -147,7 +102,6 @@ loadRoleLevels() {
       return;
     }
 
-    // EDIT
     if (this.isEdit && this.roleId) {
       this.roleService.update(this.roleId, formValue).subscribe({
         next: () => {
@@ -155,9 +109,7 @@ loadRoleLevels() {
           this.formSubmitted.emit();
         }
       });
-    }
-    // CREATE
-    else {
+    } else {
       this.roleService.create(formValue).subscribe({
         next: () => {
           this.toastr.success(this.translate.instant('ROLE.CREATE_SUCCESS'));

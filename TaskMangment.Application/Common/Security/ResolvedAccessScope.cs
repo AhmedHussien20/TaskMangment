@@ -1,5 +1,3 @@
-using TaskMangment.Domain.Entities;
-
 namespace TaskMangment.Application.Common.Security
 {
     public enum AccessScopeKind
@@ -26,17 +24,18 @@ namespace TaskMangment.Application.Common.Security
         public int? OwnBranchId { get; set; }
         public AccessScopeKind Kind { get; set; }
         public IReadOnlyList<int> BranchIds { get; set; } = [];
-        public IReadOnlyList<FunctionCode> FunctionCodes { get; set; } = [];
-        public bool HasManagerScope => BranchIds.Count > 0 || FunctionCodes.Count > 0;
+        public IReadOnlyList<int> EmployeeTypeIds { get; set; } = [];
+        public bool SeesAllTypesInBranchScope { get; set; }
+        public bool HasManagerScope => BranchIds.Count > 0 || EmployeeTypeIds.Count > 0;
         public bool IsCompanyWide => Kind == AccessScopeKind.CompanyWide;
-        public bool AllowsAllFunctionTypes =>
-            FunctionCodes.Count == 0 || FunctionCodes.Contains(FunctionCode.Operations);
+        public bool AllowsAllFunctionTypes => SeesAllTypesInBranchScope || EmployeeTypeIds.Count == 0;
 
         public UserAccessContext ToUserAccessContext() => new()
         {
             EmployeeId = EmployeeId,
             BranchIds = BranchIds,
-            FunctionCodes = FunctionCodes
+            EmployeeTypeIds = EmployeeTypeIds,
+            SeesAllTypesInBranchScope = SeesAllTypesInBranchScope
         };
     }
 }

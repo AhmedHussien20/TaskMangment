@@ -128,7 +128,7 @@
                         <dt class="col-5">{{ 'EMPLOYEE.QUALIFICATION' | translate }}</dt><dd class="col-7">{{ profile.qualification || '—' }}</dd>
                         <dt class="col-5">{{ 'EMPLOYEE.NATIONALITY' | translate }}</dt><dd class="col-7">{{ profile.nationality || '—' }}</dd>
                         <dt class="col-5">{{ 'EMPLOYEE.IDENTITY_NUMBER' | translate }}</dt><dd class="col-7">{{ profile.identityNumber || '—' }}</dd>
-                        <dt class="col-5">{{ 'EMPLOYEE.FUNCTION_CODE' | translate }}</dt><dd class="col-7">{{ profile.functionCode || '—' }}</dd>
+                        <dt class="col-5">{{ 'EMPLOYEE.FUNCTION_CODE' | translate }}</dt><dd class="col-7">{{ profile.employeeTypeName || profile.functionCode || '—' }}</dd>
                         <dt class="col-5">{{ 'EMPLOYEE.ADDRESS' | translate }}</dt><dd class="col-7">{{ profile.address || '—' }}</dd>
                       </dl>
                     </div>
@@ -252,7 +252,7 @@
                     </div>
                     <div class="panel mt-3" *ngIf="access.managerScope">
                       <h6>{{ 'EMPLOYEE_360.MANAGER_SCOPE' | translate }}</h6>
-                      <p class="small mb-1"><strong>{{ 'EMPLOYEE.FUNCTION_CODE' | translate }}:</strong> {{ access.managerScope.functionCodes.join(', ') || '—' }}</p>
+                      <p class="small mb-1"><strong>{{ 'EMPLOYEE.FUNCTION_CODE' | translate }}:</strong> {{ (access.managerScope.employeeTypeIds?.length ? access.managerScope.employeeTypeIds.join(', ') : (access.managerScope.functionCodes?.join(', ') || '—')) }}</p>
                       <span *ngFor="let b of access.managerScope.branches" class="badge bg-info text-dark me-1 mb-1">{{ b.name }}</span>
                     </div>
                   </div>

@@ -10,6 +10,9 @@ export interface Employee360Profile {
   mobile?: string;
   imageUrl?: string;
   isActive: boolean;
+  employeeTypeId?: number;
+  employeeTypeName?: string | null;
+  /** @deprecated use employeeTypeName */
   functionCode?: string | null;
   lastLoginDate?: string;
   hireDate?: string;
@@ -33,7 +36,9 @@ export interface Employee360Manager {
 }
 
 export interface Employee360ManagerScope {
-  functionCodes: string[];
+  employeeTypeIds: number[];
+  /** @deprecated use employeeTypeIds */
+  functionCodes?: string[];
   branches: { id: number; name: string }[];
 }
 

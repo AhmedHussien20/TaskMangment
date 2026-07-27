@@ -124,7 +124,7 @@ namespace TaskMangment.Hangfire.Jobs
                 //{
                 //    var ops80Ids = await _db.Employees
                 //        .Where(e => level80Ids.Contains(e.Id)
-                //                    && e.FunctionCode == FunctionCode.Operations)
+                //                    && e.EmployeeType != null && e.EmployeeType.Code == EmployeeTypeCodes.Operations)
                 //        .Select(e => e.Id)
                 //        .ToListAsync();
 
@@ -176,7 +176,7 @@ namespace TaskMangment.Hangfire.Jobs
                     {
                         var isAccountant = await _db.Employees
                             .Where(e => e.Id == employeeId)
-                            .Select(e => e.FunctionCode == FunctionCode.Accounting) 
+                            .Select(e => e.EmployeeType != null && e.EmployeeType.Code == EmployeeTypeCodes.Accounting)
                             .FirstOrDefaultAsync();
 
                         if (isAccountant)

@@ -65,6 +65,9 @@ namespace TaskMangment.Application.Common.Security
         public const string CreateDepartment = "CREATE_DEPARTMENT";
         public const string UpdateDepartment = "UPDATE_DEPARTMENT";
         public const string DeleteDepartment = "DELETE_DEPARTMENT";
+        public const string CreateEmployeeType = "CREATE_EMPLOYEE_TYPE";
+        public const string UpdateEmployeeType = "UPDATE_EMPLOYEE_TYPE";
+        public const string DeleteEmployeeType = "DELETE_EMPLOYEE_TYPE";
         public const string CreatePermission = "CREATE_PERMISSION";
         public const string UpdatePermission = "UPDATE_PERMISSION";
         public const string DeletePermission = "DELETE_PERMISSION";

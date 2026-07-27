@@ -65,6 +65,7 @@ namespace TaskMangment.Domain.Entities
 
     public enum RoleLevelEnum
     {
+        /// <summary>Legacy hierarchy values — kept for JWT/migrator compatibility; do not use for new auth.</summary>
         Employee = 10,
         TeamLead = 50,
         Accountant = 60,
@@ -122,14 +123,5 @@ namespace TaskMangment.Domain.Entities
         CloseRequestRejected,
         AchievementPercent
     }
-
-    public enum FunctionCode 
-    {
-        Operations=1,
-        Accounting,
-        HR,
-        GeneralAffairs
-    }
-
 
 }

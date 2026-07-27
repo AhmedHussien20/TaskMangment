@@ -46,34 +46,6 @@ export class RoleListComponent implements OnInit {
     { key: 'name', label: 'ROLE.NAME' },
     { key: 'description', label: 'ROLE.DESCRIPTION' },
     {
-      key: 'levelName',
-      label: 'ROLE.LEVEL',
-      type: 'badge' as const,
-      badgeMap: {
-        Employee: {
-          text: 'ROLE.LEVELS.EMPLOYEE',
-          class: 'bg-secondary'
-        },
-        TeamLead: {
-          text: 'ROLE.LEVELS.TEAM_LEAD',
-          class: 'bg-info'
-        },
-        Manager: {
-          text: 'ROLE.LEVELS.MANAGER',
-          class: 'bg-primary'
-        },
-        Admin: {
-          text: 'ROLE.LEVELS.ADMIN',
-          class: 'bg-danger'
-        },
-        BranchesManager:
-        {
-          text: 'ROLE.LEVELS.BRANCHES_MANAGER',
-          class: 'bg-warning'
-        }
-      }
-    },
-    {
       key: 'employeeCount',
       label: 'ROLE.EMPLOYEES',
       type: 'icon-action' as const,

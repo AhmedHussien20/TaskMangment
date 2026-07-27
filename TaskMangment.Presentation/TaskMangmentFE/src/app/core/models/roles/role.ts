@@ -2,13 +2,15 @@ export interface Role {
   id: number;
   name: string;
   description?: string;
-  level:string;
-  levelName:string;
+  requiresBranchScope?: boolean;
+  requiresEmployeeTypeScope?: boolean;
 }
 
 export interface RoleAddEdit {
   name: string;
   description?: string;
+  requiresBranchScope?: boolean;
+  requiresEmployeeTypeScope?: boolean;
 }
 
 export interface RolePermissionAssign {
@@ -33,7 +35,7 @@ export interface RolePagedResponse {
   totalCount: number;
   pageIndex: number;
   pageSize: number;
-  
+
   employeeCount: number;
   permissionCount: number;
 }
@@ -42,14 +44,12 @@ export interface BranchLookupDto {
   id: number;
   name: string;
 }
+
 export interface GetManagerBranchesDto {
   managerId: number;
   branchIds: number[];
   branchLookupDtos: BranchLookupDto[];
-  functionCode: number
-}
-
-export interface RoleLevelDto {
-  value: number;
-  label: string;
+  employeeTypeId?: number;
+  /** @deprecated */
+  functionCode?: number;
 }

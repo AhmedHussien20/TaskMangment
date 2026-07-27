@@ -39,7 +39,7 @@
 <!-- MODAL TEMPLATE -->
 <ng-template #branchesModal let-modal>
   <div class="modal-header">
-    <h6 class="modal-title">{{ 'ROLE.LEVELS.BRANCHES_MANAGER' | translate }}</h6>
+    <h6 class="modal-title">{{ 'ROLE.MANAGER_SCOPE' | translate }}</h6>
     <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
   </div>
 
@@ -48,6 +48,8 @@
       [isEdit]="true"
       [managerId]="selectedManagerId"
       [selectedBranchIds]="selectedBranchIds"
+      [requiresBranchScope]="requiresBranchScope"
+      [requiresEmployeeTypeScope]="requiresEmployeeTypeScope"
       (formSubmitted)="onBranchesFormSubmitted($event, modal)">
     </app-manager-branches-form>
   </div>

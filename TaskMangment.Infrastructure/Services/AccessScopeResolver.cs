@@ -52,7 +52,7 @@ namespace TaskMangment.Infrastructure.Services
             AccessScopeKind kind;
             if (companyWide)
                 kind = AccessScopeKind.CompanyWide;
-            else if (access.BranchIds.Count > 0 || access.FunctionCodes.Count > 0)
+            else if (access.BranchIds.Count > 0 || access.EmployeeTypeIds.Count > 0)
                 kind = AccessScopeKind.ManagerScoped;
             else if (perms.Contains(PermissionCodes.CreateTask) ||
                      perms.Contains(PermissionCodes.ViewScopedTasks) ||
@@ -68,7 +68,8 @@ namespace TaskMangment.Infrastructure.Services
                 OwnBranchId = employee.BranchId,
                 Kind = kind,
                 BranchIds = access.BranchIds,
-                FunctionCodes = access.FunctionCodes
+                EmployeeTypeIds = access.EmployeeTypeIds,
+                SeesAllTypesInBranchScope = access.SeesAllTypesInBranchScope
             };
         }
 

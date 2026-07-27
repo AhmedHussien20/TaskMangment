@@ -984,10 +984,12 @@ namespace TaskMangment.Infrastructure.Services
             var scope = await _scopeResolver.ResolveAsync(employeeId);
             if (scope.Kind == AccessScopeKind.ManagerScoped && scope.BranchIds.Count > 1)
             {
-                var functionCode = await _employeeRepo.GetAll(e => e.Id == employeeId)
-                    .Select(e => e.FunctionCode)
+                var isOperations = await _employeeRepo.GetAll(e => e.Id == employeeId)
+                    .Select(e => e.EmployeeType != null &&
+                                 (e.EmployeeType.SeesAllTypesInBranchScope ||
+                                  e.EmployeeType.Code == EmployeeTypeCodes.Operations))
                     .FirstOrDefaultAsync();
-                return functionCode == FunctionCode.Operations;
+                return isOperations;
             }
 
             return false;

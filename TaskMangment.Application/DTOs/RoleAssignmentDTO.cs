@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TaskMangment.Domain.Entities;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace TaskMangment.Application.DTOs
 {
@@ -16,8 +10,9 @@ namespace TaskMangment.Application.DTOs
         public string Mobile { get; set; }
         public string? BranchName { get; set; }
         public bool IsAssigned { get; set; }
-        public string?  RoleName { get; set; }
+        public string? RoleName { get; set; }
     }
+
     public class RoleWithManyEmployeeAssignDto
     {
         [Required]
@@ -30,7 +25,7 @@ namespace TaskMangment.Application.DTOs
         public int EmployeeId { get; set; }
 
         [Required]
-        public bool Assign { get; set; } 
+        public bool Assign { get; set; }
     }
 
     public class ManagerBranchesDto
@@ -42,10 +37,13 @@ namespace TaskMangment.Application.DTOs
     public class GetManagerBranchesDto
     {
         public int ManagerId { get; set; }
-        public FunctionCode? FunctionCode { get; set; }  
+        public int? EmployeeTypeId { get; set; }
         public List<int> BranchIds { get; set; } = new();
         public List<BranchLookupDto> branchLookupDtos { get; set; } = new();
+        public bool RequiresBranchScope { get; set; }
+        public bool RequiresEmployeeTypeScope { get; set; }
     }
+
     public class BranchLookupDto
     {
         public int Id { get; set; }
@@ -54,9 +52,8 @@ namespace TaskMangment.Application.DTOs
 
     public class SetManagerBranchesRequest
     {
-        public FunctionCode FunctionCode { get; set; }
+        /// <summary>Required when role has RequiresEmployeeTypeScope. Ignored for branch-only roles (defaults to Operations).</summary>
+        public int? EmployeeTypeId { get; set; }
         public List<int>? BranchIds { get; set; } = new();
     }
-
-
 }

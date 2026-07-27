@@ -170,7 +170,7 @@ export class EmployeeCreateUpdateComponent implements OnInit {
     {
       type: 'select',
       label: 'EMPLOYEE.FUNCTION_CODE',
-      name: 'functionCode',
+      name: 'employeeTypeId',
       selectType: 'simple',
       defaultValue: null,
       options: [],
@@ -269,7 +269,7 @@ export class EmployeeCreateUpdateComponent implements OnInit {
       password: [''],
       confirmPassword: [''],
       attachments: [null],
-      functionCode: [null,Validators.required],
+      employeeTypeId: [null,Validators.required],
       isActive: [true],
 
 
@@ -349,7 +349,7 @@ export class EmployeeCreateUpdateComponent implements OnInit {
         qualification: emp.qualification,
         roleIds: emp.roleIds || [],
         email: emp.email,
-        functionCode: emp.functionCode,
+        employeeTypeId: emp.employeeTypeId ?? emp.functionCode,
         isActive: emp.isActive ?? true,
         password: '',
         confirmPassword: '',
@@ -569,7 +569,7 @@ export class EmployeeCreateUpdateComponent implements OnInit {
           value: x.id
         }));
 
-        const field = this.formConfig.find(f => f.name === 'functionCode');
+        const field = this.formConfig.find(f => f.name === 'employeeTypeId');
         if (field) field.options = options;
 
         this.formConfig = [...this.formConfig];

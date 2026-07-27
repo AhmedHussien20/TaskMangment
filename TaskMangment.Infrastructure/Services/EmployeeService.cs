@@ -502,13 +502,21 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<bool>.Ok(true, "Employee deleted successfully");
         }
 
-        public Task<ApiResponse<List<FunctionCodeEnumDto>>> GetFunctionCodesAsync()
+        public async Task<ApiResponse<List<FunctionCodeEnumDto>>> GetFunctionCodesAsync()
         {
-            var values = Enum.GetValues<FunctionCode>()
-                .Select(x => new FunctionCodeEnumDto { Id = (int)x, Name = x.ToString() })
-                .ToList();
+            var values = await _db.EmployeeTypes
+                .AsNoTracking()
+                .Where(x => !x.IsDeleted)
+                .OrderBy(x => x.Id)
+                .Select(x => new FunctionCodeEnumDto
+                {
+                    Id = x.Id,
+                    Name = x.NameEn,
+                    SeesAllTypesInBranchScope = x.SeesAllTypesInBranchScope
+                })
+                .ToListAsync();
 
-            return Task.FromResult(ApiResponse<List<FunctionCodeEnumDto>>.Ok(values));
+            return ApiResponse<List<FunctionCodeEnumDto>>.Ok(values);
         }
 
 

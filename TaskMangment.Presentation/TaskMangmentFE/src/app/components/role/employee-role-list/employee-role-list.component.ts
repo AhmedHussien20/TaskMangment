@@ -21,7 +21,6 @@ export class EmployeeRoleListComponent implements OnInit {
 
   roleId!: number;
   roleName: string = '';
-  roleLevel: string | null = null;
 selectedManagerId: number | null = null;
 selectedBranchIds: number[] = [];
 
@@ -29,7 +28,9 @@ selectedBranchIds: number[] = [];
  breadcrumbs: string[] = [];
  activeitem = '';
   
-  selectbranches: boolean = false
+  selectbranches: boolean = false;
+  requiresBranchScope = false;
+  requiresEmployeeTypeScope = false;
 
   columns: TableColumn[] = [
     { key: 'fullName', label: 'EMPLOYEE.NAME' },
@@ -102,10 +103,9 @@ loadRoleInfo() {
     this.roleService.getById(this.roleId).subscribe({
       next: (res) => {
         this.roleName = res.data.name;
-        this.roleLevel= res.data.level
-        console.log(this.roleLevel)
-        if(this.roleLevel == '80')
-          this.selectbranches= true
+        this.requiresBranchScope = !!res.data.requiresBranchScope;
+        this.requiresEmployeeTypeScope = !!res.data.requiresEmployeeTypeScope;
+        this.selectbranches = this.requiresBranchScope || this.requiresEmployeeTypeScope;
 
         this.translate.get('ROLE.ASSIGNEMPLOYEE').subscribe(assignText => {
       this.title = `${assignText}  ${this.roleName}`;
@@ -207,7 +207,7 @@ openDetails(managerId: number, branchesModal: any) {
 }
 
 onBranchesFormSubmitted(
-  e: { managerId: number | null; functionCode: number; branchIds: number[] },
+  e: { managerId: number | null; employeeTypeId?: number; branchIds: number[] },
   modal: any
 ) {
   const managerId = e.managerId ?? this.selectedManagerId;
@@ -218,9 +218,9 @@ onBranchesFormSubmitted(
   }
 
   this.roleAssignmentService.setManagerBranches(managerId, {
-  functionCode: e.functionCode,
-  branchIds: e.branchIds
-})
+    employeeTypeId: e.employeeTypeId,
+    branchIds: e.branchIds
+  })
 .subscribe({
     next: () => {
       this.toastr.success(this.translate.instant('ROLE.UPDATE_SUCCESS'));

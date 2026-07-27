@@ -46,7 +46,7 @@ namespace TaskMangment.Application.DTOs
         public string? Password { get; set; }
 
         public IFormFile? Attachments { get; set; }
-        public FunctionCode? FunctionCode { get; set; }
+        public int? EmployeeTypeId { get; set; }
 
         public bool IsActive { get; set; } = true;
 
@@ -78,7 +78,8 @@ namespace TaskMangment.Application.DTOs
         public DateTime? LastLoginDate { get; set; }
         public bool IsActive { get; set; }
 
-        public FunctionCode? FunctionCode { get; set; }
+        public int? EmployeeTypeId { get; set; }
+        public string? EmployeeTypeName { get; set; }
 
 
     }
@@ -86,6 +87,7 @@ namespace TaskMangment.Application.DTOs
     {
         public int Id { get; set; }
         public string Name { get; set; } = null!;
+        public bool SeesAllTypesInBranchScope { get; set; }
     }
 
 }

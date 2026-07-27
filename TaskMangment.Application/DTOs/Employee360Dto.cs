@@ -31,7 +31,8 @@ namespace TaskMangment.Application.DTOs
         public string? Mobile { get; set; }
         public string? ImageUrl { get; set; }
         public bool IsActive { get; set; }
-        public string? FunctionCode { get; set; }
+        public int EmployeeTypeId { get; set; }
+        public string? EmployeeTypeName { get; set; }
         public DateTime? LastLoginDate { get; set; }
         public DateTime? HireDate { get; set; }
         public string? Qualification { get; set; }
@@ -57,7 +58,7 @@ namespace TaskMangment.Application.DTOs
 
     public class Employee360ManagerScopeDto
     {
-        public List<string> FunctionCodes { get; set; } = new();
+        public List<int> EmployeeTypeIds { get; set; } = new();
         public List<BranchLookupDto> Branches { get; set; } = new();
     }
 

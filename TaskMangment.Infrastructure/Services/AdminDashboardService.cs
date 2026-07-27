@@ -108,7 +108,7 @@ namespace TaskMangment.Infrastructure.Services
             branchesQuery = branchesQuery.ApplyAccessScope(access);
 
             // Company-wide report/task viewers see all company branches; others without manager scope get own branch.
-            if (!scope.IsCompanyWide && !access.BranchIds.Any() && !access.FunctionCodes.Any())
+            if (!scope.IsCompanyWide && !access.BranchIds.Any() && !access.EmployeeTypeIds.Any())
             {
                 var myBranch = await _employeeRepo
                     .GetAll(e => e.Id == employeeId && e.CompanyId == companyId)

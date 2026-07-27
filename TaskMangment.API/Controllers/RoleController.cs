@@ -66,11 +66,6 @@ namespace TaskMangment.API.Controllers
             var result = await _service.DeleteAsync(id, this.CompanyId);
             return Success(true, "Role deleted successfully");
         }
-
-        [HttpGet("role-levels")]
-        [PermissionAuthorize(PermissionCodes.AssignRole)]
-        public async Task<ApiResponse<List<RoleLevelEnumDto>>> GetRoleLevels()
-            => await _service.GetRoleLevelsAsync();
     }
 
 }

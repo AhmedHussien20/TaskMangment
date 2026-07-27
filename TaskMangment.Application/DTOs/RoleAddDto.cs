@@ -18,7 +18,8 @@ namespace TaskMangment.Application.DTOs
         [MaxLength(500)]
         public string? Description { get; set; }
 
-        public int Level { get; set; } = 10;
+        public bool RequiresBranchScope { get; set; }
+        public bool RequiresEmployeeTypeScope { get; set; }
 
     }
 
@@ -28,11 +29,11 @@ namespace TaskMangment.Application.DTOs
         public int? CompanyId { get; set; }
         public string Name { get; set; }
         public string? Description { get; set; }
-        public int Level { get; set; }
-        public string? LevelName { get; set; }
 
         public int EmployeeCount { get; set; }
         public int PermissionCount { get; set; }
+        public bool RequiresBranchScope { get; set; }
+        public bool RequiresEmployeeTypeScope { get; set; }
     }
 
     public class PermissionAddDto
@@ -114,8 +115,4 @@ public class AssignedPermissionDto
 
 
 
-public class RoleLevelEnumDto
-{
-    public int Value { get; set; }
-    public string Label { get; set; } = null!;
-}
+

@@ -42,8 +42,8 @@ public class OrgManagerResolverTests
     public async Task GetOperationalManagersAsync_ReturnsBranchManager()
     {
         SetupRepo(_employeeRepo,
-            new Employee { Id = 10, CompanyId = 1, BranchId = 5, IsActive = true, FunctionCode = FunctionCode.Operations },
-            new Employee { Id = 20, CompanyId = 1, BranchId = 5, IsActive = true, FunctionCode = FunctionCode.Operations });
+            new Employee { Id = 10, CompanyId = 1, BranchId = 5, IsActive = true, EmployeeTypeId = 1 },
+            new Employee { Id = 20, CompanyId = 1, BranchId = 5, IsActive = true, EmployeeTypeId = 1 });
 
         SetupRepo(_branchRepo, new Branch
         {
@@ -104,8 +104,8 @@ public class OrgManagerResolverTests
     public async Task GetEscalationRecipientsAsync_IncludesReceiveOrgEscalationsHolders()
     {
         SetupRepo(_employeeRepo,
-            new Employee { Id = 10, CompanyId = 1, BranchId = 5, IsActive = true, FunctionCode = FunctionCode.Operations },
-            new Employee { Id = 30, CompanyId = 1, BranchId = 1, IsActive = true, FunctionCode = FunctionCode.Operations });
+            new Employee { Id = 10, CompanyId = 1, BranchId = 5, IsActive = true, EmployeeTypeId = 1 },
+            new Employee { Id = 30, CompanyId = 1, BranchId = 1, IsActive = true, EmployeeTypeId = 1 });
 
         SetupRepo(_branchRepo, new Branch
         {

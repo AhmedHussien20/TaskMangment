@@ -69,6 +69,12 @@ private MENUITEMS: MenuItem[] = [
         requiredPermission: 'VIEW_EMPLOYEES'
       },
       {
+        title: 'nav.apps.employee.types',
+        path: '/employee/employee-types',
+        type: 'link',
+        requiredPermission: 'CREATE_EMPLOYEE_TYPE'
+      },
+      {
         title: 'nav.apps.role.list',
         path: '/role/role-list',
         type: 'link',
@@ -272,7 +278,7 @@ private MENUITEMS: MenuItem[] = [
   private canShow(item: MenuItem): boolean {
     const user = this.auth.getUser();
     if (!user) return false;
-    const functionCode = user.functionCode;
+    const functionCode = user.employeeTypeId ?? user.functionCode;
 
     if (item.requiredPermission && !this.auth.hasPermission(item.requiredPermission)) {
       return false;
@@ -293,7 +299,7 @@ private MENUITEMS: MenuItem[] = [
       !item.requiredPermissions?.length
     ) {
       if (item.minRoleLevel === 80) {
-        if (user.roleLevel === 80 && user.functionCode !== 1) {
+        if (user.roleLevel === 80 && functionCode !== 1) {
           return false;
         }
       } else if (user.roleLevel < item.minRoleLevel) {

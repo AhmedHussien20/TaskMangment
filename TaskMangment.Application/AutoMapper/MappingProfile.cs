@@ -33,7 +33,11 @@ namespace TaskMangment.Application.AutoMapper
                         .Select(er => er.Role.Name)
                         .ToList()))
                 .ForMember(dest => dest.JobName, opt => opt.MapFrom(src => src.Job != null ? src.Job.Title : null))
-                .ForMember(dest => dest.DepartmentName, opt => opt.MapFrom(src => src.Department != null ? src.Department.Name : null));
+                .ForMember(dest => dest.DepartmentName, opt => opt.MapFrom(src => src.Department != null ? src.Department.Name : null))
+                .ForMember(dest => dest.EmployeeTypeName, opt => opt.MapFrom(src => src.EmployeeType != null ? src.EmployeeType.NameEn : null));
+
+            CreateMap<EmployeeType, EmployeeTypeGetDto>();
+            CreateMap<EmployeeTypeAddEditDto, EmployeeType>();
 
 
 
@@ -41,17 +45,10 @@ namespace TaskMangment.Application.AutoMapper
                 .ForMember(dest => dest.PasswordHash, opt => opt.Ignore());
 
 
-            CreateMap<Role, RoleGetDto>()
-     .ForMember(
-         d => d.LevelName,
-         o => o.MapFrom(s =>
-             Enum.IsDefined(typeof(RoleLevelEnum), s.Level)
-                 ? Enum.GetName(typeof(RoleLevelEnum), s.Level)
-                 : "Custom"
-         )
-     );
+            CreateMap<Role, RoleGetDto>();
 
-            CreateMap<RoleAddEditDto, Role>();
+            CreateMap<RoleAddEditDto, Role>()
+                .ForMember(dest => dest.Level, opt => opt.Ignore());
             //CreateMap<Role, RoleWithPermissionsDto>();
 
             CreateMap<Permission, PermissionGetDto>();

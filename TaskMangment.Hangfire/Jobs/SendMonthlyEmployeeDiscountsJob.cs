@@ -116,7 +116,7 @@ namespace TaskMangment.Hangfire.Jobs
                     e.Id == 380 &&
                     e.BranchId != null &&
                     (
-                        e.FunctionCode == FunctionCode.Accounting ||
+                        (e.EmployeeType != null && e.EmployeeType.Code == EmployeeTypeCodes.Accounting) ||
                         e.EmployeeRoles.Any(er =>
                             er.IsAssigned &&
                             !er.IsDeleted &&

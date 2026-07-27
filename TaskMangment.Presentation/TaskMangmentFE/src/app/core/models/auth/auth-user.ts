@@ -7,6 +7,8 @@ export interface AuthUser {
   roles: string[];
   permissions: string[];
   token: string;
+  employeeTypeId?: number;
+  /** @deprecated use employeeTypeId; kept for menu/nav compatibility */
   functionCode?: number;
   hasAccessScope?: boolean;
 }

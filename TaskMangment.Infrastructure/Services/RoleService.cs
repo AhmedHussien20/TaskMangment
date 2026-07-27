@@ -146,6 +146,8 @@ namespace TaskMangment.Infrastructure.Services
 
             var role = _mapper.Map<Role>(dto);
             role.CompanyId = companyId;
+            // Level kept on entity for future use; not configured from UI.
+            role.Level = (int)RoleLevelEnum.Employee;
 
             await _roleRepo.AddAsync(role);
             await _roleRepo.SaveChangesAsync();
@@ -177,6 +179,7 @@ namespace TaskMangment.Infrastructure.Services
 
             dto.CompanyId = companyId;
             _mapper.Map(dto, role);
+            // Do not change Role.Level from API — left for future use.
 
             await _roleRepo.SaveChangesAsync();
             await _cache.RemoveAsync("roles:");
@@ -212,14 +215,6 @@ namespace TaskMangment.Infrastructure.Services
             await _cache.RemoveAsync("roles:");
 
             return ApiResponse<bool>.Ok(true, "Role deleted successfully");
-        }
-        public Task<ApiResponse<List<RoleLevelEnumDto>>> GetRoleLevelsAsync()
-        {
-            var values = Enum.GetValues<RoleLevelEnum>()
-                .Select(x => new RoleLevelEnumDto { Value = (int)x, Label = x.ToString() })
-                .ToList();
-
-            return Task.FromResult(ApiResponse<List<RoleLevelEnumDto>>.Ok(values));
         }
 
     }

@@ -90,7 +90,7 @@ public class AuthService : IAuthService
                             .GetUserPermissionsAsync(user.Id);
 
         var access = await _accessProvider.GetAsync(user.Id);
-        var hasAccessScope = access.BranchIds.Any() || access.FunctionCodes.Any()
+        var hasAccessScope = access.BranchIds.Any() || access.EmployeeTypeIds.Any()
             || permissions.Any(p =>
                 string.Equals(p, PermissionCodes.ViewCompanyTasks, StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(p, PermissionCodes.ViewAllTasks, StringComparison.OrdinalIgnoreCase) ||
@@ -125,7 +125,7 @@ public class AuthService : IAuthService
             Permissions = permissions,
             RoleLevel = roleLevel,
             RoleLevelName = roleLevelName,
-            FunctionCode= user.FunctionCode,
+            EmployeeTypeId = user.EmployeeTypeId,
             HasAccessScope = hasAccessScope,
 
             Token = token

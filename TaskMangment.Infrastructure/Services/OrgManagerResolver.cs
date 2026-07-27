@@ -38,7 +38,7 @@ namespace TaskMangment.Infrastructure.Services
         public async Task<IReadOnlyList<int>> GetOperationalManagersAsync(int employeeId)
         {
             var employee = await _employeeRepo.GetAll(e => e.Id == employeeId)
-                .Select(e => new { e.Id, e.CompanyId, e.BranchId, e.FunctionCode })
+                .Select(e => new { e.Id, e.CompanyId, e.BranchId, e.EmployeeTypeId })
                 .FirstOrDefaultAsync();
 
             if (employee == null)
@@ -70,7 +70,7 @@ namespace TaskMangment.Infrastructure.Services
 
                 foreach (var managerId in scopeManagers)
                 {
-                    if (await MatchesFunctionalScopeAsync(managerId, employee.FunctionCode) &&
+                    if (await MatchesFunctionalScopeAsync(managerId, employee.EmployeeTypeId) &&
                         await IsActiveEmployeeAsync(managerId))
                     {
                         recipients.Add(managerId);
@@ -280,18 +280,24 @@ namespace TaskMangment.Infrastructure.Services
             return result;
         }
 
-        private async Task<bool> MatchesFunctionalScopeAsync(int managerId, FunctionCode employeeFunction)
+        private async Task<bool> MatchesFunctionalScopeAsync(int managerId, int employeeTypeId)
         {
             var scopes = await _functionalScopeRepo.GetAll(s =>
                     s.EmployeeId == managerId && !s.IsDeleted)
-                .Select(s => s.FunctionCode)
+                .Select(s => new
+                {
+                    s.EmployeeTypeId,
+                    SeesAll = s.EmployeeType != null &&
+                              (s.EmployeeType.SeesAllTypesInBranchScope ||
+                               s.EmployeeType.Code == EmployeeTypeCodes.Operations)
+                })
                 .ToListAsync();
 
-            // No functional filter or Operations = all types in branch
-            if (scopes.Count == 0 || scopes.Contains(FunctionCode.Operations))
+            // No functional filter or Operations-like = all types in branch
+            if (scopes.Count == 0 || scopes.Any(s => s.SeesAll))
                 return true;
 
-            return scopes.Contains(employeeFunction);
+            return scopes.Any(s => s.EmployeeTypeId == employeeTypeId);
         }
 
         private Task<bool> IsActiveEmployeeAsync(int employeeId) =>

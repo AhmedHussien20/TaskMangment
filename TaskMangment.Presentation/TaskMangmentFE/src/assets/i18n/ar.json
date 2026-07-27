@@ -254,7 +254,8 @@
       "employee": {
         "header": "المستخدمون",
         "title": "الموظفين",
-        "list": "قائمة الموظفين"
+        "list": "قائمة الموظفين",
+        "types": "أنواع الموظفين"
       },
       "role": {
         "title": "الصلاحيات",
@@ -868,6 +869,9 @@
     "ASSIGNEMPLOYEE": "المعنيين لدور: ",
     "PERMISSIONROLE": "الصلاحيات المخصصة لدور:",
     "LEVEL": "المستوى",
+    "REQUIRES_BRANCH_SCOPE": "يتطلب نطاق الفروع",
+    "REQUIRES_EMPLOYEE_TYPE_SCOPE": "يتطلب نطاق نوع الموظف",
+    "MANAGER_SCOPE": "نطاق التغطية",
     "LEVELS": {
       "EMPLOYEE": "موظف",
       "TEAM_LEAD": "قائد فريق",
@@ -879,7 +883,7 @@
     "ALL": "الكل",
     "ASSIGNED" :"معين",
     "NOT_ASSIGNED": "غير معين"
-    
+
    },
   "PERMISSION": {
     "TITLE": "إدارة التصاريح",
@@ -1136,6 +1140,19 @@
     "title" : "قائمة الاجازات",
     "CREATE_SUCCESS" : "تم اضافة اجازة بنجاح",
     "UPDATE_SUCCESS" :"تم تحديث الاجازة بنجاح"
+  },
+  "EMPLOYEE_TYPE": {
+    "TITLE": "أنواع الموظفين",
+    "ADD": "إضافة نوع موظف",
+    "EDIT": "تعديل نوع موظف",
+    "CODE": "الرمز",
+    "NAME_EN": "الاسم (إنجليزي)",
+    "NAME_AR": "الاسم (عربي)",
+    "SEES_ALL_TYPES": "يرى جميع أنواع الموظفين في الفروع المعيّنة (نمط العمليات)",
+    "EMPLOYEE_COUNT": "الموظفون",
+    "SEARCH": "بحث أنواع الموظفين",
+    "CREATE_SUCCESS": "تم إنشاء نوع الموظف بنجاح",
+    "UPDATE_SUCCESS": "تم تحديث نوع الموظف بنجاح"
   },
   "FORBIDDEN": 
   {

@@ -257,7 +257,8 @@
       "employee": {
         "header": "Users",
         "title": "Employees",
-        "list": "Employee List"
+        "list": "Employee List",
+        "types": "Employee Types"
       },
       "role": {
         "title": "Roles",
@@ -844,6 +845,9 @@
     "ASSIGNEMPLOYEE": "Assigned employees for role:",
     "PERMISSIONROLE": "Permissions assigned to role:",
     "LEVEL": "Level",
+    "REQUIRES_BRANCH_SCOPE": "Requires branch scope",
+    "REQUIRES_EMPLOYEE_TYPE_SCOPE": "Requires employee type scope",
+    "MANAGER_SCOPE": "Manager coverage",
     "LEVELS": {
       "EMPLOYEE": "Employee",
       "TEAM_LEAD": "Team Lead",
@@ -1113,6 +1117,19 @@
     "title": "Leave Types List",
     "CREATE_SUCCESS": "Leave created successfully",
     "UPDATE_SUCCESS": "Leave updated successfully"
+  },
+  "EMPLOYEE_TYPE": {
+    "TITLE": "Employee Types",
+    "ADD": "Add Employee Type",
+    "EDIT": "Edit Employee Type",
+    "CODE": "Code",
+    "NAME_EN": "Name (English)",
+    "NAME_AR": "Name (Arabic)",
+    "SEES_ALL_TYPES": "Sees all employee types in assigned branches (Operations-style)",
+    "EMPLOYEE_COUNT": "Employees",
+    "SEARCH": "Search employee types",
+    "CREATE_SUCCESS": "Employee type created successfully",
+    "UPDATE_SUCCESS": "Employee type updated successfully"
   },
   "FORBIDDEN": 
   {

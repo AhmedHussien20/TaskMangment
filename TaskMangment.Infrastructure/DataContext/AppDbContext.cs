@@ -89,6 +89,7 @@ namespace TaskMangment.Infrastructure.DataContext
         public DbSet<WhatsAppQueue> WhatsAppQueue { get; set; }
         public DbSet<ManagerBranches> managerBranches { get; set; }
         public DbSet<EmployeeFunctionalScope> EmployeeFunctionalScopes { get; set; }
+        public DbSet<EmployeeType> EmployeeTypes { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -284,6 +285,35 @@ namespace TaskMangment.Infrastructure.DataContext
                 .HasIndex(x => new { x.ManagerId, x.BranchId })
                 .IsUnique();
 
+            builder.Entity<EmployeeType>(entity =>
+            {
+                entity.ToTable("EmployeeTypes");
+                entity.HasIndex(x => x.Code).IsUnique();
+                entity.Property(x => x.Code).HasMaxLength(50).IsRequired();
+                entity.Property(x => x.NameEn).HasMaxLength(100).IsRequired();
+                entity.Property(x => x.NameAr).HasMaxLength(100).IsRequired();
+            });
+
+            builder.Entity<Employee>()
+                .HasOne(e => e.EmployeeType)
+                .WithMany(t => t.Employees)
+                .HasForeignKey(e => e.EmployeeTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<EmployeeFunctionalScope>()
+                .HasOne(x => x.EmployeeType)
+                .WithMany(t => t.FunctionalScopes)
+                .HasForeignKey(x => x.EmployeeTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Map legacy column names during transition (migration renames FunctionCode → EmployeeTypeId).
+            builder.Entity<Employee>()
+                .Property(e => e.EmployeeTypeId)
+                .HasColumnName("FunctionCode");
+
+            builder.Entity<EmployeeFunctionalScope>()
+                .Property(x => x.EmployeeTypeId)
+                .HasColumnName("FunctionCode");
         }
 
     }

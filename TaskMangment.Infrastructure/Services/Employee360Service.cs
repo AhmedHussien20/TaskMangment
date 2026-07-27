@@ -114,7 +114,8 @@ namespace TaskMangment.Infrastructure.Services
                 Mobile = p.Mobile,
                 ImageUrl = p.ImageUrl,
                 IsActive = p.IsActive,
-                FunctionCode = p.FunctionCode?.ToString(),
+                EmployeeTypeId = p.EmployeeTypeId ?? 0,
+                EmployeeTypeName = p.EmployeeTypeName,
                 LastLoginDate = p.LastLoginDate,
                 HireDate = hireDate,
                 Qualification = p.Qualification,
@@ -825,7 +826,7 @@ namespace TaskMangment.Infrastructure.Services
 
             var accessContext = await _accessContextProvider.GetAsync(employeeId);
             Employee360ManagerScopeDto? managerScope = null;
-            if (accessContext.BranchIds.Count > 0 || accessContext.FunctionCodes.Count > 0)
+            if (accessContext.BranchIds.Count > 0 || accessContext.EmployeeTypeIds.Count > 0)
             {
                 var branches = await _managerBranchesRepo.GetAll(x =>
                         x.ManagerId == employeeId && x.IsActive && x.Branch != null && !x.Branch.IsDeleted)
@@ -834,7 +835,7 @@ namespace TaskMangment.Infrastructure.Services
 
                 managerScope = new Employee360ManagerScopeDto
                 {
-                    FunctionCodes = accessContext.FunctionCodes.Select(f => f.ToString()).ToList(),
+                    EmployeeTypeIds = accessContext.EmployeeTypeIds.ToList(),
                     Branches = branches.GroupBy(b => b.Id).Select(g => g.First()).ToList()
                 };
             }

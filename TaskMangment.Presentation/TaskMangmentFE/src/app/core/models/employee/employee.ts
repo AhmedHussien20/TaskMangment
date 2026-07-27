@@ -13,6 +13,7 @@ export interface Employee {
 export interface EnumItemDto {
   id: number;
   name: string;
+  seesAllTypesInBranchScope?: boolean;
 }
 
 
@@ -31,7 +32,9 @@ export interface EmployeeAddEdit {
   email?: string;
   password?: string;
   attachments?: File;
-  functionCode?: EnumItemDto;
+  employeeTypeId?: number;
+  /** @deprecated use employeeTypeId */
+  functionCode?: number;
   isActive?: boolean;
 }
 

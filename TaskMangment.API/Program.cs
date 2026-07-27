@@ -270,6 +270,9 @@ namespace TaskMangment.API
 
             using (var scope = app.Services.CreateScope())
             {
+                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                await EmployeeTypeSeeder.EnsureSeededAsync(db);
+
                 var migrator = scope.ServiceProvider.GetRequiredService<RolePermissionPackMigrator>();
                 await migrator.MigrateAsync();
             }

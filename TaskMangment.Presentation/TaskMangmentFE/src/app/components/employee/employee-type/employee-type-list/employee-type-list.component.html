@@ -1,0 +1,55 @@
+<app-page-header
+  [title]="title | translate"
+  [title1]="breadcrumbs"
+  [activeitem]="activeitem | translate">
+</app-page-header>
+
+<div class="row row-sm">
+  <div class="col-md-12 col-lg-12">
+    <div class="card custom-card">
+      <div>
+        <div>
+          <app-generic-table
+            [title]="title"
+            [breadcrumbs]="breadcrumbs"
+            [columns]="columns"
+            [data]="rows"
+            [entries]="entries"
+            [page]="page"
+            [labels]="labels"
+            [totalItems]="totalItems"
+            [searchCriteria]="searchCriteria"
+            [showAddButton]="canCreate"
+            [showDeleteButton]="canDelete"
+            [showEditButton]="canEdit"
+            [addButtonLabel]="'EMPLOYEE_TYPE.ADD' | translate"
+            [showFilters]="true"
+            [onSearch]="applyFilters.bind(this)"
+            (pageChange)="onPageChange($event)"
+            (entriesChange)="onEntriesChange($event)"
+            (addClick)="openAdd(employeeTypeModal)"
+            (edit)="openEdit($event, employeeTypeModal)"
+            (delete)="confirmDelete($event)">
+          </app-generic-table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<ng-template #employeeTypeModal let-modal>
+  <div class="modal-header">
+    <h6 class="modal-title">
+      {{ isEdit ? ('EMPLOYEE_TYPE.EDIT' | translate) : ('EMPLOYEE_TYPE.ADD' | translate) }}
+    </h6>
+    <button class="btn-close" (click)="modal.dismiss()"></button>
+  </div>
+
+  <div class="modal-body">
+    <app-employee-type-create-update
+      [isEdit]="isEdit"
+      [employeeTypeId]="selectedEmployeeTypeId"
+      (formSubmitted)="onFormSubmitted()">
+    </app-employee-type-create-update>
+  </div>
+</ng-template>

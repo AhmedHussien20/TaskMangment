@@ -117,7 +117,7 @@ namespace TaskMangment.Hangfire.Jobs
                     //{
                     //    var ops80Ids = await _db.Employees
                     //        .Where(e => level80Ids.Contains(e.Id)
-                    //                    && e.FunctionCode == FunctionCode.Operations)
+                    //                    && e.EmployeeType != null && e.EmployeeType.Code == EmployeeTypeCodes.Operations)
                     //        .Select(e => e.Id)
                     //        .ToListAsync();
 

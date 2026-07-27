@@ -8,6 +8,7 @@ import { GenericFormComponent } from 'app/shared/components/generic-form/generic
 import { FormFieldConfig } from 'app/core/models/form-field-config';
 import { RoleAssignmentService } from 'app/core/services/role-assignment.service';
 import { EmployeeService } from 'app/core/services/employee.service';
+import { EnumItemDto } from 'app/core/models/employee/employee';
 
 @Component({
   selector: 'app-manager-branches-form',
@@ -16,46 +17,23 @@ import { EmployeeService } from 'app/core/services/employee.service';
   templateUrl: './manager-branches-form.component.html'
 })
 export class ManagerBranchesFormComponent implements OnInit {
-  @Input() isEdit: boolean = false;
-
+  @Input() isEdit = false;
   @Input() managerId: number | null = null;
   @Input() selectedBranchIds: number[] = [];
+  /** From the role being assigned — drives which fields appear. */
+  @Input() requiresBranchScope = false;
+  @Input() requiresEmployeeTypeScope = false;
 
   @Output() formSubmitted = new EventEmitter<{
     managerId: number | null;
-    functionCode: number;
+    employeeTypeId?: number;
     branchIds: number[];
   }>();
 
-  title = 'ROLE.LEVELS.BRANCHES_MANAGER';
-  breadcrumbs = ['HOME'];
-  activeitem = 'ROLE.LEVELS.MANAGER_BRANCHES';
-
   formGroup!: FormGroup;
+  private employeeTypes: EnumItemDto[] = [];
 
-  // ✅ functionCode select + branchIds (hidden by default)
-  formConfig: FormFieldConfig[] = [
-    {
-      type: 'select',
-      label: 'EMPLOYEE.FUNCTION_CODE',
-      selectType: 'simple',
-      name: 'functionCode',
-      options: [],
-      validations: { required: true }
-    },
-    {
-      type: 'select',
-      label: 'EMPLOYEE.BRANCH',
-      selectType: 'simple',
-      name: 'branchIds',
-      multiple: true,
-      options: [],
-      validations: { required: false },
-      disabled: true,
-      // @ts-ignore
-      hidden: true
-    }
-  ];
+  formConfig: FormFieldConfig[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -66,36 +44,83 @@ export class ManagerBranchesFormComponent implements OnInit {
   ) {}
 
   ngOnInit() {
+    this.buildFormConfig();
     this.initForm();
-    this.loadFunctionCodes();
-    this.watchFunctionCode();
 
-    if (this.managerId) {
-      this.loadManagerData(); 
+    if (this.requiresEmployeeTypeScope) {
+      this.watchEmployeeType();
+      this.loadEmployeeTypes();
+    } else if (this.managerId) {
+      this.loadManagerData();
     }
   }
 
-  initForm() {
-    this.formGroup = this.fb.group({
-      functionCode: [null, [Validators.required]],
-      branchIds: [{ value: [], disabled: true }]
-    });
+  private buildFormConfig() {
+    const fields: FormFieldConfig[] = [];
+
+    if (this.requiresEmployeeTypeScope) {
+      fields.push({
+        type: 'select',
+        label: 'EMPLOYEE.FUNCTION_CODE',
+        selectType: 'simple',
+        name: 'employeeTypeId',
+        options: [],
+        validations: { required: true }
+      });
+    }
+
+    if (this.requiresBranchScope) {
+      const branchOnly = !this.requiresEmployeeTypeScope;
+      fields.push({
+        type: 'select',
+        label: 'EMPLOYEE.BRANCH',
+        selectType: 'simple',
+        name: 'branchIds',
+        multiple: true,
+        options: [],
+        validations: branchOnly ? { required: true } : { required: false },
+        disabled: !branchOnly,
+        // @ts-ignore
+        hidden: !branchOnly
+      } as FormFieldConfig);
+    }
+
+    this.formConfig = fields;
   }
 
-  loadFunctionCodes() {
+  initForm() {
+    const group: Record<string, any> = {};
+
+    if (this.requiresEmployeeTypeScope) {
+      group['employeeTypeId'] = [null, [Validators.required]];
+    }
+
+    if (this.requiresBranchScope) {
+      const branchOnly = !this.requiresEmployeeTypeScope;
+      group['branchIds'] = [
+        { value: [], disabled: !branchOnly },
+        branchOnly ? [Validators.required] : []
+      ];
+    }
+
+    this.formGroup = this.fb.group(group);
+  }
+
+  loadEmployeeTypes() {
     this.employeeService.getFunctionCodes().subscribe({
       next: (res) => {
-        const functionCodes = res.data ?? [];
-
-        const options = functionCodes.map((x: any) => ({
+        this.employeeTypes = res.data ?? [];
+        const options = this.employeeTypes.map((x) => ({
           label: x.name,
           value: x.id
         }));
-
-        const field = this.formConfig.find(f => f.name === 'functionCode');
+        const field = this.formConfig.find(f => f.name === 'employeeTypeId');
         if (field) field.options = options;
-
         this.formConfig = [...this.formConfig];
+
+        if (this.managerId) {
+          this.loadManagerData();
+        }
       },
       error: () => {
         this.toastr.error(this.translate.instant('COMMON.LOADING_FAILED'));
@@ -103,14 +128,13 @@ export class ManagerBranchesFormComponent implements OnInit {
     });
   }
 
-  private watchFunctionCode() {
-    const ctrl = this.formGroup.get('functionCode');
-    if (!ctrl) return;
+  private watchEmployeeType() {
+    const ctrl = this.formGroup.get('employeeTypeId');
+    if (!ctrl || !this.requiresBranchScope) return;
 
-    ctrl.valueChanges.subscribe(val => {
-      this.toggleBranches(val);
-    });
+    ctrl.valueChanges.subscribe(val => this.toggleBranches(val));
   }
+
   private loadManagerData() {
     if (!this.managerId) return;
 
@@ -118,25 +142,28 @@ export class ManagerBranchesFormComponent implements OnInit {
       next: (res) => {
         const dto = res.data;
 
-        this.formGroup.patchValue(
-          { functionCode: dto.functionCode },
-          { emitEvent: false }
-        );
+        if (this.requiresEmployeeTypeScope) {
+          const employeeTypeId = dto.employeeTypeId ?? dto.functionCode ?? null;
+          this.formGroup.patchValue({ employeeTypeId }, { emitEvent: false });
+          if (this.requiresBranchScope) {
+            this.toggleBranches(employeeTypeId, true);
+          }
+        }
 
-        this.toggleBranches(dto.functionCode, true);
+        if (this.requiresBranchScope) {
+          const branchOptions = (dto.branchLookupDtos ?? []).map((b: any) => ({
+            label: b.name,
+            value: b.id
+          }));
+          const branchField = this.formConfig.find(x => x.name === 'branchIds');
+          if (branchField) branchField.options = branchOptions;
 
-        const branchOptions = (dto.branchLookupDtos ?? []).map((b: any) => ({
-          label: b.name,
-          value: b.id
-        }));
-
-        const branchField = this.formConfig.find(x => x.name === 'branchIds');
-        if (branchField) branchField.options = branchOptions;
-
-        const selected = (dto.branchIds ?? []);
-        this.formGroup.patchValue({ branchIds: selected }, { emitEvent: false });
-
-        this.formConfig = [...this.formConfig];
+          this.formGroup.patchValue(
+            { branchIds: dto.branchIds ?? [] },
+            { emitEvent: false }
+          );
+          this.formConfig = [...this.formConfig];
+        }
       },
       error: () => {
         this.toastr.error(this.translate.instant('COMMON.LOADING_FAILED'));
@@ -144,43 +171,39 @@ export class ManagerBranchesFormComponent implements OnInit {
     });
   }
 
+  private toggleBranches(employeeTypeId: any, fromLoad = false) {
+    if (!this.requiresBranchScope || !this.requiresEmployeeTypeScope) return;
 
-  private toggleBranches(functionCodeId: any, fromLoad: boolean = false) {
-    const isOperations = Number(functionCodeId) === 1;
+    const selected = this.employeeTypes.find(t => Number(t.id) === Number(employeeTypeId));
+    const showBranches = selected?.seesAllTypesInBranchScope === true;
 
     const branchesField = this.formConfig.find(f => f.name === 'branchIds');
     const branchesCtrl = this.formGroup.get('branchIds');
-
     if (!branchesField || !branchesCtrl) return;
 
-    if (isOperations) {
+    if (showBranches) {
       branchesField.disabled = false;
       // @ts-ignore
       branchesField.hidden = false as any;
       branchesField.validations = { ...(branchesField.validations ?? {}), required: true };
-
       branchesCtrl.enable({ emitEvent: false });
       branchesCtrl.setValidators([Validators.required]);
       branchesCtrl.updateValueAndValidity({ emitEvent: false });
-
       this.formConfig = [...this.formConfig];
 
       if (!fromLoad && (!branchesField.options || branchesField.options.length === 0)) {
         this.loadManagerData();
       }
-
     } else {
       branchesCtrl.reset([], { emitEvent: false });
       branchesCtrl.clearValidators();
       branchesCtrl.disable({ emitEvent: false });
       branchesCtrl.updateValueAndValidity({ emitEvent: false });
-
       branchesField.disabled = true;
       // @ts-ignore
       branchesField.hidden = true as any;
       branchesField.validations = { ...(branchesField.validations ?? {}) };
       delete (branchesField.validations as any).required;
-
       this.formConfig = [...this.formConfig];
     }
   }
@@ -193,17 +216,23 @@ export class ManagerBranchesFormComponent implements OnInit {
     }
 
     const v = this.formGroup.getRawValue();
-
-    const functionCode = Number(v.functionCode);
-
     const branchIds = (v.branchIds ?? [])
       .map((x: any) => Number(x))
       .filter((n: number) => !Number.isNaN(n));
 
-    this.formSubmitted.emit({
+    const payload: {
+      managerId: number | null;
+      employeeTypeId?: number;
+      branchIds: number[];
+    } = {
       managerId: this.managerId,
-      functionCode,
       branchIds
-    });
+    };
+
+    if (this.requiresEmployeeTypeScope && v.employeeTypeId != null) {
+      payload.employeeTypeId = Number(v.employeeTypeId);
+    }
+
+    this.formSubmitted.emit(payload);
   }
 }

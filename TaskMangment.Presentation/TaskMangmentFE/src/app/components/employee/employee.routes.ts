@@ -27,6 +27,12 @@ export const EmployeeRoutes: Routes = [
     loadComponent: () =>
       import('./employee-create-update/employee-create-update.component')
         .then(m => m.EmployeeCreateUpdateComponent),
+  },
+  {
+    path: 'employee-types',
+    loadComponent: () =>
+      import('./employee-type/employee-type-list/employee-type-list.component')
+        .then(m => m.EmployeeTypeListComponent)
   }
 ];
 

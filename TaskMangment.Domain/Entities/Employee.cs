@@ -49,14 +49,16 @@ namespace TaskMangment.Domain.Entities
         public DateTime? ResetPasswordExpiry { get; set; }
 
         public DateTime? LastLoginDate { get; set; }
-        public FunctionCode FunctionCode { get; set; } = FunctionCode.Operations;
-        
+
+        /// <summary>FK to EmployeeTypes (replaces FunctionCode enum).</summary>
+        public int EmployeeTypeId { get; set; } = 1;
 
         // Navigation
         public Company Company { get; set; }
         public Branch Branch { get; set; }
         public Department Department { get; set; }
         public Job Job { get; set; }
+        public EmployeeType EmployeeType { get; set; }
 
 
 

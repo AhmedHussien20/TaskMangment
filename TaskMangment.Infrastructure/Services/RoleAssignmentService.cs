@@ -29,6 +29,7 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<ManagerBranches> _managerBranchesRepo;
         private readonly IRepository<Branch> _branchRepo;
         private readonly IRepository<EmployeeFunctionalScope> _employeeFunctionScopeRepo;
+        private readonly IRepository<EmployeeType> _employeeTypeRepo;
 
 
 
@@ -38,7 +39,8 @@ namespace TaskMangment.Infrastructure.Services
             ICachingService cache,
             IRepository<ManagerBranches> managerBranchesRepo,
             IRepository<Branch> branchRepo,
-            IRepository<EmployeeFunctionalScope> employeeFunctionScopeRepo)
+            IRepository<EmployeeFunctionalScope> employeeFunctionScopeRepo,
+            IRepository<EmployeeType> employeeTypeRepo)
         {
             _employeeRepo = employeeRepo;
             _roleRepo = roleRepo;
@@ -47,6 +49,7 @@ namespace TaskMangment.Infrastructure.Services
             _managerBranchesRepo = managerBranchesRepo;
             _branchRepo = branchRepo;
             _employeeFunctionScopeRepo = employeeFunctionScopeRepo;
+            _employeeTypeRepo = employeeTypeRepo;
         }
 
 
@@ -246,7 +249,60 @@ namespace TaskMangment.Infrastructure.Services
             if (!await _employeeRepo.IsExistAsync(managerId))
                 throw new AppException(ErrorCodes.EmployeeNotFound, StatusCodes.Status400BadRequest);
 
-            var functionCode = (FunctionCode)request.FunctionCode;
+            var roleScope = await _employeeRepo.GetAll(e => e.Id == managerId)
+                .Select(e => new
+                {
+                    RequiresBranchScope = e.EmployeeRoles
+                        .Where(er => !er.IsDeleted && er.IsAssigned && er.Role != null)
+                        .Any(er => er.Role!.RequiresBranchScope),
+                    RequiresEmployeeTypeScope = e.EmployeeRoles
+                        .Where(er => !er.IsDeleted && er.IsAssigned && er.Role != null)
+                        .Any(er => er.Role!.RequiresEmployeeTypeScope)
+                })
+                .FirstAsync();
+
+            if (!roleScope.RequiresBranchScope && !roleScope.RequiresEmployeeTypeScope)
+                throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
+
+            int employeeTypeId;
+            bool seesAllTypesInBranchScope;
+
+            if (roleScope.RequiresBranchScope && !roleScope.RequiresEmployeeTypeScope)
+            {
+                // Branch-only role (e.g. regional manager): cover all types in selected branches.
+                var operations = await _employeeTypeRepo
+                    .GetAll(t => !t.IsDeleted &&
+                                 (t.SeesAllTypesInBranchScope || t.Code == EmployeeTypeCodes.Operations))
+                    .OrderBy(t => t.Id)
+                    .Select(t => new { t.Id })
+                    .FirstOrDefaultAsync();
+
+                if (operations == null)
+                    throw new AppException(ErrorCodes.NotFound, StatusCodes.Status400BadRequest);
+
+                employeeTypeId = operations.Id;
+                seesAllTypesInBranchScope = true;
+            }
+            else
+            {
+                if (!request.EmployeeTypeId.HasValue || request.EmployeeTypeId.Value <= 0)
+                    throw new AppException(ErrorCodes.NotFound, StatusCodes.Status400BadRequest);
+
+                employeeTypeId = request.EmployeeTypeId.Value;
+                var employeeType = await _employeeTypeRepo
+                    .GetAll(t => t.Id == employeeTypeId && !t.IsDeleted)
+                    .Select(t => new
+                    {
+                        t.Id,
+                        SeesAll = t.SeesAllTypesInBranchScope || t.Code == EmployeeTypeCodes.Operations
+                    })
+                    .FirstOrDefaultAsync();
+
+                if (employeeType == null)
+                    throw new AppException(ErrorCodes.NotFound, StatusCodes.Status400BadRequest);
+
+                seesAllTypesInBranchScope = employeeType.SeesAll;
+            }
 
             var existingScope = await _employeeFunctionScopeRepo
                 .GetAll(x => x.EmployeeId == managerId && !x.IsDeleted)
@@ -254,7 +310,7 @@ namespace TaskMangment.Infrastructure.Services
 
             if (existingScope != null)
             {
-                existingScope.FunctionCode = functionCode;
+                existingScope.EmployeeTypeId = employeeTypeId;
                 existingScope.IsDeleted = false;
                 existingScope.DeletedDate = null;
             }
@@ -263,13 +319,21 @@ namespace TaskMangment.Infrastructure.Services
                 await _employeeFunctionScopeRepo.AddAsync(new EmployeeFunctionalScope
                 {
                     EmployeeId = managerId,
-                    FunctionCode = functionCode,
+                    EmployeeTypeId = employeeTypeId,
                 });
             }
 
-            if (functionCode != FunctionCode.Operations)
+            // Type-only coverage: all employees of that type across branches.
+            if (!roleScope.RequiresBranchScope || !seesAllTypesInBranchScope)
             {
+                var activeBranches = await _managerBranchesRepo
+                    .GetAll(x => x.ManagerId == managerId && x.IsActive)
+                    .ToListAsync();
+                foreach (var item in activeBranches)
+                    item.IsActive = false;
+
                 await _employeeFunctionScopeRepo.SaveChangesAsync();
+                await _managerBranchesRepo.SaveChangesAsync();
 
                 return ApiResponse<ManagerBranchesDto>.Ok(new ManagerBranchesDto
                 {
@@ -278,55 +342,21 @@ namespace TaskMangment.Infrastructure.Services
                 });
             }
 
-            var myLevel = await _employeeRepo.GetAll(e => e.Id == managerId)
-     .Select(e => e.EmployeeRoles
-         .Where(er => !er.IsDeleted && er.IsAssigned && er.Role != null)
-         .Select(er => (int?)er.Role.Level)
-         .Max() ?? 0)
-     .FirstAsync();
-
-
-            if (myLevel != 80)
-                throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
-
             var branchIds = (request.BranchIds ?? new List<int>())
                 .Distinct()
                 .ToList();
 
-            if (branchIds.Any())
-            {
-                var otherManagerIds = await _managerBranchesRepo.GetAll(x =>
-                        branchIds.Contains(x.BranchId) &&
-                        x.IsActive &&
-                        x.ManagerId != managerId)
-                    .Select(x => x.ManagerId)
-                    .Distinct()
-                    .ToListAsync();
+            if (branchIds.Count == 0)
+                throw new AppException(ErrorCodes.NotFound, StatusCodes.Status400BadRequest);
 
-                if (otherManagerIds.Any())
-                {
-                    var otherManagersLevels = await _employeeRepo.GetAll(e => otherManagerIds.Contains(e.Id))
-                        .Select(e => new
-                        {
-                            ManagerId = e.Id,
-                            Level = e.EmployeeRoles
-                                .Where(er => !er.IsDeleted && er.IsAssigned && er.Role != null)
-                                .Select(er => (int?)er.Role.Level)
-                                .Max() ?? 0
-                        })
-                        .ToListAsync();
+            var conflict = await _managerBranchesRepo.GetAll(x =>
+                    branchIds.Contains(x.BranchId) &&
+                    x.IsActive &&
+                    x.ManagerId != managerId)
+                .AnyAsync();
 
-                    var sameLevelConflicts = otherManagersLevels
-                        .Where(x => x.Level == myLevel)
-                        .Select(x => x.ManagerId)
-                        .ToList();
-
-                    if (sameLevelConflicts.Any())
-                        throw new AppException(ErrorCodes.AlreadyAssigned, StatusCodes.Status409Conflict);
-
-                }
-            }
-
+            if (conflict)
+                throw new AppException(ErrorCodes.AlreadyAssigned, StatusCodes.Status409Conflict);
 
             var existingActive = await _managerBranchesRepo
                 .GetAll(x => x.ManagerId == managerId && x.IsActive)
@@ -334,43 +364,33 @@ namespace TaskMangment.Infrastructure.Services
 
             var existingActiveIds = existingActive.Select(x => x.BranchId).ToHashSet();
 
-            var toDeactivate = existingActive.Where(x => !branchIds.Contains(x.BranchId)).ToList();
-            foreach (var item in toDeactivate)
-            {
+            foreach (var item in existingActive.Where(x => !branchIds.Contains(x.BranchId)))
                 item.IsActive = false;
-            }
 
             var toAdd = branchIds.Where(id => !existingActiveIds.Contains(id)).ToList();
-
             if (toAdd.Any())
             {
-               
                 var existingAny = await _managerBranchesRepo
                     .GetAll(x => x.ManagerId == managerId && toAdd.Contains(x.BranchId))
                     .ToListAsync();
 
                 var map = existingAny.ToDictionary(x => x.BranchId);
-
                 foreach (var bId in toAdd)
                 {
                     if (map.TryGetValue(bId, out var row))
-                    {
                         row.IsActive = true;
-                    }
                     else
-                    {
                         await _managerBranchesRepo.AddAsync(new ManagerBranches
                         {
                             ManagerId = managerId,
                             BranchId = bId,
                             IsActive = true,
                         });
-                    }
                 }
             }
 
             await _employeeFunctionScopeRepo.SaveChangesAsync();
-            await _managerBranchesRepo.SaveChangesAsync(); // ✅ لازم
+            await _managerBranchesRepo.SaveChangesAsync();
 
             return ApiResponse<ManagerBranchesDto>.Ok(new ManagerBranchesDto
             {
@@ -389,57 +409,21 @@ namespace TaskMangment.Infrastructure.Services
                 .Select(x => x.BranchId)
                 .ToListAsync();
 
-            var functionCode = await _employeeFunctionScopeRepo
+            var employeeTypeId = await _employeeFunctionScopeRepo
                 .GetAll(x => x.EmployeeId == managerId && !x.IsDeleted)
-                .Select(x => x.FunctionCode)
+                .Select(x => (int?)x.EmployeeTypeId)
                 .FirstOrDefaultAsync();
 
-            var myLevel = await _employeeRepo.GetAll(e => e.Id == managerId)
-                .Select(e => e.EmployeeRoles
-                    .Where(er => !er.IsDeleted && er.IsAssigned && er.Role != null)
-                    .Select(er => (int?)er.Role.Level)
-                    .Max() ?? 0)
-                .FirstAsync();
-
-            var activeAssignments = await _managerBranchesRepo
+            var assignedBranchIdsElsewhere = await _managerBranchesRepo
                 .GetAll(x => x.IsActive && x.ManagerId != managerId && !x.Branch.IsDeleted)
-                .Select(x => new { x.BranchId, x.ManagerId })
+                .Select(x => x.BranchId)
                 .Distinct()
                 .ToListAsync();
 
-            var assignedBranchIdsSameLevel = new HashSet<int>();
-
-            if (activeAssignments.Any())
-            {
-                var otherManagerIds = activeAssignments
-                    .Select(x => x.ManagerId)
-                    .Distinct()
-                    .ToList();
-
-                var otherManagersLevels = await _employeeRepo.GetAll(e => otherManagerIds.Contains(e.Id))
-                    .Select(e => new
-                    {
-                        ManagerId = e.Id,
-                        Level = e.EmployeeRoles
-                            .Where(er => !er.IsDeleted && er.IsAssigned && er.Role != null)
-                            .Select(er => (int?)er.Role.Level)
-                            .Max() ?? 0
-                    })
-                    .ToListAsync();
-
-                var sameLevelManagerIds = otherManagersLevels
-                    .Where(x => x.Level == myLevel)
-                    .Select(x => x.ManagerId)
-                    .ToHashSet();
-
-                assignedBranchIdsSameLevel = activeAssignments
-                    .Where(x => sameLevelManagerIds.Contains(x.ManagerId))
-                    .Select(x => x.BranchId)
-                    .ToHashSet();
-            }
+            var assignedBranchIdsElsewhereSet = assignedBranchIdsElsewhere.ToHashSet();
 
             var availableBranches = await _branchRepo
-                .GetAll(b => !assignedBranchIdsSameLevel.Contains(b.Id))
+                .GetAll(b => !assignedBranchIdsElsewhereSet.Contains(b.Id))
                 .Select(b => new BranchLookupDto
                 {
                     Id = b.Id,
@@ -462,12 +446,26 @@ namespace TaskMangment.Infrastructure.Services
                 .Select(g => g.First())
                 .ToList();
 
+            var roleFlags = await _employeeRepo.GetAll(e => e.Id == managerId)
+                .Select(e => new
+                {
+                    RequiresBranchScope = e.EmployeeRoles
+                        .Where(er => !er.IsDeleted && er.IsAssigned && er.Role != null)
+                        .Any(er => er.Role!.RequiresBranchScope),
+                    RequiresEmployeeTypeScope = e.EmployeeRoles
+                        .Where(er => !er.IsDeleted && er.IsAssigned && er.Role != null)
+                        .Any(er => er.Role!.RequiresEmployeeTypeScope)
+                })
+                .FirstAsync();
+
             return ApiResponse<GetManagerBranchesDto>.Ok(new GetManagerBranchesDto
             {
                 ManagerId = managerId,
-                FunctionCode = functionCode,
+                EmployeeTypeId = employeeTypeId,
                 BranchIds = currentBranchIds,
-                branchLookupDtos = combined
+                branchLookupDtos = combined,
+                RequiresBranchScope = roleFlags.RequiresBranchScope,
+                RequiresEmployeeTypeScope = roleFlags.RequiresEmployeeTypeScope
             });
         }
 
