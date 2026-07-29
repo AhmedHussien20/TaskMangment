@@ -83,5 +83,17 @@ namespace TaskMangment.Infrastructure.Services
 
             return list.ToHashSet(StringComparer.OrdinalIgnoreCase);
         }
+
+        public Task<bool> HasActiveRoleAsync(int employeeId)
+        {
+            return _context.EmployeeRoles
+                .AsNoTracking()
+                .AnyAsync(er =>
+                    er.EmployeeId == employeeId &&
+                    er.IsAssigned &&
+                    !er.IsDeleted &&
+                    er.Role != null &&
+                    !er.Role.IsDeleted);
+        }
     }
 }

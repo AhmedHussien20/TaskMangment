@@ -1,4 +1,4 @@
-﻿using TaskMangment.Domain.Entities;
+using TaskMangment.Domain.Entities;
 
 namespace TaskMangment.Infrastructure.Persistence.Extensions
 {

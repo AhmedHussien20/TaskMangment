@@ -231,6 +231,7 @@ namespace TaskMangment.Infrastructure.Services
             var topDelayedQuery = _assignmentRepo.GetAll(a =>
                 a.Task.CompanyId == companyId &&
                 a.IsActive &&
+                !a.Task.IsDeleted &&
                 a.Task.DueDate >= range.Start && a.Task.DueDate <= range.End &&
                 a.Task.Status != WorkTaskStatus.Closed);
 
@@ -352,6 +353,7 @@ namespace TaskMangment.Infrastructure.Services
 
             var query = _assignmentRepo.GetAll(a =>
                 a.Task.CompanyId == companyId &&
+                !a.Task.IsDeleted &&
                 a.Task.Status == WorkTaskStatus.Closed &&
                 a.ModifiedDate >= range.Start &&
                 a.ModifiedDate <= range.End);

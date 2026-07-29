@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Pipelines.Sockets.Unofficial.Arenas;
@@ -127,15 +127,30 @@ namespace TaskMangment.Infrastructure.Services
             if (!await _employeeRepository.IsExistAsync(dto.ResponsibleId))
                 throw new AppException(ErrorCodes.ManagerNotFound, StatusCodes.Status404NotFound);
 
-            var managerRoleLevel = await _employeeRolesRepository.GetAll(er => er.EmployeeId == dto.ManagerId)
-                .Join(_RoleRepo.GetAll(),
-          er => er.RoleId,
-          r => r.Id,
-          (er, r) => r.Level)
-    .FirstOrDefaultAsync();
+            var managerActive = await _employeeRepository.GetAll(e => e.Id == dto.ManagerId && !e.IsDeleted)
+                .Select(e => e.IsActive)
+                .FirstOrDefaultAsync();
+            if (!managerActive)
+                throw new AppException(ErrorCodes.EmployeeInactive, StatusCodes.Status400BadRequest);
 
-            if (managerRoleLevel != 70)
-                throw new AppException(ErrorCodes.InvalidManagerRoleLevel, StatusCodes.Status400BadRequest);
+            var responsibleActive = await _employeeRepository.GetAll(e => e.Id == dto.ResponsibleId && !e.IsDeleted)
+                .Select(e => e.IsActive)
+                .FirstOrDefaultAsync();
+            if (!responsibleActive)
+                throw new AppException(ErrorCodes.EmployeeInactive, StatusCodes.Status400BadRequest);
+
+            var canBeBranchManager = await _employeeRolesRepository.GetAll(er =>
+                    er.EmployeeId == dto.ManagerId &&
+                    er.IsAssigned &&
+                    !er.IsDeleted)
+                .Join(_RoleRepo.GetAll(r => !r.IsDeleted && r.CanBeBranchManager),
+                    er => er.RoleId,
+                    r => r.Id,
+                    (er, r) => r.Id)
+                .AnyAsync();
+
+            if (!canBeBranchManager)
+                throw new AppException(ErrorCodes.InvalidBranchManagerRole, StatusCodes.Status400BadRequest);
             if (dto.AreaId.HasValue)
             {
                 if (!await _areaRepository.IsExistAsync(dto.AreaId.Value))
@@ -156,16 +171,6 @@ namespace TaskMangment.Infrastructure.Services
 
             await _branchRepository.AddAsync(branch);
             await _branchRepository.SaveChangesAsync();
-
-            var managerBranch = new ManagerBranches
-            {
-                ManagerId = dto.ManagerId,
-                BranchId = branch.Id,
-                IsActive = true
-            };
-
-            await _managerBranchesRepo.AddAsync(managerBranch);
-            await _managerBranchesRepo.SaveChangesAsync();
 
             await _cache.RemoveAsync("branches:");
 
@@ -193,6 +198,31 @@ namespace TaskMangment.Infrastructure.Services
             if (!await _employeeRepository.IsExistAsync(dto.ResponsibleId))
                 throw new AppException(ErrorCodes.ManagerNotFound, StatusCodes.Status404NotFound);
 
+            var managerActive = await _employeeRepository.GetAll(e => e.Id == dto.ManagerId && !e.IsDeleted)
+                .Select(e => e.IsActive)
+                .FirstOrDefaultAsync();
+            if (!managerActive)
+                throw new AppException(ErrorCodes.EmployeeInactive, StatusCodes.Status400BadRequest);
+
+            var responsibleActive = await _employeeRepository.GetAll(e => e.Id == dto.ResponsibleId && !e.IsDeleted)
+                .Select(e => e.IsActive)
+                .FirstOrDefaultAsync();
+            if (!responsibleActive)
+                throw new AppException(ErrorCodes.EmployeeInactive, StatusCodes.Status400BadRequest);
+
+            var canBeBranchManager = await _employeeRolesRepository.GetAll(er =>
+                    er.EmployeeId == dto.ManagerId &&
+                    er.IsAssigned &&
+                    !er.IsDeleted)
+                .Join(_RoleRepo.GetAll(r => !r.IsDeleted && r.CanBeBranchManager),
+                    er => er.RoleId,
+                    r => r.Id,
+                    (er, r) => r.Id)
+                .AnyAsync();
+
+            if (!canBeBranchManager)
+                throw new AppException(ErrorCodes.InvalidBranchManagerRole, StatusCodes.Status400BadRequest);
+
             if (dto.AreaId.HasValue)
             {
                 if (!await _areaRepository.IsExistAsync(dto.AreaId.Value))
@@ -207,49 +237,19 @@ namespace TaskMangment.Infrastructure.Services
             if (existingManager)
                 throw new AppException(ErrorCodes.AlreadyAssigned, StatusCodes.Status400BadRequest);
 
-            var oldManagerId = branch.ManagerID;
-
             _mapper.Map(dto, branch);
             await _branchRepository.SaveChangesAsync();
 
-            if (oldManagerId != dto.ManagerId)
+            // Legacy ManagerBranches cleanup only (coverage is Branch.ManagerID / Area now).
+            if (!branch.IsActive)
             {
-                var oldLink = await _managerBranchesRepo.GetAll()
-                    .FirstOrDefaultAsync(x =>
-                        x.BranchId == branch.Id &&
-                        x.ManagerId == oldManagerId);
-
-                if (oldLink != null)
-                    oldLink.IsActive = false;
-
-                var newLink = await _managerBranchesRepo.GetAll()
-                    .FirstOrDefaultAsync(x =>
-                        x.BranchId == branch.Id &&
-                        x.ManagerId == dto.ManagerId);
-
-                if (newLink == null)
-                {
-                    await _managerBranchesRepo.AddAsync(new ManagerBranches
-                    {
-                        BranchId = branch.Id,
-                        ManagerId = dto.ManagerId,
-                        IsActive = true
-                    });
-                }
-                else
-                {
-                    newLink.IsActive = true;
-                }
-
-                var otherLinks = await _managerBranchesRepo.GetAll()
-                    .Where(x => x.BranchId == branch.Id && x.ManagerId != dto.ManagerId)
+                var links = await _managerBranchesRepo.GetAll(x =>
+                        x.BranchId == branch.Id && x.IsActive)
                     .ToListAsync();
-
-                foreach (var link in otherLinks)
+                foreach (var link in links)
                     link.IsActive = false;
+                await _managerBranchesRepo.SaveChangesAsync();
             }
-
-            await _managerBranchesRepo.SaveChangesAsync();
 
             await _cache.RemoveAsync("branches:");
 
@@ -288,7 +288,15 @@ namespace TaskMangment.Infrastructure.Services
                 throw new AppException(ErrorCodes.BranchHasDepartments, StatusCodes.Status400BadRequest);
 
             _branchRepository.SoftDelete(branch);
+
+            var coverageLinks = await _managerBranchesRepo.GetAll(x =>
+                    x.BranchId == id && x.IsActive)
+                .ToListAsync();
+            foreach (var link in coverageLinks)
+                link.IsActive = false;
+
             await _branchRepository.SaveChangesAsync();
+            await _managerBranchesRepo.SaveChangesAsync();
             await _cache.RemoveAsync("branches:");
 
 

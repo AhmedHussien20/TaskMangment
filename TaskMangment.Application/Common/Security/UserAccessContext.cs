@@ -1,4 +1,4 @@
-﻿namespace TaskMangment.Application.Common.Security
+namespace TaskMangment.Application.Common.Security
 {
     public class UserAccessContext
     {

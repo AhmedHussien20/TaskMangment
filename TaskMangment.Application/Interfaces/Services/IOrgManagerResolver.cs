@@ -18,5 +18,11 @@ namespace TaskMangment.Application.Interfaces.Services
 
         /// <summary>True if target is an org manager over the actor's branch/area.</summary>
         Task<bool> IsOrgManagerOverAsync(int actorId, int targetEmployeeId);
+
+        /// <summary>
+        /// Inverse of notification recipients: employees whose RoleNotificationSource graph
+        /// would notify this listener (same Branch / Area / Company rules).
+        /// </summary>
+        Task<IReadOnlyList<int>> GetListenableSubjectIdsAsync(int listenerEmployeeId);
     }
 }

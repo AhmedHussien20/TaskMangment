@@ -41,8 +41,28 @@ namespace TaskMangment.Infrastructure.Services
                 };
             }
 
+            // No assigned role → self only. Ignore leftover Branch.ManagerID / functional-scope rows.
+            if (!await _permissions.HasActiveRoleAsync(employeeId))
+            {
+                return new ResolvedAccessScope
+                {
+                    EmployeeId = employeeId,
+                    CompanyId = employee.CompanyId,
+                    OwnBranchId = employee.BranchId,
+                    Kind = AccessScopeKind.SelfOnly,
+                    BranchIds = new List<int>(),
+                    EmployeeTypeIds = new List<int>(),
+                    SeesAllTypesInBranchScope = false
+                };
+            }
+
             var access = await _accessProvider.GetAsync(employeeId);
             var perms = await _permissions.GetPermissionsAsync(employeeId);
+
+            // Managed branches only (Branch.ManagerID / Area.ManagerEmployeeId).
+            // Do not union home branch — managers whose home ≠ managed scope must not see home-branch staff.
+            // OwnBranch roles (e.g. مشرف تدريب) still use OwnBranchId below when BranchIds is empty.
+            var branchIds = access.BranchIds?.ToList() ?? new List<int>();
 
             var companyWide =
                 perms.Contains(PermissionCodes.ViewCompanyTasks) ||
@@ -52,7 +72,7 @@ namespace TaskMangment.Infrastructure.Services
             AccessScopeKind kind;
             if (companyWide)
                 kind = AccessScopeKind.CompanyWide;
-            else if (access.BranchIds.Count > 0 || access.EmployeeTypeIds.Count > 0)
+            else if (branchIds.Count > 0 || access.EmployeeTypeIds.Count > 0)
                 kind = AccessScopeKind.ManagerScoped;
             else if (perms.Contains(PermissionCodes.CreateTask) ||
                      perms.Contains(PermissionCodes.ViewScopedTasks) ||
@@ -67,7 +87,7 @@ namespace TaskMangment.Infrastructure.Services
                 CompanyId = employee.CompanyId,
                 OwnBranchId = employee.BranchId,
                 Kind = kind,
-                BranchIds = access.BranchIds,
+                BranchIds = branchIds,
                 EmployeeTypeIds = access.EmployeeTypeIds,
                 SeesAllTypesInBranchScope = access.SeesAllTypesInBranchScope
             };

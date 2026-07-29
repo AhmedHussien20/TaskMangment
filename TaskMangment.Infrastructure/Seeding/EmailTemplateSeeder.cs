@@ -33,17 +33,17 @@ namespace TaskMangment.Infrastructure.Seeding
             UpsertTemplate(context, new EmailTemplate
             {
                 Key = "TaskAssigned",
-                SubjectTemplate = "تم إسناد مهمة جديدة | New Task Assigned",
+                SubjectTemplate = "إسناد مهمة | Task Assigned",
                 BodyTemplate = LayoutHeader + @"
             <p style='margin:0 0 14px'>مرحبًا <strong>{{UserName}}</strong>،</p>
-            <p style='margin:0 0 14px'>تم إسناد مهمة جديدة إليك: مهمة رقم {{TaskNumberLink}} بعنوان <strong>{{TaskTitle}}</strong>.</p>
+            <p style='margin:0 0 14px'>تم إسناد المهمة لـ <strong>{{EmployeeName}}</strong>: مهمة رقم {{TaskNumberLink}} بعنوان <strong>{{TaskTitle}}</strong>.</p>
             <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
               <div><strong>تاريخ الاستحقاق:</strong> {{DueDate}}</div>
             </div>
             <p style='margin:0 0 18px'>يرجى فتح المهمة من رقم المهمة أعلاه لمتابعة التفاصيل.</p>
             <hr style='border:none;border-top:1px solid #e5e7eb;margin:20px 0'/>
             <p style='margin:0 0 14px'><strong>Hello {{UserName}},</strong></p>
-            <p style='margin:0 0 14px'>A new task has been assigned to you: task number {{TaskNumberLink}} titled <strong>{{TaskTitle}}</strong>.</p>
+            <p style='margin:0 0 14px'>Task assigned to <strong>{{EmployeeName}}</strong>: task number {{TaskNumberLink}} titled <strong>{{TaskTitle}}</strong>.</p>
             <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
               <div><strong>Due Date:</strong> {{DueDate}}</div>
             </div>
@@ -55,23 +55,23 @@ namespace TaskMangment.Infrastructure.Seeding
             UpsertTemplate(context, new EmailTemplate
             {
                 Key = "TaskAssignedToExistingTask",
-                SubjectTemplate = "تم إسنادك إلى مهمة | Assigned to Existing Task",
+                SubjectTemplate = "إسناد مهمة | Task Assigned",
                 BodyTemplate = LayoutHeader + @"
             <p style='margin:0 0 14px'>مرحبًا <strong>{{UserName}}</strong>،</p>
-            <p style='margin:0 0 14px'>تم إسنادك إلى مهمة رقم {{TaskNumberLink}} بعنوان <strong>{{TaskTitle}}</strong>.</p>
+            <p style='margin:0 0 14px'>تم إسناد المهمة لـ <strong>{{EmployeeName}}</strong>: مهمة رقم {{TaskNumberLink}} بعنوان <strong>{{TaskTitle}}</strong>.</p>
             <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
               <div style='margin-bottom:6px'><strong>الوصف:</strong> {{TaskDescription}}</div>
               <div><strong>تاريخ الاستحقاق:</strong> {{DueDate}}</div>
             </div>
-            <p style='margin:0 0 18px'>يرجى مراجعة تفاصيل المهمة والبدء في تنفيذها في أقرب وقت ممكن.</p>
+            <p style='margin:0 0 18px'>يرجى مراجعة تفاصيل المهمة.</p>
             <hr style='border:none;border-top:1px solid #e5e7eb;margin:20px 0'/>
             <p style='margin:0 0 14px'><strong>Hello {{UserName}},</strong></p>
-            <p style='margin:0 0 14px'>You have been assigned to task number {{TaskNumberLink}} titled <strong>{{TaskTitle}}</strong>.</p>
+            <p style='margin:0 0 14px'>Task assigned to <strong>{{EmployeeName}}</strong>: task number {{TaskNumberLink}} titled <strong>{{TaskTitle}}</strong>.</p>
             <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
               <div style='margin-bottom:6px'><strong>Description:</strong> {{TaskDescription}}</div>
               <div><strong>Due Date:</strong> {{DueDate}}</div>
             </div>
-            <p style='margin:0'>Please review the task details and start working on it as soon as possible.</p>
+            <p style='margin:0'>Please review the task details.</p>
             " + LayoutFooter
             });
 
@@ -79,21 +79,19 @@ namespace TaskMangment.Infrastructure.Seeding
             UpsertTemplate(context, new EmailTemplate
             {
                 Key = "TaskUnAssignedFromExistingTask",
-                SubjectTemplate = "تم إلغاء إسنادك من المهمة | Unassigned from Task",
+                SubjectTemplate = "إلغاء إسناد مهمة | Task Unassigned",
                 BodyTemplate = LayoutHeader + @"
             <p style='margin:0 0 14px'>مرحبًا <strong>{{UserName}}</strong>،</p>
-            <p style='margin:0 0 14px'>تم إزالتك من مهمة رقم {{TaskNumberLink}} بعنوان <strong>{{TaskTitle}}</strong>.</p>
+            <p style='margin:0 0 14px'>تم إلغاء إسناد <strong>{{EmployeeName}}</strong> من مهمة رقم {{TaskNumberLink}} بعنوان <strong>{{TaskTitle}}</strong>.</p>
             <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
               <div><strong>الوصف:</strong> {{TaskDescription}}</div>
             </div>
-            <p style='margin:0 0 18px'>لم يعد مطلوبًا منك العمل على هذه المهمة حاليًا.</p>
             <hr style='border:none;border-top:1px solid #e5e7eb;margin:20px 0'/>
             <p style='margin:0 0 14px'><strong>Hello {{UserName}},</strong></p>
-            <p style='margin:0 0 14px'>You have been removed from task number {{TaskNumberLink}} titled <strong>{{TaskTitle}}</strong>.</p>
+            <p style='margin:0 0 14px'><strong>{{EmployeeName}}</strong> was removed from task number {{TaskNumberLink}} titled <strong>{{TaskTitle}}</strong>.</p>
             <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
               <div><strong>Description:</strong> {{TaskDescription}}</div>
             </div>
-            <p style='margin:0'>You are no longer required to work on this task at this time.</p>
             " + LayoutFooter
             });
 

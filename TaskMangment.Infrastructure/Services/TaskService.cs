@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
@@ -55,6 +55,7 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IUserAccessContextProvider _accessProvider;
         private readonly IAccessScopeResolver _scopeResolver;
         private readonly IEmployeePermissionService _permissions;
+        private readonly INotificationRecipientBuilder _recipientBuilder;
 
         public TaskService(
              IRepository<WorkTask> taskRepo,
@@ -77,7 +78,8 @@ namespace TaskMangment.Infrastructure.Services
            IAppUnitOfWork uow,
            IUserAccessContextProvider accessProvider,
            IAccessScopeResolver scopeResolver,
-           IEmployeePermissionService permissions
+           IEmployeePermissionService permissions,
+           INotificationRecipientBuilder recipientBuilder
 )
         {
             _taskRepo = taskRepo;
@@ -101,6 +103,7 @@ namespace TaskMangment.Infrastructure.Services
             _accessProvider = accessProvider;
             _scopeResolver = scopeResolver;
             _permissions = permissions;
+            _recipientBuilder = recipientBuilder;
         }
 
         public async Task<ApiResponse<PagedResponse<TaskGetDto>>> GetAllAsync(TaskRequest request, int CompanyId, int roleLevel, int employeeId)
@@ -223,7 +226,7 @@ namespace TaskMangment.Infrastructure.Services
 
             var dtos = _mapper.Map<ICollection<TaskGetDto>>(list);
 
-            var hasCreatorPrivileges = await HasCreatorPrivilegesAsync(employeeId);
+            var scopedActorIds = await GetScopedCreatorOrAssignerIdsAsync(list, scope);
 
             foreach (var dto in dtos)
             {
@@ -240,7 +243,7 @@ namespace TaskMangment.Infrastructure.Services
                     .ToList();
 
                 dto.AssignedByName = task.AssignedBy?.FullName;
-                dto.CreatedByMe = ResolveCreatedByMe(employeeId, task, hasCreatorPrivileges, scope);
+                dto.CreatedByMe = ResolveCreatedByMe(employeeId, task, scopedActorIds, scope);
 
             }
 
@@ -310,9 +313,9 @@ namespace TaskMangment.Infrastructure.Services
 
             dto.AssignedByName = task.AssignedBy?.FullName;
 
-            var hasCreatorPrivileges = await HasCreatorPrivilegesAsync(employeeId);
             var scope = await _scopeResolver.ResolveAsync(employeeId);
-            dto.CreatedByMe = ResolveCreatedByMe(employeeId, task, hasCreatorPrivileges, scope);
+            var scopedActorIds = await GetScopedCreatorOrAssignerIdsAsync(new[] { task }, scope);
+            dto.CreatedByMe = ResolveCreatedByMe(employeeId, task, scopedActorIds, scope);
 
             return ApiResponse<TaskGetDto>.Ok(dto);
         }
@@ -408,13 +411,7 @@ namespace TaskMangment.Infrastructure.Services
                         ? new List<int> { dto.AssignedEmployeeIds[tasksToAdd.IndexOf(task)] }
                         : dto.AssignedEmployeeIds;
 
-                    empIds = await _employeeRepo.GetAll(e => empIds.Contains(e.Id) && e.IsActive)
-                        .Select(e => e.Id)
-                        .ToListAsync();
-                    empIds.Remove(createdUser);
-
-                    if (empIds.Any())
-                        await _eventDispatcher.PublishAsync(new TaskAssignedEvent(task.Id, task.Title, empIds));
+                    await PublishAssignNotificationsAsync(task.Id, task.Title, empIds, createdUser);
                 }
 
                 var firstTaskId = tasksToAdd.First().Id;
@@ -555,38 +552,16 @@ namespace TaskMangment.Infrastructure.Services
 
             if (newlyAssignedEmployeeIds.Any())
             {
-                var activeNewlyAssignedEmployeeIds = await _employeeRepo
-                    .GetAll(e => newlyAssignedEmployeeIds.Contains(e.Id) && e.IsActive && e.Id != modifierUser)
-                    .Select(e => e.Id)
-                    .ToListAsync();
-
-                if (activeNewlyAssignedEmployeeIds.Any())
-                    await _eventDispatcher.PublishAsync(
-                        new TaskAssignedEvent(task.Id, task.Title, activeNewlyAssignedEmployeeIds)
-                    );
+                await PublishAssignNotificationsAsync(task.Id, task.Title, newlyAssignedEmployeeIds, modifierUser);
             }
 
             if (reactivatedEmployeeIds.Any())
             {
-                var activeReactivatedEmployeeIds = await _employeeRepo
-                    .GetAll(e => reactivatedEmployeeIds.Contains(e.Id) && e.IsActive && e.Id != modifierUser)
-                    .Select(e => e.Id)
-                    .ToListAsync();
-
-                if (activeReactivatedEmployeeIds.Any())
-                    await _eventDispatcher.PublishAsync(
-                        new TaskAssignedEvent(task.Id, task.Title, activeReactivatedEmployeeIds)
-                    );
+                await PublishAssignNotificationsAsync(task.Id, task.Title, reactivatedEmployeeIds, modifierUser);
             }
             if (unAssignedEmployeeIds.Any())
             {
-                var activeUnAssignedEmployeeIds = await _employeeRepo
-                    .GetAll(e => unAssignedEmployeeIds.Contains(e.Id) && e.IsActive && e.Id != modifierUser)
-                    .Select(e => e.Id)
-                    .ToListAsync();
-
-                if (activeUnAssignedEmployeeIds.Any())
-                    await _eventDispatcher.PublishAsync(new TaskUnAssignedEvent(task.Id, task.Title, activeUnAssignedEmployeeIds));
+                await PublishUnassignNotificationsAsync(task.Id, task.Title, unAssignedEmployeeIds, modifierUser);
             }
 
             var fullTask = await _taskRepo.GetAll(t => t.Id == task.Id)
@@ -962,40 +937,124 @@ namespace TaskMangment.Infrastructure.Services
         private static bool ResolveCreatedByMe(
             int employeeId,
             WorkTask task,
-            bool hasCreatorPrivileges,
+            IReadOnlySet<int> scopedCreatorOrAssignerIds,
             ResolvedAccessScope scope)
         {
-            // Multi-branch scoped users who are only assignees should not get creator UI.
-            if (scope.Kind == AccessScopeKind.ManagerScoped
-                && scope.BranchIds.Count > 1
-                && task.CreatedByEmployeeId != employeeId
-                && task.Assignments.Any(a => a.EmployeeId == employeeId && a.IsActive))
-                return false;
+            var isActiveAssignee = task.Assignments != null &&
+                task.Assignments.Any(a => a.IsActive && a.EmployeeId == employeeId);
 
-            return hasCreatorPrivileges || task.CreatedByEmployeeId == employeeId;
+            return TaskCreatedByMeEvaluator.Resolve(
+                employeeId,
+                task,
+                scopedCreatorOrAssignerIds,
+                scope,
+                isActiveAssignee);
         }
 
-        private async Task<bool> HasCreatorPrivilegesAsync(int employeeId)
+        private async Task<HashSet<int>> GetScopedCreatorOrAssignerIdsAsync(
+            IEnumerable<WorkTask> tasks,
+            ResolvedAccessScope scope)
         {
-            if (await _permissions.HasAnyAsync(employeeId,
-                    PermissionCodes.ViewCompanyTasks,
-                    PermissionCodes.ViewAllTasks))
-                return true;
+            var ids = tasks
+                .SelectMany(t => new int?[] { t.CreatedByEmployeeId, t.AssignedByEmployeeId })
+                .Where(id => id.HasValue && id.Value > 0)
+                .Select(id => id!.Value)
+                .Distinct()
+                .ToList();
 
-            var scope = await _scopeResolver.ResolveAsync(employeeId);
-            if (scope.Kind == AccessScopeKind.ManagerScoped && scope.BranchIds.Count > 1)
+            if (ids.Count == 0)
+                return new HashSet<int>();
+
+            if (scope.Kind == AccessScopeKind.SelfOnly)
+                return ids.Contains(scope.EmployeeId) ? new HashSet<int> { scope.EmployeeId } : new HashSet<int>();
+
+            var inScope = await _scopeResolver
+                .FilterEmployees(_employeeRepo.GetAll(e => ids.Contains(e.Id) && !e.IsDeleted), scope)
+                .Select(e => e.Id)
+                .ToListAsync();
+
+            return inScope.ToHashSet();
+        }
+
+        /// <summary>
+        /// Same pattern as warning/penalty: for each subject, notify them + RoleNotificationSource
+        /// listeners of that subject; exclude the actor.
+        /// </summary>
+        private async Task<List<int>> BuildSubjectScopedRecipientsAsync(
+            IEnumerable<int> subjectEmployeeIds,
+            int actorIdToExclude)
+        {
+            var all = new HashSet<int>();
+            foreach (var subjectId in subjectEmployeeIds.Where(id => id > 0).Distinct())
             {
-                var isOperations = await _employeeRepo.GetAll(e => e.Id == employeeId)
-                    .Select(e => e.EmployeeType != null &&
-                                 (e.EmployeeType.SeesAllTypesInBranchScope ||
-                                  e.EmployeeType.Code == EmployeeTypeCodes.Operations))
-                    .FirstOrDefaultAsync();
-                return isOperations;
+                var part = await _recipientBuilder.BuildAsync(
+                    peerIds: new[] { subjectId },
+                    actorIdToExclude: actorIdToExclude,
+                    managerAnchorEmployeeId: subjectId);
+                foreach (var id in part)
+                    all.Add(id);
             }
 
-            return false;
+            return all.ToList();
         }
 
+        private async Task PublishAssignNotificationsAsync(
+            int taskId,
+            string taskTitle,
+            IEnumerable<int> subjectEmployeeIds,
+            int actorIdToExclude)
+        {
+            var subjects = subjectEmployeeIds.Where(id => id > 0 && id != actorIdToExclude).Distinct().ToList();
+            if (subjects.Count == 0)
+                return;
+
+            var names = await _employeeRepo.GetAll(e => subjects.Contains(e.Id))
+                .Select(e => new { e.Id, e.FullName })
+                .ToListAsync();
+
+            foreach (var subjectId in subjects)
+            {
+                var recipients = await _recipientBuilder.BuildAsync(
+                    peerIds: new[] { subjectId },
+                    actorIdToExclude: actorIdToExclude,
+                    managerAnchorEmployeeId: subjectId);
+                if (recipients.Count == 0)
+                    continue;
+
+                var name = names.FirstOrDefault(n => n.Id == subjectId)?.FullName ?? "-";
+                await _eventDispatcher.PublishAsync(
+                    new TaskAssignedEvent(taskId, taskTitle, subjectId, name, recipients));
+            }
+        }
+
+        private async Task PublishUnassignNotificationsAsync(
+            int taskId,
+            string taskTitle,
+            IEnumerable<int> subjectEmployeeIds,
+            int actorIdToExclude)
+        {
+            var subjects = subjectEmployeeIds.Where(id => id > 0 && id != actorIdToExclude).Distinct().ToList();
+            if (subjects.Count == 0)
+                return;
+
+            var names = await _employeeRepo.GetAll(e => subjects.Contains(e.Id))
+                .Select(e => new { e.Id, e.FullName })
+                .ToListAsync();
+
+            foreach (var subjectId in subjects)
+            {
+                var recipients = await _recipientBuilder.BuildAsync(
+                    peerIds: new[] { subjectId },
+                    actorIdToExclude: actorIdToExclude,
+                    managerAnchorEmployeeId: subjectId);
+                if (recipients.Count == 0)
+                    continue;
+
+                var name = names.FirstOrDefault(n => n.Id == subjectId)?.FullName ?? "-";
+                await _eventDispatcher.PublishAsync(
+                    new TaskUnAssignedEvent(taskId, taskTitle, subjectId, name, recipients));
+            }
+        }
 
     }
 }

@@ -34,7 +34,10 @@ namespace TaskMangment.Application.AutoMapper
                         .ToList()))
                 .ForMember(dest => dest.JobName, opt => opt.MapFrom(src => src.Job != null ? src.Job.Title : null))
                 .ForMember(dest => dest.DepartmentName, opt => opt.MapFrom(src => src.Department != null ? src.Department.Name : null))
-                .ForMember(dest => dest.EmployeeTypeName, opt => opt.MapFrom(src => src.EmployeeType != null ? src.EmployeeType.NameEn : null));
+                .ForMember(dest => dest.EmployeeTypeName, opt => opt.MapFrom(src =>
+                    src.EmployeeType == null
+                        ? null
+                        : (src.EmployeeType.NameEn ?? src.EmployeeType.NameAr ?? src.EmployeeType.Code)));
 
             CreateMap<EmployeeType, EmployeeTypeGetDto>();
             CreateMap<EmployeeTypeAddEditDto, EmployeeType>();
@@ -45,11 +48,18 @@ namespace TaskMangment.Application.AutoMapper
                 .ForMember(dest => dest.PasswordHash, opt => opt.Ignore());
 
 
-            CreateMap<Role, RoleGetDto>();
+            CreateMap<Role, RoleGetDto>()
+                .ForMember(dest => dest.NotifyFromRoleIds, opt => opt.Ignore())
+                .ForMember(dest => dest.EmployeeTypeName, opt => opt.MapFrom(src =>
+                    src.EmployeeType == null
+                        ? null
+                        : (src.EmployeeType.NameAr ?? src.EmployeeType.NameEn ?? src.EmployeeType.Code)));
 
             CreateMap<RoleAddEditDto, Role>()
-                .ForMember(dest => dest.Level, opt => opt.Ignore());
-            //CreateMap<Role, RoleWithPermissionsDto>();
+                .ForMember(dest => dest.Level, opt => opt.Ignore())
+                .ForMember(dest => dest.NotificationScope, opt => opt.Ignore())
+                .ForMember(dest => dest.NotificationSources, opt => opt.Ignore())
+                .ForMember(dest => dest.EmployeeType, opt => opt.Ignore());
 
             CreateMap<Permission, PermissionGetDto>();
             CreateMap<PermissionAddDto, Permission>();
@@ -241,7 +251,11 @@ namespace TaskMangment.Application.AutoMapper
             CreateMap<AuditLog,AuditLogDTO>()
                 .ForMember(dest => dest.ChangedBy, opt => opt.MapFrom(src => src.ChangedBy != null ? src.ChangedBy : "System"));
              
-            CreateMap<RoleAddEditDto, Role>();
+            CreateMap<RoleAddEditDto, Role>()
+                .ForMember(dest => dest.Level, opt => opt.Ignore())
+                .ForMember(dest => dest.NotificationScope, opt => opt.Ignore())
+                .ForMember(dest => dest.NotificationSources, opt => opt.Ignore())
+                .ForMember(dest => dest.EmployeeType, opt => opt.Ignore());
             //CreateMap<Role, RoleWithPermissionsDto>()
             //    .ForMember(dest => dest.Permissions, opt => opt.MapFrom(src => src.RolePermissions.Select(rp => rp.Permission)));
 

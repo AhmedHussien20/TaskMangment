@@ -1,4 +1,4 @@
-﻿using TaskMangment.Application.Common.Security;
+using TaskMangment.Application.Common.Security;
 using TaskMangment.Domain.Entities;
 
 namespace TaskMangment.Infrastructure.Persistence.Extensions
@@ -6,14 +6,20 @@ namespace TaskMangment.Infrastructure.Persistence.Extensions
     public static class EmployeeScopeExtensions
     {
         /// <summary>
-        /// Operations (SeesAllTypesInBranchScope): filter by branches only (all types in those branches).
-        /// Other types: filter by employee type across all branches (no branch list).
+        /// Union of managed scopes:
+        /// - SeesAllTypes + branches: everyone in those branches
+        /// - Branches + types: in managed branches OR matching type (company-wide)
+        /// - Types only: matching type company-wide
+        /// - Branches only: everyone in those branches
         /// </summary>
         public static IQueryable<Employee> ApplyAccessScope(this IQueryable<Employee> query, UserAccessContext access)
         {
+            var hasBranches = access.BranchIds != null && access.BranchIds.Any();
+            var hasTypes = access.EmployeeTypeIds != null && access.EmployeeTypeIds.Any();
+
             if (access.SeesAllTypesInBranchScope)
             {
-                if (access.BranchIds.Any())
+                if (hasBranches)
                 {
                     query = query.Where(e =>
                         e.BranchId.HasValue &&
@@ -23,11 +29,17 @@ namespace TaskMangment.Infrastructure.Persistence.Extensions
                 return query;
             }
 
-            if (access.EmployeeTypeIds.Any())
+            if (hasBranches && hasTypes)
+            {
+                query = query.Where(e =>
+                    (e.BranchId.HasValue && access.BranchIds.Contains(e.BranchId.Value)) ||
+                    access.EmployeeTypeIds.Contains(e.EmployeeTypeId));
+            }
+            else if (hasTypes)
             {
                 query = query.Where(e => access.EmployeeTypeIds.Contains(e.EmployeeTypeId));
             }
-            else if (access.BranchIds.Any())
+            else if (hasBranches)
             {
                 query = query.Where(e =>
                     e.BranchId.HasValue &&

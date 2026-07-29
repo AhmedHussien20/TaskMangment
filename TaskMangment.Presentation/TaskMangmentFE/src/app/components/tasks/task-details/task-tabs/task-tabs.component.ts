@@ -8,6 +8,7 @@ import { TaskPenaltiesComponent } from '../tabs/penalties/task-penalties/task-pe
 import { TaskAuditComponent } from '../tabs/audit/task-audit/task-audit.component';
 import { TaskRequestsComponent } from '../tabs/requests/task-requests/task-requests.component';
 import { TaskCommentsComponent } from '../tabs/comments/task-comments/task-comments.component';
+import { TaskGet } from 'app/core/models/task/task';
 
 @Component({
   selector: 'app-task-tabs',
@@ -18,6 +19,7 @@ import { TaskCommentsComponent } from '../tabs/comments/task-comments/task-comme
 export class TaskTabsComponent {
 
   @Input() taskId!: number;
+  @Input() taskInfo: TaskGet | null = null;
   @Input() createdByMe: boolean = false;
   @Input() readonly = false;
   @Input() canSendPenalty = false;

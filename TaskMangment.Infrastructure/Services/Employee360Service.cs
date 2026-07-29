@@ -100,7 +100,22 @@ namespace TaskMangment.Infrastructure.Services
                 .Select(e => (DateTime?)e.CreatedDate)
                 .FirstOrDefaultAsync();
 
+            var typeInfo = await _employeeRepo.GetAll(e => e.Id == employeeId)
+                .Select(e => new
+                {
+                    e.EmployeeTypeId,
+                    NameEn = e.EmployeeType != null ? e.EmployeeType.NameEn : null,
+                    NameAr = e.EmployeeType != null ? e.EmployeeType.NameAr : null,
+                    Code = e.EmployeeType != null ? e.EmployeeType.Code : null
+                })
+                .FirstOrDefaultAsync();
+
             var p = profileResult.Data;
+            var employeeTypeName = p.EmployeeTypeName
+                ?? typeInfo?.NameEn
+                ?? typeInfo?.NameAr
+                ?? typeInfo?.Code;
+
             var profile = new Employee360ProfileDto
             {
                 Id = p.Id,
@@ -114,8 +129,8 @@ namespace TaskMangment.Infrastructure.Services
                 Mobile = p.Mobile,
                 ImageUrl = p.ImageUrl,
                 IsActive = p.IsActive,
-                EmployeeTypeId = p.EmployeeTypeId ?? 0,
-                EmployeeTypeName = p.EmployeeTypeName,
+                EmployeeTypeId = p.EmployeeTypeId ?? typeInfo?.EmployeeTypeId ?? 0,
+                EmployeeTypeName = employeeTypeName,
                 LastLoginDate = p.LastLoginDate,
                 HireDate = hireDate,
                 Qualification = p.Qualification,
@@ -162,7 +177,6 @@ namespace TaskMangment.Infrastructure.Services
             var period = BuildPeriod(range);
             var (from, to) = GetNormalizedRange(range);
             var warnings = await _dashboardService.GetWarningsAsync(employeeId, period);
-            var discounts = await _dashboardService.GetDeductionsAsync(employeeId, period);
             var now = DateTime.UtcNow;
 
             var lateQuery = _assignmentRepo.GetAll(a =>
@@ -190,12 +204,27 @@ namespace TaskMangment.Infrastructure.Services
             {
                 Kpis = await BuildKpisAsync(employeeId, period),
                 Warnings = warnings.Data ?? new List<WarningDto>(),
-                Discounts = discounts.Data ?? new List<DeductionDto>(),
                 LateTasks = lateTasks,
                 MonthlyTrend = (await BuildOverviewChartsAsync(employeeId, range)).MonthlyProductivity
             };
 
             return ApiResponse<Employee360PerformanceDto>.Ok(dto);
+        }
+
+        public async Task<ApiResponse<Employee360DiscountsDto>> GetDiscountsAsync(
+            int actorId, int employeeId, Employee360DateRangeRequest? range = null)
+        {
+            await EnsureCanViewAsync(actorId, employeeId);
+
+            var period = BuildPeriod(range);
+            var discounts = await _dashboardService.GetDeductionsAsync(employeeId, period);
+            var list = discounts.Data ?? new List<DeductionDto>();
+
+            return ApiResponse<Employee360DiscountsDto>.Ok(new Employee360DiscountsDto
+            {
+                Discounts = list,
+                TotalAmount = list.Sum(d => d.Amount)
+            });
         }
 
         public async Task<ApiResponse<Employee360LeaveDto>> GetLeaveAsync(
@@ -829,7 +858,12 @@ namespace TaskMangment.Infrastructure.Services
             if (accessContext.BranchIds.Count > 0 || accessContext.EmployeeTypeIds.Count > 0)
             {
                 var branches = await _managerBranchesRepo.GetAll(x =>
-                        x.ManagerId == employeeId && x.IsActive && x.Branch != null && !x.Branch.IsDeleted)
+                        x.ManagerId == employeeId &&
+                        x.IsActive &&
+                        !x.IsDeleted &&
+                        x.Branch != null &&
+                        !x.Branch.IsDeleted &&
+                        x.Branch.IsActive)
                     .Select(x => new BranchLookupDto { Id = x.BranchId, Name = x.Branch!.Name })
                     .ToListAsync();
 
@@ -865,6 +899,74 @@ namespace TaskMangment.Infrastructure.Services
                 .ToListAsync();
         }
 
+        public async Task<ApiResponse<PagedResponse<Employee360KpiTaskItemDto>>> GetKpiTasksAsync(
+            int actorId, int employeeId, Employee360KpiTasksRequest request)
+        {
+            await EnsureCanViewAsync(actorId, employeeId);
+
+            var pageIndex = request.PageIndex < 1 ? 1 : request.PageIndex;
+            var pageSize = request.PageSize < 1 ? 10 : Math.Min(request.PageSize, 100);
+            var now = DateTime.UtcNow;
+            var weekEnd = now.Date.AddDays(7);
+
+            IQueryable<TaskAssignment> query = request.Filter switch
+            {
+                Employee360KpiTaskFilter.Completed => SubjectClosedAssignments(employeeId),
+                Employee360KpiTaskFilter.Overdue => SubjectActiveAssignments(employeeId)
+                    .Where(a => a.Task.DueDate != null && a.Task.DueDate < now),
+                Employee360KpiTaskFilter.Week => SubjectActiveAssignments(employeeId)
+                    .Where(a => a.Task.DueDate != null && a.Task.DueDate >= now && a.Task.DueDate <= weekEnd),
+                _ => SubjectActiveAssignments(employeeId)
+            };
+
+            // Distinct by TaskId (same as KPI counts)
+            var taskIdsQuery = query.Select(a => a.TaskId).Distinct();
+            var total = await taskIdsQuery.CountAsync();
+
+            var pageTaskIds = await taskIdsQuery
+                .OrderByDescending(id => id)
+                .Skip((pageIndex - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var tasks = await _taskRepo.GetAll(t => pageTaskIds.Contains(t.Id))
+                .Include(t => t.AssignedBy)
+                .ToListAsync();
+
+            var byId = tasks.ToDictionary(t => t.Id);
+            var items = pageTaskIds
+                .Where(id => byId.ContainsKey(id))
+                .Select(id =>
+                {
+                    var t = byId[id];
+                    return new Employee360KpiTaskItemDto
+                    {
+                        Id = t.Id,
+                        Title = t.Title,
+                        StatusText = t.Status.ToString(),
+                        AssignedByName = t.AssignedBy?.FullName,
+                        DueDate = t.DueDate,
+                        CreatedByMe = t.CreatedByEmployeeId == actorId || t.AssignedByEmployeeId == actorId
+                    };
+                })
+                .ToList();
+
+            return ApiResponse<PagedResponse<Employee360KpiTaskItemDto>>.Ok(
+                new PagedResponse<Employee360KpiTaskItemDto>(items, total, pageIndex, pageSize));
+        }
+
+        private IQueryable<TaskAssignment> SubjectAssignments(int employeeId) =>
+            _assignmentRepo.GetAll(a =>
+                a.EmployeeId == employeeId &&
+                !a.IsDeleted &&
+                !a.Task.IsDeleted);
+
+        private IQueryable<TaskAssignment> SubjectActiveAssignments(int employeeId) =>
+            SubjectAssignments(employeeId).Where(a => a.IsActive && !a.IsClosed);
+
+        private IQueryable<TaskAssignment> SubjectClosedAssignments(int employeeId) =>
+            SubjectAssignments(employeeId).Where(a => a.IsClosed);
+
         private async Task<Employee360KpiDto> BuildKpisAsync(int employeeId, PeriodDto? period = null)
         {
             period ??= new PeriodDto { Type = DashboardPeriod.Year };
@@ -873,28 +975,43 @@ namespace TaskMangment.Infrastructure.Services
             var now = DateTime.UtcNow;
             var weekEnd = now.Date.AddDays(7);
 
-            var activeQuery = _assignmentRepo.GetAll(a =>
-                a.EmployeeId == employeeId && a.IsActive && !a.IsClosed && !a.IsDeleted);
+            var activeQuery = SubjectActiveAssignments(employeeId);
 
-            var overdue = await activeQuery.CountAsync(a => a.Task.DueDate != null && a.Task.DueDate < now);
-            var dueThisWeek = await activeQuery.CountAsync(a =>
-                a.Task.DueDate != null && a.Task.DueDate >= now && a.Task.DueDate <= weekEnd);
+            var activeTasks = await activeQuery.Select(a => a.TaskId).Distinct().CountAsync();
+            var overdue = await activeQuery
+                .Where(a => a.Task.DueDate != null && a.Task.DueDate < now)
+                .Select(a => a.TaskId)
+                .Distinct()
+                .CountAsync();
+            var dueThisWeek = await activeQuery
+                .Where(a => a.Task.DueDate != null && a.Task.DueDate >= now && a.Task.DueDate <= weekEnd)
+                .Select(a => a.TaskId)
+                .Distinct()
+                .CountAsync();
+            var completedTasks = await SubjectClosedAssignments(employeeId)
+                .Select(a => a.TaskId)
+                .Distinct()
+                .CountAsync();
+            var totalTasks = await SubjectAssignments(employeeId)
+                .Select(a => a.TaskId)
+                .Distinct()
+                .CountAsync();
 
             var leave = await GetLeaveAsyncInternal(employeeId);
 
             var kpis = new Employee360KpiDto
             {
-                ActiveTasks = dashboard.Data?.Kpis?.MyActiveTasks ?? 0,
+                ActiveTasks = activeTasks,
                 DueSoonTasks = dashboard.Data?.Kpis?.DueSoonTasks ?? 0,
                 OpenWarnings = dashboard.Data?.Kpis?.MyWarnings ?? 0,
                 TotalDiscounts = dashboard.Data?.Kpis?.MyPenalties ?? 0,
-                CompletedTasks = dashboard.Data?.Performance?.CompletedTasks ?? 0,
-                TotalTasks = dashboard.Data?.Performance?.TotalTasks ?? 0,
+                CompletedTasks = completedTasks,
+                TotalTasks = totalTasks,
                 AverageCompletionHours = extended.Data?.AverageCompletionHours ?? 0,
                 OnTimeRatePercent = extended.Data?.OnTimeRatePercent ?? 0,
                 OverdueTasks = overdue,
                 DueThisWeek = dueThisWeek,
-                CurrentWorkload = dashboard.Data?.Kpis?.MyActiveTasks ?? 0,
+                CurrentWorkload = activeTasks,
                 LeaveBalance = leave.LeaveBalance
             };
 

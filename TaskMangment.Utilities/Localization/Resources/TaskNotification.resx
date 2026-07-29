@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -139,10 +139,10 @@
     <value>A new close request on task number {0} titled {1} from {2}</value>
   </data>
   <data name="TASK_ASSIGNED_NOTIFICATION" xml:space="preserve">
-    <value>A new task has been assigned to you: task number {0} titled {1}</value>
+    <value>Task assigned to {2}: task number {0} titled {1}</value>
   </data>
   <data name="TASK_UNASSIGNED_NOTIFICATION" xml:space="preserve">
-    <value>you have been removed from task number {0} titled {1}</value>
+    <value>{2} was removed from task number {0} titled {1}</value>
   </data>
   <data name="EXTENDAPPROVED" xml:space="preserve">
     <value>Task number {0} titled {1} has been extended from {2} to {3}.

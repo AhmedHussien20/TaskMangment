@@ -16,6 +16,10 @@ import { PageHeaderComponent } from 'app/shared/components/page-header/page-head
 import { GenericTableComponent, TableColumn } from 'app/shared/components/generic-table/generic-table.component';
 import { TaskCreateUpdateComponent } from 'app/components/tasks/task-create-update/task-create-update.component';
 import { TaskDetailsShellComponent } from 'app/components/tasks/task-details/task-details-shell/task-details-shell.component';
+import {
+  Employee360TaskFilter,
+  Employee360TasksPopupComponent
+} from './employee-360-tasks-popup.component';
 import { EmployeeService } from 'app/core/services/employee.service';
 import { TaskService } from 'app/core/services/task.service';
 import { AuthService } from 'app/core/services/auth.service';
@@ -92,8 +96,19 @@ export class Employee360Component implements OnInit {
   /** Shared date range for KPIs, charts, sidebar, and all tabs */
   globalFrom = '';
   globalTo = '';
+  /** True when dates are cleared and API is called without From/To (all data). */
+  allPeriodActive = false;
 
-  kpiCards: { key: string; label: string; value: string | number; icon: string; color: string; tab?: string }[] = [];
+  kpiCards: {
+    key: string;
+    label: string;
+    value: string | number;
+    icon: string;
+    color: string;
+    tab?: string;
+    taskFilter?: Employee360TaskFilter;
+    clickable?: boolean;
+  }[] = [];
 
   statusChart: Partial<ChartOptions> = {};
   productivityChart: Partial<ChartOptions> = {};
@@ -154,6 +169,9 @@ export class Employee360Component implements OnInit {
   performanceLoading = false;
   performanceSearch = '';
 
+  discountsData: EmployeeDeductionDto[] = [];
+  discountsTotalAmount = 0;
+  discountsLoading = false;
   discountSearch = '';
 
   leave: Employee360LeaveDto | null = null;
@@ -212,10 +230,29 @@ export class Employee360Component implements OnInit {
       this.router.navigate(['/employee/employee-list']);
       return;
     }
+    this.setDefaultMonthRange();
     this.load360();
   }
 
+  /** First day of current month → today (yyyy-MM-dd). */
+  private setDefaultMonthRange(): void {
+    const now = new Date();
+    this.globalFrom = this.formatDateYmd(new Date(now.getFullYear(), now.getMonth(), 1));
+    this.globalTo = this.formatDateYmd(now);
+    this.allPeriodActive = false;
+  }
+
+  private formatDateYmd(d: Date): string {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
   private dateRangeParams(): { from?: string; to?: string } {
+    if (this.allPeriodActive) {
+      return {};
+    }
     return {
       from: this.globalFrom || undefined,
       to: this.globalTo || undefined
@@ -223,19 +260,30 @@ export class Employee360Component implements OnInit {
   }
 
   applyGlobalDateRange(): void {
+    this.allPeriodActive = !this.globalFrom && !this.globalTo;
     this.taskPage = 1;
     this.emailPage = 1;
     this.notifPage = 1;
     this.timelinePage = 1;
     this.performance = null;
+    this.discountsData = [];
+    this.discountsTotalAmount = 0;
     this.leave = null;
     this.load360(false);
     this.onTabChange(this.activeTab);
   }
 
-  clearGlobalDateRange(): void {
+  /** Remove date filter and load all historical data. */
+  applyFullPeriod(): void {
     this.globalFrom = '';
     this.globalTo = '';
+    this.allPeriodActive = true;
+    this.applyGlobalDateRange();
+  }
+
+  /** Restore default: current month day 1 → today. */
+  resetToCurrentMonth(): void {
+    this.setDefaultMonthRange();
     this.applyGlobalDateRange();
   }
 
@@ -267,21 +315,73 @@ export class Employee360Component implements OnInit {
       return;
     }
     this.kpiCards = [
-      { key: 'active', label: 'EMPLOYEE_360.KPI_ACTIVE', value: k.activeTasks, icon: 'bi-list-task', color: 'kpi-blue' },
-      { key: 'completed', label: 'EMPLOYEE_360.KPI_COMPLETED', value: k.completedTasks, icon: 'bi-check2-circle', color: 'kpi-green' },
-      { key: 'overdue', label: 'EMPLOYEE_360.KPI_OVERDUE', value: k.overdueTasks, icon: 'bi-exclamation-octagon', color: 'kpi-red' },
-      { key: 'week', label: 'EMPLOYEE_360.KPI_DUE_WEEK', value: k.dueThisWeek, icon: 'bi-calendar-week', color: 'kpi-orange' },
+      { key: 'active', label: 'EMPLOYEE_360.KPI_ACTIVE', value: k.activeTasks, icon: 'bi-list-task', color: 'kpi-blue', taskFilter: 'active', clickable: true },
+      { key: 'completed', label: 'EMPLOYEE_360.KPI_COMPLETED', value: k.completedTasks, icon: 'bi-check2-circle', color: 'kpi-green', taskFilter: 'completed', clickable: true },
+      { key: 'overdue', label: 'EMPLOYEE_360.KPI_OVERDUE', value: k.overdueTasks, icon: 'bi-exclamation-octagon', color: 'kpi-red', taskFilter: 'overdue', clickable: true },
+      { key: 'week', label: 'EMPLOYEE_360.KPI_DUE_WEEK', value: k.dueThisWeek, icon: 'bi-calendar-week', color: 'kpi-orange', taskFilter: 'week', clickable: true },
       { key: 'rate', label: 'EMPLOYEE_360.KPI_COMPLETION', value: `${k.completionRate}%`, icon: 'bi-pie-chart', color: 'kpi-teal' },
-      { key: 'warn', label: 'EMPLOYEE_360.KPI_WARNINGS', value: k.openWarnings, icon: 'bi-exclamation-triangle', color: 'kpi-amber' },
-      { key: 'disc', label: 'EMPLOYEE_360.KPI_TOTAL_DISCOUNTS', value: k.totalDiscounts, icon: 'bi-cash-coin', color: 'kpi-purple', tab: 'discounts' },
-      { key: 'leave', label: 'EMPLOYEE_360.KPI_LEAVE_BAL', value: k.leaveBalance, icon: 'bi-airplane', color: 'kpi-cyan' },
-      { key: 'load', label: 'EMPLOYEE_360.KPI_WORKLOAD', value: k.currentWorkload, icon: 'bi-speedometer2', color: 'kpi-indigo' },
-      { key: 'score', label: 'EMPLOYEE_360.KPI_SCORE', value: k.performanceScore, icon: 'bi-trophy', color: 'kpi-pink' }
+      { key: 'warn', label: 'EMPLOYEE_360.KPI_WARNINGS', value: k.openWarnings, icon: 'bi-exclamation-triangle', color: 'kpi-amber', tab: 'performance', clickable: true },
+      { key: 'disc', label: 'EMPLOYEE_360.KPI_TOTAL_DISCOUNTS', value: k.totalDiscounts, icon: 'bi-cash-coin', color: 'kpi-purple', tab: 'discounts', clickable: true },
+      { key: 'leave', label: 'EMPLOYEE_360.KPI_LEAVE_BAL', value: k.leaveBalance, icon: 'bi-airplane', color: 'kpi-cyan', tab: 'leave', clickable: true },
+      { key: 'load', label: 'EMPLOYEE_360.KPI_WORKLOAD', value: k.currentWorkload, icon: 'bi-speedometer2', color: 'kpi-indigo', taskFilter: 'active', clickable: true },
+      { key: 'score', label: 'EMPLOYEE_360.KPI_SCORE', value: k.performanceScore, icon: 'bi-trophy', color: 'kpi-pink', tab: 'performance', clickable: true }
     ];
   }
 
-  onKpiClick(card: { tab?: string }): void {
+  onKpiClick(card: { tab?: string; taskFilter?: Employee360TaskFilter; clickable?: boolean; label?: string }): void {
+    if (!card.clickable) return;
+    if (card.taskFilter) {
+      this.openTasksPopup(card.taskFilter, card.label || 'TASK.LIST_TITLE');
+      return;
+    }
     if (card.tab) this.onTabChange(card.tab);
+  }
+
+  openTasksPopup(filter: Employee360TaskFilter, titleKey: string, linkedTasks?: Array<{
+    id: number;
+    title?: string;
+    statusText?: string;
+    assignedByName?: string;
+    dueDate?: string | null;
+    createdByMe?: boolean;
+  }>): void {
+    const modalRef = this.modalService.open(Employee360TasksPopupComponent, {
+      size: 'xl',
+      centered: true,
+      scrollable: true
+    });
+    modalRef.componentInstance.titleKey = titleKey;
+    modalRef.componentInstance.employeeId = this.employeeId;
+    modalRef.componentInstance.filter = filter;
+    modalRef.componentInstance.from = this.globalFrom;
+    modalRef.componentInstance.to = this.globalTo;
+    if (linkedTasks) {
+      modalRef.componentInstance.linkedTasks = linkedTasks;
+    }
+  }
+
+  openDiscountsWithTasks(): void {
+    if (!this.discountsWithTaskCount) return;
+    const linked = this.filteredDiscounts
+      .filter(d => !!d.taskId)
+      .map(d => ({
+        id: d.taskId!,
+        title: d.taskTitle || undefined,
+        statusText: d.taskStatusText || undefined,
+        assignedByName: d.taskAssignedByName || undefined,
+        dueDate: d.taskDueDate ?? null
+      }));
+    const map = new Map<number, {
+      id: number;
+      title?: string;
+      statusText?: string;
+      assignedByName?: string;
+      dueDate?: string | null;
+    }>();
+    linked.forEach(t => {
+      if (!map.has(t.id)) map.set(t.id, t);
+    });
+    this.openTasksPopup('linked', 'EMPLOYEE_360.DISCOUNTS_WITH_TASK', Array.from(map.values()));
   }
 
   buildCharts(): void {
@@ -313,7 +413,7 @@ export class Employee360Component implements OnInit {
       case 'work': this.loadTasks(); break;
       case 'access': this.loadAccess(); break;
       case 'performance': this.loadPerformance(); break;
-      case 'discounts': this.loadPerformance(); break;
+      case 'discounts': this.loadDiscounts(); break;
       case 'leave': this.loadLeave(); break;
       case 'timeline': this.loadTimeline(); break;
       case 'emails': this.loadEmails(); break;
@@ -327,6 +427,23 @@ export class Employee360Component implements OnInit {
     if (taskId) this.openTaskDetails(taskId);
   }
 
+  /** Same pattern as reports/dashboard: row click opens task details. */
+  taskRowClickable = (_item: unknown): boolean => true;
+
+  openTaskDetails(taskId?: number | null): void {
+    if (!taskId) return;
+
+    const fromRows = this.taskRows.find(x => x.id === taskId);
+    const modalRef = this.modalService.open(TaskDetailsShellComponent, {
+      size: 'xl',
+      backdrop: 'static',
+      scrollable: true
+    });
+    modalRef.componentInstance.taskId = taskId;
+    modalRef.componentInstance.readonly = true;
+    modalRef.componentInstance.createdByMe = fromRows?.createdByMe ?? false;
+  }
+
   loadTasks(): void {
     this.taskLoading = true;
     const request: any = {
@@ -335,7 +452,9 @@ export class Employee360Component implements OnInit {
       pageSize: this.taskPageSize,
       sortColumn: 'Id',
       sortDirection: 'DESC',
-      employeeIds: [this.employeeId]
+      employeeIds: [this.employeeId],
+      // 360 Work: show this employee's tasks in access scope (not intersect with "my tasks").
+      viewScopedTasks: true
     };
     if (this.taskStatusId) request.statusId = this.taskStatusId;
     if (this.taskPriorityId) request.priorityId = this.taskPriorityId;
@@ -375,6 +494,18 @@ export class Employee360Component implements OnInit {
     this.employeeService.getPerformance(this.employeeId, this.dateRangeParams()).subscribe({
       next: (res) => { this.performance = res.data; this.performanceLoading = false; },
       error: () => { this.performanceLoading = false; }
+    });
+  }
+
+  loadDiscounts(): void {
+    this.discountsLoading = true;
+    this.employeeService.get360Discounts(this.employeeId, this.dateRangeParams()).subscribe({
+      next: (res) => {
+        this.discountsData = res.data?.discounts ?? [];
+        this.discountsTotalAmount = res.data?.totalAmount ?? 0;
+        this.discountsLoading = false;
+      },
+      error: () => { this.discountsLoading = false; }
     });
   }
 
@@ -473,22 +604,6 @@ export class Employee360Component implements OnInit {
     if (this.activeTab === 'work') this.loadTasks();
   }
 
-  openTaskDetails(taskId: number): void {
-    this.taskService.getById(taskId).subscribe({
-      next: (res) => {
-        const modalRef = this.modalService.open(TaskDetailsShellComponent, {
-          size: 'xl',
-          backdrop: 'static',
-          scrollable: true
-        });
-        modalRef.componentInstance.taskId = taskId;
-        modalRef.componentInstance.readonly = true;
-        modalRef.componentInstance.createdByMe = res?.data?.createdByMe ?? false;
-      },
-      error: () => this.toastr.error(this.translate.instant('COMMON.ERROR_LOADING_DATA'))
-    });
-  }
-
   sendEmail(): void {
     const email = this.profile?.email;
     if (!email) {
@@ -562,17 +677,8 @@ export class Employee360Component implements OnInit {
     );
   }
 
-  get filteredPerformanceDiscounts(): EmployeeDeductionDto[] {
-    return (this.performance?.discounts ?? []).filter(d =>
-      this.matchesSearch(this.performanceSearch, [
-        d.reason, d.taskTitle, d.amount, d.taskId, d.id, d.createdDate,
-        d.autoDiscount ? 'Auto' : 'Manual', d.discountType
-      ])
-    );
-  }
-
   get filteredDiscounts(): EmployeeDeductionDto[] {
-    return (this.performance?.discounts ?? []).filter(d =>
+    return this.discountsData.filter(d =>
       this.matchesSearch(this.discountSearch, [
         d.reason, d.taskTitle, d.amount, d.taskId, d.id, d.createdDate,
         d.autoDiscount ? 'Auto' : 'Manual',
@@ -611,7 +717,10 @@ export class Employee360Component implements OnInit {
   }
 
   get discountsWithTaskCount(): number {
-    return this.filteredDiscounts.filter(d => !!d.taskId).length;
+    const ids = new Set(
+      this.filteredDiscounts.filter(d => !!d.taskId).map(d => d.taskId!)
+    );
+    return ids.size;
   }
 
   private matchesSearch(search: string, values: Array<string | number | null | undefined>): boolean {

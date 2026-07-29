@@ -67,6 +67,7 @@ namespace TaskMangment.Application.Common.Errors
 
         public const string RoleNotFound = "ROLE_NOT_FOUND";
         public const string RoleHasEmployees = "ROLE_HAS_EMPLOYEES";
+        public const string EmployeeMaxRolesExceeded = "EMPLOYEE_MAX_ROLES_EXCEEDED";
         public const string PermissionNotFound = "PERMISSION_NOT_FOUND";
         public const string PermissionHasRoles = "PERMISSION_HAS_ROLES";
         public const string AlreadyExists = "ALREADY_EXISTS";
@@ -81,7 +82,13 @@ namespace TaskMangment.Application.Common.Errors
         public const string InvalidOperation = "INVALID_OPERATION";
         public const string CloseRequestAlreadyPending = "CLOSEREQUESTALREADYREQUESTED";
         public const string InvalidManagerRoleLevel = "INVALID_MANAGER_ROLE_LEVEL";
+        public const string InvalidBranchManagerRole = "INVALID_BRANCH_MANAGER_ROLE";
+        public const string InvalidAreaManagerRole = "INVALID_AREA_MANAGER_ROLE";
+        public const string UseAreaForBranchScope = "USE_AREA_FOR_BRANCH_SCOPE";
+        public const string InvalidNotificationScope = "INVALID_NOTIFICATION_SCOPE";
         public const string LeaveTypeHasLeaves = "LEAVE_TYPE_HAS_LEAVES";
+        public const string RoleEmployeeTypeRequired = "ROLE_EMPLOYEE_TYPE_REQUIRED";
+        public const string EmployeeTypeMismatch = "EMPLOYEE_TYPE_MISMATCH";
     }
 
 }

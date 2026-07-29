@@ -148,10 +148,11 @@ RecurringJob.AddOrUpdate<PenaltyForMissingCommentsJob>(
     saudiTimeZone
 );
 
+// Close after the due day ends (Saudi calendar): due 27 Jul stays open all of 27 Jul, closes at 00:01 on 28 Jul.
 RecurringJob.AddOrUpdate<ArchiveOverdueTasksJob>(
     "archive-overdue-tasks",
     job => job.ExecuteAsync(),
-    Cron.Daily(8, 0),
+    Cron.Daily(0, 1),
     saudiTimeZone
 );
 

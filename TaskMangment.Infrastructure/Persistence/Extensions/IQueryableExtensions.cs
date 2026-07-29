@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -14,18 +14,16 @@ namespace TaskMangment.Infrastructure.Persistence.Extensions
             if (string.IsNullOrWhiteSpace(column))
                 return query;
 
-            try
-            {
-                direction = direction?.ToUpper() ?? "ASC";
+            var property = typeof(T)
+                .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .FirstOrDefault(p => p.Name.Equals(column, StringComparison.OrdinalIgnoreCase));
 
-                return direction == "ASC"
-                    ? query.OrderBy(e => EF.Property<object>(e, column))
-                    : query.OrderByDescending(e => EF.Property<object>(e, column));
-            }
-            catch
-            {
-                return query.OrderBy(e => EF.Property<object>(e, "Id"));
-            }
+            var propertyName = property?.Name ?? "Id";
+            direction = direction?.ToUpper() ?? "ASC";
+
+            return direction == "ASC"
+                ? query.OrderBy(e => EF.Property<object>(e, propertyName))
+                : query.OrderByDescending(e => EF.Property<object>(e, propertyName));
         }
 
         public static IQueryable<T> ApplySearch<T>(this IQueryable<T> query, string? searchKey)

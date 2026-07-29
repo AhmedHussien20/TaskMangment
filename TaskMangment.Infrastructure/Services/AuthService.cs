@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Pipelines.Sockets.Unofficial.Arenas;
 using System.Linq;
@@ -23,9 +23,9 @@ public class AuthService : IAuthService
     private readonly IRolePermissionService _permissionService;
     private readonly IRepository<RolePermission> _rolePerRepo;
     private readonly IBlobStorageService _blobStorageService;
-    private readonly IUserAccessContextProvider _accessProvider;
+    private readonly IAccessScopeResolver _scopeResolver;
 
-    public AuthService(AppDbContext db, IJwtService jwt, IEmailService email, IRepository<RolePermission> rolePerRepo, IRoleAssignmentService roleService, IRolePermissionService permissionService, IBlobStorageService blobStorageService, IUserAccessContextProvider accessProvider)
+    public AuthService(AppDbContext db, IJwtService jwt, IEmailService email, IRepository<RolePermission> rolePerRepo, IRoleAssignmentService roleService, IRolePermissionService permissionService, IBlobStorageService blobStorageService, IAccessScopeResolver scopeResolver)
     {
         _db = db;
         _jwt = jwt;
@@ -34,7 +34,7 @@ public class AuthService : IAuthService
         _roleService = roleService;
         _permissionService = permissionService;
         _blobStorageService = blobStorageService;
-        _accessProvider = accessProvider;
+        _scopeResolver = scopeResolver;
     }
 
     public async Task<ApiResponse<LoginResponse>> LoginAsync(LoginRequest request)
@@ -61,14 +61,26 @@ public class AuthService : IAuthService
                 ErrorCodes.EmployeeInactive,
                 StatusCodes.Status403Forbidden);
 
-        var profileImageWithoutSas = await _db.Attachments
-            .Where(a =>
-                a.ReferenceId == user.Id &&
-                a.AttachmentType == AttachmentType.Employee &&
-                !a.IsDeleted)
-            .Select(a => a.FilePath)
-            .FirstOrDefaultAsync();
-        var profileImage = _blobStorageService.WithSas(profileImageWithoutSas);
+        //string? profileImageWithoutSas = null;
+        //try
+        //{
+        //    profileImageWithoutSas = await _db.Attachments
+        //        .AsNoTracking()
+        //        .Where(a =>
+        //            a.ReferenceId == user.Id &&
+        //            a.AttachmentType == AttachmentType.Employee &&
+        //            !a.IsDeleted)
+        //        .OrderByDescending(a => a.Id)
+        //        .Select(a => a.FilePath)
+        //        .FirstOrDefaultAsync();
+        //}
+        //catch (Exception)
+        //{
+        //    // Profile image must not block login (Attachments can be large / unindexed under load).
+        //    profileImageWithoutSas = null;
+        //}
+
+        //var profileImage = _blobStorageService.WithSas(profileImageWithoutSas);
 
 
 
@@ -89,8 +101,10 @@ public class AuthService : IAuthService
         var permissions = await _permissionService
                             .GetUserPermissionsAsync(user.Id);
 
-        var access = await _accessProvider.GetAsync(user.Id);
-        var hasAccessScope = access.BranchIds.Any() || access.EmployeeTypeIds.Any()
+        // Same gate as AccessScopeResolver: no role / SelfOnly must not unlock نطاق المهام in the UI.
+        var scope = await _scopeResolver.ResolveAsync(user.Id);
+        var hasAccessScope =
+            scope.Kind is AccessScopeKind.ManagerScoped or AccessScopeKind.CompanyWide
             || permissions.Any(p =>
                 string.Equals(p, PermissionCodes.ViewCompanyTasks, StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(p, PermissionCodes.ViewAllTasks, StringComparison.OrdinalIgnoreCase) ||
@@ -120,7 +134,7 @@ public class AuthService : IAuthService
             Address = user.Address,
             Qualification = user.Qualification,
             IsActive = user.IsActive,
-            ProfileImage = profileImage,
+            //ProfileImage = profileImage,
             Roles = roles,
             Permissions = permissions,
             RoleLevel = roleLevel,

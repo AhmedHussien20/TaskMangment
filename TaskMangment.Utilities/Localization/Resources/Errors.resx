@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -232,6 +232,9 @@
   <data name="ROLE_NOT_FOUND" xml:space="preserve">
     <value>role not found</value>
   </data>
+  <data name="EMPLOYEE_MAX_ROLES_EXCEEDED" xml:space="preserve">
+    <value>An employee cannot have more than 2 roles</value>
+  </data>
   <data name="PERMISSION_NOT_FOUND" xml:space="preserve">
     <value>permission not found</value>
   </data>
@@ -266,13 +269,13 @@
     <value>Your leave request has been approved</value>
   </data>
   <data name="TASK_ASSIGNED_NOTIFICATION" xml:space="preserve">
-    <value>The task has been assigned to you</value>
+    <value>Task assigned to {2}: task number {0} titled {1}</value>
   </data>
   <data name="TASK_PENALTY_NOTIFICATION" xml:space="preserve">
     <value>A penalty of {2} has been applied to the task {0} from {1}</value>
   </data>
   <data name="TASK_UNASSIGNED_NOTIFICATION" xml:space="preserve">
-    <value>The task has been unassigned from you</value>
+    <value>{2} was removed from task number {0} titled {1}</value>
   </data>
   <data name="TASK_WARNING_NOTIFICATION" xml:space="preserve">
     <value>A warning has been issued for the task</value>
@@ -321,5 +324,23 @@
   </data>
   <data name="INVALID_MANAGER_ROLE_LEVEL" xml:space="preserve">
     <value>this employee hasn't branch manager role</value>
+  </data>
+  <data name="INVALID_BRANCH_MANAGER_ROLE" xml:space="preserve">
+    <value>Employee must have a role that allows being branch manager</value>
+  </data>
+  <data name="INVALID_AREA_MANAGER_ROLE" xml:space="preserve">
+    <value>Employee must have a role that requires branch scope (area manager)</value>
+  </data>
+  <data name="USE_AREA_FOR_BRANCH_SCOPE" xml:space="preserve">
+    <value>Branch coverage for this role is managed from the Area page, not manager coverage</value>
+  </data>
+  <data name="INVALID_NOTIFICATION_SCOPE" xml:space="preserve">
+    <value>Select a notification scope (Branch, Area, or Company) when choosing notify-from roles</value>
+  </data>
+  <data name="ROLE_EMPLOYEE_TYPE_REQUIRED" xml:space="preserve">
+    <value>Select an employee type for the role when employee type scope is required</value>
+  </data>
+  <data name="EMPLOYEE_TYPE_MISMATCH" xml:space="preserve">
+    <value>Employee type does not match the employee type configured on this role</value>
   </data>
 </root>

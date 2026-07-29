@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Localization;
 using TaskMangment.Application.ApiRequests;
 using TaskMangment.Application.Common.DiscountTypes;
@@ -86,6 +86,7 @@ namespace TaskMangment.Infrastructure.Services
             // Base query: assignments الخاصة بالموظف أو المهام اللي هو أنشأها
             // --------
             var baseAssignmentsQuery = _assignmentRepo.GetAll(a =>
+                !a.Task.IsDeleted &&
                 (a.EmployeeId == employeeId || a.Task.CreatedByEmployeeId == employeeId));
 
             // --------
@@ -214,6 +215,7 @@ namespace TaskMangment.Infrastructure.Services
             var baseQuery = _assignmentRepo.GetAll(a =>
                 a.IsActive &&
                 !a.IsClosed &&
+                !a.Task.IsDeleted &&
                 allowedStatuses.Contains(a.Task.Status) &&
                 !a.Task.Comments.Any(c => c.CreatedDate >= today && c.EmployeeId == a.EmployeeId)
             );
@@ -237,9 +239,6 @@ namespace TaskMangment.Infrastructure.Services
 
                 baseQuery = baseQuery.Where(a => scopedEmployeeIds.Contains(a.EmployeeId));
             }
-
-            baseQuery = baseQuery.Where(a =>
-                a.EmployeeId == employeeId || a.Task.AssignedByEmployeeId == employeeId);
 
             if (!string.IsNullOrWhiteSpace(request.searchKey))
             {
@@ -332,6 +331,11 @@ namespace TaskMangment.Infrastructure.Services
                     Reason = d.Reason,
                     TaskId = d.TaskId,
                     TaskTitle = d.Task != null ? d.Task.Title : string.Empty,
+                    TaskStatusText = d.Task != null ? d.Task.Status.ToString() : null,
+                    TaskAssignedByName = d.Task != null && d.Task.AssignedBy != null
+                        ? d.Task.AssignedBy.FullName
+                        : null,
+                    TaskDueDate = d.Task != null ? d.Task.DueDate : null,
                     CreatedDate = d.ViolationDate,
                     AutoDiscount = d.AutoDiscount,
                     DiscountType = d.discountType
@@ -362,6 +366,7 @@ namespace TaskMangment.Infrastructure.Services
             var assignments = await _assignmentRepo
                 .GetAll(a =>
         (a.EmployeeId == employeeId || a.Task.CreatedByEmployeeId == employeeId) &&
+                    !a.Task.IsDeleted &&
                     a.IsActive &&
                     !a.IsClosed &&
                     a.Task.DueDate != null &&
@@ -407,6 +412,7 @@ namespace TaskMangment.Infrastructure.Services
 
             var closedTasksQuery = _assignmentRepo.GetAll(a =>
                 (a.EmployeeId == employeeId || a.Task.CreatedByEmployeeId == employeeId) &&
+                !a.Task.IsDeleted &&
                 a.IsClosed &&
                 a.Task.ClosedAt != null &&
                 a.Task.ClosedAt >= range.Start &&
@@ -445,6 +451,7 @@ namespace TaskMangment.Infrastructure.Services
             var tasks = await _assignmentRepo
                 .GetAll(a =>
                     (a.EmployeeId == employeeId || a.Task.CreatedByEmployeeId == employeeId) &&
+                    !a.Task.IsDeleted &&
                     a.IsClosed &&
                     a.Task.ClosedAt != null &&
                     a.Task.ClosedAt >= range.Start &&

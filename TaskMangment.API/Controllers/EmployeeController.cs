@@ -65,6 +65,13 @@ namespace TaskMangment.API.Controllers
             return Success(result.Data);
         }
 
+        [HttpGet("{id}/360/tasks")]
+        public async Task<IActionResult> Get360KpiTasks(int id, [FromQuery] Employee360KpiTasksRequest request)
+        {
+            var result = await _employee360Service.GetKpiTasksAsync(CurrentUserId, id, request);
+            return Success(result.Data);
+        }
+
         [HttpGet("{id}/timeline")]
         public async Task<IActionResult> GetTimeline(int id, [FromQuery] EmployeeTimelineRequest request)
         {
@@ -83,6 +90,13 @@ namespace TaskMangment.API.Controllers
         public async Task<IActionResult> GetPerformance(int id, [FromQuery] Employee360DateRangeRequest range)
         {
             var result = await _employee360Service.GetPerformanceAsync(CurrentUserId, id, range);
+            return Success(result.Data);
+        }
+
+        [HttpGet("{id}/360/discounts")]
+        public async Task<IActionResult> Get360Discounts(int id, [FromQuery] Employee360DateRangeRequest range)
+        {
+            var result = await _employee360Service.GetDiscountsAsync(CurrentUserId, id, range);
             return Success(result.Data);
         }
 

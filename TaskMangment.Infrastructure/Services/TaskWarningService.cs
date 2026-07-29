@@ -33,7 +33,7 @@ namespace TaskMangment.Infrastructure.Services
         private readonly ICachingService _cache;
         private readonly IDomainEventDispatcher _eventDispatcher;
         private readonly IRepository<Notification> _notificationRepo;
-        private readonly IGetHigherManager _getHigherManager;
+        private readonly INotificationRecipientBuilder _recipientBuilder;
 
 
 
@@ -48,7 +48,7 @@ namespace TaskMangment.Infrastructure.Services
             IDomainEventDispatcher eventDispatcher,
             IRepository<Branch> branchRepo,
             IRepository<Notification> notificationRepo,
-            IGetHigherManager getHigherManager)
+            INotificationRecipientBuilder recipientBuilder)
         {
             _warningRepo = warningRepo;
             _employeeRepo = employeeRepo;
@@ -59,7 +59,7 @@ namespace TaskMangment.Infrastructure.Services
             _eventDispatcher = eventDispatcher;
             _branchRepo = branchRepo;
             _notificationRepo = notificationRepo;
-            _getHigherManager = getHigherManager;
+            _recipientBuilder = recipientBuilder;
         }
 
         public async Task<ApiResponse<PagedResponse<WarningGetDto>>> GetAllAsync(WarningRequest request)
@@ -200,13 +200,11 @@ namespace TaskMangment.Infrastructure.Services
                     .FirstOrDefaultAsync(b => b.Id == issuedEmployee.BranchId.Value)
                 : null;
 
-            var managerIds = await _getHigherManager.GetDirectHigherManagerIdsAsync(dto.IssuedEmployeeId);
-            var sendToIds = new List<int> { dto.IssuedEmployeeId };
-            sendToIds.AddRange(managerIds.Where(id => !sendToIds.Contains(id)));
-            sendToIds.Remove(employeeId);
-            sendToIds = await _employeeRepo.GetAll(e => sendToIds.Contains(e.Id) && e.IsActive)
-                .Select(e => e.Id)
-                .ToListAsync();
+            // Subject who received the warning is the manager-anchor (not every task peer).
+            var sendToIds = await _recipientBuilder.BuildAsync(
+                peerIds: new[] { dto.IssuedEmployeeId },
+                actorIdToExclude: employeeId,
+                managerAnchorEmployeeId: dto.IssuedEmployeeId);
 
             var IssuedToName = issuedEmployee.FullName;
 

@@ -25,6 +25,14 @@ namespace TaskMangment.Infrastructure.Services
         }
 
         public async Task<RenderedEmail> RenderAsync(string templateKey, ReferenceType referenceType, int referenceId, int? userId)
+            => await RenderAsync(templateKey, referenceType, referenceId, userId, null);
+
+        public async Task<RenderedEmail> RenderAsync(
+            string templateKey,
+            ReferenceType referenceType,
+            int referenceId,
+            int? userId,
+            IReadOnlyDictionary<string, string>? extraTokens)
         {
             var template = await _db.EmailTemplates
                 .FirstOrDefaultAsync(x => x.Key == templateKey && x.IsActive);
@@ -37,6 +45,15 @@ namespace TaskMangment.Infrastructure.Services
             var data = await LoadDataAsync(referenceType, referenceId);
             await EnsureTaskNumberAsync(data, referenceType, referenceId);
             EnsureTaskLink(data);
+
+            if (extraTokens != null)
+            {
+                foreach (var kv in extraTokens)
+                {
+                    if (!string.IsNullOrWhiteSpace(kv.Key))
+                        data[kv.Key] = kv.Value ?? string.Empty;
+                }
+            }
 
             if (userId.HasValue)
             {

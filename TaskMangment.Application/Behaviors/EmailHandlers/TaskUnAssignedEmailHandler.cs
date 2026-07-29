@@ -1,8 +1,5 @@
-﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Text.Json;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Domain.Entities;
@@ -21,13 +18,21 @@ namespace TaskMangment.Application.Behaviors.EmailHandlers
 
         public async Task Handle(TaskUnAssignedEvent ev)
         {
+            var metadata = JsonSerializer.Serialize(new Dictionary<string, string>
+            {
+                ["EmployeeName"] = string.IsNullOrWhiteSpace(ev.SubjectEmployeeName)
+                    ? "-"
+                    : ev.SubjectEmployeeName
+            });
+
             await _emailQueue.QueueAsync(new EmailQueueRequest
             {
                 TemplateKey = "TaskUnAssignedFromExistingTask",
                 ReferenceType = ReferenceType.Task,
                 RecipientType = RecipientType.Employee,
                 ReferenceId = ev.TaskId,
-                UserIds = ev.UnAssignedEmployeeIds
+                UserIds = ev.RecipientIds,
+                MetadataJson = metadata
             });
         }
     }

@@ -18,18 +18,24 @@ import { MyDatePipe } from 'app/components/utilities/pipline/MyDatePipe';
 export class TaskBasicInfoComponent implements OnChanges {
 
   @Input() taskId!: number;
+  /** When provided by the shell, reuse it and skip an extra getById. */
+  @Input() taskInfo: TaskGet | null = null;
   @Input() readonly = false;
 hasExtensions = false;
 hasNewDate = false;
   form!: FormGroup;
-  taskInfo!: TaskGet | null;
 
   constructor(private fb: FormBuilder, private taskService: TaskService) {
     this.buildForm();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['taskId'] && this.taskId) {
+    if (changes['taskInfo'] && this.taskInfo) {
+      this.applyTask(this.taskInfo);
+      return;
+    }
+    // Fallback only when used without a parent-provided taskInfo.
+    if (changes['taskId'] && this.taskId && this.taskInfo == null && !('taskInfo' in (changes))) {
       this.loadTask();
     }
   }
@@ -54,32 +60,30 @@ hasNewDate = false;
     if (!this.taskId) return;
 
     this.taskService.getById(this.taskId).subscribe({
-      next: (res) => {
-        this.taskInfo = res.data;
-         this.hasExtensions = !!this.taskInfo?.numberOfExtensions && this.taskInfo.numberOfExtensions > 0;
-         this.hasNewDate = !!this.taskInfo?.newDate;
-        if (this.taskInfo) {
-          this.form.patchValue({
-            title: this.taskInfo.title,
-            description: this.taskInfo.description,
-            commentAllowPeriodDays: this.taskInfo.commentAllowPeriodDays,
-            maxWarningsBeforeDiscount: this.taskInfo.maxWarningsBeforeDiscount,
-            penaltyOnAutoClose: this.taskInfo.penaltyOnAutoClose,
-            penaltyOnStopComment: this.taskInfo.penaltyOnStopComment,
-            createdDate:this.taskInfo.createdDate,
-            dueDate: this.taskInfo.dueDate,
-            assignedByName: this.taskInfo.assignedByName,
-            newDate: this.taskInfo.newDate,
-            numberOfExtensions: this.taskInfo.numberOfExtensions
-           // closedAt: this.taskInfo.ClosedAt
-          });
-        }
-      },
+      next: (res) => this.applyTask(res.data),
       error: (err) => {
         console.error('Failed to load task:', err);
       }
     });
   }
 
-  
+  private applyTask(task: TaskGet | null): void {
+    if (!task) return;
+    this.taskInfo = task;
+    this.hasExtensions = !!task.numberOfExtensions && task.numberOfExtensions > 0;
+    this.hasNewDate = !!task.newDate;
+    this.form.patchValue({
+      title: task.title,
+      description: task.description,
+      commentAllowPeriodDays: task.commentAllowPeriodDays,
+      maxWarningsBeforeDiscount: task.maxWarningsBeforeDiscount,
+      penaltyOnAutoClose: task.penaltyOnAutoClose,
+      penaltyOnStopComment: task.penaltyOnStopComment,
+      createdDate: task.createdDate,
+      dueDate: task.dueDate,
+      assignedByName: task.assignedByName,
+      newDate: task.newDate,
+      numberOfExtensions: task.numberOfExtensions
+    });
+  }
 }

@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Input, Output, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, MinLengthValidator, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 import { GenericFormComponent } from 'app/shared/components/generic-form/generic-form.component';
 import { EmployeeService } from 'app/core/services/employee.service';
 import { BranchService } from 'app/core/services/branch.service';
@@ -41,6 +42,8 @@ export class EmployeeCreateUpdateComponent implements OnInit {
 
   /** Original active flag when editing — used if user cannot enable/disable. */
   private originalIsActive = true;
+  /** True when opened via /employee/edit/:id or /employee/add (not list modal). */
+  private fromRoute = false;
   canEnableEmployee = false;
   canDisableEmployee = false;
 
@@ -193,10 +196,13 @@ export class EmployeeCreateUpdateComponent implements OnInit {
     private translate: TranslateService,
     private deptService: DepartmentService,
     private jobService: JobService,
-    private auth: AuthService
+    private auth: AuthService,
+    private route: ActivatedRoute,
+    private router: Router
   ) { }
 
   ngOnInit() {
+    this.resolveRouteMode();
     this.canEnableEmployee = this.auth.hasPermission(Permissions.ENABLE_EMPLOYEE);
     this.canDisableEmployee = this.auth.hasPermission(Permissions.DISABLE_EMPLOYEE);
     this.initForm();
@@ -213,6 +219,42 @@ export class EmployeeCreateUpdateComponent implements OnInit {
     // this.loadRoles();
     if (this.isEdit && this.employeeId) {
       this.loadEmployee();
+    }
+  }
+
+  /** When opened as /employee/edit/:id (e.g. from 360), Inputs are empty — read route. */
+  private resolveRouteMode(): void {
+    const idParam = this.route.snapshot.paramMap.get('id');
+    if (idParam) {
+      const id = Number(idParam);
+      if (!Number.isFinite(id) || id <= 0) return;
+
+      this.fromRoute = true;
+      this.isEdit = true;
+      this.employeeId = id;
+      this.title = 'EMPLOYEE.EDIT';
+      this.activeitem = 'EMPLOYEE.EDIT';
+      this.breadcrumbs = ['MENU.HOME', 'MENU.EMPLOYEES', 'EMPLOYEE.LIST_TITLE', 'EMPLOYEE.EDIT'];
+      return;
+    }
+
+    if (this.router.url.includes('/employee/add') && !this.employeeId) {
+      this.fromRoute = true;
+      this.isEdit = false;
+      this.title = 'EMPLOYEE.ADD';
+      this.activeitem = 'EMPLOYEE.CREATE';
+      this.breadcrumbs = ['MENU.HOME', 'MENU.EMPLOYEES', 'EMPLOYEE.LIST_TITLE', 'EMPLOYEE.CREATE'];
+    }
+  }
+
+  private afterSubmitSuccess(): void {
+    this.formSubmitted.emit();
+    if (!this.fromRoute) return;
+
+    if (this.isEdit && this.employeeId) {
+      this.router.navigate(['/employee/360', this.employeeId]);
+    } else {
+      this.router.navigate(['/employee/employee-list']);
     }
   }
 
@@ -522,7 +564,7 @@ export class EmployeeCreateUpdateComponent implements OnInit {
       this.employeeService.update(this.employeeId, formData).subscribe({
         next: () => {
           this.toastr.success(this.translate.instant('EMPLOYEE.UPDATE_SUCCESS'));
-          this.formSubmitted.emit();
+          this.afterSubmitSuccess();
         }
       });
     }
@@ -531,7 +573,7 @@ export class EmployeeCreateUpdateComponent implements OnInit {
       this.employeeService.create(formData).subscribe({
         next: () => {
           this.toastr.success(this.translate.instant('EMPLOYEE.CREATE_SUCCESS'));
-          this.formSubmitted.emit();
+          this.afterSubmitSuccess();
         }
       });
     }

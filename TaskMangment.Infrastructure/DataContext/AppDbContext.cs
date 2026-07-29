@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -90,6 +90,7 @@ namespace TaskMangment.Infrastructure.DataContext
         public DbSet<ManagerBranches> managerBranches { get; set; }
         public DbSet<EmployeeFunctionalScope> EmployeeFunctionalScopes { get; set; }
         public DbSet<EmployeeType> EmployeeTypes { get; set; }
+        public DbSet<RoleNotificationSource> RoleNotificationSources { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -172,6 +173,10 @@ namespace TaskMangment.Infrastructure.DataContext
                  .WithMany()
                  .HasForeignKey(a => a.UploadedBy)
                  .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Attachment>()
+                .HasIndex(a => new { a.ReferenceId, a.AttachmentType, a.IsDeleted })
+                .HasDatabaseName("IX_Attachments_ReferenceId_AttachmentType_IsDeleted");
 
             
             builder.Entity<TaskExtensionRequest>()
@@ -284,6 +289,20 @@ namespace TaskMangment.Infrastructure.DataContext
             builder.Entity<ManagerBranches>()
                 .HasIndex(x => new { x.ManagerId, x.BranchId })
                 .IsUnique();
+
+            builder.Entity<RoleNotificationSource>(entity =>
+            {
+                entity.ToTable("RoleNotificationSources");
+                entity.HasOne(x => x.Role)
+                    .WithMany(r => r.NotificationSources)
+                    .HasForeignKey(x => x.RoleId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(x => x.SourceRole)
+                    .WithMany()
+                    .HasForeignKey(x => x.SourceRoleId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                entity.HasIndex(x => new { x.RoleId, x.SourceRoleId }).IsUnique();
+            });
 
             builder.Entity<EmployeeType>(entity =>
             {

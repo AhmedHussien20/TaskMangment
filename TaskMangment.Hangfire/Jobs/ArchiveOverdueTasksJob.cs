@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,6 +7,7 @@ using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Domain.Entities;
 using TaskMangment.Domain.Event;
+using TaskMangment.Infrastructure;
 using TaskMangment.Infrastructure.DataContext;
 
 namespace TaskMangment.Hangfire.Jobs
@@ -26,11 +27,15 @@ namespace TaskMangment.Hangfire.Jobs
 
         public async Task ExecuteAsync()
         {
-            var todayUtc = DateTime.UtcNow.Date;
+            // End-of-day rule (Saudi calendar): due date 27 Jul stays open all of 27 Jul;
+            // it becomes overdue only when local date is 28 Jul (job runs at 00:01).
+            var tz = TimeZoneHelper.GetSaudiArabia();
+            var todayLocal = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, tz).Date;
 
             var overdueTasks = await _db.Tasks
                 .Include(t => t.Assignments)
-                .Where(t => t.DueDate < todayUtc
+                .Where(t => t.DueDate.HasValue
+                            && t.DueDate.Value.Date < todayLocal
                             && t.Status != WorkTaskStatus.Closed
                             && t.Status != WorkTaskStatus.Archived
                             && t.Status != WorkTaskStatus.AutoClose && !t.IsDeleted)
@@ -46,10 +51,12 @@ namespace TaskMangment.Hangfire.Jobs
                 if (hasCloseRequest)
                     continue;
 
+                // Approved extension keeps the task open through the full NewDueDate day.
                 var approvedExtension = await _db.TaskExtensionRequests
                     .Where(r => r.TaskId == task.Id
                          && r.Status == ExtensionRequestStatus.Approved
-                         && r.NewDueDate > DateTime.UtcNow)
+                         && !r.IsDeleted
+                         && r.NewDueDate.Date >= todayLocal)
                     .FirstOrDefaultAsync();
 
                 if (approvedExtension != null)

@@ -4,13 +4,7 @@
 <div class="row row-sm">
   <div class="col-md-12 col-lg-12">
     <div class="card custom-card">
-      
-
       <div>
-
-     
-
-        <!-- Table -->
         <div>
           <app-generic-table
             [title]="title"
@@ -31,7 +25,7 @@
             [showEditButton]="true"
             (edit)="openEdit($event, roleModal)"
 
-            (iconAction)="onIconAction($event)"
+            (iconAction)="onIconAction($event, notifyModal)"
 
             [showFilters]="true"
             [searchCriteria]="searchCriteria"
@@ -43,11 +37,11 @@
 
           </app-generic-table>
         </div>
-
       </div>
     </div>
   </div>
 </div>
+
 <ng-template #roleModal let-modal>
   <div class="modal-header">
     <h6 class="modal-title">
@@ -62,5 +56,21 @@
       [roleId]="selectedRoleId"
       (formSubmitted)="onFormSubmitted()">
     </app-role-create-update>
+  </div>
+</ng-template>
+
+<ng-template #notifyModal let-modal>
+  <div class="modal-header">
+    <h6 class="modal-title">
+      {{ 'ROLE.NOTIFY_FROM_EMPLOYEES' | translate }}
+    </h6>
+    <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
+  </div>
+
+  <div class="modal-body">
+    <app-role-notification-edit
+      [roleId]="selectedRoleId"
+      (formSubmitted)="onFormSubmitted()">
+    </app-role-notification-edit>
   </div>
 </ng-template>

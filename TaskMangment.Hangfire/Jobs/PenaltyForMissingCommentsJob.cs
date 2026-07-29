@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Domain.Entities;

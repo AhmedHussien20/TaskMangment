@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using TaskMangment.Application.DTOs.ReportsDTO;
 using TaskMangment.Application.Interfaces.Services;
@@ -94,7 +94,8 @@ namespace TaskMangment.Hangfire.Jobs
                 email.TemplateKey,
                 email.ReferenceType,
                 email.ReferenceId,
-                email.UserId);
+                email.UserId,
+                ParseMetadataTokens(email.MetadataJson));
 
             var attachments = await BuildAttachmentsAsync(email);
 
@@ -103,6 +104,21 @@ namespace TaskMangment.Hangfire.Jobs
                 rendered.Subject,
                 rendered.Body,
                 attachments);
+        }
+
+        private static IReadOnlyDictionary<string, string>? ParseMetadataTokens(string? metadataJson)
+        {
+            if (string.IsNullOrWhiteSpace(metadataJson))
+                return null;
+
+            try
+            {
+                return System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(metadataJson);
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         private async Task SendToAllEmployeesAsync(EmailQueue batchEmail)

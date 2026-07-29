@@ -20,7 +20,16 @@ namespace TaskMangment.Application.DTOs
 
         public bool RequiresBranchScope { get; set; }
         public bool RequiresEmployeeTypeScope { get; set; }
+        /// <summary>Required when RequiresEmployeeTypeScope is true — one type for the whole role.</summary>
+        public int? EmployeeTypeId { get; set; }
+        public bool CanBeBranchManager { get; set; }
+    }
 
+    public class RoleNotificationUpdateDto
+    {
+        public NotificationScope NotificationScope { get; set; } = NotificationScope.None;
+        /// <summary>Role IDs this role receives notifications from.</summary>
+        public List<int> NotifyFromRoleIds { get; set; } = new();
     }
 
     public class RoleGetDto
@@ -32,8 +41,15 @@ namespace TaskMangment.Application.DTOs
 
         public int EmployeeCount { get; set; }
         public int PermissionCount { get; set; }
+        /// <summary>Distinct active employees in roles this role receives notifications from.</summary>
+        public int NotifyFromEmployeeCount { get; set; }
         public bool RequiresBranchScope { get; set; }
         public bool RequiresEmployeeTypeScope { get; set; }
+        public int? EmployeeTypeId { get; set; }
+        public string? EmployeeTypeName { get; set; }
+        public bool CanBeBranchManager { get; set; }
+        public NotificationScope NotificationScope { get; set; }
+        public List<int> NotifyFromRoleIds { get; set; } = new();
     }
 
     public class PermissionAddDto

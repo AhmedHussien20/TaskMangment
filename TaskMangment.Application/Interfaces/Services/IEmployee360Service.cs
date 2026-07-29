@@ -14,6 +14,9 @@ namespace TaskMangment.Application.Interfaces.Services
         Task<ApiResponse<Employee360PerformanceDto>> GetPerformanceAsync(
             int actorId, int employeeId, Employee360DateRangeRequest? range = null);
 
+        Task<ApiResponse<Employee360DiscountsDto>> GetDiscountsAsync(
+            int actorId, int employeeId, Employee360DateRangeRequest? range = null);
+
         Task<ApiResponse<Employee360LeaveDto>> GetLeaveAsync(
             int actorId, int employeeId, Employee360DateRangeRequest? range = null);
 
@@ -25,5 +28,11 @@ namespace TaskMangment.Application.Interfaces.Services
 
         Task<ApiResponse<PagedResponse<EmployeeTimelineItemDto>>> GetTimelineAsync(
             int actorId, int employeeId, EmployeeTimelineRequest request);
+
+        /// <summary>
+        /// Paged task list using the same assignment rules as Employee 360 KPI cards.
+        /// </summary>
+        Task<ApiResponse<PagedResponse<Employee360KpiTaskItemDto>>> GetKpiTasksAsync(
+            int actorId, int employeeId, Employee360KpiTasksRequest request);
     }
 }

@@ -7,126 +7,43 @@ using TaskMangment.Domain.Entities;
 namespace TaskMangment.Infrastructure.Services
 {
     /// <summary>
-    /// Notification / org-chain resolution using Branch.ManagerID, ManagerBranches, Area.ManagerEmployeeId,
-    /// and RECEIVE_ORG_ESCALATIONS — never RoleLevel.
+    /// Notification recipients from each of the subject's matching listener roles (union).
+    /// Scope is per role (Branch / Area / Company) — not hardcoded role names.
+    /// Company scope: Operations (SeesAllTypes) hears all types; other types hear same type only.
+    /// Branch scope: non-org listening-role holders in the subject's branch(es);
+    /// org managers only via Branch.ManagerID / Area.ManagerEmployeeId (not home branch alone).
+    /// Area scope: non-org holders whose home is in the subject's area(s);
+    /// org managers only via Area.ManagerEmployeeId.
     /// </summary>
     public class OrgManagerResolver : IOrgManagerResolver
     {
         private readonly IRepository<Employee> _employeeRepo;
-        private readonly IRepository<ManagerBranches> _managerBranchesRepo;
-        private readonly IRepository<EmployeeFunctionalScope> _functionalScopeRepo;
+        private readonly IRepository<EmployeeRole> _employeeRoleRepo;
+        private readonly IRepository<RoleNotificationSource> _notifySourceRepo;
         private readonly IRepository<Branch> _branchRepo;
         private readonly IRepository<Area> _areaRepo;
-        private readonly IEmployeePermissionService _permissions;
 
         public OrgManagerResolver(
             IRepository<Employee> employeeRepo,
-            IRepository<ManagerBranches> managerBranchesRepo,
-            IRepository<EmployeeFunctionalScope> functionalScopeRepo,
+            IRepository<EmployeeRole> employeeRoleRepo,
+            IRepository<RoleNotificationSource> notifySourceRepo,
             IRepository<Branch> branchRepo,
-            IRepository<Area> areaRepo,
-            IEmployeePermissionService permissions)
+            IRepository<Area> areaRepo)
         {
             _employeeRepo = employeeRepo;
-            _managerBranchesRepo = managerBranchesRepo;
-            _functionalScopeRepo = functionalScopeRepo;
+            _employeeRoleRepo = employeeRoleRepo;
+            _notifySourceRepo = notifySourceRepo;
             _branchRepo = branchRepo;
             _areaRepo = areaRepo;
-            _permissions = permissions;
         }
 
         public async Task<IReadOnlyList<int>> GetOperationalManagersAsync(int employeeId)
-        {
-            var employee = await _employeeRepo.GetAll(e => e.Id == employeeId)
-                .Select(e => new { e.Id, e.CompanyId, e.BranchId, e.EmployeeTypeId })
-                .FirstOrDefaultAsync();
-
-            if (employee == null)
-                return Array.Empty<int>();
-
-            var recipients = new HashSet<int>();
-
-            if (employee.BranchId.HasValue)
-            {
-                var branchManagerId = await _branchRepo.GetAll(b =>
-                        b.Id == employee.BranchId.Value && !b.IsDeleted && b.ManagerID > 0)
-                    .Select(b => b.ManagerID)
-                    .FirstOrDefaultAsync();
-
-                if (branchManagerId > 0 && branchManagerId != employeeId)
-                {
-                    if (await IsActiveEmployeeAsync(branchManagerId))
-                        recipients.Add(branchManagerId);
-                }
-
-                var scopeManagers = await _managerBranchesRepo.GetAll(mb =>
-                        mb.BranchId == employee.BranchId.Value &&
-                        mb.IsActive &&
-                        !mb.IsDeleted &&
-                        mb.ManagerId != employeeId)
-                    .Select(mb => mb.ManagerId)
-                    .Distinct()
-                    .ToListAsync();
-
-                foreach (var managerId in scopeManagers)
-                {
-                    if (await MatchesFunctionalScopeAsync(managerId, employee.EmployeeTypeId) &&
-                        await IsActiveEmployeeAsync(managerId))
-                    {
-                        recipients.Add(managerId);
-                    }
-                }
-            }
-
-            if (recipients.Count == 0)
-            {
-                var escalations = await GetCompanyEscalationHoldersAsync(employee.CompanyId, employeeId);
-                foreach (var id in escalations)
-                    recipients.Add(id);
-            }
-
-            return recipients.ToList();
-        }
+            => await ResolveNotificationRecipientsAsync(employeeId);
 
         public async Task<IReadOnlyList<int>> GetEscalationRecipientsAsync(int actorId, NotificationEventKind eventKind)
         {
-            var actor = await _employeeRepo.GetAll(e => e.Id == actorId)
-                .Select(e => new { e.Id, e.CompanyId, e.BranchId })
-                .FirstOrDefaultAsync();
-
-            if (actor == null)
-                return Array.Empty<int>();
-
-            var recipients = new HashSet<int>();
-
-            var isBranchOwner = await IsBranchOwnerAsync(actorId);
-            var isAreaOrMultiBranch = await IsAreaOrMultiBranchManagerAsync(actorId);
-
-            if (eventKind == NotificationEventKind.EmployeeActivity ||
-                (!isBranchOwner && !isAreaOrMultiBranch && eventKind == NotificationEventKind.Escalation))
-            {
-                foreach (var id in await GetOperationalManagersAsync(actorId))
-                    recipients.Add(id);
-            }
-
-            if (isBranchOwner || eventKind == NotificationEventKind.BranchManagerActivity)
-            {
-                var areaManager = await FindAreaManagerForEmployeeAsync(actorId, actor.BranchId);
-                if (areaManager.HasValue)
-                    recipients.Add(areaManager.Value);
-
-                foreach (var id in await GetCompanyEscalationHoldersAsync(actor.CompanyId, actorId))
-                    recipients.Add(id);
-            }
-
-            if (isAreaOrMultiBranch || eventKind == NotificationEventKind.AreaManagerActivity)
-            {
-                foreach (var id in await GetCompanyEscalationHoldersAsync(actor.CompanyId, actorId))
-                    recipients.Add(id);
-            }
-
-            recipients.Remove(actorId);
-            return recipients.ToList();
+            _ = eventKind;
+            return await ResolveNotificationRecipientsAsync(actorId);
         }
 
         public async Task<bool> IsOrgManagerOverAsync(int actorId, int targetEmployeeId)
@@ -134,173 +51,460 @@ namespace TaskMangment.Infrastructure.Services
             if (actorId == targetEmployeeId)
                 return false;
 
-            var actor = await _employeeRepo.GetAll(e => e.Id == actorId)
+            var actor = await _employeeRepo.GetAll(e => e.Id == actorId && e.IsActive && !e.IsDeleted)
                 .Select(e => new { e.BranchId })
                 .FirstOrDefaultAsync();
-
             if (actor == null)
                 return false;
 
-            // Target is Branch.ManagerID for actor's branch
-            if (actor.BranchId.HasValue)
+            var targetActive = await _employeeRepo.GetAll(e => e.Id == targetEmployeeId && e.IsActive && !e.IsDeleted)
+                .AnyAsync();
+            if (!targetActive)
+                return false;
+
+            var subjectBranchIds = await GetSubjectBranchIdsAsync(actorId, actor.BranchId);
+            if (subjectBranchIds.Count == 0)
+                return false;
+
+            var isBranchManager = await _branchRepo.GetAll(b =>
+                    subjectBranchIds.Contains(b.Id) &&
+                    !b.IsDeleted &&
+                    b.ManagerID == targetEmployeeId)
+                .AnyAsync();
+            if (isBranchManager)
+                return true;
+
+            var areaIds = await _branchRepo.GetAll(b =>
+                    subjectBranchIds.Contains(b.Id) &&
+                    !b.IsDeleted &&
+                    b.AreaId != null)
+                .Select(b => b.AreaId!.Value)
+                .Distinct()
+                .ToListAsync();
+
+            if (areaIds.Count == 0)
+                return false;
+
+            return await _areaRepo.GetAll(a =>
+                    areaIds.Contains(a.Id) &&
+                    !a.IsDeleted &&
+                    a.ManagerEmployeeId == targetEmployeeId)
+                .AnyAsync();
+        }
+
+        /// <inheritdoc />
+        public async Task<IReadOnlyList<int>> GetListenableSubjectIdsAsync(int listenerEmployeeId)
+        {
+            var listener = await _employeeRepo.GetAll(e => e.Id == listenerEmployeeId)
+                .Select(e => new
+                {
+                    e.Id,
+                    e.CompanyId,
+                    e.BranchId,
+                    e.EmployeeTypeId,
+                    e.IsActive,
+                    e.IsDeleted,
+                    SeesAllTypes = e.EmployeeType != null &&
+                        (e.EmployeeType.SeesAllTypesInBranchScope ||
+                         e.EmployeeType.Code == EmployeeTypeCodes.Operations)
+                })
+                .FirstOrDefaultAsync();
+
+            if (listener == null || listener.IsDeleted || !listener.IsActive)
+                return Array.Empty<int>();
+
+            var listeningLinks = await _employeeRoleRepo.GetAll(er =>
+                    er.EmployeeId == listenerEmployeeId &&
+                    er.IsAssigned &&
+                    !er.IsDeleted &&
+                    er.Role != null &&
+                    !er.Role.IsDeleted &&
+                    er.Role.NotificationScope != NotificationScope.None)
+                .Select(er => new
+                {
+                    ListenerRoleId = er.RoleId,
+                    Scope = er.Role!.NotificationScope
+                })
+                .Distinct()
+                .ToListAsync();
+
+            if (listeningLinks.Count == 0)
+                return Array.Empty<int>();
+
+            var listenerRoleIds = listeningLinks.Select(x => x.ListenerRoleId).Distinct().ToList();
+            var sourceLinks = await _notifySourceRepo.GetAll(n =>
+                    !n.IsDeleted &&
+                    listenerRoleIds.Contains(n.RoleId))
+                .Select(n => new { n.RoleId, n.SourceRoleId })
+                .ToListAsync();
+
+            if (sourceLinks.Count == 0)
+                return Array.Empty<int>();
+
+            var scopeByListenerRole = listeningLinks.ToDictionary(x => x.ListenerRoleId, x => x.Scope);
+            var subjects = new HashSet<int>();
+
+            var branchesManagedByListener = (await _branchRepo.GetAll(b =>
+                    b.ManagerID == listenerEmployeeId && !b.IsDeleted && b.IsActive)
+                .Select(b => b.Id)
+                .ToListAsync()).ToHashSet();
+
+            var areasManagedByListener = (await _areaRepo.GetAll(a =>
+                    a.ManagerEmployeeId == listenerEmployeeId && !a.IsDeleted)
+                .Select(a => a.Id)
+                .ToListAsync()).ToHashSet();
+
+            int? listenerAreaId = null;
+            if (listener.BranchId.HasValue)
             {
-                var isBranchManager = await _branchRepo.GetAll(b =>
-                        b.Id == actor.BranchId.Value &&
-                        !b.IsDeleted &&
-                        b.ManagerID > 0 &&
-                        b.ManagerID == targetEmployeeId)
-                    .AnyAsync();
-
-                if (isBranchManager)
-                    return true;
-
-                // Target has ManagerBranches covering actor's branch
-                var coversBranch = await _managerBranchesRepo.GetAll(mb =>
-                        mb.ManagerId == targetEmployeeId &&
-                        mb.BranchId == actor.BranchId.Value &&
-                        mb.IsActive &&
-                        !mb.IsDeleted)
-                    .AnyAsync();
-
-                if (coversBranch)
-                    return true;
-
-                // Target is Area.ManagerEmployeeId for actor's area
-                var areaId = await _branchRepo.GetAll(b => b.Id == actor.BranchId.Value && !b.IsDeleted)
+                listenerAreaId = await _branchRepo.GetAll(b => b.Id == listener.BranchId.Value && !b.IsDeleted)
                     .Select(b => b.AreaId)
                     .FirstOrDefaultAsync();
+            }
 
-                if (areaId.HasValue)
+            foreach (var link in sourceLinks)
+            {
+                if (!scopeByListenerRole.TryGetValue(link.RoleId, out var scope) ||
+                    scope == NotificationScope.None)
+                    continue;
+
+                var candidates = await _employeeRoleRepo.GetAll(er =>
+                        er.RoleId == link.SourceRoleId &&
+                        er.IsAssigned &&
+                        !er.IsDeleted &&
+                        er.Employee != null &&
+                        er.Employee.IsActive &&
+                        !er.Employee.IsDeleted &&
+                        er.Employee.CompanyId == listener.CompanyId &&
+                        er.EmployeeId != listenerEmployeeId)
+                    .Select(er => new
+                    {
+                        er.EmployeeId,
+                        er.Employee!.BranchId,
+                        er.Employee.EmployeeTypeId
+                    })
+                    .Distinct()
+                    .ToListAsync();
+
+                if (candidates.Count == 0)
+                    continue;
+
+                switch (scope)
                 {
-                    var isAreaManager = await _areaRepo.GetAll(a =>
-                            a.Id == areaId.Value &&
-                            !a.IsDeleted &&
-                            a.ManagerEmployeeId == targetEmployeeId)
-                        .AnyAsync();
+                    case NotificationScope.Branch:
+                        foreach (var c in candidates)
+                        {
+                            var subjectBranchIds = await GetSubjectBranchIdsAsync(c.EmployeeId, c.BranchId);
+                            if (subjectBranchIds.Count == 0)
+                                continue;
 
-                    if (isAreaManager)
-                        return true;
+                            // Official coverage only for org managers (not "I live there").
+                            if (subjectBranchIds.Any(branchesManagedByListener.Contains))
+                            {
+                                subjects.Add(c.EmployeeId);
+                                continue;
+                            }
+
+                            if (areasManagedByListener.Count > 0)
+                            {
+                                var subjectAreaIds = await _branchRepo.GetAll(b =>
+                                        subjectBranchIds.Contains(b.Id) &&
+                                        !b.IsDeleted &&
+                                        b.AreaId != null)
+                                    .Select(b => b.AreaId!.Value)
+                                    .Distinct()
+                                    .ToListAsync();
+
+                                if (subjectAreaIds.Any(areasManagedByListener.Contains))
+                                {
+                                    subjects.Add(c.EmployeeId);
+                                    continue;
+                                }
+                            }
+
+                            // Non-org listeners (e.g. مشرف تدريب): same home branch as subject geography.
+                            var listenerIsOrgManager =
+                                branchesManagedByListener.Count > 0 || areasManagedByListener.Count > 0;
+                            if (!listenerIsOrgManager &&
+                                listener.BranchId.HasValue &&
+                                subjectBranchIds.Contains(listener.BranchId.Value))
+                            {
+                                subjects.Add(c.EmployeeId);
+                            }
+                        }
+                        break;
+
+                    case NotificationScope.Area:
+                        foreach (var c in candidates)
+                        {
+                            var subjectBranchIds = await GetSubjectBranchIdsAsync(c.EmployeeId, c.BranchId);
+                            if (subjectBranchIds.Count == 0)
+                                continue;
+
+                            var subjectAreaIds = await _branchRepo.GetAll(b =>
+                                    subjectBranchIds.Contains(b.Id) &&
+                                    !b.IsDeleted &&
+                                    b.AreaId != null)
+                                .Select(b => b.AreaId!.Value)
+                                .Distinct()
+                                .ToListAsync();
+
+                            if (subjectAreaIds.Count == 0)
+                                continue;
+
+                            if (subjectAreaIds.Any(areasManagedByListener.Contains))
+                            {
+                                subjects.Add(c.EmployeeId);
+                                continue;
+                            }
+
+                            var listenerIsOrgManager =
+                                branchesManagedByListener.Count > 0 || areasManagedByListener.Count > 0;
+                            if (!listenerIsOrgManager &&
+                                listenerAreaId.HasValue &&
+                                subjectAreaIds.Contains(listenerAreaId.Value))
+                            {
+                                subjects.Add(c.EmployeeId);
+                            }
+                        }
+                        break;
+
+                    case NotificationScope.Company:
+                        foreach (var c in candidates)
+                        {
+                            if (listener.SeesAllTypes || c.EmployeeTypeId == listener.EmployeeTypeId)
+                                subjects.Add(c.EmployeeId);
+                        }
+                        break;
                 }
             }
 
-            return false;
+            return subjects.ToList();
         }
 
-        private async Task<bool> IsBranchOwnerAsync(int employeeId)
+        private async Task<IReadOnlyList<int>> ResolveNotificationRecipientsAsync(int subjectEmployeeId)
         {
-            var ownsBranch = await _branchRepo.GetAll(b =>
-                    !b.IsDeleted && b.ManagerID > 0 && b.ManagerID == employeeId)
-                .AnyAsync();
-
-            if (ownsBranch)
-                return true;
-
-            var managedCount = await _managerBranchesRepo.GetAll(mb =>
-                    mb.ManagerId == employeeId && mb.IsActive && !mb.IsDeleted)
-                .Select(mb => mb.BranchId)
-                .Distinct()
-                .CountAsync();
-
-            return managedCount == 1;
-        }
-
-        private async Task<bool> IsAreaOrMultiBranchManagerAsync(int employeeId)
-        {
-            var isAreaManager = await _areaRepo.GetAll(a =>
-                    !a.IsDeleted && a.ManagerEmployeeId == employeeId)
-                .AnyAsync();
-
-            if (isAreaManager)
-                return true;
-
-            var managedCount = await _managerBranchesRepo.GetAll(mb =>
-                    mb.ManagerId == employeeId && mb.IsActive && !mb.IsDeleted)
-                .Select(mb => mb.BranchId)
-                .Distinct()
-                .CountAsync();
-
-            return managedCount > 1;
-        }
-
-        private async Task<int?> FindAreaManagerForEmployeeAsync(int employeeId, int? employeeBranchId)
-        {
-            int? branchId = employeeBranchId;
-            if (!branchId.HasValue)
-            {
-                branchId = await _managerBranchesRepo.GetAll(mb =>
-                        mb.ManagerId == employeeId && mb.IsActive && !mb.IsDeleted)
-                    .Select(mb => (int?)mb.BranchId)
-                    .FirstOrDefaultAsync();
-            }
-
-            if (!branchId.HasValue)
-                return null;
-
-            var areaId = await _branchRepo.GetAll(b => b.Id == branchId.Value && !b.IsDeleted)
-                .Select(b => b.AreaId)
+            var subject = await _employeeRepo.GetAll(e => e.Id == subjectEmployeeId)
+                .Select(e => new { e.Id, e.CompanyId, e.BranchId, e.EmployeeTypeId, e.IsActive, e.IsDeleted })
                 .FirstOrDefaultAsync();
+            if (subject == null || subject.IsDeleted || !subject.IsActive)
+                return Array.Empty<int>();
 
-            if (!areaId.HasValue)
-                return null;
-
-            var areaManagerId = await _areaRepo.GetAll(a =>
-                    a.Id == areaId.Value &&
-                    !a.IsDeleted &&
-                    a.ManagerEmployeeId != null &&
-                    a.ManagerEmployeeId != employeeId)
-                .Select(a => a.ManagerEmployeeId)
-                .FirstOrDefaultAsync();
-
-            if (!areaManagerId.HasValue)
-                return null;
-
-            return await IsActiveEmployeeAsync(areaManagerId.Value) ? areaManagerId : null;
-        }
-
-        private async Task<List<int>> GetCompanyEscalationHoldersAsync(int companyId, int excludeEmployeeId)
-        {
-            var candidates = await _employeeRepo.GetAll(e =>
-                    e.CompanyId == companyId &&
-                    e.IsActive &&
-                    !e.IsDeleted &&
-                    e.Id != excludeEmployeeId)
-                .Select(e => e.Id)
+            var subjectRoleIds = await _employeeRoleRepo.GetAll(er =>
+                    er.EmployeeId == subjectEmployeeId &&
+                    er.IsAssigned &&
+                    !er.IsDeleted &&
+                    er.Role != null &&
+                    !er.Role.IsDeleted)
+                .Select(er => er.RoleId)
+                .Distinct()
                 .ToListAsync();
 
-            var result = new List<int>();
-            foreach (var id in candidates)
-            {
-                if (await _permissions.HasAsync(id, PermissionCodes.ReceiveOrgEscalations) ||
-                    await _permissions.HasAnyAsync(id, PermissionCodes.ViewCompanyTasks, PermissionCodes.ViewAllTasks))
-                {
-                    result.Add(id);
-                }
-            }
+            if (subjectRoleIds.Count == 0)
+                return Array.Empty<int>();
 
-            return result;
-        }
-
-        private async Task<bool> MatchesFunctionalScopeAsync(int managerId, int employeeTypeId)
-        {
-            var scopes = await _functionalScopeRepo.GetAll(s =>
-                    s.EmployeeId == managerId && !s.IsDeleted)
-                .Select(s => new
+            // Each listener role keeps its own scope + notify-from; results are unioned.
+            var receiverRoles = await _notifySourceRepo.GetAll(n =>
+                    !n.IsDeleted &&
+                    subjectRoleIds.Contains(n.SourceRoleId) &&
+                    n.Role != null &&
+                    !n.Role.IsDeleted &&
+                    n.Role.NotificationScope != NotificationScope.None)
+                .Select(n => new
                 {
-                    s.EmployeeTypeId,
-                    SeesAll = s.EmployeeType != null &&
-                              (s.EmployeeType.SeesAllTypesInBranchScope ||
-                               s.EmployeeType.Code == EmployeeTypeCodes.Operations)
+                    ReceiverRoleId = n.RoleId,
+                    Scope = n.Role!.NotificationScope
                 })
+                .Distinct()
                 .ToListAsync();
 
-            // No functional filter or Operations-like = all types in branch
-            if (scopes.Count == 0 || scopes.Any(s => s.SeesAll))
-                return true;
+            if (receiverRoles.Count == 0)
+                return Array.Empty<int>();
 
-            return scopes.Any(s => s.EmployeeTypeId == employeeTypeId);
+            var subjectBranchIds = await GetSubjectBranchIdsAsync(subject.Id, subject.BranchId);
+            var subjectAreaIds = await _branchRepo.GetAll(b =>
+                    subjectBranchIds.Contains(b.Id) &&
+                    !b.IsDeleted &&
+                    b.AreaId != null)
+                .Select(b => b.AreaId!.Value)
+                .Distinct()
+                .ToListAsync();
+
+            var recipients = new HashSet<int>();
+
+            foreach (var receiver in receiverRoles)
+            {
+                var candidates = await _employeeRoleRepo.GetAll(er =>
+                        er.RoleId == receiver.ReceiverRoleId &&
+                        er.IsAssigned &&
+                        !er.IsDeleted &&
+                        er.Employee != null &&
+                        er.Employee.IsActive &&
+                        !er.Employee.IsDeleted &&
+                        er.Employee.CompanyId == subject.CompanyId &&
+                        er.EmployeeId != subjectEmployeeId)
+                    .Select(er => new
+                    {
+                        er.EmployeeId,
+                        er.Employee!.BranchId,
+                        er.Employee.EmployeeTypeId,
+                        SeesAllTypes = er.Employee.EmployeeType != null &&
+                            (er.Employee.EmployeeType.SeesAllTypesInBranchScope ||
+                             er.Employee.EmployeeType.Code == EmployeeTypeCodes.Operations)
+                    })
+                    .Distinct()
+                    .ToListAsync();
+
+                if (candidates.Count == 0)
+                    continue;
+
+                switch (receiver.Scope)
+                {
+                    case NotificationScope.Branch:
+                        // Non-org listening-role holders in the subject's branch(es),
+                        // plus official Branch.ManagerID / Area.ManagerEmployeeId with the listening role.
+                        // Org managers are NOT included merely because their home branch matches.
+                        if (subjectBranchIds.Count == 0)
+                            break;
+
+                        var candidateIdsForBranch = candidates.Select(c => c.EmployeeId).ToHashSet();
+                        var orgManagerCandidateIds = await GetOrgManagerEmployeeIdsAsync(candidateIdsForBranch);
+
+                        foreach (var c in candidates)
+                        {
+                            if (!c.BranchId.HasValue || !subjectBranchIds.Contains(c.BranchId.Value))
+                                continue;
+
+                            if (!orgManagerCandidateIds.Contains(c.EmployeeId))
+                                recipients.Add(c.EmployeeId);
+                        }
+
+                        var branchManagers = await _branchRepo.GetAll(b =>
+                                subjectBranchIds.Contains(b.Id) &&
+                                !b.IsDeleted &&
+                                b.IsActive &&
+                                candidateIdsForBranch.Contains(b.ManagerID))
+                            .Select(b => b.ManagerID)
+                            .Distinct()
+                            .ToListAsync();
+                        foreach (var id in branchManagers)
+                            recipients.Add(id);
+
+                        if (subjectAreaIds.Count > 0)
+                        {
+                            var branchScopeAreaManagers = await _areaRepo.GetAll(a =>
+                                    subjectAreaIds.Contains(a.Id) &&
+                                    !a.IsDeleted &&
+                                    a.ManagerEmployeeId != null &&
+                                    candidateIdsForBranch.Contains(a.ManagerEmployeeId.Value))
+                                .Select(a => a.ManagerEmployeeId!.Value)
+                                .Distinct()
+                                .ToListAsync();
+                            foreach (var id in branchScopeAreaManagers)
+                                recipients.Add(id);
+                        }
+                        break;
+
+                    case NotificationScope.Area:
+                        // Non-org listening-role holders whose home is in the subject's area(s),
+                        // plus designated area managers holding the listening role.
+                        if (subjectAreaIds.Count == 0)
+                            break;
+
+                        var areaBranchIds = await _branchRepo.GetAll(b =>
+                                !b.IsDeleted &&
+                                b.AreaId != null &&
+                                subjectAreaIds.Contains(b.AreaId.Value))
+                            .Select(b => b.Id)
+                            .Distinct()
+                            .ToListAsync();
+                        var areaBranchIdSet = areaBranchIds.ToHashSet();
+
+                        var candidateIdsForArea = candidates.Select(c => c.EmployeeId).ToHashSet();
+                        var orgManagerIdsForArea = await GetOrgManagerEmployeeIdsAsync(candidateIdsForArea);
+
+                        foreach (var c in candidates)
+                        {
+                            if (!c.BranchId.HasValue || !areaBranchIdSet.Contains(c.BranchId.Value))
+                                continue;
+
+                            if (!orgManagerIdsForArea.Contains(c.EmployeeId))
+                                recipients.Add(c.EmployeeId);
+                        }
+
+                        var areaManagers = await _areaRepo.GetAll(a =>
+                                subjectAreaIds.Contains(a.Id) &&
+                                !a.IsDeleted &&
+                                a.ManagerEmployeeId != null &&
+                                candidateIdsForArea.Contains(a.ManagerEmployeeId.Value))
+                            .Select(a => a.ManagerEmployeeId!.Value)
+                            .Distinct()
+                            .ToListAsync();
+                        foreach (var id in areaManagers)
+                            recipients.Add(id);
+                        break;
+
+                    case NotificationScope.Company:
+                        // Company-wide: Operations hears all types; other types hear same type only.
+                        foreach (var c in candidates)
+                        {
+                            if (c.SeesAllTypes || c.EmployeeTypeId == subject.EmployeeTypeId)
+                                recipients.Add(c.EmployeeId);
+                        }
+                        break;
+                }
+            }
+
+            return recipients.ToList();
         }
 
-        private Task<bool> IsActiveEmployeeAsync(int employeeId) =>
-            _employeeRepo.GetAll(e => e.Id == employeeId && e.IsActive && !e.IsDeleted).AnyAsync();
+        private async Task<List<int>> GetSubjectBranchIdsAsync(int employeeId, int? homeBranchId)
+        {
+            var ids = new HashSet<int>();
+
+            var managed = await _branchRepo.GetAll(b =>
+                    b.ManagerID == employeeId && !b.IsDeleted && b.IsActive)
+                .Select(b => b.Id)
+                .ToListAsync();
+            foreach (var id in managed)
+                ids.Add(id);
+
+            var isAreaManager = await _areaRepo.GetAll(a =>
+                    a.ManagerEmployeeId == employeeId && !a.IsDeleted)
+                .AnyAsync();
+
+            // Org managers: home branch counts only if they are that branch's ManagerID.
+            // Otherwise home would pull in a branch that already has another manager.
+            if (homeBranchId.HasValue)
+            {
+                var isOrgManager = managed.Count > 0 || isAreaManager;
+                if (!isOrgManager || managed.Contains(homeBranchId.Value))
+                    ids.Add(homeBranchId.Value);
+            }
+
+            return ids.ToList();
+        }
+
+        private async Task<HashSet<int>> GetOrgManagerEmployeeIdsAsync(HashSet<int> employeeIds)
+        {
+            if (employeeIds.Count == 0)
+                return new HashSet<int>();
+
+            var branchMgrIds = await _branchRepo.GetAll(b =>
+                    employeeIds.Contains(b.ManagerID) && !b.IsDeleted && b.IsActive)
+                .Select(b => b.ManagerID)
+                .Distinct()
+                .ToListAsync();
+
+            var areaMgrIds = await _areaRepo.GetAll(a =>
+                    a.ManagerEmployeeId != null &&
+                    employeeIds.Contains(a.ManagerEmployeeId.Value) &&
+                    !a.IsDeleted)
+                .Select(a => a.ManagerEmployeeId!.Value)
+                .Distinct()
+                .ToListAsync();
+
+            return branchMgrIds.Concat(areaMgrIds).ToHashSet();
+        }
     }
 }

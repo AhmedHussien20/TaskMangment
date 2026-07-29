@@ -32,10 +32,16 @@ public class AccessScopeResolverTests
             });
     }
 
+    private void SetupHasActiveRole(int employeeId, bool hasRole = true)
+    {
+        _permissions.Setup(p => p.HasActiveRoleAsync(employeeId)).ReturnsAsync(hasRole);
+    }
+
     [Fact]
     public async Task ResolveAsync_WithViewCompanyTasks_IsCompanyWide()
     {
         SetupEmployees(new Employee { Id = 1, CompanyId = 10, BranchId = 5, IsActive = true });
+        SetupHasActiveRole(1);
         _accessProvider.Setup(a => a.GetAsync(1))
             .ReturnsAsync(new UserAccessContext { EmployeeId = 1 });
         _permissions.Setup(p => p.GetPermissionsAsync(1))
@@ -51,6 +57,7 @@ public class AccessScopeResolverTests
     public async Task ResolveAsync_WithManagerBranches_IsManagerScoped()
     {
         SetupEmployees(new Employee { Id = 2, CompanyId = 10, BranchId = 5, IsActive = true });
+        SetupHasActiveRole(2);
         _accessProvider.Setup(a => a.GetAsync(2))
             .ReturnsAsync(new UserAccessContext
             {
@@ -70,6 +77,7 @@ public class AccessScopeResolverTests
     public async Task ResolveAsync_WithCreateTaskOnly_IsOwnBranch()
     {
         SetupEmployees(new Employee { Id = 3, CompanyId = 10, BranchId = 7, IsActive = true });
+        SetupHasActiveRole(3);
         _accessProvider.Setup(a => a.GetAsync(3))
             .ReturnsAsync(new UserAccessContext { EmployeeId = 3 });
         _permissions.Setup(p => p.GetPermissionsAsync(3))
@@ -85,6 +93,7 @@ public class AccessScopeResolverTests
     public async Task ResolveAsync_WithOnlyViewOwnTasks_IsSelfOnly()
     {
         SetupEmployees(new Employee { Id = 4, CompanyId = 10, BranchId = 7, IsActive = true });
+        SetupHasActiveRole(4);
         _accessProvider.Setup(a => a.GetAsync(4))
             .ReturnsAsync(new UserAccessContext { EmployeeId = 4 });
         _permissions.Setup(p => p.GetPermissionsAsync(4))
@@ -93,6 +102,28 @@ public class AccessScopeResolverTests
         var scope = await CreateSut().ResolveAsync(4);
 
         Assert.Equal(AccessScopeKind.SelfOnly, scope.Kind);
+    }
+
+    [Fact]
+    public async Task ResolveAsync_NoRole_IgnoresFunctionalScope_IsSelfOnly()
+    {
+        SetupEmployees(new Employee { Id = 130, CompanyId = 10, BranchId = 3, IsActive = true });
+        SetupHasActiveRole(130, hasRole: false);
+        _accessProvider.Setup(a => a.GetAsync(130))
+            .ReturnsAsync(new UserAccessContext
+            {
+                EmployeeId = 130,
+                EmployeeTypeIds = [1],
+                SeesAllTypesInBranchScope = true
+            });
+
+        var scope = await CreateSut().ResolveAsync(130);
+
+        Assert.Equal(AccessScopeKind.SelfOnly, scope.Kind);
+        Assert.Empty(scope.BranchIds);
+        Assert.Empty(scope.EmployeeTypeIds);
+        Assert.False(scope.SeesAllTypesInBranchScope);
+        _accessProvider.Verify(a => a.GetAsync(It.IsAny<int>()), Times.Never);
     }
 
     [Fact]
@@ -117,6 +148,32 @@ public class AccessScopeResolverTests
         var result = CreateSut().FilterEmployees(employees, scope).Select(e => e.Id).ToList();
 
         Assert.Equal(new[] { 1, 3 }, result);
+    }
+
+    [Fact]
+    public void FilterEmployees_ManagerScoped_UnionsBranchesOrTypes()
+    {
+        var employees = new List<Employee>
+        {
+            new() { Id = 1, CompanyId = 10, BranchId = 5, EmployeeTypeId = 1, IsActive = true }, // in branch
+            new() { Id = 2, CompanyId = 10, BranchId = 9, EmployeeTypeId = 3, IsActive = true }, // matching type
+            new() { Id = 3, CompanyId = 10, BranchId = 9, EmployeeTypeId = 1, IsActive = true }, // neither
+            new() { Id = 4, CompanyId = 99, BranchId = 5, EmployeeTypeId = 3, IsActive = true }  // other company
+        }.AsQueryable();
+
+        var scope = new ResolvedAccessScope
+        {
+            EmployeeId = 100,
+            CompanyId = 10,
+            Kind = AccessScopeKind.ManagerScoped,
+            BranchIds = [5],
+            EmployeeTypeIds = [3],
+            SeesAllTypesInBranchScope = false
+        };
+
+        var result = CreateSut().FilterEmployees(employees, scope).Select(e => e.Id).OrderBy(x => x).ToList();
+
+        Assert.Equal(new[] { 1, 2 }, result);
     }
 
     [Fact]
@@ -161,6 +218,7 @@ public class AccessScopeResolverTests
 
         _accessProvider.Setup(a => a.GetAsync(1))
             .ReturnsAsync(new UserAccessContext { EmployeeId = 1 });
+        _permissions.Setup(p => p.HasActiveRoleAsync(1)).ReturnsAsync(true);
         _permissions.Setup(p => p.GetPermissionsAsync(1))
             .ReturnsAsync(new HashSet<string> { PermissionCodes.CreateTask });
         _permissions.Setup(p => p.HasAsync(1, PermissionCodes.CreateTask)).ReturnsAsync(true);
@@ -180,6 +238,7 @@ public class AccessScopeResolverTests
 
         _accessProvider.Setup(a => a.GetAsync(1))
             .ReturnsAsync(new UserAccessContext { EmployeeId = 1 });
+        _permissions.Setup(p => p.HasActiveRoleAsync(1)).ReturnsAsync(true);
         _permissions.Setup(p => p.GetPermissionsAsync(1))
             .ReturnsAsync(new HashSet<string> { PermissionCodes.CreateTask });
         _permissions.Setup(p => p.HasAsync(1, PermissionCodes.CreateTask)).ReturnsAsync(true);
@@ -199,6 +258,7 @@ public class AccessScopeResolverTests
 
         _accessProvider.Setup(a => a.GetAsync(1))
             .ReturnsAsync(new UserAccessContext { EmployeeId = 1 });
+        _permissions.Setup(p => p.HasActiveRoleAsync(1)).ReturnsAsync(true);
         _permissions.Setup(p => p.GetPermissionsAsync(1))
             .ReturnsAsync(new HashSet<string> { PermissionCodes.CreateTask });
         _permissions.Setup(p => p.HasAsync(1, PermissionCodes.CreateTask)).ReturnsAsync(true);

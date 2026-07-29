@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -32,7 +32,8 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
         private readonly IDomainEventDispatcher _eventDispatcher;
-        private readonly IGetHigherManager _getHigherManager;
+        private readonly INotificationRecipientBuilder _recipientBuilder;
+        private readonly TaskCreatedByMeEvaluator _createdByMe;
 
 
         public TaskExtensionRequestService(
@@ -43,7 +44,8 @@ namespace TaskMangment.Infrastructure.Services
             ICachingService cache,
             IRepository<WorkTask> taskRepo,
             IDomainEventDispatcher eventDispatcher,
-            IGetHigherManager getHigherManager)
+            INotificationRecipientBuilder recipientBuilder,
+            TaskCreatedByMeEvaluator createdByMe)
         {
             _requestRepo = requestRepo;
             _taskAssignmentRepo = taskAssignmentRepo;
@@ -52,7 +54,8 @@ namespace TaskMangment.Infrastructure.Services
             _cache = cache;
             _taskRepo = taskRepo;
             _eventDispatcher = eventDispatcher;
-            _getHigherManager = getHigherManager;
+            _recipientBuilder = recipientBuilder;
+            _createdByMe = createdByMe;
         }
 
         public async Task<ApiResponse<PagedResponse<TaskExtensionRequestListDto>>> GetAllAsync(TaskExtensionRequestRequest request)
@@ -155,33 +158,22 @@ namespace TaskMangment.Infrastructure.Services
             await _cache.RemoveAsync("taskExtensionRequests:");
 
 
-            var assignedEmployeeIds = await _taskAssignmentRepo
+            var peerIds = await _taskAssignmentRepo
          .GetAll(a => a.TaskId == taskId && a.IsActive)
    .Select(a => a.EmployeeId)
    .ToListAsync();
 
             var employeeName = await _employeeRepo.GetAll(e => e.Id == employeeId).Select(e => e.FullName).FirstOrDefaultAsync();
 
-            if (task.AssignedByEmployeeId.HasValue && !assignedEmployeeIds.Contains(task.AssignedByEmployeeId.Value))
+            if (task.AssignedByEmployeeId.HasValue && !peerIds.Contains(task.AssignedByEmployeeId.Value))
             {
-                assignedEmployeeIds.Add(task.AssignedByEmployeeId.Value);
-            }
-            assignedEmployeeIds.Remove(employeeId);
-            assignedEmployeeIds = await _employeeRepo.GetAll(e => assignedEmployeeIds.Contains(e.Id) && e.IsActive)
-                .Select(e => e.Id)
-                .ToListAsync();
-
-            foreach (var recipientId in assignedEmployeeIds.ToList())
-            {
-                var managerIds = await _getHigherManager.GetDirectHigherManagerIdsAsync(recipientId);
-                assignedEmployeeIds.AddRange(managerIds.Where(id => !assignedEmployeeIds.Contains(id)));
+                peerIds.Add(task.AssignedByEmployeeId.Value);
             }
 
-            assignedEmployeeIds.Remove(employeeId);
-            assignedEmployeeIds = await _employeeRepo.GetAll(e => assignedEmployeeIds.Contains(e.Id) && e.IsActive)
-                .Select(e => e.Id)
-                .ToListAsync();
-
+            var assignedEmployeeIds = await _recipientBuilder.BuildAsync(
+                peerIds,
+                actorIdToExclude: employeeId,
+                managerAnchorEmployeeId: employeeId);
 
             if (assignedEmployeeIds.Any())
             {
@@ -238,6 +230,9 @@ namespace TaskMangment.Infrastructure.Services
             if (request.Status != ExtensionRequestStatus.Pending)
                 throw new AppException(ErrorCodes.AlreadyReviewed, StatusCodes.Status400BadRequest);
 
+            if (!await _createdByMe.IsCreatedByMeAsync(task, reviewerId))
+                throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
+
             if (dto.Status == ExtensionRequestStatus.Approved)
             {
                 if (!dto.NewDueDate.HasValue ||
@@ -262,21 +257,10 @@ namespace TaskMangment.Infrastructure.Services
                     assignedEmployeeIds.Add(task.AssignedByEmployeeId.Value);
                 }
 
-                assignedEmployeeIds.Remove(reviewerId);
-                assignedEmployeeIds = await _employeeRepo.GetAll(e => assignedEmployeeIds.Contains(e.Id) && e.IsActive)
-                    .Select(e => e.Id)
-                    .ToListAsync();
-
-                foreach (var recipientId in assignedEmployeeIds.ToList())
-                {
-                    var managerIds = await _getHigherManager.GetDirectHigherManagerIdsAsync(recipientId);
-                    assignedEmployeeIds.AddRange(managerIds.Where(id => !assignedEmployeeIds.Contains(id)));
-                }
-
-                assignedEmployeeIds.Remove(reviewerId);
-                assignedEmployeeIds = await _employeeRepo.GetAll(e => assignedEmployeeIds.Contains(e.Id) && e.IsActive)
-                    .Select(e => e.Id)
-                    .ToListAsync();
+                assignedEmployeeIds = await _recipientBuilder.BuildAsync(
+                    assignedEmployeeIds,
+                    actorIdToExclude: reviewerId,
+                    managerAnchorEmployeeId: reviewerId);
 
                 if (assignedEmployeeIds.Any())
                 {

@@ -122,6 +122,13 @@ export class EventCalenderComponent implements OnInit, AfterViewInit {
       className: 'bg-secondary',
       borderClass: 'bg-secondary',
       eventType: CalendarEventType.Comment
+    },
+    {
+      key: 'Leave',
+      labelKey: 'CALENDAR.EVENT_TYPE.LEAVE',
+      className: 'bg-primary',
+      borderClass: 'bg-primary',
+      eventType: CalendarEventType.Leave
     }
   ];
 
@@ -199,7 +206,9 @@ export class EventCalenderComponent implements OnInit, AfterViewInit {
 
     this.calendarService.getAll({
       pageIndex: 1,
-      pageSize: 100
+      pageSize: 500,
+      sortColumn: 'StartDate',
+      sortDirection: 'ASC'
     }).subscribe({
       next: (res) => {
         const list: CalendarEventGetDto[] = res.data?.data ?? [];
@@ -265,6 +274,8 @@ export class EventCalenderComponent implements OnInit, AfterViewInit {
         return 'bg-purple';
       case CalendarEventType.Comment:
         return 'bg-secondary';
+      case CalendarEventType.Leave:
+        return 'bg-primary';
       default:
         return 'bg-primary';
     }

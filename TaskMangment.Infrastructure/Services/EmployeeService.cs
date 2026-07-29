@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Azure.Core;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -176,6 +176,30 @@ namespace TaskMangment.Infrastructure.Services
             if (request.IsActive.HasValue)
                 empQuery = empQuery.Where(e => e.IsActive == request.IsActive.Value);
 
+            if (request.CanBeBranchManager == true || request.RequiresBranchScope == true)
+            {
+                // Manager pickers never include inactive employees.
+                empQuery = empQuery.Where(e => e.IsActive);
+            }
+
+            if (request.CanBeBranchManager == true)
+            {
+                empQuery = empQuery.Where(e =>
+                    e.EmployeeRoles.Any(er =>
+                        er.IsAssigned && !er.IsDeleted &&
+                        er.Role != null && !er.Role.IsDeleted &&
+                        er.Role.CanBeBranchManager));
+            }
+
+            if (request.RequiresBranchScope == true)
+            {
+                empQuery = empQuery.Where(e =>
+                    e.EmployeeRoles.Any(er =>
+                        er.IsAssigned && !er.IsDeleted &&
+                        er.Role != null && !er.Role.IsDeleted &&
+                        er.Role.RequiresBranchScope));
+            }
+
             var isCreateTaskPicker = !string.IsNullOrWhiteSpace(request.PermissionCode)
                 && request.PermissionCode == PermissionCodes.CreateTask;
 
@@ -192,7 +216,12 @@ namespace TaskMangment.Infrastructure.Services
                         .ToListAsync();
 
                     var scopeManagers = await _managerBranchesRepo.GetAll(mb =>
-                            mb.BranchId == branchId && mb.IsActive && !mb.IsDeleted)
+                            mb.BranchId == branchId &&
+                            mb.IsActive &&
+                            !mb.IsDeleted &&
+                            mb.Branch != null &&
+                            !mb.Branch.IsDeleted &&
+                            mb.Branch.IsActive)
                         .Select(mb => mb.ManagerId)
                         .ToListAsync();
                     blockedIds.AddRange(scopeManagers);
@@ -227,6 +256,7 @@ namespace TaskMangment.Infrastructure.Services
                 .Include(e => e.Branch)
                 .Include(e => e.Department)
                 .Include(e => e.Job)
+                .Include(e => e.EmployeeType)
                 .Include(e => e.EmployeeRoles)
                     .ThenInclude(er => er.Role)
                 .AsNoTracking()

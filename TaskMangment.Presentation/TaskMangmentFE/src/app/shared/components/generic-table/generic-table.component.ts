@@ -404,6 +404,10 @@ ngOnChanges(changes: SimpleChanges): void {
 
   // ---------- Actions ----------
 
+  get hasRowActions(): boolean {
+    return this.showEditButton || this.showDeleteButton || this.showDetailsButton || this.showCopyButton;
+  }
+
   editItem(id: number) {
     this.edit.emit(id);
   }
@@ -478,7 +482,10 @@ ngOnChanges(changes: SimpleChanges): void {
     if (
       target.closest('button') ||
       target.closest('input') ||
-      target.closest('a')
+      target.closest('a') ||
+      target.closest('.dropdown') ||
+      target.closest('.dropdown-menu') ||
+      target.closest('.table-actions-col')
     ) {
       return;
     }

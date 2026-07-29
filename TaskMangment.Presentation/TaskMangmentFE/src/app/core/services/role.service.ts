@@ -7,6 +7,7 @@ import { BaseResponse } from 'app/models/base.response.model';
 import {
   Role,
   RoleAddEdit,
+  RoleNotificationUpdate,
   RolePagedResponse
 } from 'app/core/models/roles/role';
 
@@ -48,6 +49,13 @@ export class RoleService {
   // =============================
   update(id: number, model: RoleAddEdit): Observable<BaseResponse<any>> {
     return this.api.put<BaseResponse<any>>(this.service, `${id}`, model);
+  }
+
+  // =============================
+  // PUT /Role/{id}/notifications
+  // =============================
+  updateNotifications(id: number, model: RoleNotificationUpdate): Observable<BaseResponse<Role>> {
+    return this.api.put<BaseResponse<Role>>(this.service, `${id}/notifications`, model);
   }
 
   // =============================

@@ -11,6 +11,7 @@ import { Role } from 'app/core/models/roles/role';
 import { RoleService } from 'app/core/services/role.service';
 import { SearchCriteria } from 'app/core/models/search-criteria.model';
 import { RoleCreateUpdateComponent } from '../role-create-update/role-create-update.component';
+import { RoleNotificationEditComponent } from '../role-notification-edit/role-notification-edit.component';
 import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
 import { ToastrService } from 'ngx-toastr';
@@ -25,7 +26,8 @@ import { ToastrService } from 'ngx-toastr';
     TranslateModule,
     PageHeaderComponent,
     GenericTableComponent,
-    RoleCreateUpdateComponent
+    RoleCreateUpdateComponent,
+    RoleNotificationEditComponent
   ],
   templateUrl: './role-list.component.html',
   styleUrls: ['./role-list.component.scss']
@@ -56,6 +58,12 @@ export class RoleListComponent implements OnInit {
       label: 'ROLE.PERMISSIONS',
       type: 'icon-action' as const,
       icon: 'bi-shield-lock'
+    },
+    {
+      key: 'notifyFromEmployeeCount',
+      label: 'ROLE.NOTIFY_FROM_EMPLOYEES',
+      type: 'icon-action' as const,
+      icon: 'bi bi-bell'
     }
 
   ];
@@ -148,11 +156,21 @@ export class RoleListComponent implements OnInit {
     this.open(modal);
   }
 
+  openNotifyEdit(id: number, modal: any) {
+    this.selectedRoleId = id;
+    this.modalService.open(modal, {
+      centered: true,
+      backdrop: true,
+      size: 'lg',
+      windowClass: 'effect-scale'
+    });
+  }
+
   open(content: any) {
     this.modalService.open(content, {
       centered: true,
       backdrop: true,
-      size: 'lg',
+      size: 'xl',
       windowClass: 'effect-scale'
     });
   }
@@ -162,7 +180,7 @@ export class RoleListComponent implements OnInit {
     this.loadData();
   }
 
-  onIconAction(event: { type: string; row: any }) {
+  onIconAction(event: { type: string; row: any }, notifyModal: any) {
     if (event.type === 'employeeCount') {
       this.router.navigate([
         '/role',
@@ -177,7 +195,9 @@ export class RoleListComponent implements OnInit {
         'permissions'
       ]);
     }
-
+    else if (event.type === 'notifyFromEmployeeCount') {
+      this.openNotifyEdit(event.row.id, notifyModal);
+    }
   }
   confirmDelete(roleId: number) {
     Swal.fire({

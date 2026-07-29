@@ -69,7 +69,8 @@ export class AreaCreateUpdateComponent implements OnInit {
             pageIndex: 1,
             pageSize: 20, 
             sortColumn: 'Id',
-            sortDirection: 'DESC'
+            sortDirection: 'DESC',
+            requiresBranchScope: true
           };
           
           return this.employeeService.getAll(request);
@@ -151,7 +152,7 @@ export class AreaCreateUpdateComponent implements OnInit {
       pageSize: 20,
       sortColumn: 'Id',
       sortDirection: 'DESC',
-      roleLevel: 80
+      requiresBranchScope: true
     };
 
     return this.employeeService.getAll(request);

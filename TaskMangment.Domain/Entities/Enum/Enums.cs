@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,6 +11,18 @@ namespace TaskMangment.Domain.Entities
     public enum ExtensionRequestStatus : byte { Pending = 1, Approved = 2, Rejected = 3 }
     public enum CloseRequestStatus : byte { Pending = 1, Approved = 2, Rejected = 3 }
     public enum DiscountType : byte { ManualDiscount = 1, AutoCloseTaskDiscount = 2, StopCommentDiscount = 3, MaxWarningDiscount = 4 }
+
+    /// <summary>
+    /// Where a role receives notifications from its NotifyFrom roles.
+    /// None = this role does not receive via role-notification rules.
+    /// </summary>
+    public enum NotificationScope : byte
+    {
+        None = 0,
+        Branch = 1,
+        Area = 2,
+        Company = 3
+    }
 
     public enum NotificationChannel
     {

@@ -8,5 +8,7 @@ namespace TaskMangment.Application.Interfaces.Services
         Task<bool> HasAsync(int employeeId, string permissionCode);
         Task<bool> HasAnyAsync(int employeeId, params string[] permissionCodes);
         Task<IReadOnlySet<string>> GetPermissionsAsync(int employeeId);
+        /// <summary>True when the employee has at least one assigned, non-deleted role.</summary>
+        Task<bool> HasActiveRoleAsync(int employeeId);
     }
 }

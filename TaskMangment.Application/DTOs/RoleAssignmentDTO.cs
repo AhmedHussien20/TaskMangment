@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace TaskMangment.Application.DTOs
 {
@@ -11,6 +11,13 @@ namespace TaskMangment.Application.DTOs
         public string? BranchName { get; set; }
         public bool IsAssigned { get; set; }
         public string? RoleName { get; set; }
+        public List<AssignedRoleItemDto> AssignedRoles { get; set; } = new();
+    }
+
+    public class AssignedRoleItemDto
+    {
+        public int RoleId { get; set; }
+        public string RoleName { get; set; } = "";
     }
 
     public class RoleWithManyEmployeeAssignDto
@@ -26,6 +33,9 @@ namespace TaskMangment.Application.DTOs
 
         [Required]
         public bool Assign { get; set; }
+
+        /// <summary>When assigning, these roles are unassigned first (replace / update).</summary>
+        public List<int>? UnassignRoleIds { get; set; }
     }
 
     public class ManagerBranchesDto

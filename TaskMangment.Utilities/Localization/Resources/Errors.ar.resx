@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -231,6 +231,9 @@
   <data name="ROLE_NOT_FOUND" xml:space="preserve">
     <value>الصلاحية غير موجودة</value>
   </data>
+  <data name="EMPLOYEE_MAX_ROLES_EXCEEDED" xml:space="preserve">
+    <value>لا يمكن إضافة أكثر من صلاحيتين للموظف</value>
+  </data>
   <data name="PERMISSION_NOT_FOUND" xml:space="preserve">
     <value>الاذن غير موجود</value>
   </data>
@@ -265,13 +268,13 @@
     <value>تمت الموافقة على طلب الإجازة الخاص بك</value>
   </data>
   <data name="TASK_ASSIGNED_NOTIFICATION" xml:space="preserve">
-    <value>تم إسناد المهمة إليك</value>
+    <value>تم إسناد المهمة لـ {2}: مهمة رقم {0} بعنوان {1}</value>
   </data>
   <data name="TASK_PENALTY_NOTIFICATION" xml:space="preserve">
     <value>تم تطبيق جزاء بقيمة {2} على المهمة {0} من {1}</value>
   </data>
   <data name="TASK_UNASSIGNED_NOTIFICATION" xml:space="preserve">
-    <value>تم إلغاء إسناد المهمة منك</value>
+    <value>تم إلغاء إسناد {2} من مهمة رقم {0} بعنوان {1}</value>
   </data>
   <data name="TASK_WARNING_NOTIFICATION" xml:space="preserve">
     <value>تم توجيه تحذير على المهمة</value>
@@ -320,5 +323,23 @@
   </data>
   <data name="INVALID_MANAGER_ROLE_LEVEL" xml:space="preserve">
     <value>ليس لديه صلاحية مدير فرع</value>
+  </data>
+  <data name="INVALID_BRANCH_MANAGER_ROLE" xml:space="preserve">
+    <value>يجب أن يكون للموظف دور يسمح بتعيينه مديراً للفرع</value>
+  </data>
+  <data name="INVALID_AREA_MANAGER_ROLE" xml:space="preserve">
+    <value>يجب أن يكون للموظف دور يتطلب نطاق الفروع لتعيينه مديراً للمنطقة</value>
+  </data>
+  <data name="USE_AREA_FOR_BRANCH_SCOPE" xml:space="preserve">
+    <value>تغطية الفروع لهذا الدور تتم من صفحة المناطق وليس من نطاق التغطية</value>
+  </data>
+  <data name="INVALID_NOTIFICATION_SCOPE" xml:space="preserve">
+    <value>اختر نطاق الإشعارات (فرع / منطقة / شركة) عند تحديد الأدوار المصدر</value>
+  </data>
+  <data name="ROLE_EMPLOYEE_TYPE_REQUIRED" xml:space="preserve">
+    <value>يجب اختيار نوع الموظف للدور عند تفعيل يتطلب نطاق نوع الموظف</value>
+  </data>
+  <data name="EMPLOYEE_TYPE_MISMATCH" xml:space="preserve">
+    <value>نوع الموظف لا يطابق نوع الموظف المحدد للدور</value>
   </data>
 </root>

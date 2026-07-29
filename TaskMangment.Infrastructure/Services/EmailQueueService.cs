@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.SignalR;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -76,9 +76,8 @@ namespace TaskMangment.Infrastructure.Services
                     ReferenceType = request.ReferenceType,
                     ReferenceId = request.ReferenceId,
                     ScheduledAt = scheduledAt,
-                    Status = EmailStatus.Pending
-                    //MetadataJson = request.MetadataJson
-
+                    Status = EmailStatus.Pending,
+                    MetadataJson = request.MetadataJson
                 };
 
                 await _db.EmailQueue.AddAsync(emailQueue);

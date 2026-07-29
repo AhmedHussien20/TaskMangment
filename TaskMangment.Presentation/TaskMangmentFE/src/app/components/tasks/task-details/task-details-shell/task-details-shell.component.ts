@@ -54,36 +54,45 @@ export class TaskDetailsShellComponent implements OnInit, OnChanges {
   ) { }
 
   taskInfo: TaskGet | null = null;
+  private loadedTaskId: number | null = null;
 
   ngOnInit(): void {
     this.refreshPermissions();
-    if (this.taskId) {
-      this.loadTask();
-    }
+    this.ensureTaskLoaded();
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    if (changes['taskId'] && this.taskId) {
-      this.loadTask();
+    if (changes['taskId']) {
+      this.ensureTaskLoaded();
     }
     if (changes['createdByMe']) {
       this.refreshPermissions();
     }
   }
 
+  private ensureTaskLoaded(): void {
+    if (!this.taskId || this.loadedTaskId === this.taskId) return;
+    this.loadedTaskId = this.taskId;
+    this.loadTask();
+  }
+
   private refreshPermissions(): void {
     const isAssignee = this.isCurrentUserAssignee();
+    const isCreatorSide = this.createdByMe;
 
-    this.canComment = this.auth.hasPermission(Permissions.COMMENT_TASK);
-    this.canCloseRequest = this.auth.hasPermission(Permissions.CLOSE_TASK_EMPLOYEE);
-    this.canExtendRequest = this.auth.hasPermission(Permissions.SUBMIT_DUE_DATE);
-    this.canSendWarning =
-      this.auth.hasPermission(Permissions.SEND_WARNING) && !isAssignee;
-    this.canSendPenalty =
-      this.auth.hasPermission(Permissions.SEND_PENALTY) && !isAssignee;
-    this.canSetPercentage =
-      (this.createdByMe || this.auth.hasPermission(Permissions.UPDATE_TASK)) && !isAssignee;
-    this.canReviewRequests = this.auth.hasAnyPermission(
+    // Employee-side actions (close/extend request) — not for creator-side viewers.
+    this.canComment =
+      this.auth.hasPermission(Permissions.COMMENT_TASK) || isCreatorSide;
+    this.canCloseRequest =
+      !isCreatorSide && this.auth.hasPermission(Permissions.CLOSE_TASK_EMPLOYEE);
+    this.canExtendRequest =
+      !isCreatorSide && this.auth.hasPermission(Permissions.SUBMIT_DUE_DATE);
+
+    // Creator-side actions — only when createdByMe is true (and not an assignee).
+    this.canSendWarning = isCreatorSide && !isAssignee;
+    this.canSendPenalty = isCreatorSide && !isAssignee;
+    this.canSetPercentage = isCreatorSide && !isAssignee;
+    this.canReviewRequests = isCreatorSide && this.auth.hasAnyPermission(
       Permissions.APPROVE_CLOSE_EXTEND,
       Permissions.REJECT_CLOSE_EXTEND,
       Permissions.EXTEND_DUE_DATE

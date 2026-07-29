@@ -58,6 +58,7 @@ namespace TaskMangment.Infrastructure.Services
             services.AddScoped<ITaskCommentService, TaskCommentService>();
             services.AddScoped<ITaskExtensionRequestsService, TaskExtensionRequestService>();
             services.AddScoped<ITaskCloseRequestService, TaskCloseRequestService>();
+            services.AddScoped<TaskCreatedByMeEvaluator>();
             services.AddScoped<ITaskWarningService, TaskWarningService>();
              
             services.AddScoped<IAuditLogService, AuditLogService>();
@@ -150,6 +151,7 @@ namespace TaskMangment.Infrastructure.Services
             services.AddScoped<IOrgManagerResolver, OrgManagerResolver>();
             services.AddScoped<IAccessScopeResolver, AccessScopeResolver>();
             services.AddScoped<IGetHigherManager, GetHigherManager>();
+            services.AddScoped<INotificationRecipientBuilder, NotificationRecipientBuilder>();
             services.AddScoped<RolePermissionPackMigrator>();
             services.AddHttpClient<IWhatsAppService, WhatsAppService>();
 

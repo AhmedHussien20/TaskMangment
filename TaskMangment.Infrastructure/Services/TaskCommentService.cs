@@ -37,7 +37,7 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IDomainEventDispatcher _eventDispatcher;
         private readonly IBlobStorageService _blobStorageService;
         private readonly IAppUnitOfWork _uow;
-        private readonly IGetHigherManager _getHigherManager;
+        private readonly INotificationRecipientBuilder _recipientBuilder;
         private readonly IEmployeePermissionService _permissions;
 
 
@@ -53,7 +53,7 @@ namespace TaskMangment.Infrastructure.Services
             IRepository<Employee> employeeRepo,
             IBlobStorageService blobStorageService,
             IAppUnitOfWork uow,
-            IGetHigherManager getHigherManager,
+            INotificationRecipientBuilder recipientBuilder,
             IEmployeePermissionService permissions
             )
         {
@@ -67,7 +67,7 @@ namespace TaskMangment.Infrastructure.Services
             _employeeRepo = employeeRepo;
             _blobStorageService = blobStorageService;
             _uow = uow;
-            _getHigherManager = getHigherManager;
+            _recipientBuilder = recipientBuilder;
             _permissions = permissions;
         }
 
@@ -228,7 +228,8 @@ namespace TaskMangment.Infrastructure.Services
                 await _uow.CommitAsync();
 
                 // ==== Notifications/Event ====
-                var assignedEmployeeIds = await _taskAssignmentRepo
+                // Peers = assignees + AssignedBy; managers only of the commenter (actor), not every peer.
+                var peerIds = await _taskAssignmentRepo
                     .GetAll(a => a.TaskId == taskId && a.IsActive)
                     .Select(a => a.EmployeeId)
                     .ToListAsync();
@@ -239,26 +240,15 @@ namespace TaskMangment.Infrastructure.Services
                     .FirstOrDefaultAsync();
 
                 if (task.AssignedByEmployeeId.HasValue &&
-                    !assignedEmployeeIds.Contains(task.AssignedByEmployeeId.Value))
+                    !peerIds.Contains(task.AssignedByEmployeeId.Value))
                 {
-                    assignedEmployeeIds.Add(task.AssignedByEmployeeId.Value);
+                    peerIds.Add(task.AssignedByEmployeeId.Value);
                 }
 
-                assignedEmployeeIds.Remove(employeeId);
-                assignedEmployeeIds = await _employeeRepo.GetAll(e => assignedEmployeeIds.Contains(e.Id) && e.IsActive)
-                    .Select(e => e.Id)
-                    .ToListAsync();
-
-                foreach (var recipientId in assignedEmployeeIds.ToList())
-                {
-                    var managerIds = await _getHigherManager.GetDirectHigherManagerIdsAsync(recipientId);
-                    assignedEmployeeIds.AddRange(managerIds.Where(id => !assignedEmployeeIds.Contains(id)));
-                }
-
-                assignedEmployeeIds.Remove(employeeId);
-                assignedEmployeeIds = await _employeeRepo.GetAll(e => assignedEmployeeIds.Contains(e.Id) && e.IsActive)
-                    .Select(e => e.Id)
-                    .ToListAsync();
+                var assignedEmployeeIds = await _recipientBuilder.BuildAsync(
+                    peerIds,
+                    actorIdToExclude: employeeId,
+                    managerAnchorEmployeeId: employeeId);
 
                 if (assignedEmployeeIds.Any())
                 {

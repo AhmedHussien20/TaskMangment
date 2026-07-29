@@ -131,9 +131,14 @@ namespace TaskMangment.Application.DTOs
     {
         public Employee360KpiDto Kpis { get; set; } = new();
         public List<WarningDto> Warnings { get; set; } = new();
-        public List<DeductionDto> Discounts { get; set; } = new();
         public List<Employee360DeadlineDto> LateTasks { get; set; } = new();
         public List<Employee360NamedCountDto> MonthlyTrend { get; set; } = new();
+    }
+
+    public class Employee360DiscountsDto
+    {
+        public decimal TotalAmount { get; set; }
+        public List<DeductionDto> Discounts { get; set; } = new();
     }
 
     public class Employee360LeaveDto
@@ -234,5 +239,33 @@ namespace TaskMangment.Application.DTOs
         public bool? UnreadOnly { get; set; }
         public int PageIndex { get; set; } = 1;
         public int PageSize { get; set; } = 20;
+    }
+
+    /// <summary>
+    /// Task list filter matching Employee 360 KPI card definitions.
+    /// </summary>
+    public enum Employee360KpiTaskFilter
+    {
+        Active = 1,
+        Overdue = 2,
+        Week = 3,
+        Completed = 4
+    }
+
+    public class Employee360KpiTasksRequest
+    {
+        public Employee360KpiTaskFilter Filter { get; set; } = Employee360KpiTaskFilter.Active;
+        public int PageIndex { get; set; } = 1;
+        public int PageSize { get; set; } = 10;
+    }
+
+    public class Employee360KpiTaskItemDto
+    {
+        public int Id { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string StatusText { get; set; } = string.Empty;
+        public string? AssignedByName { get; set; }
+        public DateTime? DueDate { get; set; }
+        public bool CreatedByMe { get; set; }
     }
 }

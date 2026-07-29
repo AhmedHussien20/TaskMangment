@@ -35,7 +35,7 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IDomainEventDispatcher _eventDispatcher;
         private readonly IStringLocalizer<DiscountAutoType> _localizer;
         private readonly IRepository<Notification> _notificationRepo;
-        private readonly IGetHigherManager _getHigherManager;
+        private readonly INotificationRecipientBuilder _recipientBuilder;
 
 
 
@@ -50,7 +50,7 @@ namespace TaskMangment.Infrastructure.Services
             IStringLocalizer<DiscountAutoType> localizer,
             IRepository<Branch> branchRepo,
             IRepository<Notification> notificationRepo,
-            IGetHigherManager getHigherManager)
+            INotificationRecipientBuilder recipientBuilder)
         {
             _discountRepo = discountRepo;
             _employeeRepo = employeeRepo;
@@ -61,7 +61,7 @@ namespace TaskMangment.Infrastructure.Services
             _localizer = localizer;
             _branchRepo = branchRepo;
             _notificationRepo = notificationRepo;
-            _getHigherManager = getHigherManager;
+            _recipientBuilder = recipientBuilder;
         }
 
         public async Task<ApiResponse<PagedResponse<DiscountGetDto>>> GetAllAsync(TaskDiscountRequest request)
@@ -209,14 +209,11 @@ namespace TaskMangment.Infrastructure.Services
                     .FirstOrDefaultAsync(b => b.Id == issuedEmployee.BranchId.Value)
                 : null;
 
-            var managerIds = await _getHigherManager.GetDirectHigherManagerIdsAsync(dto.EmployeeId);
-
-            var sendToIds = new List<int> { dto.EmployeeId };
-            sendToIds.AddRange(managerIds.Where(id => !sendToIds.Contains(id)));
-            sendToIds.Remove(createdByEmployeeId);
-            sendToIds = await _employeeRepo.GetAll(e => sendToIds.Contains(e.Id) && e.IsActive)
-                .Select(e => e.Id)
-                .ToListAsync();
+            // Subject who received the penalty is the manager-anchor.
+            var sendToIds = await _recipientBuilder.BuildAsync(
+                peerIds: new[] { dto.EmployeeId },
+                actorIdToExclude: createdByEmployeeId,
+                managerAnchorEmployeeId: dto.EmployeeId);
 
             var IssuedToName = issuedEmployee.FullName;
 

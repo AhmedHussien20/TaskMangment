@@ -115,9 +115,13 @@ export interface Employee360AccessDto {
 export interface Employee360PerformanceDto {
   kpis: Employee360Kpis;
   warnings: EmployeeWarningDto[];
-  discounts: EmployeeDeductionDto[];
   lateTasks: Employee360Deadline[];
   monthlyTrend: Employee360NamedCount[];
+}
+
+export interface Employee360DiscountsDto {
+  totalAmount: number;
+  discounts: EmployeeDeductionDto[];
 }
 
 export interface Employee360LeaveDto {
@@ -204,6 +208,9 @@ export interface EmployeeDeductionDto {
   reason: string;
   taskId?: number;
   taskTitle: string;
+  taskStatusText?: string;
+  taskAssignedByName?: string;
+  taskDueDate?: string;
   createdDate: string;
   autoDiscount: boolean;
   discountType: number;

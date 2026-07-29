@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -27,7 +27,8 @@ namespace TaskMangment.Domain.Entities
 
         public bool ForAll { get; set; } = false;
 
-        //public string? MetadataJson { get; set; }
+        /// <summary>Optional JSON object of extra template tokens (e.g. EmployeeName).</summary>
+        public string? MetadataJson { get; set; }
 
     }
 

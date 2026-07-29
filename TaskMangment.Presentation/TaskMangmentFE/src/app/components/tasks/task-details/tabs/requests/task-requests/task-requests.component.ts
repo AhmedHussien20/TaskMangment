@@ -15,9 +15,6 @@ import { TaskService } from 'app/core/services/task.service';
 import { NgSelectModule } from '@ng-select/ng-select';
 import { DatePickerComponent } from 'app/components/date-picker/date-picker.component';
 import { isPastDueDate, isWeekendDueDate } from 'app/shared/validations/weekend-due-date.validator';
-import { AuthService } from 'app/core/services/auth.service';
-import { Permissions } from 'app/core/constants/permissions';
-
 
 @Component({
   selector: 'app-task-requests',
@@ -28,7 +25,7 @@ import { Permissions } from 'app/core/constants/permissions';
 export class TaskRequestsComponent implements OnInit, OnChanges, AfterViewInit {
 
   @Input() taskId!: number;
-  /** When true, reviewer actions are shown (task creator or approve/reject permission). */
+  /** Already gated by shell: createdByMe && approve/reject/extend permission. */
   @Input() createdByMe: boolean = false;
   canReview: boolean = false;
 
@@ -92,8 +89,7 @@ export class TaskRequestsComponent implements OnInit, OnChanges, AfterViewInit {
     private translate: TranslateService,
     private modalService: NgbModal,
     private toastr: ToastrService,
-    private taskService: TaskService,
-    private auth: AuthService
+    private taskService: TaskService
   ) { }
 
  extensionStatusOptions: { label: string; value: ExtensionRequestStatus }[] = [];
@@ -125,14 +121,8 @@ ngOnInit(): void {
   }
 
   private refreshCanReview(): void {
-    // createdByMe input from shell is already permission-gated (canReviewRequests).
-    this.canReview =
-      this.createdByMe ||
-      this.auth.hasAnyPermission(
-        Permissions.APPROVE_CLOSE_EXTEND,
-        Permissions.REJECT_CLOSE_EXTEND,
-        Permissions.EXTEND_DUE_DATE
-      );
+    // Shell passes createdByMe && canReviewRequests — do not re-OR permissions here.
+    this.canReview = this.createdByMe;
   }
 
   private ensureReviewColumn(): void {

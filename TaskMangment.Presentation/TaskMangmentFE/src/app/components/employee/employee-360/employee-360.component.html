@@ -30,6 +30,14 @@
             <span class="badge" [ngClass]="profile.isActive ? 'bg-success' : 'bg-secondary'">
               {{ (profile.isActive ? 'TABLE.ACTIVE' : 'TABLE.INACTIVE') | translate }}
             </span>
+            <span class="badge bg-info text-dark" *ngIf="profile.employeeTypeName || profile.functionCode; else noType">
+              {{ profile.employeeTypeName || profile.functionCode }}
+            </span>
+            <ng-template #noType>
+              <span class="badge bg-light text-muted">{{ 'EMPLOYEE.FUNCTION_CODE' | translate }}: —</span>
+            </ng-template>
+            <span class="badge bg-primary" *ngFor="let r of data.roles">{{ r.name }}</span>
+            <span class="badge bg-light text-muted" *ngIf="!data.roles?.length">{{ 'EMPLOYEE_360.ROLES' | translate }}: —</span>
           </div>
 
           <div class="e360-meta text-muted small mb-2">
@@ -91,9 +99,15 @@
         <button type="button" class="btn btn-sm btn-primary" (click)="applyGlobalDateRange()">
           {{ 'COMMON.APPLY' | translate }}
         </button>
-        <button type="button" class="btn btn-sm btn-outline-secondary" (click)="clearGlobalDateRange()"
-          [disabled]="!globalFrom && !globalTo">
-          {{ 'COMMON.CLEAR' | translate }}
+        <button type="button" class="btn btn-sm btn-outline-secondary" (click)="resetToCurrentMonth()">
+          {{ 'EMPLOYEE_360.THIS_MONTH' | translate }}
+        </button>
+        <button type="button" class="btn btn-sm"
+          [class.btn-outline-primary]="!allPeriodActive"
+          [class.btn-primary]="allPeriodActive"
+          (click)="applyFullPeriod()"
+          [disabled]="allPeriodActive">
+          {{ 'EMPLOYEE_360.FULL_PERIOD' | translate }}
         </button>
       </div>
     </div>
@@ -102,7 +116,7 @@
   <!-- KPI Cards -->
   <div class="row g-2 mb-3">
     <div class="col-6 col-md-4 col-lg-3 col-xl-2" *ngFor="let card of kpiCards">
-      <div class="kpi-card" [ngClass]="card.color" [class.clickable]="!!card.tab" (click)="onKpiClick(card)">
+      <div class="kpi-card" [ngClass]="card.color" [class.clickable]="!!card.clickable" (click)="onKpiClick(card)">
         <div class="kpi-icon"><i class="bi" [ngClass]="card.icon"></i></div>
         <div>
           <div class="kpi-value">{{ card.value }}</div>
@@ -226,7 +240,11 @@
                   [showAddButton]="false" [showEditButton]="false" [showDeleteButton]="false"
                   [showDetailsButton]="true" [showFilters]="false" [showExportExcel]="false"
                   [searchCriteria]="emptySearchCriteria"
-                  (details)="openTaskDetails($event)" (pageChange)="onTaskPageChange($event)">
+                  [rowClickable]="true"
+                  [rowClickableCondition]="taskRowClickable"
+                  (edit)="openTaskDetails($event)"
+                  (details)="openTaskDetails($event)"
+                  (pageChange)="onTaskPageChange($event)">
                 </app-generic-table>
               </ng-template>
             </li>
@@ -305,24 +323,12 @@
                     <div class="col-lg-6">
                       <div class="panel">
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                          <h6 class="mb-0">{{ 'EMPLOYEE_360.DISCOUNTS' | translate }} ({{ filteredPerformanceDiscounts.length }})</h6>
+                          <h6 class="mb-0">{{ 'EMPLOYEE_360.DISCOUNTS' | translate }}</h6>
                           <button type="button" class="btn btn-link btn-sm p-0" (click)="onTabChange('discounts')">
                             {{ 'EMPLOYEE_360.VIEW_ALL_DISCOUNTS' | translate }}
                           </button>
                         </div>
-                        <div *ngIf="!filteredPerformanceDiscounts.length" class="empty-state">{{ 'EMPLOYEE_360.NO_DISCOUNTS' | translate }}</div>
-                        <div *ngFor="let d of filteredPerformanceDiscounts | slice:0:5" class="list-item"
-                          [class.clickable]="!!d.taskId" (click)="d.taskId && openTaskDetails(d.taskId!)">
-                          <div class="d-flex justify-content-between gap-2">
-                            <a *ngIf="d.taskId" href="javascript:void(0)" class="task-link" (click)="openTaskFromEvent($event, d.taskId)">
-                              #{{ d.taskId }} — {{ d.taskTitle || ('TASK.ID' | translate) }}
-                            </a>
-                            <strong *ngIf="!d.taskId">{{ d.taskTitle || '—' }}</strong>
-                            <span class="text-danger">{{ d.amount | number:'1.0-2' }}</span>
-                          </div>
-                          <div class="small text-muted">{{ d.createdDate | myDate:'d MMM y':true }}</div>
-                          <div class="small">{{ d.reason }}</div>
-                        </div>
+                        <p class="small text-muted mb-0">{{ 'EMPLOYEE_360.DISCOUNTS_TAB_HINT' | translate }}</p>
                       </div>
                     </div>
                     <div class="col-12">
@@ -350,12 +356,12 @@
                       [placeholder]="'EMPLOYEE_360.SEARCH_ALL_COLUMNS' | translate" />
                   </div>
                 </div>
-                <div *ngIf="performanceLoading" class="empty-state">{{ 'COMMON.LOADING' | translate }}</div>
-                <div *ngIf="!performanceLoading && performance">
+                <div *ngIf="discountsLoading" class="empty-state">{{ 'COMMON.LOADING' | translate }}</div>
+                <div *ngIf="!discountsLoading">
                   <div class="row g-2 mb-3">
                     <div class="col-md-4">
                       <div class="mini-stat">
-                        <div class="v text-danger">{{ performance.kpis.totalDiscounts | number:'1.0-2' }}</div>
+                        <div class="v text-danger">{{ discountsTotalAmount | number:'1.0-2' }}</div>
                         <div class="l">{{ 'EMPLOYEE_360.KPI_TOTAL_DISCOUNTS' | translate }}</div>
                       </div>
                     </div>
@@ -366,7 +372,9 @@
                       </div>
                     </div>
                     <div class="col-md-4">
-                      <div class="mini-stat">
+                      <div class="mini-stat clickable" (click)="openDiscountsWithTasks()"
+                        [class.disabled]="!discountsWithTaskCount"
+                        [attr.title]="'EMPLOYEE_360.DISCOUNTS_WITH_TASK' | translate">
                         <div class="v">{{ discountsWithTaskCount }}</div>
                         <div class="l">{{ 'EMPLOYEE_360.DISCOUNTS_WITH_TASK' | translate }}</div>
                       </div>
@@ -388,7 +396,9 @@
                           </tr>
                         </thead>
                         <tbody>
-                          <tr *ngFor="let d of filteredDiscounts">
+                          <tr *ngFor="let d of filteredDiscounts"
+                            [class.clickable]="!!d.taskId"
+                            (click)="d.taskId && openTaskDetails(d.taskId)">
                             <td>{{ d.createdDate | myDate:'d MMM y':true }}</td>
                             <td>
                               <a *ngIf="d.taskId" href="javascript:void(0)" class="task-link" (click)="openTaskFromEvent($event, d.taskId)">

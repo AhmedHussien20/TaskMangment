@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -24,5 +24,7 @@ namespace TaskMangment.Domain.Entities.Enum
         Anniversar = 7,
 
         Comment = 8,
+
+        Leave = 9,
     }
 }

@@ -45,6 +45,34 @@ export class EmployeeService {
     return this.api.get<BaseResponse<Employee360Dto>>(this.service, `${id}/360${query}`);
   }
 
+  get360KpiTasks(
+    id: number,
+    filter: 'active' | 'overdue' | 'week' | 'completed',
+    pageIndex = 1,
+    pageSize = 10
+  ): Observable<BaseResponse<{
+    data: Array<{
+      id: number;
+      title: string;
+      statusText: string;
+      assignedByName?: string;
+      dueDate?: string;
+      createdByMe: boolean;
+    }>;
+    totalCount: number;
+    pageIndex: number;
+    pageSize: number;
+  }>> {
+    const filterMap: Record<string, number> = {
+      active: 1,
+      overdue: 2,
+      week: 3,
+      completed: 4
+    };
+    const query = `Filter=${filterMap[filter] ?? 1}&PageIndex=${pageIndex}&PageSize=${pageSize}`;
+    return this.api.get(this.service, `${id}/360/tasks?${query}`);
+  }
+
   getTimeline(id: number, request: {
     from?: string;
     to?: string;
@@ -85,6 +113,17 @@ export class EmployeeService {
     if (range.to) params.push(`To=${encodeURIComponent(range.to)}`);
     const query = params.length ? `?${params.join('&')}` : '';
     return this.api.get(this.service, `${id}/performance${query}`);
+  }
+
+  get360Discounts(id: number, range: { from?: string; to?: string } = {}): Observable<BaseResponse<{
+    totalAmount: number;
+    discounts: EmployeeDeductionDto[];
+  }>> {
+    const params: string[] = [];
+    if (range.from) params.push(`From=${encodeURIComponent(range.from)}`);
+    if (range.to) params.push(`To=${encodeURIComponent(range.to)}`);
+    const query = params.length ? `?${params.join('&')}` : '';
+    return this.api.get(this.service, `${id}/360/discounts${query}`);
   }
 
   getLeave360(id: number, range: { from?: string; to?: string } = {}): Observable<BaseResponse<Employee360LeaveDto>> {

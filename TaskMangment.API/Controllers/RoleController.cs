@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using TaskMangment.API.Middlewares;
 using TaskMangment.Application.Common.ApiRequests.Job;
@@ -56,6 +56,14 @@ namespace TaskMangment.API.Controllers
         {
             var result = await _service.UpdateAsync(id, dto, this.CompanyId);
             return Success(result.Data, "Role updated successfully");
+        }
+
+        [HttpPut("{id:int}/notifications")]
+        [PermissionAuthorize(PermissionCodes.AssignRole)]
+        public async Task<IActionResult> UpdateNotifications(int id, [FromBody] RoleNotificationUpdateDto dto)
+        {
+            var result = await _service.UpdateNotificationsAsync(id, dto, this.CompanyId);
+            return Success(result.Data, "Role notifications updated successfully");
         }
 
         

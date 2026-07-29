@@ -32,7 +32,7 @@ namespace TaskMangment.Infrastructure.Services
         private readonly ICachingService _cache;
         private readonly IDomainEventDispatcher _eventDispatcher;
         private readonly IRepository<TaskAssignment> _taskAssignmentRepo;
-        private readonly IGetHigherManager _getHigherManager;
+        private readonly INotificationRecipientBuilder _recipientBuilder;
 
 
         public TaskPercentageService(
@@ -43,7 +43,7 @@ namespace TaskMangment.Infrastructure.Services
             ICachingService cache,
             IDomainEventDispatcher eventDispatcher,
             IRepository<TaskAssignment> taskAssignmentRepo,
-            IGetHigherManager getHigherManager)
+            INotificationRecipientBuilder recipientBuilder)
         {
             _repo = repo;
             _taskRepo = taskRepo;
@@ -52,7 +52,7 @@ namespace TaskMangment.Infrastructure.Services
             _cache = cache;
             _eventDispatcher = eventDispatcher;
             _taskAssignmentRepo = taskAssignmentRepo;
-            _getHigherManager = getHigherManager;
+            _recipientBuilder = recipientBuilder;
         }
 
         public async Task<ApiResponse<PagedResponse<TaskPercentageGetDto>>> GetAllAsync(TaskPercentRequest request)
@@ -134,7 +134,7 @@ namespace TaskMangment.Infrastructure.Services
             await _repo.SaveChangesAsync();
             await _cache.RemoveAsync("taskPercentages:");
 
-            var assignedEmployeeIds = await _taskAssignmentRepo
+            var peerIds = await _taskAssignmentRepo
       .GetAll(a => a.TaskId == taskId && a.IsActive)
       .Where(a => a.EmployeeId != employeeId)
       .Select(a => a.EmployeeId)
@@ -146,25 +146,15 @@ namespace TaskMangment.Infrastructure.Services
 
 
 
-            if (task.AssignedByEmployeeId.HasValue && !assignedEmployeeIds.Contains(task.AssignedByEmployeeId.Value))
+            if (task.AssignedByEmployeeId.HasValue && !peerIds.Contains(task.AssignedByEmployeeId.Value))
             {
-                assignedEmployeeIds.Add(task.AssignedByEmployeeId.Value);
-            }
-            assignedEmployeeIds.Remove(employeeId);
-            assignedEmployeeIds = await _employeeRepo.GetAll(e => assignedEmployeeIds.Contains(e.Id) && e.IsActive)
-                .Select(e => e.Id)
-                .ToListAsync();
-
-            foreach (var recipientId in assignedEmployeeIds.ToList())
-            {
-                var managerIds = await _getHigherManager.GetDirectHigherManagerIdsAsync(recipientId);
-                assignedEmployeeIds.AddRange(managerIds.Where(id => !assignedEmployeeIds.Contains(id)));
+                peerIds.Add(task.AssignedByEmployeeId.Value);
             }
 
-            assignedEmployeeIds.Remove(employeeId);
-            assignedEmployeeIds = await _employeeRepo.GetAll(e => assignedEmployeeIds.Contains(e.Id) && e.IsActive)
-                .Select(e => e.Id)
-                .ToListAsync();
+            var assignedEmployeeIds = await _recipientBuilder.BuildAsync(
+                peerIds,
+                actorIdToExclude: employeeId,
+                managerAnchorEmployeeId: employeeId);
 
             if (assignedEmployeeIds.Any())
                 await _eventDispatcher.PublishAsync(new TaskAchievePercentEvent(entity.Id,dto.AchievementPercent, task.Id,task.Title, employeeName, assignedEmployeeIds));

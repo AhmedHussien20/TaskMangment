@@ -154,6 +154,7 @@ namespace TaskMangment.Infrastructure.Services
 
             var query = _context.TaskComments
                 .Include(c => c.Employee)
+                .Where(c => !c.IsDeleted && c.Task != null && !c.Task.IsDeleted)
                 .AsQueryable();
 
             if (fromDate.HasValue)
@@ -217,6 +218,7 @@ namespace TaskMangment.Infrastructure.Services
 
             var query = _context.TaskComments
                 .Include(c => c.Employee)
+                .Where(c => !c.IsDeleted && c.Task != null && !c.Task.IsDeleted)
                 .AsQueryable();
 
             if (fromDate.HasValue)
@@ -284,6 +286,7 @@ namespace TaskMangment.Infrastructure.Services
             var query = _context.TaskAssignments
                 .Include(a => a.Employee)
                 .Include(a => a.Task)
+                .Where(a => !a.IsDeleted && a.Task != null && !a.Task.IsDeleted)
                 .AsQueryable();
 
             if (fromDate.HasValue)
@@ -366,6 +369,7 @@ namespace TaskMangment.Infrastructure.Services
             var query = _context.TaskAssignments
                 .Include(a => a.Employee)
                 .Include(a => a.Task)
+                .Where(a => !a.IsDeleted && a.Task != null && !a.Task.IsDeleted)
                 .AsQueryable();
 
             if (fromDate.HasValue)
@@ -439,6 +443,7 @@ namespace TaskMangment.Infrastructure.Services
             var query = _context.TaskAssignments
                 .Include(a => a.Employee)
                 .Include(a => a.Task)
+                .Where(a => !a.IsDeleted && a.Task != null && !a.Task.IsDeleted)
                 .AsQueryable();
 
             if (fromDate.HasValue)
@@ -853,6 +858,7 @@ namespace TaskMangment.Infrastructure.Services
 
             var lastCommentIds = await _context.TaskComments
                 .Where(c =>
+                    !c.IsDeleted && c.Task != null && !c.Task.IsDeleted &&
                     (!fromDate.HasValue || c.CreatedDate >= fromDate.Value) &&
                     (!toDate.HasValue || c.CreatedDate <= toDate.Value))
                 .GroupBy(c => new { c.TaskId, c.EmployeeId })
@@ -867,7 +873,9 @@ namespace TaskMangment.Infrastructure.Services
                 .Include(c => c.Employee)
                 .Include(c => c.Task)
                     .ThenInclude(t => t.AssignedBy)
-                .Where(c => lastCommentIds.Contains(c.Id))
+                .Where(c =>
+                    !c.IsDeleted && c.Task != null && !c.Task.IsDeleted &&
+                    lastCommentIds.Contains(c.Id))
                 .AsQueryable();
 
             if (canViewAllTasks || hasAccessScope)
@@ -922,7 +930,9 @@ namespace TaskMangment.Infrastructure.Services
             var todayEnd = todayStart.AddDays(1);
 
             var lastCommentIds = await _context.TaskComments
-                .Where(c => c.CreatedDate >= todayStart && c.CreatedDate < todayEnd)
+                .Where(c =>
+                    !c.IsDeleted && c.Task != null && !c.Task.IsDeleted &&
+                    c.CreatedDate >= todayStart && c.CreatedDate < todayEnd)
                 .GroupBy(c => new { c.TaskId, c.EmployeeId })
                 .Select(g => g
                     .OrderByDescending(c => c.CreatedDate)
@@ -935,7 +945,9 @@ namespace TaskMangment.Infrastructure.Services
                 .Include(c => c.Employee)
                 .Include(c => c.Task)
                     .ThenInclude(t => t.AssignedBy)
-                .Where(c => lastCommentIds.Contains(c.Id))
+                .Where(c =>
+                    !c.IsDeleted && c.Task != null && !c.Task.IsDeleted &&
+                    lastCommentIds.Contains(c.Id))
                 .AsQueryable();
 
             if (dto.MovementType == TaskMovementType.Outgoing && dto.EmployeeId.HasValue)
@@ -1012,6 +1024,7 @@ namespace TaskMangment.Infrastructure.Services
                 .Include(a => a.Employee).ThenInclude(e => e.Branch).ThenInclude(b => b.Area)
                 .Include(a => a.Employee).ThenInclude(e => e.Company)
                 .Where(a =>
+                    !a.IsDeleted && a.Task != null && !a.Task.IsDeleted &&
                     a.IsActive &&
                     (a.Task.Status == WorkTaskStatus.New || a.Task.Status == WorkTaskStatus.InProgress) &&
                     a.Task.DueDate != null &&
@@ -1085,6 +1098,7 @@ namespace TaskMangment.Infrastructure.Services
                 .Include(a => a.Task)
                     .ThenInclude(t => t.AssignedBy)
                 .Include(a => a.Employee)
+                .Where(a => !a.IsDeleted && a.Task != null && !a.Task.IsDeleted)
                 .AsQueryable();
 
             query = query.Where(a => a.Task.CreatedDate >= fromDate);
@@ -1169,6 +1183,7 @@ namespace TaskMangment.Infrastructure.Services
             var flat = await _context.TaskAssignments
                 .Include(a => a.Task).ThenInclude(t => t.AssignedBy)
                 .Include(a => a.Employee)
+                .Where(a => !a.IsDeleted && a.Task != null && !a.Task.IsDeleted)
                 .Where(a => a.IsActive)
                 .Where(a => scopedEmployeeIds.Contains(a.EmployeeId))
                 .Where(a => a.Employee.BranchId == dto.BranchId)
@@ -1276,9 +1291,11 @@ namespace TaskMangment.Infrastructure.Services
             IQueryable<TaskAssignment> query = _context.TaskAssignments
                 .Include(a => a.Task)
                 .Where(a =>
+                    !a.IsDeleted &&
+                    a.Task != null &&
+                    !a.Task.IsDeleted &&
                     a.IsActive &&
-                    a.EmployeeId == employeeId &&
-                    !a.Task.IsDeleted);
+                    a.EmployeeId == employeeId);
 
             if (!canViewAllTasks && !hasAccessScope && canViewCreatedTasks && employeeId != currentEmployeeId)
                 query = query.Where(a => a.Task.CreatedByEmployeeId == currentEmployeeId);
@@ -1323,10 +1340,12 @@ namespace TaskMangment.Infrastructure.Services
             var commentsQuery = _context.TaskComments
                 .Include(c => c.Task)
                 .Where(c =>
+                    !c.IsDeleted &&
+                    c.Task != null &&
+                    !c.Task.IsDeleted &&
                     c.EmployeeId.HasValue &&
                     c.EmployeeId.Value == employeeId &&
-                    c.TaskId == taskId &&
-                    !c.Task.IsDeleted)
+                    c.TaskId == taskId)
                 .AsQueryable();
 
             if (!canViewAllTasks && !hasAccessScope && canViewCreatedTasks && employeeId != currentEmployeeId)

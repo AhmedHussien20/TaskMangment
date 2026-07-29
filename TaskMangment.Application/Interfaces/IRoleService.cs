@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -16,6 +16,7 @@ namespace TaskMangment.Application.Interfaces
         Task<ApiResponse<RoleGetDto>> GetByIdAsync(int id, int companyId);
         Task<ApiResponse<int>> CreateAsync(RoleAddEditDto dto, int companyId);
         Task<ApiResponse<RoleGetDto>> UpdateAsync(int id, RoleAddEditDto dto, int companyId);
+        Task<ApiResponse<RoleGetDto>> UpdateNotificationsAsync(int id, RoleNotificationUpdateDto dto, int companyId);
         Task<ApiResponse<bool>> DeleteAsync(int id, int companyId);
 
     }
