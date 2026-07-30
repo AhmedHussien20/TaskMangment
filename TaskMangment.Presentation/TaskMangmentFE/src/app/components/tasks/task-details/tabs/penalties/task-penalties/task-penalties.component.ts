@@ -27,6 +27,8 @@ export class TaskPenaltiesComponent implements OnInit, OnDestroy, OnChanges {
 
   rows: DiscountGetDto[] = [];
   totalItems = 0;
+  page = 1;
+  entries = 10;
 
   columns: TableColumn[] = [
     { key: 'violationDate', label: 'TASK.PENALTY_DATE', type: 'date' },
@@ -75,7 +77,7 @@ export class TaskPenaltiesComponent implements OnInit, OnDestroy, OnChanges {
     this.canDelete = !this.readonly && this.auth.hasPermission(Permissions.DELETE_PENALTY);
   }
 
-  loadPenalties(pageIndex = 1, pageSize = 10) {
+  loadPenalties(pageIndex = this.page, pageSize = this.entries) {
     const request = {
       taskId: this.taskId,
       searchKey: '',
@@ -89,6 +91,7 @@ export class TaskPenaltiesComponent implements OnInit, OnDestroy, OnChanges {
       next: (res) => {
         this.rows = res.data.data;
         this.totalItems = res.data.totalCount;
+        this.page = res.data.pageIndex ?? pageIndex;
       },
       error: (err) => {
         console.error('Failed to load penalties', err);
@@ -96,9 +99,18 @@ export class TaskPenaltiesComponent implements OnInit, OnDestroy, OnChanges {
     });
   }
 
+  onPageChange(page: number): void {
+    this.page = page;
+    this.loadPenalties(page, this.entries);
+  }
+
+  onEntriesChange(entries: number): void {
+    this.entries = entries;
+    this.page = 1;
+    this.loadPenalties(1, entries);
+  }
+
   ngOnDestroy(): void {
     this.sub?.unsubscribe();
   }
-
-
 }

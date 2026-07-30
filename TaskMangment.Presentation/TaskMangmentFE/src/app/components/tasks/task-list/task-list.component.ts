@@ -169,7 +169,6 @@ deepSearchComp?: TasksEmployeeDeepSearchComponent;
     this.showEmployeeFilter = this.auth.hasAnyPermission(
       Permissions.VIEW_SCOPED_TASKS,
       Permissions.VIEW_COMPANY_TASKS,
-      Permissions.VIEW_ALL_TASKS,
       Permissions.VIEW_EMPLOYEES
     );
 
@@ -192,13 +191,17 @@ deepSearchComp?: TasksEmployeeDeepSearchComponent;
     }
 
     this.canCreate = this.auth.hasPermission(Permissions.CREATE_TASK);
-    this.canEdit = this.auth.hasPermission(Permissions.UPDATE_TASK);
-    this.canDelete = this.auth.hasPermission(Permissions.DELETE_TASK);
+    // Show action columns when user may own tasks and/or has update/delete permission.
+    this.canEdit =
+      this.auth.hasPermission(Permissions.UPDATE_TASK) ||
+      this.auth.hasPermission(Permissions.CREATE_TASK);
+    this.canDelete =
+      this.auth.hasPermission(Permissions.DELETE_TASK) ||
+      this.auth.hasPermission(Permissions.CREATE_TASK);
     this.canCopy = this.auth.hasPermission(Permissions.CREATE_TASK);
     this.canArchive = this.auth.hasPermission(Permissions.ARCHIVE_TASK);
-    this.canShowExtraTasks = this.auth.hasAnyPermission(
-      Permissions.VIEW_COMPANY_TASKS,
-      Permissions.VIEW_ALL_TASKS
+    this.canShowExtraTasks = this.auth.hasPermission(
+      Permissions.VIEW_COMPANY_TASKS
     );
 
     this.loadData();
@@ -376,7 +379,8 @@ openCopy(id: number, modal: any) {
       const modalRef = this.modalService.open(TaskDetailsShellComponent, {
         size: 'xl',
         backdrop: 'static',
-        scrollable: true
+        scrollable: true,
+        windowClass: 'task-details-modal'
       });
 
       modalRef.componentInstance.taskId = taskId;
@@ -422,17 +426,26 @@ openCopy(id: number, modal: any) {
     });
   }
 
- disableEditRow = (row: TaskGet) => {
-  return !row.createdByMe || row.status === 3 || row.status === 4 || row.status === 5;
-};
+  /** Literal owner can edit; scope-only needs UPDATE_TASK. */
+  disableEditRow = (row: TaskGet) => {
+    const closed = row.status === 3 || row.status === 4 || row.status === 5;
+    if (closed) return true;
+    if (row.isCreatorOrAssigner) return false;
+    return !(row.createdByMe && this.auth.hasPermission(Permissions.UPDATE_TASK));
+  };
 
-disableDeleteRow = (row: TaskGet) => {
-  return !row.createdByMe || row.status === 3 || row.status === 4 || row.status === 5;
-};
+  /** Literal owner can delete; scope-only needs DELETE_TASK. */
+  disableDeleteRow = (row: TaskGet) => {
+    const closed = row.status === 3 || row.status === 4 || row.status === 5;
+    if (closed) return true;
+    if (row.isCreatorOrAssigner) return false;
+    return !(row.createdByMe && this.auth.hasPermission(Permissions.DELETE_TASK));
+  };
 
-disableCopyRow = (row: TaskGet): boolean => {
-  return !row.createdByMe;
-};
+  disableCopyRow = (row: TaskGet): boolean => {
+    if (row.isCreatorOrAssigner) return false;
+    return !(row.createdByMe && this.auth.hasPermission(Permissions.CREATE_TASK));
+  };
 deepSearchTitleKey: string = 'TASK.DEEP_SEARCH';
 extraMenuItems = [
   { label: 'TASK.OUTGOING_NEW', value: { direction: 2, statusId: 1 } },

@@ -63,6 +63,12 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
         public DateTime? NewDate { get; set; }
         public int? NumberOfExtensions { get; set; }
         public bool CreatedByMe { get; set; } = false;
+        /// <summary>
+        /// True only when the current user is CreatedBy or AssignedBy (not scope-inferred).
+        /// </summary>
+        public bool IsCreatorOrAssigner { get; set; } = false;
+        /// <summary>Pending close + extension requests for this task.</summary>
+        public int PendingRequestsCount { get; set; }
 
     }
 

@@ -37,6 +37,7 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<EmailTemplate> _emailTemplateRepo;
         private readonly IRepository<Notification> _notificationRepo;
         private readonly IRepository<WorkTask> _taskRepo;
+        private readonly IRepository<Attachment> _attachmentRepo;
 
         public Employee360Service(
             IAccessScopeResolver accessScope,
@@ -60,7 +61,8 @@ namespace TaskMangment.Infrastructure.Services
             IRepository<EmailQueue> emailQueueRepo,
             IRepository<EmailTemplate> emailTemplateRepo,
             IRepository<Notification> notificationRepo,
-            IRepository<WorkTask> taskRepo)
+            IRepository<WorkTask> taskRepo,
+            IRepository<Attachment> attachmentRepo)
         {
             _accessScope = accessScope;
             _employeeService = employeeService;
@@ -84,6 +86,7 @@ namespace TaskMangment.Infrastructure.Services
             _emailTemplateRepo = emailTemplateRepo;
             _notificationRepo = notificationRepo;
             _taskRepo = taskRepo;
+            _attachmentRepo = attachmentRepo;
         }
 
         public async Task<ApiResponse<Employee360Dto>> Get360Async(
@@ -139,7 +142,7 @@ namespace TaskMangment.Infrastructure.Services
                 IdentityNumber = p.IdentityNumber
             };
 
-            var access = await BuildAccessAsync(employeeId);
+            var accessSummary = await BuildAccessSummaryAsync(employeeId);
             var reportingManagers = await GetReportingManagersAsync(employeeId);
             var kpis = await BuildKpisAsync(employeeId, period);
             var sidebar = await BuildSidebarAsync(employeeId, range);
@@ -148,9 +151,8 @@ namespace TaskMangment.Infrastructure.Services
             var dto = new Employee360Dto
             {
                 Profile = profile,
-                Roles = access.Roles,
-                Permissions = access.Permissions,
-                ManagerScope = access.ManagerScope,
+                Roles = accessSummary.Roles,
+                ManagerScope = accessSummary.ManagerScope,
                 ReportingManagers = reportingManagers,
                 DirectManager = reportingManagers.FirstOrDefault(),
                 Kpis = kpis,
@@ -268,7 +270,7 @@ namespace TaskMangment.Infrastructure.Services
                 History = leaves.Select(l => new Employee360LeaveItemDto
                 {
                     Id = l.Id,
-                    LeaveTypeName = l.LeaveType?.NameEn ?? l.LeaveType?.NameAr ?? "",
+                    LeaveTypeName = l.LeaveType?.NameAr ?? l.LeaveType?.NameEn ?? "",
                     StartDate = l.StartDate,
                     EndDate = l.EndDate,
                     Status = l.Status.ToString(),
@@ -305,7 +307,16 @@ namespace TaskMangment.Infrastructure.Services
                     query = query.Where(e => e.Status == status);
             }
             if (!string.IsNullOrWhiteSpace(request.Type))
-                query = query.Where(e => e.TemplateKey.Contains(request.Type) || e.ReferenceType.ToString().Contains(request.Type));
+            {
+                var typeKey = request.Type.Trim();
+                var matchingRefTypes = Enum.GetValues<ReferenceType>()
+                    .Where(r => r.ToString().Contains(typeKey, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+
+                query = query.Where(e =>
+                    e.TemplateKey.Contains(typeKey) ||
+                    matchingRefTypes.Contains(e.ReferenceType));
+            }
             if (!string.IsNullOrWhiteSpace(request.SearchKey))
             {
                 var key = request.SearchKey.Trim();
@@ -318,19 +329,21 @@ namespace TaskMangment.Infrastructure.Services
                     .Where(s => MapEmailStatus(s).Contains(key, StringComparison.OrdinalIgnoreCase)
                              || s.ToString().Contains(key, StringComparison.OrdinalIgnoreCase))
                     .ToList();
+                var matchingRefTypes = Enum.GetValues<ReferenceType>()
+                    .Where(r => r.ToString().Contains(key, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
                 var providerMatch = "SMTP".Contains(key, StringComparison.OrdinalIgnoreCase);
+                var idMatches = int.TryParse(key, out var idKey);
 
                 query = query.Where(e =>
-                    e.Id.ToString().Contains(key) ||
+                    (idMatches && (e.Id == idKey || e.ReferenceId == idKey || e.RetryCount == idKey)) ||
                     e.ToEmail.Contains(key) ||
                     (e.Cc != null && e.Cc.Contains(key)) ||
                     (e.Bcc != null && e.Bcc.Contains(key)) ||
                     e.TemplateKey.Contains(key) ||
-                    e.ReferenceType.ToString().Contains(key) ||
-                    e.ReferenceId.ToString().Contains(key) ||
-                    e.RetryCount.ToString().Contains(key) ||
+                    matchingRefTypes.Contains(e.ReferenceType) ||
                     (e.ErrorMessage != null && e.ErrorMessage.Contains(key)) ||
-                    providerMatch ||
+                    (providerMatch && key.Equals("SMTP", StringComparison.OrdinalIgnoreCase)) ||
                     matchingTemplateKeys.Contains(e.TemplateKey) ||
                     statusMatches.Contains(e.Status));
             }
@@ -530,6 +543,72 @@ namespace TaskMangment.Infrastructure.Services
                 new PagedResponse<Employee360NotificationItemDto>(items, total, pageIndex, pageSize));
         }
 
+        public async Task<ApiResponse<PagedResponse<Employee360CommentItemDto>>> GetCommentsAsync(
+            int actorId, int employeeId, Employee360PagedRequest request)
+        {
+            await EnsureCanViewAsync(actorId, employeeId);
+
+            var pageIndex = request.PageIndex < 1 ? 1 : request.PageIndex;
+            var pageSize = request.PageSize < 1 ? 20 : Math.Min(request.PageSize, 100);
+
+            var query = _commentRepo.GetAll(c => c.EmployeeId == employeeId && !c.IsDeleted);
+            var from = NormalizeFrom(request.From);
+            var to = NormalizeTo(request.To);
+
+            if (from.HasValue)
+                query = query.Where(c => c.CreatedDate >= from.Value);
+            if (to.HasValue)
+                query = query.Where(c => c.CreatedDate <= to.Value);
+            if (!string.IsNullOrWhiteSpace(request.SearchKey))
+            {
+                var key = request.SearchKey.Trim();
+                query = query.Where(c =>
+                    (c.CommentText != null && c.CommentText.Contains(key)) ||
+                    c.TaskId.ToString().Contains(key) ||
+                    c.Task.Title.Contains(key));
+            }
+
+            var total = await query.CountAsync();
+            var rows = await query
+                .OrderByDescending(c => c.CreatedDate)
+                .Skip((pageIndex - 1) * pageSize)
+                .Take(pageSize)
+                .Select(c => new
+                {
+                    c.Id,
+                    c.CreatedDate,
+                    c.CommentText,
+                    c.TaskId,
+                    TaskTitle = c.Task.Title
+                })
+                .ToListAsync();
+
+            var commentIds = rows.Select(r => r.Id).ToList();
+            var attachmentCounts = commentIds.Count == 0
+                ? new Dictionary<int, int>()
+                : await _attachmentRepo
+                    .GetAll(a =>
+                        commentIds.Contains(a.ReferenceId) &&
+                        a.AttachmentType == AttachmentType.Comment &&
+                        !a.IsDeleted)
+                    .GroupBy(a => a.ReferenceId)
+                    .Select(g => new { CommentId = g.Key, Count = g.Count() })
+                    .ToDictionaryAsync(x => x.CommentId, x => x.Count);
+
+            var items = rows.Select(r => new Employee360CommentItemDto
+            {
+                Id = r.Id,
+                Date = r.CreatedDate,
+                CommentText = r.CommentText,
+                TaskId = r.TaskId,
+                TaskTitle = r.TaskTitle,
+                AttachmentCount = attachmentCounts.TryGetValue(r.Id, out var count) ? count : 0
+            }).ToList();
+
+            return ApiResponse<PagedResponse<Employee360CommentItemDto>>.Ok(
+                new PagedResponse<Employee360CommentItemDto>(items, total, pageIndex, pageSize));
+        }
+
         private async Task<Dictionary<int, int?>> ResolveEmailTaskIdsAsync(List<EmailQueue> rows)
         {
             var result = rows.ToDictionary(r => r.Id, r => (int?)null);
@@ -717,7 +796,7 @@ namespace TaskMangment.Infrastructure.Services
                 {
                     l.CreatedDate,
                     l.Status,
-                    LeaveTypeName = l.LeaveType.NameEn ?? l.LeaveType.NameAr,
+                    LeaveTypeName = l.LeaveType.NameAr ?? l.LeaveType.NameEn,
                     l.StartDate,
                     l.EndDate,
                     l.ApprovedAt,
@@ -832,7 +911,11 @@ namespace TaskMangment.Infrastructure.Services
         private static bool HasCustomRange(Employee360DateRangeRequest? range) =>
             range?.From.HasValue == true || range?.To.HasValue == true;
 
-        private async Task<Employee360AccessDto> BuildAccessAsync(int employeeId)
+        /// <summary>
+        /// Lightweight access bits for the 360 header (roles + manager scope).
+        /// Full permissions are loaded only via <see cref="GetAccessAsync"/>.
+        /// </summary>
+        private async Task<(List<Employee360RoleDto> Roles, Employee360ManagerScopeDto? ManagerScope)> BuildAccessSummaryAsync(int employeeId)
         {
             var roles = await _employeeRoleRepo.GetAll(er =>
                     er.EmployeeId == employeeId && er.IsAssigned && !er.IsDeleted && er.Role != null && !er.Role.IsDeleted)
@@ -845,13 +928,6 @@ namespace TaskMangment.Infrastructure.Services
                 .ToListAsync();
 
             roles = roles.GroupBy(r => r.RoleId).Select(g => g.First()).ToList();
-            var permissions = (await _permissionService.GetPermissionsAsync(employeeId)).OrderBy(p => p).ToList();
-
-            var groups = permissions
-                .Select(p => p.Contains('_') ? p.Split('_')[0] : "GENERAL")
-                .Distinct()
-                .OrderBy(g => g)
-                .ToList();
 
             var accessContext = await _accessContextProvider.GetAsync(employeeId);
             Employee360ManagerScopeDto? managerScope = null;
@@ -873,6 +949,20 @@ namespace TaskMangment.Infrastructure.Services
                     Branches = branches.GroupBy(b => b.Id).Select(g => g.First()).ToList()
                 };
             }
+
+            return (roles, managerScope);
+        }
+
+        private async Task<Employee360AccessDto> BuildAccessAsync(int employeeId)
+        {
+            var (roles, managerScope) = await BuildAccessSummaryAsync(employeeId);
+            var permissions = (await _permissionService.GetPermissionsAsync(employeeId)).OrderBy(p => p).ToList();
+
+            var groups = permissions
+                .Select(p => p.Contains('_') ? p.Split('_')[0] : "GENERAL")
+                .Distinct()
+                .OrderBy(g => g)
+                .ToList();
 
             return new Employee360AccessDto
             {

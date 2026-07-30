@@ -40,7 +40,7 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpPost("{taskId}")]
-        [PermissionAuthorize(PermissionCodes.CloseTaskEmployee)]
+        [PermissionAuthorize(PermissionCodes.RequestTaskClose)]
         public async Task<IActionResult> Add([FromBody] TaskCloseRequestAddDto dto, int taskId)
         {
             var result = await _service.AddAsync(dto, taskId, this.CurrentUserId);
@@ -48,7 +48,7 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpPatch("review/{id}")]
-        [PermissionAuthorize(PermissionCodes.ApproveCloseExtend, PermissionCodes.RejectCloseExtend)]
+        [PermissionAuthorize(PermissionCodes.ApproveTaskRequest, PermissionCodes.RejectTaskRequest)]
         public async Task<IActionResult> Review(int id, [FromBody] CloseRequestStatus status)
         {
             var result = await _service.ReviewAsync(id, status, this.CurrentUserId);

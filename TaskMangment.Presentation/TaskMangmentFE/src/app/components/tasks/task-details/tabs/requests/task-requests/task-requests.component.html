@@ -1,7 +1,9 @@
 <div class="table-responsive" style="max-height:400px; overflow:auto;">
   <app-generic-table [columns]="columns" [data]="rows" [page]="page" [entries]="entries" [totalItems]="totalItems"
-    [showAddButton]="false" [showDetailsButton]="false" [showFilters]="false" [showPagination]="false"
-    (pageChange)="onPageChange($event)" (iconAction)="onAction($event,reviewModal)">
+    [showAddButton]="false" [showDetailsButton]="false" [showFilters]="false" [showPagination]="true"
+    [showExportExcel]="false"
+    (pageChange)="onPageChange($event)" (entriesChange)="onEntriesChange($event)"
+    (iconAction)="onAction($event,reviewModal)">
   </app-generic-table>
 
 </div>

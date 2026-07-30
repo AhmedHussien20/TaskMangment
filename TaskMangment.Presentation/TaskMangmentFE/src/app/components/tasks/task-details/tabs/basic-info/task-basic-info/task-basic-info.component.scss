@@ -1,34 +1,54 @@
 .task-details-wrapper {
-  max-height: 50vh;   
+  max-height: 50vh;
   overflow-y: auto;
   overflow-x: hidden;
   display: block;
 }
 
-
-
 .task-details-table {
   width: 100%;
+  table-layout: fixed;
 }
 
-/* العنوان */
 .task-details-table th {
-  width: 40%;              
-  text-align: right;
-  white-space: nowrap;
+  width: 32%;
+  max-width: 180px;
+  text-align: start;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
   padding: 10px 12px;
   font-size: 13px;
   font-weight: 600;
   color: #374151;
   background: #f9fafb;
+  vertical-align: top;
 }
 
-
 .task-details-table td {
-  width: 70%;
+  width: 68%;
   padding: 10px 12px;
   font-size: 14px;
   color: #111827;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  vertical-align: top;
+}
+
+@media (max-width: 768px) {
+  .task-details-table th {
+    width: 28%;
+    max-width: 120px;
+    font-size: 12px;
+    padding: 8px 8px;
+  }
+
+  .task-details-table td {
+    width: 72%;
+    font-size: 13px;
+    padding: 8px 8px;
+  }
 }
 
 .money-badge {
@@ -52,5 +72,3 @@
   font-size: 11px;
   opacity: 0.8;
 }
-
-

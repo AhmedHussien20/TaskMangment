@@ -157,8 +157,7 @@ namespace TaskMangment.Infrastructure.Services
                 var canCommentUnassigned = await _permissions.HasAnyAsync(
                     employeeId,
                     PermissionCodes.ViewScopedTasks,
-                    PermissionCodes.ViewCompanyTasks,
-                    PermissionCodes.ViewAllTasks);
+                    PermissionCodes.ViewCompanyTasks);
                 if (!canCommentUnassigned)
                     throw new AppException(ErrorCodes.NotAssigned, StatusCodes.Status400BadRequest);
             }

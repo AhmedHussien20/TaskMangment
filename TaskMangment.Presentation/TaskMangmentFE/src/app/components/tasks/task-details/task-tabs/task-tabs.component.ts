@@ -1,4 +1,5 @@
 import { Component, Input } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
 import { TaskEmployeesComponent } from '../tabs/employees/task-employees/task-employees.component';
 import { TaskBasicInfoComponent } from '../tabs/basic-info/task-basic-info/task-basic-info.component';
@@ -13,8 +14,9 @@ import { TaskGet } from 'app/core/models/task/task';
 @Component({
   selector: 'app-task-tabs',
   standalone: true,
-  imports: [NgbNavModule,TaskEmployeesComponent,TaskBasicInfoComponent ,TaskWarningsComponent, TranslateModule,TaskPenaltiesComponent,TaskAuditComponent,TaskBasicInfoComponent,TaskRequestsComponent,TaskCommentsComponent ],
-  templateUrl: './task-tabs.component.html'
+  imports: [CommonModule, NgbNavModule,TaskEmployeesComponent,TaskBasicInfoComponent ,TaskWarningsComponent, TranslateModule,TaskPenaltiesComponent,TaskAuditComponent,TaskRequestsComponent,TaskCommentsComponent ],
+  templateUrl: './task-tabs.component.html',
+  styleUrls: ['./task-tabs.component.scss']
 })
 export class TaskTabsComponent {
 
@@ -26,4 +28,8 @@ export class TaskTabsComponent {
   @Input() canSendWarning = false;
 
   activeTab = 'basic';
+
+  get pendingRequestsCount(): number {
+    return this.taskInfo?.pendingRequestsCount ?? 0;
+  }
 }

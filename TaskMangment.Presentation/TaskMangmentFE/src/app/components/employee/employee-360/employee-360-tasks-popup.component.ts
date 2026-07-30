@@ -170,6 +170,7 @@ export class Employee360TasksPopupComponent implements OnInit {
     const row = this.rows.find(r => r.id === id);
     const modalRef = this.modalService.open(TaskDetailsShellComponent, {
       size: 'xl',
+      windowClass: 'task-details-modal',
       backdrop: 'static',
       scrollable: true
     });

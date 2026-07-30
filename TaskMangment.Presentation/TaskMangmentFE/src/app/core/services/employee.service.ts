@@ -6,6 +6,7 @@ import { SearchCriteria } from '../models/search-criteria.model';
 import { Employee, EmployeeAddEdit, EmployeePagedResponse, EnumItemDto } from '../models/employee/employee';
 import {
   Employee360AccessDto,
+  Employee360CommentItem,
   Employee360Dto,
   Employee360EmailItem,
   Employee360LeaveDto,
@@ -150,6 +151,15 @@ export class EmployeeService {
     pageSize: number;
   }>> {
     return this.api.get(this.service, `${id}/notifications?${this.build360Query(request)}`);
+  }
+
+  getComments360(id: number, request: Employee360PagedRequest = {}): Observable<BaseResponse<{
+    data: Employee360CommentItem[];
+    totalCount: number;
+    pageIndex: number;
+    pageSize: number;
+  }>> {
+    return this.api.get(this.service, `${id}/comments?${this.build360Query(request)}`);
   }
 
   private build360Query(req: Employee360PagedRequest): string {

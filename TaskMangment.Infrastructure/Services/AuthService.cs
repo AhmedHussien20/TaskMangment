@@ -107,7 +107,6 @@ public class AuthService : IAuthService
             scope.Kind is AccessScopeKind.ManagerScoped or AccessScopeKind.CompanyWide
             || permissions.Any(p =>
                 string.Equals(p, PermissionCodes.ViewCompanyTasks, StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(p, PermissionCodes.ViewAllTasks, StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(p, PermissionCodes.ViewScopedTasks, StringComparison.OrdinalIgnoreCase));
 
         var token = await _jwt.GenerateTokenAsync(user);

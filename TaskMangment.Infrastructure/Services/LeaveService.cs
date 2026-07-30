@@ -347,8 +347,7 @@ namespace TaskMangment.Infrastructure.Services
                 var canSelfReview = await _permissions.HasAnyAsync(
                     managerId,
                     PermissionCodes.ViewCompanyReports,
-                    PermissionCodes.ViewCompanyTasks,
-                    PermissionCodes.ViewAllTasks);
+                    PermissionCodes.ViewCompanyTasks);
                 if (!canSelfReview)
                     throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
                 return;

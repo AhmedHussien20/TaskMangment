@@ -39,7 +39,7 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpPost("{taskId}")]
-        [PermissionAuthorize(PermissionCodes.SubmitDueDate)]
+        [PermissionAuthorize(PermissionCodes.RequestDueDateExtension)]
         public async Task<IActionResult> Add([FromBody] TaskExtensionRequestAddDto dto, int taskId)
         {
             var result = await _service.AddAsync(dto, taskId, this.CurrentUserId);
@@ -47,7 +47,7 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpPatch("review/{id}")]
-        [PermissionAuthorize(PermissionCodes.ApproveCloseExtend, PermissionCodes.RejectCloseExtend, PermissionCodes.ExtendDueDate)]
+        [PermissionAuthorize(PermissionCodes.ApproveTaskRequest, PermissionCodes.RejectTaskRequest)]
         public async Task<IActionResult> Review(int id, [FromBody] TaskExtensionReviewDto dto)
         {
             var result = await _service.ReviewAsync(id, dto, this.CurrentUserId);

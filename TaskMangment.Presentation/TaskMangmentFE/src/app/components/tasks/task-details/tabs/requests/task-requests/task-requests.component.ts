@@ -15,6 +15,7 @@ import { TaskService } from 'app/core/services/task.service';
 import { NgSelectModule } from '@ng-select/ng-select';
 import { DatePickerComponent } from 'app/components/date-picker/date-picker.component';
 import { isPastDueDate, isWeekendDueDate } from 'app/shared/validations/weekend-due-date.validator';
+import { TaskDetailsRefreshService } from '../../../task-details-refresh.service';
 
 @Component({
   selector: 'app-task-requests',
@@ -30,6 +31,7 @@ export class TaskRequestsComponent implements OnInit, OnChanges, AfterViewInit {
   canReview: boolean = false;
 
   isLoading = false;
+  allRows: any[] = [];
   rows: any[] = [];
   totalItems = 0;
   page = 1;
@@ -89,7 +91,8 @@ export class TaskRequestsComponent implements OnInit, OnChanges, AfterViewInit {
     private translate: TranslateService,
     private modalService: NgbModal,
     private toastr: ToastrService,
-    private taskService: TaskService
+    private taskService: TaskService,
+    private refreshService: TaskDetailsRefreshService
   ) { }
 
  extensionStatusOptions: { label: string; value: ExtensionRequestStatus }[] = [];
@@ -161,6 +164,7 @@ ngOnInit(): void {
   this.taskService.getTaskRequests(this.taskId).subscribe({
     next: (res) => {
       if (!res.success || !res.data) {
+        this.allRows = [];
         this.rows = [];
         this.totalItems = 0;
         this.isLoading = false;
@@ -188,14 +192,13 @@ const closeRows = res.data.closeRequests.map((x: TaskCloseRequestGet) => ({
   responseDate: x.reviewedAt || null
 }));
 
-      this.rows = [...extensionRows, ...closeRows]
+      this.allRows = [...extensionRows, ...closeRows]
         .filter(item => item.createdAt)
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-      this.totalItems = this.rows.length;
+      this.totalItems = this.allRows.length;
+      this.applyPage();
       this.isLoading = false;
-
-      console.log('Rows loaded:', this.rows.length, 'items');
     },
     error: (err) => {
       console.error('Error loading requests:', err);
@@ -203,6 +206,22 @@ const closeRows = res.data.closeRequests.map((x: TaskCloseRequestGet) => ({
     }
   });
 }
+
+  private applyPage(): void {
+    const start = (this.page - 1) * this.entries;
+    this.rows = this.allRows.slice(start, start + this.entries);
+  }
+
+  onPageChange(page: number): void {
+    this.page = page;
+    this.applyPage();
+  }
+
+  onEntriesChange(entries: number): void {
+    this.entries = entries;
+    this.page = 1;
+    this.applyPage();
+  }
 
 
 
@@ -223,13 +242,6 @@ const closeRows = res.data.closeRequests.map((x: TaskCloseRequestGet) => ({
 
 
   refresh(): void {
-    console.log('Refreshing requests');
-    this.loadRequests();
-  }
-
-  onPageChange(page: number): void {
-    console.log('Page changed to:', page);
-    this.page = page;
     this.loadRequests();
   }
 
@@ -273,6 +285,7 @@ const closeRows = res.data.closeRequests.map((x: TaskCloseRequestGet) => ({
         this.toastr.success(this.translate.instant('TASK.SAVED_SUCCESS'));
         this.modalService.dismissAll();
         this.refresh();
+        this.refreshService.trigger('requests');
       }
     });
   }
@@ -283,6 +296,7 @@ submitCloseReview(status: CloseRequestStatus | null) {
       this.toastr.success(this.translate.instant('TASK.SAVED_SUCCESS'));
       this.modalService.dismissAll();
       this.refresh();
+      this.refreshService.trigger('requests');
     });
 }
 

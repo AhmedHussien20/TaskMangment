@@ -26,6 +26,9 @@ namespace TaskMangment.Application.Interfaces.Services
         Task<ApiResponse<PagedResponse<Employee360NotificationItemDto>>> GetNotificationsAsync(
             int actorId, int employeeId, Employee360PagedRequest request);
 
+        Task<ApiResponse<PagedResponse<Employee360CommentItemDto>>> GetCommentsAsync(
+            int actorId, int employeeId, Employee360PagedRequest request);
+
         Task<ApiResponse<PagedResponse<EmployeeTimelineItemDto>>> GetTimelineAsync(
             int actorId, int employeeId, EmployeeTimelineRequest request);
 

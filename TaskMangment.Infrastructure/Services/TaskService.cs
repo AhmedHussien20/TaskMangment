@@ -56,6 +56,7 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IAccessScopeResolver _scopeResolver;
         private readonly IEmployeePermissionService _permissions;
         private readonly INotificationRecipientBuilder _recipientBuilder;
+        private readonly TaskCreatedByMeEvaluator _createdByMe;
 
         public TaskService(
              IRepository<WorkTask> taskRepo,
@@ -79,7 +80,8 @@ namespace TaskMangment.Infrastructure.Services
            IUserAccessContextProvider accessProvider,
            IAccessScopeResolver scopeResolver,
            IEmployeePermissionService permissions,
-           INotificationRecipientBuilder recipientBuilder
+           INotificationRecipientBuilder recipientBuilder,
+           TaskCreatedByMeEvaluator createdByMe
 )
         {
             _taskRepo = taskRepo;
@@ -104,6 +106,7 @@ namespace TaskMangment.Infrastructure.Services
             _scopeResolver = scopeResolver;
             _permissions = permissions;
             _recipientBuilder = recipientBuilder;
+            _createdByMe = createdByMe;
         }
 
         public async Task<ApiResponse<PagedResponse<TaskGetDto>>> GetAllAsync(TaskRequest request, int CompanyId, int roleLevel, int employeeId)
@@ -132,9 +135,7 @@ namespace TaskMangment.Infrastructure.Services
 
             var scope = await _scopeResolver.ResolveAsync(employeeId);
             var canViewCompany = scope.IsCompanyWide ||
-                await _permissions.HasAnyAsync(employeeId,
-                    PermissionCodes.ViewCompanyTasks,
-                    PermissionCodes.ViewAllTasks);
+                await _permissions.HasAsync(employeeId, PermissionCodes.ViewCompanyTasks);
 
             var canViewScoped = await _permissions.HasAsync(employeeId, PermissionCodes.ViewScopedTasks)
                 || scope.Kind is AccessScopeKind.ManagerScoped or AccessScopeKind.CompanyWide
@@ -243,6 +244,7 @@ namespace TaskMangment.Infrastructure.Services
                     .ToList();
 
                 dto.AssignedByName = task.AssignedBy?.FullName;
+                dto.IsCreatorOrAssigner = TaskCreatedByMeEvaluator.IsCreatorOrAssigner(employeeId, task);
                 dto.CreatedByMe = ResolveCreatedByMe(employeeId, task, scopedActorIds, scope);
 
             }
@@ -301,6 +303,15 @@ namespace TaskMangment.Infrastructure.Services
             dto.NumberOfExtensions = numberOfExtensions;
             dto.NewDate = newDate;
 
+            var pendingExtensions = await _extensionRequestRepo.GetAll()
+                .Where(x => x.TaskId == task.Id && !x.IsDeleted && x.Status == ExtensionRequestStatus.Pending)
+                .CountAsync();
+
+            var pendingCloses = await _closeRequestRepo.GetAll()
+                .Where(x => x.TaskId == task.Id && !x.IsDeleted && x.Status == CloseRequestStatus.Pending)
+                .CountAsync();
+
+            dto.PendingRequestsCount = pendingExtensions + pendingCloses;
 
             dto.AssignEmployee = task.Assignments
                 .Where(a => a.IsActive && a.Employee.IsActive)
@@ -315,6 +326,7 @@ namespace TaskMangment.Infrastructure.Services
 
             var scope = await _scopeResolver.ResolveAsync(employeeId);
             var scopedActorIds = await GetScopedCreatorOrAssignerIdsAsync(new[] { task }, scope);
+            dto.IsCreatorOrAssigner = TaskCreatedByMeEvaluator.IsCreatorOrAssigner(employeeId, task);
             dto.CreatedByMe = ResolveCreatedByMe(employeeId, task, scopedActorIds, scope);
 
             return ApiResponse<TaskGetDto>.Ok(dto);
@@ -442,6 +454,8 @@ namespace TaskMangment.Infrastructure.Services
             var task = await _taskRepo.GetByIDAsync(id);
             if (task == null)
                 throw new AppException(ErrorCodes.TaskNotFound, StatusCodes.Status400BadRequest);
+
+            await EnsureCanMutateTaskAsync(modifierUser, task, PermissionCodes.UpdateTask);
 
             var currentStatus = task.Status;
 
@@ -580,11 +594,13 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<TaskGetDto>.Ok(taskDto, "Task updated successfully");
         }
 
-        public async Task<ApiResponse<bool>> DeleteAsync(int id)
+        public async Task<ApiResponse<bool>> DeleteAsync(int id, int employeeId)
         {
             var task = await _taskRepo.GetByIDAsync(id);
             if (task == null)
                 throw new AppException(ErrorCodes.TaskNotFound, StatusCodes.Status400BadRequest);
+
+            await EnsureCanMutateTaskAsync(employeeId, task, PermissionCodes.DeleteTask);
 
 
             var hasDependencies =
@@ -934,6 +950,19 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<bool>.Ok(true);
         }
 
+        private async Task EnsureCanMutateTaskAsync(int employeeId, WorkTask task, string permissionCode)
+        {
+            if (TaskCreatedByMeEvaluator.IsCreatorOrAssigner(employeeId, task))
+                return;
+
+            // Scope-inferred creator-side still requires the mutation permission.
+            if (await _permissions.HasAsync(employeeId, permissionCode) &&
+                await _createdByMe.IsCreatedByMeAsync(task, employeeId))
+                return;
+
+            throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
+        }
+
         private static bool ResolveCreatedByMe(
             int employeeId,
             WorkTask task,
@@ -965,7 +994,8 @@ namespace TaskMangment.Infrastructure.Services
             if (ids.Count == 0)
                 return new HashSet<int>();
 
-            if (scope.Kind == AccessScopeKind.SelfOnly)
+            // OwnBranch / SelfOnly: do not treat same-branch peers/bosses as creator-side.
+            if (!TaskCreatedByMeEvaluator.AllowsScopeInferredCreatorSide(scope.Kind))
                 return ids.Contains(scope.EmployeeId) ? new HashSet<int> { scope.EmployeeId } : new HashSet<int>();
 
             var inScope = await _scopeResolver

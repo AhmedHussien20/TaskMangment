@@ -22,9 +22,13 @@ import {
 } from './employee-360-tasks-popup.component';
 import { EmployeeService } from 'app/core/services/employee.service';
 import { TaskService } from 'app/core/services/task.service';
+import { LeaveService } from 'app/core/services/leave.service';
 import { AuthService } from 'app/core/services/auth.service';
+import { Permissions } from 'app/core/constants/permissions';
+import Swal from 'sweetalert2';
 import {
   Employee360AccessDto,
+  Employee360CommentItem,
   Employee360Deadline,
   Employee360Dto,
   Employee360EmailItem,
@@ -35,10 +39,12 @@ import {
   EmployeeTimelineItem,
   EmployeeWarningDto
 } from 'app/core/models/employee/employee-360';
+import { AttachmentVm } from 'app/core/models/task/task-comment';
 import { TaskGet } from 'app/core/models/task/task';
 import { MyDatePipe } from 'app/components/utilities/pipline/MyDatePipe';
 import { DatePickerComponent } from 'app/components/date-picker/date-picker.component';
 import { SearchCriteria } from 'app/core/models/search-criteria.model';
+import { TaskCommentService } from 'app/core/services/task-comment.service';
 import {
   ApexAxisChartSeries,
   ApexChart,
@@ -92,6 +98,8 @@ export class Employee360Component implements OnInit {
 
   canCreateTask = false;
   canEditEmployee = false;
+  canApproveLeave = false;
+  canRejectLeave = false;
 
   /** Shared date range for KPIs, charts, sidebar, and all tabs */
   globalFrom = '';
@@ -122,6 +130,14 @@ export class Employee360Component implements OnInit {
   taskStatusId: number | null = null;
   taskPriorityId: number | null = null;
   taskLoading = false;
+
+  /** Default page size for client-side lists (discounts, leave, performance). */
+  readonly listPageSize = 10;
+  discountPage = 1;
+  leavePage = 1;
+  warningPage = 1;
+  latePage = 1;
+
   taskColumns: TableColumn[] = [
     { key: 'id', label: 'TASK.ID' },
     { key: 'title', label: 'TASK.TITLE' },
@@ -181,23 +197,56 @@ export class Employee360Component implements OnInit {
   emails: Employee360EmailItem[] = [];
   emailTotal = 0;
   emailPage = 1;
+  emailPageSize = 15;
   emailLoading = false;
   emailSearch = '';
   emailStatus = '';
   emailType = '';
+  emailTypeOptions = [
+    'LeaveApproved',
+    'LeaveRejected',
+    'LeaveRequestCreated',
+    'TaskDueTodayReminder',
+    'TaskCommentAdded',
+    'TaskAssignedToExistingTask',
+    'TaskUnAssignedFromExistingTask',
+    'TaskExtensionRequest',
+    'TaskExtensionApproved',
+    'TaskCloseRequest',
+    'TaskCloseApproved',
+    'TaskAchievement',
+    'EmployeeDeduction',
+    'EmployeeWarning',
+    'MonthlyEmployeeDiscounts',
+    'OfficialHoliday',
+    'OfferSent',
+    'DeveloperErrorAlert'
+  ];
 
   notifications: Employee360NotificationItem[] = [];
   notifTotal = 0;
   notifPage = 1;
+  notifPageSize = 15;
   notifLoading = false;
   notifSearch = '';
   notifStatus = '';
   notifChannel = '';
   notifUnreadOnly = false;
 
+  comments: Employee360CommentItem[] = [];
+  commentTotal = 0;
+  commentPage = 1;
+  commentPageSize = 15;
+  commentLoading = false;
+  commentSearch = '';
+  openAttachmentsForCommentId: number | null = null;
+  attachmentsMap: Record<number, AttachmentVm[]> = {};
+  loadingAttachments: Record<number, boolean> = {};
+
   timeline: EmployeeTimelineItem[] = [];
   timelineTotal = 0;
   timelinePage = 1;
+  timelinePageSize = 20;
   timelineLoading = false;
   timelineSearch = '';
 
@@ -218,6 +267,8 @@ export class Employee360Component implements OnInit {
     private router: Router,
     private employeeService: EmployeeService,
     private taskService: TaskService,
+    private leaveService: LeaveService,
+    private commentService: TaskCommentService,
     private auth: AuthService,
     private modalService: NgbModal,
     private toastr: ToastrService,
@@ -230,8 +281,14 @@ export class Employee360Component implements OnInit {
       this.router.navigate(['/employee/employee-list']);
       return;
     }
+    this.canApproveLeave = this.auth.hasPermission(Permissions.APPROVE_LEAVE);
+    this.canRejectLeave = this.auth.hasPermission(Permissions.REJECT_LEAVE);
     this.setDefaultMonthRange();
     this.load360();
+  }
+
+  get canReviewLeave(): boolean {
+    return this.canApproveLeave || this.canRejectLeave;
   }
 
   /** First day of current month → today (yyyy-MM-dd). */
@@ -264,8 +321,14 @@ export class Employee360Component implements OnInit {
     this.taskPage = 1;
     this.emailPage = 1;
     this.notifPage = 1;
+    this.commentPage = 1;
     this.timelinePage = 1;
+    this.discountPage = 1;
+    this.leavePage = 1;
+    this.warningPage = 1;
+    this.latePage = 1;
     this.performance = null;
+    this.access = null;
     this.discountsData = [];
     this.discountsTotalAmount = 0;
     this.leave = null;
@@ -418,6 +481,7 @@ export class Employee360Component implements OnInit {
       case 'timeline': this.loadTimeline(); break;
       case 'emails': this.loadEmails(); break;
       case 'notifications': this.loadNotifications(); break;
+      case 'comments': this.loadComments(); break;
     }
   }
 
@@ -436,6 +500,7 @@ export class Employee360Component implements OnInit {
     const fromRows = this.taskRows.find(x => x.id === taskId);
     const modalRef = this.modalService.open(TaskDetailsShellComponent, {
       size: 'xl',
+      windowClass: 'task-details-modal',
       backdrop: 'static',
       scrollable: true
     });
@@ -481,7 +546,24 @@ export class Employee360Component implements OnInit {
     this.loadTasks();
   }
 
+  onTaskEntriesChange(entries: number): void {
+    this.taskPageSize = entries;
+    this.taskPage = 1;
+    this.loadTasks();
+  }
+
+  loadPerformance(): void {
+    this.performanceLoading = true;
+    this.warningPage = 1;
+    this.latePage = 1;
+    this.employeeService.getPerformance(this.employeeId, this.dateRangeParams()).subscribe({
+      next: (res) => { this.performance = res.data; this.performanceLoading = false; },
+      error: () => { this.performanceLoading = false; }
+    });
+  }
+
   loadAccess(): void {
+    if (this.access) return; // already loaded once this session
     this.accessLoading = true;
     this.employeeService.getAccess(this.employeeId).subscribe({
       next: (res) => { this.access = res.data; this.accessLoading = false; },
@@ -489,16 +571,9 @@ export class Employee360Component implements OnInit {
     });
   }
 
-  loadPerformance(): void {
-    this.performanceLoading = true;
-    this.employeeService.getPerformance(this.employeeId, this.dateRangeParams()).subscribe({
-      next: (res) => { this.performance = res.data; this.performanceLoading = false; },
-      error: () => { this.performanceLoading = false; }
-    });
-  }
-
   loadDiscounts(): void {
     this.discountsLoading = true;
+    this.discountPage = 1;
     this.employeeService.get360Discounts(this.employeeId, this.dateRangeParams()).subscribe({
       next: (res) => {
         this.discountsData = res.data?.discounts ?? [];
@@ -511,9 +586,72 @@ export class Employee360Component implements OnInit {
 
   loadLeave(): void {
     this.leaveLoading = true;
+    this.leavePage = 1;
     this.employeeService.getLeave360(this.employeeId, this.dateRangeParams()).subscribe({
       next: (res) => { this.leave = res.data; this.leaveLoading = false; },
       error: () => { this.leaveLoading = false; }
+    });
+  }
+
+  isLeavePending(status: string): boolean {
+    return (status || '').toLowerCase() === 'pending';
+  }
+
+  approveLeave(leaveId: number): void {
+    if (!this.canApproveLeave) {
+      this.toastr.error(this.translate.instant('FORBIDDEN.MESSAGE'));
+      return;
+    }
+
+    Swal.fire({
+      title: this.translate.instant('LEAVE.APPROVE_CONFIRM'),
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: this.translate.instant('LEAVE.APPROVE'),
+      cancelButtonText: this.translate.instant('COMMON.CANCEL')
+    }).then(result => {
+      if (!result.isConfirmed) return;
+      this.leaveService.approve(leaveId).subscribe({
+        next: () => {
+          this.toastr.success(this.translate.instant('LEAVE.APPROVED_SUCCESS'));
+          this.loadLeave();
+          this.load360(false);
+        },
+        error: () => this.toastr.error(this.translate.instant('COMMON.ERROR_LOADING_DATA'))
+      });
+    });
+  }
+
+  rejectLeave(leaveId: number): void {
+    if (!this.canRejectLeave) {
+      this.toastr.error(this.translate.instant('FORBIDDEN.MESSAGE'));
+      return;
+    }
+
+    Swal.fire({
+      title: this.translate.instant('LEAVE.REJECT'),
+      input: 'textarea',
+      inputLabel: this.translate.instant('LEAVE.REJECT_REASON'),
+      inputPlaceholder: this.translate.instant('LEAVE.REJECT_REASON'),
+      showCancelButton: true,
+      confirmButtonText: this.translate.instant('LEAVE.REJECT'),
+      cancelButtonText: this.translate.instant('COMMON.CANCEL'),
+      inputValidator: (value) => {
+        if (!value?.trim()) {
+          return this.translate.instant('LEAVE.REJECT_REASON_REQUIRED');
+        }
+        return null;
+      }
+    }).then(result => {
+      if (!result.isConfirmed) return;
+      this.leaveService.reject(leaveId, String(result.value).trim()).subscribe({
+        next: () => {
+          this.toastr.success(this.translate.instant('LEAVE.REJECTED_SUCCESS'));
+          this.loadLeave();
+          this.load360(false);
+        },
+        error: () => this.toastr.error(this.translate.instant('COMMON.ERROR_LOADING_DATA'))
+      });
     });
   }
 
@@ -521,7 +659,7 @@ export class Employee360Component implements OnInit {
     this.emailLoading = true;
     this.employeeService.getEmails(this.employeeId, {
       pageIndex: this.emailPage,
-      pageSize: 15,
+      pageSize: this.emailPageSize,
       searchKey: this.emailSearch || undefined,
       ...this.dateRangeParams(),
       status: this.emailStatus || undefined,
@@ -545,7 +683,7 @@ export class Employee360Component implements OnInit {
     this.notifLoading = true;
     this.employeeService.getNotifications360(this.employeeId, {
       pageIndex: this.notifPage,
-      pageSize: 15,
+      pageSize: this.notifPageSize,
       searchKey: this.notifSearch || undefined,
       ...this.dateRangeParams(),
       status: this.notifStatus || undefined,
@@ -566,11 +704,75 @@ export class Employee360Component implements OnInit {
     this.loadNotifications();
   }
 
+  loadComments(): void {
+    this.commentLoading = true;
+    this.openAttachmentsForCommentId = null;
+    this.employeeService.getComments360(this.employeeId, {
+      pageIndex: this.commentPage,
+      pageSize: this.commentPageSize,
+      searchKey: this.commentSearch || undefined,
+      ...this.dateRangeParams()
+    }).subscribe({
+      next: (res) => {
+        this.comments = res.data?.data ?? [];
+        this.commentTotal = res.data?.totalCount ?? 0;
+        this.commentLoading = false;
+      },
+      error: () => { this.commentLoading = false; }
+    });
+  }
+
+  applyCommentFilters(): void {
+    this.commentPage = 1;
+    this.loadComments();
+  }
+
+  toggleCommentAttachments(event: Event, commentId: number): void {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (this.openAttachmentsForCommentId === commentId) {
+      this.openAttachmentsForCommentId = null;
+      return;
+    }
+
+    this.openAttachmentsForCommentId = commentId;
+    if (this.attachmentsMap[commentId]) return;
+
+    this.loadingAttachments[commentId] = true;
+    this.commentService.getCommentAttachments(commentId).subscribe({
+      next: (res) => {
+        this.attachmentsMap[commentId] = (res?.data ?? []) as AttachmentVm[];
+        this.loadingAttachments[commentId] = false;
+      },
+      error: () => {
+        this.attachmentsMap[commentId] = [];
+        this.loadingAttachments[commentId] = false;
+      }
+    });
+  }
+
+  openCommentAttachment(event: Event, att: AttachmentVm): void {
+    event.preventDefault();
+    event.stopPropagation();
+    if (att.url) {
+      window.open(att.url, '_blank');
+      return;
+    }
+    this.commentService.downloadAttachment(att.id).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank');
+        setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      }
+    });
+  }
+
   loadTimeline(): void {
     this.timelineLoading = true;
     this.employeeService.getTimeline(this.employeeId, {
       pageIndex: this.timelinePage,
-      pageSize: 20,
+      pageSize: this.timelinePageSize,
       ...this.dateRangeParams(),
       searchKey: this.timelineSearch || undefined
     }).subscribe({
@@ -669,12 +871,20 @@ export class Employee360Component implements OnInit {
     );
   }
 
+  get pagedWarnings(): EmployeeWarningDto[] {
+    return this.paginate(this.filteredWarnings, this.warningPage);
+  }
+
   get filteredLateTasks(): Employee360Deadline[] {
     return (this.performance?.lateTasks ?? []).filter(t =>
       this.matchesSearch(this.performanceSearch, [
         t.title, t.status, t.priority, t.taskId, t.dueDate
       ])
     );
+  }
+
+  get pagedLateTasks(): Employee360Deadline[] {
+    return this.paginate(this.filteredLateTasks, this.latePage);
   }
 
   get filteredDiscounts(): EmployeeDeductionDto[] {
@@ -688,12 +898,20 @@ export class Employee360Component implements OnInit {
     );
   }
 
+  get pagedDiscounts(): EmployeeDeductionDto[] {
+    return this.paginate(this.filteredDiscounts, this.discountPage);
+  }
+
   get filteredLeaveHistory() {
     return (this.leave?.history ?? []).filter(l =>
       this.matchesSearch(this.leaveSearch, [
         l.leaveTypeName, l.status, l.notes, l.startDate, l.endDate, l.id, l.createdDate
       ])
     );
+  }
+
+  get pagedLeaveHistory() {
+    return this.paginate(this.filteredLeaveHistory, this.leavePage);
   }
 
   get filteredAccessRoles() {
@@ -721,6 +939,27 @@ export class Employee360Component implements OnInit {
       this.filteredDiscounts.filter(d => !!d.taskId).map(d => d.taskId!)
     );
     return ids.size;
+  }
+
+  onPerformanceSearchChange(): void {
+    this.warningPage = 1;
+    this.latePage = 1;
+  }
+
+  onDiscountSearchChange(): void {
+    this.discountPage = 1;
+  }
+
+  onLeaveSearchChange(): void {
+    this.leavePage = 1;
+  }
+
+  private paginate<T>(items: T[], page: number): T[] {
+    const size = this.listPageSize;
+    const maxPage = Math.max(1, Math.ceil(items.length / size) || 1);
+    const safePage = Math.min(Math.max(1, page), maxPage);
+    const start = (safePage - 1) * size;
+    return items.slice(start, start + size);
   }
 
   private matchesSearch(search: string, values: Array<string | number | null | undefined>): boolean {

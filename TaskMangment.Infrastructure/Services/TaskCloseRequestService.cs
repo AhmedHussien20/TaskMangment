@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -11,6 +11,7 @@ using TaskMangment.Application.Common.Errors;
 using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Responses;
+using TaskMangment.Application.Common.Security;
 using TaskMangment.Application.DTOs.TaskDTOs;
 using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
@@ -34,6 +35,7 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<TaskPercentage> _AchievementRepo;
         private readonly INotificationRecipientBuilder _recipientBuilder;
         private readonly TaskCreatedByMeEvaluator _createdByMe;
+        private readonly IEmployeePermissionService _permissions;
 
 
 
@@ -46,7 +48,8 @@ namespace TaskMangment.Infrastructure.Services
             IRepository<Employee> employeeRepo,
             IDomainEventDispatcher eventDispatcher, IRepository<TaskPercentage> AchievementRepo,
             INotificationRecipientBuilder recipientBuilder,
-            TaskCreatedByMeEvaluator createdByMe)
+            TaskCreatedByMeEvaluator createdByMe,
+            IEmployeePermissionService permissions)
 
         {
             _requestRepo = requestRepo;
@@ -59,6 +62,7 @@ namespace TaskMangment.Infrastructure.Services
             _AchievementRepo = AchievementRepo;
             _recipientBuilder = recipientBuilder;
             _createdByMe = createdByMe;
+            _permissions = permissions;
         }
 
         public async Task<ApiResponse<PagedResponse<TaskCloseRequestListDto>>> GetAllAsync(TaskCloseRequestRequest request)
@@ -216,6 +220,12 @@ namespace TaskMangment.Infrastructure.Services
                 throw new AppException(ErrorCodes.AlreadyReviewed, StatusCodes.Status400BadRequest);
 
             if (!await _createdByMe.IsCreatedByMeAsync(task, reviewerId))
+                throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
+
+            var requiredPermission = status == CloseRequestStatus.Approved
+                ? PermissionCodes.ApproveTaskRequest
+                : PermissionCodes.RejectTaskRequest;
+            if (!await _permissions.HasAsync(reviewerId, requiredPermission))
                 throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
 
             var taskAssignments = await _taskAssignmentRepo

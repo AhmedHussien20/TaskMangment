@@ -29,6 +29,8 @@ export class TaskWarningsComponent implements OnInit, OnDestroy, OnChanges {
 
   rows: WarningGetDto[] = [];
   totalItems = 0;
+  page = 1;
+  entries = 10;
 
   columns: TableColumn[] = [
     { key: 'violationDate', label: 'TASK.DATE', type: 'date' },
@@ -74,7 +76,7 @@ export class TaskWarningsComponent implements OnInit, OnDestroy, OnChanges {
     this.canDelete = !this.readonly && this.auth.hasPermission(Permissions.DELETE_WARNING);
   }
 
-  loadWarnings(pageIndex = 1, pageSize = 10) {
+  loadWarnings(pageIndex = this.page, pageSize = this.entries) {
     const request = {
       taskId: this.taskId,
       searchKey: '',
@@ -86,13 +88,25 @@ export class TaskWarningsComponent implements OnInit, OnDestroy, OnChanges {
 
     this.warningService.getAll(request).subscribe({
       next: (res) => {
-        this.rows = res.data.data; 
+        this.rows = res.data.data;
         this.totalItems = res.data.totalCount;
+        this.page = res.data.pageIndex ?? pageIndex;
       },
-      error: (err) => {console.error('Failed to load warnings', err)
-         console.error('Failed to load warnings - Full Error:', err);
+      error: (err) => {
+        console.error('Failed to load warnings', err);
       }
     });
+  }
+
+  onPageChange(page: number): void {
+    this.page = page;
+    this.loadWarnings(page, this.entries);
+  }
+
+  onEntriesChange(entries: number): void {
+    this.entries = entries;
+    this.page = 1;
+    this.loadWarnings(1, entries);
   }
 
   ngOnDestroy(): void {

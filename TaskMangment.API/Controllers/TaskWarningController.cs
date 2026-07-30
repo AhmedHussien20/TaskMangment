@@ -38,16 +38,16 @@ namespace TaskMangment.API.Controllers
             return Success(result.Data);
         }
 
+        /// <summary>Allowed for literal task creator/assigner, or users with ISSUE_WARNING.</summary>
         [HttpPost("{taskId}")]
-        [PermissionAuthorize(PermissionCodes.SendWarning)]
         public async Task<IActionResult> Add(int taskId, [FromBody] WarningAddEditDto dto)
         {
             var result = await _service.AddAsync(dto, taskId,this.CurrentUserId);
             return Success(result.Data, "Warning added successfully");
         }
 
+        /// <summary>Allowed for literal task creator/assigner, or users with ISSUE_WARNING.</summary>
         [HttpPut("{id}")]
-        [PermissionAuthorize(PermissionCodes.SendWarning)]
         public async Task<IActionResult> Update(int id, [FromBody] WarningAddEditDto dto)
         {
             var result = await _service.UpdateAsync(id, dto, this.CurrentUserId);

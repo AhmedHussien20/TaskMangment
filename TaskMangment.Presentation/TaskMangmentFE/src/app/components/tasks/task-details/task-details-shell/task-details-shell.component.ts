@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
+import { Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
 import { TaskTabsComponent } from '../task-tabs/task-tabs.component';
 import { PageHeaderComponent } from 'app/shared/components/page-header/page-header.component';
 import { TranslateModule } from '@ngx-translate/core';
@@ -15,6 +15,7 @@ import { AuthService } from 'app/core/services/auth.service';
 import { CommonModule } from '@angular/common';
 import { PercentageModalComponent } from '../actions/task-percentage/percentage-modal/percentage-modal.component';
 import { Permissions } from 'app/core/constants/permissions';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-task-details-shell',
@@ -28,7 +29,7 @@ import { Permissions } from 'app/core/constants/permissions';
     CommonModule
   ]
 })
-export class TaskDetailsShellComponent implements OnInit, OnChanges {
+export class TaskDetailsShellComponent implements OnInit, OnChanges, OnDestroy {
 
   @Input() taskId!: number;
   @Input() createdByMe: boolean = false;
@@ -45,6 +46,8 @@ export class TaskDetailsShellComponent implements OnInit, OnChanges {
   canSetPercentage = false;
   canReviewRequests = false;
 
+  private refreshSub?: Subscription;
+
   constructor(
     private modal: NgbModal,
     private refreshService: TaskDetailsRefreshService,
@@ -59,6 +62,13 @@ export class TaskDetailsShellComponent implements OnInit, OnChanges {
   ngOnInit(): void {
     this.refreshPermissions();
     this.ensureTaskLoaded();
+    this.refreshSub = this.refreshService.refresh$.subscribe(() => {
+      if (this.taskId) this.loadTask();
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.refreshSub?.unsubscribe();
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -79,23 +89,26 @@ export class TaskDetailsShellComponent implements OnInit, OnChanges {
   private refreshPermissions(): void {
     const isAssignee = this.isCurrentUserAssignee();
     const isCreatorSide = this.createdByMe;
+    const isLiteralOwner = !!this.taskInfo?.isCreatorOrAssigner;
 
     // Employee-side actions (close/extend request) — not for creator-side viewers.
     this.canComment =
       this.auth.hasPermission(Permissions.COMMENT_TASK) || isCreatorSide;
     this.canCloseRequest =
-      !isCreatorSide && this.auth.hasPermission(Permissions.CLOSE_TASK_EMPLOYEE);
+      !isCreatorSide && this.auth.hasPermission(Permissions.REQUEST_TASK_CLOSE);
     this.canExtendRequest =
-      !isCreatorSide && this.auth.hasPermission(Permissions.SUBMIT_DUE_DATE);
+      !isCreatorSide && this.auth.hasPermission(Permissions.REQUEST_DUE_DATE_EXTENSION);
 
-    // Creator-side actions — only when createdByMe is true (and not an assignee).
-    this.canSendWarning = isCreatorSide && !isAssignee;
-    this.canSendPenalty = isCreatorSide && !isAssignee;
-    this.canSetPercentage = isCreatorSide && !isAssignee;
+    // Warn/penalty: literal owner always; scope-only viewers need ISSUE_* permission.
+    this.canSendWarning =
+      !isAssignee && (isLiteralOwner || (isCreatorSide && this.auth.hasPermission(Permissions.ISSUE_WARNING)));
+    this.canSendPenalty =
+      !isAssignee && (isLiteralOwner || (isCreatorSide && this.auth.hasPermission(Permissions.ISSUE_PENALTY)));
+    // Percentage has no dedicated permission — literal owner only.
+    this.canSetPercentage = isLiteralOwner && !isAssignee;
     this.canReviewRequests = isCreatorSide && this.auth.hasAnyPermission(
-      Permissions.APPROVE_CLOSE_EXTEND,
-      Permissions.REJECT_CLOSE_EXTEND,
-      Permissions.EXTEND_DUE_DATE
+      Permissions.APPROVE_TASK_REQUEST,
+      Permissions.REJECT_TASK_REQUEST
     );
   }
 

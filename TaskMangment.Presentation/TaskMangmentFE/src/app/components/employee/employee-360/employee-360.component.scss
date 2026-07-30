@@ -53,6 +53,30 @@
   &:hover { text-decoration: underline; }
 }
 
+.comment-row {
+  cursor: pointer;
+
+  &:hover { background: #f8fafc; }
+}
+
+.comment-text {
+  max-width: 420px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.attachments-panel {
+  background: #f8fafc;
+  border: 1px solid var(--e360-border);
+  border-radius: 0.4rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.attachment-row span {
+  max-width: 70%;
+}
+
 .kpi-card {
   display: flex;
   gap: 0.65rem;

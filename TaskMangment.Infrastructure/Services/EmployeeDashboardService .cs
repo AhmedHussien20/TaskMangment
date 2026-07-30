@@ -223,8 +223,7 @@ namespace TaskMangment.Infrastructure.Services
             var canViewScoped = await _permissions.HasAnyAsync(
                 employeeId,
                 PermissionCodes.ViewScopedTasks,
-                PermissionCodes.ViewCompanyTasks,
-                PermissionCodes.ViewAllTasks);
+                    PermissionCodes.ViewCompanyTasks);
 
             if (!canViewScoped)
             {

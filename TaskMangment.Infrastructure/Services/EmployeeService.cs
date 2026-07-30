@@ -159,6 +159,9 @@ namespace TaskMangment.Infrastructure.Services
         {
             var scope = await _scopeResolver.ResolveAsync(employeeId);
 
+            var isCreateTaskPicker = !string.IsNullOrWhiteSpace(request.PermissionCode)
+                && request.PermissionCode == PermissionCodes.CreateTask;
+
             var empQuery = _employeeRepo.GetAll()
                 .Include(e => e.Branch)
                 .Include(e => e.Department)
@@ -168,7 +171,18 @@ namespace TaskMangment.Infrastructure.Services
                 .ApplySearch(request.searchKey)
                 .AsNoTracking();
 
-            empQuery = _scopeResolver.FilterEmployees(empQuery, scope);
+            // Assign picker must NOT use View excludes (branch/area superiors / company-wide).
+            // ASSIGN_OUTSIDE_SCOPE widens the picker to the whole company.
+            if (isCreateTaskPicker &&
+                await _permissions.HasAsync(employeeId, PermissionCodes.AssignOutsideScope))
+            {
+                empQuery = empQuery.Where(e => e.CompanyId == scope.CompanyId && !e.IsDeleted && e.IsActive);
+            }
+            else
+            {
+                var intent = isCreateTaskPicker ? AccessIntent.Assign : AccessIntent.View;
+                empQuery = _scopeResolver.FilterEmployees(empQuery, scope, intent);
+            }
 
             if (request.BranchId.HasValue)
                 empQuery = empQuery.Where(e => e.BranchId == request.BranchId.Value);
@@ -200,15 +214,14 @@ namespace TaskMangment.Infrastructure.Services
                         er.Role.RequiresBranchScope));
             }
 
-            var isCreateTaskPicker = !string.IsNullOrWhiteSpace(request.PermissionCode)
-                && request.PermissionCode == PermissionCodes.CreateTask;
-
             if (isCreateTaskPicker)
             {
                 empQuery = empQuery.Where(e => e.IsActive);
 
                 var canAssignManagers = await _permissions.HasAsync(employeeId, PermissionCodes.AssignToManagers);
-                if (!canAssignManagers && scope.OwnBranchId.HasValue)
+                var canAssignOutside = await _permissions.HasAsync(employeeId, PermissionCodes.AssignOutsideScope);
+                // Outside-scope already includes managers company-wide; only block superiors when neither grant exists.
+                if (!canAssignManagers && !canAssignOutside && scope.OwnBranchId.HasValue)
                 {
                     var branchId = scope.OwnBranchId.Value;
                     var blockedIds = await _branchRepo.GetAll(b => b.Id == branchId && !b.IsDeleted && b.ManagerID > 0)

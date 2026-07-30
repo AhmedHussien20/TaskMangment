@@ -12,12 +12,38 @@ namespace TaskMangment.Tests.Security;
 public class AccessScopeResolverTests
 {
     private readonly Mock<IRepository<Employee>> _employeeRepo = new();
+    private readonly Mock<IRepository<Branch>> _branchRepo = new();
+    private readonly Mock<IRepository<Area>> _areaRepo = new();
     private readonly Mock<IUserAccessContextProvider> _accessProvider = new();
     private readonly Mock<IEmployeePermissionService> _permissions = new();
     private readonly Mock<IOrgManagerResolver> _orgManagers = new();
 
     private AccessScopeResolver CreateSut() =>
-        new(_employeeRepo.Object, _accessProvider.Object, _permissions.Object, _orgManagers.Object);
+        new(_employeeRepo.Object, _branchRepo.Object, _areaRepo.Object,
+            _accessProvider.Object, _permissions.Object, _orgManagers.Object);
+
+    public AccessScopeResolverTests()
+    {
+        // Default empty org trees so ResolveAsync ManagerScoped/OwnBranch can compute excludes.
+        _branchRepo
+            .Setup(r => r.GetAll(It.IsAny<Expression<Func<Branch, bool>>>()))
+            .Returns((Expression<Func<Branch, bool>>? expr) =>
+            {
+                IEnumerable<Branch> source = Array.Empty<Branch>();
+                if (expr != null)
+                    source = source.Where(expr.Compile());
+                return source.AsAsyncQueryable();
+            });
+        _areaRepo
+            .Setup(r => r.GetAll(It.IsAny<Expression<Func<Area, bool>>>()))
+            .Returns((Expression<Func<Area, bool>>? expr) =>
+            {
+                IEnumerable<Area> source = Array.Empty<Area>();
+                if (expr != null)
+                    source = source.Where(expr.Compile());
+                return source.AsAsyncQueryable();
+            });
+    }
 
     private void SetupEmployees(params Employee[] employees)
     {
@@ -51,6 +77,7 @@ public class AccessScopeResolverTests
 
         Assert.Equal(AccessScopeKind.CompanyWide, scope.Kind);
         Assert.Equal(10, scope.CompanyId);
+        Assert.Empty(scope.ViewExcludeEmployeeIds);
     }
 
     [Fact]
@@ -148,6 +175,59 @@ public class AccessScopeResolverTests
         var result = CreateSut().FilterEmployees(employees, scope).Select(e => e.Id).ToList();
 
         Assert.Equal(new[] { 1, 3 }, result);
+    }
+
+    [Fact]
+    public void FilterEmployees_View_ExcludesConfiguredSuperiors()
+    {
+        var employees = new List<Employee>
+        {
+            new() { Id = 104, CompanyId = 10, BranchId = 4, IsActive = true },
+            new() { Id = 103, CompanyId = 10, BranchId = 4, IsActive = true }, // area manager
+            new() { Id = 6, CompanyId = 10, BranchId = 4, IsActive = true },   // company-wide
+            new() { Id = 200, CompanyId = 10, BranchId = 4, IsActive = true }  // normal staff
+        }.AsQueryable();
+
+        var scope = new ResolvedAccessScope
+        {
+            EmployeeId = 104,
+            CompanyId = 10,
+            OwnBranchId = 4,
+            Kind = AccessScopeKind.ManagerScoped,
+            BranchIds = [4],
+            ViewExcludeEmployeeIds = [103, 6]
+        };
+
+        var result = CreateSut().FilterEmployees(employees, scope).Select(e => e.Id).OrderBy(x => x).ToList();
+
+        Assert.Equal(new[] { 104, 200 }, result);
+    }
+
+    [Fact]
+    public void FilterEmployees_Assign_DoesNotApplyViewExcludes()
+    {
+        var employees = new List<Employee>
+        {
+            new() { Id = 104, CompanyId = 10, BranchId = 4, IsActive = true },
+            new() { Id = 103, CompanyId = 10, BranchId = 4, IsActive = true }
+        }.AsQueryable();
+
+        var scope = new ResolvedAccessScope
+        {
+            EmployeeId = 104,
+            CompanyId = 10,
+            Kind = AccessScopeKind.ManagerScoped,
+            BranchIds = [4],
+            ViewExcludeEmployeeIds = [103]
+        };
+
+        var result = CreateSut()
+            .FilterEmployees(employees, scope, AccessIntent.Assign)
+            .Select(e => e.Id)
+            .OrderBy(x => x)
+            .ToList();
+
+        Assert.Equal(new[] { 103, 104 }, result);
     }
 
     [Fact]

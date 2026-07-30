@@ -30,6 +30,12 @@ namespace TaskMangment.Application.Common.Security
         public bool IsCompanyWide => Kind == AccessScopeKind.CompanyWide;
         public bool AllowsAllFunctionTypes => SeesAllTypesInBranchScope || EmployeeTypeIds.Count == 0;
 
+        /// <summary>
+        /// Employees hidden from View lists/360 for ManagerScoped/OwnBranch actors:
+        /// org superiors (area/branch managers above them) and company-wide users.
+        /// </summary>
+        public IReadOnlyList<int> ViewExcludeEmployeeIds { get; set; } = [];
+
         public UserAccessContext ToUserAccessContext() => new()
         {
             EmployeeId = EmployeeId,

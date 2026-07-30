@@ -208,6 +208,7 @@ export class EmployeeTaskCommentsReportComponent implements OnInit {
   onEdit(id: number) {
     const modalRef = this.modalService.open(TaskDetailsShellComponent, {
       size: 'xl',
+      windowClass: 'task-details-modal',
       backdrop: 'static',
       scrollable: true
     });

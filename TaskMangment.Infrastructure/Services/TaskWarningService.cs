@@ -12,6 +12,7 @@ using TaskMangment.Application.Common.Errors;
 using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Responses;
+using TaskMangment.Application.Common.Security;
 using TaskMangment.Application.DTOs.TaskDTOs;
 using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
@@ -34,6 +35,8 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IDomainEventDispatcher _eventDispatcher;
         private readonly IRepository<Notification> _notificationRepo;
         private readonly INotificationRecipientBuilder _recipientBuilder;
+        private readonly IEmployeePermissionService _permissions;
+        private readonly TaskCreatedByMeEvaluator _createdByMe;
 
 
 
@@ -48,7 +51,9 @@ namespace TaskMangment.Infrastructure.Services
             IDomainEventDispatcher eventDispatcher,
             IRepository<Branch> branchRepo,
             IRepository<Notification> notificationRepo,
-            INotificationRecipientBuilder recipientBuilder)
+            INotificationRecipientBuilder recipientBuilder,
+            IEmployeePermissionService permissions,
+            TaskCreatedByMeEvaluator createdByMe)
         {
             _warningRepo = warningRepo;
             _employeeRepo = employeeRepo;
@@ -60,6 +65,8 @@ namespace TaskMangment.Infrastructure.Services
             _branchRepo = branchRepo;
             _notificationRepo = notificationRepo;
             _recipientBuilder = recipientBuilder;
+            _permissions = permissions;
+            _createdByMe = createdByMe;
         }
 
         public async Task<ApiResponse<PagedResponse<WarningGetDto>>> GetAllAsync(WarningRequest request)
@@ -170,6 +177,8 @@ namespace TaskMangment.Infrastructure.Services
             if (actorIsAssignee)
                 throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
 
+            await EnsureCanSendWarningAsync(employeeId, task);
+
             var warning = _mapper.Map<Warning>(dto);
             warning.TaskAssignmentId = assignment.Id;
             warning.TaskId = taskId;
@@ -254,6 +263,10 @@ namespace TaskMangment.Infrastructure.Services
             if (actorIsAssignee)
                 throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
 
+            var task = await _taskRepo.GetByIDAsync(taskId)
+                ?? throw new AppException(ErrorCodes.TaskNotFound, StatusCodes.Status404NotFound);
+            await EnsureCanSendWarningAsync(modifiedByEmployeeId, task);
+
             var taskAssignments = await _taskAssignmentRepo.GetAll(ta => ta.TaskId == taskId)
                 .ToListAsync();
 
@@ -302,6 +315,18 @@ namespace TaskMangment.Infrastructure.Services
 
             return ApiResponse<bool>.Ok(true, "Warning deleted successfully");
 
+        }
+
+        private async Task EnsureCanSendWarningAsync(int employeeId, WorkTask task)
+        {
+            if (TaskCreatedByMeEvaluator.IsCreatorOrAssigner(employeeId, task))
+                return;
+
+            if (await _permissions.HasAsync(employeeId, PermissionCodes.IssueWarning) &&
+                await _createdByMe.IsCreatedByMeAsync(task, employeeId))
+                return;
+
+            throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
         }
     }
 }

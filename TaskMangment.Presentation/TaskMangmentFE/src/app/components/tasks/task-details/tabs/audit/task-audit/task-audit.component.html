@@ -161,8 +161,8 @@
           <h6 class="mb-0">
             {{ 'TASK.CLOSE_REQUESTS' | translate }}
           </h6>
+          <span class="badge bg-secondary rounded-pill ms-2">{{ counts['close'] }}</span>
         </div>
-        <span class="badge bg-secondary rounded-pill ms-2">{{ counts['close'] }}</span>
       </div>
       <ul class="list-group list-group-flush">
         <li *ngFor="let item of closeItems" class="list-group-item">
@@ -171,7 +171,8 @@
             <div class="flex-grow-1">
               <div class="fw-semibold">{{ item.message }}</div>
               <div class="text-muted small">
-                {{ item.user }} • {{ item.date | date:'medium' }}
+                <div>{{ item.user }}</div>
+                <div>{{ item.date | myDate:'d MMMM y':true }}</div>
               </div>
             </div>
           </div>

@@ -73,6 +73,7 @@
               <button ngbDropdownItem routerLink="/employee/employee-list">{{ 'COMMON.BACK' | translate }}</button>
               <button ngbDropdownItem (click)="onTabChange('timeline')">{{ 'EMPLOYEE_360.TAB_TIMELINE' | translate }}</button>
               <button ngbDropdownItem (click)="onTabChange('emails')">{{ 'EMPLOYEE_360.TAB_EMAILS' | translate }}</button>
+              <button ngbDropdownItem (click)="onTabChange('comments')">{{ 'EMPLOYEE_360.TAB_COMMENTS' | translate }}</button>
             </div>
           </div>
         </div>
@@ -244,7 +245,8 @@
                   [rowClickableCondition]="taskRowClickable"
                   (edit)="openTaskDetails($event)"
                   (details)="openTaskDetails($event)"
-                  (pageChange)="onTaskPageChange($event)">
+                  (pageChange)="onTaskPageChange($event)"
+                  (entriesChange)="onTaskEntriesChange($event)">
                 </app-generic-table>
               </ng-template>
             </li>
@@ -276,7 +278,9 @@
                   </div>
                   <div class="col-md-8">
                     <div class="panel">
-                      <h6>{{ 'EMPLOYEE_360.PERMISSIONS' | translate }}</h6>
+                      <h6>{{ 'EMPLOYEE_360.PERMISSIONS' | translate }}
+                        <span class="badge bg-light text-dark ms-1">{{ filteredAccessPermissions.length }}</span>
+                      </h6>
                       <div class="perm-grid">
                         <code *ngFor="let p of filteredAccessPermissions">{{ p }}</code>
                       </div>
@@ -293,7 +297,8 @@
                   <div class="flex-grow-1">
                     <label class="form-label small mb-1">{{ 'COMMON.SEARCH' | translate }}</label>
                     <input class="form-control form-control-sm" [(ngModel)]="performanceSearch"
-                      [placeholder]="'EMPLOYEE_360.SEARCH_ALL_COLUMNS' | translate" />
+                      [placeholder]="'EMPLOYEE_360.SEARCH_ALL_COLUMNS' | translate"
+                      (ngModelChange)="onPerformanceSearchChange()" />
                   </div>
                 </div>
                 <div *ngIf="performanceLoading" class="empty-state">{{ 'COMMON.LOADING' | translate }}</div>
@@ -309,7 +314,7 @@
                       <div class="panel">
                         <h6>{{ 'EMPLOYEE_360.WARNINGS' | translate }} ({{ filteredWarnings.length }})</h6>
                         <div *ngIf="!filteredWarnings.length" class="empty-state">{{ 'EMPLOYEE_360.NO_WARNINGS' | translate }}</div>
-                        <div *ngFor="let w of filteredWarnings" class="list-item"
+                        <div *ngFor="let w of pagedWarnings" class="list-item"
                           [class.clickable]="!!w.taskId" (click)="w.taskId && openTaskDetails(w.taskId!)">
                           <a *ngIf="w.taskId" href="javascript:void(0)" class="task-link" (click)="openTaskFromEvent($event, w.taskId)">
                             #{{ w.taskId }} — {{ w.taskTitle }}
@@ -318,6 +323,13 @@
                           <div class="small text-muted">{{ w.createdDate | myDate:'d MMM y':true }}</div>
                           <div class="small">{{ w.reason }}</div>
                         </div>
+                        <ngb-pagination *ngIf="filteredWarnings.length > listPageSize"
+                          class="d-flex justify-content-end mt-2"
+                          [collectionSize]="filteredWarnings.length"
+                          [(page)]="warningPage"
+                          [pageSize]="listPageSize"
+                          [maxSize]="5">
+                        </ngb-pagination>
                       </div>
                     </div>
                     <div class="col-lg-6">
@@ -335,11 +347,18 @@
                       <div class="panel">
                         <h6>{{ 'EMPLOYEE_360.LATE_TASKS' | translate }}</h6>
                         <div *ngIf="!filteredLateTasks.length" class="empty-state">{{ 'EMPLOYEE_360.NO_LATE' | translate }}</div>
-                        <div class="list-item clickable" *ngFor="let t of filteredLateTasks" (click)="openTaskDetails(t.taskId)">
+                        <div class="list-item clickable" *ngFor="let t of pagedLateTasks" (click)="openTaskDetails(t.taskId)">
                           <strong>{{ t.title }}</strong>
                           <span class="badge bg-danger ms-2">{{ t.dueDate | myDate:'d MMM y' }}</span>
                           <span class="badge bg-secondary ms-1">{{ t.priority }}</span>
                         </div>
+                        <ngb-pagination *ngIf="filteredLateTasks.length > listPageSize"
+                          class="d-flex justify-content-end mt-2"
+                          [collectionSize]="filteredLateTasks.length"
+                          [(page)]="latePage"
+                          [pageSize]="listPageSize"
+                          [maxSize]="5">
+                        </ngb-pagination>
                       </div>
                     </div>
                   </div>
@@ -353,7 +372,8 @@
                   <div class="flex-grow-1">
                     <label class="form-label small mb-1">{{ 'COMMON.SEARCH' | translate }}</label>
                     <input class="form-control form-control-sm" [(ngModel)]="discountSearch"
-                      [placeholder]="'EMPLOYEE_360.SEARCH_ALL_COLUMNS' | translate" />
+                      [placeholder]="'EMPLOYEE_360.SEARCH_ALL_COLUMNS' | translate"
+                      (ngModelChange)="onDiscountSearchChange()" />
                   </div>
                 </div>
                 <div *ngIf="discountsLoading" class="empty-state">{{ 'COMMON.LOADING' | translate }}</div>
@@ -396,7 +416,7 @@
                           </tr>
                         </thead>
                         <tbody>
-                          <tr *ngFor="let d of filteredDiscounts"
+                          <tr *ngFor="let d of pagedDiscounts"
                             [class.clickable]="!!d.taskId"
                             (click)="d.taskId && openTaskDetails(d.taskId)">
                             <td>{{ d.createdDate | myDate:'d MMM y':true }}</td>
@@ -417,6 +437,13 @@
                         </tbody>
                       </table>
                     </div>
+                    <ngb-pagination *ngIf="filteredDiscounts.length > listPageSize"
+                      class="d-flex justify-content-end mt-2"
+                      [collectionSize]="filteredDiscounts.length"
+                      [(page)]="discountPage"
+                      [pageSize]="listPageSize"
+                      [maxSize]="5">
+                    </ngb-pagination>
                   </div>
                 </div>
               </ng-template>
@@ -428,7 +455,8 @@
                   <div class="flex-grow-1">
                     <label class="form-label small mb-1">{{ 'COMMON.SEARCH' | translate }}</label>
                     <input class="form-control form-control-sm" [(ngModel)]="leaveSearch"
-                      [placeholder]="'EMPLOYEE_360.SEARCH_ALL_COLUMNS' | translate" />
+                      [placeholder]="'EMPLOYEE_360.SEARCH_ALL_COLUMNS' | translate"
+                      (ngModelChange)="onLeaveSearchChange()" />
                   </div>
                 </div>
                 <div *ngIf="leaveLoading" class="empty-state">{{ 'COMMON.LOADING' | translate }}</div>
@@ -444,23 +472,51 @@
                     <h6>{{ 'EMPLOYEE_360.LEAVE_HISTORY' | translate }}</h6>
                     <div *ngIf="!filteredLeaveHistory.length" class="empty-state">{{ 'EMPLOYEE_360.NO_LEAVE' | translate }}</div>
                     <div class="table-responsive" *ngIf="filteredLeaveHistory.length">
-                      <table class="table table-sm table-hover">
+                      <table class="table table-sm table-hover align-middle">
                         <thead><tr>
                           <th>{{ 'LEAVE.TYPE' | translate }}</th>
                           <th>{{ 'LEAVE.START_DATE' | translate }}</th>
                           <th>{{ 'LEAVE.END_DATE' | translate }}</th>
+                          <th>{{ 'LEAVE.NOTES' | translate }}</th>
                           <th>{{ 'LEAVE.STATUS' | translate }}</th>
+                          <th *ngIf="canReviewLeave" class="text-end">{{ 'COMMON.ACTIONS' | translate }}</th>
                         </tr></thead>
                         <tbody>
-                          <tr *ngFor="let l of filteredLeaveHistory">
+                          <tr *ngFor="let l of pagedLeaveHistory">
                             <td>{{ l.leaveTypeName }}</td>
                             <td>{{ l.startDate | myDate:'d MMM y' }}</td>
                             <td>{{ l.endDate | myDate:'d MMM y' }}</td>
-                            <td><span class="badge" [ngClass]="statusBadgeClass(l.status)">{{ l.status }}</span></td>
+                            <td class="text-break">{{ l.notes || '—' }}</td>
+                            <td>
+                              <span class="badge" [ngClass]="statusBadgeClass(l.status)">
+                                {{ ('LEAVE.' + (l.status | uppercase)) | translate }}
+                              </span>
+                            </td>
+                            <td *ngIf="canReviewLeave" class="text-end text-nowrap">
+                              <ng-container *ngIf="isLeavePending(l.status)">
+                                <button *ngIf="canApproveLeave" type="button"
+                                  class="btn btn-sm btn-success me-1"
+                                  (click)="approveLeave(l.id)">
+                                  {{ 'LEAVE.APPROVE' | translate }}
+                                </button>
+                                <button *ngIf="canRejectLeave" type="button"
+                                  class="btn btn-sm btn-outline-danger"
+                                  (click)="rejectLeave(l.id)">
+                                  {{ 'LEAVE.REJECT' | translate }}
+                                </button>
+                              </ng-container>
+                            </td>
                           </tr>
                         </tbody>
                       </table>
                     </div>
+                    <ngb-pagination *ngIf="filteredLeaveHistory.length > listPageSize"
+                      class="d-flex justify-content-end mt-2"
+                      [collectionSize]="filteredLeaveHistory.length"
+                      [(page)]="leavePage"
+                      [pageSize]="listPageSize"
+                      [maxSize]="5">
+                    </ngb-pagination>
                   </div>
                 </div>
               </ng-template>
@@ -494,8 +550,9 @@
                     </div>
                   </div>
                 </div>
-                <ngb-pagination *ngIf="timelineTotal > 20" class="d-flex justify-content-end mt-3"
-                  [collectionSize]="timelineTotal" [(page)]="timelinePage" [pageSize]="20"
+                <ngb-pagination *ngIf="timelineTotal > timelinePageSize" class="d-flex justify-content-end mt-3"
+                  [collectionSize]="timelineTotal" [(page)]="timelinePage" [pageSize]="timelinePageSize"
+                  [maxSize]="5"
                   (pageChange)="onTimelinePageChange($event)">
                 </ngb-pagination>
               </ng-template>
@@ -520,9 +577,12 @@
                       <option value="Failed">Failed</option>
                     </select>
                   </div>
-                  <div style="min-width:160px">
+                  <div style="min-width:180px">
                     <label class="form-label small mb-1">{{ 'EMPLOYEE_360.EMAIL_TYPE' | translate }}</label>
-                    <input class="form-control form-control-sm" [(ngModel)]="emailType" [placeholder]="'EMPLOYEE_360.EMAIL_TYPE' | translate" />
+                    <select class="form-select form-select-sm" [(ngModel)]="emailType">
+                      <option value="">{{ 'COMMON.ALL' | translate }}</option>
+                      <option *ngFor="let t of emailTypeOptions" [value]="t">{{ ('EMPLOYEE_360.EMAIL_TYPES.' + t) | translate }}</option>
+                    </select>
                   </div>
                   <button type="button" class="btn btn-sm btn-outline-primary" (click)="applyEmailFilters()">{{ 'COMMON.FILTER' | translate }}</button>
                 </div>
@@ -568,8 +628,9 @@
                     </tbody>
                   </table>
                 </div>
-                <ngb-pagination *ngIf="emailTotal > 15" class="d-flex justify-content-end"
-                  [collectionSize]="emailTotal" [(page)]="emailPage" [pageSize]="15"
+                <ngb-pagination *ngIf="emailTotal > emailPageSize" class="d-flex justify-content-end mt-2"
+                  [collectionSize]="emailTotal" [(page)]="emailPage" [pageSize]="emailPageSize"
+                  [maxSize]="5"
                   (pageChange)="emailPage=$event; loadEmails()">
                 </ngb-pagination>
               </ng-template>
@@ -643,9 +704,88 @@
                     </tbody>
                   </table>
                 </div>
-                <ngb-pagination *ngIf="notifTotal > 15" class="d-flex justify-content-end"
-                  [collectionSize]="notifTotal" [(page)]="notifPage" [pageSize]="15"
+                <ngb-pagination *ngIf="notifTotal > notifPageSize" class="d-flex justify-content-end mt-2"
+                  [collectionSize]="notifTotal" [(page)]="notifPage" [pageSize]="notifPageSize"
+                  [maxSize]="5"
                   (pageChange)="notifPage=$event; loadNotifications()">
+                </ngb-pagination>
+              </ng-template>
+            </li>
+
+            <li [ngbNavItem]="'comments'"><button ngbNavLink>{{ 'EMPLOYEE_360.TAB_COMMENTS' | translate }}</button>
+              <ng-template ngbNavContent>
+                <div class="d-flex flex-wrap gap-2 mb-3 align-items-end">
+                  <div class="flex-grow-1">
+                    <label class="form-label small mb-1">{{ 'COMMON.SEARCH' | translate }}</label>
+                    <input class="form-control form-control-sm" [(ngModel)]="commentSearch"
+                      [placeholder]="'EMPLOYEE_360.SEARCH_ALL_COLUMNS' | translate"
+                      (keyup.enter)="applyCommentFilters()" />
+                  </div>
+                  <button type="button" class="btn btn-sm btn-outline-primary" (click)="applyCommentFilters()">{{ 'COMMON.FILTER' | translate }}</button>
+                </div>
+                <div *ngIf="commentLoading" class="empty-state">{{ 'COMMON.LOADING' | translate }}</div>
+                <div *ngIf="!commentLoading && !comments.length" class="empty-state">{{ 'EMPLOYEE_360.NO_COMMENTS' | translate }}</div>
+                <div class="table-responsive" *ngIf="!commentLoading && comments.length">
+                  <table class="table table-sm table-hover align-middle">
+                    <thead>
+                      <tr>
+                        <th>{{ 'EMPLOYEE_360.COL_DATE' | translate }}</th>
+                        <th>{{ 'EMPLOYEE_360.COL_COMMENT' | translate }}</th>
+                        <th>{{ 'EMPLOYEE_360.COL_TASK' | translate }}</th>
+                        <th class="text-center" style="width:70px">{{ 'EMPLOYEE_360.COL_ATTACHMENTS' | translate }}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <ng-container *ngFor="let c of comments">
+                        <tr class="comment-row" (click)="openTaskDetails(c.taskId)" role="button">
+                          <td>{{ c.date | myDate:'d MMM y':true }}</td>
+                          <td>
+                            <div class="comment-text">{{ c.commentText || '—' }}</div>
+                          </td>
+                          <td>
+                            <a href="javascript:void(0)" class="task-link" (click)="openTaskFromEvent($event, c.taskId)">
+                              #{{ c.taskId }}
+                              <span *ngIf="c.taskTitle"> — {{ c.taskTitle }}</span>
+                            </a>
+                          </td>
+                          <td class="text-center" (click)="$event.stopPropagation()">
+                            <button *ngIf="c.attachmentCount > 0 || c.hasAttachments"
+                              type="button"
+                              class="btn btn-sm btn-outline-secondary attachment-btn"
+                              [title]="'EMPLOYEE_360.VIEW_ATTACHMENTS' | translate"
+                              (click)="toggleCommentAttachments($event, c.id)">
+                              <i class="bi bi-paperclip"></i>
+                              <span class="ms-1">{{ c.attachmentCount }}</span>
+                            </button>
+                            <span *ngIf="!(c.attachmentCount > 0 || c.hasAttachments)" class="text-muted">—</span>
+                          </td>
+                        </tr>
+                        <tr *ngIf="openAttachmentsForCommentId === c.id" class="attachments-expand-row">
+                          <td colspan="4">
+                            <div class="attachments-panel">
+                              <div *ngIf="loadingAttachments[c.id]" class="text-muted small">{{ 'COMMON.LOADING' | translate }}</div>
+                              <div *ngIf="!loadingAttachments[c.id] && !(attachmentsMap[c.id]?.length)" class="text-muted small">
+                                {{ 'TASK.NO_ATTACHMENTS' | translate }}
+                              </div>
+                              <div *ngFor="let att of attachmentsMap[c.id]"
+                                class="attachment-row d-flex justify-content-between align-items-center py-1">
+                                <span class="small text-truncate me-2">{{ att.fileName }}</span>
+                                <button type="button" class="btn btn-sm btn-outline-primary"
+                                  (click)="openCommentAttachment($event, att)">
+                                  <i class="bi bi-box-arrow-up-right"></i>
+                                </button>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      </ng-container>
+                    </tbody>
+                  </table>
+                </div>
+                <ngb-pagination *ngIf="commentTotal > commentPageSize" class="d-flex justify-content-end mt-2"
+                  [collectionSize]="commentTotal" [(page)]="commentPage" [pageSize]="commentPageSize"
+                  [maxSize]="5"
+                  (pageChange)="commentPage=$event; loadComments()">
                 </ngb-pagination>
               </ng-template>
             </li>

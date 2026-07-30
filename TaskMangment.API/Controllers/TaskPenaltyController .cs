@@ -39,16 +39,16 @@ namespace TaskMangment.API.Controllers
             return Success(result.Data);
         }
 
+        /// <summary>Allowed for literal task creator/assigner, or users with ISSUE_PENALTY.</summary>
         [HttpPost("{taskId}")]
-        [PermissionAuthorize(PermissionCodes.SendPenalty)]
         public async Task<IActionResult> Add(int taskId, [FromBody] DiscountAddEditDto dto)
         {
             var result = await _service.AddAsync(this.CurrentUserId, taskId, dto);
             return Success(result.Data, "Discount added successfully");
         }
 
+        /// <summary>Allowed for literal task creator/assigner, or users with ISSUE_PENALTY.</summary>
         [HttpPut("{id}")]
-        [PermissionAuthorize(PermissionCodes.SendPenalty)]
         public async Task<IActionResult> Update(int id,int TaskId, [FromBody] DiscountAddEditDto dto)
         {
             var result = await _service.UpdateAsync(id,TaskId, dto,this.CurrentUserId);

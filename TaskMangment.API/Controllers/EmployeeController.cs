@@ -121,6 +121,13 @@ namespace TaskMangment.API.Controllers
             return Success(result.Data);
         }
 
+        [HttpGet("{id}/comments")]
+        public async Task<IActionResult> GetComments(int id, [FromQuery] Employee360PagedRequest request)
+        {
+            var result = await _employee360Service.GetCommentsAsync(CurrentUserId, id, request);
+            return Success(result.Data);
+        }
+
         [HttpGet("{id}/warnings")]
         public async Task<IActionResult> GetWarnings(int id, [FromQuery] PeriodDto? period)
         {

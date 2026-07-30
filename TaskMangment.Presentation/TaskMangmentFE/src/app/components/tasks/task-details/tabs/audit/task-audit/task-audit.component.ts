@@ -98,7 +98,9 @@ export class TaskAuditComponent implements OnInit, OnDestroy {
               id: summary.lastWarning.id,
               type: 'warning',
               message: summary.lastWarning.reason,
-              user: summary.lastWarning.issuedByName || '',
+              user: summary.lastWarning.issuedByName
+                || summary.lastWarning.issuedEmployeeName
+                || '',
               date: summary.lastWarning.issuedAt
             };
             this.items.push(warningItem);

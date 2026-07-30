@@ -52,19 +52,19 @@ namespace TaskMangment.API.Controllers
             return Success(result.Data, "Task added successfully");
         }
 
+        /// <summary>Allowed for literal task creator/assigner, or users with UPDATE_TASK.</summary>
         [HttpPut("{id}")]
-        [PermissionAuthorize(PermissionCodes.UpdateTask)]
         public async Task<IActionResult> Update(int id, [FromBody] TaskAddEditDto dto)
         {
             var result = await _service.UpdateAsync(id, dto, this.CurrentUserId);
             return Success(result.Data, "Task updated successfully");
         }
 
+        /// <summary>Allowed for literal task creator/assigner, or users with DELETE_TASK.</summary>
         [HttpDelete("{id}")]
-        [PermissionAuthorize(PermissionCodes.DeleteTask)]
         public async Task<IActionResult> Delete(int id)
         {
-            var result = await _service.DeleteAsync(id);
+            var result = await _service.DeleteAsync(id, this.CurrentUserId);
             return Success(true, "Task deleted successfully");
         }
 

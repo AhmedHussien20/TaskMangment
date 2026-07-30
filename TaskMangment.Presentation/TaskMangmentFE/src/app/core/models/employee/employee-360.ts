@@ -94,7 +94,6 @@ export interface Employee360OverviewCharts {
 export interface Employee360Dto {
   profile: Employee360Profile;
   roles: Employee360Role[];
-  permissions: string[];
   reportingManagers: Employee360Manager[];
   directManager?: Employee360Manager | null;
   managerScope?: Employee360ManagerScope | null;
@@ -181,6 +180,16 @@ export interface Employee360NotificationItem {
   createdBy?: string;
   taskId?: number;
   taskTitle?: string;
+}
+
+export interface Employee360CommentItem {
+  id: number;
+  date: string;
+  commentText?: string;
+  taskId: number;
+  taskTitle?: string;
+  attachmentCount: number;
+  hasAttachments: boolean;
 }
 
 export interface EmployeeTimelineItem {

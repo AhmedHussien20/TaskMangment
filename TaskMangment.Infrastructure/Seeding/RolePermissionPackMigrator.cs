@@ -24,6 +24,7 @@ namespace TaskMangment.Infrastructure.Seeding
         public async Task MigrateAsync()
         {
             await EnsureCanonicalPermissionsAsync();
+            await RenameLegacyPermissionsAsync();
             await SoftDeleteUnknownPermissionsAsync();
             await GrantPacksByRoleLevelAsync();
             await _db.SaveChangesAsync();
@@ -202,6 +203,60 @@ namespace TaskMangment.Infrastructure.Seeding
         }
 
         /// <summary>
+        /// Remaps RolePermissions from legacy codes onto the renamed catalog codes, then soft-deletes old rows.
+        /// </summary>
+        private async Task RenameLegacyPermissionsAsync()
+        {
+            var now = DateTime.UtcNow;
+            var allRows = await _db.Permissions.ToListAsync();
+            var byCode = allRows
+                .GroupBy(p => p.Code, StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(g => g.Key, g => g.OrderBy(x => x.Id).ToList(), StringComparer.OrdinalIgnoreCase);
+
+            var renamed = 0;
+            foreach (var (oldCode, newCode) in PermissionCodes.LegacyCodeRenames)
+            {
+                if (string.Equals(oldCode, newCode, StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                if (!byCode.TryGetValue(oldCode, out var oldRows) || oldRows.Count == 0)
+                    continue;
+
+                if (!byCode.TryGetValue(newCode, out var newRows) || newRows.Count == 0)
+                {
+                    _logger.LogWarning(
+                        "Cannot rename {OldCode} → {NewCode}: target permission missing from catalog sync.",
+                        oldCode,
+                        newCode);
+                    continue;
+                }
+
+                var target = newRows.FirstOrDefault(r => !r.IsDeleted) ?? newRows[0];
+                if (target.IsDeleted)
+                {
+                    target.IsDeleted = false;
+                    target.DeletedDate = null;
+                    target.ModifiedDate = now;
+                }
+
+                var oldIds = oldRows.Select(r => r.Id).ToList();
+                await RemapRolePermissionsToKeeperAsync(target.Id, oldIds, now);
+
+                foreach (var old in oldRows.Where(r => !r.IsDeleted))
+                {
+                    old.IsDeleted = true;
+                    old.DeletedDate = now;
+                    old.ModifiedDate = now;
+                    renamed++;
+                }
+            }
+
+            await _db.SaveChangesAsync();
+            if (renamed > 0)
+                _logger.LogInformation("Renamed/retired {Count} legacy Permission rows.", renamed);
+        }
+
+        /// <summary>
         /// Soft-deletes permission rows (and RolePermission FKs) whose Code is not in the catalog.
         /// </summary>
         private async Task SoftDeleteUnknownPermissionsAsync()
@@ -320,7 +375,6 @@ namespace TaskMangment.Infrastructure.Seeding
                     PermissionCodes.ViewOwnTasks,
                     PermissionCodes.ViewScopedTasks,
                     PermissionCodes.ViewEmployees,
-                    PermissionCodes.ManageManagerScope,
                     PermissionCodes.ApproveLeave,
                     PermissionCodes.RejectLeave,
                     PermissionCodes.ViewScopedReports,
@@ -375,9 +429,8 @@ namespace TaskMangment.Infrastructure.Seeding
                     PermissionCodes.ViewOwnTasks,
                     PermissionCodes.CreateTask,
                     PermissionCodes.UpdateTask,
-                    PermissionCodes.ApproveCloseExtend,
-                    PermissionCodes.RejectCloseExtend,
-                    PermissionCodes.ExtendDueDate,
+                    PermissionCodes.ApproveTaskRequest,
+                    PermissionCodes.RejectTaskRequest,
                     ..PermissionCodes.AssigneeTaskActions
                 ];
             }

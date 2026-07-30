@@ -26,7 +26,9 @@ namespace TaskMangment.Infrastructure.Services
         }
 
         /// <summary>
-        /// True when user created/assigned the task, or (not an assignee) creator/assigner is in their scope.
+        /// True when user created/assigned the task, or (not an assignee) creator/assigner is under
+        /// their <b>managed</b> coverage (ManagerScoped / CompanyWide).
+        /// OwnBranch (same home branch) does NOT count — peers/bosses in the same branch are not "my" tasks.
         /// False when the user is only an assignee of a task assigned by someone else.
         /// </summary>
         public static bool Resolve(
@@ -36,14 +38,15 @@ namespace TaskMangment.Infrastructure.Services
             ResolvedAccessScope scope,
             bool isActiveAssignee)
         {
-            if (task.CreatedByEmployeeId == employeeId || task.AssignedByEmployeeId == employeeId)
+            if (IsCreatorOrAssigner(employeeId, task))
                 return true;
 
             // Assigned to me from another person → never creator-side.
             if (isActiveAssignee)
                 return false;
 
-            if (scope.Kind == AccessScopeKind.SelfOnly)
+            // SelfOnly / OwnBranch: visibility may be broader, but creator-side only for literal owner.
+            if (!AllowsScopeInferredCreatorSide(scope.Kind))
                 return false;
 
             var creatorInScope = task.CreatedByEmployeeId.HasValue &&
@@ -54,9 +57,19 @@ namespace TaskMangment.Infrastructure.Services
             return creatorInScope || assignerInScope;
         }
 
+        /// <summary>
+        /// Scope-inferred creator-side only for real coverage (managed branches/types or company-wide).
+        /// OwnBranch = same home branch peers/bosses — not subordinates.
+        /// </summary>
+        public static bool AllowsScopeInferredCreatorSide(AccessScopeKind kind)
+            => kind is AccessScopeKind.ManagerScoped or AccessScopeKind.CompanyWide;
+
+        public static bool IsCreatorOrAssigner(int employeeId, WorkTask task)
+            => task.CreatedByEmployeeId == employeeId || task.AssignedByEmployeeId == employeeId;
+
         public async Task<bool> IsCreatedByMeAsync(WorkTask task, int employeeId)
         {
-            if (task.CreatedByEmployeeId == employeeId || task.AssignedByEmployeeId == employeeId)
+            if (IsCreatorOrAssigner(employeeId, task))
                 return true;
 
             var isAssignee = await _assignmentRepo
@@ -66,7 +79,7 @@ namespace TaskMangment.Infrastructure.Services
                 return false;
 
             var scope = await _scopeResolver.ResolveAsync(employeeId);
-            if (scope.Kind == AccessScopeKind.SelfOnly)
+            if (!AllowsScopeInferredCreatorSide(scope.Kind))
                 return false;
 
             var ids = new List<int>();

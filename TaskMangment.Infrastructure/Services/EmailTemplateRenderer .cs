@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
@@ -138,6 +138,8 @@ namespace TaskMangment.Infrastructure.Services
                 data["TaskLink"] = string.Empty;
             if (!data.ContainsKey("TaskLinkBlock"))
                 data["TaskLinkBlock"] = string.Empty;
+            if (!data.ContainsKey("TaskDetailsLink"))
+                data["TaskDetailsLink"] = string.Empty;
 
             var taskNumberLabel = data.TryGetValue("TaskNumber", out var rawNumber) && !string.IsNullOrWhiteSpace(rawNumber)
                 ? rawNumber.Trim()
@@ -161,10 +163,20 @@ namespace TaskMangment.Infrastructure.Services
             var taskUrl = $"{frontendUrl.TrimEnd('/')}/task/task-list?taskId={taskId}";
             var display = taskNumberLabel ?? taskId.ToString();
             data["TaskLink"] = taskUrl;
-            // Keep empty for old templates; new templates embed the link in the sentence.
-            data["TaskLinkBlock"] = string.Empty;
             data["TaskNumberLink"] =
                 $"<a href='{taskUrl}' style='color:#0d6efd;text-decoration:underline;font-weight:bold'>{display}</a>";
+            data["TaskDetailsLink"] = BuildTaskDetailsLinkHtml(taskUrl);
+            data["TaskLinkBlock"] = data["TaskDetailsLink"];
+        }
+
+        private static string BuildTaskDetailsLinkHtml(string taskUrl)
+        {
+            return
+                "<div style='margin:18px 0 0;text-align:center'>" +
+                $"<a href='{taskUrl}' style='display:inline-block;background:#0d6efd;color:#ffffff;text-decoration:none;font-weight:bold;padding:10px 18px;border-radius:8px'>" +
+                "اضغط هنا لعرض التفاصيل | Click here to see the details" +
+                "</a>" +
+                "</div>";
         }
 
         private static bool TryGetTaskId(Dictionary<string, string> data, out int taskId)
@@ -178,9 +190,18 @@ namespace TaskMangment.Infrastructure.Services
 
         private static string AppendTaskLinkFallback(string body, Dictionary<string, string> data)
         {
-            // Task link is embedded inline via {{TaskNumberLink}} in seeded templates.
-            // Do not inject a separate footer link block.
-            return body;
+            if (string.IsNullOrEmpty(body) || data == null)
+                return body;
+
+            if (!data.TryGetValue("TaskDetailsLink", out var detailsLink) || string.IsNullOrWhiteSpace(detailsLink))
+                return body;
+
+            // Templates already include {{TaskDetailsLink}}; only inject if the placeholder was missing.
+            if (body.Contains("task/task-list?taskId=", StringComparison.OrdinalIgnoreCase) ||
+                body.Contains("اضغط هنا لعرض التفاصيل", StringComparison.OrdinalIgnoreCase))
+                return body;
+
+            return body + detailsLink;
         }
 
         private async Task EnsureTaskNumberAsync(
@@ -439,6 +460,13 @@ namespace TaskMangment.Infrastructure.Services
                                     : (w.TaskAssignment != null && w.TaskAssignment.Employee != null
                                         ? w.TaskAssignment.Employee.FullName
                                         : null),
+                                BranchName = w.Issued != null && w.Issued.Branch != null
+                                    ? w.Issued.Branch.Name
+                                    : (w.TaskAssignment != null
+                                       && w.TaskAssignment.Employee != null
+                                       && w.TaskAssignment.Employee.Branch != null
+                                        ? w.TaskAssignment.Employee.Branch.Name
+                                        : null),
                                 IssuedByName = w.IssuedBy != null ? w.IssuedBy.FullName : "النظام",
                                 w.Reason,
                                 w.ViolationDate,
@@ -449,16 +477,19 @@ namespace TaskMangment.Infrastructure.Services
                         if (warning == null)
                             throw new Exception($"Employee warning with Id {referenceId} not found.");
 
-                        var warningDate = warning.ViolationDate ?? warning.IssuedAt;
+                        // Related day of the violation (e.g. missing comment yesterday), not the send date.
+                        var relatedDate = warning.ViolationDate ?? warning.IssuedAt;
 
                         return new Dictionary<string, string>
                         {
                             ["TaskNumber"] = warning.TaskNumber.ToString(),
                             ["TaskTitle"] = warning.TaskTitle ?? "-",
                             ["EmployeeName"] = string.IsNullOrWhiteSpace(warning.EmployeeName) ? "-" : warning.EmployeeName,
+                            ["BranchName"] = string.IsNullOrWhiteSpace(warning.BranchName) ? "-" : warning.BranchName,
                             ["IssuedByName"] = string.IsNullOrWhiteSpace(warning.IssuedByName) ? "النظام" : warning.IssuedByName,
                             ["WarningReason"] = string.IsNullOrWhiteSpace(warning.Reason) ? "-" : warning.Reason,
-                            ["ViolationDate"] = warningDate.ToString("yyyy-MM-dd")
+                            ["ViolationDate"] = relatedDate.ToString("yyyy-MM-dd"),
+                            ["IssuedAt"] = warning.IssuedAt.ToString("yyyy-MM-dd")
                         };
                     }
 
@@ -472,12 +503,14 @@ namespace TaskMangment.Infrastructure.Services
                             .Select(d => new
                             {
                                 EmployeeName = d.Employee.FullName,
+                                BranchName = d.Employee.Branch != null ? d.Employee.Branch.Name : null,
                                 TaskNumber = d.TaskId.HasValue ? d.TaskId.Value.ToString() : "-",
                                 TaskTitle = d.Task != null ? d.Task.Title : "-",
                                 IssuedByName = d.CreatedBy != null ? d.CreatedBy.FullName : "النظام",
                                 d.Reason,
                                 d.Amount,
-                                d.ViolationDate
+                                d.ViolationDate,
+                                CreatedDate = d.CreatedDate
                             })
                             .FirstOrDefaultAsync();
 
@@ -487,12 +520,15 @@ namespace TaskMangment.Infrastructure.Services
                         return new Dictionary<string, string>
                         {
                             ["EmployeeName"] = deduction.EmployeeName,
+                            ["BranchName"] = string.IsNullOrWhiteSpace(deduction.BranchName) ? "-" : deduction.BranchName,
                             ["TaskNumber"] = deduction.TaskNumber,
                             ["TaskTitle"] = deduction.TaskTitle,
                             ["IssuedByName"] = string.IsNullOrWhiteSpace(deduction.IssuedByName) ? "النظام" : deduction.IssuedByName,
                             ["DeductionReason"] = deduction.Reason ?? "-",
                             ["DeductionAmount"] = deduction.Amount.ToString("N2"),
-                            ["ViolationDate"] = deduction.ViolationDate.ToString("yyyy-MM-dd")
+                            // Related day of the violation (e.g. missing comment yesterday), not the send date.
+                            ["ViolationDate"] = deduction.ViolationDate.ToString("yyyy-MM-dd"),
+                            ["IssuedAt"] = deduction.CreatedDate.ToString("yyyy-MM-dd")
                         };
                     }
 

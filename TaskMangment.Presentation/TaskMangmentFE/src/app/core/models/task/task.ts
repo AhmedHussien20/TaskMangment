@@ -75,7 +75,10 @@ export interface TaskGet {
   requireUploadFile: boolean;
   newDate?: string;
   numberOfExtensions?: number;
-  createdByMe: boolean
+  createdByMe: boolean;
+  /** True only when current user is CreatedBy or AssignedBy (not scope-inferred). */
+  isCreatorOrAssigner?: boolean;
+  pendingRequestsCount?: number;
 }
 
 export interface TaskSummary {

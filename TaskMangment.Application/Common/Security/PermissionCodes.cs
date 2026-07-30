@@ -13,22 +13,18 @@ namespace TaskMangment.Application.Common.Security
         public const string ViewOwnTasks = "VIEW_OWN_TASKS";
         public const string ViewScopedTasks = "VIEW_SCOPED_TASKS";
         public const string ViewCompanyTasks = "VIEW_COMPANY_TASKS";
-        /// <summary>Legacy alias used by reports; treated as company-wide task visibility.</summary>
-        public const string ViewAllTasks = "VIEW_ALL_TASKS";
 
-        // Tasks — workflow
-        public const string ExtendDueDate = "EXTEND_DUE_DATE";
-        public const string SubmitDueDate = "SUBMIT_DUE_DATE";
-        public const string ApproveCloseExtend = "APPROVE_CLOSE_EXTEND";
-        public const string RejectCloseExtend = "REJECT_CLOSE_EXTEND";
-        public const string CloseTaskEmployee = "CLOSE_TASK_EMPLOYEE";
+        // Tasks — assignee requests
+        public const string RequestTaskClose = "REQUEST_TASK_CLOSE";
+        public const string RequestDueDateExtension = "REQUEST_DUE_DATE_EXTENSION";
+
+        // Tasks — creator / scoped-manager actions
+        public const string ApproveTaskRequest = "APPROVE_TASK_REQUEST";
+        public const string RejectTaskRequest = "REJECT_TASK_REQUEST";
         public const string ArchiveTask = "ARCHIVE_TASK";
-        public const string TransferTask = "TRANSFER_TASK";
-        public const string ExemptEmployeeTask = "EXEMPT_EMPLOYEE_TASK";
-        public const string ReopenTaskEmployee = "REOPEN_TASK_EMPLOYEE";
-        public const string SendWarning = "SEND_WARNING";
+        public const string IssueWarning = "ISSUE_WARNING";
         public const string DeleteWarning = "DELETE_WARNING";
-        public const string SendPenalty = "SEND_PENALTY";
+        public const string IssuePenalty = "ISSUE_PENALTY";
         public const string DeletePenalty = "DELETE_PENALTY";
 
         // People / org management
@@ -39,7 +35,6 @@ namespace TaskMangment.Application.Common.Security
         public const string EnableEmployee = "ENABLE_EMPLOYEE";
         public const string DisableEmployee = "DISABLE_EMPLOYEE";
         public const string AssignRole = "ASSIGN_ROLE";
-        public const string ManageManagerScope = "MANAGE_MANAGER_SCOPE";
         public const string AssignToManagers = "ASSIGN_TO_MANAGERS";
         public const string AssignOutsideScope = "ASSIGN_OUTSIDE_SCOPE";
 
@@ -55,7 +50,6 @@ namespace TaskMangment.Application.Common.Security
         public const string ReceiveOrgEscalations = "RECEIVE_ORG_ESCALATIONS";
 
         // Org CRUD
-        public const string EditCompany = "EDIT_COMPANY";
         public const string CreateArea = "CREATE_AREA";
         public const string UpdateArea = "UPDATE_AREA";
         public const string DeleteArea = "DELETE_AREA";
@@ -69,52 +63,41 @@ namespace TaskMangment.Application.Common.Security
         public const string UpdateEmployeeType = "UPDATE_EMPLOYEE_TYPE";
         public const string DeleteEmployeeType = "DELETE_EMPLOYEE_TYPE";
         public const string CreatePermission = "CREATE_PERMISSION";
-        public const string UpdatePermission = "UPDATE_PERMISSION";
-        public const string DeletePermission = "DELETE_PERMISSION";
-        public const string CreateJob = "CREATE_JOB";
-        public const string UpdateJob = "UPDATE_JOB";
-        public const string DeleteJob = "DELETE_JOB";
 
         /// <summary>Assignee / day-to-day task participation pack.</summary>
         public static readonly string[] AssigneeTaskActions =
         [
             CommentTask,
-            SubmitDueDate,
-            CloseTaskEmployee
+            RequestDueDateExtension,
+            RequestTaskClose
         ];
 
-        /// <summary>Manager / creator discipline & review pack.</summary>
+        /// <summary>Manager / creator discipline &amp; review pack.</summary>
         public static readonly string[] ManagerTaskActions =
         [
-            SendWarning,
+            IssueWarning,
             DeleteWarning,
-            SendPenalty,
+            IssuePenalty,
             DeletePenalty,
-            ApproveCloseExtend,
-            RejectCloseExtend,
-            ExtendDueDate,
-            ArchiveTask,
-            TransferTask,
-            ExemptEmployeeTask,
-            ReopenTaskEmployee
+            ApproveTaskRequest,
+            RejectTaskRequest,
+            ArchiveTask
         ];
 
-        public static readonly string[] NewCatalogCodes =
-        [
-            ViewOwnTasks,
-            ViewScopedTasks,
-            ViewCompanyTasks,
-            ViewAllTasks,
-            ViewEmployees,
-            AssignRole,
-            ManageManagerScope,
-            AssignToManagers,
-            AssignOutsideScope,
-            ApproveLeave,
-            RejectLeave,
-            ViewScopedReports,
-            ViewCompanyReports,
-            ReceiveOrgEscalations
-        ];
+        /// <summary>
+        /// Old code → new code. Used by RolePermissionPackMigrator to preserve role grants.
+        /// </summary>
+        public static readonly IReadOnlyDictionary<string, string> LegacyCodeRenames =
+            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["CLOSE_TASK_EMPLOYEE"] = RequestTaskClose,
+                ["SUBMIT_DUE_DATE"] = RequestDueDateExtension,
+                ["APPROVE_CLOSE_EXTEND"] = ApproveTaskRequest,
+                ["REJECT_CLOSE_EXTEND"] = RejectTaskRequest,
+                ["EXTEND_DUE_DATE"] = ApproveTaskRequest,
+                ["SEND_WARNING"] = IssueWarning,
+                ["SEND_PENALTY"] = IssuePenalty,
+                ["VIEW_ALL_TASKS"] = ViewCompanyTasks,
+            };
     }
 }

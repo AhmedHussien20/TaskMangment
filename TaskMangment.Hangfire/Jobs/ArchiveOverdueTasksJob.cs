@@ -98,7 +98,7 @@ namespace TaskMangment.Hangfire.Jobs
                         where rp.IsAssigned && !rp.IsDeleted
                               && rp.Permission != null && !rp.Permission.IsDeleted
                               && (rp.Permission.Code == "VIEW_COMPANY_TASKS"
-                                  || rp.Permission.Code == "VIEW_ALL_TASKS"
+                                  || rp.Permission.Code == "VIEW_COMPANY_TASKS"
                                   || rp.Permission.Code == "RECEIVE_ORG_ESCALATIONS")
                         select er.EmployeeId
                     ).Distinct().ToListAsync();

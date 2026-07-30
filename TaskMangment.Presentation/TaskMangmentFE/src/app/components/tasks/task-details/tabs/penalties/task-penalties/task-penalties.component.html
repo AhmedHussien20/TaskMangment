@@ -2,11 +2,16 @@
   <app-generic-table
     [columns]="columns"
     [data]="rows"
+    [page]="page"
+    [entries]="entries"
     [totalItems]="totalItems"
     [showAddButton]="canAdd"
     [showEditButton]="canEdit"
     [showFilters]="false"
-    [showPagination]="false"
-    [showDeleteButton]="canDelete">
+    [showPagination]="true"
+    [showExportExcel]="false"
+    [showDeleteButton]="canDelete"
+    (pageChange)="onPageChange($event)"
+    (entriesChange)="onEntriesChange($event)">
   </app-generic-table>
 </div>

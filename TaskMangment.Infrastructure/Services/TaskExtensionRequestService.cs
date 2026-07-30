@@ -11,6 +11,7 @@ using TaskMangment.Application.Common.Errors;
 using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Responses;
+using TaskMangment.Application.Common.Security;
 using TaskMangment.Application.Common.Validation;
 using TaskMangment.Application.DTOs;
 using TaskMangment.Application.DTOs.TaskDTOs;
@@ -34,6 +35,7 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IDomainEventDispatcher _eventDispatcher;
         private readonly INotificationRecipientBuilder _recipientBuilder;
         private readonly TaskCreatedByMeEvaluator _createdByMe;
+        private readonly IEmployeePermissionService _permissions;
 
 
         public TaskExtensionRequestService(
@@ -45,7 +47,8 @@ namespace TaskMangment.Infrastructure.Services
             IRepository<WorkTask> taskRepo,
             IDomainEventDispatcher eventDispatcher,
             INotificationRecipientBuilder recipientBuilder,
-            TaskCreatedByMeEvaluator createdByMe)
+            TaskCreatedByMeEvaluator createdByMe,
+            IEmployeePermissionService permissions)
         {
             _requestRepo = requestRepo;
             _taskAssignmentRepo = taskAssignmentRepo;
@@ -56,6 +59,7 @@ namespace TaskMangment.Infrastructure.Services
             _eventDispatcher = eventDispatcher;
             _recipientBuilder = recipientBuilder;
             _createdByMe = createdByMe;
+            _permissions = permissions;
         }
 
         public async Task<ApiResponse<PagedResponse<TaskExtensionRequestListDto>>> GetAllAsync(TaskExtensionRequestRequest request)
@@ -231,6 +235,12 @@ namespace TaskMangment.Infrastructure.Services
                 throw new AppException(ErrorCodes.AlreadyReviewed, StatusCodes.Status400BadRequest);
 
             if (!await _createdByMe.IsCreatedByMeAsync(task, reviewerId))
+                throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
+
+            var requiredPermission = dto.Status == ExtensionRequestStatus.Approved
+                ? PermissionCodes.ApproveTaskRequest
+                : PermissionCodes.RejectTaskRequest;
+            if (!await _permissions.HasAsync(reviewerId, requiredPermission))
                 throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
 
             if (dto.Status == ExtensionRequestStatus.Approved)

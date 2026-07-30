@@ -34,7 +34,7 @@ namespace TaskMangment.Infrastructure.Services
 
         /// <summary>
         /// Report visibility (permission-driven, no role names/levels):
-        /// - Company: VIEW_COMPANY_REPORTS / VIEW_COMPANY_TASKS / VIEW_ALL_TASKS
+        /// - Company: VIEW_COMPANY_REPORTS / VIEW_COMPANY_TASKS
         /// - Team: manager scope, VIEW_EMPLOYEES (own branch), VIEW_SCOPED_*
         /// - Creator: CREATE_TASK only → own activity + tasks they created (does not widen to full branch)
         /// - Own: everyone else → own data only
@@ -46,7 +46,6 @@ namespace TaskMangment.Infrastructure.Services
 
             bool canViewAllTasks =
                 scope.IsCompanyWide ||
-                await _permissionChecker.HasPermissionAsync(currentEmployeeId, PermissionCodes.ViewAllTasks) ||
                 await _permissionChecker.HasPermissionAsync(currentEmployeeId, PermissionCodes.ViewCompanyTasks) ||
                 await _permissionChecker.HasPermissionAsync(currentEmployeeId, PermissionCodes.ViewCompanyReports);
 

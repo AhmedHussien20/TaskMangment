@@ -7,7 +7,6 @@ namespace TaskMangment.Application.DTOs
     {
         public Employee360ProfileDto Profile { get; set; } = null!;
         public List<Employee360RoleDto> Roles { get; set; } = new();
-        public List<string> Permissions { get; set; } = new();
         public List<Employee360ManagerDto> ReportingManagers { get; set; } = new();
         public Employee360ManagerDto? DirectManager { get; set; }
         public Employee360ManagerScopeDto? ManagerScope { get; set; }
@@ -150,6 +149,9 @@ namespace TaskMangment.Application.DTOs
         public int ApprovedCount { get; set; }
         public int RejectedCount { get; set; }
         public List<Employee360LeaveItemDto> History { get; set; } = new();
+        public int HistoryTotalCount { get; set; }
+        public int PageIndex { get; set; } = 1;
+        public int PageSize { get; set; } = 10;
     }
 
     public class Employee360LeaveItemDto
@@ -204,6 +206,17 @@ namespace TaskMangment.Application.DTOs
         public string? CreatedBy { get; set; }
         public int? TaskId { get; set; }
         public string? TaskTitle { get; set; }
+    }
+
+    public class Employee360CommentItemDto
+    {
+        public int Id { get; set; }
+        public DateTime Date { get; set; }
+        public string? CommentText { get; set; }
+        public int TaskId { get; set; }
+        public string? TaskTitle { get; set; }
+        public int AttachmentCount { get; set; }
+        public bool HasAttachments => AttachmentCount > 0;
     }
 
     public class EmployeeTimelineItemDto
