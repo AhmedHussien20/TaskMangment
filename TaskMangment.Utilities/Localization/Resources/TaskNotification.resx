@@ -118,7 +118,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="TASK_COMMENT_NOTIFICATION" xml:space="preserve">
-    <value>a new comment on task number {0} titled {1} from {2}</value>
+    <value>a new comment on task number {0} titled {1} from {2} - branch {3}</value>
   </data>
   <data name="COMMENT_LABEL" xml:space="preserve">
     <value>Comment</value>
@@ -127,40 +127,39 @@
     <value>Task link</value>
   </data>
   <data name="TASK_PENALTY_NOTIFICATION" xml:space="preserve">
-    <value>a new penalty of {3} on task number {0} titled {1} from {2}</value>
+    <value>a new penalty of {3} - branch {4} on task number {0} titled {1} from {2}</value>
   </data>
   <data name="TASK_EXTENSION_REQUEST_NOTIFICATION" xml:space="preserve">
-    <value>A new extension request on task number {0} titled {1} from {2}</value>
+    <value>A new extension request on task number {0} titled {1} from {2} - branch {3}</value>
   </data>
   <data name="TASK_WARNING_NOTIFICATION" xml:space="preserve">
-    <value>Warning for employee {3} on task number {0} titled {1} from {2}</value>
+    <value>Warning for employee {3} - branch {4} on task number {0} titled {1} from {2}</value>
   </data>
   <data name="TASK_CLOSE_REQUEST_NOTIFICATION" xml:space="preserve">
-    <value>A new close request on task number {0} titled {1} from {2}</value>
+    <value>A new close request on task number {0} titled {1} from {2} - branch {3}</value>
   </data>
   <data name="TASK_ASSIGNED_NOTIFICATION" xml:space="preserve">
-    <value>Task assigned to {2}: task number {0} titled {1}</value>
+    <value>Task assigned to {2} - branch {3}: task number {0} titled {1}</value>
   </data>
   <data name="TASK_UNASSIGNED_NOTIFICATION" xml:space="preserve">
-    <value>{2} was removed from task number {0} titled {1}</value>
+    <value>{2} - branch {3} was removed from task number {0} titled {1}</value>
   </data>
   <data name="EXTENDAPPROVED" xml:space="preserve">
-    <value>Task number {0} titled {1} has been extended from {2} to {3}.
-</value>
+    <value>Task number {0} titled {1} (branch {4}) has been extended from {2} to {3}.</value>
   </data>
   <data name="CLOSEAPPROVED" xml:space="preserve">
-    <value>task number {0} titled {1} has been closed according to request</value>
+    <value>task number {0} titled {1} (branch {2}) has been closed according to request</value>
   </data>
   <data name="TASKACHIEVEMENT" xml:space="preserve">
-    <value>{2} achieved {3} from task number {0} titled {1}</value>
+    <value>{2} achieved {3} from task number {0} titled {1} - branch {4}</value>
   </data>
   <data name="LEAVEREQUESTCREATED" xml:space="preserve">
-    <value>New leave request {0} from {1} start from {2} to {3}</value>
+    <value>New leave request {0} from {1} - branch {4} start from {2} to {3}</value>
   </data>
   <data name="LEAVE_APPROVED_NOTIFICATION" xml:space="preserve">
-    <value>the leave request {0} has been approved from {1} to {2} by {3}</value>
+    <value>the leave request {0} has been approved from {1} to {2} by {3} - branch {4}</value>
   </data>
   <data name="LEAVE_REJECTED_NOTIFICATION" xml:space="preserve">
-    <value>request {0} has been rejected for {1} by {2}</value>
+    <value>request {0} has been rejected for {1} by {2} - branch {3}</value>
   </data>
 </root>

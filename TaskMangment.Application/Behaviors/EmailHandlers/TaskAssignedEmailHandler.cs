@@ -22,7 +22,10 @@ namespace TaskMangment.Application.Behaviors.EmailHandlers
             {
                 ["EmployeeName"] = string.IsNullOrWhiteSpace(ev.SubjectEmployeeName)
                     ? "-"
-                    : ev.SubjectEmployeeName
+                    : ev.SubjectEmployeeName,
+                ["BranchName"] = string.IsNullOrWhiteSpace(ev.BranchName)
+                    ? "-"
+                    : ev.BranchName
             });
 
             await _emailQueue.QueueAsync(new EmailQueueRequest

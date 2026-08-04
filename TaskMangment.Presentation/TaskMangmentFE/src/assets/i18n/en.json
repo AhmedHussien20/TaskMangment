@@ -869,8 +869,9 @@
     "PERMISSIONROLE": "Permissions assigned to role:",
     "LEVEL": "Level",
     "REQUIRES_BRANCH_SCOPE": "Requires branch scope (area manager via Areas page)",
-    "REQUIRES_EMPLOYEE_TYPE_SCOPE": "Requires employee type scope",
+    "REQUIRES_EMPLOYEE_TYPE_SCOPE": "Requires a specific employee type scope",
     "ROLE_EMPLOYEE_TYPE": "Role employee type",
+    "RESTRICT_EMPLOYEE_TYPE_TO_BRANCH": "This type in the assignee's branch only (not company-wide)",
     "CAN_BE_BRANCH_MANAGER": "Can be assigned as branch manager",
     "NOTIFICATION_SCOPE": "Notification range",
     "NOTIFY_FROM_ROLES": "Receive notifications from roles",
@@ -1111,6 +1112,7 @@
     "ROLE_TITLE": "Role",
     "TOTAL_DISCOUNT": "Total Discount",
     "ALL_ROLES": "All Roles",
+    "ALL_STATUSES": "All Statuses",
     "FROM_DATE_REQUIRED": "From date is required when To date is selected"
 
 
@@ -1139,6 +1141,9 @@
     "LIST_TITLE": "Leave Requests List",
     "SEARCH": "Search",
     "CREATE_SUCCESS": "Request sent successfully",
+    "LEAVE_SCOPE": "Leave scope",
+    "LEAVES": "Leaves",
+    "ALL_LEAVES_IN_SCOPE": "All leaves",
     "ALL_REQUESTS": "All requests",
     "PENDING_FOR_APPROVAL": "Pending for approval"
   },

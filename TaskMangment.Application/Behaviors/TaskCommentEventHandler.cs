@@ -96,7 +96,9 @@ namespace TaskMangment.Application.Behaviors
 
                 ev.taskTitle,
 
-                ev.EmployeeName
+                ev.EmployeeName,
+
+                ev.BranchName
 
             );
 

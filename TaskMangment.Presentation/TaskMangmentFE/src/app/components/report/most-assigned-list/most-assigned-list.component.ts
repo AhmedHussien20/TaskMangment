@@ -13,6 +13,7 @@ import { PageHeaderComponent } from 'app/shared/components/page-header/page-head
 import { DatePickerComponent } from 'app/components/date-picker/date-picker.component';
 import { ReportRoleFilterComponent } from '../shared/report-role-filter.component';
 import { getReportRoleFilterParams } from '../shared/report-role-filter.helper';
+import { ReportStatusFilterComponent } from '../shared/report-status-filter.component';
 
 @Component({
   selector: 'app-most-assigned-list',
@@ -25,7 +26,8 @@ import { getReportRoleFilterParams } from '../shared/report-role-filter.helper';
     GenericTableComponent,
     PageHeaderComponent,
     DatePickerComponent,
-    ReportRoleFilterComponent
+    ReportRoleFilterComponent,
+    ReportStatusFilterComponent
   ],
   templateUrl: './most-assigned-list.component.html',
   styleUrls: ['./most-assigned-list.component.scss']
@@ -58,6 +60,7 @@ export class MostAssignedListComponent implements OnInit {
   fromDate?: string;
   toDate?: string;
   selectedRoleId?: number;
+  status?: string;
 
   isLoading = false;
 
@@ -75,7 +78,7 @@ export class MostAssignedListComponent implements OnInit {
   loadData(): void {
     this.isLoading = true;
     const { roleId, roleTitle } = getReportRoleFilterParams(this.roleFilter, this.selectedRoleId);
-    this.reportService.getMostAssigned(this.fromDate, this.toDate, roleId, roleTitle).subscribe({
+    this.reportService.getMostAssigned(this.fromDate, this.toDate, roleId, roleTitle, this.status).subscribe({
       next: (res) => {
         this.rows = res.data;
         this.totalItems = res.data.length;
@@ -104,7 +107,7 @@ export class MostAssignedListComponent implements OnInit {
 
   onExportPdf(): void {
     const { roleId, roleTitle } = getReportRoleFilterParams(this.roleFilter, this.selectedRoleId);
-    this.reportPdfService.getMostAssignedPdf(ExportType.Pdf, this.fromDate, this.toDate, roleId, roleTitle).subscribe({
+    this.reportPdfService.getMostAssignedPdf(ExportType.Pdf, this.fromDate, this.toDate, roleId, roleTitle, this.status).subscribe({
       next: (blob) => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -122,7 +125,7 @@ export class MostAssignedListComponent implements OnInit {
   }
   onExportExcel(): void {
     const { roleId, roleTitle } = getReportRoleFilterParams(this.roleFilter, this.selectedRoleId);
-    this.reportPdfService.getMostAssignedPdf(ExportType.Excel, this.fromDate, this.toDate, roleId, roleTitle).subscribe({
+    this.reportPdfService.getMostAssignedPdf(ExportType.Excel, this.fromDate, this.toDate, roleId, roleTitle, this.status).subscribe({
       next: (blob) => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');

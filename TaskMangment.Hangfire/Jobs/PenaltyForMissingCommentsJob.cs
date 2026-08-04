@@ -284,6 +284,13 @@ namespace TaskMangment.Hangfire.Jobs
 
                     if (issuedEmployee == null) continue;
 
+                    var branchName = issuedEmployee.BranchId.HasValue
+                        ? await _db.Branches
+                            .Where(b => b.Id == issuedEmployee.BranchId.Value)
+                            .Select(b => b.Name)
+                            .FirstOrDefaultAsync()
+                        : null;
+
                     var managerIds = await _getHigherManager.GetDirectHigherManagerIdsAsync(warning.IssuedEmployeeId!.Value);
 
                     var sendToIds = new List<int> { warning.IssuedEmployeeId!.Value };
@@ -301,7 +308,8 @@ namespace TaskMangment.Hangfire.Jobs
                             "النظام",
                             sendToIds,
                             issuedEmployee.FullName,
-                            taskTitle
+                            taskTitle,
+                            branchName
                         )
                     );
                 }
@@ -326,6 +334,13 @@ namespace TaskMangment.Hangfire.Jobs
                         .FirstOrDefaultAsync();
 
                     if (issuedEmployee == null) continue;
+
+                    var branchName = issuedEmployee.BranchId.HasValue
+                        ? await _db.Branches
+                            .Where(b => b.Id == issuedEmployee.BranchId.Value)
+                            .Select(b => b.Name)
+                            .FirstOrDefaultAsync()
+                        : null;
 
                     var managerIds = await _getHigherManager.GetDirectHigherManagerIdsAsync(discount.EmployeeId);
 
@@ -352,7 +367,8 @@ namespace TaskMangment.Hangfire.Jobs
                             sendToIds,
                             issuedToName,
                             taskTitle,
-                            discount.Amount
+                            discount.Amount,
+                            branchName
                         )
                     );
                 }

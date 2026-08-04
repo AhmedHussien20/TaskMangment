@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace TaskMangment.Domain.Event
 {
@@ -15,8 +11,16 @@ namespace TaskMangment.Domain.Event
         public string TaskTitle { get; set; }
         public string EmployeeName { get; set; }
         public List<int> Recipients { get; }
+        public string BranchName { get; }
 
-        public TaskAchievePercentEvent(int percentId, string percent, int taskId, string taskTitle, string employeeName, List<int> recipients)
+        public TaskAchievePercentEvent(
+            int percentId,
+            string percent,
+            int taskId,
+            string taskTitle,
+            string employeeName,
+            List<int> recipients,
+            string? branchName = null)
         {
             PercentId = percentId;
             Percent = percent;
@@ -24,6 +28,7 @@ namespace TaskMangment.Domain.Event
             TaskTitle = taskTitle;
             EmployeeName = employeeName;
             Recipients = recipients;
+            BranchName = string.IsNullOrWhiteSpace(branchName) ? "-" : branchName;
         }
     }
 }

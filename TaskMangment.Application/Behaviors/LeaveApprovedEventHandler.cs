@@ -34,7 +34,8 @@ namespace TaskMangment.Application.Behaviors
                 ev.LeaveTypeName,
                 ev.StartDate.ToString("yyyy-MM-dd"),
                 ev.EndDate.ToString("yyyy-MM-dd"),
-                ev.ApprovedByName
+                ev.ApprovedByName,
+                ev.BranchName
             );
 
             if (ev.EmployeeId != ev.ApprovedById)

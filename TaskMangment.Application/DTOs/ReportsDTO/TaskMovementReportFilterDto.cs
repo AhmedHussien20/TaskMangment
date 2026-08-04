@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TaskMangment.Domain.Entities;
 
 namespace TaskMangment.Application.DTOs.ReportsDTO
 {
@@ -11,6 +12,7 @@ namespace TaskMangment.Application.DTOs.ReportsDTO
         public int? EmployeeId { get; set; }
         public TaskMovementType MovementType { get; set; }
         public string ReportTitle { get; set; } = string.Empty;
+        public WorkTaskStatus? Status { get; set; }
     }
     public class TaskMovementReportDto
     {

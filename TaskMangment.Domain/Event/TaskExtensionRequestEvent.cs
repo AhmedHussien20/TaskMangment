@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace TaskMangment.Domain.Event
 {
@@ -13,14 +9,22 @@ namespace TaskMangment.Domain.Event
         public string taskTitle { get; set; }
         public string EmployeeName { get; set; }
         public List<int> Recipients { get; }
+        public string BranchName { get; }
 
-        public TaskExtensionRequestEvent(int requestId, int taskId, string employeeName, List<int> recipients, string taskTitle)
+        public TaskExtensionRequestEvent(
+            int requestId,
+            int taskId,
+            string employeeName,
+            List<int> recipients,
+            string taskTitle,
+            string? branchName = null)
         {
             RequestId = requestId;
             TaskId = taskId;
             EmployeeName = employeeName;
             Recipients = recipients;
             this.taskTitle = taskTitle;
+            BranchName = string.IsNullOrWhiteSpace(branchName) ? "-" : branchName;
         }
     }
 }

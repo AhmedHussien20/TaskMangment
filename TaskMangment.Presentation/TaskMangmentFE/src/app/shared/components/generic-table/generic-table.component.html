@@ -38,7 +38,7 @@
             <div class="filter-grid">
 
                 <div class="filter-item" *ngFor="let key of objectKeys(searchCriteria?.filterTypes)"
-                    [hidden]="(key === 'employeeIds' && !showEmployeeFilter) || (key === 'viewScopedTasks' && !extraFilterOptions?.['viewScopedTasks']?.length)"
+                    [hidden]="(key === 'employeeIds' && !showEmployeeFilter) || (isScopeFilterKey(key) && !extraFilterOptions?.[key]?.length)"
                     (click)="$event.stopPropagation()">
 
                     <label>{{ getLabel(key) | translate }}</label>
@@ -68,7 +68,7 @@
                                 <ng-select [items]="getDropdownOptions(key)" bindValue="id" bindLabel="name"
                                     [ngModel]="searchCriteria[key]" (ngModelChange)="onFilterChange(key, $event)"
                                     [multiple]="isMultiSelect(key)" [closeOnSelect]="!isMultiSelect(key)"
-                                    [clearable]="key !== 'viewScopedTasks'" [searchable]="key !== 'viewScopedTasks'"
+                                    [clearable]="!isScopeFilterKey(key)" [searchable]="!isScopeFilterKey(key)"
                                     appendTo="body">
 
                                     <ng-template ng-option-tmp let-item="item">

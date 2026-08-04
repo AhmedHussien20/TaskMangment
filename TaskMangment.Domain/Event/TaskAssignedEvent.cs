@@ -11,19 +11,22 @@ namespace TaskMangment.Domain.Event
         public string SubjectEmployeeName { get; }
         /// <summary>Subject + role listeners (excludes actor).</summary>
         public List<int> RecipientIds { get; }
+        public string BranchName { get; }
 
         public TaskAssignedEvent(
             int taskId,
             string taskTitle,
             int subjectEmployeeId,
             string subjectEmployeeName,
-            List<int> recipientIds)
+            List<int> recipientIds,
+            string? branchName = null)
         {
             TaskId = taskId;
             TaskTitle = taskTitle;
             SubjectEmployeeId = subjectEmployeeId;
             SubjectEmployeeName = subjectEmployeeName ?? string.Empty;
             RecipientIds = recipientIds ?? new List<int>();
+            BranchName = string.IsNullOrWhiteSpace(branchName) ? "-" : branchName;
         }
 
         /// <summary>Backward-compatible alias used by older call sites/handlers.</summary>

@@ -1039,7 +1039,7 @@ namespace TaskMangment.Infrastructure.Services
                 return;
 
             var names = await _employeeRepo.GetAll(e => subjects.Contains(e.Id))
-                .Select(e => new { e.Id, e.FullName })
+                .Select(e => new { e.Id, e.FullName, BranchName = e.Branch != null ? e.Branch.Name : null })
                 .ToListAsync();
 
             foreach (var subjectId in subjects)
@@ -1051,9 +1051,10 @@ namespace TaskMangment.Infrastructure.Services
                 if (recipients.Count == 0)
                     continue;
 
-                var name = names.FirstOrDefault(n => n.Id == subjectId)?.FullName ?? "-";
+                var subject = names.FirstOrDefault(n => n.Id == subjectId);
+                var name = subject?.FullName ?? "-";
                 await _eventDispatcher.PublishAsync(
-                    new TaskAssignedEvent(taskId, taskTitle, subjectId, name, recipients));
+                    new TaskAssignedEvent(taskId, taskTitle, subjectId, name, recipients, subject?.BranchName));
             }
         }
 
@@ -1068,7 +1069,7 @@ namespace TaskMangment.Infrastructure.Services
                 return;
 
             var names = await _employeeRepo.GetAll(e => subjects.Contains(e.Id))
-                .Select(e => new { e.Id, e.FullName })
+                .Select(e => new { e.Id, e.FullName, BranchName = e.Branch != null ? e.Branch.Name : null })
                 .ToListAsync();
 
             foreach (var subjectId in subjects)
@@ -1080,9 +1081,10 @@ namespace TaskMangment.Infrastructure.Services
                 if (recipients.Count == 0)
                     continue;
 
-                var name = names.FirstOrDefault(n => n.Id == subjectId)?.FullName ?? "-";
+                var subject = names.FirstOrDefault(n => n.Id == subjectId);
+                var name = subject?.FullName ?? "-";
                 await _eventDispatcher.PublishAsync(
-                    new TaskUnAssignedEvent(taskId, taskTitle, subjectId, name, recipients));
+                    new TaskUnAssignedEvent(taskId, taskTitle, subjectId, name, recipients, subject?.BranchName));
             }
         }
 

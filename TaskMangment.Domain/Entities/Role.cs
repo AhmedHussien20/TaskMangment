@@ -24,6 +24,13 @@ namespace TaskMangment.Domain.Entities
         public bool RequiresEmployeeTypeScope { get; set; }
 
         /// <summary>
+        /// When true with <see cref="RequiresEmployeeTypeScope"/>: cover that type in the
+        /// assignee's own/managed branch only. When false: that type is company-wide.
+        /// Independent of <see cref="RequiresBranchScope"/>.
+        /// </summary>
+        public bool RestrictEmployeeTypeToBranch { get; set; }
+
+        /// <summary>
         /// Required when <see cref="RequiresEmployeeTypeScope"/> is true.
         /// All assignees cover this type; employee.EmployeeTypeId must match.
         /// </summary>

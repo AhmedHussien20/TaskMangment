@@ -1,5 +1,4 @@
-﻿ 
-namespace TaskMangment.Domain.Event
+﻿namespace TaskMangment.Domain.Event
 {
     public class LeaveEvent
     {
@@ -9,8 +8,16 @@ namespace TaskMangment.Domain.Event
         public string LeaveTypeName { get; }
         public DateTime StartDate { get; }
         public DateTime EndDate { get; }
+        public string BranchName { get; }
 
-        public LeaveEvent(int leaveId,int employeeId,string employeeName,string leaveTypeName,DateTime startDate,DateTime endDate)
+        public LeaveEvent(
+            int leaveId,
+            int employeeId,
+            string employeeName,
+            string leaveTypeName,
+            DateTime startDate,
+            DateTime endDate,
+            string? branchName = null)
         {
             LeaveId = leaveId;
             EmployeeId = employeeId;
@@ -18,7 +25,7 @@ namespace TaskMangment.Domain.Event
             LeaveTypeName = leaveTypeName;
             StartDate = startDate;
             EndDate = endDate;
+            BranchName = string.IsNullOrWhiteSpace(branchName) ? "-" : branchName;
         }
     }
-
 }

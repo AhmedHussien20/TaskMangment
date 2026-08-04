@@ -9,6 +9,7 @@ export interface Role {
   requiresEmployeeTypeScope?: boolean;
   employeeTypeId?: number | null;
   employeeTypeName?: string | null;
+  restrictEmployeeTypeToBranch?: boolean;
   canBeBranchManager?: boolean;
   notificationScope?: number;
   notifyFromRoleIds?: number[];
@@ -20,6 +21,7 @@ export interface RoleAddEdit {
   requiresBranchScope?: boolean;
   requiresEmployeeTypeScope?: boolean;
   employeeTypeId?: number | null;
+  restrictEmployeeTypeToBranch?: boolean;
   canBeBranchManager?: boolean;
 }
 

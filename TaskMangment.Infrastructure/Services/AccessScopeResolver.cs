@@ -102,6 +102,7 @@ namespace TaskMangment.Infrastructure.Services
                 Kind = kind,
                 BranchIds = branchIds,
                 EmployeeTypeIds = access.EmployeeTypeIds,
+                BranchRestrictedEmployeeTypeIds = access.BranchRestrictedEmployeeTypeIds,
                 SeesAllTypesInBranchScope = access.SeesAllTypesInBranchScope,
                 ViewExcludeEmployeeIds = viewExclude
             };

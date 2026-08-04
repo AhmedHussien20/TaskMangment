@@ -29,12 +29,7 @@
                         </select>
                     </div>
 
-                    <div class="d-flex flex-column">
-                        <label class="form-label small">{{ 'REPORTS.STATUS' | translate }}</label>
-                        <select [(ngModel)]="status" class="form-control form-control-sm">
-                            <option *ngFor="let s of statusOptions" [value]="s.value">{{ s.label | translate}}</option>
-                        </select>
-                    </div>
+                    <app-report-status-filter [(status)]="status"></app-report-status-filter>
 
                     <div *ngIf="isAdmin" class="d-flex flex-column">
             <app-employee-ng-select [(selectedEmployeeId)]="selectedEmployeeId">

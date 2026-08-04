@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Localization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -38,7 +38,8 @@ namespace TaskMangment.Application.Behaviors
                 ev.TaskId,
                 ev.TaskTitle,
                 ev.IssuedbyName,
-                ev.Amount.ToString("0.##")
+                ev.Amount.ToString("0.##"),
+                string.IsNullOrWhiteSpace(ev.BranchName) ? "-" : ev.BranchName
             );
 
             foreach (var empId in ev.SendTo)

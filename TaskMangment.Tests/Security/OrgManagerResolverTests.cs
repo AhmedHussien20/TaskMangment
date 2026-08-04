@@ -51,6 +51,14 @@ public class OrgManagerResolverTests
         SeesAllTypesInBranchScope = false
     };
 
+    private static EmployeeType AccountingType() => new()
+    {
+        Id = 2,
+        Code = EmployeeTypeCodes.Accounting,
+        NameEn = "Accounting",
+        SeesAllTypesInBranchScope = false
+    };
+
     [Fact]
     public async Task BranchScope_NotifiesBranchManagerWithListeningRole()
     {
@@ -293,6 +301,47 @@ public class OrgManagerResolverTests
 
         Assert.Contains(30, fromHr);
         Assert.DoesNotContain(30, fromOps);
+    }
+
+    [Fact]
+    public async Task BranchScope_NonOperations_OnlySameType()
+    {
+        var employeeRole = new Role { Id = 7, Name = "Employee", NotificationScope = NotificationScope.None };
+        var branchAccountantRole = new Role { Id = 18, Name = "Branch Accountant", NotificationScope = NotificationScope.Branch };
+
+        var subjectOps = new Employee { Id = 341, CompanyId = 1, BranchId = 19, IsActive = true, EmployeeTypeId = 1, EmployeeType = OpsType() };
+        var subjectAccounting = new Employee { Id = 342, CompanyId = 1, BranchId = 19, IsActive = true, EmployeeTypeId = 2, EmployeeType = AccountingType() };
+        var accountant = new Employee { Id = 380, CompanyId = 1, BranchId = 19, IsActive = true, EmployeeTypeId = 2, EmployeeType = AccountingType() };
+
+        SetupRepo(_employeeRepo, subjectOps, subjectAccounting, accountant);
+        SetupRepo(_branchRepo, new Branch
+        {
+            Id = 19,
+            CompanyId = 1,
+            Name = "Root",
+            ManagerID = 1,
+            IsActive = true,
+            IsDeleted = false
+        });
+        SetupRepo(_areaRepo);
+        SetupRepo(_employeeRoleRepo,
+            new EmployeeRole { Id = 1, EmployeeId = 341, RoleId = 7, IsAssigned = true, Employee = subjectOps, Role = employeeRole },
+            new EmployeeRole { Id = 2, EmployeeId = 342, RoleId = 7, IsAssigned = true, Employee = subjectAccounting, Role = employeeRole },
+            new EmployeeRole { Id = 3, EmployeeId = 380, RoleId = 18, IsAssigned = true, Employee = accountant, Role = branchAccountantRole });
+        SetupRepo(_notifySourceRepo, new RoleNotificationSource
+        {
+            Id = 1,
+            RoleId = 18,
+            SourceRoleId = 7,
+            Role = branchAccountantRole,
+            IsDeleted = false
+        });
+
+        var fromOps = await CreateSut().GetOperationalManagersAsync(341);
+        var fromAccounting = await CreateSut().GetOperationalManagersAsync(342);
+
+        Assert.DoesNotContain(380, fromOps);
+        Assert.Contains(380, fromAccounting);
     }
 
     [Fact]

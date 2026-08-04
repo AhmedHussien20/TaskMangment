@@ -90,32 +90,33 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpGet("closing-soon-tasks")]
-        public async Task<IActionResult> GetClosingSoonTasks([FromQuery] int employeeId)
+        public async Task<IActionResult> GetClosingSoonTasks([FromQuery] int? employeeId, [FromQuery] WorkTaskStatus? status)
         {
             var now = DateTime.UtcNow;
             var next3Days = now.AddDays(3); 
 
-            var tasks = await _reportService.GetTasksClosingSoonAsync(this.CurrentUserId, this.RoleLevel, employeeId, now, next3Days);
+            var tasks = await _reportService.GetTasksClosingSoonAsync(this.CurrentUserId, this.RoleLevel, employeeId, now, next3Days, status);
 
             return Success(tasks);
         }
 
         [HttpGet("employee-task-tracking")]
-        public async Task<IActionResult> EmployeeTaskTracking(int? employeeId, DateTime fromDate, DateTime? toDate)
+        public async Task<IActionResult> EmployeeTaskTracking(int? employeeId, DateTime fromDate, DateTime? toDate, WorkTaskStatus? status)
         {
 
-            var tasks = await _reportService.GetEmployeeTaskTrackingAsync(this.CurrentUserId, this.RoleLevel,employeeId, fromDate, toDate);
+            var tasks = await _reportService.GetEmployeeTaskTrackingAsync(this.CurrentUserId, this.RoleLevel,employeeId, fromDate, toDate, status);
             return Success(tasks);
         }
 
         [HttpGet("branch-tasks")]
-        public async Task<IActionResult> GetBranchTasks(int branchId,DateTime fromDate,DateTime? toDate)
+        public async Task<IActionResult> GetBranchTasks(int branchId,DateTime fromDate,DateTime? toDate, WorkTaskStatus? status)
         {
             var filter = new BranchTasksReportFilterDto
             {
                 BranchId = branchId,
                 FromDate = fromDate,
-                ToDate = toDate
+                ToDate = toDate,
+                Status = status
             };
 
             var data = await _reportService.GetBranchTasksReportAsync(this.CurrentUserId,this.RoleLevel,filter);

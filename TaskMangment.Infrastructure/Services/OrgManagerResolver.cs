@@ -9,7 +9,7 @@ namespace TaskMangment.Infrastructure.Services
     /// <summary>
     /// Notification recipients from each of the subject's matching listener roles (union).
     /// Scope is per role (Branch / Area / Company) — not hardcoded role names.
-    /// Company scope: Operations (SeesAllTypes) hears all types; other types hear same type only.
+    /// All scopes: Operations (SeesAllTypes) hears all types; other types hear same type only.
     /// Branch scope: non-org listening-role holders in the subject's branch(es);
     /// org managers only via Branch.ManagerID / Area.ManagerEmployeeId (not home branch alone).
     /// Area scope: non-org holders whose home is in the subject's area(s);
@@ -93,7 +93,9 @@ namespace TaskMangment.Infrastructure.Services
         }
 
         /// <inheritdoc />
-        public async Task<IReadOnlyList<int>> GetListenableSubjectIdsAsync(int listenerEmployeeId)
+        public async Task<IReadOnlyList<int>> GetListenableSubjectIdsAsync(
+            int listenerEmployeeId,
+            int? onlyListenerRoleId = null)
         {
             var listener = await _employeeRepo.GetAll(e => e.Id == listenerEmployeeId)
                 .Select(e => new
@@ -119,7 +121,8 @@ namespace TaskMangment.Infrastructure.Services
                     !er.IsDeleted &&
                     er.Role != null &&
                     !er.Role.IsDeleted &&
-                    er.Role.NotificationScope != NotificationScope.None)
+                    er.Role.NotificationScope != NotificationScope.None &&
+                    (onlyListenerRoleId == null || er.RoleId == onlyListenerRoleId.Value))
                 .Select(er => new
                 {
                     ListenerRoleId = er.RoleId,
@@ -194,6 +197,9 @@ namespace TaskMangment.Infrastructure.Services
                     case NotificationScope.Branch:
                         foreach (var c in candidates)
                         {
+                            if (!HearsSubjectType(listener.SeesAllTypes, listener.EmployeeTypeId, c.EmployeeTypeId))
+                                continue;
+
                             var subjectBranchIds = await GetSubjectBranchIdsAsync(c.EmployeeId, c.BranchId);
                             if (subjectBranchIds.Count == 0)
                                 continue;
@@ -237,6 +243,9 @@ namespace TaskMangment.Infrastructure.Services
                     case NotificationScope.Area:
                         foreach (var c in candidates)
                         {
+                            if (!HearsSubjectType(listener.SeesAllTypes, listener.EmployeeTypeId, c.EmployeeTypeId))
+                                continue;
+
                             var subjectBranchIds = await GetSubjectBranchIdsAsync(c.EmployeeId, c.BranchId);
                             if (subjectBranchIds.Count == 0)
                                 continue;
@@ -272,7 +281,7 @@ namespace TaskMangment.Infrastructure.Services
                     case NotificationScope.Company:
                         foreach (var c in candidates)
                         {
-                            if (listener.SeesAllTypes || c.EmployeeTypeId == listener.EmployeeTypeId)
+                            if (HearsSubjectType(listener.SeesAllTypes, listener.EmployeeTypeId, c.EmployeeTypeId))
                                 subjects.Add(c.EmployeeId);
                         }
                         break;
@@ -364,6 +373,7 @@ namespace TaskMangment.Infrastructure.Services
                         // Non-org listening-role holders in the subject's branch(es),
                         // plus official Branch.ManagerID / Area.ManagerEmployeeId with the listening role.
                         // Org managers are NOT included merely because their home branch matches.
+                        // Type rule: Operations hears all; other types hear same type only.
                         if (subjectBranchIds.Count == 0)
                             break;
 
@@ -372,6 +382,9 @@ namespace TaskMangment.Infrastructure.Services
 
                         foreach (var c in candidates)
                         {
+                            if (!HearsSubjectType(c.SeesAllTypes, c.EmployeeTypeId, subject.EmployeeTypeId))
+                                continue;
+
                             if (!c.BranchId.HasValue || !subjectBranchIds.Contains(c.BranchId.Value))
                                 continue;
 
@@ -388,7 +401,12 @@ namespace TaskMangment.Infrastructure.Services
                             .Distinct()
                             .ToListAsync();
                         foreach (var id in branchManagers)
-                            recipients.Add(id);
+                        {
+                            var mgr = candidates.FirstOrDefault(c => c.EmployeeId == id);
+                            if (mgr != null &&
+                                HearsSubjectType(mgr.SeesAllTypes, mgr.EmployeeTypeId, subject.EmployeeTypeId))
+                                recipients.Add(id);
+                        }
 
                         if (subjectAreaIds.Count > 0)
                         {
@@ -401,13 +419,19 @@ namespace TaskMangment.Infrastructure.Services
                                 .Distinct()
                                 .ToListAsync();
                             foreach (var id in branchScopeAreaManagers)
-                                recipients.Add(id);
+                            {
+                                var mgr = candidates.FirstOrDefault(c => c.EmployeeId == id);
+                                if (mgr != null &&
+                                    HearsSubjectType(mgr.SeesAllTypes, mgr.EmployeeTypeId, subject.EmployeeTypeId))
+                                    recipients.Add(id);
+                            }
                         }
                         break;
 
                     case NotificationScope.Area:
                         // Non-org listening-role holders whose home is in the subject's area(s),
                         // plus designated area managers holding the listening role.
+                        // Type rule: Operations hears all; other types hear same type only.
                         if (subjectAreaIds.Count == 0)
                             break;
 
@@ -425,6 +449,9 @@ namespace TaskMangment.Infrastructure.Services
 
                         foreach (var c in candidates)
                         {
+                            if (!HearsSubjectType(c.SeesAllTypes, c.EmployeeTypeId, subject.EmployeeTypeId))
+                                continue;
+
                             if (!c.BranchId.HasValue || !areaBranchIdSet.Contains(c.BranchId.Value))
                                 continue;
 
@@ -441,14 +468,19 @@ namespace TaskMangment.Infrastructure.Services
                             .Distinct()
                             .ToListAsync();
                         foreach (var id in areaManagers)
-                            recipients.Add(id);
+                        {
+                            var mgr = candidates.FirstOrDefault(c => c.EmployeeId == id);
+                            if (mgr != null &&
+                                HearsSubjectType(mgr.SeesAllTypes, mgr.EmployeeTypeId, subject.EmployeeTypeId))
+                                recipients.Add(id);
+                        }
                         break;
 
                     case NotificationScope.Company:
                         // Company-wide: Operations hears all types; other types hear same type only.
                         foreach (var c in candidates)
                         {
-                            if (c.SeesAllTypes || c.EmployeeTypeId == subject.EmployeeTypeId)
+                            if (HearsSubjectType(c.SeesAllTypes, c.EmployeeTypeId, subject.EmployeeTypeId))
                                 recipients.Add(c.EmployeeId);
                         }
                         break;
@@ -457,6 +489,12 @@ namespace TaskMangment.Infrastructure.Services
 
             return recipients.ToList();
         }
+
+        /// <summary>
+        /// Operations / SeesAllTypes hears every type; otherwise listener and subject must share type.
+        /// </summary>
+        private static bool HearsSubjectType(bool listenerSeesAllTypes, int listenerTypeId, int subjectTypeId)
+            => listenerSeesAllTypes || listenerTypeId == subjectTypeId;
 
         private async Task<List<int>> GetSubjectBranchIdsAsync(int employeeId, int? homeBranchId)
         {

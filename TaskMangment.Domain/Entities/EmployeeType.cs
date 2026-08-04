@@ -18,7 +18,7 @@ namespace TaskMangment.Domain.Entities
 
         /// <summary>
         /// When true (Operations): coverage uses branches and can see all employee types in those branches.
-        /// When false: coverage is all employees of this type across all branches (no branch list).
+        /// When false: coverage is all employees of this type (branch vs company is decided by the role flags).
         /// </summary>
         public bool SeesAllTypesInBranchScope { get; set; }
 

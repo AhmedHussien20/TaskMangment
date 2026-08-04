@@ -167,7 +167,9 @@ namespace TaskMangment.Infrastructure.Services
    .Select(a => a.EmployeeId)
    .ToListAsync();
 
-            var employeeName = await _employeeRepo.GetAll(e => e.Id == employeeId).Select(e => e.FullName).FirstOrDefaultAsync();
+            var employeeInfo = await _employeeRepo.GetAll(e => e.Id == employeeId)
+                .Select(e => new { e.FullName, BranchName = e.Branch != null ? e.Branch.Name : null })
+                .FirstOrDefaultAsync();
 
             if (task.AssignedByEmployeeId.HasValue && !peerIds.Contains(task.AssignedByEmployeeId.Value))
             {
@@ -182,7 +184,13 @@ namespace TaskMangment.Infrastructure.Services
             if (assignedEmployeeIds.Any())
             {
                 await _eventDispatcher.PublishAsync(
-                    new TaskExtensionRequestEvent(request.Id, taskId, employeeName, assignedEmployeeIds, task.Title)
+                    new TaskExtensionRequestEvent(
+                        request.Id,
+                        taskId,
+                        employeeInfo?.FullName,
+                        assignedEmployeeIds,
+                        task.Title,
+                        employeeInfo?.BranchName)
                 );
             }
 
@@ -272,6 +280,11 @@ namespace TaskMangment.Infrastructure.Services
                     actorIdToExclude: reviewerId,
                     managerAnchorEmployeeId: reviewerId);
 
+                var requesterBranchName = await _employeeRepo
+                    .GetAll(e => e.Id == request.RequestedByEmployeeId)
+                    .Select(e => e.Branch != null ? e.Branch.Name : null)
+                    .FirstOrDefaultAsync();
+
                 if (assignedEmployeeIds.Any())
                 {
                     await _eventDispatcher.PublishAsync(
@@ -281,7 +294,8 @@ namespace TaskMangment.Infrastructure.Services
                             task.Title,
                             task.DueDate,
                             dto.NewDueDate,
-                            assignedEmployeeIds
+                            assignedEmployeeIds,
+                            requesterBranchName
                         )
                     );
                 }

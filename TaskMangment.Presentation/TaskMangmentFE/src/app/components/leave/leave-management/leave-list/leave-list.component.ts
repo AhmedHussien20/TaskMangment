@@ -40,10 +40,9 @@ export class LeaveListComponent implements OnInit {
   canCreate = false;
   canApprove = false;
   canReject = false;
+  /** Same gate as task "كل المهام" — managers with AccessScope. */
+  showScopedLeaves = false;
   status: { id: number; name: string }[] = [];
-
-  /** 'all' = LeaveRequests; 'pending' = pending for approval */
-  listMode: 'all' | 'pending' = 'all';
 
   title = 'LEAVE.LIST_TITLE';
   activeitem = 'LEAVE.LIST_TITLE';
@@ -109,7 +108,16 @@ export class LeaveListComponent implements OnInit {
   labels = {
     searchKey: 'LEAVE.SEARCH',
     statusId: 'LEAVE.STATUS',
+    viewScopedLeaves: 'LEAVE.LEAVE_SCOPE',
   };
+
+  leaveScopeFilterOptions: Record<string, { id: string; name: string }[]> = {
+    viewScopedLeaves: [
+      { id: 'my', name: 'LEAVE.LEAVES' },
+      { id: 'scoped', name: 'LEAVE.ALL_LEAVES_IN_SCOPE' },
+    ],
+  };
+
   isLoading = false;
 
   isEdit = false;
@@ -127,11 +135,25 @@ export class LeaveListComponent implements OnInit {
 
   ngOnInit(): void {
     const roleLevel = this.auth.getRoleLevel();
+    const user = this.auth.getUser() ?? this.auth.getCurrentUser();
 
     this.status = this.statusOptions;
     this.canCreate = roleLevel >= 10;
     this.canApprove = this.auth.hasPermission('APPROVE_LEAVE');
     this.canReject = this.auth.hasPermission('REJECT_LEAVE');
+    this.showScopedLeaves = !!user?.hasAccessScope;
+
+    if (this.showScopedLeaves) {
+      this.searchCriteria = {
+        ...this.searchCriteria,
+        viewScopedLeaves: 'my',
+        filterTypes: {
+          viewScopedLeaves: 'dropdown',
+          searchKey: 'text',
+          statusId: 'dropdown',
+        },
+      };
+    }
 
     this.loadData();
   }
@@ -140,25 +162,15 @@ export class LeaveListComponent implements OnInit {
     return this.canApprove || this.canReject;
   }
 
-  setListMode(mode: 'all' | 'pending'): void {
-    if (this.listMode === mode) return;
-    this.listMode = mode;
-    this.page = 1;
-    this.searchCriteria.pageIndex = 1;
-    if (mode === 'pending') {
-      this.searchCriteria['statusId'] = null;
-    }
-    this.loadData();
-  }
-
   loadData() {
     this.isLoading = true;
-    const request$ =
-      this.listMode === 'pending' && this.canReview
-        ? this.leaveService.getPending(this.searchCriteria)
-        : this.leaveService.LeaveRequests(this.searchCriteria);
+    const scope = (this.searchCriteria as any).viewScopedLeaves;
+    const criteria = {
+      ...this.searchCriteria,
+      viewScopedLeaves: scope === 'scoped' ? true : undefined,
+    };
 
-    request$.subscribe({
+    this.leaveService.LeaveRequests(criteria).subscribe({
       next: (res: any) => {
         const pageData = res.data;
 

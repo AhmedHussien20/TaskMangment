@@ -247,6 +247,13 @@ namespace TaskMangment.Hangfire.Jobs
                             })
                             .FirstOrDefaultAsync();
 
+                        var branchName = issuedEmployee?.BranchId != null
+                            ? await _db.Branches
+                                .Where(b => b.Id == issuedEmployee.BranchId.Value)
+                                .Select(b => b.Name)
+                                .FirstOrDefaultAsync()
+                            : null;
+
                         var managerIds = await _getHigherManager.GetDirectHigherManagerIdsAsync(discount.EmployeeId);
 
                         var sendToIds = new List<int> { discount.EmployeeId };
@@ -262,7 +269,8 @@ namespace TaskMangment.Hangfire.Jobs
                                 sendToIds,
                                 issuedToName,
                                 task.Title,
-                                discount.Amount
+                                discount.Amount,
+                                branchName
                             )
                         );
                     }

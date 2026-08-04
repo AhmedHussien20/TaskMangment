@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace TaskMangment.Domain.Event
+﻿namespace TaskMangment.Domain.Event
 {
     public class LeaveRejectedEvent
     {
@@ -17,8 +11,19 @@ namespace TaskMangment.Domain.Event
         public string RejectReason { get; }
         public DateTime StartDate { get; }
         public DateTime EndDate { get; }
+        public string BranchName { get; }
 
-        public LeaveRejectedEvent(int leaveId,int employeeId,int rejectedById,string employeeName,string rejectedByName,string leaveTypeName, string rejectReason,DateTime startDate, DateTime endDate)
+        public LeaveRejectedEvent(
+            int leaveId,
+            int employeeId,
+            int rejectedById,
+            string employeeName,
+            string rejectedByName,
+            string leaveTypeName,
+            string rejectReason,
+            DateTime startDate,
+            DateTime endDate,
+            string? branchName = null)
         {
             LeaveId = leaveId;
             EmployeeId = employeeId;
@@ -29,7 +34,7 @@ namespace TaskMangment.Domain.Event
             RejectReason = rejectReason;
             StartDate = startDate;
             EndDate = endDate;
+            BranchName = string.IsNullOrWhiteSpace(branchName) ? "-" : branchName;
         }
     }
-
 }

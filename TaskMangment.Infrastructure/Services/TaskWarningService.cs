@@ -221,7 +221,14 @@ namespace TaskMangment.Infrastructure.Services
             if (sendToIds.Any())
             {
                 await _eventDispatcher.PublishAsync(
-                        new TaskWarningEvent(warning.Id, taskId, employeeName, sendToIds, IssuedToName, task.Title)
+                        new TaskWarningEvent(
+                            warning.Id,
+                            taskId,
+                            employeeName,
+                            sendToIds,
+                            IssuedToName,
+                            task.Title,
+                            branch?.Name)
                     );
             }
 

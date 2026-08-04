@@ -23,6 +23,13 @@ namespace TaskMangment.Application.Interfaces.Services
         /// Inverse of notification recipients: employees whose RoleNotificationSource graph
         /// would notify this listener (same Branch / Area / Company rules).
         /// </summary>
-        Task<IReadOnlyList<int>> GetListenableSubjectIdsAsync(int listenerEmployeeId);
+        /// <param name="listenerEmployeeId">The listener employee.</param>
+        /// <param name="onlyListenerRoleId">
+        /// When set, only that listening role's notify-from graph is used
+        /// (ignores other roles the employee may also hold).
+        /// </param>
+        Task<IReadOnlyList<int>> GetListenableSubjectIdsAsync(
+            int listenerEmployeeId,
+            int? onlyListenerRoleId = null);
     }
 }

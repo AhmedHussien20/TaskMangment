@@ -6,6 +6,7 @@ using TaskMangment.Application.Common.Responses;
 using TaskMangment.Application.DTOs;
 using TaskMangment.Application.Interfaces;
 using TaskMangment.Application.Interfaces.IRepository;
+using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Application.Common.ApiRequests.Role;
 using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
@@ -22,6 +23,7 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<RolePermission> _rolePermissionRepo;
         private readonly IRepository<RoleNotificationSource> _notifySourceRepo;
         private readonly IRepository<EmployeeType> _employeeTypeRepo;
+        private readonly IOrgManagerResolver _orgManagers;
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
 
@@ -32,7 +34,8 @@ namespace TaskMangment.Infrastructure.Services
             IRepository<EmployeeRole> employeeRoleRepo,
             IRepository<RolePermission> rolePermissionRepo,
             IRepository<RoleNotificationSource> notifySourceRepo,
-            IRepository<EmployeeType> employeeTypeRepo)
+            IRepository<EmployeeType> employeeTypeRepo,
+            IOrgManagerResolver orgManagers)
         {
             _roleRepo = roleRepo;
             _mapper = mapper;
@@ -41,6 +44,7 @@ namespace TaskMangment.Infrastructure.Services
             _rolePermissionRepo = rolePermissionRepo;
             _notifySourceRepo = notifySourceRepo;
             _employeeTypeRepo = employeeTypeRepo;
+            _orgManagers = orgManagers;
         }
 
         public async Task<ApiResponse<PagedResponse<RoleGetDto>>> GetAllAsync(RoleRequest request, int companyId)
@@ -78,25 +82,12 @@ namespace TaskMangment.Infrastructure.Services
                 .Select(n => new { n.RoleId, n.SourceRoleId })
                 .ToListAsync();
 
-            var allSourceRoleIds = notifySources
-                .Select(x => x.SourceRoleId)
+            var rolesWithNotify = notifySources
+                .Select(x => x.RoleId)
                 .Distinct()
-                .ToList();
+                .ToHashSet();
 
-            var sourceRoleEmployees = allSourceRoleIds.Count == 0
-                ? new List<(int RoleId, int EmployeeId)>()
-                : (await _employeeRoleRepo
-                    .GetAll(er =>
-                        allSourceRoleIds.Contains(er.RoleId) &&
-                        er.IsAssigned &&
-                        !er.IsDeleted &&
-                        er.Employee != null &&
-                        er.Employee.IsActive &&
-                        !er.Employee.IsDeleted)
-                    .Select(er => new { er.RoleId, er.EmployeeId })
-                    .ToListAsync())
-                  .Select(x => (x.RoleId, x.EmployeeId))
-                  .ToList();
+            var notifyFromCounts = await ComputeScopedNotifyFromCountsAsync(rolesWithNotify);
 
             var dtos = _mapper.Map<List<RoleGetDto>>(roles);
 
@@ -109,12 +100,7 @@ namespace TaskMangment.Infrastructure.Services
                     .Select(x => x.SourceRoleId)
                     .Distinct()
                     .ToList();
-                var sourceIds = dto.NotifyFromRoleIds;
-                dto.NotifyFromEmployeeCount = sourceRoleEmployees
-                    .Where(x => sourceIds.Contains(x.RoleId))
-                    .Select(x => x.EmployeeId)
-                    .Distinct()
-                    .Count();
+                dto.NotifyFromEmployeeCount = notifyFromCounts.GetValueOrDefault(dto.Id);
             }
 
             var response = new PagedResponse<RoleGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
@@ -140,20 +126,57 @@ namespace TaskMangment.Infrastructure.Services
 
             if (dto.NotifyFromRoleIds.Count > 0)
             {
-                dto.NotifyFromEmployeeCount = await _employeeRoleRepo
-                    .GetAll(er =>
-                        dto.NotifyFromRoleIds.Contains(er.RoleId) &&
-                        er.IsAssigned &&
-                        !er.IsDeleted &&
-                        er.Employee != null &&
-                        er.Employee.IsActive &&
-                        !er.Employee.IsDeleted)
-                    .Select(er => er.EmployeeId)
-                    .Distinct()
-                    .CountAsync();
+                var counts = await ComputeScopedNotifyFromCountsAsync(new HashSet<int> { id });
+                dto.NotifyFromEmployeeCount = counts.GetValueOrDefault(id);
             }
 
             return ApiResponse<RoleGetDto>.Ok(dto);
+        }
+
+        /// <summary>
+        /// Distinct subjects this role actually receives from (Branch / Area / Company rules),
+        /// unioned across assignees — not the raw headcount of source roles.
+        /// </summary>
+        private async Task<Dictionary<int, int>> ComputeScopedNotifyFromCountsAsync(HashSet<int> listenerRoleIds)
+        {
+            var result = listenerRoleIds.ToDictionary(id => id, _ => 0);
+            if (listenerRoleIds.Count == 0)
+                return result;
+
+            var assignees = await _employeeRoleRepo
+                .GetAll(er =>
+                    listenerRoleIds.Contains(er.RoleId) &&
+                    er.IsAssigned &&
+                    !er.IsDeleted &&
+                    er.Employee != null &&
+                    er.Employee.IsActive &&
+                    !er.Employee.IsDeleted)
+                .Select(er => new { er.RoleId, er.EmployeeId })
+                .ToListAsync();
+
+            foreach (var roleId in listenerRoleIds)
+            {
+                var assigneeIds = assignees
+                    .Where(x => x.RoleId == roleId)
+                    .Select(x => x.EmployeeId)
+                    .Distinct()
+                    .ToList();
+
+                if (assigneeIds.Count == 0)
+                    continue;
+
+                var subjects = new HashSet<int>();
+                foreach (var assigneeId in assigneeIds)
+                {
+                    var ids = await _orgManagers.GetListenableSubjectIdsAsync(assigneeId, roleId);
+                    foreach (var subjectId in ids)
+                        subjects.Add(subjectId);
+                }
+
+                result[roleId] = subjects.Count;
+            }
+
+            return result;
         }
 
         public async Task<ApiResponse<int>> CreateAsync(RoleAddEditDto dto, int companyId)
@@ -210,6 +233,7 @@ namespace TaskMangment.Infrastructure.Services
             if (!dto.RequiresEmployeeTypeScope)
             {
                 dto.EmployeeTypeId = null;
+                dto.RestrictEmployeeTypeToBranch = false;
                 return;
             }
 

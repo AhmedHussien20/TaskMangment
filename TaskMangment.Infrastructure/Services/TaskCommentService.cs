@@ -233,9 +233,9 @@ namespace TaskMangment.Infrastructure.Services
                     .Select(a => a.EmployeeId)
                     .ToListAsync();
 
-                var employeeName = await _employeeRepo
+                var employeeInfo = await _employeeRepo
                     .GetAll(e => e.Id == employeeId)
-                    .Select(e => e.FullName)
+                    .Select(e => new { e.FullName, BranchName = e.Branch != null ? e.Branch.Name : null })
                     .FirstOrDefaultAsync();
 
                 if (task.AssignedByEmployeeId.HasValue &&
@@ -252,7 +252,13 @@ namespace TaskMangment.Infrastructure.Services
                 if (assignedEmployeeIds.Any())
                 {
                     await _eventDispatcher.PublishAsync(
-                        new TaskCommentAddedEvent(comment.Id, taskId, employeeName, assignedEmployeeIds, task.Title)
+                        new TaskCommentAddedEvent(
+                            comment.Id,
+                            taskId,
+                            employeeInfo?.FullName,
+                            assignedEmployeeIds,
+                            task.Title,
+                            employeeInfo?.BranchName)
                     );
                 }
 

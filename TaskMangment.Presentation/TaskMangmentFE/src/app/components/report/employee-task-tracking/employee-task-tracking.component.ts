@@ -17,6 +17,7 @@ import { Permissions } from 'app/core/constants/permissions';
 
 import { EmployeeTaskTrackingReportDto, ExportType } from 'app/core/models/reports/reports';
 import { TaskDetailsShellComponent } from 'app/components/tasks/task-details/task-details-shell/task-details-shell.component';
+import { ReportStatusFilterComponent } from '../shared/report-status-filter.component';
 
 @Component({
   selector: 'app-employee-task-tracking',
@@ -29,7 +30,8 @@ import { TaskDetailsShellComponent } from 'app/components/tasks/task-details/tas
     GenericTableComponent,
     PageHeaderComponent,
     DatePickerComponent,
-    EmployeeNgSelectComponent
+    EmployeeNgSelectComponent,
+    ReportStatusFilterComponent
   ],
   templateUrl: './employee-task-tracking.component.html',
   styleUrls: ['./employee-task-tracking.component.scss']
@@ -57,6 +59,7 @@ rows: any[] = [];
 
   fromDate?: string;
   toDate?: string;
+  status?: string;
 
   isLoading = false;
   isAdmin = false;
@@ -108,7 +111,7 @@ rows: any[] = [];
       return;
     }
     this.isLoading = true;
-    this.reportService.getEmployeeTaskTracking(this.selectedEmployeeId!, this.fromDate, this.toDate)
+    this.reportService.getEmployeeTaskTracking(this.selectedEmployeeId!, this.fromDate, this.toDate, this.status)
       .subscribe({
         next: (res) => {
 this.rows = (res.data ?? []).map((t: EmployeeTaskTrackingReportDto) => ({
@@ -152,7 +155,8 @@ this.rows = (res.data ?? []).map((t: EmployeeTaskTrackingReportDto) => ({
       ExportType.Pdf,
       this.selectedEmployeeId!,
       this.fromDate,
-      this.toDate
+      this.toDate,
+      this.status
     ).subscribe({
       next: (blob) => {
         const url = window.URL.createObjectURL(blob);
@@ -182,7 +186,8 @@ this.rows = (res.data ?? []).map((t: EmployeeTaskTrackingReportDto) => ({
       ExportType.Excel,
       this.selectedEmployeeId!,
       this.fromDate,
-      this.toDate
+      this.toDate,
+      this.status
     ).subscribe({
       next: (blob) => {
         const url = window.URL.createObjectURL(blob);

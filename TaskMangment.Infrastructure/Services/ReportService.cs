@@ -162,6 +162,9 @@ namespace TaskMangment.Infrastructure.Services
             if (toDate.HasValue)
                 query = query.Where(c => c.CreatedDate <= toDate.Value);
 
+            if (filter?.Status.HasValue == true)
+                query = query.Where(c => c.Task.Status == filter.Status.Value);
+
             if (!fromDate.HasValue && !toDate.HasValue)
                 return new List<EmployeeCommentsActivityReportDto>();
 
@@ -225,6 +228,9 @@ namespace TaskMangment.Infrastructure.Services
 
             if (toDate.HasValue)
                 query = query.Where(c => c.CreatedDate <= toDate.Value);
+
+            if (filter?.Status.HasValue == true)
+                query = query.Where(c => c.Task.Status == filter.Status.Value);
 
             if (!fromDate.HasValue && !toDate.HasValue)
                 return new List<EmployeeCommentsReportDto>();
@@ -293,6 +299,9 @@ namespace TaskMangment.Infrastructure.Services
 
             if (toDate.HasValue)
                 query = query.Where(a => a.Task.CreatedDate <= toDate.Value);
+
+            if (filter?.Status.HasValue == true)
+                query = query.Where(a => a.Task.Status == filter.Status.Value);
 
             if (!fromDate.HasValue && !toDate.HasValue)
                 return new List<EmployeeAssignmentsReportDto>();
@@ -400,8 +409,17 @@ namespace TaskMangment.Infrastructure.Services
                 query = query.Where(a => a.EmployeeId == currentEmployeeId);
             }
 
+            // On-time report is based on closed tasks; optional status further narrows.
+            if (filter?.Status.HasValue == true)
+            {
+                query = query.Where(a => a.Task.Status == filter.Status.Value);
+            }
+            else
+            {
+                query = query.Where(a => a.Task.Status == WorkTaskStatus.Closed);
+            }
+
             query = query.Where(a =>
-                a.Task.Status == WorkTaskStatus.Closed &&
                 a.Task.ClosedAt != null &&
                 a.Task.DueDate != null);
 
@@ -450,6 +468,9 @@ namespace TaskMangment.Infrastructure.Services
 
             if (toDate.HasValue)
                 query = query.Where(a => a.Task.CreatedDate <= toDate.Value);
+
+            if (filter?.Status.HasValue == true)
+                query = query.Where(a => a.Task.Status == filter.Status.Value);
 
             if (!fromDate.HasValue && !toDate.HasValue)
                 return new List<EmployeeArchivedTasksReportDto>();
@@ -674,6 +695,9 @@ namespace TaskMangment.Infrastructure.Services
             if (dto.BranchId.HasValue && dto.BranchId.Value > 0)
                 discountsQuery = discountsQuery.Where(d => d.Employee.BranchId == dto.BranchId.Value);
 
+            if (dto.Status.HasValue)
+                discountsQuery = discountsQuery.Where(d => d.Task != null && d.Task.Status == dto.Status.Value);
+
             var query = discountsQuery
                 .SelectMany(
                     d => d.Employee.EmployeeRoles.Where(er =>
@@ -859,7 +883,8 @@ namespace TaskMangment.Infrastructure.Services
                 .Where(c =>
                     !c.IsDeleted && c.Task != null && !c.Task.IsDeleted &&
                     (!fromDate.HasValue || c.CreatedDate >= fromDate.Value) &&
-                    (!toDate.HasValue || c.CreatedDate <= toDate.Value))
+                    (!toDate.HasValue || c.CreatedDate <= toDate.Value) &&
+                    (filter == null || !filter.Status.HasValue || c.Task.Status == filter.Status.Value))
                 .GroupBy(c => new { c.TaskId, c.EmployeeId })
                 .Select(g => g
                     .OrderByDescending(c => c.CreatedDate)
@@ -876,6 +901,9 @@ namespace TaskMangment.Infrastructure.Services
                     !c.IsDeleted && c.Task != null && !c.Task.IsDeleted &&
                     lastCommentIds.Contains(c.Id))
                 .AsQueryable();
+
+            if (filter?.Status.HasValue == true)
+                query = query.Where(c => c.Task.Status == filter.Status.Value);
 
             if (canViewAllTasks || hasAccessScope)
             {
@@ -931,7 +959,8 @@ namespace TaskMangment.Infrastructure.Services
             var lastCommentIds = await _context.TaskComments
                 .Where(c =>
                     !c.IsDeleted && c.Task != null && !c.Task.IsDeleted &&
-                    c.CreatedDate >= todayStart && c.CreatedDate < todayEnd)
+                    c.CreatedDate >= todayStart && c.CreatedDate < todayEnd &&
+                    (!dto.Status.HasValue || c.Task.Status == dto.Status.Value))
                 .GroupBy(c => new { c.TaskId, c.EmployeeId })
                 .Select(g => g
                     .OrderByDescending(c => c.CreatedDate)
@@ -948,6 +977,9 @@ namespace TaskMangment.Infrastructure.Services
                     !c.IsDeleted && c.Task != null && !c.Task.IsDeleted &&
                     lastCommentIds.Contains(c.Id))
                 .AsQueryable();
+
+            if (dto.Status.HasValue)
+                query = query.Where(c => c.Task.Status == dto.Status.Value);
 
             if (dto.MovementType == TaskMovementType.Outgoing && dto.EmployeeId.HasValue)
                 query = query.Where(c => c.Task.AssignedByEmployeeId == dto.EmployeeId.Value);
@@ -1016,7 +1048,8 @@ namespace TaskMangment.Infrastructure.Services
             int roleLevel,
             int? employeeId,
             DateTime fromDate,
-            DateTime toDate)
+            DateTime toDate,
+            WorkTaskStatus? status = null)
         {
             var query = _context.TaskAssignments
                 .Include(a => a.Task).ThenInclude(t => t.AssignedBy)
@@ -1026,6 +1059,7 @@ namespace TaskMangment.Infrastructure.Services
                     !a.IsDeleted && a.Task != null && !a.Task.IsDeleted &&
                     a.IsActive &&
                     (a.Task.Status == WorkTaskStatus.New || a.Task.Status == WorkTaskStatus.InProgress) &&
+                    (!status.HasValue || a.Task.Status == status.Value) &&
                     a.Task.DueDate != null &&
                     a.Task.DueDate >= fromDate &&
                     a.Task.DueDate <= toDate
@@ -1089,7 +1123,8 @@ namespace TaskMangment.Infrastructure.Services
      int roleLevel,
      int? employeeId,
      DateTime fromDate,
-     DateTime? toDate)
+     DateTime? toDate,
+     WorkTaskStatus? status = null)
         {
             var effectiveToDate = toDate ?? DateTime.Now;
 
@@ -1103,6 +1138,9 @@ namespace TaskMangment.Infrastructure.Services
             query = query.Where(a => a.Task.CreatedDate >= fromDate);
 
             query = query.Where(a => a.Task.CreatedDate <= effectiveToDate);
+
+            if (status.HasValue)
+                query = query.Where(a => a.Task.Status == status.Value);
 
             var (scopedEmployeeIds, canViewAllTasks, canViewCreatedTasks, hasAccessScope) =
                 await GetScopedEmployeeIdsAsync(currentEmployeeId, roleLevel);
@@ -1179,7 +1217,7 @@ namespace TaskMangment.Infrastructure.Services
             var (scopedEmployeeIds, canViewAllTasks, canViewCreatedTasks, hasAccessScope) =
                 await GetScopedEmployeeIdsAsync(currentEmployeeId, roleLevel);
 
-            var flat = await _context.TaskAssignments
+            var assignmentsQuery = _context.TaskAssignments
                 .Include(a => a.Task).ThenInclude(t => t.AssignedBy)
                 .Include(a => a.Employee)
                 .Where(a => !a.IsDeleted && a.Task != null && !a.Task.IsDeleted)
@@ -1187,7 +1225,12 @@ namespace TaskMangment.Infrastructure.Services
                 .Where(a => scopedEmployeeIds.Contains(a.EmployeeId))
                 .Where(a => a.Employee.BranchId == dto.BranchId)
                 .Where(a => a.Task.CreatedDate >= dto.FromDate && a.Task.CreatedDate <= effectiveTo)
-                .Where(a => (canViewAllTasks || hasAccessScope) ? true : a.EmployeeId == currentEmployeeId)
+                .Where(a => (canViewAllTasks || hasAccessScope) ? true : a.EmployeeId == currentEmployeeId);
+
+            if (dto.Status.HasValue)
+                assignmentsQuery = assignmentsQuery.Where(a => a.Task.Status == dto.Status.Value);
+
+            var flat = await assignmentsQuery
                 .Select(a => new
                 {
                     a.TaskId,

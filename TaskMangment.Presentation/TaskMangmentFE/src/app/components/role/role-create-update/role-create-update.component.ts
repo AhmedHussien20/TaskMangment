@@ -54,7 +54,7 @@ export class RoleCreateUpdateComponent implements OnInit {
     });
 
     this.formGroup.get('requiresEmployeeTypeScope')?.valueChanges.subscribe(required => {
-      this.toggleEmployeeTypeField(!!required);
+      this.toggleEmployeeTypeFields(!!required);
     });
   }
 
@@ -65,6 +65,7 @@ export class RoleCreateUpdateComponent implements OnInit {
       requiresBranchScope: [false],
       requiresEmployeeTypeScope: [false],
       employeeTypeId: [null],
+      restrictEmployeeTypeToBranch: [false],
       canBeBranchManager: [false]
     });
   }
@@ -105,6 +106,12 @@ export class RoleCreateUpdateComponent implements OnInit {
         options: this.employeeTypeOptions,
         validations: { required: true }
       });
+      fields.push({
+        type: 'checkbox',
+        label: 'ROLE.RESTRICT_EMPLOYEE_TYPE_TO_BRANCH',
+        name: 'restrictEmployeeTypeToBranch',
+        defaultValue: false
+      });
     }
 
     fields.push({
@@ -117,15 +124,17 @@ export class RoleCreateUpdateComponent implements OnInit {
     this.formConfig = fields;
   }
 
-  private toggleEmployeeTypeField(required: boolean) {
-    const control = this.formGroup.get('employeeTypeId');
+  private toggleEmployeeTypeFields(required: boolean) {
+    const typeControl = this.formGroup.get('employeeTypeId');
+    const branchOnlyControl = this.formGroup.get('restrictEmployeeTypeToBranch');
     if (required) {
-      control?.setValidators([Validators.required]);
+      typeControl?.setValidators([Validators.required]);
     } else {
-      control?.clearValidators();
-      control?.setValue(null, { emitEvent: false });
+      typeControl?.clearValidators();
+      typeControl?.setValue(null, { emitEvent: false });
+      branchOnlyControl?.setValue(false, { emitEvent: false });
     }
-    control?.updateValueAndValidity({ emitEvent: false });
+    typeControl?.updateValueAndValidity({ emitEvent: false });
     this.buildFormConfig(required);
   }
 
@@ -156,9 +165,10 @@ export class RoleCreateUpdateComponent implements OnInit {
         requiresBranchScope: role.requiresBranchScope ?? false,
         requiresEmployeeTypeScope: requiresType,
         employeeTypeId: role.employeeTypeId ?? null,
+        restrictEmployeeTypeToBranch: role.restrictEmployeeTypeToBranch ?? false,
         canBeBranchManager: role.canBeBranchManager ?? false
       });
-      this.toggleEmployeeTypeField(requiresType);
+      this.toggleEmployeeTypeFields(requiresType);
     });
   }
 
@@ -173,7 +183,10 @@ export class RoleCreateUpdateComponent implements OnInit {
       ...formValue,
       employeeTypeId: formValue.requiresEmployeeTypeScope
         ? formValue.employeeTypeId
-        : null
+        : null,
+      restrictEmployeeTypeToBranch: formValue.requiresEmployeeTypeScope
+        ? !!formValue.restrictEmployeeTypeToBranch
+        : false
     };
 
     if (this.isEdit && this.roleId) {

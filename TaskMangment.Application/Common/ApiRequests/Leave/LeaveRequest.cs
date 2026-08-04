@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,5 +12,10 @@ namespace TaskMangment.Application.Common.ApiRequests.Leave
         public List<int>? EmployeeIds { get; set; }
         public int? StatusId { get; set; }
 
+        /// <summary>
+        /// When true, list leaves for employees in the caller's AccessScope (like ViewScopedTasks),
+        /// not only RoleNotificationSource subjects.
+        /// </summary>
+        public bool? ViewScopedLeaves { get; set; }
     }
 }

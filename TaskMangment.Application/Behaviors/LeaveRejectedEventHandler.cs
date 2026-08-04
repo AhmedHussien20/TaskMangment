@@ -38,10 +38,9 @@ namespace TaskMangment.Application.Behaviors
             var message = string.Format(
                 template,
                 ev.LeaveTypeName,
-                ev.StartDate.ToString("yyyy-MM-dd"),
-                ev.EndDate.ToString("yyyy-MM-dd"),
                 ev.RejectReason,
-                ev.RejectedByName
+                ev.RejectedByName,
+                ev.BranchName
             );
 
             if (ev.EmployeeId != ev.RejectedById)

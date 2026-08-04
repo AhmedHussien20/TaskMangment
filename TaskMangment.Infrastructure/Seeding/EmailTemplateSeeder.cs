@@ -40,12 +40,14 @@ namespace TaskMangment.Infrastructure.Seeding
             <p style='margin:0 0 14px'>مرحبًا <strong>{{UserName}}</strong>،</p>
             <p style='margin:0 0 14px'>تم إسناد المهمة لـ <strong>{{EmployeeName}}</strong>: مهمة رقم {{TaskNumberLink}} بعنوان <strong>{{TaskTitle}}</strong>.</p>
             <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
+              <div style='margin-bottom:6px'><strong>الفرع:</strong> {{BranchName}}</div>
               <div><strong>تاريخ الاستحقاق:</strong> {{DueDate}}</div>
             </div>
             <hr style='border:none;border-top:1px solid #e5e7eb;margin:20px 0'/>
             <p style='margin:0 0 14px'><strong>Hello {{UserName}},</strong></p>
             <p style='margin:0 0 14px'>Task assigned to <strong>{{EmployeeName}}</strong>: task number {{TaskNumberLink}} titled <strong>{{TaskTitle}}</strong>.</p>
             <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
+              <div style='margin-bottom:6px'><strong>Branch:</strong> {{BranchName}}</div>
               <div><strong>Due Date:</strong> {{DueDate}}</div>
             </div>
             " + TaskDetailsLinkPlaceholder + LayoutFooter
@@ -60,6 +62,7 @@ namespace TaskMangment.Infrastructure.Seeding
             <p style='margin:0 0 14px'>مرحبًا <strong>{{UserName}}</strong>،</p>
             <p style='margin:0 0 14px'>تم إسناد المهمة لـ <strong>{{EmployeeName}}</strong>: مهمة رقم {{TaskNumberLink}} بعنوان <strong>{{TaskTitle}}</strong>.</p>
             <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
+              <div style='margin-bottom:6px'><strong>الفرع:</strong> {{BranchName}}</div>
               <div style='margin-bottom:6px'><strong>الوصف:</strong> {{TaskDescription}}</div>
               <div><strong>تاريخ الاستحقاق:</strong> {{DueDate}}</div>
             </div>
@@ -68,6 +71,7 @@ namespace TaskMangment.Infrastructure.Seeding
             <p style='margin:0 0 14px'><strong>Hello {{UserName}},</strong></p>
             <p style='margin:0 0 14px'>Task assigned to <strong>{{EmployeeName}}</strong>: task number {{TaskNumberLink}} titled <strong>{{TaskTitle}}</strong>.</p>
             <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
+              <div style='margin-bottom:6px'><strong>Branch:</strong> {{BranchName}}</div>
               <div style='margin-bottom:6px'><strong>Description:</strong> {{TaskDescription}}</div>
               <div><strong>Due Date:</strong> {{DueDate}}</div>
             </div>
@@ -84,12 +88,14 @@ namespace TaskMangment.Infrastructure.Seeding
             <p style='margin:0 0 14px'>مرحبًا <strong>{{UserName}}</strong>،</p>
             <p style='margin:0 0 14px'>تم إلغاء إسناد <strong>{{EmployeeName}}</strong> من مهمة رقم {{TaskNumberLink}} بعنوان <strong>{{TaskTitle}}</strong>.</p>
             <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
+              <div style='margin-bottom:6px'><strong>الفرع:</strong> {{BranchName}}</div>
               <div><strong>الوصف:</strong> {{TaskDescription}}</div>
             </div>
             <hr style='border:none;border-top:1px solid #e5e7eb;margin:20px 0'/>
             <p style='margin:0 0 14px'><strong>Hello {{UserName}},</strong></p>
             <p style='margin:0 0 14px'><strong>{{EmployeeName}}</strong> was removed from task number {{TaskNumberLink}} titled <strong>{{TaskTitle}}</strong>.</p>
             <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
+              <div style='margin-bottom:6px'><strong>Branch:</strong> {{BranchName}}</div>
               <div><strong>Description:</strong> {{TaskDescription}}</div>
             </div>
             " + TaskDetailsLinkPlaceholder + LayoutFooter
@@ -102,14 +108,14 @@ namespace TaskMangment.Infrastructure.Seeding
                 SubjectTemplate = "تعليق جديد على المهمة | New Task Comment",
                 BodyTemplate = LayoutHeader + @"
             <p style='margin:0 0 14px'>مرحبًا <strong>{{UserName}}</strong>،</p>
-            <p style='margin:0 0 14px'>تعليق جديد على مهمة رقم {{TaskNumberLink}} بعنوان <strong>{{TaskTitle}}</strong> من <strong>{{EmployeeName}}</strong>.</p>
+            <p style='margin:0 0 14px'>تعليق جديد على مهمة رقم {{TaskNumberLink}} بعنوان <strong>{{TaskTitle}}</strong> من <strong>{{EmployeeName}}</strong> - فرع <strong>{{BranchName}}</strong>.</p>
             <div style='background:#f8fafc;border:1px solid #e5e7eb;border-right:4px solid #0d6efd;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
               <div style='font-size:12px;color:#6b7280;margin-bottom:6px'><strong>التعليق</strong></div>
               <div>{{CommentText}}</div>
             </div>
             <hr style='border:none;border-top:1px solid #e5e7eb;margin:20px 0'/>
             <p style='margin:0 0 14px'><strong>Hello {{UserName}},</strong></p>
-            <p style='margin:0 0 14px'>A new comment on task number {{TaskNumberLink}} titled <strong>{{TaskTitle}}</strong> from <strong>{{EmployeeName}}</strong>.</p>
+            <p style='margin:0 0 14px'>A new comment on task number {{TaskNumberLink}} titled <strong>{{TaskTitle}}</strong> from <strong>{{EmployeeName}}</strong> - branch <strong>{{BranchName}}</strong>.</p>
             <div style='background:#f8fafc;border:1px solid #e5e7eb;border-left:4px solid #0d6efd;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
               <div style='font-size:12px;color:#6b7280;margin-bottom:6px'><strong>Comment</strong></div>
               <div>{{CommentText}}</div>
@@ -147,12 +153,14 @@ namespace TaskMangment.Infrastructure.Seeding
             <p style='margin:0 0 14px'>مرحبًا <strong>{{UserName}}</strong>،</p>
             <p style='margin:0 0 14px'>طلب تمديد جديد على مهمة رقم {{TaskNumberLink}} بعنوان <strong>{{TaskTitle}}</strong> من <strong>{{EmployeeName}}</strong>.</p>
             <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
+              <div style='margin-bottom:6px'><strong>الفرع:</strong> {{BranchName}}</div>
               <div><strong>سبب الطلب:</strong> {{ExtensionReason}}</div>
             </div>
             <hr style='border:none;border-top:1px solid #e5e7eb;margin:20px 0'/>
             <p style='margin:0 0 14px'><strong>Hello {{UserName}},</strong></p>
             <p style='margin:0 0 14px'>A new extension request on task number {{TaskNumberLink}} titled <strong>{{TaskTitle}}</strong> from <strong>{{EmployeeName}}</strong>.</p>
             <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
+              <div style='margin-bottom:6px'><strong>Branch:</strong> {{BranchName}}</div>
               <div><strong>Reason:</strong> {{ExtensionReason}}</div>
             </div>
             " + TaskDetailsLinkPlaceholder + LayoutFooter
@@ -167,12 +175,14 @@ namespace TaskMangment.Infrastructure.Seeding
             <p style='margin:0 0 14px'>مرحبًا <strong>{{UserName}}</strong>،</p>
             <p style='margin:0 0 14px'>طلب غلق جديد على مهمة رقم {{TaskNumberLink}} بعنوان <strong>{{TaskTitle}}</strong> من <strong>{{EmployeeName}}</strong>.</p>
             <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
+              <div style='margin-bottom:6px'><strong>الفرع:</strong> {{BranchName}}</div>
               <div><strong>ملاحظات الإغلاق:</strong> {{CloseNotes}}</div>
             </div>
             <hr style='border:none;border-top:1px solid #e5e7eb;margin:20px 0'/>
             <p style='margin:0 0 14px'><strong>Hello {{UserName}},</strong></p>
             <p style='margin:0 0 14px'>A new close request on task number {{TaskNumberLink}} titled <strong>{{TaskTitle}}</strong> from <strong>{{EmployeeName}}</strong>.</p>
             <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
+              <div style='margin-bottom:6px'><strong>Branch:</strong> {{BranchName}}</div>
               <div><strong>Close Notes:</strong> {{CloseNotes}}</div>
             </div>
             " + TaskDetailsLinkPlaceholder + LayoutFooter
@@ -243,6 +253,7 @@ namespace TaskMangment.Infrastructure.Seeding
             <p style='margin:0 0 14px'>مرحبًا <strong>{{UserName}}</strong>،</p>
             <p style='margin:0 0 14px'>نود تذكيرك بأن موعد انتهاء مهمة رقم {{TaskNumberLink}} بعنوان <strong>{{TaskTitle}}</strong> هو <strong>اليوم</strong>.</p>
             <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
+              <div style='margin-bottom:6px'><strong>الفرع:</strong> {{BranchName}}</div>
               <div><strong>تاريخ الاستحقاق:</strong> {{DueDate}}</div>
             </div>
             <p style='margin:0 0 18px'>يرجى التأكد من إنهاء المهمة في الموعد المحدد أو اتخاذ الإجراء اللازم.</p>
@@ -250,6 +261,7 @@ namespace TaskMangment.Infrastructure.Seeding
             <p style='margin:0 0 14px'><strong>Hello {{UserName}},</strong></p>
             <p style='margin:0 0 14px'>This is a reminder that the due date for task number {{TaskNumberLink}} titled <strong>{{TaskTitle}}</strong> is <strong>today</strong>.</p>
             <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
+              <div style='margin-bottom:6px'><strong>Branch:</strong> {{BranchName}}</div>
               <div><strong>Due Date:</strong> {{DueDate}}</div>
             </div>
             <p style='margin:0 0 18px'>Please ensure the task is completed on time or take the necessary action.</p>
@@ -265,6 +277,7 @@ namespace TaskMangment.Infrastructure.Seeding
             <p style='margin:0 0 14px'>مرحبًا <strong>{{UserName}}</strong>،</p>
             <p style='margin:0 0 14px'>تم تمديد مهمة رقم {{TaskNumberLink}} بعنوان <strong>{{TaskTitle}}</strong>.</p>
             <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
+              <div style='margin-bottom:6px'><strong>الفرع:</strong> {{BranchName}}</div>
               <div style='margin-bottom:6px'><strong>من تاريخ:</strong> {{OldDueDate}}</div>
               <div><strong>إلى تاريخ:</strong> {{NewDueDate}}</div>
             </div>
@@ -273,6 +286,7 @@ namespace TaskMangment.Infrastructure.Seeding
             <p style='margin:0 0 14px'><strong>Hello {{UserName}},</strong></p>
             <p style='margin:0 0 14px'>Task number {{TaskNumberLink}} titled <strong>{{TaskTitle}}</strong> has been extended.</p>
             <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
+              <div style='margin-bottom:6px'><strong>Branch:</strong> {{BranchName}}</div>
               <div style='margin-bottom:6px'><strong>From:</strong> {{OldDueDate}}</div>
               <div><strong>To:</strong> {{NewDueDate}}</div>
             </div>
@@ -288,10 +302,16 @@ namespace TaskMangment.Infrastructure.Seeding
                 BodyTemplate = LayoutHeader + @"
             <p style='margin:0 0 14px'>مرحبًا <strong>{{UserName}}</strong>،</p>
             <p style='margin:0 0 14px'>تم غلق مهمة رقم {{TaskNumberLink}} بعنوان <strong>{{TaskTitle}}</strong> وفقًا للطلب.</p>
+            <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
+              <div><strong>الفرع:</strong> {{BranchName}}</div>
+            </div>
             <p style='margin:0 0 18px'>شكرًا لالتزامك وإنجازك للمهمة.</p>
             <hr style='border:none;border-top:1px solid #e5e7eb;margin:20px 0'/>
             <p style='margin:0 0 14px'><strong>Hello {{UserName}},</strong></p>
             <p style='margin:0 0 14px'>Task number {{TaskNumberLink}} titled <strong>{{TaskTitle}}</strong> has been closed according to the request.</p>
+            <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
+              <div><strong>Branch:</strong> {{BranchName}}</div>
+            </div>
             <p style='margin:0 0 18px'>Thank you for completing the task successfully.</p>
             " + TaskDetailsLinkPlaceholder + LayoutFooter
             });
@@ -305,6 +325,7 @@ namespace TaskMangment.Infrastructure.Seeding
             <p style='margin:0 0 14px'>مرحبًا،</p>
             <p style='margin:0 0 14px'>طلب <strong>{{LeaveType}}</strong> من <strong>{{EmployeeName}}</strong>.</p>
             <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
+              <div style='margin-bottom:6px'><strong>الفرع:</strong> {{BranchName}}</div>
               <div style='margin-bottom:6px'><strong>من:</strong> {{StartDate}}</div>
               <div><strong>إلى:</strong> {{EndDate}}</div>
             </div>
@@ -313,6 +334,7 @@ namespace TaskMangment.Infrastructure.Seeding
             <p style='margin:0 0 14px'><strong>Hello,</strong></p>
             <p style='margin:0 0 14px'>New leave request <strong>{{LeaveType}}</strong> from <strong>{{EmployeeName}}</strong>.</p>
             <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0'>
+              <div style='margin-bottom:6px'><strong>Branch:</strong> {{BranchName}}</div>
               <div style='margin-bottom:6px'><strong>From:</strong> {{StartDate}}</div>
               <div><strong>To:</strong> {{EndDate}}</div>
             </div>
@@ -328,6 +350,7 @@ namespace TaskMangment.Infrastructure.Seeding
             <p style='margin:0 0 14px'>مرحبًا <strong>{{UserName}}</strong>،</p>
             <p style='margin:0 0 14px'>تم الموافقة على <strong>{{LeaveType}}</strong> بواسطة <strong>{{ApprovedBy}}</strong>.</p>
             <div style='background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
+              <div style='margin-bottom:6px'><strong>الفرع:</strong> {{BranchName}}</div>
               <div style='margin-bottom:6px'><strong>من:</strong> {{StartDate}}</div>
               <div><strong>إلى:</strong> {{EndDate}}</div>
             </div>
@@ -335,6 +358,7 @@ namespace TaskMangment.Infrastructure.Seeding
             <p style='margin:0 0 14px'><strong>Hello {{UserName}},</strong></p>
             <p style='margin:0 0 14px'>The leave request <strong>{{LeaveType}}</strong> has been approved by <strong>{{ApprovedBy}}</strong>.</p>
             <div style='background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px 14px;margin:0'>
+              <div style='margin-bottom:6px'><strong>Branch:</strong> {{BranchName}}</div>
               <div style='margin-bottom:6px'><strong>From:</strong> {{StartDate}}</div>
               <div><strong>To:</strong> {{EndDate}}</div>
             </div>
@@ -350,6 +374,7 @@ namespace TaskMangment.Infrastructure.Seeding
             <p style='margin:0 0 14px'>مرحبًا <strong>{{UserName}}</strong>،</p>
             <p style='margin:0 0 14px'>تم رفض طلب <strong>{{LeaveType}}</strong> بواسطة <strong>{{RejectedBy}}</strong>.</p>
             <div style='background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
+              <div style='margin-bottom:6px'><strong>الفرع:</strong> {{BranchName}}</div>
               <div style='margin-bottom:6px'><strong>السبب:</strong> {{RejectReason}}</div>
               <div style='margin-bottom:6px'><strong>من:</strong> {{StartDate}}</div>
               <div><strong>إلى:</strong> {{EndDate}}</div>
@@ -358,6 +383,7 @@ namespace TaskMangment.Infrastructure.Seeding
             <p style='margin:0 0 14px'><strong>Hello {{UserName}},</strong></p>
             <p style='margin:0 0 14px'>Request <strong>{{LeaveType}}</strong> has been rejected by <strong>{{RejectedBy}}</strong>.</p>
             <div style='background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px 14px;margin:0'>
+              <div style='margin-bottom:6px'><strong>Branch:</strong> {{BranchName}}</div>
               <div style='margin-bottom:6px'><strong>Reason:</strong> {{RejectReason}}</div>
               <div style='margin-bottom:6px'><strong>From:</strong> {{StartDate}}</div>
               <div><strong>To:</strong> {{EndDate}}</div>
@@ -372,10 +398,10 @@ namespace TaskMangment.Infrastructure.Seeding
                 SubjectTemplate = "إضافة نسبة إنجاز على المهمة | Task Achievement Added",
                 BodyTemplate = LayoutHeader + @"
             <p style='margin:0 0 14px'>مرحبًا <strong>{{UserName}}</strong>،</p>
-            <p style='margin:0 0 14px'>قام <strong>{{EmployeeName}}</strong> بإنجاز <strong>{{Percent}}</strong> من مهمة رقم {{TaskNumberLink}} بعنوان <strong>{{TaskTitle}}</strong>.</p>
+            <p style='margin:0 0 14px'>قام <strong>{{EmployeeName}}</strong> بإنجاز <strong>{{Percent}}</strong> من مهمة رقم {{TaskNumberLink}} بعنوان <strong>{{TaskTitle}}</strong> - فرع <strong>{{BranchName}}</strong>.</p>
             <hr style='border:none;border-top:1px solid #e5e7eb;margin:20px 0'/>
             <p style='margin:0 0 14px'><strong>Hello {{UserName}},</strong></p>
-            <p style='margin:0 0 18px'><strong>{{EmployeeName}}</strong> achieved <strong>{{Percent}}</strong> from task number {{TaskNumberLink}} titled <strong>{{TaskTitle}}</strong>.</p>
+            <p style='margin:0 0 18px'><strong>{{EmployeeName}}</strong> achieved <strong>{{Percent}}</strong> from task number {{TaskNumberLink}} titled <strong>{{TaskTitle}}</strong> - branch <strong>{{BranchName}}</strong>.</p>
             " + TaskDetailsLinkPlaceholder + LayoutFooter
             });
 
@@ -393,6 +419,10 @@ namespace TaskMangment.Infrastructure.Seeding
               <tr>
                 <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>عنوان العرض</strong></td>
                 <td style='padding:6px;border:1px solid #ddd'>{{OfferTitle}}</td>
+              </tr>
+              <tr>
+                <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>الفرع</strong></td>
+                <td style='padding:6px;border:1px solid #ddd'>{{BranchName}}</td>
               </tr>
               <tr>
                 <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>الوصف</strong></td>
@@ -468,6 +498,10 @@ namespace TaskMangment.Infrastructure.Seeding
               <tr>
                 <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>Offer Title</strong></td>
                 <td style='padding:6px;border:1px solid #ddd'>{{OfferTitle}}</td>
+              </tr>
+              <tr>
+                <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>Branch</strong></td>
+                <td style='padding:6px;border:1px solid #ddd'>{{BranchName}}</td>
               </tr>
               <tr>
                 <td style='padding:6px;border:1px solid #ddd;background:#f8f9fa'><strong>Description</strong></td>

@@ -113,7 +113,8 @@ namespace TaskMangment.Infrastructure.Services
                                                       full.Employee.FullName,
                                                       full.LeaveType.NameAr,
                                                       leave.StartDate,
-                                                      leave.EndDate
+                                                      leave.EndDate,
+                                                      full.Employee.Branch?.Name
                                                     ));
             }
 
@@ -141,7 +142,27 @@ namespace TaskMangment.Infrastructure.Services
                 PermissionCodes.ApproveLeave,
                 PermissionCodes.RejectLeave);
 
-            if (!canReviewLeave)
+            var scope = await _scopeResolver.ResolveAsync(employeeId);
+            var canViewScoped =
+                scope.Kind is AccessScopeKind.ManagerScoped or AccessScopeKind.CompanyWide
+                || await _permissions.HasAsync(employeeId, PermissionCodes.ViewScopedTasks)
+                || await _permissions.HasAsync(employeeId, PermissionCodes.ViewCompanyTasks);
+
+            // جميع الاجازات = AccessScope (like tasks). Default reviewer list stays notification-based.
+            if (request.ViewScopedLeaves == true && canViewScoped)
+            {
+                var scopedEmployeeIds = _scopeResolver
+                    .FilterEmployees(
+                        _employeeRepo.GetAll(e => e.CompanyId == scope.CompanyId && e.IsActive),
+                        scope)
+                    .Select(e => e.Id);
+
+                query = query.Where(l => scopedEmployeeIds.Contains(l.EmployeeId));
+
+                if (request.EmployeeIds != null && request.EmployeeIds.Any())
+                    query = query.Where(l => request.EmployeeIds.Contains(l.EmployeeId));
+            }
+            else if (!canReviewLeave)
             {
                 query = query.Where(l => l.EmployeeId == employeeId);
             }
@@ -217,6 +238,7 @@ namespace TaskMangment.Infrastructure.Services
         {
             var leave = await _leaveRepo.GetAll(l => l.Id == leaveId)
                 .Include(l => l.Employee)
+                .ThenInclude(e => e.Branch)
                 .Include(l => l.ApprovedBy)
                 .Include(l => l.LeaveType)
                 .FirstOrDefaultAsync();
@@ -251,7 +273,8 @@ namespace TaskMangment.Infrastructure.Services
                 managerFullName,
                 leave.LeaveType.NameAr,
                 leave.StartDate,
-                leave.EndDate
+                leave.EndDate,
+                leave.Employee.Branch?.Name
             ));
 
             return ApiResponse<bool>.Ok(true, "Leave approved");
@@ -263,6 +286,7 @@ namespace TaskMangment.Infrastructure.Services
         {
             var leave = await _leaveRepo.GetAll(l => l.Id == leaveId)
                 .Include(l => l.Employee)
+                .ThenInclude(e => e.Branch)
                 .Include(l => l.ApprovedBy)
                 .Include(l => l.LeaveType)
                 .FirstOrDefaultAsync();
@@ -298,7 +322,8 @@ namespace TaskMangment.Infrastructure.Services
                 leave.LeaveType.NameAr,
                 leave.RejectionReason,
                 leave.StartDate,
-                leave.EndDate
+                leave.EndDate,
+                leave.Employee.Branch?.Name
             ));
 
             return ApiResponse<bool>.Ok(true, "Leave rejected");

@@ -23,6 +23,7 @@ import { AuthService } from 'app/core/services/auth.service';
 import { Permissions } from 'app/core/constants/permissions';
 import { EmployeeNgSelectComponent } from 'app/components/employee-select/employee-select.component';
 import { TaskDetailsShellComponent } from 'app/components/tasks/task-details/task-details-shell/task-details-shell.component';
+import { ReportStatusFilterComponent } from '../shared/report-status-filter.component';
 
 @Component({
   selector: 'app-task-today-activity-report',
@@ -35,6 +36,7 @@ import { TaskDetailsShellComponent } from 'app/components/tasks/task-details/tas
     GenericTableComponent,
     PageHeaderComponent,
     EmployeeNgSelectComponent,
+    ReportStatusFilterComponent,
   ],
   templateUrl: './task-today-activity-report.component.html',
 })
@@ -63,6 +65,7 @@ export class TaskTodayActivityReportComponent implements OnInit {
 
   movementType: TaskMovementType = TaskMovementType.Outgoing;
   reportTitle?: string;
+  status?: string;
 
   isLoading = false;
   isAdmin = false;
@@ -112,6 +115,7 @@ export class TaskTodayActivityReportComponent implements OnInit {
         this.selectedEmployeeId,
         this.movementType,
         this.reportTitle,
+        this.status,
       )
       .subscribe({
         next: (res) => {
@@ -159,6 +163,7 @@ export class TaskTodayActivityReportComponent implements OnInit {
         this.selectedEmployeeId,
         this.movementType,
         this.reportTitle,
+        this.status,
       )
       .subscribe({
         next: (blob) => {
@@ -186,6 +191,7 @@ export class TaskTodayActivityReportComponent implements OnInit {
         this.selectedEmployeeId,
         this.movementType,
         this.reportTitle,
+        this.status,
       )
       .subscribe({
         next: (blob) => {

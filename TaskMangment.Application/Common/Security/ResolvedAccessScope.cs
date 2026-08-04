@@ -25,6 +25,8 @@ namespace TaskMangment.Application.Common.Security
         public AccessScopeKind Kind { get; set; }
         public IReadOnlyList<int> BranchIds { get; set; } = [];
         public IReadOnlyList<int> EmployeeTypeIds { get; set; } = [];
+        /// <summary>Types that must stay within actor branch(es); from roles with type+branch flags.</summary>
+        public IReadOnlyList<int> BranchRestrictedEmployeeTypeIds { get; set; } = [];
         public bool SeesAllTypesInBranchScope { get; set; }
         public bool HasManagerScope => BranchIds.Count > 0 || EmployeeTypeIds.Count > 0;
         public bool IsCompanyWide => Kind == AccessScopeKind.CompanyWide;
@@ -39,8 +41,10 @@ namespace TaskMangment.Application.Common.Security
         public UserAccessContext ToUserAccessContext() => new()
         {
             EmployeeId = EmployeeId,
+            OwnBranchId = OwnBranchId,
             BranchIds = BranchIds,
             EmployeeTypeIds = EmployeeTypeIds,
+            BranchRestrictedEmployeeTypeIds = BranchRestrictedEmployeeTypeIds,
             SeesAllTypesInBranchScope = SeesAllTypesInBranchScope
         };
     }

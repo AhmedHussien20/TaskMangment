@@ -893,8 +893,9 @@
     "PERMISSIONROLE": "الصلاحيات المخصصة لدور:",
     "LEVEL": "المستوى",
     "REQUIRES_BRANCH_SCOPE": "يتطلب نطاق الفروع (مدير المنطقة من صفحة المناطق)",
-    "REQUIRES_EMPLOYEE_TYPE_SCOPE": "يتطلب نطاق نوع الموظف",
+    "REQUIRES_EMPLOYEE_TYPE_SCOPE": "يتطلب نطاق نوع معين",
     "ROLE_EMPLOYEE_TYPE": "نوع الموظف للدور",
+    "RESTRICT_EMPLOYEE_TYPE_TO_BRANCH": "علي مستوي فرع (وليس عموم الشركة)",
     "CAN_BE_BRANCH_MANAGER": "يمكن تعيينه مديراً للفرع",
     "NOTIFICATION_SCOPE": "نطاق الإشعارات",
     "NOTIFY_FROM_ROLES": "استقبال إشعارات من الأدوار",
@@ -1134,6 +1135,7 @@
     "ROLE_TITLE": "الصلاحية",
     "TOTAL_DISCOUNT": "إجمالي الخصومات",
     "ALL_ROLES": "كل الصلاحيات",
+    "ALL_STATUSES": "كل الحالات",
     "FROM_DATE_REQUIRED": "يجب اختيار تاريخ البداية عند اختيار تاريخ النهاية"
   },
   "LEAVE" : 
@@ -1161,7 +1163,10 @@
     "LIST_TITLE" : "قائمة تقديم الاجازات" ,
     "SEARCH" : "بحث",
     "CREATE_SUCCESS" : "تم ارسال الطلب بنجاح",
+    "LEAVE_SCOPE": "نطاق الاجازات",
+    "LEAVES": "الاجازات",
     "ALL_REQUESTS": "كل الطلبات",
+    "ALL_LEAVES_IN_SCOPE": "جميع الاجازات",
     "PENDING_FOR_APPROVAL": "بانتظار الموافقة"
   },
   "LEAVE_TYPE" : 

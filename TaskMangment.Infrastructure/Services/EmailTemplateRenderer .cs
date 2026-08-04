@@ -68,12 +68,20 @@ namespace TaskMangment.Infrastructure.Services
                 }
                 else 
                 {
-                    var userName = await _db.Employees
+                    var user = await _db.Employees
                         .Where(e => e.Id == userId.Value)
-                        .Select(e => e.FullName)
+                        .Select(e => new
+                        {
+                            e.FullName,
+                            BranchName = e.Branch != null ? e.Branch.Name : null
+                        })
                         .FirstOrDefaultAsync();
 
-                    data["UserName"] = string.IsNullOrWhiteSpace(userName) ? "مستخدم" : userName;
+                    data["UserName"] = string.IsNullOrWhiteSpace(user?.FullName) ? "مستخدم" : user!.FullName;
+
+                    // Fallback for templates without a subject-employee branch (e.g. due-today).
+                    if (!data.ContainsKey("BranchName") || string.IsNullOrWhiteSpace(data["BranchName"]))
+                        data["BranchName"] = string.IsNullOrWhiteSpace(user?.BranchName) ? "-" : user!.BranchName!;
                 }
             }
             else
@@ -82,6 +90,9 @@ namespace TaskMangment.Infrastructure.Services
                     data["StudentName"] = "طالب";
                 else
                     data["UserName"] = "مستخدم";
+
+                if (!data.ContainsKey("BranchName") || string.IsNullOrWhiteSpace(data["BranchName"]))
+                    data["BranchName"] = "-";
             }
 
             return new RenderedEmail
@@ -342,6 +353,9 @@ namespace TaskMangment.Infrastructure.Services
                                 TaskNumber = c.TaskId,
                                 TaskTitle = c.Task.Title,
                                 EmployeeName = c.Employee != null ? c.Employee.FullName : "موظف",
+                                BranchName = c.Employee != null && c.Employee.Branch != null
+                                    ? c.Employee.Branch.Name
+                                    : null,
                                 c.CommentText
                             })
                             .FirstOrDefaultAsync();
@@ -354,6 +368,7 @@ namespace TaskMangment.Infrastructure.Services
                             ["TaskNumber"] = comment.TaskNumber.ToString(),
                             ["TaskTitle"] = comment.TaskTitle,
                             ["EmployeeName"] = comment.EmployeeName ?? "موظف",
+                            ["BranchName"] = string.IsNullOrWhiteSpace(comment.BranchName) ? "-" : comment.BranchName,
                             ["CommentText"] = string.IsNullOrWhiteSpace(comment.CommentText)
                                 ? "رفع ملف"
                                 : comment.CommentText
@@ -372,6 +387,7 @@ namespace TaskMangment.Infrastructure.Services
                                 TaskNumber = c.TaskId,
                                 TaskTitle = c.Task.Title,
                                 EmployeeName = c.Employee.FullName,
+                                BranchName = c.Employee.Branch != null ? c.Employee.Branch.Name : null,
                                 Percent = c.AchievementPercent
                             })
                             .FirstOrDefaultAsync();
@@ -384,6 +400,7 @@ namespace TaskMangment.Infrastructure.Services
                             ["TaskNumber"] = percent.TaskNumber.ToString(),
                             ["TaskTitle"] = percent.TaskTitle,
                             ["EmployeeName"] = percent.EmployeeName,
+                            ["BranchName"] = string.IsNullOrWhiteSpace(percent.BranchName) ? "-" : percent.BranchName,
                             ["Percent"] = percent.Percent
                         };
                     }
@@ -400,6 +417,9 @@ namespace TaskMangment.Infrastructure.Services
                                 TaskNumber = r.TaskId,
                                 TaskTitle = r.Task.Title,
                                 EmployeeName = r.RequestedBy != null ? r.RequestedBy.FullName : "موظف",
+                                BranchName = r.RequestedBy != null && r.RequestedBy.Branch != null
+                                    ? r.RequestedBy.Branch.Name
+                                    : null,
                                 r.Reason
                             })
                             .FirstOrDefaultAsync();
@@ -412,6 +432,7 @@ namespace TaskMangment.Infrastructure.Services
                             ["TaskNumber"] = request.TaskNumber.ToString(),
                             ["TaskTitle"] = request.TaskTitle,
                             ["EmployeeName"] = request.EmployeeName ?? "موظف",
+                            ["BranchName"] = string.IsNullOrWhiteSpace(request.BranchName) ? "-" : request.BranchName,
                             ["ExtensionReason"] = request.Reason ?? "-"
                         };
                     }
@@ -428,6 +449,9 @@ namespace TaskMangment.Infrastructure.Services
                                 TaskNumber = r.TaskId,
                                 TaskTitle = r.Task.Title,
                                 EmployeeName = r.RequestedBy != null ? r.RequestedBy.FullName : "موظف",
+                                BranchName = r.RequestedBy != null && r.RequestedBy.Branch != null
+                                    ? r.RequestedBy.Branch.Name
+                                    : null,
                                 r.Message
                             })
                             .FirstOrDefaultAsync();
@@ -440,6 +464,7 @@ namespace TaskMangment.Infrastructure.Services
                             ["TaskNumber"] = close.TaskNumber.ToString(),
                             ["TaskTitle"] = close.TaskTitle,
                             ["EmployeeName"] = close.EmployeeName ?? "موظف",
+                            ["BranchName"] = string.IsNullOrWhiteSpace(close.BranchName) ? "-" : close.BranchName,
                             ["CloseNotes"] = close.Message ?? "-"
                         };
                     }
@@ -568,7 +593,8 @@ namespace TaskMangment.Infrastructure.Services
                                 a.EndDate,
                                 a.Body,
                                 SubjectName = a.Subject.Title,
-                                CourseName = a.Course.Title
+                                CourseName = a.Course.Title,
+                                BranchName = a.Branch != null ? a.Branch.Name : null
                             })
                             .FirstOrDefaultAsync();
 
@@ -583,6 +609,7 @@ namespace TaskMangment.Infrastructure.Services
                         {
                             ["OfferTitle"] = offer.Title,
                             ["OfferDescription"] = offer.Description,
+                            ["BranchName"] = string.IsNullOrWhiteSpace(offer.BranchName) ? "-" : offer.BranchName,
                             ["SubjectName"] = offer.SubjectName ?? "-",
                             ["CourseName"] = offer.CourseName ?? "-",
                             ["StartDate"] = offer.StartDate?.ToString("yyyy-MM-dd") ?? "-",
@@ -610,7 +637,10 @@ namespace TaskMangment.Infrastructure.Services
                                 TaskNumber = r.TaskId,
                                 TaskTitle = r.Task.Title,
                                 OldDueDate = r.Task.DueDate,
-                                NewDueDate = r.NewDueDate
+                                NewDueDate = r.NewDueDate,
+                                BranchName = r.RequestedBy != null && r.RequestedBy.Branch != null
+                                    ? r.RequestedBy.Branch.Name
+                                    : null
                             })
                             .FirstOrDefaultAsync();
 
@@ -621,6 +651,7 @@ namespace TaskMangment.Infrastructure.Services
                         {
                             ["TaskNumber"] = request.TaskNumber.ToString(),
                             ["TaskTitle"] = request.TaskTitle,
+                            ["BranchName"] = string.IsNullOrWhiteSpace(request.BranchName) ? "-" : request.BranchName,
                             ["OldDueDate"] = request.OldDueDate?.ToString("yyyy-MM-dd") ?? "-",
                             ["NewDueDate"] = request.NewDueDate.ToString("yyyy-MM-dd")
                         };
@@ -636,7 +667,10 @@ namespace TaskMangment.Infrastructure.Services
                             .Select(r => new
                             {
                                 TaskNumber = r.TaskId,
-                                TaskTitle = r.Task.Title
+                                TaskTitle = r.Task.Title,
+                                BranchName = r.RequestedBy != null && r.RequestedBy.Branch != null
+                                    ? r.RequestedBy.Branch.Name
+                                    : null
                             })
                             .FirstOrDefaultAsync();
 
@@ -646,7 +680,8 @@ namespace TaskMangment.Infrastructure.Services
                         return new Dictionary<string, string>
                         {
                             ["TaskNumber"] = request.TaskNumber.ToString(),
-                            ["TaskTitle"] = request.TaskTitle
+                            ["TaskTitle"] = request.TaskTitle,
+                            ["BranchName"] = string.IsNullOrWhiteSpace(request.BranchName) ? "-" : request.BranchName
                         };
                     }
 
@@ -660,6 +695,7 @@ namespace TaskMangment.Infrastructure.Services
                             .Select(l => new
                             {
                                 EmployeeName = l.Employee.FullName,
+                                BranchName = l.Employee.Branch != null ? l.Employee.Branch.Name : null,
                                 LeaveType = l.LeaveType.NameAr,
                                 l.StartDate,
                                 l.EndDate,
@@ -674,6 +710,7 @@ namespace TaskMangment.Infrastructure.Services
                         return new Dictionary<string, string>
                         {
                             ["EmployeeName"] = leave.EmployeeName,
+                            ["BranchName"] = string.IsNullOrWhiteSpace(leave.BranchName) ? "-" : leave.BranchName,
                             ["LeaveType"] = leave.LeaveType ?? "-",
                             ["StartDate"] = leave.StartDate.ToString("yyyy-MM-dd"),
                             ["EndDate"] = leave.EndDate.ToString("yyyy-MM-dd"),

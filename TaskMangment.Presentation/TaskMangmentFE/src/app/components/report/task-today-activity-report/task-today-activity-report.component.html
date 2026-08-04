@@ -26,6 +26,8 @@
             <input type="text" [(ngModel)]="reportTitle" class="form-control form-control-sm">
           </div>
 
+          <app-report-status-filter [(status)]="status"></app-report-status-filter>
+
           <div class="d-flex align-items-end gap-2">
             <button class="btn btn-primary btn-sm" (click)="onFilterApply()">
               {{ 'COMMON.APPLY' | translate }}

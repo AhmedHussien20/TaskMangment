@@ -141,8 +141,10 @@ namespace TaskMangment.Infrastructure.Services
       .ToListAsync();
 
 
-            var employee = await _employeeRepo.GetByIDAsync(employeeId);
-            string employeeName = employee?.FullName;
+            var employeeInfo = await _employeeRepo.GetAll(e => e.Id == employeeId)
+                .Select(e => new { e.FullName, BranchName = e.Branch != null ? e.Branch.Name : null })
+                .FirstOrDefaultAsync();
+            string employeeName = employeeInfo?.FullName;
 
 
 
@@ -157,7 +159,14 @@ namespace TaskMangment.Infrastructure.Services
                 managerAnchorEmployeeId: employeeId);
 
             if (assignedEmployeeIds.Any())
-                await _eventDispatcher.PublishAsync(new TaskAchievePercentEvent(entity.Id,dto.AchievementPercent, task.Id,task.Title, employeeName, assignedEmployeeIds));
+                await _eventDispatcher.PublishAsync(new TaskAchievePercentEvent(
+                    entity.Id,
+                    dto.AchievementPercent,
+                    task.Id,
+                    task.Title,
+                    employeeName,
+                    assignedEmployeeIds,
+                    employeeInfo?.BranchName));
 
             var saved = await _repo.GetAll()
                 .Include(tp => tp.Task)

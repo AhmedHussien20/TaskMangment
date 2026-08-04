@@ -15,6 +15,7 @@ import { ReportPdfService } from 'app/core/services/report-pdf.service';
 import { ExportType, BranchTaskReportRowDto } from 'app/core/models/reports/reports';
 import { BranchService } from 'app/core/services/branch.service';
 import { TaskDetailsShellComponent } from 'app/components/tasks/task-details/task-details-shell/task-details-shell.component';
+import { ReportStatusFilterComponent } from '../shared/report-status-filter.component';
 
 @Component({
   selector: 'app-branch-task-tracking',
@@ -26,7 +27,8 @@ import { TaskDetailsShellComponent } from 'app/components/tasks/task-details/tas
     TranslateModule,
     GenericTableComponent,
     PageHeaderComponent,
-    DatePickerComponent
+    DatePickerComponent,
+    ReportStatusFilterComponent
   ],
   templateUrl: './branch-task-tracking.component.html',
   styleUrls: ['./branch-task-tracking.component.scss']
@@ -58,6 +60,7 @@ export class BranchTaskTrackingComponent implements OnInit {
 
   fromDate?: string;
   toDate?: string;
+  status?: string;
 
   isLoading = false;
 
@@ -120,7 +123,7 @@ loadBranches(): void {
 
     this.isLoading = true;
 
-    this.reportService.getBranchTasks(this.selectedBranchId!, this.fromDate, this.toDate)
+    this.reportService.getBranchTasks(this.selectedBranchId!, this.fromDate, this.toDate, this.status)
       .subscribe({
         next: (res) => {
           const data = res.data ?? [];
@@ -176,7 +179,8 @@ loadBranches(): void {
       ExportType.Pdf,
       this.selectedBranchId!,
       this.fromDate,
-      this.toDate
+      this.toDate,
+      this.status
     ).subscribe({
       next: (blob) => this.downloadBlob(blob, 'branch-tasks-report.pdf'),
       error: () => this.toastr.error(this.translate.instant('COMMON.ERROR_LOADING_DATA'))
@@ -195,7 +199,8 @@ loadBranches(): void {
       ExportType.Excel,
       this.selectedBranchId!,
       this.fromDate,
-      this.toDate
+      this.toDate,
+      this.status
     ).subscribe({
       next: (blob) => this.downloadBlob(blob, 'branch-tasks-report.xlsx'),
       error: () => this.toastr.error(this.translate.instant('COMMON.ERROR_LOADING_DATA'))

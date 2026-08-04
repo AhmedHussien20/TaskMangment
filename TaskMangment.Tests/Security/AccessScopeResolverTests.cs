@@ -257,6 +257,33 @@ public class AccessScopeResolverTests
     }
 
     [Fact]
+    public void FilterEmployees_ManagerScoped_RestrictedType_IsTypeAndActorBranch()
+    {
+        var employees = new List<Employee>
+        {
+            new() { Id = 1, CompanyId = 10, BranchId = 5, EmployeeTypeId = 3, IsActive = true }, // accounting in home
+            new() { Id = 2, CompanyId = 10, BranchId = 9, EmployeeTypeId = 3, IsActive = true }, // accounting other branch
+            new() { Id = 3, CompanyId = 10, BranchId = 5, EmployeeTypeId = 1, IsActive = true }, // other type in home
+        }.AsQueryable();
+
+        var scope = new ResolvedAccessScope
+        {
+            EmployeeId = 100,
+            CompanyId = 10,
+            OwnBranchId = 5,
+            Kind = AccessScopeKind.ManagerScoped,
+            BranchIds = [],
+            EmployeeTypeIds = [3],
+            BranchRestrictedEmployeeTypeIds = [3],
+            SeesAllTypesInBranchScope = false
+        };
+
+        var result = CreateSut().FilterEmployees(employees, scope).Select(e => e.Id).OrderBy(x => x).ToList();
+
+        Assert.Equal(new[] { 1 }, result);
+    }
+
+    [Fact]
     public void FilterEmployees_SelfOnly_ReturnsActorOnly()
     {
         var employees = new List<Employee>

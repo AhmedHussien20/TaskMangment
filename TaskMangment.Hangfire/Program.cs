@@ -100,6 +100,21 @@ if (args.Contains("--seed-email-templates-only", StringComparer.OrdinalIgnoreCas
     return;
 }
 
+// One-shot: schema migrate + email templates + permission catalog/role packs, then exit.
+if (args.Contains("--sync-db", StringComparer.OrdinalIgnoreCase))
+{
+    using (var scope = app.Services.CreateScope())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        Console.WriteLine("Applying pending EF migrations...");
+        await db.Database.MigrateAsync();
+        var migrator = scope.ServiceProvider.GetRequiredService<RolePermissionPackMigrator>();
+        await migrator.MigrateAsync();
+    }
+    Console.WriteLine("DB sync completed (schema + email templates + permissions).");
+    return;
+}
+
 var defaultCulture = new CultureInfo("ar");
 
 CultureInfo.DefaultThreadCurrentCulture = defaultCulture;

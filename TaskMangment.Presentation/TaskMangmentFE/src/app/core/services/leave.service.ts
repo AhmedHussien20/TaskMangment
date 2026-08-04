@@ -66,6 +66,10 @@ export class LeaveService {
     });
   }
 
+  if (req.viewScopedLeaves === true || req.viewScopedLeaves === 'true' || req.viewScopedLeaves === 'scoped') {
+    params.push('viewScopedLeaves=true');
+  }
+
   return params.join('&');
 }
 }

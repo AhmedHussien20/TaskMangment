@@ -18,6 +18,7 @@ import { BranchService } from 'app/core/services/branch.service';
 import { RoleService } from 'app/core/services/role.service';
 import { GenericTableComponent, TableColumn } from 'app/shared/components/generic-table/generic-table.component';
 import { PageHeaderComponent } from 'app/shared/components/page-header/page-header.component';
+import { ReportStatusFilterComponent } from '../shared/report-status-filter.component';
 
 @Component({
   selector: 'app-employee-total-discounts',
@@ -29,7 +30,8 @@ import { PageHeaderComponent } from 'app/shared/components/page-header/page-head
     TranslateModule,
     GenericTableComponent,
     PageHeaderComponent,
-    DatePickerComponent
+    DatePickerComponent,
+    ReportStatusFilterComponent
   ],
   templateUrl: './employee-total-discounts.component.html',
   styleUrls: ['./employee-total-discounts.component.scss']
@@ -58,6 +60,7 @@ export class EmployeeTotalDiscountsComponent implements OnInit {
   selectedRoleId?: number;
   fromDate?: string;
   toDate?: string;
+  status?: string;
 
   isLoading = false;
 
@@ -127,7 +130,7 @@ export class EmployeeTotalDiscountsComponent implements OnInit {
 
     this.isLoading = true;
     this.reportService
-      .getEmployeeTotalDiscounts(this.selectedBranchId, this.selectedRoleId, this.selectedRoleTitle, this.fromDate, this.toDate)
+      .getEmployeeTotalDiscounts(this.selectedBranchId, this.selectedRoleId, this.selectedRoleTitle, this.fromDate, this.toDate, this.status)
       .subscribe({
         next: (res) => {
           this.rows = res.data ?? [];
@@ -167,7 +170,7 @@ export class EmployeeTotalDiscountsComponent implements OnInit {
     if (!this.validateDateRange()) return;
 
     this.reportPdfService
-      .getEmployeeTotalDiscountsPdf(exportType, this.selectedBranchId, this.selectedRoleId, this.selectedRoleTitle, this.fromDate, this.toDate)
+      .getEmployeeTotalDiscountsPdf(exportType, this.selectedBranchId, this.selectedRoleId, this.selectedRoleTitle, this.fromDate, this.toDate, this.status)
       .subscribe({
         next: (blob) => {
           const url = window.URL.createObjectURL(blob);

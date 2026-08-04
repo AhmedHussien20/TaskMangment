@@ -163,6 +163,7 @@ namespace TaskMangment.Infrastructure.Services
             var existingManager = await _branchRepository.GetAll()
                 .AnyAsync(b => b.ManagerID == dto.ManagerId || b.ResponsibleID == dto.ResponsibleId);
 
+            //edit to enable manage many branch
             if (existingManager)
                 throw new AppException(ErrorCodes.AlreadyAssigned, StatusCodes.Status400BadRequest);
 

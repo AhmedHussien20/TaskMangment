@@ -280,9 +280,13 @@ ngOnChanges(changes: SimpleChanges): void {
       });
   }
 
+  isScopeFilterKey(key: string): boolean {
+    return key === 'viewScopedTasks' || key === 'viewScopedLeaves';
+  }
+
   onFilterChange(key: string, value: any) {
     (this.searchCriteria as any)[key] = value;
-    if (key === 'viewScopedTasks') {
+    if (this.isScopeFilterKey(key)) {
       (this.searchCriteria as any).pageIndex = 1;
       this.applyFilters();
       return;
@@ -337,7 +341,7 @@ ngOnChanges(changes: SimpleChanges): void {
         if (this.isMultiSelect(key)) {
           (this.searchCriteria as any)[key] = [];
         } else {
-          (this.searchCriteria as any)[key] = (key === 'statusId') ? 0 : (key === 'viewScopedTasks') ? 'my' : null;
+          (this.searchCriteria as any)[key] = (key === 'statusId') ? 0 : (this.isScopeFilterKey(key) ? 'my' : null);
         }
 
       } else if (type === 'date') {

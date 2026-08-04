@@ -4,28 +4,12 @@
 <div class="row row-sm">
   <div class="col-md-12 col-lg-12">
     <div class="card custom-card">
-      <div class="card-body pb-0" *ngIf="canReview">
-        <div class="btn-group mb-3" role="group">
-          <button type="button" class="btn btn-sm"
-            [class.btn-primary]="listMode === 'all'"
-            [class.btn-outline-primary]="listMode !== 'all'"
-            (click)="setListMode('all')">
-            {{ 'LEAVE.ALL_REQUESTS' | translate }}
-          </button>
-          <button type="button" class="btn btn-sm"
-            [class.btn-primary]="listMode === 'pending'"
-            [class.btn-outline-primary]="listMode !== 'pending'"
-            (click)="setListMode('pending')">
-            {{ 'LEAVE.PENDING_FOR_APPROVAL' | translate }}
-          </button>
-        </div>
-      </div>
-
       <div>
         <div>
           <app-generic-table [title]="title" [breadcrumbs]="breadcrumbs" [columns]="columns" [data]="rows"
             [entries]="entries" [page]="page" [labels]="labels" [totalItems]="totalItems" [showAddButton]="canCreate"
-            [showDetailsButton]="true" [showFilters]="listMode === 'all'" [searchCriteria]="searchCriteria"
+            [showDetailsButton]="true" [showFilters]="true" [searchCriteria]="searchCriteria"
+            [extraFilterOptions]="showScopedLeaves ? leaveScopeFilterOptions : {}"
             [onSearch]="applyFilters.bind(this)" (pageChange)="onPageChange($event)" (entriesChange)="onEntriesChange($event)" (addClick)="openAdd(leaveModal)"
             (details)="openDetailsModal($event)" [addButtonLabel]="'LEAVE.ADD' | translate" [statusOptions]="status">
           </app-generic-table>

@@ -17,6 +17,7 @@ import { Permissions } from 'app/core/constants/permissions';
 import { EmployeeNgSelectComponent } from 'app/components/employee-select/employee-select.component';
 import { DatePickerComponent } from 'app/components/date-picker/date-picker.component';
 import { TaskDetailsShellComponent } from 'app/components/tasks/task-details/task-details-shell/task-details-shell.component';
+import { ReportStatusFilterComponent } from '../shared/report-status-filter.component';
 
 @Component({
   selector: 'app-tasks-discount-report',
@@ -31,6 +32,7 @@ import { TaskDetailsShellComponent } from 'app/components/tasks/task-details/tas
     EmployeeNgSelectComponent,
     DatePickerComponent,
     NgbModalModule,
+    ReportStatusFilterComponent,
   ],
   templateUrl: './tasks-discoun-report.component.html',
 })
@@ -70,14 +72,6 @@ selectedEmployeeId?: number;
       { label: 'REPORTS.OUTGOING', value: TaskMovementType.Outgoing },
       { label: 'REPORTS.INCOMING', value: TaskMovementType.Incoming }
     ];
- 
- statusOptions = [
-  { label: 'TASK.STATUS_IN_PROGRESS', value: 'InProgress' },
-  { label: 'TASK.STATUS_ARCHIVED', value: 'Archived' },
-  { label: 'TASK.STATUS_AUTOCLOSE', value: 'AutoClose' },
-  { label: 'TASK.STATUS_CLOSED', value: 'Closed' }
-
-];
 
 
 
