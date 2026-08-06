@@ -326,7 +326,11 @@ namespace TaskMangment.Infrastructure.Services
                 employee.CompanyId = CampanyId;
                 employee.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
 
+                // Need employee Id before roles; still inside UoW transaction.
                 await _employeeRepo.SaveChangesAsync();
+
+                if (dto.UpdateRoles)
+                    await SyncEmployeeRolesAsync(employee.Id, dto.RoleIds, employee.EmployeeTypeId);
 
                 if (dto.Attachments != null)
                 {
@@ -359,13 +363,11 @@ namespace TaskMangment.Infrastructure.Services
 
 
                     await _attachmentRepo.AddAsync(attachment);
-                    await _attachmentRepo.SaveChangesAsync();
-
-                    
                 }
 
+                // Single flush for roles (+ attachment) then commit — all or nothing.
+                await _employeeRepo.SaveChangesAsync();
                 await _cache.RemoveAsync("employees:");
-
                 await _uow.CommitAsync();
 
                 var fullEmployee = await _employeeRepo.GetAll(e => e.Id == employee.Id)
@@ -423,6 +425,9 @@ namespace TaskMangment.Infrastructure.Services
                 if (!string.IsNullOrWhiteSpace(dto.Password))
                     employee.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
 
+                if (dto.UpdateRoles)
+                    await SyncEmployeeRolesAsync(employee.Id, dto.RoleIds, dto.EmployeeTypeId ?? employee.EmployeeTypeId);
+
                 if (dto.Attachments != null)
                 {
                     var oldAttachment = await _attachmentRepo
@@ -453,8 +458,6 @@ namespace TaskMangment.Infrastructure.Services
                         oldAttachment.BlobUrl = newBlobUrl;
                         oldAttachment.BlobUploadedAt = DateTime.UtcNow;
                         oldAttachment.IsUploadedToBlob = true;
-
-                        await _attachmentRepo.SaveChangesAsync();
                     }
                     else
                     {
@@ -474,13 +477,12 @@ namespace TaskMangment.Infrastructure.Services
                         };
 
                         await _attachmentRepo.AddAsync(attachment);
-                        await _attachmentRepo.SaveChangesAsync();
                     }
                 }
 
+                // One SaveChanges for employee + roles (+ attachment), then UoW commit.
                 await _employeeRepo.SaveChangesAsync();
                 await _cache.RemoveAsync("employees:");
-
                 await _uow.CommitAsync();
 
                 if (!string.IsNullOrWhiteSpace(oldBlobUrl) &&
@@ -560,6 +562,84 @@ namespace TaskMangment.Infrastructure.Services
                 .ToListAsync();
 
             return ApiResponse<List<FunctionCodeEnumDto>>.Ok(values);
+        }
+
+        private const int MaxRolesPerEmployee = 2;
+
+        /// <summary>
+        /// Optional role assignment on create/update. Empty list clears active roles.
+        /// </summary>
+        private async Task SyncEmployeeRolesAsync(int employeeId, List<int>? roleIds, int? employeeTypeId)
+        {
+            var desired = (roleIds ?? new List<int>())
+                .Where(id => id > 0)
+                .Distinct()
+                .ToList();
+
+            if (desired.Count > MaxRolesPerEmployee)
+                throw new AppException(ErrorCodes.EmployeeMaxRolesExceeded, StatusCodes.Status400BadRequest);
+
+            if (desired.Count > 0)
+            {
+                var roles = await _roleRepo
+                    .GetAll(r => desired.Contains(r.Id) && !r.IsDeleted)
+                    .Select(r => new
+                    {
+                        r.Id,
+                        r.RequiresEmployeeTypeScope,
+                        r.EmployeeTypeId
+                    })
+                    .ToListAsync();
+
+                if (roles.Count != desired.Count)
+                    throw new AppException(ErrorCodes.RoleNotFound, StatusCodes.Status400BadRequest);
+
+                foreach (var role in roles)
+                {
+                    if (!role.RequiresEmployeeTypeScope)
+                        continue;
+
+                    if (!role.EmployeeTypeId.HasValue || role.EmployeeTypeId.Value <= 0)
+                        throw new AppException(ErrorCodes.RoleEmployeeTypeRequired, StatusCodes.Status400BadRequest);
+
+                    if (employeeTypeId != role.EmployeeTypeId)
+                        throw new AppException(ErrorCodes.EmployeeTypeMismatch, StatusCodes.Status400BadRequest);
+                }
+            }
+
+            var existing = await _employeeRoleRepo
+                .GetAll(er => er.EmployeeId == employeeId && !er.IsDeleted)
+                .ToListAsync();
+
+            foreach (var er in existing)
+            {
+                if (desired.Contains(er.RoleId))
+                {
+                    er.IsAssigned = true;
+                    er.IsDeleted = false;
+                    er.DeletedDate = null;
+                    er.ModifiedDate = DateTime.UtcNow;
+                }
+                else if (er.IsAssigned)
+                {
+                    er.IsAssigned = false;
+                    er.ModifiedDate = DateTime.UtcNow;
+                }
+            }
+
+            var existingRoleIds = existing.Select(er => er.RoleId).ToHashSet();
+            foreach (var roleId in desired.Where(id => !existingRoleIds.Contains(id)))
+            {
+                await _employeeRoleRepo.AddAsync(new EmployeeRole
+                {
+                    EmployeeId = employeeId,
+                    RoleId = roleId,
+                    IsAssigned = true,
+                    CreatedDate = DateTime.UtcNow
+                });
+            }
+
+            // No SaveChanges here — caller saves once then _uow.CommitAsync().
         }
 
 

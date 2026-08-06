@@ -141,6 +141,9 @@
   <data name="TASK_ASSIGNED_NOTIFICATION" xml:space="preserve">
     <value>Task assigned to {2} - branch {3}: task number {0} titled {1}</value>
   </data>
+  <data name="TASK_ASSIGNED_COMMENT_REQUIREMENT" xml:space="preserve">
+    <value>Please add at least {0} comment(s) every {1} day(s).</value>
+  </data>
   <data name="TASK_UNASSIGNED_NOTIFICATION" xml:space="preserve">
     <value>{2} - branch {3} was removed from task number {0} titled {1}</value>
   </data>

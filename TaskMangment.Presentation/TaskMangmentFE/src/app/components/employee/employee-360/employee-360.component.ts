@@ -15,6 +15,7 @@ import { ToastrService } from 'ngx-toastr';
 import { PageHeaderComponent } from 'app/shared/components/page-header/page-header.component';
 import { GenericTableComponent, TableColumn } from 'app/shared/components/generic-table/generic-table.component';
 import { TaskCreateUpdateComponent } from 'app/components/tasks/task-create-update/task-create-update.component';
+import { EmployeeCreateUpdateComponent } from 'app/components/employee/employee-create-update/employee-create-update.component';
 import { TaskDetailsShellComponent } from 'app/components/tasks/task-details/task-details-shell/task-details-shell.component';
 import {
   Employee360TaskFilter,
@@ -84,6 +85,7 @@ export type ChartOptions = {
     PageHeaderComponent,
     GenericTableComponent,
     TaskCreateUpdateComponent,
+    EmployeeCreateUpdateComponent,
     MyDatePipe,
     DatePickerComponent
   ],
@@ -254,6 +256,7 @@ export class Employee360Component implements OnInit {
   breadcrumbs = ['MENU.HOME', 'MENU.EMPLOYEES', 'EMPLOYEE.LIST_TITLE', 'EMPLOYEE_360.TITLE'];
   activeitem = 'EMPLOYEE_360.TITLE';
   modalKey = 0;
+  employeeEditKey = 0;
   emptySearchCriteria: SearchCriteria = {
     searchKey: '',
     pageIndex: 1,
@@ -797,7 +800,12 @@ export class Employee360Component implements OnInit {
 
   openCreateTask(modal: any): void {
     this.modalKey++;
-    this.modalService.open(modal, { centered: true, backdrop: true, size: 'lg' });
+    this.modalService.open(modal, {
+      centered: true,
+      backdrop: 'static',
+      keyboard: false,
+      size: 'xl'
+    });
   }
 
   onTaskCreated(): void {
@@ -815,8 +823,20 @@ export class Employee360Component implements OnInit {
     window.location.href = `mailto:${email}`;
   }
 
-  goToEdit(): void {
-    this.router.navigate(['/employee/edit', this.employeeId]);
+  goToEdit(modal: any): void {
+    this.employeeEditKey++;
+    this.modalService.open(modal, {
+      centered: true,
+      backdrop: 'static',
+      keyboard: false,
+      size: 'xl',
+      windowClass: 'effect-scale'
+    });
+  }
+
+  onEmployeeUpdated(): void {
+    this.modalService.dismissAll();
+    this.load360();
   }
 
   timelineIcon(type: string): string {

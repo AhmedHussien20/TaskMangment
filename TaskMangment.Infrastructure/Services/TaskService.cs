@@ -249,6 +249,25 @@ namespace TaskMangment.Infrastructure.Services
 
             }
 
+            var pageTaskIds = list.Select(t => t.Id).ToList();
+            if (pageTaskIds.Count > 0)
+            {
+                var unreadCounts = await _notificationRepo.GetAll()
+                    .Where(n => n.UserId == employeeId
+                        && !n.IsRead
+                        && n.TaskId != null
+                        && pageTaskIds.Contains(n.TaskId.Value))
+                    .GroupBy(n => n.TaskId!.Value)
+                    .Select(g => new { TaskId = g.Key, Count = g.Count() })
+                    .ToListAsync();
+
+                var unreadMap = unreadCounts.ToDictionary(x => x.TaskId, x => x.Count);
+                foreach (var dto in dtos)
+                {
+                    dto.UnreadNotificationsCount = unreadMap.TryGetValue(dto.Id, out var count) ? count : 0;
+                }
+            }
+
             var summary = new TaskSummaryDto
             {
                 MyTasks = await _taskRepo.CountAsync(t =>
@@ -312,6 +331,10 @@ namespace TaskMangment.Infrastructure.Services
                 .CountAsync();
 
             dto.PendingRequestsCount = pendingExtensions + pendingCloses;
+
+            dto.UnreadNotificationsCount = await _notificationRepo.GetAll()
+                .Where(n => n.UserId == employeeId && !n.IsRead && n.TaskId == task.Id)
+                .CountAsync();
 
             dto.AssignEmployee = task.Assignments
                 .Where(a => a.IsActive && a.Employee.IsActive)
@@ -1038,6 +1061,14 @@ namespace TaskMangment.Infrastructure.Services
             if (subjects.Count == 0)
                 return;
 
+            var taskMeta = await _taskRepo.GetAll(t => t.Id == taskId)
+                .Select(t => new
+                {
+                    PeriodDays = t.CommentAllowPeriodDays.HasValue ? (int?)t.CommentAllowPeriodDays.Value : null,
+                    t.MinCommentsPerPeriod
+                })
+                .FirstOrDefaultAsync();
+
             var names = await _employeeRepo.GetAll(e => subjects.Contains(e.Id))
                 .Select(e => new { e.Id, e.FullName, BranchName = e.Branch != null ? e.Branch.Name : null })
                 .ToListAsync();
@@ -1054,7 +1085,15 @@ namespace TaskMangment.Infrastructure.Services
                 var subject = names.FirstOrDefault(n => n.Id == subjectId);
                 var name = subject?.FullName ?? "-";
                 await _eventDispatcher.PublishAsync(
-                    new TaskAssignedEvent(taskId, taskTitle, subjectId, name, recipients, subject?.BranchName));
+                    new TaskAssignedEvent(
+                        taskId,
+                        taskTitle,
+                        subjectId,
+                        name,
+                        recipients,
+                        subject?.BranchName,
+                        taskMeta?.PeriodDays,
+                        taskMeta?.MinCommentsPerPeriod ?? 1));
             }
         }
 

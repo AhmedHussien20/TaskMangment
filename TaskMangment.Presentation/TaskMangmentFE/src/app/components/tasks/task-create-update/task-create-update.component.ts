@@ -131,6 +131,14 @@ export class TaskCreateUpdateComponent implements OnInit {
       ],
       defaultValue: CommentAllowPeriod.Daily
     },
+    {
+      type: 'input',
+      inputType: 'number',
+      label: 'TASK.MIN_COMMENTS_PER_PERIOD',
+      name: 'minCommentsPerPeriod',
+      validations: { required: true, min: 1, max: 30 },
+      defaultValue: 1
+    },
 
     {
       type: 'input',
@@ -241,6 +249,7 @@ export class TaskCreateUpdateComponent implements OnInit {
     status: [{ value: TaskStatus.New, disabled: !this.isEdit }, Validators.required], 
       dueDate: [null, [Validators.required, weekendDueDateValidator(), notPastDueDateValidator()]],
       commentAllowPeriodDays: [CommentAllowPeriod.Daily, Validators.required],
+      minCommentsPerPeriod: [1, [Validators.required, Validators.min(1), Validators.max(30)]],
       maxWarningsBeforeDiscount: [3, [Validators.required, Validators.min(0), Validators.max(3)]],
       penaltyOnAutoClose: [50, [Validators.required, decimalValidator(), penaltyAmountValidator()]],
       penaltyOnStopComment : [50, [Validators.required, decimalValidator(), penaltyAmountValidator()]],

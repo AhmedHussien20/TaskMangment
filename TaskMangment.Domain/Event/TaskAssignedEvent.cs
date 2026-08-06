@@ -12,6 +12,8 @@ namespace TaskMangment.Domain.Event
         /// <summary>Subject + role listeners (excludes actor).</summary>
         public List<int> RecipientIds { get; }
         public string BranchName { get; }
+        public int? CommentAllowPeriodDays { get; }
+        public int MinCommentsPerPeriod { get; }
 
         public TaskAssignedEvent(
             int taskId,
@@ -19,7 +21,9 @@ namespace TaskMangment.Domain.Event
             int subjectEmployeeId,
             string subjectEmployeeName,
             List<int> recipientIds,
-            string? branchName = null)
+            string? branchName = null,
+            int? commentAllowPeriodDays = null,
+            int minCommentsPerPeriod = 1)
         {
             TaskId = taskId;
             TaskTitle = taskTitle;
@@ -27,6 +31,8 @@ namespace TaskMangment.Domain.Event
             SubjectEmployeeName = subjectEmployeeName ?? string.Empty;
             RecipientIds = recipientIds ?? new List<int>();
             BranchName = string.IsNullOrWhiteSpace(branchName) ? "-" : branchName;
+            CommentAllowPeriodDays = commentAllowPeriodDays;
+            MinCommentsPerPeriod = minCommentsPerPeriod < 1 ? 1 : minCommentsPerPeriod;
         }
 
         /// <summary>Backward-compatible alias used by older call sites/handlers.</summary>

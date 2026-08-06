@@ -50,6 +50,7 @@ hasNewDate = false;
       title: ['', Validators.required],
       description: [''],
       commentAllowPeriodDays: [''],
+      minCommentsPerPeriod: [1],
       maxWarningsBeforeDiscount: [3],
       penaltyOnAutoClose: [0],
       penaltyOnStopComment: [0],

@@ -27,6 +27,12 @@ namespace TaskMangment.Application.Behaviors
             var subjectName = string.IsNullOrWhiteSpace(ev.SubjectEmployeeName) ? "-" : ev.SubjectEmployeeName;
             var message = string.Format(messageTemplate, ev.TaskId, ev.TaskTitle, subjectName, ev.BranchName);
 
+            if (ev.CommentAllowPeriodDays.HasValue && ev.CommentAllowPeriodDays.Value > 0)
+            {
+                var requirementTemplate = _localizer["TASK_ASSIGNED_COMMENT_REQUIREMENT"];
+                message = $"{message}\n{string.Format(requirementTemplate, ev.MinCommentsPerPeriod, ev.CommentAllowPeriodDays.Value)}";
+            }
+
             foreach (var empId in ev.RecipientIds)
             {
                 await _notificationService.SendAsync(

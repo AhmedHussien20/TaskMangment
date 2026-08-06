@@ -51,6 +51,8 @@ namespace TaskMangment.Infrastructure.Services
             if (string.IsNullOrWhiteSpace(_settings.From))
                 throw new Exception("From email is missing in EmailSettings.");
 
+            body = EnsureNoReplyFooter(body);
+
             if (!string.IsNullOrWhiteSpace(_settings.BrevoApiKey))
             {
                 await SendViaBrevoApiAsync(to, subject, body, attachments);
@@ -64,6 +66,23 @@ namespace TaskMangment.Infrastructure.Services
             }
 
             throw new Exception("Email is not configured. Set EmailSettings BrevoApiKey or Host/User/Password.");
+        }
+
+        private const string NoReplyFooterMarker = "يُرجى عدم الرد على هذه الرسالة";
+
+        private static string EnsureNoReplyFooter(string body)
+        {
+            if (string.IsNullOrWhiteSpace(body))
+                return body;
+
+            if (body.Contains(NoReplyFooterMarker, StringComparison.Ordinal))
+                return body;
+
+            const string footerHtml = @"
+<div style='margin-top:20px;padding-top:12px;border-top:1px solid #e5e7eb;font-size:11px;color:#6b7280;line-height:1.6;text-align:center'>
+  تم إرسال هذه الرسالة تلقائيًا من النظام لإشعارك بالمهمة أو التنبيه. يُرجى عدم الرد على هذه الرسالة، واستخدام النظام لمتابعة المهمة أو إضافة أي تعليق. شكرًا لك.
+</div>";
+            return body + footerHtml;
         }
 
         private async Task SendViaSmtpAsync(string to, string subject, string body, List<EmailAttachment>? attachments)

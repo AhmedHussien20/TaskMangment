@@ -1,6 +1,7 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using TaskMangment.Application.Common.Notification;
+using TaskMangment.Application.DTOs;
 using TaskMangment.Domain.Entities;
 
 namespace TaskMangment.Application.Interfaces.Services
@@ -18,7 +19,9 @@ namespace TaskMangment.Application.Interfaces.Services
             string? whatsAppMessage = null,
             IReadOnlyList<WhatsAppAttachment>? whatsAppAttachments = null);
         Task<List<Notification>> GetUnreadAsync(int userId);
+        Task<List<TaskNotificationDto>> GetByTaskAsync(int userId, int taskId);
         Task MarkAsReadAsync(int notificationId);
         Task MarkAllAsReadAsync(int userId);
+        Task MarkAsReadByTaskAsync(int userId, int taskId);
     }
 }

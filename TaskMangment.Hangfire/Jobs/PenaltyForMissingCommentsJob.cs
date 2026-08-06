@@ -75,6 +75,9 @@ namespace TaskMangment.Hangfire.Jobs
                 var periodDays = (int)task.CommentAllowPeriodDays!.Value;
                 if (periodDays < 1) periodDays = 1;
 
+                var minCommentsRequired = task.MinCommentsPerPeriod;
+                if (minCommentsRequired < 1) minCommentsRequired = 1;
+
                 var maxWarningsBeforeDiscount = task.MaxWarningsBeforeDiscount;
                 if (maxWarningsBeforeDiscount < 0) maxWarningsBeforeDiscount = 0;
                 if (maxWarningsBeforeDiscount > 3) maxWarningsBeforeDiscount = 3;
@@ -144,23 +147,30 @@ namespace TaskMangment.Hangfire.Jobs
                     if (exemptIds.Contains(employeeId))
                         continue;
 
-                    var lastComment = await _db.TaskComments
-                        .Where(c => c.TaskId == task.Id && c.EmployeeId == employeeId && !c.IsDeleted)
-                        .OrderByDescending(c => c.CreatedDate)
-                        .FirstOrDefaultAsync();
+                    // Rolling allow-period: when the employee completes the minimum
+                    // (even late), the next period starts from that completion date.
+                    // Example: deadline 2 Aug, 3rd comment on 5 Aug → next last chance = 12 Aug.
+                    var commentDates = await _db.TaskComments
+                        .Where(c =>
+                            c.TaskId == task.Id &&
+                            c.EmployeeId == employeeId &&
+                            !c.IsDeleted)
+                        .Select(c => c.CreatedDate)
+                        .ToListAsync();
 
-                    var baseDate = assignment.AssignedAt.Date;
-
-                    if (lastComment != null && lastComment.CreatedDate.Date > baseDate)
-                        baseDate = lastComment.CreatedDate.Date;
-
-                    var dueDate = baseDate.AddDays(periodDays);
-
-                    if (dueDate > yesterday)
+                    if (!TryGetOpenCommentCycle(
+                            assignment.AssignedAt.Date,
+                            periodDays,
+                            minCommentsRequired,
+                            commentDates,
+                            today,
+                            yesterday,
+                            out var lastChanceDate,
+                            out _))
+                    {
+                        // Still inside allow period, or minimum already met for current cycle.
                         continue;
-
-                    if (lastComment != null && lastComment.CreatedDate.Date == dueDate)
-                        continue;
+                    }
 
                     var hasLeave = await _db.Leaves
                       .Where(l => l.EmployeeId == employeeId &&
@@ -199,6 +209,12 @@ namespace TaskMangment.Hangfire.Jobs
                         }
                     }
 
+                    // One auto sanction per job calendar day (Arab local).
+                    var localDayStart = new DateTime(today.Year, today.Month, today.Day, 0, 0, 0, DateTimeKind.Unspecified);
+                    var localNextDay = localDayStart.AddDays(1);
+                    var utcDayStart = TimeZoneInfo.ConvertTimeToUtc(localDayStart, tz);
+                    var utcNextDay = TimeZoneInfo.ConvertTimeToUtc(localNextDay, tz);
+
                     var existingAutoWarningCount = await _db.Warnings.CountAsync(w =>
                         w.TaskId == task.Id &&
                         w.IssuedEmployeeId == employeeId &&
@@ -214,8 +230,8 @@ namespace TaskMangment.Hangfire.Jobs
                             w.IssuedEmployeeId == employeeId &&
                             w.AutoWarning &&
                             !w.IsDeleted &&
-                            w.ViolationDate != null &&
-                            w.ViolationDate.Value.Date == yesterday);
+                            w.IssuedAt >= utcDayStart &&
+                            w.IssuedAt < utcNextDay);
 
                         if (alreadyWarned)
                             continue;
@@ -228,7 +244,7 @@ namespace TaskMangment.Hangfire.Jobs
                             Reason = StopCommentWarningReason,
                             IssuedAt = DateTime.UtcNow,
                             AutoWarning = true,
-                            ViolationDate = yesterday
+                            ViolationDate = lastChanceDate
                         };
 
                         await _db.Warnings.AddAsync(warning);
@@ -244,7 +260,8 @@ namespace TaskMangment.Hangfire.Jobs
                         d.EmployeeId == employeeId &&
                         d.discountType == DiscountType.StopCommentDiscount &&
                         d.AutoDiscount &&
-                        d.ViolationDate.Date == yesterday);
+                        d.CreatedDate >= utcDayStart &&
+                        d.CreatedDate < utcNextDay);
 
                     if (alreadyDiscounted)
                         continue;
@@ -258,7 +275,7 @@ namespace TaskMangment.Hangfire.Jobs
                         AutoDiscount = true,
                         CreatedDate = DateTime.UtcNow,
                         discountType = DiscountType.StopCommentDiscount,
-                        ViolationDate = yesterday
+                        ViolationDate = lastChanceDate
                     };
 
                     await _db.Discounts.AddAsync(discount);
@@ -377,6 +394,67 @@ namespace TaskMangment.Hangfire.Jobs
                     // intentionally ignored (same as original behavior)
                 }
             }
+        }
+
+        /// <summary>
+        /// Resolves the current comment allow-cycle.
+        /// Returns true only when the cycle deadline has passed (as of yesterday)
+        /// and the employee is still under the minimum — i.e. should warn/penalize.
+        /// When the minimum is met (on time or late), the next cycle starts from that
+        /// completion date (next last-chance = completionDate + periodDays).
+        /// </summary>
+        private static bool TryGetOpenCommentCycle(
+            DateTime assignedAt,
+            int periodDays,
+            int minCommentsRequired,
+            List<DateTime> commentDates,
+            DateTime today,
+            DateTime yesterday,
+            out DateTime lastChanceDate,
+            out int commentCountInCycle)
+        {
+            lastChanceDate = default;
+            commentCountInCycle = 0;
+
+            if (periodDays < 1) periodDays = 1;
+            if (minCommentsRequired < 1) minCommentsRequired = 1;
+
+            var orderedDates = commentDates
+                .Select(d => d.Date)
+                .OrderBy(d => d)
+                .ToList();
+
+            var cycleStart = assignedAt.Date;
+            var startExclusive = false; // first cycle includes assignment day
+
+            // Advance through completed cycles (minimum already met).
+            while (true)
+            {
+                lastChanceDate = cycleStart.AddDays(periodDays);
+
+                var datesInCycle = orderedDates
+                    .Where(d =>
+                        d <= today &&
+                        (startExclusive ? d > cycleStart : d >= cycleStart))
+                    .ToList();
+
+                commentCountInCycle = datesInCycle.Count;
+
+                if (commentCountInCycle < minCommentsRequired)
+                    break;
+
+                // Nth comment that completed this cycle → next cycle starts there.
+                var completionDate = datesInCycle[minCommentsRequired - 1];
+                cycleStart = completionDate;
+                startExclusive = true; // next comments must be after completion day
+            }
+
+            // Still inside allow period (deadline not reached yet as of yesterday).
+            if (yesterday < lastChanceDate)
+                return false;
+
+            // Deadline passed and still under minimum → sanction.
+            return commentCountInCycle < minCommentsRequired;
         }
     }
 }

@@ -22,6 +22,8 @@ export interface FormFieldConfig {
   
   selectType?: 'simple' | 'employee' | 'custom';
   multiple?: boolean;
+  /** ng-select: max items when multiple is true */
+  maxSelectedItems?: number;
 
   prefix?: string;
   placeholder?: string;

@@ -15,6 +15,7 @@ import { AuthService } from 'app/core/services/auth.service';
 import { CommonModule } from '@angular/common';
 import { PercentageModalComponent } from '../actions/task-percentage/percentage-modal/percentage-modal.component';
 import { Permissions } from 'app/core/constants/permissions';
+import { NotificationApiService } from 'app/core/services/notification.service';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -33,6 +34,7 @@ export class TaskDetailsShellComponent implements OnInit, OnChanges, OnDestroy {
 
   @Input() taskId!: number;
   @Input() createdByMe: boolean = false;
+  @Input() initialTab?: string;
   requireUploadFile = false;
 
   readonly = false;
@@ -45,21 +47,29 @@ export class TaskDetailsShellComponent implements OnInit, OnChanges, OnDestroy {
   canSendPenalty = false;
   canSetPercentage = false;
   canReviewRequests = false;
+  isClosing = false;
 
   private refreshSub?: Subscription;
+  /** True after the مستجدات tab was opened (used by list on dismiss). */
+  updatesViewed = false;
+  private markedSeen = false;
 
   constructor(
     private modal: NgbModal,
     private refreshService: TaskDetailsRefreshService,
     private taskService: TaskService,
     public modall: NgbActiveModal,
-    private auth: AuthService
+    private auth: AuthService,
+    private notificationService: NotificationApiService
   ) { }
 
   taskInfo: TaskGet | null = null;
   private loadedTaskId: number | null = null;
 
   ngOnInit(): void {
+    if (this.initialTab === 'updates') {
+      this.updatesViewed = true;
+    }
     this.refreshPermissions();
     this.ensureTaskLoaded();
     this.refreshSub = this.refreshService.refresh$.subscribe(() => {
@@ -69,6 +79,53 @@ export class TaskDetailsShellComponent implements OnInit, OnChanges, OnDestroy {
 
   ngOnDestroy(): void {
     this.refreshSub?.unsubscribe();
+    // Escape / backdrop dismiss path
+    this.markTaskUpdatesSeen(false);
+  }
+
+  onUpdatesViewed(): void {
+    this.updatesViewed = true;
+  }
+
+  closeDetails(): void {
+    if (this.isClosing) return;
+
+    if (!this.shouldMarkUpdatesSeen()) {
+      this.modall.dismiss();
+      return;
+    }
+
+    this.isClosing = true;
+    this.markTaskUpdatesSeen(true);
+  }
+
+  private shouldMarkUpdatesSeen(): boolean {
+    return this.updatesViewed
+      && !this.markedSeen
+      && !!this.taskId
+      && (this.taskInfo?.unreadNotificationsCount ?? 0) > 0;
+  }
+
+  private markTaskUpdatesSeen(closeModal: boolean): void {
+    if (!this.shouldMarkUpdatesSeen()) {
+      if (closeModal) this.modall.dismiss();
+      return;
+    }
+
+    this.markedSeen = true;
+    this.notificationService.markAsReadByTask(this.taskId).subscribe({
+      next: () => {
+        this.notificationService.notifyUnreadChanged();
+        if (closeModal) {
+          this.modall.close({ markedSeen: true, taskId: this.taskId });
+        }
+      },
+      error: () => {
+        this.markedSeen = false;
+        this.isClosing = false;
+        if (closeModal) this.modall.dismiss();
+      }
+    });
   }
 
   ngOnChanges(changes: SimpleChanges) {

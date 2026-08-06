@@ -71,6 +71,13 @@ deepSearchComp?: TasksEmployeeDeepSearchComponent;
   isLoading = false;
 
   columns: TableColumn[] = [
+    {
+      key: 'unreadNotificationsCount',
+      label: 'TASK.UPDATES_TAB',
+      type: 'notification-count',
+      icon: 'bi bi-bell',
+      width: '56px'
+    },
     { key: 'id', label: 'TASK.ID' },
     { key: 'title', label: 'TASK.TITLE' },
     { key: 'assignedByName', label: 'TASK.ASSIGNED_BY' },
@@ -370,7 +377,7 @@ openCopy(id: number, modal: any) {
     this.loadData();
   }
 
- openDetails(taskId: number) {
+ openDetails(taskId: number, initialTab?: string) {
   const task = this.rows.find(x => x.id === taskId);
 
   // Verify access before opening popup so users can't open tasks that aren't theirs.
@@ -387,12 +394,41 @@ openCopy(id: number, modal: any) {
       modalRef.componentInstance.readonly = true;
       modalRef.componentInstance.createdByMe =
         res?.data?.createdByMe ?? task?.createdByMe ?? false;
+      if (initialTab) {
+        modalRef.componentInstance.initialTab = initialTab;
+      }
+
+      modalRef.result.then(
+        (result) => {
+          if (result?.markedSeen) {
+            this.clearUnreadCount(taskId);
+          }
+        },
+        () => {
+          // Dismissed (e.g. Escape) — mark runs in shell destroy; clear badge locally if updates were viewed.
+          if (initialTab === 'updates' || modalRef.componentInstance?.updatesViewed) {
+            this.clearUnreadCount(taskId);
+          }
+        }
+      );
     },
     error: () => {
       this.toastr.error(this.translate.instant('COMMON.ERROR_LOADING_DATA'));
     }
   });
 }
+
+  onIconAction(e: { type: string; row: TaskGet }) {
+    if (e.type === 'unreadNotificationsCount') {
+      this.openDetails(e.row.id, 'updates');
+    }
+  }
+
+  private clearUnreadCount(taskId: number): void {
+    this.rows = this.rows.map(r =>
+      r.id === taskId ? { ...r, unreadNotificationsCount: 0 } : r
+    );
+  }
 
   confirmDelete(taskId: number) {
     Swal.fire({

@@ -19,8 +19,8 @@ namespace TaskMangment.Infrastructure.Seeding
         const string LayoutFooter = @"
     </div>
     <div style='background:#f8fafc;padding:14px 20px;text-align:center;font-size:11px;color:#6b7280;border-top:1px solid #e5e7eb;line-height:1.6'>
-      هذا البريد مرسل تلقائيًا من نظام إدارة المهام – يرجى عدم الرد<br/>
-      This is an automated message from Task Management System – please do not reply
+      تم إرسال هذه الرسالة تلقائيًا من النظام لإشعارك بالمهمة أو التنبيه. يُرجى عدم الرد على هذه الرسالة، واستخدام النظام لمتابعة المهمة أو إضافة أي تعليق. شكرًا لك.<br/>
+      This message was sent automatically by the system. Please do not reply; use the system to follow up on the task or add any comment. Thank you.
     </div>
   </div>
 </div>";
@@ -41,14 +41,16 @@ namespace TaskMangment.Infrastructure.Seeding
             <p style='margin:0 0 14px'>تم إسناد المهمة لـ <strong>{{EmployeeName}}</strong>: مهمة رقم {{TaskNumberLink}} بعنوان <strong>{{TaskTitle}}</strong>.</p>
             <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
               <div style='margin-bottom:6px'><strong>الفرع:</strong> {{BranchName}}</div>
-              <div><strong>تاريخ الاستحقاق:</strong> {{DueDate}}</div>
+              <div style='margin-bottom:6px'><strong>تاريخ الاستحقاق:</strong> {{DueDate}}</div>
+              <div><strong>الحد الأدنى للتعليقات:</strong> {{MinCommentsPerPeriod}} تعليق خلال كل {{CommentAllowPeriodDays}} يوم</div>
             </div>
             <hr style='border:none;border-top:1px solid #e5e7eb;margin:20px 0'/>
             <p style='margin:0 0 14px'><strong>Hello {{UserName}},</strong></p>
             <p style='margin:0 0 14px'>Task assigned to <strong>{{EmployeeName}}</strong>: task number {{TaskNumberLink}} titled <strong>{{TaskTitle}}</strong>.</p>
             <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
               <div style='margin-bottom:6px'><strong>Branch:</strong> {{BranchName}}</div>
-              <div><strong>Due Date:</strong> {{DueDate}}</div>
+              <div style='margin-bottom:6px'><strong>Due Date:</strong> {{DueDate}}</div>
+              <div><strong>Minimum comments:</strong> {{MinCommentsPerPeriod}} comment(s) every {{CommentAllowPeriodDays}} day(s)</div>
             </div>
             " + TaskDetailsLinkPlaceholder + LayoutFooter
             });
@@ -64,18 +66,20 @@ namespace TaskMangment.Infrastructure.Seeding
             <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
               <div style='margin-bottom:6px'><strong>الفرع:</strong> {{BranchName}}</div>
               <div style='margin-bottom:6px'><strong>الوصف:</strong> {{TaskDescription}}</div>
-              <div><strong>تاريخ الاستحقاق:</strong> {{DueDate}}</div>
+              <div style='margin-bottom:6px'><strong>تاريخ الاستحقاق:</strong> {{DueDate}}</div>
+              <div><strong>الحد الأدنى للتعليقات:</strong> {{MinCommentsPerPeriod}} تعليق خلال كل {{CommentAllowPeriodDays}} يوم</div>
             </div>
-            <p style='margin:0 0 18px'>يرجى مراجعة تفاصيل المهمة.</p>
+            <p style='margin:0 0 18px'>يرجى مراجعة تفاصيل المهمة وإضافة التعليقات المطلوبة في الفترة المحددة.</p>
             <hr style='border:none;border-top:1px solid #e5e7eb;margin:20px 0'/>
             <p style='margin:0 0 14px'><strong>Hello {{UserName}},</strong></p>
             <p style='margin:0 0 14px'>Task assigned to <strong>{{EmployeeName}}</strong>: task number {{TaskNumberLink}} titled <strong>{{TaskTitle}}</strong>.</p>
             <div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin:0 0 18px'>
               <div style='margin-bottom:6px'><strong>Branch:</strong> {{BranchName}}</div>
               <div style='margin-bottom:6px'><strong>Description:</strong> {{TaskDescription}}</div>
-              <div><strong>Due Date:</strong> {{DueDate}}</div>
+              <div style='margin-bottom:6px'><strong>Due Date:</strong> {{DueDate}}</div>
+              <div><strong>Minimum comments:</strong> {{MinCommentsPerPeriod}} comment(s) every {{CommentAllowPeriodDays}} day(s)</div>
             </div>
-            <p style='margin:0 0 18px'>Please review the task details.</p>
+            <p style='margin:0 0 18px'>Please review the task details and add the required comments within the period.</p>
             " + TaskDetailsLinkPlaceholder + LayoutFooter
             });
 

@@ -141,6 +141,7 @@
                                     }}</a>
                                 <ng-template ngbNavContent>
                                     <app-employee-create-update [isEdit]="true" [employeeId]="employeeId"
+                                        [isProfileMode]="true"
                                         (formSubmitted)="onProfileUpdated()">
                                     </app-employee-create-update>
                                 </ng-template>

@@ -41,6 +41,10 @@
         <th>{{ 'TASK.COMMENT_ALLOW_PERIOD' | translate }}</th>
         <td>{{ taskInfo?.commentAllowPeriodDays }} يوم</td>
       </tr>
+      <tr>
+        <th>{{ 'TASK.MIN_COMMENTS_PER_PERIOD' | translate }}</th>
+        <td>{{ taskInfo?.minCommentsPerPeriod ?? 1 }}</td>
+      </tr>
 
       <tr>
         <th>{{ 'TASK.MAX_WARNINGS_BEFORE_DISCOUNT' | translate }}</th>

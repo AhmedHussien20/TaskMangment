@@ -54,6 +54,23 @@
   </ng-template>
 </li>
 
+<li ngbNavItem="updates" class="nav-item">
+  <a ngbNavLink>
+    <span class="tab-link-label">
+      {{ 'TASK.UPDATES_TAB' | translate }}
+      <span *ngIf="unreadNotificationsCount > 0" class="badge rounded-pill bg-danger tab-count-badge">
+        {{ unreadNotificationsCount }}
+      </span>
+    </span>
+  </a>
+  <ng-template ngbNavContent>
+    <app-task-updates
+      [taskId]="taskId"
+      (updatesViewed)="onUpdatesViewed()">
+    </app-task-updates>
+  </ng-template>
+</li>
+
 <li ngbNavItem="audit" class="nav-item">
   <a ngbNavLink>{{ 'TASK.AUDIT' | translate }}</a>
   <ng-template ngbNavContent>

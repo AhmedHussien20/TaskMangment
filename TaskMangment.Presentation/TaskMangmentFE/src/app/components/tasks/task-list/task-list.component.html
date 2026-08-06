@@ -41,6 +41,7 @@
   [addButtonLabel]="'TASK.ADD' | translate"
   (edit)="openEdit($event, taskModal)"
   (details)="openDetails($event)"
+  (iconAction)="onIconAction($event)"
   (delete)="confirmDelete($event)"
   [disableEditFn]="disableEditRow"
   [disableDeleteFn]="disableDeleteRow"

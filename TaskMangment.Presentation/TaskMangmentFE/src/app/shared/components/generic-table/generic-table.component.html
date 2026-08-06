@@ -159,16 +159,30 @@
                         <input type="checkbox" (change)="toggleSelectAll($event)" />
                     </th>
 
-                    <th *ngFor="let col of columns" [ngStyle]="getColumnStyle(col.key)">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span (click)="sort(col.key)" class="cursor-pointer">
-                                {{ col.label | translate }}
+                    <th *ngFor="let col of columns"
+                        [ngStyle]="getColumnStyle(col.key)"
+                        [class.text-center]="isCenteredColumn(col)"
+                        [class.notification-count-col]="col.type === 'notification-count'">
+                        <div class="d-flex align-items-center"
+                            [class.justify-content-between]="!isCenteredColumn(col)"
+                            [class.justify-content-center]="isCenteredColumn(col)">
+                            <span (click)="sort(col.key)" class="cursor-pointer"
+                                [ngbTooltip]="col.type === 'notification-count' ? (col.label | translate) : null"
+                                container="body">
+                                <ng-container *ngIf="col.type === 'notification-count'; else defaultHeader">
+                                    <i [class]="col.icon || 'bi bi-bell'"></i>
+                                </ng-container>
+                                <ng-template #defaultHeader>
+                                    {{ col.label | translate }}
+                                </ng-template>
                                 <i *ngIf="sortColumn === col.key">
                                     {{ sortDirection === 'ASC' ? '↑' : '↓' }}
                                 </i>
                             </span>
 
-                            <span class="col-resizer" (mousedown)="startResize($event, col.key)"></span>
+                            <span *ngIf="col.type !== 'notification-count'"
+                                class="col-resizer"
+                                (mousedown)="startResize($event, col.key)"></span>
                         </div>
                     </th>
 
@@ -193,7 +207,11 @@
 
 
                     <!-- Columns -->
-                    <td *ngFor="let col of columns" [ngSwitch]="col.type">
+                    <td *ngFor="let col of columns"
+                        [ngSwitch]="col.type"
+                        [ngStyle]="getColumnStyle(col.key)"
+                        [class.text-center]="isCenteredColumn(col)"
+                        [class.notification-count-col]="col.type === 'notification-count'">
 
                         <!-- ASSIGNEES -->
                         <ng-container *ngSwitchCase="'assignees'">
@@ -226,6 +244,22 @@
                                 <i [class]="col.icon"></i>
                                 <span class="badge bg-info ms-1">
                                     {{ getValue(item, col.key) }}
+                                </span>
+                            </button>
+                        </ng-container>
+
+                        <!-- NOTIFICATION COUNT (compact bell + badge) -->
+                        <ng-container *ngSwitchCase="'notification-count'">
+                            <button type="button"
+                                class="notification-count-btn"
+                                [class.has-unread]="(+getValue(item, col.key) || 0) > 0"
+                                [ngbTooltip]="col.label | translate"
+                                container="body"
+                                (click)="iconAction.emit({ type: col.key, row: item })">
+                                <i [class]="col.icon || 'bi bi-bell'"></i>
+                                <span *ngIf="(+getValue(item, col.key) || 0) > 0"
+                                    class="notification-count-badge">
+                                    {{ getValue(item, col.key) > 99 ? '99+' : getValue(item, col.key) }}
                                 </span>
                             </button>
                         </ng-container>

@@ -41,7 +41,7 @@
           </div>
 
           <div class="e360-meta text-muted small mb-2">
-            <span *ngIf="profile.jobName || profile.title"><i class="bi bi-briefcase me-1"></i>{{ profile.jobName || profile.title }}</span>
+            <span *ngIf="profile.title"><i class="bi bi-briefcase me-1"></i>{{ profile.title }}</span>
             <span *ngIf="profile.departmentName"><i class="bi bi-diagram-3 me-1"></i>{{ profile.departmentName }}</span>
             <span *ngIf="profile.branchName"><i class="bi bi-geo-alt me-1"></i>{{ profile.branchName }}</span>
             <span *ngIf="data.directManager"><i class="bi bi-person-badge me-1"></i>{{ 'EMPLOYEE_360.DIRECT_MANAGER' | translate }}: {{ data.directManager.fullName }}</span>
@@ -59,7 +59,7 @@
           <button *ngIf="canCreateTask" type="button" class="btn btn-primary btn-sm" (click)="openCreateTask(taskModal)">
             <i class="bi bi-plus-lg me-1"></i>{{ 'EMPLOYEE_360.CREATE_TASK' | translate }}
           </button>
-          <button *ngIf="canEditEmployee" type="button" class="btn btn-outline-primary btn-sm" (click)="goToEdit()">
+          <button *ngIf="canEditEmployee" type="button" class="btn btn-outline-primary btn-sm" (click)="goToEdit(employeeModal)">
             <i class="bi bi-pencil-square me-1"></i>{{ 'EMPLOYEE.EDIT' | translate }}
           </button>
           <button type="button" class="btn btn-outline-secondary btn-sm" (click)="sendEmail()">
@@ -151,7 +151,7 @@
                   <div class="col-md-6">
                     <div class="panel">
                       <h6>{{ 'EMPLOYEE_360.ORG_HIERARCHY' | translate }}</h6>
-                      <div class="org-line small mb-2">{{ profile.branchName || '—' }} / {{ profile.departmentName || '—' }} / {{ profile.jobName || '—' }}</div>
+                      <div class="org-line small mb-2">{{ profile.branchName || '—' }} / {{ profile.departmentName || '—' }}</div>
                       <h6 class="mt-3">{{ 'EMPLOYEE_360.REPORTING_MANAGERS' | translate }}</h6>
                       <ul class="list-unstyled mb-0" *ngIf="data.reportingManagers?.length; else noMgr">
                         <li *ngFor="let m of data.reportingManagers" class="mb-1">
@@ -856,5 +856,17 @@
     <app-task-create-update *ngIf="modalKey" [isEdit]="false"
       [preselectedEmployeeIds]="[employeeId]" (formSubmitted)="onTaskCreated()">
     </app-task-create-update>
+  </div>
+</ng-template>
+
+<ng-template #employeeModal let-modal>
+  <div class="modal-header">
+    <h6 class="modal-title">{{ 'EMPLOYEE.EDIT' | translate }}</h6>
+    <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    <app-employee-create-update *ngIf="employeeEditKey" [isEdit]="true" [employeeId]="employeeId"
+      (formSubmitted)="onEmployeeUpdated()">
+    </app-employee-create-update>
   </div>
 </ng-template>

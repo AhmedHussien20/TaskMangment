@@ -57,6 +57,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   notificationCount = 0;
   private notificationSubscription$?: Subscription;
+  private unreadChangedSubscription$?: Subscription;
 
   get profileImage(): string {
     if (this.user?.profileImage) {
@@ -443,30 +444,10 @@ export class HeaderComponent implements OnInit, OnDestroy {
   });
 
 
-  this.notificationService.getUnread().subscribe({
-    next: (res) => {
-      const unread = res?.data ?? [];
-      unread.forEach((n: any) => {
-        if (this.notifications.some(x => x.id === n.id)) return;
+  this.loadUnreadNotifications();
 
-        this.notifications.unshift({
-          id: n.id,
-          message: n.message,
-          createdAt: new Date(n.createdDate ?? n.createdAt),
-          isRead: false,
-          link: n.link || '/pages/notifications-list',
-          type: n.taskId ? 'task' : 'other',
-          taskId: n.taskId ?? undefined
-        });
-      });
-
-      this.notificationCount =
-        this.notifications.filter(x => !x.isRead).length;
-    },
-    error: (err) => {
-      console.error('Error loading unread notifications:', err);
-    }
-  });
+  this.unreadChangedSubscription$ = this.notificationService.unreadChanged$
+    .subscribe(() => this.loadUnreadNotifications(true));
 
   this.notificationSubscription$ = this.signalR.notification$
     .pipe(filter(n => !!n))
@@ -476,7 +457,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
       const notification: HeaderNotification = {
         id: n!.id ?? 0,
         message: n!.message,
-        createdAt: new Date(n!.createdAt),
+        createdAt: n!.createdAt ? this.parseNotificationDate(n!.createdAt) : new Date(),
         isRead: false,
         link: n!.link || '/pages/notifications-list',
         type: n!.taskId ? 'task' : 'other',
@@ -484,12 +465,59 @@ export class HeaderComponent implements OnInit, OnDestroy {
       };
       this.toastr.info(n!.message, this.translationService.instant('nav.notifications.notification'));
 
-      this.notifications.unshift(notification);
+      this.notifications = [notification, ...this.notifications];
 
       this.notificationCount =
         this.notifications.filter(x => !x.isRead).length;
     });
 }
+
+  private loadUnreadNotifications(replace = false): void {
+    this.notificationService.getUnread().subscribe({
+      next: (res) => {
+        const unread = (res?.data ?? []).map((n: any) => ({
+          id: n.id,
+          message: n.message,
+          createdAt: this.parseNotificationDate(n.createdDate ?? n.createdAt),
+          isRead: false,
+          link: n.link || '/pages/notifications-list',
+          type: n.taskId ? 'task' : 'other',
+          taskId: n.taskId ?? undefined
+        } as HeaderNotification));
+
+        // API is newest-first; keep that order (do not unshift in a loop — it reverses the list).
+        if (replace || this.notifications.length === 0) {
+          this.notifications = unread;
+        } else {
+          const existingIds = new Set(this.notifications.map(x => x.id));
+          const incoming = unread.filter(n => !existingIds.has(n.id));
+          this.notifications = [...incoming, ...this.notifications]
+            .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+        }
+
+        this.notificationCount =
+          this.notifications.filter(x => !x.isRead).length;
+      },
+      error: (err) => {
+        console.error('Error loading unread notifications:', err);
+      }
+    });
+  }
+
+  /** Server stores UTC; values without Z must be treated as UTC. */
+  private parseNotificationDate(value: string | Date | null | undefined): Date {
+    if (!value) return new Date();
+    if (value instanceof Date) return value;
+
+    const raw = String(value).trim();
+    if (!raw) return new Date();
+
+    if (/[zZ]|[+-]\d{2}:?\d{2}$/.test(raw)) {
+      return new Date(raw);
+    }
+
+    return new Date(raw.endsWith('Z') ? raw : `${raw}Z`);
+  }
 
   private clearNotificationsUi() {
     this.notifications = [];
@@ -525,6 +553,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.clearNotificationsUi();
     this.notificationSubscription$?.unsubscribe();
+    this.unreadChangedSubscription$?.unsubscribe();
     if (this.menuitemsSubscribe$) {
       this.menuitemsSubscribe$.unsubscribe();
     }

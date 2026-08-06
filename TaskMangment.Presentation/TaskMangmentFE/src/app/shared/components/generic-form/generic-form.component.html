@@ -153,6 +153,7 @@
 
 
           <ng-select [items]="field.options" bindLabel="label" bindValue="value" [multiple]="field.multiple"
+            [maxSelectedItems]="field.maxSelectedItems"
             [searchable]="true" [closeOnSelect]="!field.multiple" [clearable]="true" [clearSearchOnAdd]="true"
             [loading]="field.isLoading"
             (open)="onSelectOpen(field)" (scrollToEnd)="onSelectScrollToEnd(field)" appendTo=".modal"

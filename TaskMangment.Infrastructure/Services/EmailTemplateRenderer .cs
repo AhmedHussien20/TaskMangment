@@ -300,12 +300,19 @@ namespace TaskMangment.Infrastructure.Services
                                 TaskNumber = t.Id,
                                 t.Title,
                                 t.DueDate,
-                                t.Description
+                                t.Description,
+                                PeriodDays = t.CommentAllowPeriodDays.HasValue ? (int?)t.CommentAllowPeriodDays.Value : null,
+                                t.MinCommentsPerPeriod
                             })
                             .FirstOrDefaultAsync();
 
                         if (task == null)
                             throw new Exception($"Task with Id {referenceId} not found.");
+
+                        var minComments = task.MinCommentsPerPeriod < 1 ? 1 : task.MinCommentsPerPeriod;
+                        var periodDays = task.PeriodDays.HasValue && task.PeriodDays.Value > 0
+                            ? task.PeriodDays.Value.ToString()
+                            : "-";
 
                         return new Dictionary<string, string>
                         {
@@ -313,7 +320,9 @@ namespace TaskMangment.Infrastructure.Services
                             ["TaskNumber"] = (referenceId > 0 ? referenceId : task.TaskNumber).ToString(),
                             ["TaskTitle"] = task.Title ?? "-",
                             ["DueDate"] = task.DueDate?.ToString("yyyy-MM-dd") ?? "-",
-                            ["TaskDescription"] = task.Description ?? "-"
+                            ["TaskDescription"] = task.Description ?? "-",
+                            ["MinCommentsPerPeriod"] = minComments.ToString(),
+                            ["CommentAllowPeriodDays"] = periodDays
                         };
                     }
 

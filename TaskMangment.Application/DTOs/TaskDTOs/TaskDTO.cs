@@ -1,4 +1,4 @@
-﻿ 
+ 
 using System.ComponentModel.DataAnnotations; 
 using TaskMangment.Domain.Entities; 
 
@@ -15,6 +15,9 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
         public string Description { get; set; }
 
         public int? CommentAllowPeriodDays { get; set; }
+
+        /// <summary>Minimum comments required within each allow period (default 1).</summary>
+        public int MinCommentsPerPeriod { get; set; } = 1;
 
         public int MaxWarningsBeforeDiscount { get; set; } = 3;
 
@@ -55,6 +58,7 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
         public decimal PenaltyOnAutoClose { get; set; } = 0;
         public decimal PenaltyOnStopComment { get; set; } = 0;
         public int? CommentAllowPeriodDays { get; set; }
+        public int MinCommentsPerPeriod { get; set; } = 1;
 
         public DateTime? ClosedAt { get; set; }
         public int? ClosedByUserId { get; set; }
@@ -69,6 +73,9 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
         public bool IsCreatorOrAssigner { get; set; } = false;
         /// <summary>Pending close + extension requests for this task.</summary>
         public int PendingRequestsCount { get; set; }
+
+        /// <summary>Unread notifications for the current user on this task.</summary>
+        public int UnreadNotificationsCount { get; set; }
 
     }
 

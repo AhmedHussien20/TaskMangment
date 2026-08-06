@@ -29,6 +29,8 @@ export interface EmployeeAddEdit {
   address?: string;
   qualification?: string;
   roleIds: number[];
+  /** Role names from GET (aligned with roleIds). */
+  roles?: string[];
   email?: string;
   password?: string;
   attachments?: File;

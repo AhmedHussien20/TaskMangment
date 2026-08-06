@@ -1,5 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using TaskMangment.Application.Interfaces.IRepository;
+using Microsoft.AspNetCore.Mvc;
+using TaskMangment.Application.DTOs;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
@@ -24,11 +24,26 @@ namespace TaskMangment.API.Controllers
             return Ok(ApiResponse<List<Notification>>.Ok(notifications));
         }
 
+        [HttpGet("by-task/{taskId}")]
+        public async Task<IActionResult> GetByTask(int taskId)
+        {
+            var notifications =
+                await _notificationService.GetByTaskAsync(CurrentUserId, taskId);
+            return Ok(ApiResponse<List<TaskNotificationDto>>.Ok(notifications));
+        }
+
         [HttpPost("{id}/read")]
         public async Task<IActionResult> MarkAsRead(int id)
         {
             await _notificationService.MarkAsReadAsync(id);
 
+            return Ok(ApiResponse<string>.Ok(string.Empty));
+        }
+
+        [HttpPost("by-task/{taskId}/read")]
+        public async Task<IActionResult> MarkAsReadByTask(int taskId)
+        {
+            await _notificationService.MarkAsReadByTaskAsync(CurrentUserId, taskId);
             return Ok(ApiResponse<string>.Ok(string.Empty));
         }
 

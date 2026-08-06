@@ -160,12 +160,7 @@ namespace TaskMangment.Infrastructure.Services
             if (!await _companyRepository.IsExistAsync(CampanyId))
                 throw new AppException(ErrorCodes.CompanyNotFound, StatusCodes.Status404NotFound);
 
-            var existingManager = await _branchRepository.GetAll()
-                .AnyAsync(b => b.ManagerID == dto.ManagerId || b.ResponsibleID == dto.ResponsibleId);
-
-            //edit to enable manage many branch
-            if (existingManager)
-                throw new AppException(ErrorCodes.AlreadyAssigned, StatusCodes.Status400BadRequest);
+            // ManagerID / ResponsibleID may cover many branches (no uniqueness check).
 
             var branch = _mapper.Map<Branch>(dto);
             branch.CompanyId = CampanyId;
@@ -230,13 +225,7 @@ namespace TaskMangment.Infrastructure.Services
                     throw new AppException(ErrorCodes.AreaNotFound, StatusCodes.Status404NotFound);
             }
 
-            var existingManager = await _branchRepository.GetAll()
-                .AnyAsync(b =>
-                    b.Id != id &&
-                    (b.ManagerID == dto.ManagerId || b.ResponsibleID == dto.ResponsibleId));
-
-            if (existingManager)
-                throw new AppException(ErrorCodes.AlreadyAssigned, StatusCodes.Status400BadRequest);
+            // ManagerID / ResponsibleID may cover many branches (no uniqueness check).
 
             _mapper.Map(dto, branch);
             await _branchRepository.SaveChangesAsync();

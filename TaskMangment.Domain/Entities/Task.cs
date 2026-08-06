@@ -1,4 +1,4 @@
-﻿ 
+ 
 using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
 
@@ -13,6 +13,8 @@ namespace TaskMangment.Domain.Entities
         public string Description { get; set; }
 
         public CommentAllowPeriod? CommentAllowPeriodDays { get; set; }
+        /// <summary>Minimum comments required within each CommentAllowPeriodDays window.</summary>
+        public int MinCommentsPerPeriod { get; set; } = 1;
         public int MaxWarningsBeforeDiscount { get; set; } = 3;
         public int MaxWarnings { get; set; } = 3;
         [Column(TypeName = "decimal(18,2)")] public decimal PenaltyAtMaxWarnings { get; set; } = 0;

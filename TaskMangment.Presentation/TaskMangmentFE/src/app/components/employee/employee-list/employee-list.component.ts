@@ -195,8 +195,9 @@ export class EmployeeListComponent implements OnInit {
   open(content: any) {
     this.modalService.open(content, {
       centered: true,
-      backdrop: true,
-      size: 'lg',
+      backdrop: 'static',
+      keyboard: false,
+      size: 'xl',
       windowClass: 'effect-scale'
     });
   }

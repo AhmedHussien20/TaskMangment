@@ -1,4 +1,4 @@
-﻿
+
 using TaskMangment.Application.DTOs;
 using TaskMangment.Domain.Entities;
 using AutoMapper;
@@ -29,8 +29,13 @@ namespace TaskMangment.Application.AutoMapper
                 .ForMember(dest => dest.BranchName, opt => opt.MapFrom(src => src.Branch != null ? src.Branch.Name : null))
                 .ForMember(dest => dest.Roles, opt => opt.MapFrom(src =>
                     src.EmployeeRoles
-                        .Where(er => er.Role != null)
+                        .Where(er => er.IsAssigned && !er.IsDeleted && er.Role != null)
                         .Select(er => er.Role.Name)
+                        .ToList()))
+                .ForMember(dest => dest.RoleIds, opt => opt.MapFrom(src =>
+                    src.EmployeeRoles
+                        .Where(er => er.IsAssigned && !er.IsDeleted)
+                        .Select(er => er.RoleId)
                         .ToList()))
                 .ForMember(dest => dest.JobName, opt => opt.MapFrom(src => src.Job != null ? src.Job.Title : null))
                 .ForMember(dest => dest.DepartmentName, opt => opt.MapFrom(src => src.Department != null ? src.Department.Name : null))
@@ -45,7 +50,8 @@ namespace TaskMangment.Application.AutoMapper
 
 
             CreateMap<EmployeeAddEditDto, Employee>()
-                .ForMember(dest => dest.PasswordHash, opt => opt.Ignore());
+                .ForMember(dest => dest.PasswordHash, opt => opt.Ignore())
+                .ForMember(dest => dest.EmployeeRoles, opt => opt.Ignore());
 
 
             CreateMap<Role, RoleGetDto>()
