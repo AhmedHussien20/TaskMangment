@@ -15,9 +15,9 @@ export class DepartmentService {
   constructor(private api: ApiService) {}
 
   // GET /Department?query
-  getAll(request: any): Observable<DepartmentPagedResponse> {
+  getAll(request: any): Observable<any> {
     const query = this.buildQuery(request);
-    return this.api.get<DepartmentPagedResponse>(this.service, `?${query}`);
+    return this.api.get<any>(this.service, `?${query}`);
   }
 
   // GET /Department/{id}
@@ -47,7 +47,8 @@ export class DepartmentService {
       `PageIndex=${req.pageIndex}`,
       `PageSize=${req.pageSize}`,
       `SortColumn=${req.sortColumn}`,
-      `SortDirection=${req.sortDirection}`
+      `SortDirection=${req.sortDirection}`,
+      `branchId=${req.branchId ?? ''}`
     ].join('&');
   }
 }

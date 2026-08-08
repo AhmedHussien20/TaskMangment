@@ -9,7 +9,7 @@ namespace TaskMangment.Application.Common.ApiRequests.Task
 {
     public class WarningRequest : BaseApiRequest
     {
-        public int? TaskAssignmentId { get; set; }
-        public int? IssuedByEmployeeId { get; set; }
+        public int TaskId { get; set; }
+
     }
 }

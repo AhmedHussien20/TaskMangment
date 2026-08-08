@@ -16,19 +16,45 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
     public class TaskExtensionRequestListDto
     {
         public int Id { get; set; }
+
+        public int TaskId { get; set; }
+        public string TaskTitle { get; set; }
+
+
         public string Reason { get; set; }
         public ExtensionRequestStatus Status { get; set; }
+        public string ExtendRequestText => Status.ToString();
+
         public string RequestedByName { get; set; }
         public DateTime RequestedAt { get; set; }
+        public DateTime? ReviewedAt { get; set; }
+        public string ReviewedByName { get; set; }
     }
     public class TaskExtensionRequestDetailsDto
     {
         public int Id { get; set; }
+
+        public int TaskId { get; set; }
+        public string TaskTitle { get; set; }
+
         public string Reason { get; set; }
         public ExtensionRequestStatus Status { get; set; }
+
+        public string ExtendRequestText => Status.ToString();
+
+
+
         public DateTime RequestedAt { get; set; }
         public string? RequestedByName { get; set; }
         public DateTime? ReviewedAt { get; set; }
         public string ReviewedByName { get; set; }
+
+
     }
+    public class TaskExtensionReviewDto
+    {
+        public ExtensionRequestStatus Status { get; set; }
+        public DateTime? NewDueDate { get; set; }
+    }
+
 }

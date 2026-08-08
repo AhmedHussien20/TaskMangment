@@ -1,17 +1,55 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output, OnDestroy } from '@angular/core';
+import { Component, EventEmitter, Input, Output, OnDestroy, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgbDropdownModule, NgbPaginationModule, NgbTooltipModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgSelectModule } from '@ng-select/ng-select';
 import { TranslateModule } from '@ngx-translate/core';
+import { EmployeeNgSelectComponent } from 'app/components/employee-select/employee-select.component';
+import { MyDatePipe } from 'app/components/utilities/pipline/MyDatePipe';
 import { SearchCriteria } from 'app/core/models/search-criteria.model';
+import { Subject } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
+
+type SelectOption =
+  | { id: any; name: string }
+  | { value: any; label: string };
+export type ColumnType =
+  | 'text'
+  | 'icon-action'
+  | 'notification-count'
+  | 'icon'
+  | 'badge'
+  | 'custom'
+  | 'date'
+  | 'dateTime'
+  | 'assignees'
+  | 'seen';
+
+export interface BadgeConfig {
+  text: string;
+  class: string;
+  icon?: string;
+}
 
 export interface TableColumn {
   key: string;
-  label: string;         // translation key أو نص عادي
-  isButton?: boolean;    // لو عمود زرار
-  icon?: string;         // للأعمدة اللي هي buttons
-  onClick?: (item: any) => void
+  label: string;
+  type?: ColumnType;
+  badgeMap?: Record<string, BadgeConfig>;
+  icon?: string;
+  displayField?: string;
+  /** Optional fixed/min width (e.g. '56px'). */
+  width?: string;
 }
+export interface ExtraMenuItem {
+  label: string;
+  value: any;
+  iconClass?: string;
+  divider?: boolean;
+  disabled?: boolean;
+}
+
+
 interface HasId {
   id: any;
 }
@@ -22,15 +60,27 @@ interface HasId {
   imports: [
     CommonModule,
     FormsModule,
-    NgbPaginationModule, TranslateModule
+    NgbPaginationModule, TranslateModule, MyDatePipe, NgbTooltipModule, NgSelectModule, NgbDropdownModule, EmployeeNgSelectComponent
   ],
-  styleUrls: ['./generic-table.component.scss']
+  styleUrls: ['./generic-table.component.scss'],
+
+
 })
-export class GenericTableComponent<T> implements OnDestroy {
+export class GenericTableComponent<T> implements OnDestroy,OnChanges {
+  private filtersChanged$ = new Subject<void>();
+  @Output() exportPdfClick = new EventEmitter<void>();
+  @Output() exportExcelClick = new EventEmitter<void>();
+
+  @Input() showExportPdf: boolean = false;
+  @Input() showExportExcel: boolean = true;
+  @Input() showExportReportExcel: boolean = false;
 
   @Input() formUrl: string = '';
   @Input() breadcrumbs: string[] = [];
-  @Input() activeitem: string = ''; 
+  @Input() activeitem: string = '';
+  @Input() showDetailsButton: boolean = false;
+
+  @Output() details = new EventEmitter<number>();
 
   // ---------- Inputs ----------
   @Input() title: string = '';
@@ -46,27 +96,41 @@ export class GenericTableComponent<T> implements OnDestroy {
   @Input() showCheckbox: boolean = false;
   @Input() showEditButton: boolean = false;
   @Input() showDeleteButton: boolean = false;
+  @Input() showCopyButton: boolean = false;
 
   @Input() showAddButton: boolean = false;
   @Input() addButtonLabel: string = '';
+  @Input() disableActions: boolean = false;
+  @Input() disableEditFn?: (row: T) => boolean;
+  @Input() disableDeleteFn?: (row: T) => boolean;
+  @Input() disableDetailsFn?: (row: T) => boolean;
+  @Input() disableCopyFn?: (row: T) => boolean;
 
   @Input() searchCriteria!: SearchCriteria<T>;
   @Input() labels: { [key: string]: string } = {};
-  @Input() statusOptions: { id: number; name: string }[] = [];
-
+  @Input() statusOptions: { id: any; name: string }[] = [];
+  @Input() branchOptions: { id: any; name: string }[] = [];
+  // @Input() employeeOptions: { id: number; name: string }[] = [];
   // callback من الـ parent (زى Expiry)
   @Input() onSearch?: (criteria: SearchCriteria<T>) => void;
   @Input() onAddClick?: () => void;
   @Output() addClick = new EventEmitter<void>();
+  @Input() checkboxKey?: string;
 
   // ---------- Outputs ----------
   @Output() pageChange = new EventEmitter<number>();
   @Output() entriesChange = new EventEmitter<number>();
   @Output() edit = new EventEmitter<number>();
   @Output() delete = new EventEmitter<number>();
+  @Output() copy = new EventEmitter<any>();
+  @Input() rowClickable: boolean = false;
+  @Input() showEmployeeFilter: boolean = true;
+  @Input() BranchFilter: boolean = false;
+  @Output() cleared = new EventEmitter<void>();
 
-  // ---------- UI State ----------
-  loading: boolean = false;             // لو حبيت تستخدمه بعدين
+  @Input() extraFilterOptions: Record<string, SelectOption[]> = {};
+
+  loading: boolean = false;
   filtersOpen: boolean = true;
 
   sortColumn: string = '';
@@ -79,7 +143,59 @@ export class GenericTableComponent<T> implements OnDestroy {
   private resizeStartWidth: number = 0;
 
   // ---------- Helpers ----------
+  @Output() iconAction = new EventEmitter<{
+    type: string;
+    row: any;
+  }>();
 
+  @Output() checkboxChange = new EventEmitter<{
+    row: any;
+    checked: boolean;
+  }>();
+
+  @Input() showExtraButton: boolean = false;
+
+  @Input() showSecondButton: boolean = false;
+  @Input() disableSecondButton: boolean = false;
+  @Input() secondButtonLabel: string = '';
+
+
+  @Output() secondButtonClick = new EventEmitter<void>();
+  onSecondButtonClick(): void {
+    this.secondButtonClick.emit();
+  }
+  @Input() extraMenuItems: ExtraMenuItem[] = [];
+
+  @Output() extraMenuSelect = new EventEmitter<ExtraMenuItem>();
+
+  @Output() extraClick = new EventEmitter<void>();
+
+  private extraOptionsCache: Record<string, { id: any; name: string }[]> = {};
+
+  onExtraMenuItemClick(item: ExtraMenuItem) {
+    if (item?.disabled) return;
+    this.extraMenuSelect.emit(item);
+  }
+
+  /* ngOnInit(): void {
+  this.filtersChanged$
+    .pipe(debounceTime(400))
+    .subscribe(() => {
+      this.applyFilters(); 
+    });
+}
+onFilterChange(key: string, value: any) {
+  this.searchCriteria[key] = value;
+
+  if (this.searchCriteria.pageIndex) this.searchCriteria.pageIndex = 1;
+
+  this.filtersChanged$.next();
+} */
+ngOnChanges(changes: SimpleChanges): void {
+  if (changes['extraFilterOptions']) {
+    this.extraOptionsCache = {};
+  }
+}
   objectKeys(obj: any): string[] {
     return obj ? Object.keys(obj) : [];
   }
@@ -88,26 +204,115 @@ export class GenericTableComponent<T> implements OnDestroy {
     return this.labels?.[key] ?? key;
   }
 
+  getBadgeText(col: TableColumn, item: any): string {
+    if (!col.badgeMap) return '';
+    const value = this.getValue(item, col.key);
+    return col.badgeMap[value]?.text ?? '';
+  }
 
-  getInputType(key: string): 'text' | 'dropdown' | 'date' | 'number' {
+  getBadgeClass(col: TableColumn, item: any): string {
+    if (!col.badgeMap) return '';
+    const value = this.getValue(item, col.key);
+    return col.badgeMap[value]?.class ?? '';
+  }
+
+  getInitials(name: string): string {
+    if (!name) return '';
+
+    return name
+      .split(' ')
+      .map(x => x[0])
+      .join('')
+      .substring(0, 2)
+      .toUpperCase();
+  }
+  getExtraOptions(key: string) {
+    return this.extraFilterOptions?.[key] ?? [];
+  }
+
+  getInputType(key: string): 'text' | 'dropdown' | 'date' | 'dateTime' | 'number' | 'toggle' {
     const filterTypes = (this.searchCriteria?.filterTypes || {}) as any;
     return filterTypes[key] || 'text';
   }
 
   getDropdownOptions(key: string) {
-    if (key === 'statusId') return this.statusOptions;
-    // تقدر تزود switch هنا لباقي الفلاتر
-    return [];
+
+  switch (key) {
+
+    case 'branchId':
+      return this.branchOptions;
+
+    case 'statusId':
+      return this.statusOptions;
+
+      case 'isAssigned':
+        return this.statusOptions;
+
+    default:
+      if (!this.extraOptionsCache[key]) {
+        const raw = this.extraFilterOptions?.[key] ?? [];
+        this.extraOptionsCache[key] = raw.map((x: any) => ({
+          id: x.id ?? x.value,
+          name: x.name ?? x.label
+        }));
+      }
+      return this.extraOptionsCache[key];
+  }
+
+}
+  getSelectedEmployeeId(): number | undefined {
+    const ids = (this.searchCriteria as any)?.['employeeIds'];
+    if (Array.isArray(ids) && ids.length > 0) return Number(ids[0]);
+    return undefined;
+  }
+
+  setSelectedEmployeeId(id: number | undefined) {
+    const value = (id === null || id === undefined) ? [] : [Number(id)];
+    this.onFilterChange('employeeIds', value);
   }
 
   // ---------- Filters ----------
 
+  ngOnInit(): void {
+    this.filtersChanged$
+      .pipe(debounceTime(100))
+      .subscribe(() => {
+        (this.searchCriteria as any).pageIndex = 1;
+        this.applyFilters();
+      });
+  }
+
+  isScopeFilterKey(key: string): boolean {
+    return key === 'viewScopedTasks' || key === 'viewScopedLeaves';
+  }
+
+  onFilterChange(key: string, value: any) {
+    (this.searchCriteria as any)[key] = value;
+    if (this.isScopeFilterKey(key)) {
+      (this.searchCriteria as any).pageIndex = 1;
+      this.applyFilters();
+      return;
+    }
+    this.filtersChanged$.next();
+  }
   applyFilters() {
     if (this.onSearch) {
-      // نمرر نسخة عشان منلعبش فى الريفرنس الأصلي
       this.onSearch({ ...(this.searchCriteria || {}) });
     }
   }
+
+  viewDetails(id: number) {
+    this.details.emit(id);
+  }
+
+  isMultiSelect(key: string): boolean {
+    if (key === 'employeeIds') return true;
+    if (key === 'statusId') return false;
+    return false;
+  }
+
+
+
 
   getItemId(item: T): any {
     return (item as any)['id'];
@@ -135,13 +340,24 @@ export class GenericTableComponent<T> implements OnDestroy {
       if (type === 'text' || type === 'number') {
         (this.searchCriteria as any)[key] = '';
       } else if (type === 'dropdown' || type === 'radio') {
-        (this.searchCriteria as any)[key] = 0;
+        if (this.isMultiSelect(key)) {
+          (this.searchCriteria as any)[key] = [];
+        } else {
+          (this.searchCriteria as any)[key] = (key === 'statusId') ? 0 : (this.isScopeFilterKey(key) ? 'my' : null);
+        }
+
       } else if (type === 'date') {
         (this.searchCriteria as any)[key] = null;
       }
+      else if (type === 'toggle') {
+        (this.searchCriteria as any)[key] = null;
+      }
+
     });
 
     this.applyFilters();
+    this.cleared.emit();
+
   }
 
   toggleFilters() {
@@ -176,7 +392,6 @@ export class GenericTableComponent<T> implements OnDestroy {
   }
 
   updateSelectedItems() {
-    // لو حبيت تبعت selectedItems للـ parent بعدين
   }
 
   // ---------- Pagination ----------
@@ -186,11 +401,18 @@ export class GenericTableComponent<T> implements OnDestroy {
     this.pageChange.emit(page);
   }
 
-  onEntriesChangeInternal() {
-    this.entriesChange.emit(this.entries);
+  onEntriesChangeInternal(value: number) {
+    const newEntries = Number(value);
+    this.entries = newEntries;
+    this.page = 1;
+    this.entriesChange.emit(newEntries);
   }
 
   // ---------- Actions ----------
+
+  get hasRowActions(): boolean {
+    return this.showEditButton || this.showDeleteButton || this.showDetailsButton || this.showCopyButton;
+  }
 
   editItem(id: number) {
     this.edit.emit(id);
@@ -198,6 +420,9 @@ export class GenericTableComponent<T> implements OnDestroy {
 
   deleteItem(id: number) {
     this.delete.emit(id);
+  }
+  copyItem(id: number) {
+    this.copy.emit(id);
   }
 
   // ---------- Export ----------
@@ -245,11 +470,81 @@ export class GenericTableComponent<T> implements OnDestroy {
   };
 
   getColumnStyle(key: string) {
-    return this.columnWidths[key] ? { width: this.columnWidths[key] } : {};
+    if (this.columnWidths[key]) {
+      return { width: this.columnWidths[key] };
+    }
+    const col = this.columns.find(c => c.key === key);
+    return col?.width ? { width: col.width, minWidth: col.width } : {};
+  }
+
+  isCenteredColumn(col: TableColumn): boolean {
+    return col.type === 'notification-count';
   }
 
   ngOnDestroy(): void {
     document.removeEventListener('mousemove', this.onMouseMove);
     document.removeEventListener('mouseup', this.onMouseUp);
   }
+
+  @Input() rowClickableCondition?: (item: T) => boolean;
+
+  onRowClick(item: T, event: MouseEvent) {
+
+    if (!this.rowClickable) return;
+
+    const target = event.target as HTMLElement;
+    if (
+      target.closest('button') ||
+      target.closest('input') ||
+      target.closest('a') ||
+      target.closest('.dropdown') ||
+      target.closest('.dropdown-menu') ||
+      target.closest('.table-actions-col')
+    ) {
+      return;
+    }
+
+    if (this.rowClickableCondition && !this.rowClickableCondition(item)) {
+      return;
+    }
+
+    const id = this.getItemId(item);
+    if (id !== undefined && id !== null) {
+      this.edit.emit(id);
+
+    }
+  }
+
+
+  @Input() disableCheckboxFn: ((row: T) => boolean) | null = null;
+
+  onCheckboxChange(item: T, event: Event) {
+    const checked = (event.target as HTMLInputElement).checked;
+
+    this.checkboxChange.emit({
+      row: item,
+      checked
+    });
+  }
+
+  isChecked(item: T): boolean {
+    if (!this.checkboxKey) return false;
+
+    const value = (item as any)[this.checkboxKey];
+    return value === true;
+  }
+  exportPdf() {
+    this.exportPdfClick.emit();
+  }
+  exportExcell() {
+    this.exportExcelClick.emit();
+  }
+
+  onToggleFilterClick(key: string, value: any) {
+    (this.searchCriteria as any)[key] = value;
+    (this.searchCriteria as any).pageIndex = 1;
+    this.applyFilters();
+  }
+
+
 }

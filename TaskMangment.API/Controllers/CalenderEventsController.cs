@@ -21,12 +21,12 @@ namespace TaskMangment.API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll([FromQuery] CalendarEventRequest request)
         {
-            var result = await _service.GetAllAsync(request);
+            var result = await _service.GetAllAsync(request, this.CurrentUserId, this.RoleLevel);
 
             if (!result.Success)
                 return Fail(result.Message!);
 
-            SetCacheHeader(600);
+            //SetCacheHeader(600);
 
             return Success(result.Data);
         }
@@ -35,10 +35,6 @@ namespace TaskMangment.API.Controllers
         public async Task<IActionResult> GetById(int id)
         {
             var result = await _service.GetByIdAsync(id);
-
-            if (!result.Success)
-                return Fail(result.Message!, 404);
-
             return Success(result.Data);
         }
 
@@ -46,32 +42,20 @@ namespace TaskMangment.API.Controllers
         public async Task<IActionResult> Add([FromBody] CalendarEventAddEditDto dto)
         {
             var result = await _service.AddAsync(dto, this.CurrentUserId, this.CompanyId);
-
-            if (!result.Success)
-                return Fail(result.Message);
-
             return Success(result.Data, "Calender Event added successfully");
         }
 
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] CalendarEventAddEditDto dto)
         {
-            var result = await _service.UpdateAsync(id, dto);
-
-            if (!result.Success)
-                return Fail(result.Message, 404);
-
+            var result = await _service.UpdateAsync(id, dto,this.CurrentUserId,this.RoleLevel);
             return Success(result.Data, "Calender Event updated successfully");
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var result = await _service.DeleteAsync(id);
-
-            if (!result.Success)
-                return Fail(result.Message, 404);
-
+            var result = await _service.DeleteAsync(id, this.CurrentUserId, this.RoleLevel);
             return Success(true, "Calender Event deleted successfully");
         }
     }

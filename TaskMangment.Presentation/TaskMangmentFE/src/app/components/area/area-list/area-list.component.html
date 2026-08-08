@@ -4,29 +4,29 @@
 <div class="row row-sm">
   <div class="col-md-12 col-lg-12">
     <div class="card custom-card">
-      <div class="card-header border-bottom-0">
+      <!-- <div class="card-header border-bottom-0">
         <div class="d-flex">
           <label class="main-content-label my-auto pt-2">{{ title | translate}}</label>
         </div>
       </div>
 
-      <div class="card-body pt-2">
-
+      <div class="card-body pt-2"> -->
+        <div>
         <!-- LOADING -->
-        <div *ngIf="isLoading" class="text-center my-3">
+        <!-- <div *ngIf="isLoading" class="text-center my-3">
           <div class="spinner-border" role="status">
             <span class="visually-hidden">{{ 'TABLE.LOADING' | translate }}</span>
           </div>
-        </div>
+        </div> -->
 
         <!-- TABLE -->
-        <div *ngIf="!isLoading">
-          <app-generic-table [title]="title" [breadcrumbs]="breadcrumbs" [activeitem]="activeitem" [labels]="labels"
+        <div>
+          <app-generic-table [title]="title" [breadcrumbs]="breadcrumbs" [activeitem]="activeitem | translate" [labels]="labels"
             [columns]="columns" [data]="rows" [entries]="entries" [page]="page" [totalItems]="totalItems"
-            [showAddButton]="true" [addButtonLabel]="'AREA.addArea' | translate" (addClick)="openAdd(areaModal)"
-            [showEditButton]="true" (edit)="openEdit($event, areaModal)" [showFilters]="true" [formUrl]="formUrl"
+            [showAddButton]="canCreate" [addButtonLabel]="'AREA.addArea' | translate" (addClick)="openAdd(areaModal)"
+            [showEditButton]="canEdit" (edit)="openEdit($event, areaModal)" [showFilters]="true" [formUrl]="formUrl"
             [searchCriteria]="searchCriteria" [onSearch]="applyFilters.bind(this)" (pageChange)="onPageChange($event)"
-            (entriesChange)="onEntriesChange($event)">
+            (entriesChange)="onEntriesChange($event)" [showDeleteButton]="canDelete" (delete)="confirmDelete($event)">
           </app-generic-table>
 
         </div>

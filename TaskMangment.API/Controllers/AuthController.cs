@@ -20,29 +20,33 @@ public class AuthController : BaseController
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
         var result = await _auth.LoginAsync(request);
-        if (!result.Success)
-            return Fail(result.Message);
         return Success(result.Data);
+
     }
     [AllowAnonymous]
     [HttpPost("forgot-password")]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
     {
         var result = await _auth.ForgotPasswordAsync(request.Email);
-        if (!result.Success)
-            return Fail(result.Message);
+        return Success(result.Data);
+    }
+
+    [AllowAnonymous]
+    [HttpPost("verify-reset-code")]
+    public async Task<IActionResult> VerifyResetCode([FromBody] VerifyResetCodeRequest request)
+    {
+        var result = await _auth.VerifyResetCodeAsync(request);
         return Success(result.Data);
     }
 
     [AllowAnonymous]
     [HttpPost("reset-password")]
-    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+    public async Task<IActionResult> ResetPassword([FromBody] UpdatePasswordRequest request)
     {
-        var result = await _auth.ResetPasswordAsync(request);
-        if(!result.Success)
-            return Fail(result.Message);
+        var result = await _auth.UpdatePasswordAsync(request);
         return Success(result.Data);
     }
+
 
 
 }

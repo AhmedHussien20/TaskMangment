@@ -1,0 +1,52 @@
+<div class="task-updates">
+  <div *ngIf="isLoading" class="text-center py-4">
+    <div class="spinner-border spinner-border-sm" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <small class="text-muted d-block mt-2">{{ 'COMMON.LOADING' | translate }}</small>
+  </div>
+
+  <ul *ngIf="!isLoading && items.length > 0" class="list-group list-group-flush">
+    <li *ngFor="let item of items" class="list-group-item" [class.update-unread]="!item.isRead">
+      <div class="d-flex align-items-start gap-3">
+        <i class="bi bi-bell text-primary update-icon"></i>
+        <div class="flex-grow-1">
+          <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+            <span class="badge rounded-pill bg-light text-dark border">
+              {{ typeLabelKey(item.notificationType) | translate }}
+            </span>
+            <span *ngIf="!item.isRead" class="badge rounded-pill bg-danger">
+              {{ 'nav.notifications.unread' | translate }}
+            </span>
+          </div>
+          <div class="fw-semibold update-message">{{ item.message }}</div>
+          <div class="text-muted small mt-1">
+            {{ item.createdDate | myDate:'d MMMM y':true }}
+          </div>
+
+          <div *ngIf="item.attachments?.length" class="update-attachments mt-2">
+            <div class="small text-muted mb-1">
+              <i class="bi bi-paperclip me-1"></i>
+              {{ 'EMPLOYEE_360.COL_ATTACHMENTS' | translate }}
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+              <a *ngFor="let att of item.attachments"
+                class="btn btn-sm btn-outline-secondary update-attachment-link"
+                [href]="att.url"
+                target="_blank"
+                rel="noopener">
+                <i class="bi bi-file-earmark me-1"></i>
+                {{ att.fileName }}
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </li>
+  </ul>
+
+  <div *ngIf="!isLoading && items.length === 0" class="text-center text-muted py-4">
+    <i class="bi bi-bell display-6 d-block mb-2 opacity-50"></i>
+    {{ 'TASK.NO_UPDATES' | translate }}
+  </div>
+</div>

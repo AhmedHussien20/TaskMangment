@@ -1,6 +1,9 @@
-﻿using AutoMapper;
+using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using TaskMangment.Application.Common.ApiRequests.Role;
+using TaskMangment.Application.Common.Errors;
+using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Responses;
 using TaskMangment.Application.DTOs;
@@ -36,44 +39,38 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<bool> UserHasPermissionAsync(int userId, string permissionCode)
         {
-            var permission = await _permissionRepo.GetAll(p => p.Code == permissionCode).FirstOrDefaultAsync();
-            if (permission == null) return false;
+            if (string.IsNullOrWhiteSpace(permissionCode))
+                return false;
 
-            int permissionId = permission.Id;
-
-            var userRoles = await _employeeRoleRepo.GetAll(er => er.EmployeeId == userId).Select(er => er.RoleId).ToListAsync();
-
-            if (!userRoles.Any()) return false;
-
-            bool hasPermission = await _rolePermissionRepo
-                .GetAll(rp => userRoles.Contains(rp.RoleId) && rp.PermissionId == permissionId)
-                .AnyAsync();
-
-            return hasPermission;
+            return await _employeeRoleRepo.GetAll(er =>
+                    er.EmployeeId == userId &&
+                    er.IsAssigned &&
+                    !er.IsDeleted)
+                .SelectMany(er => er.Role.RolePermissions)
+                .AnyAsync(rp =>
+                    rp.IsAssigned &&
+                    !rp.IsDeleted &&
+                    rp.Permission != null &&
+                    !rp.Permission.IsDeleted &&
+                    rp.Permission.Code == permissionCode);
         }
 
         public async Task<ApiResponse<PagedResponse<PermissionGetDto>>> GetAllAsync(PermissionRequest request)
         {
-            string safeName = request.Name ?? "";
-            string safeCode = request.Code ?? "";
+          
+            //string cacheKey =
+            //    $"permissions:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
 
-            string cacheKey =
-                $"permissions-{request.PageIndex}-{request.PageSize}-{request.SortColumn}-{request.SortDirection}-{safeName}-{safeCode}";
+            //if (!request.BypassCache)
+            //{
+            //    var cached = await _cache.GetAsync<PagedResponse<PermissionGetDto>>(cacheKey);
+            //    if (cached != null)
+            //        return ApiResponse<PagedResponse<PermissionGetDto>>.Ok(cached);
+            //}
 
-            if (!request.BypassCache)
-            {
-                var cached = await _cache.GetAsync<PagedResponse<PermissionGetDto>>(cacheKey);
-                if (cached != null)
-                    return ApiResponse<PagedResponse<PermissionGetDto>>.Ok(cached);
-            }
+            var query = _permissionRepo.GetAll().ApplySearch(request.searchKey);
+            ;
 
-            var query = _permissionRepo.GetAll().AsNoTracking().AsQueryable();
-
-            if (!string.IsNullOrWhiteSpace(request.Name))
-                query = query.Where(p => p.Name.Contains(request.Name));
-
-            if (!string.IsNullOrWhiteSpace(request.Code))
-                query = query.Where(p => p.Code.Contains(request.Code));
 
             int totalCount = await query.CountAsync();
 
@@ -88,7 +85,7 @@ namespace TaskMangment.Infrastructure.Services
 
             var response = new PagedResponse<PermissionGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
 
-            await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
+            //await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
 
             return ApiResponse<PagedResponse<PermissionGetDto>>.Ok(response);
         }
@@ -96,7 +93,7 @@ namespace TaskMangment.Infrastructure.Services
         public async Task<ApiResponse<PermissionGetDto>> CreateAsync(PermissionAddDto dto)
         {
             if (await _permissionRepo.GetAll(p => p.Code == dto.Code).AnyAsync())
-                return ApiResponse<PermissionGetDto>.Fail("Permission code already exists");
+                throw new AppException(ErrorCodes.AlreadyExists, StatusCodes.Status400BadRequest);
 
             var permission = _mapper.Map<Permission>(dto);
             await _permissionRepo.AddAsync(permission);
@@ -105,6 +102,8 @@ namespace TaskMangment.Infrastructure.Services
           
 
             var resultDto = _mapper.Map<PermissionGetDto>(permission);
+            await _cache.RemoveAsync("permissions:");
+
             return ApiResponse<PermissionGetDto>.Ok(resultDto, "Permission created successfully");
         }
 
@@ -112,21 +111,23 @@ namespace TaskMangment.Infrastructure.Services
         {
             var permission = await _permissionRepo.GetByIDAsync(id);
             if (permission == null)
-                return ApiResponse<PermissionGetDto>.Fail("Permission not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
 
             if (permission.Code != dto.Code)
             {
                 bool codeExists = await _permissionRepo.GetAll(p => p.Code == dto.Code).AnyAsync();
                 if (codeExists)
-                    return ApiResponse<PermissionGetDto>.Fail("Permission code already exists");
+                    throw new AppException(ErrorCodes.AlreadyExists, StatusCodes.Status400BadRequest);
             }
 
             _mapper.Map(dto, permission);
             await _permissionRepo.SaveChangesAsync();
+            await _cache.RemoveAsync("permissions:");
 
-          
+
 
             var resultDto = _mapper.Map<PermissionGetDto>(permission);
+
             return ApiResponse<PermissionGetDto>.Ok(resultDto, "Permission updated successfully");
         }
 
@@ -134,11 +135,18 @@ namespace TaskMangment.Infrastructure.Services
         {
             var permission = await _permissionRepo.GetByIDAsync(id);
             if (permission == null)
-                return ApiResponse<bool>.Fail("Permission not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
+
+            var hasRoles = await _rolePermissionRepo
+                .GetAll(rp => rp.PermissionId == id && rp.IsAssigned)
+                .AnyAsync();
+
+            if (hasRoles)
+                throw new AppException(ErrorCodes.PermissionHasRoles, StatusCodes.Status400BadRequest);
 
             _permissionRepo.SoftDelete(permission);
             await _permissionRepo.SaveChangesAsync();
-
+            await _cache.RemoveAsync("permissions:");
 
             return ApiResponse<bool>.Ok(true, "Permission deleted successfully");
         }

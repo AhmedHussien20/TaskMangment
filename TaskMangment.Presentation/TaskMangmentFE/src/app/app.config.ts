@@ -48,6 +48,8 @@ import { authReducer } from './store/auth/auth.reducer';
 import { provideEffects } from '@ngrx/effects';
 import { NavEffects } from './store/nav/nav.effects';
 import { AuthEffects } from './store/auth/auth.effects';
+import { languageInterceptor } from './core/interceptors/language.interceptor';
+import { errorInterceptor } from './core/auth/error_toastre.interceptor';
 
 export function HttpLoaderFactory(http: HttpClient) {
     return new TranslateHttpLoader(http, './assets/i18n/', '.json');
@@ -98,21 +100,20 @@ export const appConfig: ApplicationConfig = {
         ),
 
         // TRANSLATE
-        TranslateService,
-        TranslateStore,
-        {
-            provide: TranslateLoader,
-            useFactory: HttpLoaderFactory,
-            deps: [HttpClient],
-        },
-        { provide: TranslateCompiler, useClass: TranslateDefaultParser },
-        { provide: TranslateParser, useClass: TranslateDefaultParser },
-        { provide: MissingTranslationHandler, useClass: FakeMissingTranslationHandler },
-        { provide: USE_DEFAULT_LANG, useValue: true },
-        { provide: DEFAULT_LANGUAGE, useValue: 'ar' },
-        { provide: ISOLATE_TRANSLATE_SERVICE, useValue: false },
-        { provide: USE_EXTEND, useValue: true },
-
+        // TranslateService,
+        // TranslateStore,
+        // {
+        //     provide: TranslateLoader,
+        //     useFactory: HttpLoaderFactory,
+        //     deps: [HttpClient],
+        // },
+        // { provide: TranslateCompiler, useClass: TranslateDefaultParser },
+        // { provide: TranslateParser, useClass: TranslateDefaultParser },
+        // { provide: MissingTranslationHandler, useClass: FakeMissingTranslationHandler },
+        // { provide: USE_DEFAULT_LANG, useValue: true },
+        // { provide: DEFAULT_LANGUAGE, useValue: 'ar' },
+        // { provide: ISOLATE_TRANSLATE_SERVICE, useValue: false },
+        // { provide: USE_EXTEND, useValue: true },
         importProvidersFrom(
             TranslateModule.forRoot({
                 defaultLanguage: 'ar',
@@ -124,12 +125,14 @@ export const appConfig: ApplicationConfig = {
             })
         ),
 
+       
+
         // STORE
         provideStore(),
 
         // HTTP + INTERCEPTOR
         provideHttpClient(
-            withInterceptors([AuthInterceptor])
+            withInterceptors([AuthInterceptor, languageInterceptor, errorInterceptor])
         ),
         provideStore({
             nav: navReducer,

@@ -9,6 +9,16 @@
 bin/
 obj/
 appsettings.Production.json
+# ======================
+# Uploaded files
+wwwroot/uploads/*
+!wwwroot/uploads/.gitkeep
+# ======================
+# Logs
+logs/*
+*.log
+!logs/.gitkeep
+
 
 # ======================
 # Angular
@@ -20,3 +30,5 @@ dist/
 # Environment & secrets
 .env
 firebase-config.json
+/TaskMangment.API/Properties/PublishProfiles
+/TaskMangment.Hangfire/Properties/PublishProfiles

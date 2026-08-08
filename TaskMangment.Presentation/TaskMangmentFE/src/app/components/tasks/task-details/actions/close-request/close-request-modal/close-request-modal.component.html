@@ -1,0 +1,51 @@
+<form [formGroup]="form">
+
+  <div class="modal-header">
+    <h6 class="modal-title">
+      {{ 'TASK.CLOSE_REQUEST' | translate }}
+    </h6>
+    <button class="btn-close" (click)="modal.dismiss()"></button>
+  </div>
+
+  <div class="modal-body">
+
+    <div class="alert alert-warning">
+      {{ 'TASK.CLOSE_REQUEST_WARNING_INFO' | translate }}
+    </div>
+
+    <label class="form-label">
+      {{ 'TASK.CLOSE_REQUEST_TITLE' | translate }}
+    </label>
+
+    <textarea
+      class="form-control"
+      rows="4"
+      formControlName="reason"
+      placeholder="{{ 'TASK.CLOSE_REQUEST_PLACEHOLDER' | translate }}">
+    </textarea>
+
+    <!-- رسالة الخطأ -->
+    <div class="text-danger small mt-1" *ngIf="form.controls['reason'].touched && form.controls['reason'].invalid">
+      <div *ngIf="form.controls['reason'].errors?.['required']">
+        {{ 'TASK.REQUIRED_FIELD' | translate }}
+      </div>
+      <div *ngIf="form.controls['reason'].errors?.['minlength']">
+        {{ 'TASK.MIN_LENGTH_TASK_CHARACTERS' | translate }}
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-footer">
+    <button class="btn btn-secondary" (click)="modal.dismiss()">
+      {{ 'FORM.CANCEL' | translate }}
+    </button>
+
+    <button
+      class="btn btn-danger"
+      [disabled]="form.invalid || isSubmitting"
+      (click)="submit()">
+      {{ 'TASK.SUBMIT_REQUEST' | translate }}
+    </button>
+  </div>
+
+</form>

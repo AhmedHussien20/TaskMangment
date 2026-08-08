@@ -1,0 +1,194 @@
+<div class="task-audit">
+
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h6 class="mb-0">
+      <i class="bi bi-activity me-2"></i>
+      {{ 'TASK.ACTIVITY_SUMMARY' | translate }}
+    </h6>
+  </div>
+
+  <div *ngIf="isLoading" class="text-center py-4">
+    <div class="spinner-border spinner-border-sm" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <small class="text-muted d-block mt-2">{{ 'COMMON.LOADING' | translate }}</small>
+  </div>
+
+  <div *ngIf="!isLoading && items.length > 0" class="task-audit-content">
+    <div *ngIf="commentItems.length > 0" class="mb-4">
+      <div class="d-flex align-items-center justify-content-between mb-2 px-1">
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-chat-dots text-primary"></i>
+          <h6 class="mb-0">
+            {{ 'TASK.COMMENTS' | translate }}
+          </h6>
+          <span class="badge bg-primary rounded-pill ms-2">{{ counts['comment'] }}</span>
+        </div>
+      </div>
+      <ul class="list-group list-group-flush">
+        <li *ngFor="let item of commentItems" class="list-group-item">
+          <div class="d-flex align-items-start gap-3">
+            <i class="bi bi-chat-dots text-primary" style="font-size: 1.2rem;"></i>
+            <div class="flex-grow-1">
+              <div class="fw-semibold">{{ item.message }}</div>
+              <div class="text-muted small">
+                <div>{{ item.user }}</div>
+                <div>{{ item.date | myDate:'d MMMM y':true }}</div>
+              </div>
+            </div>
+          </div>
+        </li>
+      </ul>
+      <hr class="my-3">
+
+    </div>
+
+    <div *ngIf="warningItems.length > 0" class="mb-4">
+      <div class="d-flex align-items-center justify-content-between mb-2 px-1">
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-exclamation-triangle text-warning"></i>
+          <h6 class="mb-0">
+            {{ 'TASK.WARNINGS' | translate }}
+          </h6>
+          <span class="badge bg-warning rounded-pill ms-2">{{ counts['warning'] }}</span>
+        </div>
+      </div>
+      <ul class="list-group list-group-flush">
+        <li *ngFor="let item of warningItems" class="list-group-item">
+          <div class="d-flex align-items-start gap-3">
+            <i class="bi bi-exclamation-triangle text-warning" style="font-size: 1.2rem;"></i>
+            <div class="flex-grow-1">
+              <div class="fw-semibold">{{ item.message }}</div>
+              <div class="text-muted small">
+                <div>{{ item.user }}</div>
+                <div>{{ item.date | myDate:'d MMMM y':true }}</div>
+              </div>
+            </div>
+          </div>
+        </li>
+      </ul>
+      <hr class="my-3">
+
+    </div>
+
+    <div *ngIf="penaltyItems.length > 0" class="mb-4">
+      <div class="d-flex align-items-center justify-content-between mb-2 px-1">
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-cash-coin text-danger"></i>
+          <h6 class="mb-0">
+            {{ 'TASK.PENALTIES' | translate }}
+          </h6>
+          <span class="badge bg-danger rounded-pill ms-2">{{ counts['penalty'] }}</span>
+        </div>
+      </div>
+      <ul class="list-group list-group-flush">
+        <li *ngFor="let item of penaltyItems" class="list-group-item">
+          <div class="d-flex align-items-start gap-3">
+            <i class="bi bi-cash-coin text-danger" style="font-size: 1.2rem;"></i>
+            <div class="flex-grow-1">
+              <div class="fw-semibold">{{ item.message }}</div>
+              <div class="text-muted small">
+                <div>{{ item.user }}</div>
+                <div>{{ item.date | myDate:'d MMMM y':true }}</div>
+              </div>
+            </div>
+          </div>
+        </li>
+      </ul>
+      <hr class="my-3">
+
+    </div>
+
+    <div *ngIf="extensionItems.length > 0" class="mb-4">
+      <div class="d-flex align-items-center justify-content-between mb-2 px-1">
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-clock-history text-info"></i>
+          <h6 class="mb-0">
+            {{ 'TASK.EXTENSION_REQUESTS' | translate }}
+          </h6>
+          <span class="badge bg-info rounded-pill ms-2">{{ counts['extension'] }}</span>
+        </div>
+      </div>
+      <ul class="list-group list-group-flush">
+        <li *ngFor="let item of extensionItems" class="list-group-item">
+          <div class="d-flex align-items-start gap-3">
+            <i class="bi bi-clock-history text-info" style="font-size: 1.2rem;"></i>
+            <div class="flex-grow-1">
+              <div class="fw-semibold">{{ item.message }}</div>
+              <div class="text-muted small">
+                <div>{{ item.user }}</div>
+                <div>{{ item.date | myDate:'d MMMM y':true }}</div>
+              </div>
+            </div>
+          </div>
+        </li>
+      </ul>
+      <hr class="my-3">
+    </div>
+
+    <div *ngIf="percentageItems.length > 0" class="mb-4">
+      <div class="d-flex align-items-center justify-content-between mb-2 px-1">
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-bar-chart-line text-success"></i>
+          <h6 class="mb-0">
+            {{ 'TASK.PERCENTAGE_UPDATES' | translate }}
+          </h6>
+          <span class="badge bg-success rounded-pill ms-2">{{ counts['percentage'] }}</span>
+        </div>
+      </div>
+      <ul class="list-group list-group-flush">
+        <li *ngFor="let item of percentageItems" class="list-group-item">
+          <div class="d-flex align-items-start gap-3">
+            <i class="bi bi-bar-chart-line text-success" style="font-size: 1.2rem;"></i>
+            <div class="flex-grow-1">
+              <div class="fw-semibold">{{ item.message }}</div>
+              <div class="text-muted small">
+                <div>{{ item.user }}</div>
+                <div>{{ item.date | myDate:'d MMMM y':true }}</div>
+              </div>
+            </div>
+          </div>
+        </li>
+      </ul>
+      <hr class="my-3">
+    </div>
+
+    <!-- قسم طلبات الإغلاق -->
+    <div *ngIf="closeItems.length > 0" class="mb-4">
+      <div class="d-flex align-items-center justify-content-between mb-2 px-1">
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-x-circle text-secondary"></i>
+          <h6 class="mb-0">
+            {{ 'TASK.CLOSE_REQUESTS' | translate }}
+          </h6>
+          <span class="badge bg-secondary rounded-pill ms-2">{{ counts['close'] }}</span>
+        </div>
+      </div>
+      <ul class="list-group list-group-flush">
+        <li *ngFor="let item of closeItems" class="list-group-item">
+          <div class="d-flex align-items-start gap-3">
+            <i class="bi bi-x-circle text-secondary" style="font-size: 1.2rem;"></i>
+            <div class="flex-grow-1">
+              <div class="fw-semibold">{{ item.message }}</div>
+              <div class="text-muted small">
+                <div>{{ item.user }}</div>
+                <div>{{ item.date | myDate:'d MMMM y':true }}</div>
+              </div>
+            </div>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+
+
+  </div>
+
+  <div *ngIf="!isLoading && items.length === 0" class="card border-0 shadow-sm">
+    <div class="card-body text-center text-muted py-4">
+      <i class="bi bi-activity display-6 d-block mb-2 opacity-50"></i>
+      {{ 'TASK.NO_DATA' | translate }}
+    </div>
+  </div>
+
+</div>

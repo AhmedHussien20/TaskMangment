@@ -1,0 +1,11 @@
+<div class="leave-type-create-update">
+  <!-- Leave type create/update form -->
+</div>
+<app-generic-form
+  [title]="title"
+  [breadcrumbs]="breadcrumbs"
+  [activeitem]="activeitem | translate"
+  [formGroup]="formGroup"
+  [formConfig]="formConfig"
+  (formSubmit)="onSubmit($event)">
+</app-generic-form>

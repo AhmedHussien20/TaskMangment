@@ -1,14 +1,21 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, MinLengthValidator, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { Employee } from 'app/core/models/employee/employee';
-import { FormFieldConfig } from 'app/core/models/form-field-config';
-import { EmployeeService } from 'app/core/services/employee.service';
-import { TaskService } from 'app/core/services/task.service';
 import { GenericFormComponent } from 'app/shared/components/generic-form/generic-form.component';
-import { Validators } from 'ngx-editor';
+import { TaskService } from 'app/core/services/task.service';
+import { EmployeeService } from 'app/core/services/employee.service';
+import { Employee } from 'app/core/models/employee/employee';
 import { ToastrService } from 'ngx-toastr';
+import { FormFieldConfig } from 'app/core/models/form-field-config';
+import { CommentAllowPeriod, TaskPriority, TaskStatus } from 'app/core/models/task/task';
+import { decimalValidator, penaltyAmountValidator } from 'app/shared/validations/numberVlidator';
+import {
+  notPastDueDateValidator,
+  startOfToday,
+  taskDueDateCalendarFilter,
+  weekendDueDateValidator
+} from 'app/shared/validations/weekend-due-date.validator';
 
 @Component({
   selector: 'app-task-create-update',
@@ -23,171 +30,348 @@ import { ToastrService } from 'ngx-toastr';
 })
 export class TaskCreateUpdateComponent implements OnInit {
 
-  @Input() isEdit = false;
+  @Input() isEdit: boolean = false;
   @Input() taskId: number | null = null;
   @Output() formSubmitted = new EventEmitter<void>();
-
+  @Input() isCopy: boolean = false;
+  /** Preselect assignees when creating a task from Employee 360. */
+  @Input() preselectedEmployeeIds: number[] = [];
   formGroup!: FormGroup;
+
+  title = 'TASK.ADD';
+  breadcrumbs = ['HOME', 'TASKS'];
+  activeitem = 'TASK.ADD';
 
   formConfig: FormFieldConfig[] = [
 
-    /* ================= TITLE ================= */
     {
       type: 'input',
-      inputType: 'text',
       label: 'TASK.TITLE',
       name: 'title',
-      validations: { required: true, maxlength: 300 }
+      validations: { required: true, minlength: 3, maxlength: 300 },
+      defaultValue: ''
     },
 
-    /* ================= ASSIGNED EMPLOYEES ================= */
     {
       type: 'select',
       label: 'TASK.ASSIGNED_EMPLOYEES',
       name: 'assignedEmployeeIds',
-      options: [],              // تُملأ من employees
+      selectType: 'employee',
       multiple: true,
-      selectType: 'employee',   // مهم للـ template
-      validations: { required: true }
+      isPaginated: true,
+      searchFunction: (searchTerm: string) => {
+          const request = {
+            searchKey: searchTerm || '',
+            pageIndex: 1,
+            pageSize: 20, 
+            sortColumn: 'Id',
+            sortDirection: 'DESC'
+          };
+          
+          return this.employeeService.getAll(request);
+        },
+      options: [],
+      validations: { required: true },
+      defaultValue: []
     },
 
-    /* ================= PRIORITY ================= */
     {
       type: 'select',
       label: 'TASK.PRIORITY',
       name: 'priority',
       selectType: 'simple',
       options: [
-        { label: 'TASK.PRIORITY_LOW', value: 0 },
-        { label: 'TASK.PRIORITY_MEDIUM', value: 1 },
-        { label: 'TASK.PRIORITY_HIGH', value: 2 }
+        { label: 'TASK.PRIORITY_LOW', value: TaskPriority.Low },
+        { label: 'TASK.PRIORITY_MEDIUM', value: TaskPriority.Medium },
+        { label: 'TASK.PRIORITY_HIGH', value: TaskPriority.High }
       ],
-      validations: { required: true }
+      validations: { required: true },
+      defaultValue: TaskPriority.Low
+    },
+    {
+      type: 'select',
+      label: 'TASK.STATUS',
+      name: 'status',
+      selectType: 'simple',
+      options: [
+        { label: 'TASK.STATUS_NEW', value: TaskStatus.New },
+        { label: 'TASK.STATUS_IN_PROGRESS', value: TaskStatus.InProgress },
+        { label: 'TASK.STATUS_CLOSED', value: TaskStatus.Closed },
+        { label: 'TASK.STATUS_ARCHIVED', value: TaskStatus.Archived }
+
+      ],
+      validations: { required: true },
+      defaultValue: TaskStatus.New,
+  disabled: !this.isEdit 
+
     },
 
-    /* ================= DUE DATE ================= */
     {
       type: 'date',
       label: 'TASK.DUE_DATE',
-      name: 'dueDate'
+      name: 'dueDate',
+      defaultValue: null,
+      minDate: startOfToday(),
+      dateFilter: taskDueDateCalendarFilter,
+      errorMessages: {
+        weekendDueDate: 'TASK.DUE_DATE_WEEKEND',
+        pastDueDate: 'TASK.DUE_DATE_PAST'
+      }
     },
 
-    /* ================= COMMENT PERIOD ================= */
     {
-      type: 'input',
-      inputType: 'number',
+      type: 'select',
       label: 'TASK.COMMENT_ALLOW_PERIOD',
-      name: 'commentAllowPeriodDays'
+      name: 'commentAllowPeriodDays',
+      selectType: 'simple',
+      options: [
+        { label: 'TASK.DAILY', value: CommentAllowPeriod.Daily },
+        { label: 'TASK.WEEKLY', value: CommentAllowPeriod.Weekly },
+        { label: 'TASK.MONTHLY', value: CommentAllowPeriod.Monthly },
+      ],
+      defaultValue: CommentAllowPeriod.Daily
     },
-
-    /* ================= WARNINGS ================= */
     {
       type: 'input',
       inputType: 'number',
-      label: 'TASK.MAX_WARNINGS',
-      name: 'maxWarnings'
+      label: 'TASK.MIN_COMMENTS_PER_PERIOD',
+      name: 'minCommentsPerPeriod',
+      validations: { required: true, min: 1, max: 30 },
+      defaultValue: 1
     },
 
-    /* ================= PENALTIES ================= */
     {
       type: 'input',
       inputType: 'number',
-      label: 'TASK.PENALTY_AT_MAX_WARNINGS',
-      name: 'penaltyAtMaxWarnings'
+      label: 'TASK.MAX_WARNINGS_BEFORE_DISCOUNT',
+      name: 'maxWarningsBeforeDiscount',
+      validations: { required: true, min: 0, max: 3 },
+      defaultValue: 3
     },
 
     {
       type: 'input',
       inputType: 'number',
       label: 'TASK.PENALTY_ON_AUTO_CLOSE',
-      name: 'penaltyOnAutoClose'
+      name: 'penaltyOnAutoClose',
+      validations: { required: true, minPenalty: 50 },
+      defaultValue: null
     },
-
-    /* ================= SHARED ================= */
+    {
+      type: 'input',
+      inputType: 'number',
+      label: 'TASK.PENALTY_ON_STOP_COMMENT',
+      name: 'penaltyOnStopComment',
+      validations: { required: true, minPenalty: 50 },
+      defaultValue: null
+    },
     {
       type: 'checkbox',
       label: 'TASK.IS_SHARED',
-      name: 'isShared'
+      name: 'isShared',
+      defaultValue: false
+    },
+    {
+      type: 'checkbox',
+      label: 'TASK.REQUIRE_UPLOAD_FILE_WHEN_COMMENTING',
+      name: 'requireUploadFile',
+      defaultValue: false
     },
 
-    /* ================= DESCRIPTION ================= */
     {
       type: 'textarea',
       label: 'TASK.DESCRIPTION',
-      name: 'description'
+      name: 'description',
+      defaultValue: ''
     }
-
   ];
-
-
-
-  title = 'TASK.ADD';
-  breadcrumbs = ['HOME', 'TASKS'];
-  activeitem = 'TASK.ADD';
 
   constructor(
     private fb: FormBuilder,
     private taskService: TaskService,
-    private toastr: ToastrService,
     private employeeService: EmployeeService,
+    private toastr: ToastrService,
     private translate: TranslateService
   ) { }
 
-  ngOnInit() {
+  ngOnInit(): void {
+  this.initForm();
+  this.loadEmployees();
+
+  if ((this.isEdit || this.isCopy) && this.taskId) {
+    this.loadTask();
+  } else if (!this.isEdit && this.preselectedEmployeeIds?.length) {
+    this.applyPreselectedEmployees();
+  }
+}
+
+  private applyPreselectedEmployees(): void {
+    const ids = [...this.preselectedEmployeeIds];
+    this.formGroup.patchValue({ assignedEmployeeIds: ids });
+
+    const field = this.formConfig.find(f => f.name === 'assignedEmployeeIds');
+    if (!field) return;
+
+    // Ensure preselected employees appear in options even if not on first page.
+    ids.forEach(id => {
+      const exists = (field.options || []).some((o: any) => o.value === id);
+      if (!exists) {
+        this.employeeService.getById(id).subscribe({
+          next: (res: any) => {
+            const emp = res?.data;
+            if (!emp) return;
+            field.options = [
+              {
+                label: emp.fullName,
+                value: emp.id ?? id,
+                mobile: emp.mobile,
+                email: emp.email
+              },
+              ...(field.options || [])
+            ];
+            this.formGroup.patchValue({ assignedEmployeeIds: ids });
+          }
+        });
+      }
+    });
+  }
+
+  initForm() {
     this.formGroup = this.fb.group({
-      title: ['', Validators.required],
-      description: [''],
+      title: ['', [
+        Validators.required,
+        Validators.minLength(3),
+        Validators.maxLength(100)
+      ]],
+      description: ['', Validators.required],
       assignedEmployeeIds: [[], Validators.required],
-      priority: [0, Validators.required],
-      dueDate: [null],
-      commentAllowPeriodDays: [null],
-      maxWarnings: [3],
-      penaltyAtMaxWarnings: [0],
-      penaltyOnAutoClose: [0],
-      isShared: [false]
+      priority: [TaskPriority.Low, Validators.required],
+    status: [{ value: TaskStatus.New, disabled: !this.isEdit }, Validators.required], 
+      dueDate: [null, [Validators.required, weekendDueDateValidator(), notPastDueDateValidator()]],
+      commentAllowPeriodDays: [CommentAllowPeriod.Daily, Validators.required],
+      minCommentsPerPeriod: [1, [Validators.required, Validators.min(1), Validators.max(30)]],
+      maxWarningsBeforeDiscount: [3, [Validators.required, Validators.min(0), Validators.max(3)]],
+      penaltyOnAutoClose: [50, [Validators.required, decimalValidator(), penaltyAmountValidator()]],
+      penaltyOnStopComment : [50, [Validators.required, decimalValidator(), penaltyAmountValidator()]],
+      isShared: [false],
+      requireUploadFile: [false]
     });
 
-    this.loadEmployees();
-    if (this.isEdit && this.taskId) {
-      this.taskService.getById(this.taskId).subscribe(res => {
-        this.formGroup.patchValue(res.data);
+  }
+
+ loadTask() {
+  this.taskService.getById(this.taskId!).subscribe(res => {
+    const task = res.data;
+
+    const assigned = (task.assignEmployee || []).map((e: any) => ({
+      value: e.id,
+      label: e.name
+    }));
+
+    const assignedEmployeeIds = assigned.map(x => x.value);
+
+    const field = this.formConfig.find(f => f.name === 'assignedEmployeeIds');
+    if (field) {
+      field.options = field.options || [];
+      const existing = new Set(field.options.map((x: any) => x.value));
+      const missing = assigned.filter(x => !existing.has(x.value));
+      field.options = [...missing, ...field.options];
+    }
+
+    let dueDate: string | null = null;
+    if (task.dueDate) {
+      const d = new Date(task.dueDate);
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      dueDate = `${d.getFullYear()}-${month}-${day}`;
+    }
+
+    this.formGroup.patchValue({
+      ...task,
+      assignedEmployeeIds,
+      dueDate,
+      
+    });
+    if (this.isCopy) {
+  this.formGroup.patchValue({
+    status: TaskStatus.New,
+    title: `${task.title} - ${this.translate.instant('TASK.COPY')}`,
+    dueDate: null
+  });
+}
+    if (this.isEdit) {
+  this.formGroup.get('status')!.enable();
+}
+
+  });
+}
+
+
+
+  loadEmployees() {
+  const field = this.formConfig.find(f => f.name === 'assignedEmployeeIds');
+  if (field) {
+    field.isPaginated = true;
+    field.searchFunction = (searchTerm: string, page: number) => {
+      const request = {
+        searchKey: searchTerm || '',
+        pageIndex: page,
+        pageSize: 20,
+        sortColumn: 'Id',
+        sortDirection: 'DESC',
+        permissionCode : 'CREATE_TASK'
+      };
+      
+      return this.employeeService.getAll(request);
+    };
+    
+    if (field.searchFunction) {
+      field.searchFunction('', 1).subscribe(res => {
+        field.options = res.data.data.map((emp: Employee) => ({
+          label: emp.fullName,
+          value: emp.id,
+          mobile: emp.mobile,
+          email: emp.email
+        }));
+
+        if (!this.isEdit && this.preselectedEmployeeIds?.length) {
+          this.applyPreselectedEmployees();
+        }
       });
     }
   }
+}
+  onSubmit(formData: any) {
+    if (this.formGroup.invalid) {
+      this.formGroup.markAllAsTouched();
+      const dueCtrl = this.formGroup.get('dueDate');
+      if (dueCtrl?.hasError('weekendDueDate')) {
+        this.toastr.error(this.translate.instant('TASK.DUE_DATE_WEEKEND'));
+      } else if (dueCtrl?.hasError('pastDueDate')) {
+        this.toastr.error(this.translate.instant('TASK.DUE_DATE_PAST'));
+      } else {
+        this.toastr.error(this.translate.instant('FORM.VALIDATION_ERROR'));
+      }
+      return;
+    }
+    const payload = { ...this.formGroup.value, penaltyAtMaxWarnings: 0, maxWarnings: 3 };
+    if (payload.dueDate instanceof Date) {
+      const d: Date = payload.dueDate;
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      payload.dueDate = `${y}-${m}-${day}`;
+    }
+    const request$ =
+  this.isEdit && !this.isCopy && this.taskId
+    ? this.taskService.update(this.taskId, payload)
+    : this.taskService.create(payload);
 
-  onSubmit() {
-    if (this.formGroup.invalid) return;
-
-    const req = this.isEdit
-      ? this.taskService.update(this.taskId!, this.formGroup.value)
-      : this.taskService.create(this.formGroup.value);
-
-    req.subscribe(() => {
-      this.toastr.success(this.translate.instant('TASK.SAVED_SUCCESS'));
-      this.formSubmitted.emit();
-    });
-  }
-
-  loadEmployees() {
-    const req = {
-      searchKey: '',
-      pageIndex: 1,
-      pageSize: 1000,
-      sortColumn: 'Id',
-      sortDirection: 'ASC'
-    };
-
-    this.employeeService.getAll(req).subscribe(res => {
-      const list = res.data.data;
-
-      const assignedEmployeeIds = this.formConfig.find(x => x.name === 'assignedEmployeeIds');
-       
-      if (assignedEmployeeIds) {
-        assignedEmployeeIds.options = list.map((emp: Employee) => ({
-          label: emp.fullName,
-          value: emp.id
-        }));
-      } 
+    request$.subscribe({
+      next: () => {
+        this.toastr.success(this.translate.instant('TASK.SAVED_SUCCESS'));
+        this.formSubmitted.emit();
+      }
     });
   }
 }

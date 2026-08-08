@@ -10,5 +10,7 @@ namespace TaskMangment.Application.Common.ApiRequests.Task
 {
     public class TaskExtensionRequestRequest : BaseApiRequest
     {
+        public int TaskId { get; set; }
+
     }
 }

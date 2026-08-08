@@ -4,40 +4,13 @@
   [ngClass]="{ 'sticky-pin': scrolled }"
 >
   <!-- Start::main-sidebar-header -->
-  <div class="main-sidebar-header">
-    <a routerLink="/dashboard" class="header-logo">
-      <img
-        src="./assets/images/brand-logos/desktop-white.png"
-        class="desktop-white"
-        alt="logo"
-      />
-      <img
-        src="./assets/images/brand-logos/toggle-white.png"
-        class="toggle-white"
-        alt="logo"
-      />
-      <img
-        src="./assets/images/brand-logos/desktop-logo.png"
-        class="desktop-logo"
-        alt="logo"
-      />
-      <img
-        src="./assets/images/brand-logos/toggle-dark.png"
-        class="toggle-dark"
-        alt="logo"
-      />
-      <img
-        src="./assets/images/brand-logos/toggle-logo.png"
-        class="toggle-logo"
-        alt="logo"
-      />
-      <img
-        src="./assets/images/brand-logos/desktop-dark.png"
-        class="desktop-dark"
-        alt="logo"
-      />
-    </a>
-  </div>
+ <div class="main-sidebar-header">
+  <a routerLink="/dashboard" class="header-logo text-logo">
+    <span class="logo-full">إدارة المهام</span>
+    <span class="logo-short">"م.م"</span>
+  </a>
+</div>
+
   <!-- End::main-sidebar-header -->
   <!-- <ngx-simplebar> -->
   <ngx-simplebar class="main-sidebar" id="sidebar-scroll">
@@ -136,8 +109,7 @@
                 'double-menu-active': menuItem.active,
                 'force-left': menuItem.dirchange
               }"
-              [ngStyle]="{ display: menuItem.active ? 'block' : 'none' }"
-            >
+              [ngStyle]="{ display: menuItem.active ? 'block' : 'none' }">
               <li class="slide side-menu__label1">
                 <a href="javascript:void(0)">{{ menuItem.title }}</a>
               </li>

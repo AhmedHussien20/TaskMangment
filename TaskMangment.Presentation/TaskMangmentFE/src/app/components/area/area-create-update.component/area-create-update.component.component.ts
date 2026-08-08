@@ -40,7 +40,7 @@ export class AreaCreateUpdateComponent implements OnInit {
   breadcrumbs = ['Home', 'Areas'];
   activeitem = 'AREA.create';
 
-  formGroup!: FormGroup; // ← أضف !
+  formGroup!: FormGroup;
 
   formConfig: FormFieldConfig[] = [
     {
@@ -54,14 +54,27 @@ export class AreaCreateUpdateComponent implements OnInit {
       type: 'input',
       label: 'AREA.ADDRESS',
       name: 'address',
-      validations: { maxlength: 200 },
+      validations: {required: true, maxlength: 200 },
       defaultValue: ''
     },
     {
       type: 'select',
       label: 'AREA.MANAGER',
-      name: 'managerId',
+      name: 'managerEmployeeId',
       selectType: 'employee',
+      isPaginated: true,
+      searchFunction: (searchTerm: string) => {
+          const request = {
+            searchKey: searchTerm || '',
+            pageIndex: 1,
+            pageSize: 20, 
+            sortColumn: 'Id',
+            sortDirection: 'DESC',
+            requiresBranchScope: true
+          };
+          
+          return this.employeeService.getAll(request);
+        },
       options: [],
       validations: { required: true },
       defaultValue: null
@@ -79,19 +92,19 @@ export class AreaCreateUpdateComponent implements OnInit {
 
   ngOnInit() {
     this.initForm();
-    this.loadEmployees();
-
-    if (this.isEdit && this.areaId) {
-      this.loadArea();
-    }
+    this.loadManagers(() => {
+      if (this.isEdit && this.areaId) {
+        this.loadArea();
+      }
+    });
   }
 
   initForm() {
     this.formGroup = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100)]],
-      address: ['', Validators.maxLength(200)],
+      address: ['', [Validators.required, Validators.maxLength(200)]],
       managerName: ['', Validators.maxLength(100)],
-      managerId: [null, Validators.required]
+      managerEmployeeId: [null, Validators.required]
 
     });
   }
@@ -102,57 +115,67 @@ export class AreaCreateUpdateComponent implements OnInit {
     this.areaService.getById(this.areaId).subscribe(res => {
       if (!res) return;
       const area = res.data;
+      const managerField = this.formConfig.find(f => f.name === 'managerEmployeeId');
+
+      this.ensureEmployeeOption(managerField, area.managerEmployeeId, area.managerName ?? undefined);
+
       this.formGroup.patchValue({
         name: area.name,
         address: area.address,
-        managerId: area.managerID
+        managerEmployeeId: area.managerEmployeeId
       });
-
-      console.log('Loaded area data: ', res);
     });
   }
 
-  loadEmployees() {
+  private ensureEmployeeOption(field: FormFieldConfig | undefined, id?: number, name?: string): void {
+    if (!field || !id || !name) return;
+
+    field.options = field.options || [];
+    if (!field.options.some(o => o.value === id)) {
+      field.options = [{ label: name, value: id }, ...field.options];
+    }
+  }
+
+ loadManagers(onReady?: () => void): void {
+  const field = this.formConfig.find(f => f.name === 'managerEmployeeId');
+  if (!field) {
+    onReady?.();
+    return;
+  }
+
+  field.isPaginated = true;
+
+  field.searchFunction = (searchTerm: string, page: number) => {
     const request = {
-      searchKey: '',
-      pageIndex: 1,
-      pageSize: 1000,
+      searchKey: searchTerm || '',
+      pageIndex: page,
+      pageSize: 20,
       sortColumn: 'Id',
-      sortDirection: 'ASC'
+      sortDirection: 'DESC',
+      requiresBranchScope: true
     };
 
-    this.employeeService.getAll(request).subscribe(res => {
-      const list = res.data.data;
+    return this.employeeService.getAll(request);
+  };
 
-      const managerField = this.formConfig.find(f => f.name === 'managerId');
+  field.searchFunction('', 1).subscribe(res => {
+    field.options = (res?.data?.data ?? []).map((emp: Employee) => ({
+      label: emp.fullName,
+      value: emp.id,
+      mobile: emp.mobile,
+      email: emp.email
+    }));
+    onReady?.();
+  });
+}
 
-       if (managerField) {
-    managerField.options = list.map((emp: Employee) => ({
-          label: emp.fullName,
-          value: emp.id,
-          mobile: emp.mobile,
-          email: emp.email
-        }));
-      }
-    });
-  }
 
 
 
   onSubmit(formData: any) {
-
     if (this.formGroup.invalid) {
       this.formGroup.markAllAsTouched();
-
-      this.toastr.error(
-        this.translate.instant('FORM.VALIDATION_ERROR'),
-        this.translate.instant('FORM.ERROR'),
-        {
-          timeOut: 3000,
-          positionClass: 'toast-top-right',
-        }
-      );
-
+      this.toastr.error(this.translate.instant('FORM.VALIDATION_ERROR'));
       return;
     }
 
@@ -160,29 +183,9 @@ export class AreaCreateUpdateComponent implements OnInit {
     if (this.isEdit && this.areaId) {
       this.areaService.update(this.areaId, this.formGroup.value).subscribe({
         next: (response) => {
+          this.toastr.success(this.translate.instant('AREA.UPDATED_SUCCESS'));
           this.formSubmitted.emit();
-
-          this.toastr.success(
-            this.translate.instant('AREA.UPDATE_SUCCESS'),
-            this.translate.instant('FORM.SUCCESS'),
-            {
-              timeOut: 3000,
-              positionClass: 'toast-top-right',
-            }
-          );
         },
-        error: (error) => {
-          console.error('Update error:', error);
-
-          this.toastr.error(
-            this.translate.instant('AREA.UPDATE_FAILED'),
-            this.translate.instant('FORM.ERROR'),
-            {
-              timeOut: 3000,
-              positionClass: 'toast-top-right',
-            }
-          );
-        }
       });
     }
 
@@ -190,29 +193,9 @@ export class AreaCreateUpdateComponent implements OnInit {
     else {
       this.areaService.create(this.formGroup.value).subscribe({
         next: (response) => {
+          this.toastr.success(this.translate.instant('AREA.CREATE_SUCCESS'));
           this.formSubmitted.emit();
-
-          this.toastr.success(
-            this.translate.instant('AREA.CREATE_SUCCESS'),
-            this.translate.instant('FORM.SUCCESS'),
-            {
-              timeOut: 3000,
-              positionClass: 'toast-top-right',
-            }
-          );
         },
-        error: (error) => {
-          console.error('Create error:', error);
-
-          this.toastr.error(
-            this.translate.instant('AREA.CREATE_FAILED'),
-            this.translate.instant('FORM.ERROR'),
-            {
-              timeOut: 3000,
-              positionClass: 'toast-top-right',
-            }
-          );
-        }
       });
     }
   }

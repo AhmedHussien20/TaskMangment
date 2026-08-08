@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -6,14 +7,19 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TaskMangment.Application.Common.ApiRequests.Task;
+using TaskMangment.Application.Common.Errors;
+using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Responses;
+using TaskMangment.Application.Common.Security;
+using TaskMangment.Application.Common.Validation;
 using TaskMangment.Application.DTOs;
 using TaskMangment.Application.DTOs.TaskDTOs;
 using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
+using TaskMangment.Domain.Event;
 using TaskMangment.Infrastructure.Persistence.Extensions;
 
 namespace TaskMangment.Infrastructure.Services
@@ -23,38 +29,64 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<TaskExtensionRequest> _requestRepo;
         private readonly IRepository<TaskAssignment> _taskAssignmentRepo;
         private readonly IRepository<WorkTask> _taskRepo;
+        private readonly IRepository<Employee> _employeeRepo;
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
+        private readonly IDomainEventDispatcher _eventDispatcher;
+        private readonly INotificationRecipientBuilder _recipientBuilder;
+        private readonly TaskCreatedByMeEvaluator _createdByMe;
+        private readonly IEmployeePermissionService _permissions;
+
 
         public TaskExtensionRequestService(
             IRepository<TaskExtensionRequest> requestRepo,
             IRepository<TaskAssignment> taskAssignmentRepo,
+            IRepository<Employee> employeeRepo,
             IMapper mapper,
             ICachingService cache,
-            IRepository<WorkTask> taskRepo)
+            IRepository<WorkTask> taskRepo,
+            IDomainEventDispatcher eventDispatcher,
+            INotificationRecipientBuilder recipientBuilder,
+            TaskCreatedByMeEvaluator createdByMe,
+            IEmployeePermissionService permissions)
         {
             _requestRepo = requestRepo;
             _taskAssignmentRepo = taskAssignmentRepo;
+            _employeeRepo = employeeRepo;
             _mapper = mapper;
             _cache = cache;
             _taskRepo = taskRepo;
+            _eventDispatcher = eventDispatcher;
+            _recipientBuilder = recipientBuilder;
+            _createdByMe = createdByMe;
+            _permissions = permissions;
         }
 
         public async Task<ApiResponse<PagedResponse<TaskExtensionRequestListDto>>> GetAllAsync(TaskExtensionRequestRequest request)
         {
-            string cacheKey = $"taskExtensionRequests:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
+            //string cacheKey = $"taskExtensionRequests:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}:{request.TaskId}";
 
-            if (!request.BypassCache)
-            {
-                var cached = await _cache.GetAsync<PagedResponse<TaskExtensionRequestListDto>>(cacheKey);
-                if (cached != null)
-                    return ApiResponse<PagedResponse<TaskExtensionRequestListDto>>.Ok(cached);
-            }
+            //if (!request.BypassCache)
+            //{
+            //    var cached = await _cache.GetAsync<PagedResponse<TaskExtensionRequestListDto>>(cacheKey);
+            //    if (cached != null)
+            //        return ApiResponse<PagedResponse<TaskExtensionRequestListDto>>.Ok(cached);
+            //}
 
-            var query = _requestRepo.GetAll()
-                .Include(r => r.TaskAssignment)
-                .Include(r => r.RequestedBy)
-                .Include(r => r.ReviewedBy)
+            var task = await _taskRepo.GetByIDAsync(request.TaskId);
+            if (task == null)
+                throw new AppException(ErrorCodes.TaskNotFound, StatusCodes.Status404NotFound);
+
+
+            var query = _requestRepo.GetAll(c => c.TaskId == request.TaskId)
+                                                      .Include(r => r.RequestedBy)
+                                                     .Include(r => r.ReviewedBy)
+
+                                                    .Include(r => r.TaskAssignment)
+                                                    .ThenInclude(a => a.Employee)
+                                                    .Include(r => r.TaskAssignment)
+                                                    .ThenInclude(a => a.Task)
+
                 .ApplySearch(request.searchKey);
 
             var totalCount = await query.CountAsync();
@@ -70,7 +102,7 @@ namespace TaskMangment.Infrastructure.Services
 
             var response = new PagedResponse<TaskExtensionRequestListDto>(dtos, totalCount, request.PageIndex, request.PageSize);
 
-            await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
+           // await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
 
             return ApiResponse<PagedResponse<TaskExtensionRequestListDto>>.Ok(response);
         }
@@ -85,27 +117,43 @@ namespace TaskMangment.Infrastructure.Services
                 .FirstOrDefaultAsync();
 
             if (request == null)
-                return ApiResponse<TaskExtensionRequestDetailsDto>.Fail("Request not found");
+                throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
 
-            var dto = _mapper.Map<TaskExtensionRequestDetailsDto>(request);
-            return ApiResponse<TaskExtensionRequestDetailsDto>.Ok(dto);
+            var savedRequest = await _requestRepo.GetAll(r => r.Id == request.Id)
+                                                             .Include(r => r.RequestedBy)
+                                                             .Include(r => r.TaskAssignment)
+                                                             .ThenInclude(a => a.Employee)
+                                                             .Include(r => r.TaskAssignment)
+                                                             .ThenInclude(a => a.Task)
+                                                            .AsNoTracking()
+                                                            .FirstOrDefaultAsync();
+
+            var resultDto = _mapper.Map<TaskExtensionRequestDetailsDto>(savedRequest);
+            resultDto.TaskTitle = savedRequest.TaskAssignment?.Task?.Title;
+            resultDto.ReviewedByName = savedRequest.ReviewedBy?.FullName;
+
+
+            return ApiResponse<TaskExtensionRequestDetailsDto>.Ok(resultDto);
         }
 
         public async Task<ApiResponse<TaskExtensionRequestDetailsDto>> AddAsync(TaskExtensionRequestAddDto dto, int taskId, int employeeId)
         {
             var task = await _taskRepo.GetByIDAsync(taskId);
             if (task == null)
-                return ApiResponse<TaskExtensionRequestDetailsDto>.Fail("Task not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.TaskNotFound, StatusCodes.Status404NotFound);
 
-            var assignment = await _taskAssignmentRepo.GetAll(a => a.TaskId == taskId && a.EmployeeId == employeeId)
+            var assignment = await _taskAssignmentRepo.GetAll(a => a.TaskId == taskId && a.EmployeeId == employeeId  && a.IsActive)
                                                       .FirstOrDefaultAsync();
             if (assignment == null)
-                return ApiResponse<TaskExtensionRequestDetailsDto>.Fail("Employee is not assigned to this task", StatusCode.BadRequest);
+                throw new AppException(ErrorCodes.NotAssigned, StatusCodes.Status400BadRequest);
+
+            if (assignment.IsClosed)
+                throw new AppException(ErrorCodes.TaskAlreadyClosed, StatusCodes.Status400BadRequest);
 
             var request = _mapper.Map<TaskExtensionRequest>(dto);
             request.TaskAssignmentId = assignment.Id;
+            request.TaskId = taskId;
             request.RequestedByEmployeeId = employeeId;
-            request.CreatedBy = employeeId;
             request.RequestedAt = DateTime.UtcNow;
             request.Status = ExtensionRequestStatus.Pending;
 
@@ -114,46 +162,169 @@ namespace TaskMangment.Infrastructure.Services
             await _cache.RemoveAsync("taskExtensionRequests:");
 
 
+            var peerIds = await _taskAssignmentRepo
+         .GetAll(a => a.TaskId == taskId && a.IsActive)
+   .Select(a => a.EmployeeId)
+   .ToListAsync();
+
+            var employeeInfo = await _employeeRepo.GetAll(e => e.Id == employeeId)
+                .Select(e => new { e.FullName, BranchName = e.Branch != null ? e.Branch.Name : null })
+                .FirstOrDefaultAsync();
+
+            if (task.AssignedByEmployeeId.HasValue && !peerIds.Contains(task.AssignedByEmployeeId.Value))
+            {
+                peerIds.Add(task.AssignedByEmployeeId.Value);
+            }
+
+            var assignedEmployeeIds = await _recipientBuilder.BuildAsync(
+                peerIds,
+                actorIdToExclude: employeeId,
+                managerAnchorEmployeeId: employeeId);
+
+            if (assignedEmployeeIds.Any())
+            {
+                await _eventDispatcher.PublishAsync(
+                    new TaskExtensionRequestEvent(
+                        request.Id,
+                        taskId,
+                        employeeInfo?.FullName,
+                        assignedEmployeeIds,
+                        task.Title,
+                        employeeInfo?.BranchName)
+                );
+            }
+
+
             var savedRequest = await _requestRepo.GetAll(r => r.Id == request.Id)
                                                  .Include(r => r.RequestedBy)
-                                                .Include(r => r.TaskAssignment)
-                                                .ThenInclude(a => a.Employee)
+                                                 .Include(r => r.TaskAssignment)
+                                                 .ThenInclude(a => a.Employee) 
+                                                 .Include(r => r.TaskAssignment)
+                                                 .ThenInclude(a => a.Task) 
                                                 .AsNoTracking()
                                                 .FirstOrDefaultAsync();
 
+
             var resultDto = _mapper.Map<TaskExtensionRequestDetailsDto>(savedRequest);
+            resultDto.TaskTitle = savedRequest.TaskAssignment.Task?.Title; 
+
+
 
             return ApiResponse<TaskExtensionRequestDetailsDto>.Ok(resultDto, "Extension request added successfully");
         }
 
-        public async Task<ApiResponse<TaskExtensionRequestDetailsDto>> ReviewAsync(int id, bool approved, int reviewerId)
+        public async Task<ApiResponse<TaskExtensionRequestDetailsDto>> ReviewAsync(int id,TaskExtensionReviewDto dto,int reviewerId)
         {
-            var request = await _requestRepo.GetByIDAsync(id);
-            if (request == null)
-                return ApiResponse<TaskExtensionRequestDetailsDto>.Fail("Request not found");
+            var request = await _requestRepo
+                .GetAll(r => r.Id == id)
+                .Include(r => r.TaskAssignment)
+                .ThenInclude(a => a.Task)
+                .FirstOrDefaultAsync();
 
-            request.Status = approved
-                ? Domain.Entities.ExtensionRequestStatus.Approved
-                : Domain.Entities.ExtensionRequestStatus.Rejected;
+            if (request == null)
+                throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
+
+            var task = request.TaskAssignment?.Task;
+
+            if (task == null)
+                throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
+
+            if (task.Status is WorkTaskStatus.Closed
+                or WorkTaskStatus.AutoClose
+                or WorkTaskStatus.Archived)
+            {
+                throw new AppException(
+                    ErrorCodes.TaskAlreadyClosed,
+                    StatusCodes.Status400BadRequest
+                );
+            }
+
+            if (request.Status != ExtensionRequestStatus.Pending)
+                throw new AppException(ErrorCodes.AlreadyReviewed, StatusCodes.Status400BadRequest);
+
+            if (!await _createdByMe.IsCreatedByMeAsync(task, reviewerId))
+                throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
+
+            var requiredPermission = dto.Status == ExtensionRequestStatus.Approved
+                ? PermissionCodes.ApproveTaskRequest
+                : PermissionCodes.RejectTaskRequest;
+            if (!await _permissions.HasAsync(reviewerId, requiredPermission))
+                throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
+
+            if (dto.Status == ExtensionRequestStatus.Approved)
+            {
+                if (!dto.NewDueDate.HasValue ||
+                    dto.NewDueDate < task.DueDate)
+                {
+                    throw new AppException(ErrorCodes.InvalidDate, StatusCodes.Status400BadRequest);
+                }
+
+                TaskDueDateRules.EnsureValidDueDate(dto.NewDueDate);
+
+                request.Status = ExtensionRequestStatus.Approved;
+                request.NewDueDate = dto.NewDueDate.Value;
+
+                var assignedEmployeeIds = await _taskAssignmentRepo
+                    .GetAll(a => a.TaskId == task.Id && a.IsActive)
+                    .Select(a => a.EmployeeId)
+                    .ToListAsync();
+
+                if (task.AssignedByEmployeeId.HasValue &&
+                    !assignedEmployeeIds.Contains(task.AssignedByEmployeeId.Value))
+                {
+                    assignedEmployeeIds.Add(task.AssignedByEmployeeId.Value);
+                }
+
+                assignedEmployeeIds = await _recipientBuilder.BuildAsync(
+                    assignedEmployeeIds,
+                    actorIdToExclude: reviewerId,
+                    managerAnchorEmployeeId: reviewerId);
+
+                var requesterBranchName = await _employeeRepo
+                    .GetAll(e => e.Id == request.RequestedByEmployeeId)
+                    .Select(e => e.Branch != null ? e.Branch.Name : null)
+                    .FirstOrDefaultAsync();
+
+                if (assignedEmployeeIds.Any())
+                {
+                    await _eventDispatcher.PublishAsync(
+                        new TaskExtendApproveEvent(
+                            request.Id,
+                            task.Id,
+                            task.Title,
+                            task.DueDate,
+                            dto.NewDueDate,
+                            assignedEmployeeIds,
+                            requesterBranchName
+                        )
+                    );
+                }
+            }
+            else
+            {
+                request.Status = ExtensionRequestStatus.Rejected;
+            }
 
             request.ReviewedByEmployeeId = reviewerId;
             request.ReviewedAt = DateTime.UtcNow;
-            request.ModifiedDate = DateTime.UtcNow;
 
             await _requestRepo.SaveChangesAsync();
             await _cache.RemoveAsync("taskExtensionRequests:");
 
-            var updatedRequest = await _requestRepo.GetAll(r => r.Id == id)
-                                                     .Include(r => r.RequestedBy)
-                                                     .Include(r => r.ReviewedBy)
-                                                    .Include(r => r.TaskAssignment)
-                                                    .ThenInclude(a => a.Employee)
-                                                    .AsNoTracking()
-                                                    .FirstOrDefaultAsync();
+            var updatedRequest = await _requestRepo
+                .GetAll(r => r.Id == id)
+                .Include(r => r.RequestedBy)
+                .Include(r => r.ReviewedBy)
+                .Include(r => r.TaskAssignment)
+                .ThenInclude(a => a.Task)
+                .AsNoTracking()
+                .FirstOrDefaultAsync();
 
             var resultDto = _mapper.Map<TaskExtensionRequestDetailsDto>(updatedRequest);
+            resultDto.TaskTitle = updatedRequest.TaskAssignment.Task?.Title;
 
-            return ApiResponse<TaskExtensionRequestDetailsDto>.Ok(resultDto, "Request reviewed successfully");
+            return ApiResponse<TaskExtensionRequestDetailsDto>
+                .Ok(resultDto, "Request reviewed successfully");
         }
 
     }

@@ -9,9 +9,13 @@ import { GenericTableComponent } from '../../../shared/components/generic-table/
 import { BranchService } from 'app/core/services/branch.service';
 
 import { SearchCriteria } from 'app/core/models/search-criteria.model';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { BranchGetDto } from 'app/core/models/branch/branch';
 import { BranchCreateUpdateComponent  } from '../branch-create-update.component/branch-create-update.component';
+import { ToastrService } from 'ngx-toastr';
+import Swal from 'sweetalert2';
+import { AuthService } from 'app/core/services/auth.service';
+import { Permissions } from 'app/core/constants/permissions';
 
 @Component({
   selector: 'app-branch-list',
@@ -32,8 +36,12 @@ import { BranchCreateUpdateComponent  } from '../branch-create-update.component/
 export class BranchListComponent implements OnInit {
 
   title = 'BRANCH.LIST_TITLE';
-  breadcrumbs = ['HOME', 'BRANCHES'];
   activeitem = 'BRANCH.LIST_TITLE';
+  breadcrumbs = [
+  'MENU.HOME',
+  'MENU.ORGANIZATION_STRUCTURE',
+  'BRANCH.LIST_TITLE'
+];
 
   // table columns
   columns = [
@@ -46,7 +54,9 @@ export class BranchListComponent implements OnInit {
 
   rows: BranchGetDto[] = [];
   totalItems = 0;
-
+  canCreate = false;
+  canEdit = false;
+  canDelete = false;
   page = 1;
   entries = 10;
 
@@ -55,7 +65,7 @@ export class BranchListComponent implements OnInit {
     pageIndex: this.page,
     pageSize: this.entries,
     sortColumn: 'Id',
-    sortDirection: 'ASC',
+    sortDirection: 'DESC',
     filterTypes: {
       searchKey: 'text',
     }
@@ -72,10 +82,16 @@ export class BranchListComponent implements OnInit {
 
   constructor(
     private branchService: BranchService,
-    private modalService: NgbModal
+    private modalService: NgbModal,
+    private translate: TranslateService,
+    private toastr: ToastrService,
+    private auth:AuthService
   ) { }
 
   ngOnInit(): void {
+    this.canCreate = this.auth.hasPermission(Permissions.CREATE_BRANCH);
+    this.canEdit = this.auth.hasPermission(Permissions.UPDATE_BRANCH);
+    this.canDelete = this.auth.hasPermission(Permissions.DELETE_BRANCH);
     this.loadData();
   }
 
@@ -125,7 +141,7 @@ key = 0;
 openAdd(modal: any) {
   this.isEdit = false;
   this.selectedBranchId = null;
-  this.key++; // force rebuild
+  this.key++;
   this.open(modal);
 }
 
@@ -151,4 +167,38 @@ openEdit(id: number, modal: any) {
     this.modalService.dismissAll();
     this.loadData();
   }
+
+  confirmDelete(branchId: number) {
+    Swal.fire({
+      title: this.translate.instant('COMMON.CONFIRM_DELETE_TITLE'),
+      text: this.translate.instant('COMMON.CONFIRM_DELETE_TEXT'),
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: this.translate.instant('COMMON.DELETE_BUTTON'),
+      cancelButtonText: this.translate.instant('COMMON.CANCEL_BUTTON'),
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#6c757d'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.deleteTask(branchId);
+      }
+    });
+  }
+  
+  deleteTask(branchId: number) {
+    this.isLoading = true;
+
+    this.branchService.delete(branchId).subscribe({
+      next: () => {
+      this.toastr.success(this.translate.instant('COMMON.DELETE_SUCCESS'));
+  
+  
+        this.isLoading = false;
+        this.loadData();
+      },
+      error: () => {      this.isLoading = false;
+}
+    });
+  }
+  
 }

@@ -1,13 +1,10 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
-import { TranslateService } from '@ngx-translate/core';
 import { tap } from 'rxjs/operators';
 
 export const AuthInterceptor: HttpInterceptorFn = (req, next) => {
 
-  const router = inject(Router);
   const toastr = inject(ToastrService);
 
   console.log('%c[INTERCEPTOR] Request intercepted', 'color: green', req.url);
@@ -23,22 +20,35 @@ export const AuthInterceptor: HttpInterceptorFn = (req, next) => {
   return next(req).pipe(
     tap({
       error: (err) => {
-        if (err.status === 401) {
+        const isAuthRequest = /\/auth\/(login|forgot-password|verify-reset-code|reset-password)/i.test(req.url);
+
+        const isInactiveAccount =
+          err.status === 403 && err.error?.errorCode === 'EMPLOYEE_INACTIVE';
+
+        // Let the login page show the error; don't reload while already on login.
+        if (isAuthRequest) {
+          return;
+        }
+
+        if (err.status === 401 || isInactiveAccount) {
 
           // Clear token
           localStorage.clear();
 
           // Show toast
           toastr.error(
-            getMessage('SESSION_EXPIRED'),
-            getMessage('UNAUTHORIZED'),
+            isInactiveAccount
+              ? getMessage('ACCOUNT_INACTIVE')
+              : getMessage('SESSION_EXPIRED'),
+            isInactiveAccount
+              ? getMessage('ACCOUNT_DISABLED')
+              : getMessage('UNAUTHORIZED'),
             {
               timeOut: 3000,
               positionClass: 'toast-top-right'
             }
           );
 
-          // Redirect to login
           window.location.href = '/auth/login';
         }
       }
@@ -58,6 +68,14 @@ function getMessage(key: string): string {
     UNAUTHORIZED: {
       en: 'Unauthorized',
       ar: 'غير مصرح'
+    },
+    ACCOUNT_INACTIVE: {
+      en: 'Your account is inactive. Please contact the administrator.',
+      ar: 'حسابك غير نشط. يرجى التواصل مع المسؤول.'
+    },
+    ACCOUNT_DISABLED: {
+      en: 'Account disabled',
+      ar: 'الحساب معطل'
     }
   };
 

@@ -1,6 +1,9 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore; 
 using TaskMangment.Application.Common.ApiRequests.Company;
+using TaskMangment.Application.Common.Errors;
+using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Responses;
 using TaskMangment.Application.DTOs;
@@ -16,31 +19,40 @@ namespace TaskMangment.Infrastructure.Services
     {
         private readonly IRepository<Company> _companyRepository;
         private readonly IRepository<Employee> _employeeRepository;
+        private readonly IRepository<Area> _areaRepository;
+        private readonly IRepository<Branch> _branchRepository;
+        private readonly IRepository<Role> _roleRepository;
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
 
         public CompanyService(
             IRepository<Company> companyRepository,
             IRepository<Employee> employeeRepository,
+            IRepository<Area> areaRepository,
+            IRepository<Branch> branchRepository,
+            IRepository<Role> roleRepository,
             IMapper mapper,
             ICachingService cache)
         {
             _companyRepository = companyRepository;
             _employeeRepository = employeeRepository;
+            _areaRepository = areaRepository;
+            _branchRepository = branchRepository;
+            _roleRepository = roleRepository;
             _mapper = mapper;
             _cache = cache;
         }
 
         public async Task<ApiResponse<PagedResponse<CompanyGetDto>>> GetAllAsync(CompanyRequest request)
         {
-            string cacheKey = $"companies:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
+            //string cacheKey = $"companies:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
 
-            if (!request.BypassCache)
-            {
-                var cached = await _cache.GetAsync<PagedResponse<CompanyGetDto>>(cacheKey);
-                if (cached != null)
-                    return ApiResponse<PagedResponse<CompanyGetDto>>.Ok(cached);
-            }
+            //if (!request.BypassCache)
+            //{
+            //    var cached = await _cache.GetAsync<PagedResponse<CompanyGetDto>>(cacheKey);
+            //    if (cached != null)
+            //        return ApiResponse<PagedResponse<CompanyGetDto>>.Ok(cached);
+            //}
 
             var query = _companyRepository.GetAll()
                 .Include(c => c.TechnicalManager)
@@ -59,7 +71,7 @@ namespace TaskMangment.Infrastructure.Services
 
             var response = new PagedResponse<CompanyGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
 
-            await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
+            //await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
 
             return ApiResponse<PagedResponse<CompanyGetDto>>.Ok(response);
         }
@@ -73,8 +85,9 @@ namespace TaskMangment.Infrastructure.Services
                 .FirstOrDefaultAsync();
 
             if (company == null)
-                return ApiResponse<CompanyGetDto>.Fail("Company not found", StatusCode.NotFound);
-
+                throw new AppException(
+                                      ErrorCodes.CompanyNotFound,
+                                      StatusCodes.Status404NotFound);
             var dto = _mapper.Map<CompanyGetDto>(company);
             return ApiResponse<CompanyGetDto>.Ok(dto);
         }
@@ -82,10 +95,10 @@ namespace TaskMangment.Infrastructure.Services
         public async Task<ApiResponse<CompanyGetDto>> AddAsync(CompanyAddEditDto dto)
         {
             if (dto.TechnicalManagerId.HasValue && !await _employeeRepository.IsExistAsync(dto.TechnicalManagerId.Value))
-                return ApiResponse<CompanyGetDto>.Fail("Technical Manager not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.ManagerNotFound, StatusCodes.Status404NotFound);
 
             if (dto.FinancialManagerId.HasValue && !await _employeeRepository.IsExistAsync(dto.FinancialManagerId.Value))
-                return ApiResponse<CompanyGetDto>.Fail("Financial Manager not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.ManagerNotFound, StatusCodes.Status404NotFound);
 
             var company = _mapper.Map<Company>(dto);
 
@@ -102,13 +115,13 @@ namespace TaskMangment.Infrastructure.Services
         {
             var company = await _companyRepository.GetByIDAsync(id);
             if (company == null)
-                return ApiResponse<CompanyGetDto>.Fail("Company not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.CompanyNotFound, StatusCodes.Status404NotFound);
 
             if (dto.TechnicalManagerId.HasValue && !await _employeeRepository.IsExistAsync(dto.TechnicalManagerId.Value))
-                return ApiResponse<CompanyGetDto>.Fail("Technical Manager not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.ManagerNotFound, StatusCodes.Status404NotFound);
 
             if (dto.FinancialManagerId.HasValue && !await _employeeRepository.IsExistAsync(dto.FinancialManagerId.Value))
-                return ApiResponse<CompanyGetDto>.Fail("Financial Manager not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.ManagerNotFound, StatusCodes.Status404NotFound);
 
             _mapper.Map(dto, company);
 
@@ -123,7 +136,19 @@ namespace TaskMangment.Infrastructure.Services
         {
             var company = await _companyRepository.GetByIDAsync(id);
             if (company == null)
-                return ApiResponse<bool>.Fail("Company not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.CompanyNotFound, StatusCodes.Status404NotFound);
+
+            if (await _employeeRepository.GetAll(e => e.CompanyId == id).AnyAsync())
+                throw new AppException(ErrorCodes.CompanyHasEmployees, StatusCodes.Status400BadRequest);
+
+            if (await _areaRepository.GetAll(a => a.CompanyId == id).AnyAsync())
+                throw new AppException(ErrorCodes.CompanyHasAreas, StatusCodes.Status400BadRequest);
+
+            if (await _branchRepository.GetAll(b => b.CompanyId == id).AnyAsync())
+                throw new AppException(ErrorCodes.CompanyHasBranches, StatusCodes.Status400BadRequest);
+
+            if (await _roleRepository.GetAll(r => r.CompanyId == id).AnyAsync())
+                throw new AppException(ErrorCodes.CompanyHasRoles, StatusCodes.Status400BadRequest);
 
             _companyRepository.SoftDelete(company);
             await _companyRepository.SaveChangesAsync();

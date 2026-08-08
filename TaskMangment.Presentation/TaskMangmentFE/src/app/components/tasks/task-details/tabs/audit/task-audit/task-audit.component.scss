@@ -1,0 +1,22 @@
+.task-audit {
+  display: flex;
+  flex-direction: column;
+  max-height: min(55vh, 520px);
+  min-height: 0;
+}
+
+.task-audit-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-inline-end: 4px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.task-audit .fw-semibold,
+.task-audit .list-group-item {
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}

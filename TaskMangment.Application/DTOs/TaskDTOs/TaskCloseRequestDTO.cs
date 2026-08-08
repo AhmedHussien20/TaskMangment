@@ -16,8 +16,14 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
     public class TaskCloseRequestListDto
     {
         public int Id { get; set; }
+
+        public int TaskId { get; set; }
+        public string TaskTitle { get; set; }
+
         public string Message { get; set; }
         public CloseRequestStatus Status { get; set; }
+        public string CloseRequestText => Status.ToString();
+
         public DateTime RequestedAt { get; set; }
         public string RequestedByName { get; set; }
 
@@ -26,12 +32,24 @@ namespace TaskMangment.Application.DTOs.TaskDTOs
     {
 
         public int Id { get; set; }
+
+        public int TaskId { get; set; }
+        public string TaskTitle { get; set; }
+
+
         public string Message { get; set; }
         public CloseRequestStatus Status { get; set; }
+
+        public string CloseRequestText => Status.ToString();
         public DateTime RequestedAt { get; set; }
         public DateTime? ReviewedAt { get; set; }
         public string ReviewedByName { get; set; }
         public string? RequestedByName { get; set; }
 
+    }
+
+    public class TaskCloseReviewDto
+    {
+        public CloseRequestStatus Status { get; set; }
     }
 }

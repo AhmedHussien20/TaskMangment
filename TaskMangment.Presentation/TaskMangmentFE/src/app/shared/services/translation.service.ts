@@ -11,7 +11,7 @@ import { updateMenuTranslations } from 'app/store/nav/nav.actions';
 })
 export class TranslationService {
   private currentLang = new BehaviorSubject<string>('ar');
-  private readonly storageKey = 'app-language';
+  private readonly storageKey = 'lang';
 
   constructor(
     private translate: TranslateService,
@@ -27,6 +27,8 @@ export class TranslationService {
     this.translate.use(lang).subscribe(() => {
       localStorage.setItem(this.storageKey, lang);
       this.currentLang.next(lang);
+
+      document.documentElement.lang = lang;
   
       if(lang === 'ar') {
         this.appStateService.updateState({ direction: 'rtl' });

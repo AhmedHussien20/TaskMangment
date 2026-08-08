@@ -1,0 +1,59 @@
+<form [formGroup]="form">
+
+  <div class="modal-header">
+    <h6>{{ 'TASK.ADD_PENALTY' | translate }}</h6>
+    <button class="btn-close" (click)="modal.dismiss()"></button>
+  </div>
+
+  <div class="modal-body">
+
+    <!-- Employee Dropdown -->
+    <div class="mb-3">
+      <label class="form-label">{{ 'TASK.ASSIGNED_EMPLOYEES' | translate }}</label>
+      <app-employee-ng-select
+  [options]="assignedEmployees"
+  [selectedEmployeeId]="form.controls['selectedEmployeeId'].value"
+  (selectedEmployeeIdChange)="form.controls['selectedEmployeeId'].setValue($event)"
+  [disabled]="false"
+  [showLabel]="false"
+></app-employee-ng-select>
+
+      <div class="text-danger small mt-1" *ngIf="form.controls['selectedEmployeeId'].touched && form.controls['selectedEmployeeId'].invalid">
+        {{ 'TASK.SELECT_EMPLOYEE' | translate }}
+      </div>
+    </div>
+
+    <!-- Amount Input -->
+    <div class="mb-3">
+      <input type="number" class="form-control" placeholder="{{ 'TASK.PENALTY_AMOUNT' | translate }}" formControlName="amount">
+      <div class="text-danger small mt-1" *ngIf="form.controls['amount'].touched && form.controls['amount'].invalid">
+        <div *ngIf="form.controls['amount'].errors?.['required']">{{ 'TASK.REQUIRED_FIELD' | translate }}</div>
+        <div *ngIf="form.controls['amount'].errors?.['min']"> {{ 'TASK.PENALTY_AMOUNT_MIN' | translate }}</div>
+      </div>
+    </div>
+
+    <!-- Reason Textarea -->
+    <div class="mb-3">
+      <textarea class="form-control" rows="3" placeholder="{{ 'TASK.PENALTY_REASON' | translate }}" formControlName="reason"></textarea>
+      <div class="text-danger small mt-1" *ngIf="form.controls['reason'].touched && form.controls['reason'].invalid">
+        <div *ngIf="form.controls['reason'].errors?.['required']">{{ 'TASK.REQUIRED_FIELD' | translate }}</div>
+        <div *ngIf="form.controls['reason'].errors?.['minlength']">   
+               {{ 'TASK.MIN_LENGTH_TASK_CHARACTERS' | translate }}</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="modal-footer">
+    <button class="btn btn-secondary" (click)="modal.dismiss()">
+      {{ 'FORM.CANCEL' | translate }}
+    </button>
+
+    <button
+      class="btn btn-danger"
+      [disabled]="form.invalid || isSubmitting"
+      (click)="submit()">
+      {{ 'TASK.SUBMIT_PENALTY' | translate }}
+    </button>
+  </div>
+</form>

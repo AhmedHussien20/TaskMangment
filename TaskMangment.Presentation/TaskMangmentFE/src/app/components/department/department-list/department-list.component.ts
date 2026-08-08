@@ -12,7 +12,11 @@ import { DepartmentGetDto } from 'app/core/models/department/department';
 
 import { DepartmentCreateUpdateComponent } from '../department-create-update/department-create-update.component';
 
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import Swal from 'sweetalert2';
+import { ToastrService } from 'ngx-toastr';
+import { AuthService } from 'app/core/services/auth.service';
+import { Permissions } from 'app/core/constants/permissions';
 
 @Component({
   selector: 'app-department-list',
@@ -33,8 +37,12 @@ import { TranslateModule } from '@ngx-translate/core';
 export class DepartmentListComponent implements OnInit {
 
   title = 'DEPARTMENT.LIST_TITLE';
-  breadcrumbs = ['HOME', 'DEPARTMENTS'];
   activeitem = 'DEPARTMENT.LIST_TITLE';
+  breadcrumbs = [
+  'MENU.HOME',
+  'MENU.ORGANIZATION_STRUCTURE',
+  'DEPARTMENT.LIST_TITLE'
+];
 
   columns = [
     { key: 'id', label: 'DEPARTMENT.ID' },
@@ -56,7 +64,7 @@ export class DepartmentListComponent implements OnInit {
     pageIndex: this.page,
     pageSize: this.entries,
     sortColumn: 'Id',
-    sortDirection: 'ASC',
+    sortDirection: 'DESC',
     filterTypes: {
       searchKey: 'text',
     }
@@ -67,16 +75,25 @@ export class DepartmentListComponent implements OnInit {
   };
 
   isLoading = false;
+  canCreate = false;
+  canEdit = false;
+  canDelete = false;
 
   selectedDeptId: number | null = null;
   isEdit = false;
 
   constructor(
     private deptService: DepartmentService,
-    private modalService: NgbModal
+    private modalService: NgbModal,
+    private translate: TranslateService,
+    private toastr: ToastrService,
+    private auth: AuthService
   ) { }
 
   ngOnInit(): void {
+    this.canCreate = this.auth.hasPermission(Permissions.CREATE_DEPARTMENT);
+    this.canEdit = this.auth.hasPermission(Permissions.UPDATE_DEPARTMENT);
+    this.canDelete = this.auth.hasPermission(Permissions.DELETE_DEPARTMENT);
     this.loadData();
   }
 
@@ -117,15 +134,18 @@ export class DepartmentListComponent implements OnInit {
     this.page = 1;
     this.loadData();
   }
-
+key = 0;
   openAdd(modal: any) {
     this.isEdit = false;
     this.selectedDeptId = null;
+    this.key++; 
     this.open(modal);
   }
 
   openEdit(id: number, modal: any) {
     this.isEdit = true;
+    this.selectedDeptId = id;
+    this.key++;
     this.selectedDeptId = id;
     this.open(modal);
   }
@@ -143,4 +163,39 @@ export class DepartmentListComponent implements OnInit {
     this.modalService.dismissAll();
     this.loadData();
   }
+
+   confirmDelete(deptId: number) {
+      Swal.fire({
+        title: this.translate.instant('COMMON.CONFIRM_DELETE_TITLE'),
+        text: this.translate.instant('COMMON.CONFIRM_DELETE_TEXT'),
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: this.translate.instant('COMMON.DELETE_BUTTON'),
+        cancelButtonText: this.translate.instant('COMMON.CANCEL_BUTTON'),
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.deleteDepartment(deptId);
+        }
+      });
+    }
+    
+    deleteDepartment(deptId: number) {
+      this.isLoading = true;
+
+      this.deptService.delete(deptId).subscribe({
+        next: () => {
+        this.toastr.success(this.translate.instant('COMMON.DELETE_SUCCESS'));
+    
+    
+          this.isLoading = false;
+          this.loadData();
+        },
+        error: () => {
+          this.isLoading = false;
+        }
+      });
+    }
+    
 }

@@ -14,7 +14,7 @@ export const admin: Routes = [
       import('./danger-message/danger-message.component').then((m) => m.DangerMessageComponent),
   },
   {
-    path: 'warning-message',
+    path: 'forbidden',
     loadComponent: () =>
       import('./warning-message/warning-message.component').then((m) => m.WarningMessageComponent),
   },

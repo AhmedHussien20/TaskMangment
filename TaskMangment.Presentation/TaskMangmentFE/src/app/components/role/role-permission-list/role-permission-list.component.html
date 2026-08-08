@@ -1,0 +1,32 @@
+<app-page-header [title]="title | translate" [title1]="breadcrumbs" [activeitem]="activeitem | translate">
+</app-page-header>
+
+<div class="card">
+  <div>
+    <app-generic-table
+      [title]="title"
+      [columns]="columns"
+      [data]="rows"
+      
+      [showCheckbox]="true"
+      checkboxKey="isAssigned"
+      (checkboxChange)="onAssignToggle($event)"
+      
+      [entries]="entries"
+      [page]="page"
+      [totalItems]="totalItems"
+      
+      [searchCriteria]="searchCriteria"
+      [onSearch]="applyFilters"
+      [labels]="labels"
+      (pageChange)="onPageChange($event)"
+      (entriesChange)="onEntriesChange($event)">
+    </app-generic-table>
+
+    <div class="d-flex justify-content-end mt-3">
+      <button class="btn btn-primary" (click)="saveAssignments()">
+        {{ 'FORM.SAVE' | translate }}
+      </button>
+    </div>
+  </div>
+</div>

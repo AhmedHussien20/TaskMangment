@@ -1,0 +1,35 @@
+.comments-tab {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.comments-table {
+  max-height: min(450px, 50vh);
+  overflow-y: auto;
+}
+
+.comments-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  margin-top: 0.5rem;
+  padding-top: 0.25rem;
+}
+
+.comment-cell {
+  max-width: 350px;
+  white-space: normal !important;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.attachments-panel {
+  max-width: 520px;
+}
+
+.attachment-row span {
+  direction: ltr;
+}

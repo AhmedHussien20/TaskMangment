@@ -11,6 +11,10 @@ import { AreaService } from 'app/core/services/area.service';
 import { SearchCriteria } from 'app/core/models/search-criteria.model';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AreaCreateUpdateComponent } from '../area-create-update.component/area-create-update.component.component';
+import { ToastrService } from 'ngx-toastr';
+import Swal from 'sweetalert2';
+import { AuthService } from 'app/core/services/auth.service';
+import { Permissions } from 'app/core/constants/permissions';
 
 
 declare var bootstrap: any;
@@ -34,8 +38,12 @@ declare var bootstrap: any;
 export class AreaListComponent implements OnInit {
 
   title = 'AREA.LIST_TITLE';
-  breadcrumbs = ['HOME', 'AREAS'];
   activeitem = 'AREA.LIST_TITLE';
+  breadcrumbs = [
+  'MENU.HOME',
+  'MENU.ORGANIZATION_STRUCTURE',
+  'AREA.LIST_TITLE'
+];
 
   // Table Columns
   columns = [
@@ -62,7 +70,7 @@ export class AreaListComponent implements OnInit {
     pageSize: this.entries,
 
     sortColumn: 'Id',
-    sortDirection: 'ASC',
+    sortDirection: 'DESC',
 
     filterTypes: {
       searchKey: 'text',
@@ -71,6 +79,9 @@ export class AreaListComponent implements OnInit {
   };
 
   isLoading = false;
+  canCreate = false;
+  canEdit = false;
+  canDelete = false;
   labels = {
     searchKey: 'AREA.searchKey',
   }
@@ -79,10 +90,16 @@ export class AreaListComponent implements OnInit {
   constructor(
     private router: Router,
     private areaService: AreaService,
-    private modalService: NgbModal, private fb: FormBuilder
+    private modalService: NgbModal, private fb: FormBuilder,
+    private translate: TranslateService,
+    private toastr: ToastrService,
+    private auth: AuthService
   ) { }
 
   ngOnInit(): void {
+    this.canCreate = this.auth.hasPermission(Permissions.CREATE_AREA);
+    this.canEdit = this.auth.hasPermission(Permissions.UPDATE_AREA);
+    this.canDelete = this.auth.hasPermission(Permissions.DELETE_AREA);
     this.loadData();
   }
 
@@ -171,4 +188,40 @@ export class AreaListComponent implements OnInit {
     this.modalService.dismissAll();
     this.loadData();
   } 
+
+confirmDelete(areaId: number) {
+  Swal.fire({
+    title: this.translate.instant('COMMON.CONFIRM_DELETE_TITLE'),
+    text: this.translate.instant('COMMON.CONFIRM_DELETE_TEXT'),
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: this.translate.instant('COMMON.DELETE_BUTTON'),
+    cancelButtonText: this.translate.instant('COMMON.CANCEL_BUTTON'),
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#6c757d'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      this.deleteTask(areaId);
+    }
+  });
+}
+
+deleteTask(areaId: number) {
+  this.isLoading = true;
+
+  this.areaService.delete(areaId).subscribe({
+    next: () => {
+    this.toastr.success(this.translate.instant('COMMON.DELETE_SUCCESS'));
+
+
+      this.isLoading = false;
+      this.loadData();
+    },
+    error: () => {
+      this.isLoading = false;
+    }
+  });
+}
+
+
 }

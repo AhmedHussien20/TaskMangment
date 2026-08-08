@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TaskMangment.Application.DTOs.ReportsDTO;
 
 namespace TaskMangment.Application.Interfaces.Services
 {
     public interface IEmailService
     {
-        Task SendEmailAsync(string subject, string body);
-        Task SendEmailAsync(string to, string subject, string body);
+        Task SendEmailAsync(string to, string subject, string body, List<EmailAttachment>? attachments =null);
     }
 }

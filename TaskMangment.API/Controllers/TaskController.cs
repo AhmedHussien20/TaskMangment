@@ -1,10 +1,14 @@
-﻿
+
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.SignalR; 
+using TaskMangment.API.Middlewares;
+using TaskMangment.Application.Authorization;
 using TaskMangment.Application.Common.ApiRequests.Task;
+using TaskMangment.Application.Common.Security;
 using TaskMangment.Application.DTOs.TaskDTOs;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Domain.Entities;
+using TaskMangment.Infrastructure.Services;
 using TaskMangment.Infrastructure.SignalR;
 
 namespace TaskMangment.API.Controllers
@@ -15,70 +19,90 @@ namespace TaskMangment.API.Controllers
     {
         private readonly ITaskService _service;
         private readonly INotificationService _notificationService;
-        private readonly IHubContext<NotificationHub> _hub;
 
-        public TaskController(ITaskService service, IHubContext<NotificationHub> hub, INotificationService notificationService)
+        public TaskController(ITaskService service, INotificationService notificationService)
         {
             _service = service;
-            _hub = hub;
             _notificationService= notificationService;
         }
 
+        
         [HttpGet]
         public async Task<IActionResult> GetAll([FromQuery] TaskRequest request)
         {
-            var result = await _service.GetAllAsync(request, CompanyId);
-
+            var result = await _service.GetAllAsync(request, CompanyId, this.RoleLevel, this.CurrentUserId);
             if (!result.Success)
                 return Fail(result.Message!);
-
-            SetCacheHeader(600);
-
+            //SetCacheHeader(600);
             return Success(result.Data);
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var result = await _service.GetByIdAsync(id);
-
-            if (!result.Success)
-                return Fail(result.Message!, 404);
-
+            var result = await _service.GetByIdAsync(id, this.RoleLevel, this.CurrentUserId);
             return Success(result.Data);
         }
-
         [HttpPost]
+        [PermissionAuthorize(PermissionCodes.CreateTask)]
         public async Task<IActionResult> Add([FromBody] TaskAddEditDto dto)
         {
+           
             var result = await _service.AddAsync(dto,this.CurrentUserId, this.CompanyId);
-
-            if (!result.Success)
-                return Fail(result.Message);
-
             return Success(result.Data, "Task added successfully");
         }
 
+        /// <summary>Allowed for literal task creator/assigner, or users with UPDATE_TASK.</summary>
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] TaskAddEditDto dto)
         {
             var result = await _service.UpdateAsync(id, dto, this.CurrentUserId);
-
-            if (!result.Success)
-                return Fail(result.Message, 404);
-
             return Success(result.Data, "Task updated successfully");
         }
 
+        /// <summary>Allowed for literal task creator/assigner, or users with DELETE_TASK.</summary>
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var result = await _service.DeleteAsync(id);
-
-            if (!result.Success)
-                return Fail(result.Message, 404);
-
+            var result = await _service.DeleteAsync(id, this.CurrentUserId);
             return Success(true, "Task deleted successfully");
         }
+
+        [HttpGet("{taskId}/assigned-employees")]
+        public async Task<IActionResult> GetAssignedEmployees(int taskId)
+        {
+            var response = await _service.GetAssignedEmployeesAsync(taskId);
+            return Success(response.Data);
+        }
+
+        [HttpGet("{taskId}/requests")]
+        public async Task<IActionResult> GetTaskRequests(int taskId)
+        {
+            var result = await _service.GetTaskRequestsAsync(taskId);
+            if (!result.Success)
+                return Fail(result.Message!);
+
+            return Success(result.Data);
+        }
+
+        [HttpGet("{taskId}/activity-summary")]
+        public async Task<IActionResult> GetTaskActivitySummary(int taskId)
+        {
+            var result = await _service.GetTaskActivitySummaryAsync(taskId);
+            return Ok(result);
+        }
+
+        [HttpPost("archive-closed")]
+        [PermissionAuthorize(PermissionCodes.ArchiveTask)]
+        public async Task<IActionResult> ArchiveClosed([FromBody] List<int> taskIds)
+        {
+            var result = await _service.ArchiveClosedTasksAsync(taskIds);
+            if (!result.Success)
+                return Fail(result.Message!);
+
+            return Success(true);
+        }
+
+       
     }
 }

@@ -8,6 +8,8 @@ import { CommonModule, DOCUMENT } from '@angular/common';
 import { DomSanitizer } from '@angular/platform-browser';
 import { AuthService } from 'app/core/services/auth.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { NotificationApiService } from 'app/core/services/notification.service';
+import { SignalRService } from 'app/core/services/signalr.service';
 
 @Component({
   selector: 'app-login',
@@ -30,17 +32,15 @@ export class LoginComponent {
   disabled = '';
 
   constructor(
-    @Inject(DOCUMENT) private document: Document,
-    private elementRef: ElementRef,
-    private sanitizer: DomSanitizer,
+    @Inject(DOCUMENT) private document: Document, 
     public authservice: AuthService,
     private router: Router,
     private formBuilder: FormBuilder,
     private renderer: Renderer2,
-    private toastr: ToastrService,private translate: TranslateService) {
-  this.translate.use('ar');
-  document.documentElement.dir = 'rtl';
-  document.documentElement.lang = 'ar';
+    private toastr: ToastrService, private translate: TranslateService, private notificationService: NotificationApiService, private signalRService: SignalRService) {
+    this.translate.use('ar');
+    document.documentElement.dir = 'rtl';
+    document.documentElement.lang = 'ar';
   }
 
   ngOnInit(): void {
@@ -61,7 +61,7 @@ export class LoginComponent {
   getValidationMessages(controlName: string): string[] {
     const control = this.loginForm.controls[controlName];
     const messages: string[] = [];
-  
+
     if (control && control.errors && control.touched) {
       for (const errorKey in control.errors) {
         if (control.errors.hasOwnProperty(errorKey)) {
@@ -71,16 +71,16 @@ export class LoginComponent {
     }
     return messages;
   }
-  
+
   getErrorMessage(controlName: string, errorKey: string, errorValue: any): string {
     const fieldNames: { [key: string]: string } = {
       username: 'Username',  // Change userCode to username
       password: 'Password',
       email: 'Email'
     };
-  
+
     const defaultFieldName = fieldNames[controlName] || controlName;
-  
+
     const errorMessages: { [key: string]: string } = {
       required: `${defaultFieldName} is required.`,
       minlength: `${defaultFieldName} must be at least ${errorValue.requiredLength} characters.`,
@@ -88,37 +88,53 @@ export class LoginComponent {
       pattern: `${defaultFieldName} format is invalid.`,
       email: `Please enter a valid ${defaultFieldName}.`
     };
-  
+
     return errorMessages[errorKey] || `${defaultFieldName} is invalid.`;
   }
-  
+
 
   Submit(event: Event) {
-    event.preventDefault();
-    console.log(this.loginForm.value);
-    if (this.loginForm.valid) {
-      const username = this.loginForm.controls['username'].value;  // Change userCode to username
-      const password = this.loginForm.controls['password'].value;
+  event.preventDefault();
 
-      this.authservice.login(username, password).subscribe({  // Change userCode to username
-        next: (response) => {
-          this.router.navigate(['/dashboard']);
-        },
-        error: (error) => {
-          console.log(error);
-          this.toastr.error(error, 'error', {
-            timeOut: 3000,
-            positionClass: 'toast-top-right',
-          });
-        }
+  if (this.loginForm.invalid) {
+    this.toastr.error('Please fill in the form correctly', '', {
+      timeOut: 3000,
+      positionClass: 'toast-top-right',
+    });
+    return;
+  }
+
+  const username = this.loginForm.controls['username'].value;
+  const password = this.loginForm.controls['password'].value;
+
+  this.authservice.login(username, password).subscribe({
+    next: (response) => {
+
+      const userId = response.data?.userId || 0;
+
+      // Start SignalR
+      this.signalRService.startConnection(userId);
+
+     /*  // Load notifications
+      this.notificationService.getUnread().subscribe(res => {
+        const unread = res.data || [];
+        unread.forEach(n => {
+         this.toastr.info(n.message, this.translate.instant('nav.notifications.notification'));
+        });
       });
-    } else {
-      this.toastr.error('Please fill in the form correctly', 'spruha', {
-        timeOut: 3000,
+ */
+      this.router.navigate(['/dashboard']);
+    },
+    error: (err) => {
+      const message = err?.message || this.translate.instant('LOGIN.FAILED');
+      this.toastr.error(message, '', {
+        timeOut: 4000,
         positionClass: 'toast-top-right',
       });
     }
-  }
+  });
+}
+
 
   public togglePassword() {
     this.showPassword = !this.showPassword;

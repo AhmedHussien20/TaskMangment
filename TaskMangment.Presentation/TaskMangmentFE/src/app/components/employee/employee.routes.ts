@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core'; 
+import { AuthGuard } from 'app/core/auth/auth.guard';
 
 export const EmployeeRoutes: Routes = [
   {
@@ -8,6 +9,12 @@ export const EmployeeRoutes: Routes = [
     loadComponent: () =>
       import('./employee-list/employee-list.component')
         .then(m => m.EmployeeListComponent)
+  },
+  {
+    path: '360/:id',
+    loadComponent: () =>
+      import('./employee-360/employee-360.component')
+        .then(m => m.Employee360Component)
   },
   {
     path: 'add',
@@ -19,7 +26,13 @@ export const EmployeeRoutes: Routes = [
     path: 'edit/:id',
     loadComponent: () =>
       import('./employee-create-update/employee-create-update.component')
-        .then(m => m.EmployeeCreateUpdateComponent)
+        .then(m => m.EmployeeCreateUpdateComponent),
+  },
+  {
+    path: 'employee-types',
+    loadComponent: () =>
+      import('./employee-type/employee-type-list/employee-type-list.component')
+        .then(m => m.EmployeeTypeListComponent)
   }
 ];
 

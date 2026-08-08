@@ -16,15 +16,17 @@ import { SignalRService } from './core/services/signalr.service';
 })
 export class AppComponent {
   title = 'Task-Portal';
-  constructor(private appState: AppStateService, private store: Store, private translationService: TranslationService, private signalR: SignalRService) { }
+  constructor(
+    private appState: AppStateService,
+    private store: Store,
+    private translationService: TranslationService,
+    private signalR: SignalRService
+  ) { }
 
   ngOnInit(): void {
-    this.store.dispatch(NavActions.initializeMenu());  // ✅ Move dispatch here
+    const userId = 4
+    this.store.dispatch(NavActions.initializeMenu());
     this.appState.updateState();
-    this.signalR.startConnection();
-
-    this.signalR.listen("ReceiveMessage", (user, message) => {
-      console.log("Message received:", user, message);
-    });
+    // Language + direction are handled centrally in TranslationService (storage key: 'lang')
   }
 }

@@ -1,7 +1,7 @@
 <app-generic-form
   [title]="title"
   [breadcrumbs]="breadcrumbs"
-  [activeitem]="activeitem"
+  [activeitem]="activeitem | translate"
   [formGroup]="formGroup"
   [formConfig]="formConfig"
   (formSubmit)="onSubmit($event)">  

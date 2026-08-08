@@ -1,0 +1,65 @@
+<app-page-header
+[title]="title | translate"
+[title1]="breadcrumbs"
+[activeitem]="activeitem | translate"> </app-page-header>
+
+<div class="row row-sm">
+  <div class="col-md-12 col-lg-12">
+    <div class="card custom-card">
+
+  <div>
+
+   
+    <!-- Table -->
+    <div>
+      <app-generic-table
+        [title]="title"
+        [breadcrumbs]="breadcrumbs"
+        [activeitem]="activeitem"
+        [labels]="labels"
+        [columns]="columns"
+        [data]="rows"
+
+        [entries]="entries"
+        [page]="page"
+        [totalItems]="totalItems"
+
+        [showAddButton]="true"
+        [addButtonLabel]="'PERMISSION.ADD' | translate"
+        (addClick)="openAdd(permissionModal)"
+
+        [showFilters]="true"
+        [searchCriteria]="searchCriteria"
+        [onSearch]="applyFilters.bind(this)"
+
+        (pageChange)="onPageChange($event)"
+        (entriesChange)="onEntriesChange($event)">
+      </app-generic-table>
+    </div>
+
+  </div>
+</div>
+
+
+  </div>
+</div>
+
+<!-- MODAL -->
+
+<ng-template #permissionModal let-modal>
+
+  <div class="modal-header">
+    <h6 class="modal-title">
+      {{ isEdit ? ('PERMISSION.EDIT' | translate) : ('PERMISSION.ADD' | translate) }}
+    </h6>
+    <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
+  </div>
+
+  <div class="modal-body">
+    <app-permission-create-update
+      [isEdit]="isEdit"
+      [permissionId]="selectedPermissionId"
+      (formSubmitted)="onFormSubmitted()">
+    </app-permission-create-update>
+  </div>
+</ng-template>

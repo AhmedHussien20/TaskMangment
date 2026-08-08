@@ -1,0 +1,56 @@
+<app-page-header [title]="title | translate" [title1]="breadcrumbs" [activeitem]="activeitem | translate">
+</app-page-header>
+
+<div class="card">
+  <div>
+
+  <app-generic-table
+  [title]="title"
+  [columns]="columns"
+  [data]="rows"
+  [entries]="entries"
+  [page]="page"
+  [totalItems]="totalItems"
+  [searchCriteria]="searchCriteria"
+  [labels]="labels"
+  [statusOptions]="assignmentStatusOptions"  
+
+  [onSearch]="applyFilters"
+  (pageChange)="onPageChange($event)"
+  (entriesChange)="onEntriesChange($event)"
+  [showCheckbox]="true"
+  [showDetailsButton]="selectbranches"
+
+  
+(details)="openDetails($event, branchesModal)"
+  checkboxKey="isAssigned"
+  (checkboxChange)="onAssignToggle($event)">
+</app-generic-table>
+
+    <div class="d-flex justify-content-end mt-3">
+      <button class="btn btn-primary" (click)="saveAssignments()">
+        {{ 'FORM.SAVE' | translate }}
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL TEMPLATE -->
+<ng-template #branchesModal let-modal>
+  <div class="modal-header">
+    <h6 class="modal-title">{{ 'ROLE.MANAGER_SCOPE' | translate }}</h6>
+    <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
+  </div>
+
+  <div class="modal-body">
+    <app-manager-branches-form
+      [isEdit]="true"
+      [managerId]="selectedManagerId"
+      [selectedBranchIds]="selectedBranchIds"
+      [requiresBranchScope]="requiresBranchScope"
+      [requiresEmployeeTypeScope]="requiresEmployeeTypeScope"
+      (formSubmitted)="onBranchesFormSubmitted($event, modal)">
+    </app-manager-branches-form>
+  </div>
+</ng-template>

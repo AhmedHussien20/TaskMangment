@@ -1,8 +1,16 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc; 
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
+using System.Globalization;
+using TaskMangment.API.Middlewares;
 using TaskMangment.Application.ApiRequests.Area;
+using TaskMangment.Application.Authorization;
+using TaskMangment.Application.Common.Errors;
+using TaskMangment.Application.Common.Security;
 using TaskMangment.Application.DTOs;
 using TaskMangment.Application.Interfaces.Services;
+using TaskMangment.Application.Responses;
 
 namespace TaskMangment.API.Controllers
 {
@@ -16,62 +24,43 @@ namespace TaskMangment.API.Controllers
             _service = service;
         }
 
+        //[HasRole("Manager","CEO")]
         [HttpGet]
         public async Task<IActionResult> GetAll([FromQuery] AreaRequest request)
         {
-            var result = await _service.GetAllAsync(request, this.CompanyId);
-
-            if (!result.Success)
-                return Fail(result.Message!);
-
-            // Optional: Cache header
-            SetCacheHeader(600);
-
+            var result = await _service.GetAllAsync(request, this.CompanyId); 
+            //SetCacheHeader(600);
             return Success(result.Data);
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var result = await _service.GetByIdAsync(id);
-
-            if (!result.Success)
-                return Fail(result.Message!, 404);
-
+            var result = await _service.GetByIdAsync(id); 
             return Success(result.Data);
         }
 
         [HttpPost]
+        [PermissionAuthorize(PermissionCodes.CreateArea)]
         public async Task<IActionResult> Add([FromBody] AreaAddEditDto dto )
         {
-
-            var result = await _service.AddAsync(dto, this.CompanyId, this.CurrentUserId);
-
-            if (!result.Success)
-                return Fail(result.Message);
-
+            var result = await _service.AddAsync(dto, this.CompanyId, this.CurrentUserId); 
             return Success(result.Data, "Area added successfully");
         }
 
         [HttpPut("{id}")]
+        [PermissionAuthorize(PermissionCodes.UpdateArea)]
         public async Task<IActionResult> Update(int id, [FromBody] AreaAddEditDto dto)
         {
             var result = await _service.UpdateAsync(id, dto);
-
-            if (!result.Success)
-                return Fail(result.Message, 404);
-
             return Success(result.Data, "Area updated successfully");
         }
 
         [HttpDelete("{id}")]
+        [PermissionAuthorize(PermissionCodes.DeleteArea)]
         public async Task<IActionResult> Delete(int id)
         {
-            var result = await _service.DeleteAsync(id);
-
-            if (!result.Success)
-                return Fail(result.Message, 404);
-
+            var result = await _service.DeleteAsync(id); 
             return Success(true, "Area deleted successfully");
         }
     }

@@ -28,4 +28,10 @@ namespace TaskMangment.Application.DTOs
 
         public int OfferCount { get; set; }
     }
+
+    public class CourseSubjectDto
+    {
+        public int Id { get; set; }
+        public string Title { get; set; } = string.Empty;
+    }
 }

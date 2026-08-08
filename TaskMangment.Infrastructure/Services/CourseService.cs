@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -6,6 +7,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TaskMangment.Application.Common.ApiRequests.Course;
+using TaskMangment.Application.Common.Errors;
+using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Responses;
 using TaskMangment.Application.DTOs;
@@ -21,31 +24,34 @@ namespace TaskMangment.Infrastructure.Services
     {
         private readonly IRepository<Course> _courseRepository;
         private readonly IRepository<CourseSubject> _subjectRepository;
+        private readonly IRepository<Offer> _offerRepository;
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
 
         public CourseService(
             IRepository<Course> courseRepository,
             IRepository<CourseSubject> subjectRepository,
+            IRepository<Offer> offerRepository,
             IMapper mapper,
             ICachingService cache)
         {
             _courseRepository = courseRepository;
             _subjectRepository = subjectRepository;
+            _offerRepository = offerRepository;
             _mapper = mapper;
             _cache = cache;
         }
 
         public async Task<ApiResponse<PagedResponse<CourseGetDto>>> GetAllAsync(CourseRequest request)
         {
-            string cacheKey = $"courses:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
+            //string cacheKey = $"courses:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
 
-            if (!request.BypassCache)
-            {
-                var cached = await _cache.GetAsync<PagedResponse<CourseGetDto>>(cacheKey);
-                if (cached != null)
-                    return ApiResponse<PagedResponse<CourseGetDto>>.Ok(cached);
-            }
+            //if (!request.BypassCache)
+            //{
+            //    var cached = await _cache.GetAsync<PagedResponse<CourseGetDto>>(cacheKey);
+            //    if (cached != null)
+            //        return ApiResponse<PagedResponse<CourseGetDto>>.Ok(cached);
+            //}
 
             var query = _courseRepository.GetAll()
                 .Include(c => c.Subjects)
@@ -73,9 +79,23 @@ namespace TaskMangment.Infrastructure.Services
 
             var response = new PagedResponse<CourseGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
 
-            await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
+            //await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
 
             return ApiResponse<PagedResponse<CourseGetDto>>.Ok(response);
+        }
+
+        public async Task<ApiResponse<ICollection<CourseSubjectDto>>> GetSubjectsByCourseAsync(int courseId)
+        {
+            var subjects = await _subjectRepository
+                .GetAll(s => s.CourseId == courseId)
+                .Select(s => new CourseSubjectDto
+                {
+                    Id = s.Id,
+                    Title = s.Title
+                })
+                .ToListAsync();
+
+            return ApiResponse<ICollection<CourseSubjectDto>>.Ok(subjects);
         }
 
         public async Task<ApiResponse<CourseGetDto>> GetByIdAsync(int id)
@@ -87,8 +107,9 @@ namespace TaskMangment.Infrastructure.Services
                 .FirstOrDefaultAsync();
 
             if (course == null)
-                return ApiResponse<CourseGetDto>.Fail("Course not found", StatusCode.NotFound);
-
+                throw new AppException(
+                    ErrorCodes.CourseNotFound,
+                    StatusCodes.Status404NotFound);
             var dto = _mapper.Map<CourseGetDto>(course);
             //dto.Subjects = course.Subjects.Select(s => s.Title).ToList();
             //dto.OfferCount = course.Offers.Count;
@@ -124,7 +145,9 @@ namespace TaskMangment.Infrastructure.Services
                 .FirstOrDefaultAsync();
 
             if (course == null)
-                return ApiResponse<CourseGetDto>.Fail("Course not found", StatusCode.NotFound);
+                throw new AppException(
+                    ErrorCodes.CourseNotFound,
+                    StatusCodes.Status404NotFound);
 
             // Update main properties
             _mapper.Map(dto, course);
@@ -157,7 +180,15 @@ namespace TaskMangment.Infrastructure.Services
         {
             var course = await _courseRepository.GetByIDAsync(id);
             if (course == null)
-                return ApiResponse<bool>.Fail("Course not found", StatusCode.NotFound);
+                throw new AppException(
+                    ErrorCodes.CourseNotFound,
+                    StatusCodes.Status404NotFound);
+
+            if (await _subjectRepository.GetAll(s => s.CourseId == id).AnyAsync())
+                throw new AppException(ErrorCodes.CourseHasSubjects, StatusCodes.Status400BadRequest);
+
+            if (await _offerRepository.GetAll(o => o.CourseId == id).AnyAsync())
+                throw new AppException(ErrorCodes.CourseHasOffers, StatusCodes.Status400BadRequest);
 
             _courseRepository.SoftDelete(course);
             await _courseRepository.SaveChangesAsync();

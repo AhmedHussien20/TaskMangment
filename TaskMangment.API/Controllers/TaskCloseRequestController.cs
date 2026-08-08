@@ -1,8 +1,11 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using TaskMangment.API.Middlewares;
 using TaskMangment.Application.Common.ApiRequests.Task;
+using TaskMangment.Application.Common.Security;
 using TaskMangment.Application.DTOs.TaskDTOs;
 using TaskMangment.Application.Interfaces.Services;
+using TaskMangment.Domain.Entities;
 
 namespace TaskMangment.API.Controllers
 {
@@ -24,7 +27,7 @@ namespace TaskMangment.API.Controllers
             if (!result.Success)
                 return Fail(result.Message!);
 
-            SetCacheHeader(600);
+            //SetCacheHeader(600);
 
             return Success(result.Data);
         }
@@ -33,32 +36,22 @@ namespace TaskMangment.API.Controllers
         public async Task<IActionResult> GetById(int id)
         {
             var result = await _service.GetByIdAsync(id);
-
-            if (!result.Success)
-                return Fail(result.Message!, 404);
-
             return Success(result.Data);
         }
 
-        [HttpPost]
+        [HttpPost("{taskId}")]
+        [PermissionAuthorize(PermissionCodes.RequestTaskClose)]
         public async Task<IActionResult> Add([FromBody] TaskCloseRequestAddDto dto, int taskId)
         {
             var result = await _service.AddAsync(dto, taskId, this.CurrentUserId);
-
-            if (!result.Success)
-                return Fail(result.Message);
-
             return Success(result.Data, "Close request added successfully");
         }
 
-        [HttpPut("{id}/review")]
-        public async Task<IActionResult> Review(int id, [FromQuery] bool approved)
+        [HttpPatch("review/{id}")]
+        [PermissionAuthorize(PermissionCodes.ApproveTaskRequest, PermissionCodes.RejectTaskRequest)]
+        public async Task<IActionResult> Review(int id, [FromBody] CloseRequestStatus status)
         {
-            var result = await _service.ReviewAsync(id, approved, this.CurrentUserId);
-
-            if (!result.Success)
-                return Fail(result.Message);
-
+            var result = await _service.ReviewAsync(id, status, this.CurrentUserId);
             return Success(true, "Close request reviewed successfully");
         }
     }

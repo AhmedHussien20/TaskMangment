@@ -26,13 +26,12 @@ namespace TaskMangment.Application.DTOs
 
         [MaxLength(200)]
         public string Email { get; set; }
-
-      
-
         public int? AreaId { get; set; }
 
-        public int? ManagerId { get; set; }
-        public int? ResponsibleId { get; set; }
+        public int ManagerId { get; set; }
+        public int ResponsibleId { get; set; }
+        public bool MainBranch { get; set; } = false;
+
     }
 
     public class BranchGetDto
@@ -40,12 +39,18 @@ namespace TaskMangment.Application.DTOs
         public int Id { get; set; }
         public string Name { get; set; }
         public string AreaName { get; set; }
+        public int AreaId { get; set; }
         public string ManagerName { get; set; }
         public string ResponsibleName { get; set; }
+        public int ManagerID { get; set; }
+        public int ResponsibleID { get; set; }
         public string Address { get; set; }
         public string Phone { get; set; }
+        public string Mobile { get; set; }
         public string Fax { get; set; }
         public string Email { get; set; }
+        public bool MainBranch { get; set; }
+
     }
 
 }

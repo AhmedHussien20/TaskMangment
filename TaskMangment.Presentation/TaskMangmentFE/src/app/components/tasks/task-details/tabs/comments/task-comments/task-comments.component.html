@@ -1,0 +1,122 @@
+<div class="comments-tab">
+  <div class="table-responsive comments-table">
+    <table class="table table-bordered align-middle mb-0">
+      <thead class="table-light" style="position: sticky; top: 0; z-index: 10;">
+        <tr>
+          <th>#</th>
+          <th>{{ 'TASK.COMMENTED_BY' | translate }}</th>
+          <th>{{ 'TASK.COMMENTED_DATE' | translate }}</th>
+          <th>{{ 'TASK.COMMENT' | translate }}</th>
+          <th>{{ 'TASK.TIME_ELAPSED' | translate }}</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngFor="let c of comments">
+          <td>{{ c.id }}</td>
+          <td>{{ c.employeeName }}</td>
+
+          <td>
+            <span class="badge bg-success">{{ c.timeLabel }}</span>
+            <br />
+            <small class="text-muted">{{ c.createdDate | myDate }}</small>
+          </td>
+
+          <td class="comment-cell">
+            <div class="d-flex align-items-start justify-content-between gap-2">
+              <div class="flex-grow-1">
+                <span class="badge bg-secondary mb-1">{{ 'TASK.COMMENT' | translate }}</span>
+
+                <div class="mb-1">
+                  <ng-container *ngIf="c.commentText?.trim(); else fileComment">
+                    {{ c.commentText }}
+                  </ng-container>
+
+                  <ng-template #fileComment>
+                    <i class="bi bi-paperclip"></i>
+                    {{ 'TASK.FILE' | translate }}
+                  </ng-template>
+                </div>
+              </div>
+
+              <button
+                *ngIf="(c.attachmentCount ?? 0) > 0"
+                type="button"
+                class="btn btn-outline-primary btn-sm"
+                (click)="toggleAttachments(c.id)">
+                <i class="bi bi-paperclip"></i>
+                {{ c.attachmentCount }}
+              </button>
+            </div>
+
+            <div *ngIf="openAttachmentsForCommentId === c.id"
+                 class="attachments-panel mt-2 p-2 border rounded bg-light">
+
+              <div *ngIf="loadingAttachments[c.id]" class="text-muted small">
+                {{ 'TABLE.LOADING' | translate }}
+              </div>
+
+              <ng-container *ngIf="!loadingAttachments[c.id]">
+                <div *ngIf="!(attachmentsMap[c.id]?.length)" class="text-muted small">
+                  {{ 'TASK.NO_ATTACHMENTS' | translate }}
+                </div>
+
+                <div *ngFor="let att of attachmentsMap[c.id]" class="attachment-row d-flex justify-content-between align-items-center py-1">
+                  <span class="small text-truncate" style="max-width: 260px;">
+                    {{ att.fileName }}
+                  </span>
+
+                  <div class="d-flex gap-1">
+                    <button class="btn btn-sm btn-outline-secondary" (click)="openAttachment(att)">
+                      <i class="bi bi-box-arrow-up-right"></i>
+                    </button>
+
+                    <button class="btn btn-sm btn-success" (click)="downloadAttachment(att)">
+                      <i class="bi bi-download"></i>
+                    </button>
+                  </div>
+                </div>
+              </ng-container>
+            </div>
+          </td>
+
+          <td class="text-muted">
+            {{ c.timeLabel }}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div *ngIf="!comments.length" class="text-center text-muted mt-2">
+    {{ 'TASK.NO_COMMENTS' | translate }}
+  </div>
+
+  <div *ngIf="totalItems > 0" class="comments-pagination">
+    <div class="text-muted small text-nowrap">
+      {{ 'TABLE.TOTAL_RECORDS' | translate }}: {{ totalItems }}
+    </div>
+
+    <ngb-pagination
+      *ngIf="totalItems > entries"
+      class="mb-0"
+      [collectionSize]="totalItems"
+      [page]="page"
+      [pageSize]="entries"
+      [maxSize]="5"
+      [boundaryLinks]="true"
+      [size]="'sm'"
+      (pageChange)="onPageChange($event)">
+    </ngb-pagination>
+
+    <div class="d-flex align-items-center gap-2 text-nowrap">
+      <span>{{ 'TABLE.SHOW' | translate }}</span>
+      <select class="form-select form-select-sm w-auto"
+              [ngModel]="entries"
+              (ngModelChange)="onEntriesChange($event)">
+        <option *ngFor="let n of [5,10,20,50]" [ngValue]="n">{{ n }}</option>
+      </select>
+      <span>{{ 'TABLE.ENTRIES' | translate }}</span>
+    </div>
+  </div>
+</div>

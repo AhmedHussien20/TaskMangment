@@ -1,0 +1,51 @@
+<div class="table-responsive" style="max-height:400px; overflow:auto;">
+  <app-generic-table [columns]="columns" [data]="rows" [page]="page" [entries]="entries" [totalItems]="totalItems"
+    [showAddButton]="false" [showDetailsButton]="false" [showFilters]="false" [showPagination]="true"
+    [showExportExcel]="false"
+    (pageChange)="onPageChange($event)" (entriesChange)="onEntriesChange($event)"
+    (iconAction)="onAction($event,reviewModal)">
+  </app-generic-table>
+
+</div>
+
+<ng-template #reviewModal let-modal>
+  <div class="modal-header">
+    <h6 class="modal-title">
+      {{ requestType === 'extend' ? ('TASK.REVIEW_EXTENSION' | translate) : ('TASK.REVIEW_CLOSE' | translate) }}
+    </h6>
+    <button class="btn-close" (click)="modal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    <label>{{'TASK.STATUS' | translate}}</label>
+
+    <!-- Extend -->
+    <ng-select *ngIf="requestType === 'extend'" [items]="extensionStatusOptions" bindLabel="label" bindValue="value"
+      [(ngModel)]="reviewModel.status" placeholder="{{'TASK.SELECT' | translate}}" [clearable]="false">
+    </ng-select>
+
+    <div *ngIf="requestType === 'extend' && reviewModel.status === ExtensionRequestStatus.Approved" class="mt-2">
+      <label>{{'TASK.NEW_DATE' | translate}}</label>
+<app-date-picker [(ngModel)]="reviewModel.newDueDate" [blockWeekendAndPast]="true"></app-date-picker>
+</div>
+
+    <!-- Close -->
+    <ng-select *ngIf="requestType === 'close'" [items]="closeStatusOptions" bindLabel="label" bindValue="value"
+      [(ngModel)]="selectedCloseStatus" placeholder="{{'TASK.SELECT' | translate}}" [clearable]="false">
+    </ng-select>
+
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-secondary" (click)="modal.dismiss()">{{ 'FORM.CANCEL' | translate }}</button>
+
+    <button class="btn btn-primary" *ngIf="requestType === 'extend'" (click)="submitReview()"
+      [disabled]="!reviewModel.status">
+      {{ 'FORM.SAVE' | translate }}
+    </button>
+
+    <button class="btn btn-primary" *ngIf="requestType === 'close'" (click)="submitCloseReview(selectedCloseStatus)"
+      [disabled]="!selectedCloseStatus">
+      {{ 'FORM.SAVE' | translate }}
+    </button>
+
+  </div>
+</ng-template>

@@ -11,6 +11,7 @@ namespace TaskMangment.Domain.Entities
     public class TaskExtensionRequest : BaseEntity
     {
 
+        public int TaskId { get; set; }
         [Required] 
         public int TaskAssignmentId { get; set; }
         public int? RequestedByEmployeeId { get; set; }
@@ -21,6 +22,9 @@ namespace TaskMangment.Domain.Entities
         public DateTime RequestedAt { get; set; } = DateTime.UtcNow;
         public int? ReviewedByEmployeeId { get; set; }
         public DateTime? ReviewedAt { get; set; }
+
+        [ForeignKey(nameof(TaskId))]
+        public WorkTask Task { get; set; }
 
         [ForeignKey(nameof(TaskAssignmentId))] public TaskAssignment TaskAssignment { get; set; }
         [ForeignKey(nameof(RequestedByEmployeeId))] public Employee RequestedBy { get; set; }

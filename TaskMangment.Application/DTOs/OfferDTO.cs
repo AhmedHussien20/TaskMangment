@@ -12,7 +12,7 @@ namespace TaskMangment.Application.DTOs
         [Required, MaxLength(250)]
         public string Title { get; set; }
 
-        [MaxLength(1000)]
+        [MaxLength(2000)]
         public string Description { get; set; }
 
         public DateTime? StartDate { get; set; }
@@ -24,6 +24,15 @@ namespace TaskMangment.Application.DTOs
         public int? SubjectId { get; set; }
 
         public List<int>? AssignedStudentIds { get; set; } = new List<int>();
+
+        public string PaymentMethod { get; set; }
+        public string Price { get; set; }
+        public string InterestRate { get; set; }
+        public string DiscountRate { get; set; }
+        public string InstallmentValue { get; set; }
+        public string NetAmount { get; set; }
+        public string? OfferOwner { get; set; }
+        public string? Specialization { get; set; }
     }
 
     public class OfferGetDto
@@ -37,6 +46,22 @@ namespace TaskMangment.Application.DTOs
         public string CourseTitle { get; set; }
         public string SubjectTitle { get; set; }
 
+        public int? CourseId { get; set; }          
+        public int? SubjectId { get; set; }
+
         public List<string> AssignedStudents { get; set; } = new List<string>();
+        public List<int> AssignedStudentsIds { get; set; } = new List<int>();
+
+        public string? PaymentMethod { get; set; }
+        public string? Price { get; set; }
+        public string? InterestRate { get; set; }
+        public string? DiscountRate { get; set; }
+        public string? InstallmentValue { get; set; }
+        public string? NetAmount { get; set; }
+        public string? OfferOwner { get; set; }
+        public string? Specialization { get; set; }
+
     }
+
+    
 }

@@ -1,0 +1,36 @@
+.task-updates {
+  display: flex;
+  flex-direction: column;
+  max-height: min(55vh, 520px);
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-inline-end: 4px;
+  -webkit-overflow-scrolling: touch;
+
+  .update-icon {
+    font-size: 1.2rem;
+    margin-top: 0.15rem;
+  }
+
+  .update-unread {
+    background-color: rgba(13, 110, 253, 0.04);
+  }
+
+  .fw-semibold,
+  .list-group-item {
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+
+  .update-message {
+    white-space: pre-wrap;
+  }
+
+  .update-attachment-link {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}

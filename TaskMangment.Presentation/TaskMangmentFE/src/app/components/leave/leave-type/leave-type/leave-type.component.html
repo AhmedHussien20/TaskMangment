@@ -1,0 +1,57 @@
+<app-page-header
+  [title]="title | translate"
+  [title1]="breadcrumbs"
+  [activeitem]="activeitem | translate">
+</app-page-header>
+
+<div class="row row-sm">
+  <div class="col-md-12 col-lg-12">
+    <div class="card custom-card">
+      <div>
+
+      
+
+        <div>
+          <app-generic-table
+            [title]="title"
+            [breadcrumbs]="breadcrumbs"
+            [columns]="columns"
+            [data]="rows"
+            [entries]="entries"
+            [page]="page"
+            [labels]="labels"
+            [totalItems]="totalItems"
+            [showAddButton]="canCreate"
+            [showDeleteButton]="canDelete"
+            [showEditButton]="canEdit"
+            [addButtonLabel]="'LEAVE_TYPE.ADD' | translate"
+            [showFilters]="true"
+            [onSearch]="applyFilters.bind(this)"
+            (pageChange)="onPageChange($event)"
+            (addClick)="openAdd(leaveTypeModal)"
+            (edit)="openEdit($event, leaveTypeModal)"
+            (delete)="confirmDelete($event)"
+            [showFilters]="false"
+            [showPagination]="false">
+          </app-generic-table>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<ng-template #leaveTypeModal let-modal>
+  <div class="modal-header">
+    <h6 class="modal-title">{{ isEdit ? ('LEAVE_TYPE.EDIT' | translate) : ('LEAVE_TYPE.ADD' | translate) }}</h6>
+    <button class="btn-close" (click)="modal.dismiss()"></button>
+  </div>
+
+  <div class="modal-body">
+    <app-leave-type-create-update
+       [isEdit]="isEdit"
+      [leaveTypeId]="selectedLeaveTypeId"
+      (formSubmitted)="onFormSubmitted()">
+    </app-leave-type-create-update>
+  </div>
+</ng-template>

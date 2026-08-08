@@ -1,5 +1,37 @@
-<div class="login-page gradient-bg d-flex align-items-center justify-content-center vh-100">
+<div class="login-wrapper">
 
+  <!-- 🔥 LOGO STRIP في أعلى الصفحة -->
+  <div class="top-logos">
+    <div class="logos-marquee">
+      <div class="logos-track">
+
+        <img src="assets/logos/1.png">
+        <img src="assets/logos/2.png">
+        <img src="assets/logos/3.png">
+        <img src="assets/logos/4.png">
+        <img src="assets/logos/5.png">
+        <img src="assets/logos/6.png">
+        <img src="assets/logos/7.png">
+        <img src="assets/logos/8.png">
+        <img src="assets/logos/9.png">
+
+        <!-- تكرار علشان يلف باستمرار -->
+        <img src="assets/logos/1.png">
+        <img src="assets/logos/2.png">
+        <img src="assets/logos/3.png">
+        <img src="assets/logos/4.png">
+        <img src="assets/logos/5.png">
+        <img src="assets/logos/6.png">
+        <img src="assets/logos/7.png">
+        <img src="assets/logos/8.png">
+<img src="assets/logos/9.png">
+      </div>
+    </div>
+  </div>
+<div class="login-page gradient-bg d-flex flex-column align-items-center justify-content-center vh-100">
+ 
+
+  <!-- LOGIN CARD -->
   <div class="login-card shadow-lg rounded-4 p-4 p-md-5 bg-body">
     
     <h3 class="fw-bold mb-1 text-center">
@@ -14,18 +46,25 @@
       
       <div class="mb-3">
         <label class="form-label fw-semibold">{{ 'LOGIN.USERNAME' | translate }}</label>
-        <input type="text" formControlName="username" class="form-control form-control-lg" placeholder="{{ 'LOGIN.USERNAME_PLACEHOLDER' | translate }}">
+        <input type="text" formControlName="username"
+               class="form-control form-control-lg"
+               placeholder="{{ 'LOGIN.USERNAME_PLACEHOLDER' | translate }}">
       </div>
 
       <div class="mb-3">
         <label class="form-label fw-semibold">{{ 'LOGIN.PASSWORD' | translate }}</label>
         <div class="position-relative">
-          <input [type]="showPassword ? 'text' : 'password'" formControlName="password" class="form-control form-control-lg pe-5" placeholder="{{ 'LOGIN.PASSWORD_PLACEHOLDER' | translate }}">
-          <i class="fe fe-eye position-absolute top-50 end-0 translate-middle-y me-3 cursor-pointer" (click)="toggleVisibility()"></i>
+          <input [type]="showPassword ? 'text' : 'password'"
+                 formControlName="password"
+                 class="form-control form-control-lg pe-5"
+                 placeholder="{{ 'LOGIN.PASSWORD_PLACEHOLDER' | translate }}">
+          <i class="fe fe-eye position-absolute top-50 end-0 translate-middle-y me-3 cursor-pointer"
+             (click)="toggleVisibility()"></i>
         </div>
       </div>
 
-      <button class="btn btn-primary btn-lg w-100 mt-2" [disabled]="!loginForm.valid || authservice.showLoader">
+      <button class="btn btn-primary btn-lg w-100 mt-2"
+              [disabled]="!loginForm.valid || authservice.showLoader">
         <span *ngIf="!authservice.showLoader">{{ 'LOGIN.SUBMIT' | translate }}</span>
         <span *ngIf="authservice.showLoader" class="spinner-border spinner-border-sm"></span>
       </button>
@@ -33,12 +72,42 @@
     </form>
 
     <div class="text-center mt-4">
-      <a routerLink="/custom/forget-password" class="d-block mb-2">{{ 'LOGIN.FORGOT_PASSWORD' | translate }}</a>
+      <a routerLink="/auth/forgot-password" class="d-block mb-2">
+        {{ 'LOGIN.FORGOT_PASSWORD' | translate }}
+      </a>
+
       <span class="text-muted fs-14">
         {{ 'LOGIN.DONT_HAVE_ACCOUNT' | translate }}
-        <a routerLink="/custom/sign-up" class="fw-semibold">{{ 'LOGIN.REGISTER_HERE' | translate }}</a>
+        <a routerLink="#" class="fw-semibold">
+          {{ 'LOGIN.REGISTER_HERE' | translate }}
+        </a>
       </span>
     </div>
 
+  </div>
+<div class="bottom-logos">
+    <div class="logos-marquee">
+      <div class="logos-track">
+        <img src="assets/logos/1.png">
+        <img src="assets/logos/2.png">
+        <img src="assets/logos/3.png">
+        <img src="assets/logos/4.png">
+        <img src="assets/logos/5.png">
+        <img src="assets/logos/6.png">
+        <img src="assets/logos/7.png">
+        <img src="assets/logos/8.png">
+        <img src="assets/logos/9.png">
+
+        <img src="assets/logos/1.png">
+        <img src="assets/logos/2.png">
+        <img src="assets/logos/3.png">
+        <img src="assets/logos/4.png">
+        <img src="assets/logos/5.png">
+        <img src="assets/logos/6.png">
+        <img src="assets/logos/7.png">
+        <img src="assets/logos/8.png">
+        <img src="assets/logos/9.png">
+      </div>
+    </div>
   </div>
 </div>

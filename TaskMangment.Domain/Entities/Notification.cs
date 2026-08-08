@@ -10,7 +10,10 @@ namespace TaskMangment.Domain.Entities
     {
         public int UserId { get; set; }
         public string Message { get; set; }
-        public string Type { get; set; } // Email, Web, WhatsApp
+        public NotificationChannel Channel { get; set; }
         public bool IsRead { get; set; } = false;  
+        public int ReferenceId { get; set; }
+        public NotificationType NotificationType { get; set; }
+        public int? TaskId { get; set; }
     }
 }

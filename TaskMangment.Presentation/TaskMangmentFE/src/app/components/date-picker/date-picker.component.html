@@ -1,0 +1,23 @@
+<mat-form-field
+  [appearance]="appearance"
+  class="w-100"
+  [class.dp-sm]="size === 'sm'"
+  [class.dp-md]="size === 'md'"
+  dir="rtl"
+>
+  <input
+    matInput
+    [matDatepicker]="picker"
+    [min]="minDate"
+    [max]="maxDate"
+    [matDatepickerFilter]="calendarFilter"
+    [disabled]="disabled"
+    [required]="required"
+    [placeholder]="placeholderKey ? (placeholderKey | translate) : ''"
+    [ngModel]="valueDate"
+    (ngModelChange)="onDateChange($event)"
+  />
+
+  <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+  <mat-datepicker #picker></mat-datepicker>
+</mat-form-field>

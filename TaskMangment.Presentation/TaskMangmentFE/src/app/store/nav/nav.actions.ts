@@ -7,3 +7,5 @@ export const updateMenuItems = createAction(
   props<{ items: MenuItem[] }>()
 );
 export const updateMenuTranslations = createAction('[Nav] Update Menu Translations');
+
+export const clearMenu = createAction('[Nav] Clear Menu');

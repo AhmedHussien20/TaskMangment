@@ -1,13 +1,19 @@
-﻿using AutoMapper;
+using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Pipelines.Sockets.Unofficial.Arenas;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TaskMangment.Application.Common.ApiRequests.Branch;
+using TaskMangment.Application.Common.Errors;
+using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Responses;
+using TaskMangment.Application.Common.Security;
 using TaskMangment.Application.DTOs;
 using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
@@ -25,6 +31,15 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<Company> _companyRepository;
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
+        private readonly IRepository<ManagerBranches> _managerBranchesRepo;
+        private readonly IRepository<Department> _departmentRepository;
+        private readonly IUserAccessContextProvider _accessProvider;
+        private readonly IRepository<Employee> _employeeRepo;
+        private readonly IRepository<Role> _RoleRepo;
+        private readonly IRepository<EmployeeRole> _employeeRolesRepository;
+
+
+
 
         public BranchService(
             IRepository<Branch> branchRepository,
@@ -32,7 +47,13 @@ namespace TaskMangment.Infrastructure.Services
             IRepository<Area> areaRepository,
             IRepository<Company> companyRepository,
             IMapper mapper,
-            ICachingService cache)
+            ICachingService cache,
+            IRepository<ManagerBranches> managerBranchesRepo,
+            IRepository<Department> departmentRepository,
+            IUserAccessContextProvider accessProvider,
+            IRepository<Employee> employeeRepo,
+            IRepository<Role> roleRepo, IRepository<EmployeeRole> employeeRolesRepository
+        )
         {
             _branchRepository = branchRepository;
             _employeeRepository = employeeRepository;
@@ -40,25 +61,29 @@ namespace TaskMangment.Infrastructure.Services
             _companyRepository = companyRepository;
             _mapper = mapper;
             _cache = cache;
+            _managerBranchesRepo = managerBranchesRepo;
+            _departmentRepository = departmentRepository;
+            _accessProvider = accessProvider;
+            _employeeRepo = employeeRepo;
+            _RoleRepo = roleRepo;
+            _employeeRolesRepository = employeeRolesRepository;
         }
 
-        public async Task<ApiResponse<PagedResponse<BranchGetDto>>> GetAllAsync(BranchRequest request)
+        public async Task<ApiResponse<PagedResponse<BranchGetDto>>> GetAllAsync(
+    BranchRequest request,
+    int employeeId,
+    int roleLevel,int companyId)
         {
-            string cacheKey =
-                $"branches:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
-
-            if (!request.BypassCache)
-            {
-                var cached = await _cache.GetAsync<PagedResponse<BranchGetDto>>(cacheKey);
-                if (cached != null)
-                    return ApiResponse<PagedResponse<BranchGetDto>>.Ok(cached);
-            }
-
-            var query = _branchRepository.GetAll()
+            var access = await _accessProvider.GetAsync(employeeId);
+            var query = _branchRepository
+                .GetAll(b => b.CompanyId == companyId && !b.IsDeleted)
                 .Include(b => b.Manager)
                 .Include(b => b.Responsible)
                 .Include(b => b.Area)
-                .ApplySearch(request.searchKey); ;
+                .ApplySearch(request.searchKey)
+                .ApplyAccessScope(access);
+
+
             var totalCount = await query.CountAsync();
 
             query = query.OrderByDynamicSafe(request.SortColumn, request.SortDirection);
@@ -72,10 +97,9 @@ namespace TaskMangment.Infrastructure.Services
 
             var response = new PagedResponse<BranchGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
 
-            await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
-
             return ApiResponse<PagedResponse<BranchGetDto>>.Ok(response);
         }
+
 
         public async Task<ApiResponse<BranchGetDto>> GetByIdAsync(int id)
         {
@@ -83,12 +107,13 @@ namespace TaskMangment.Infrastructure.Services
                 .Include(b => b.Manager)
                 .Include(b => b.Responsible)
                 .Include(b => b.Area)
-
                 .AsNoTracking()
                 .FirstOrDefaultAsync();
 
             if (branch == null)
-                return ApiResponse<BranchGetDto>.Fail("Branch not found", StatusCode.NotFound);
+                    throw new AppException(
+                        ErrorCodes.BranchNotFound,
+                        StatusCodes.Status404NotFound);
 
             var dto = _mapper.Map<BranchGetDto>(branch);
             return ApiResponse<BranchGetDto>.Ok(dto);
@@ -96,82 +121,172 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<BranchGetDto>> AddAsync(BranchAddEditDto dto, int CampanyId)
         {
-            if (dto.ManagerId.HasValue && !await _employeeRepository.IsExistAsync(dto.ManagerId.Value))
-                return ApiResponse<BranchGetDto>.Fail("Manager not found", StatusCode.NotFound);
+            if (!await _employeeRepository.IsExistAsync(dto.ManagerId))
+                throw new AppException(ErrorCodes.ManagerNotFound, StatusCodes.Status404NotFound);
 
-            if (dto.ResponsibleId.HasValue && !await _employeeRepository.IsExistAsync(dto.ResponsibleId.Value))
-                return ApiResponse<BranchGetDto>.Fail("Responsible employee not found", StatusCode.NotFound);
+            if (!await _employeeRepository.IsExistAsync(dto.ResponsibleId))
+                throw new AppException(ErrorCodes.ManagerNotFound, StatusCodes.Status404NotFound);
 
-            if (dto.AreaId.HasValue && !await _areaRepository.IsExistAsync(dto.AreaId.Value))
-                return ApiResponse<BranchGetDto>.Fail("Area not found", StatusCode.NotFound);
+            var managerActive = await _employeeRepository.GetAll(e => e.Id == dto.ManagerId && !e.IsDeleted)
+                .Select(e => e.IsActive)
+                .FirstOrDefaultAsync();
+            if (!managerActive)
+                throw new AppException(ErrorCodes.EmployeeInactive, StatusCodes.Status400BadRequest);
+
+            var responsibleActive = await _employeeRepository.GetAll(e => e.Id == dto.ResponsibleId && !e.IsDeleted)
+                .Select(e => e.IsActive)
+                .FirstOrDefaultAsync();
+            if (!responsibleActive)
+                throw new AppException(ErrorCodes.EmployeeInactive, StatusCodes.Status400BadRequest);
+
+            var canBeBranchManager = await _employeeRolesRepository.GetAll(er =>
+                    er.EmployeeId == dto.ManagerId &&
+                    er.IsAssigned &&
+                    !er.IsDeleted)
+                .Join(_RoleRepo.GetAll(r => !r.IsDeleted && r.CanBeBranchManager),
+                    er => er.RoleId,
+                    r => r.Id,
+                    (er, r) => r.Id)
+                .AnyAsync();
+
+            if (!canBeBranchManager)
+                throw new AppException(ErrorCodes.InvalidBranchManagerRole, StatusCodes.Status400BadRequest);
+            if (dto.AreaId.HasValue)
+            {
+                if (!await _areaRepository.IsExistAsync(dto.AreaId.Value))
+                    throw new AppException(ErrorCodes.AreaNotFound, StatusCodes.Status404NotFound);
+            }
 
             if (!await _companyRepository.IsExistAsync(CampanyId))
-                return ApiResponse<BranchGetDto>.Fail("Company not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.CompanyNotFound, StatusCodes.Status404NotFound);
+
+            // ManagerID / ResponsibleID may cover many branches (no uniqueness check).
 
             var branch = _mapper.Map<Branch>(dto);
             branch.CompanyId = CampanyId;
 
             await _branchRepository.AddAsync(branch);
             await _branchRepository.SaveChangesAsync();
+
             await _cache.RemoveAsync("branches:");
 
-
             var branchFull = await _branchRepository.GetAll()
-    .Include(b => b.Manager)
-    .Include(b => b.Responsible)
-    .Include(b => b.Area)
-    .FirstOrDefaultAsync(b => b.Id == branch.Id);
+                .Include(b => b.Manager)
+                .Include(b => b.Responsible)
+                .Include(b => b.Area)
+                .FirstOrDefaultAsync(b => b.Id == branch.Id);
 
             var branchdto = _mapper.Map<BranchGetDto>(branchFull);
 
-            // TODO: Optional: Clear branch cache pattern
-            // await _cache.RemoveByPatternAsync("branches-");
-
             return ApiResponse<BranchGetDto>.Ok(branchdto, "Branch added successfully");
         }
+
 
         public async Task<ApiResponse<BranchGetDto>> UpdateAsync(int id, BranchAddEditDto dto)
         {
             var branch = await _branchRepository.GetByIDAsync(id);
             if (branch == null)
-                return ApiResponse<BranchGetDto>.Fail("Branch not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.BranchNotFound, StatusCodes.Status404NotFound);
 
-            if (dto.ManagerId.HasValue && !await _employeeRepository.IsExistAsync(dto.ManagerId.Value))
-                return ApiResponse<BranchGetDto>.Fail("Manager not found", StatusCode.NotFound);
+            if (!await _employeeRepository.IsExistAsync(dto.ManagerId))
+                throw new AppException(ErrorCodes.ManagerNotFound, StatusCodes.Status404NotFound);
 
-            if (dto.ResponsibleId.HasValue && !await _employeeRepository.IsExistAsync(dto.ResponsibleId.Value))
-                return ApiResponse<BranchGetDto>.Fail("Responsible employee not found", StatusCode.NotFound);
+            if (!await _employeeRepository.IsExistAsync(dto.ResponsibleId))
+                throw new AppException(ErrorCodes.ManagerNotFound, StatusCodes.Status404NotFound);
 
-            if (dto.AreaId.HasValue && !await _areaRepository.IsExistAsync(dto.AreaId.Value))
-                return ApiResponse<BranchGetDto>.Fail("Area not found", StatusCode.NotFound);
+            var managerActive = await _employeeRepository.GetAll(e => e.Id == dto.ManagerId && !e.IsDeleted)
+                .Select(e => e.IsActive)
+                .FirstOrDefaultAsync();
+            if (!managerActive)
+                throw new AppException(ErrorCodes.EmployeeInactive, StatusCodes.Status400BadRequest);
 
-         
+            var responsibleActive = await _employeeRepository.GetAll(e => e.Id == dto.ResponsibleId && !e.IsDeleted)
+                .Select(e => e.IsActive)
+                .FirstOrDefaultAsync();
+            if (!responsibleActive)
+                throw new AppException(ErrorCodes.EmployeeInactive, StatusCodes.Status400BadRequest);
+
+            var canBeBranchManager = await _employeeRolesRepository.GetAll(er =>
+                    er.EmployeeId == dto.ManagerId &&
+                    er.IsAssigned &&
+                    !er.IsDeleted)
+                .Join(_RoleRepo.GetAll(r => !r.IsDeleted && r.CanBeBranchManager),
+                    er => er.RoleId,
+                    r => r.Id,
+                    (er, r) => r.Id)
+                .AnyAsync();
+
+            if (!canBeBranchManager)
+                throw new AppException(ErrorCodes.InvalidBranchManagerRole, StatusCodes.Status400BadRequest);
+
+            if (dto.AreaId.HasValue)
+            {
+                if (!await _areaRepository.IsExistAsync(dto.AreaId.Value))
+                    throw new AppException(ErrorCodes.AreaNotFound, StatusCodes.Status404NotFound);
+            }
+
+            // ManagerID / ResponsibleID may cover many branches (no uniqueness check).
 
             _mapper.Map(dto, branch);
-
             await _branchRepository.SaveChangesAsync();
+
+            // Legacy ManagerBranches cleanup only (coverage is Branch.ManagerID / Area now).
+            if (!branch.IsActive)
+            {
+                var links = await _managerBranchesRepo.GetAll(x =>
+                        x.BranchId == branch.Id && x.IsActive)
+                    .ToListAsync();
+                foreach (var link in links)
+                    link.IsActive = false;
+                await _managerBranchesRepo.SaveChangesAsync();
+            }
+
             await _cache.RemoveAsync("branches:");
 
             var branchFull = await _branchRepository.GetAll()
-   .Include(b => b.Manager)
-   .Include(b => b.Responsible)
-   .Include(b => b.Area)
-   .FirstOrDefaultAsync(b => b.Id == branch.Id);
-            var branchdto = _mapper.Map<BranchGetDto>(branch);
+                .Include(b => b.Manager)
+                .Include(b => b.Responsible)
+                .Include(b => b.Area)
+                .FirstOrDefaultAsync(b => b.Id == branch.Id);
 
-            // TODO: Optional: Invalidate cache
+            var branchdto = _mapper.Map<BranchGetDto>(branchFull);
 
             return ApiResponse<BranchGetDto>.Ok(branchdto, "Branch updated successfully");
         }
+
 
         public async Task<ApiResponse<bool>> DeleteAsync(int id)
         {
             var branch = await _branchRepository.GetByIDAsync(id);
             if (branch == null)
-                return ApiResponse<bool>.Fail("Branch not found", StatusCode.NotFound);
+                throw new AppException(
+                    ErrorCodes.BranchNotFound,
+                    StatusCodes.Status404NotFound);
+
+            var hasEmployees = await _employeeRepository
+                .GetAll(e => e.BranchId == id)
+                .AnyAsync();
+
+            if (hasEmployees)
+                throw new AppException(ErrorCodes.BranchHasEmployees, StatusCodes.Status400BadRequest);
+
+            var hasDepartments = await _departmentRepository
+                .GetAll(d => d.BranchId == id)
+                .AnyAsync();
+
+            if (hasDepartments)
+                throw new AppException(ErrorCodes.BranchHasDepartments, StatusCodes.Status400BadRequest);
 
             _branchRepository.SoftDelete(branch);
+
+            var coverageLinks = await _managerBranchesRepo.GetAll(x =>
+                    x.BranchId == id && x.IsActive)
+                .ToListAsync();
+            foreach (var link in coverageLinks)
+                link.IsActive = false;
+
             await _branchRepository.SaveChangesAsync();
+            await _managerBranchesRepo.SaveChangesAsync();
             await _cache.RemoveAsync("branches:");
 
 

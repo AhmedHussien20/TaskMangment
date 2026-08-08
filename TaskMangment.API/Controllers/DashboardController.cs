@@ -1,0 +1,177 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using TaskMangment.API.Middlewares;
+using TaskMangment.Application.ApiRequests;
+using TaskMangment.Application.Common.Security;
+using TaskMangment.Application.Dashboards.Admin;
+using TaskMangment.Application.Dashboards.Employee;
+using TaskMangment.Application.DTOs;
+using TaskMangment.Application.DTOs.TaskDTOs;
+using TaskMangment.Domain.Entities;
+namespace TaskMangment.API.Controllers
+{
+    [ApiController]
+    [Route("api/dashboard")]
+    public class DashboardController : BaseController
+    {
+        private readonly IAdminDashboardService _adminService;
+        private readonly IEmployeeDashboardService _employeeService;
+
+        public DashboardController(
+            IAdminDashboardService adminService,
+            IEmployeeDashboardService employeeService)
+        {
+            _adminService = adminService;
+            _employeeService = employeeService;
+        }
+
+        [HttpGet("admin")]
+        [PermissionAuthorize(
+            PermissionCodes.ViewScopedTasks, PermissionCodes.ViewCompanyTasks)]
+        public async Task<IActionResult> GetAdminDashboard([FromQuery] PeriodDto period, int? branchId = null)
+        {
+            var result = await _adminService.GetDashboardAsync(CompanyId,this.RoleLevel,CurrentUserId, period, branchId);
+            return Success(result.Data);
+        }
+
+        [HttpGet("employee")]
+        public async Task<IActionResult> GetEmployeeDashboard([FromQuery] PeriodDto period)
+        {
+            var result = await _employeeService.GetDashboardAsync(CurrentUserId,period);
+            return Success(result.Data);
+        }
+
+        [HttpGet("employee/warnings")]
+        public async Task<IActionResult> GetEmployeeWarnings([FromQuery] PeriodDto period)
+        {
+            var result = await _employeeService.GetWarningsAsync(CurrentUserId,period);
+            return Success(result.Data);
+        }
+
+        [HttpGet("employee/deductions")]
+        public async Task<IActionResult> GetEmployeeDeductions([FromQuery] PeriodDto period)
+        {
+            var result = await _employeeService.GetDeductionsAsync(CurrentUserId, period);
+            return Success(result.Data);
+        }
+
+        [HttpGet("not-comment-today")]
+        public async Task<IActionResult> GetTasksWithoutCommentsToday([FromQuery] BaseApiRequest request)
+        {
+            var result = await _employeeService.GetTasksWithoutCommentsTodayAsync(request, CurrentUserId,this.RoleLevel);
+            return Success(result.Data);
+        }
+
+        [HttpGet("due-soon-tasks")]
+        public async Task<IActionResult> GetTasksDueSoon()
+        {
+            var result = await _employeeService.GetDueSoonTasksAsync(CurrentUserId);
+            return Success(result.Data);
+        }
+        [HttpGet("employee/kpis")]
+        public async Task<IActionResult> GetEmployeeKpis([FromQuery] PeriodDto period)
+        {
+            var result = await _employeeService.GetEmployeeKpisAsync(CurrentUserId, period);
+            return Success(result.Data);
+        }
+
+        [HttpGet("employee/completed-tasks-details")]
+        public async Task<IActionResult> GetEmployeeCompletedTasksDetails([FromQuery] PeriodDto period)
+        {
+            var result = await _employeeService.GetEmployeeCompletedTasksDetailsAsync(CurrentUserId, period);
+            return Success(result.Data);
+        }
+
+
+        [HttpGet("admin/in-progress-updated-today")]
+        [PermissionAuthorize(
+            PermissionCodes.ViewScopedTasks, PermissionCodes.ViewCompanyTasks)]
+        public async Task<IActionResult> GetTodayUpdatedInProgressTasks([FromQuery] UpdatedTodayTasksRequest request, int? branchId = null)
+        {
+            var result = await _adminService.GetTodayUpdatedInProgressTasksAsync(CompanyId, this.RoleLevel, CurrentUserId, request, branchId);
+            return Success(result.Data);
+        }
+
+        [HttpGet("admin/completed-tasks-today")]
+        [PermissionAuthorize(
+            PermissionCodes.ViewScopedTasks, PermissionCodes.ViewCompanyTasks)]
+        public async Task<IActionResult> GetEmployeesCompletedTasksToday([FromQuery] PeriodDto period, int? branchId = null)
+        {
+            var result = await _adminService.GetEmployeesCompletedTasksTodayAsync(CompanyId, this.RoleLevel, CurrentUserId, period, branchId);
+                
+
+            return Success(result.Data);
+        }
+
+        [HttpGet("admin/pending-close-requests")]
+        [PermissionAuthorize(
+            PermissionCodes.ViewScopedTasks, PermissionCodes.ViewCompanyTasks)]
+        public async Task<IActionResult> GetPendingCloseRequests([FromQuery] PeriodDto period, int? branchId = null)
+        {
+            var result = await _adminService .GetPendingCloseRequestsAsync(CompanyId, this.RoleLevel, CurrentUserId, period, branchId);
+            return Success(result.Data);
+        }
+
+        [HttpGet("admin/tasks-by-status")]
+        [PermissionAuthorize(
+            PermissionCodes.ViewScopedTasks, PermissionCodes.ViewCompanyTasks)]
+        public async Task<IActionResult> GetAdminTasksByStatus([FromQuery] string status,[FromQuery] TasksByStatusRequest request,int? branchId = null)
+        {
+            var result = await _adminService.GetTasksByStatusAsync(CompanyId, status,RoleLevel,CurrentUserId,request,branchId);
+            return Success(result.Data);
+        }
+
+        [HttpGet("admin/kpis")]
+        [PermissionAuthorize(
+            PermissionCodes.ViewScopedTasks, PermissionCodes.ViewCompanyTasks)]
+        public async Task<IActionResult> GetAdminKpis([FromQuery] PeriodDto period, int? branchId = null)
+        {
+            var result = await _adminService.GetKpisAsync(CompanyId, this.RoleLevel, CurrentUserId, period,branchId);
+            return Success(result.Data);
+        }
+
+        [HttpGet("admin/discounts")]
+        [PermissionAuthorize(
+            PermissionCodes.ViewScopedTasks, PermissionCodes.ViewCompanyTasks)]
+        public async Task<IActionResult> GetDiscounts([FromQuery] DiscountsRequest request, int? branchId = null)
+        {
+            var result = await _adminService.GetDiscountsAsync(CompanyId,this.RoleLevel,CurrentUserId,request,branchId);
+            return Success(result.Data);
+        }
+
+        [HttpGet("admin/high-priority-tasks")]
+        [PermissionAuthorize(
+            PermissionCodes.ViewScopedTasks, PermissionCodes.ViewCompanyTasks)]
+        public async Task<IActionResult> GetHighPriorityTasks([FromQuery] TasksHighPriorityRequest request,int? branchId = null)
+        {
+            var result = await _adminService.GetHighPriorityTasksAsync(this.CompanyId,this.RoleLevel,this.CurrentUserId,request,branchId);
+            return Success(result.Data); 
+        }
+
+        [HttpGet("admin/completed-tasks-details")]
+        [PermissionAuthorize(
+            PermissionCodes.ViewScopedTasks, PermissionCodes.ViewCompanyTasks)]
+        public async Task<IActionResult> GetCompletedTasksDetails([FromQuery] PeriodDto period, int? branchId = null)
+        {
+            var result = await _adminService.GetCompletedTasksDetailsAsync(CompanyId, this.RoleLevel, CurrentUserId, period,branchId);
+            return Success(result.Data);
+        }
+
+        
+        [HttpGet("admin/branches-for-filter")]
+        [PermissionAuthorize(
+            PermissionCodes.ViewScopedTasks, PermissionCodes.ViewCompanyTasks)]
+        public async Task<IActionResult> GetBranchesForFilter()
+        {
+            var result = await _adminService.GetBranchesForFilterAsync(
+                this.CompanyId,
+                this.RoleLevel,
+                this.CurrentUserId
+            );
+
+            return Success(result.Data);
+        }
+
+    }
+
+}

@@ -5,6 +5,6 @@ namespace TaskMangment.Application.Interfaces.Services
 {
     public interface IJwtService
     {
-        string GenerateToken(Employee user);
+        Task<string> GenerateTokenAsync(Employee user);
     }
 }

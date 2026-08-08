@@ -1,0 +1,95 @@
+<app-page-header [title]="title | translate" [title1]="breadcrumbs" [activeitem]="activeitem | translate">
+</app-page-header>
+
+<div class="row row-sm">
+  <!-- LEFT PANEL -->
+  <div class="col-xl-3">
+    <div class="card custom-card">
+      
+
+      <div class="card-body p-0">
+        <!-- external categories -->
+        <div id="external-events" #external class="border-bottom p-3">
+          <div
+            *ngFor="let c of categories"
+            class="fc-event fc-h-event fc-daygrid-event fc-daygrid-block-event"
+            [ngClass]="c.borderClass"
+            [attr.data-class]="c.className"
+            [attr.data-event-type]="c.eventType">
+
+            <div class="fc-event-main">
+              {{ c.labelKey | translate }}
+            </div>
+          </div>
+        </div>
+
+        <!-- activity -->
+      <div class="p-3 border-bottom" style="background-color: #f8f5ff; border-bottom-color: #e0d4ff !important;">
+  <div class="d-flex align-items-center mb-4 justify-content-between">
+    <h6 class="fw-semibold mb-0" style="color: #9358c2;">
+      {{ 'CALENDAR.ACTIVITY' | translate }} :
+    </h6>
+    <button class="btn btn-sm btn-wave" 
+            style="background-color: #e0d4ff; color: #9358c2; border: none; box-shadow: 0 2px 4px rgba(147, 88, 194, 0.15); transition: all 0.3s ease;"
+            onmouseover="this.style.backgroundColor='#d0b8ff'; this.style.transform='translateY(-1px)';"
+            onmouseout="this.style.backgroundColor='#e0d4ff'; this.style.transform='translateY(0)';">
+      {{ 'CALENDAR.VIEW_ALL' | translate }}
+    </button>
+  </div>
+  <overlay-scrollbars>
+    <ul class="list-unstyled mb-0 fullcalendar-events-activity" id="full-calendar-activity">
+      <li *ngIf="activityLoading" class="text-muted fs-12" style="color: #a992cc;">
+        {{ 'CALENDAR.LOADING' | translate }}...
+      </li>
+      <li *ngFor="let item of activity" class="mb-3 p-3 rounded-3" 
+          style="background-color: #ffffff; border-left: 4px solid #ba8eff; box-shadow: 0 2px 8px rgba(147, 88, 194, 0.08); transition: all 0.3s ease;"
+          onmouseover="this.style.boxShadow='0 4px 12px rgba(147, 88, 194, 0.15)'; this.style.transform='translateY(-2px)';"
+          onmouseout="this.style.boxShadow='0 2px 8px rgba(147, 88, 194, 0.08)'; this.style.transform='translateY(0)';">
+        <div class="d-flex align-items-center justify-content-between flex-wrap">
+          <p class="mb-1 fw-semibold" style="color: #9358c2;">
+            {{ item.dateText }}
+          </p>
+          <span class="badge mb-1 rounded-pill px-3 py-2" 
+                [ngClass]="item.badgeClass"
+                style="background-color: #f0e5ff; color: #9358c2; font-weight: 500; font-size: 0.75rem;">
+            {{ item.badgeText }}
+          </span>
+        </div>
+        <p class="mb-0 fs-12" style="color: #888; line-height: 1.5;">
+          {{ item.description }}
+        </p>
+      </li>
+      <li *ngIf="!activityLoading && activity.length === 0" class="text-muted fs-12" style="color: #a992cc;">
+        {{ 'CALENDAR.NO_ACTIVITY' | translate }}
+      </li>
+    </ul>
+  </overlay-scrollbars>
+</div>
+
+        <!-- image -->
+        <div class="p-3">
+          <img src="./assets/images/media/media-80.svg" alt="">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="col-xl-9">
+    <div class="card custom-card">
+      <div class="card-header">
+        <div class="card-title">{{ 'CALENDAR.TITLE' | translate }}</div>
+      </div>
+
+      <div class="card-body">
+        <div id="calendar2">
+          <div *ngIf="loading" class="text-muted fs-12 mb-2">
+            {{ 'CALENDAR.LOADING' | translate }}...
+          </div>
+
+          <full-calendar [options]="calendarOptions"></full-calendar>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

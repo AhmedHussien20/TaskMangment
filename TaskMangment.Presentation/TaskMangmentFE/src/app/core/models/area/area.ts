@@ -2,7 +2,7 @@ export interface Area {
   id: number;
   name: string;
   address: string;
-  managerID: number;
+  managerEmployeeId: number;
   managerName: string | null;
   branchCount: number;
 }

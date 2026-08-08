@@ -2,50 +2,107 @@
 </app-page-header>
 
 <div class="row row-sm">
-    <div class="col-md-12 col-lg-12">
-        <div class="card custom-card">
-
-            <div class="card-header border-bottom-0">
-                <div class="d-flex">
-                    <label class="main-content-label my-auto pt-2">{{ title | translate }}</label>
-                </div>
-            </div>
-
-            <div class="card-body pt-2">
-
-                <!-- LOADING -->
-                <div *ngIf="isLoading" class="text-center my-3">
-                    <div class="spinner-border" role="status">
-                        <span class="visually-hidden">{{ 'TABLE.LOADING' | translate }}</span>
-                    </div>
-                </div>
-
-                <!-- TABLE -->
-                <div *ngIf="!isLoading">
-
-                    <app-generic-table [title]="title" [breadcrumbs]="breadcrumbs" [columns]="columns" [data]="rows"
-                        [entries]="entries" [page]="page" [labels]="labels" [totalItems]="totalItems"
-                        [showAddButton]="true" (addClick)="openAdd(taskModal)" [showEditButton]="true"
-                        [showFilters]="true" [searchCriteria]="searchCriteria" [onSearch]="applyFilters.bind(this)"
-                        (pageChange)="onPageChange($event)" [addButtonLabel]="'TASK.ADD' | translate"
-                        (edit)="openEdit($event, taskModal)">
-                    </app-generic-table>
-                </div>
-            </div>
-        </div>
+  @for (card of cards; track $index) {
+    <div class="col-12 col-md-6 col-xl-3">
+      <spk-dashboard [card]="card"></spk-dashboard>
     </div>
+  }
 </div>
-<!-- MODAL TEMPLATE -->
-<ng-template #taskModal let-modal>
-    <div class="modal-header">
-        <h6 class="modal-title">
-            {{ isEdit ? ('TASK.EDIT' | translate) : ('TASK.ADD' | translate) }}
-        </h6>
-        <button class="btn-close" (click)="modal.dismiss()"></button>
-    </div>
 
-    <div class="modal-body">
-        <app-task-create-update [isEdit]="isEdit" [taskId]="selectedTaskId" (formSubmitted)="onFormSubmitted()">
-        </app-task-create-update>
+<div class="row row-sm">
+  <div class="col-md-12 col-lg-12">
+    <div class="card custom-card">
+      <div class="card-body pt-2">
+        <div>
+          <app-generic-table
+  [title]="title"
+  [breadcrumbs]="breadcrumbs"
+  [columns]="columns"
+  [data]="rows"
+  [entries]="entries"
+  [page]="page"
+  [labels]="labels"
+  [totalItems]="totalItems"
+  [showAddButton]="canCreate"
+  [showEditButton]="canEdit"
+  [showCopyButton]="canCopy"
+  [showDeleteButton]="canDelete"
+  (addClick)="openAdd(taskModal)"
+  (copy)="openCopy($event, taskModal)"
+  [showDetailsButton]="true"
+  [showFilters]="true"
+  [searchCriteria]="searchCriteria"
+  [onSearch]="applyFilters.bind(this)"
+  [statusOptions]="status"
+  [showEmployeeFilter]="showEmployeeFilter"
+  [extraFilterOptions]="showTaskScopeFilter ? taskScopeFilterOptions : {}"
+  (pageChange)="onPageChange($event)"
+  (entriesChange)="onEntriesChange($event)"
+  [addButtonLabel]="'TASK.ADD' | translate"
+  (edit)="openEdit($event, taskModal)"
+  (details)="openDetails($event)"
+  (iconAction)="onIconAction($event)"
+  (delete)="confirmDelete($event)"
+  [disableEditFn]="disableEditRow"
+  [disableDeleteFn]="disableDeleteRow"
+  [disableCopyFn]="disableCopyRow"
+  [showExtraButton]="canShowExtraTasks"
+  [extraMenuItems]="extraMenuItems"
+  (extraMenuSelect)="onExtraMenuSelect($event, deepSearchModal)"
+  [showCheckbox]="IsClosed && canArchive"
+  (cleared)="onTableCleared()"
+  [checkboxKey]="'__archiveChecked'"
+  (checkboxChange)="onCheckboxChange($event)"
+  [disableCheckboxFn]="disableArchiveCheckbox"
+
+  [showSecondButton]="canArchive && TurnToArchive && selectedArchiveIds.length > 0"
+  [secondButtonLabel]="'TASK.ARCHIVE'"
+  (secondButtonClick)="archiveSelectedTasks()"
+>
+</app-generic-table>
+
+        </div>
+      </div>
     </div>
+  </div>
+</div>
+
+<!-- TASK MODAL -->
+<ng-template #taskModal let-modal>
+  <div class="modal-header">
+    <h6 class="modal-title">
+      {{ isEdit ? ('TASK.EDIT' | translate) : ('TASK.ADD' | translate) }}
+    </h6>
+    <button class="btn-close" (click)="modal.dismiss()"></button>
+  </div>
+
+  <div class="modal-body">
+    <app-task-create-update
+  [isEdit]="isEdit"
+  [isCopy]="isCopyMode"
+  [taskId]="selectedTaskId"
+  (formSubmitted)="onFormSubmitted()">
+</app-task-create-update>
+  </div>
 </ng-template>
+
+<!-- DEEP SEARCH MODAL -->
+<ng-template #deepSearchModal let-modal>
+  <div class="modal-header">
+    <h6 class="modal-title">
+        {{ deepSearchTitleKey | translate }}
+    </h6>
+    <button class="btn-close" (click)="modal.dismiss()"></button>
+  </div>
+
+  <div class="modal-body">
+    <app-tasks-employee-deep-search
+      [statusOptions]="statusOptions"
+      [initial]="deepSearchInitial"
+      (submitFilters)="applyDeepSearch($event, modal)"
+      [triggerClear]="clearTrigger"
+      (cancel)="modal.dismiss()">
+    </app-tasks-employee-deep-search>
+  </div>
+</ng-template>
+

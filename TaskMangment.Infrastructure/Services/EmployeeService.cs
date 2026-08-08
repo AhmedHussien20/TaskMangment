@@ -1,20 +1,30 @@
-﻿using AutoMapper;
+using AutoMapper;
+using Azure.Core;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Mail;
 using System.Text;
 using System.Threading.Tasks;
 using TaskMangment.Application.Common.ApiRequests.Employee;
+using TaskMangment.Application.Common.Errors;
+using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Responses;
+using TaskMangment.Application.Common.Security;
 using TaskMangment.Application.DTOs;
 using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
+using TaskMangment.Infrastructure.DataContext;
 using TaskMangment.Infrastructure.Persistence.Extensions;
+using Attachment = TaskMangment.Domain.Entities.Attachment;
 
 namespace TaskMangment.Infrastructure.Services
 {
@@ -25,8 +35,21 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<EmployeeRole> _employeeRoleRepo;
         private readonly IRepository<Branch> _branchRepo;
         private readonly IRepository<Company> _companyRepository;
+        private readonly IRepository<Attachment> _attachmentRepo;
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
+        private readonly AppDbContext _db;
+        private readonly IWebHostEnvironment _env;
+        private readonly IBlobStorageService _blobStorageService;
+        private readonly IAppUnitOfWork _uow;
+        private readonly IRepository<ManagerBranches> _managerBranchesRepo;
+        private readonly IUserAccessContextProvider _accessProvider;
+        private readonly IRepository<TaskAssignment> _taskAssignmentRepo;
+        private readonly IRepository<WorkTask> _taskRepo;
+        private readonly IAccessScopeResolver _scopeResolver;
+        private readonly IEmployeePermissionService _permissions;
+
+
 
         public EmployeeService(
             IRepository<Employee> employeeRepo,
@@ -35,61 +58,218 @@ namespace TaskMangment.Infrastructure.Services
             IRepository<Branch> branchRepo,
             IRepository<Company> companyRepository,
             IMapper mapper,
-            ICachingService cache)
+            ICachingService cache,
+            IRepository<Attachment> attachmentRepo,
+            IBlobStorageService blobStorageService,
+            AppDbContext db,
+            IWebHostEnvironment env,
+            IAppUnitOfWork uow,
+            IRepository<ManagerBranches> managerBranchesRepo,
+            IUserAccessContextProvider accessProvider,
+            IRepository<TaskAssignment> taskAssignmentRepo,
+            IRepository<WorkTask> taskRepo,
+            IAccessScopeResolver scopeResolver,
+            IEmployeePermissionService permissions
+            )
         {
             _employeeRepo = employeeRepo;
             _roleRepo = roleRepo;
             _employeeRoleRepo = employeeRoleRepo;
             _branchRepo = branchRepo;
             _companyRepository = companyRepository;
-
+            _blobStorageService = blobStorageService;
             _mapper = mapper;
             _cache = cache;
+            _attachmentRepo = attachmentRepo;
+            _db = db;
+            _uow = uow;
+            _managerBranchesRepo = managerBranchesRepo;
+            _accessProvider = accessProvider;
+            _env = env;
+            _taskAssignmentRepo = taskAssignmentRepo;
+            _taskRepo = taskRepo;
+            _scopeResolver = scopeResolver;
+            _permissions = permissions;
         }
 
-        public async Task<ApiResponse<PagedResponse<EmployeeGetDto>>> GetAllAsync(EmployeeRequest request)
+        public async Task<ApiResponse<PagedResponse<EmployeeGetDto>>> GetAllAsync(EmployeeRequest request,int employeeId,int roleLevel) 
         {
-            string cacheKey =
-                $"employees:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
+            var empQuery = await BuildEmployeeQueryAsync(request, employeeId, roleLevel);
 
-            if (!request.BypassCache)
-            {
-                var cached = await _cache.GetAsync<PagedResponse<EmployeeGetDto>>(cacheKey);
-                if (cached != null)
-                    return ApiResponse<PagedResponse<EmployeeGetDto>>.Ok(cached);
-            }
+            var totalCount = await empQuery.CountAsync();
 
-            var query = _employeeRepo.GetAll()
-                .Include(e => e.Branch)
-                .Include(e => e.EmployeeRoles)
-                    .ThenInclude(er => er.Role)
-                .ApplySearch(request.searchKey);
+            empQuery = empQuery.OrderByDynamicSafe(request.SortColumn, request.SortDirection);
 
-            var totalCount = await query.CountAsync();
-
-            query = query.OrderByDynamicSafe(request.SortColumn, request.SortDirection);
-
-            var list = await query
+            var employees = await empQuery
                 .Skip((request.PageIndex - 1) * request.PageSize)
                 .Take(request.PageSize)
                 .ToListAsync();
 
-            
-            var dtos = _mapper.Map<ICollection<EmployeeGetDto>>(list);
+            var employeeIds = employees.Select(e => e.Id).ToList();
 
+            var images = await _db.Attachments
+                .Where(a =>
+                    a.AttachmentType == AttachmentType.Employee &&
+                    !a.IsDeleted &&
+                    employeeIds.Contains(a.ReferenceId))
+                .GroupBy(a => a.ReferenceId)
+                .Select(g => new
+                {
+                    EmployeeId = g.Key,
+                    ImageUrl = g.OrderByDescending(x => x.CreatedDate)
+                                .Select(x => x.FilePath)
+                                .FirstOrDefault()
+                })
+                .ToDictionaryAsync(x => x.EmployeeId, x => x.ImageUrl);
+
+            var dtos = _mapper.Map<List<EmployeeGetDto>>(employees);
+
+            foreach (var dto in dtos)
+            {
+                if (images.TryGetValue(dto.Id, out var blobName) &&
+                    !string.IsNullOrWhiteSpace(blobName))
+                    dto.ImageUrl = _blobStorageService.WithSas(blobName);
+                else
+                    dto.ImageUrl = null;
+            }
 
             var response = new PagedResponse<EmployeeGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
-
-            // Save to cache for 10 minutes
-            await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
-
             return ApiResponse<PagedResponse<EmployeeGetDto>>.Ok(response);
         }
+
+        public async Task<ApiResponse<List<EmployeeGetDto>>> GetAllForExportAsync(
+            EmployeeRequest request,
+            int employeeId,
+            int roleLevel)
+        {
+            var empQuery = await BuildEmployeeQueryAsync(request, employeeId, roleLevel);
+
+            empQuery = empQuery.OrderByDynamicSafe(request.SortColumn, request.SortDirection);
+
+            var employees = await empQuery.ToListAsync();
+            var dtos = _mapper.Map<List<EmployeeGetDto>>(employees);
+
+            return ApiResponse<List<EmployeeGetDto>>.Ok(dtos);
+        }
+
+        private async Task<IQueryable<Employee>> BuildEmployeeQueryAsync(
+            EmployeeRequest request,
+            int employeeId,
+            int roleLevel)
+        {
+            var scope = await _scopeResolver.ResolveAsync(employeeId);
+
+            var isCreateTaskPicker = !string.IsNullOrWhiteSpace(request.PermissionCode)
+                && request.PermissionCode == PermissionCodes.CreateTask;
+
+            var empQuery = _employeeRepo.GetAll()
+                .Include(e => e.Branch)
+                .Include(e => e.Department)
+                .Include(e => e.Job)
+                .Include(e => e.EmployeeRoles.Where(er => er.IsAssigned && !er.IsDeleted))
+                    .ThenInclude(er => er.Role)
+                .ApplySearch(request.searchKey)
+                .AsNoTracking();
+
+            // Assign picker must NOT use View excludes (branch/area superiors / company-wide).
+            // ASSIGN_OUTSIDE_SCOPE widens the picker to the whole company.
+            if (isCreateTaskPicker &&
+                await _permissions.HasAsync(employeeId, PermissionCodes.AssignOutsideScope))
+            {
+                empQuery = empQuery.Where(e => e.CompanyId == scope.CompanyId && !e.IsDeleted && e.IsActive);
+            }
+            else
+            {
+                var intent = isCreateTaskPicker ? AccessIntent.Assign : AccessIntent.View;
+                empQuery = _scopeResolver.FilterEmployees(empQuery, scope, intent);
+            }
+
+            if (request.BranchId.HasValue)
+                empQuery = empQuery.Where(e => e.BranchId == request.BranchId.Value);
+
+            if (request.IsActive.HasValue)
+                empQuery = empQuery.Where(e => e.IsActive == request.IsActive.Value);
+
+            if (request.CanBeBranchManager == true || request.RequiresBranchScope == true)
+            {
+                // Manager pickers never include inactive employees.
+                empQuery = empQuery.Where(e => e.IsActive);
+            }
+
+            if (request.CanBeBranchManager == true)
+            {
+                empQuery = empQuery.Where(e =>
+                    e.EmployeeRoles.Any(er =>
+                        er.IsAssigned && !er.IsDeleted &&
+                        er.Role != null && !er.Role.IsDeleted &&
+                        er.Role.CanBeBranchManager));
+            }
+
+            if (request.RequiresBranchScope == true)
+            {
+                empQuery = empQuery.Where(e =>
+                    e.EmployeeRoles.Any(er =>
+                        er.IsAssigned && !er.IsDeleted &&
+                        er.Role != null && !er.Role.IsDeleted &&
+                        er.Role.RequiresBranchScope));
+            }
+
+            if (isCreateTaskPicker)
+            {
+                empQuery = empQuery.Where(e => e.IsActive);
+
+                var canAssignManagers = await _permissions.HasAsync(employeeId, PermissionCodes.AssignToManagers);
+                var canAssignOutside = await _permissions.HasAsync(employeeId, PermissionCodes.AssignOutsideScope);
+                // Outside-scope already includes managers company-wide; only block superiors when neither grant exists.
+                if (!canAssignManagers && !canAssignOutside && scope.OwnBranchId.HasValue)
+                {
+                    var branchId = scope.OwnBranchId.Value;
+                    var blockedIds = await _branchRepo.GetAll(b => b.Id == branchId && !b.IsDeleted && b.ManagerID > 0)
+                        .Select(b => b.ManagerID)
+                        .ToListAsync();
+
+                    var scopeManagers = await _managerBranchesRepo.GetAll(mb =>
+                            mb.BranchId == branchId &&
+                            mb.IsActive &&
+                            !mb.IsDeleted &&
+                            mb.Branch != null &&
+                            !mb.Branch.IsDeleted &&
+                            mb.Branch.IsActive)
+                        .Select(mb => mb.ManagerId)
+                        .ToListAsync();
+                    blockedIds.AddRange(scopeManagers);
+
+                    var areaId = await _branchRepo.GetAll(b => b.Id == branchId && !b.IsDeleted)
+                        .Select(b => b.AreaId)
+                        .FirstOrDefaultAsync();
+                    if (areaId.HasValue)
+                    {
+                        var areaManagerId = await _db.Set<Area>()
+                            .Where(a => a.Id == areaId.Value && !a.IsDeleted && a.ManagerEmployeeId != null)
+                            .Select(a => a.ManagerEmployeeId!.Value)
+                            .FirstOrDefaultAsync();
+                        if (areaManagerId > 0)
+                            blockedIds.Add(areaManagerId);
+                    }
+
+                    blockedIds = blockedIds.Where(id => id != employeeId).Distinct().ToList();
+                    if (blockedIds.Count > 0)
+                        empQuery = empQuery.Where(e => !blockedIds.Contains(e.Id));
+                }
+            }
+
+            return empQuery;
+        }
+
+
 
         public async Task<ApiResponse<EmployeeGetDto>> GetByIdAsync(int id)
         {
             var employee = await _employeeRepo.GetAll(e => e.Id == id)
                 .Include(e => e.Branch)
+                .Include(e => e.Department)
+                .Include(e => e.Job)
+                .Include(e => e.EmployeeType)
                 .Include(e => e.EmployeeRoles)
                     .ThenInclude(er => er.Role)
                 .AsNoTracking()
@@ -100,6 +280,7 @@ namespace TaskMangment.Infrastructure.Services
 
             
             var dto = _mapper.Map<EmployeeGetDto>(employee);
+           // var x = employee.Department.Name;
 
             return ApiResponse<EmployeeGetDto>.Ok(dto);
         }
@@ -107,100 +288,256 @@ namespace TaskMangment.Infrastructure.Services
         public async Task<ApiResponse<EmployeeGetDto>> AddAsync(EmployeeAddEditDto dto, int CampanyId)
         {
             if (dto.BranchId.HasValue && !await _branchRepo.IsExistAsync(dto.BranchId.Value))
-                return ApiResponse<EmployeeGetDto>.Fail("Branch not found", StatusCode.NotFound);
-
+                throw new AppException(ErrorCodes.BranchNotFound, StatusCodes.Status400BadRequest);
 
             if (!await _companyRepository.IsExistAsync(CampanyId))
-                return ApiResponse<EmployeeGetDto>.Fail("Company not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.CompanyNotFound, StatusCodes.Status400BadRequest);
 
+            if (string.IsNullOrWhiteSpace(dto.Password))
+                throw new AppException(ErrorCodes.Invalid, StatusCodes.Status400BadRequest);
 
-            var employee = _mapper.Map<Employee>(dto);
-            employee.CompanyId = CampanyId;
-            employee.CreatedDate = DateTime.UtcNow;
+            var existingByEmail = await _db.Employees
+                .FirstOrDefaultAsync(e => e.Email == dto.Email);
 
+            if (existingByEmail != null && !existingByEmail.IsDeleted)
+                throw new AppException(ErrorCodes.EmailAlreadyExists, StatusCodes.Status400BadRequest);
 
-            var hasher = new PasswordHasher<Employee>();
-            employee.PasswordHash = hasher.HashPassword(employee, dto.Password);
+            await _uow.BeginTransactionAsync();
+            string? blobUrl = null;
 
-            await _employeeRepo.AddAsync(employee);
-            await _employeeRepo.SaveChangesAsync();
-
-
-            // Assign roles
-            foreach (var roleId in dto.RoleIds)
+            try
             {
-                if (!await _roleRepo.IsExistAsync(roleId))
-                    return ApiResponse<EmployeeGetDto>.Fail($"Role with ID {roleId} not found");
+                var employee = existingByEmail ?? _mapper.Map<Employee>(dto);
 
-                await _employeeRoleRepo.AddAsync(new EmployeeRole
+                if (existingByEmail != null)
                 {
-                    EmployeeId = employee.Id,
-                    RoleId = roleId
-                });
+                    _mapper.Map(dto, employee);
+                    employee.IsDeleted = false;
+                    employee.DeletedDate = null;
+                    employee.DeletedBy = null;
+                    employee.ModifiedDate = DateTime.UtcNow;
+                }
+                else
+                {
+                    employee.CreatedDate = DateTime.UtcNow;
+                    await _employeeRepo.AddAsync(employee);
+                }
+
+                employee.CompanyId = CampanyId;
+                employee.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+
+                // Need employee Id before roles; still inside UoW transaction.
+                await _employeeRepo.SaveChangesAsync();
+
+                if (dto.UpdateRoles)
+                    await SyncEmployeeRolesAsync(employee.Id, dto.RoleIds, employee.EmployeeTypeId);
+
+                if (dto.Attachments != null)
+                {
+                    var uniqueFileName = $"{Guid.NewGuid()}_{Path.GetFileName(dto.Attachments.FileName)}";
+
+                    await using var stream = dto.Attachments.OpenReadStream();
+
+                    blobUrl = await _blobStorageService.UploadAsync(
+                        stream,
+                        uniqueFileName,
+                        dto.Attachments.ContentType,
+                        folder: "attachments"
+                    );
+
+
+                    var attachment = new Attachment
+                    {
+                        FileName = dto.Attachments.FileName,  
+                        FilePath = blobUrl,
+                        Size = dto.Attachments.Length,
+                        UploadedBy = employee.Id,
+                        ContentType = dto.Attachments.ContentType,
+                        UploadedAt = DateTime.UtcNow,
+                        AttachmentType = AttachmentType.Employee,
+                        ReferenceId = employee.Id,
+                        BlobUrl = blobUrl,
+                        BlobUploadedAt = DateTime.UtcNow,
+                        IsUploadedToBlob = true
+                    };
+
+
+                    await _attachmentRepo.AddAsync(attachment);
+                }
+
+                // Single flush for roles (+ attachment) then commit — all or nothing.
+                await _employeeRepo.SaveChangesAsync();
+                await _cache.RemoveAsync("employees:");
+                await _uow.CommitAsync();
+
+                var fullEmployee = await _employeeRepo.GetAll(e => e.Id == employee.Id)
+                                                      .Include(e => e.Branch)
+                                                      .Include(e => e.Job)
+                                                      .Include(e => e.Department)
+                                                      .Include(e => e.EmployeeRoles)
+                                                          .ThenInclude(er => er.Role)
+                                                      .FirstOrDefaultAsync();
+
+                var employeeDto = _mapper.Map<EmployeeGetDto>(fullEmployee);
+
+                return ApiResponse<EmployeeGetDto>.Ok(employeeDto, "Employee added successfully");
             }
+            catch
+            {
+                await _uow.RollbackAsync();
 
-            await _employeeRoleRepo.SaveChangesAsync();
-            await _cache.RemoveAsync("employees:");
+                if (!string.IsNullOrWhiteSpace(blobUrl))
+                {
+                    try
+                    {
+                        await _blobStorageService.DeleteAsync(blobUrl);
+                    }
+                    catch
+                    {
+                    }
+                }
 
-            var fullEmployee = await _employeeRepo.GetAll(e => e.Id == employee.Id)
-                                                  .Include(e => e.Branch)
-                                                  .Include(e => e.EmployeeRoles)
-                                                      .ThenInclude(er => er.Role)
-                                                  .FirstOrDefaultAsync();
-
-            var employeeDto = _mapper.Map<EmployeeGetDto>(fullEmployee);
-
-            return ApiResponse<EmployeeGetDto>.Ok(employeeDto, "Employee added successfully");
+                throw;
+            }
         }
 
         public async Task<ApiResponse<EmployeeGetDto>> UpdateAsync(int id, EmployeeAddEditDto dto)
         {
+            if (dto.BranchId.HasValue && !await _branchRepo.IsExistAsync(dto.BranchId.Value))
+                throw new AppException(ErrorCodes.BranchNotFound, StatusCodes.Status400BadRequest);
+
             var employee = await _employeeRepo.GetByIDAsync(id);
             if (employee == null)
-                return ApiResponse<EmployeeGetDto>.Fail("Employee not found");
+                throw new AppException(ErrorCodes.EmployeeNotFound, StatusCodes.Status400BadRequest);
 
-            _mapper.Map(dto, employee);
-            employee.ModifiedDate = DateTime.UtcNow;
+            if (await _employeeRepo.GetAll(e => e.Email == dto.Email && e.Id != id).AnyAsync())
+                throw new AppException(ErrorCodes.EmailAlreadyExists, StatusCodes.Status400BadRequest);
 
-            // TODO: Hash password if provided
-            // if(!string.IsNullOrWhiteSpace(dto.Password))
-            //    employee.PasswordHash = HashPassword(dto.Password);
+            await _uow.BeginTransactionAsync();
 
-            // Update roles
-            var oldRoles = await _employeeRoleRepo.GetAll(er => er.EmployeeId == id).ToListAsync();
-            _employeeRoleRepo.DeleteRange(oldRoles);
+            string? newBlobUrl = null;
+            string? oldBlobUrl = null;   
 
-            foreach (var roleId in dto.RoleIds)
+            try
             {
-                if (!await _roleRepo.IsExistAsync(roleId))
-                    return ApiResponse<EmployeeGetDto>.Fail($"Role with ID {roleId} not found");
+                _mapper.Map(dto, employee);
 
-                await _employeeRoleRepo.AddAsync(new EmployeeRole
+                if (!string.IsNullOrWhiteSpace(dto.Password))
+                    employee.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+
+                if (dto.UpdateRoles)
+                    await SyncEmployeeRolesAsync(employee.Id, dto.RoleIds, dto.EmployeeTypeId ?? employee.EmployeeTypeId);
+
+                if (dto.Attachments != null)
                 {
-                    EmployeeId = employee.Id,
-                    RoleId = roleId
-                });
+                    var oldAttachment = await _attachmentRepo
+                        .GetAll(a => a.ReferenceId == employee.Id && a.AttachmentType == AttachmentType.Employee)
+                        .FirstOrDefaultAsync();
+
+                    if (oldAttachment != null)
+                        oldBlobUrl = oldAttachment.BlobUrl;
+
+                    var uniqueFileName = $"{Guid.NewGuid()}_{Path.GetFileName(dto.Attachments.FileName)}";
+                    await using var stream = dto.Attachments.OpenReadStream();
+
+                    newBlobUrl = await _blobStorageService.UploadAsync(
+                        stream,
+                        uniqueFileName,
+                        dto.Attachments.ContentType,
+                        folder: "attachments"
+                    );
+
+                    if (oldAttachment != null)
+                    {
+                        oldAttachment.FileName = dto.Attachments.FileName; 
+                        oldAttachment.FilePath = newBlobUrl;
+                        oldAttachment.Size = dto.Attachments.Length;
+                        oldAttachment.ContentType = dto.Attachments.ContentType;
+                        oldAttachment.UploadedAt = DateTime.UtcNow;
+
+                        oldAttachment.BlobUrl = newBlobUrl;
+                        oldAttachment.BlobUploadedAt = DateTime.UtcNow;
+                        oldAttachment.IsUploadedToBlob = true;
+                    }
+                    else
+                    {
+                        var attachment = new Attachment
+                        {
+                            FileName = dto.Attachments.FileName,
+                            FilePath = newBlobUrl,
+                            Size = dto.Attachments.Length,
+                            UploadedBy = employee.Id,
+                            ContentType = dto.Attachments.ContentType,
+                            UploadedAt = DateTime.UtcNow,
+                            AttachmentType = AttachmentType.Employee,
+                            ReferenceId = employee.Id,
+                            BlobUrl = newBlobUrl,
+                            BlobUploadedAt = DateTime.UtcNow,
+                            IsUploadedToBlob = true
+                        };
+
+                        await _attachmentRepo.AddAsync(attachment);
+                    }
+                }
+
+                // One SaveChanges for employee + roles (+ attachment), then UoW commit.
+                await _employeeRepo.SaveChangesAsync();
+                await _cache.RemoveAsync("employees:");
+                await _uow.CommitAsync();
+
+                if (!string.IsNullOrWhiteSpace(oldBlobUrl) &&
+                    !string.IsNullOrWhiteSpace(newBlobUrl) &&
+                    !string.Equals(oldBlobUrl, newBlobUrl, StringComparison.OrdinalIgnoreCase))
+                {
+                    try { await _blobStorageService.DeleteAsync(oldBlobUrl); } catch { }
+                }
+
+                var fullEmployee = await _employeeRepo.GetAll(e => e.Id == employee.Id)
+                    .Include(e => e.Branch)
+                    .Include(e => e.Job)
+                    .Include(e => e.Department)
+                    .Include(e => e.EmployeeRoles)
+                        .ThenInclude(er => er.Role)
+                    .FirstOrDefaultAsync();
+
+                var employeeDto = _mapper.Map<EmployeeGetDto>(fullEmployee);
+                return ApiResponse<EmployeeGetDto>.Ok(employeeDto, "Employee updated successfully");
             }
+            catch
+            {
+                await _uow.RollbackAsync();
 
-            await _employeeRepo.SaveChangesAsync();
-            await _employeeRoleRepo.SaveChangesAsync();
-            await _cache.RemoveAsync("employees:");
+                if (!string.IsNullOrWhiteSpace(newBlobUrl))
+                {
+                    try { await _blobStorageService.DeleteAsync(newBlobUrl); } catch { }
+                }
 
-            var fullEmployee = await _employeeRepo.GetAll(e => e.Id == employee.Id)
-                                                             .Include(e => e.Branch)
-                                                             .Include(e => e.EmployeeRoles)
-                                                                 .ThenInclude(er => er.Role)
-                                                             .FirstOrDefaultAsync();
-
-            var employeeDto = _mapper.Map<EmployeeGetDto>(fullEmployee);
-            return ApiResponse<EmployeeGetDto>.Ok(employeeDto, "Employee updated successfully");
+                throw;
+            }
         }
+
+
 
         public async Task<ApiResponse<bool>> DeleteAsync(int id)
         {
             var employee = await _employeeRepo.GetByIDAsync(id);
             if (employee == null)
-                return ApiResponse<bool>.Fail("Employee not found");
+                throw new AppException(
+                    ErrorCodes.EmployeeNotFound,
+                    StatusCodes.Status400BadRequest);
+
+            var hasActiveAssignments = await _taskAssignmentRepo
+                .GetAll(a => a.EmployeeId == id && a.IsActive)
+                .AnyAsync();
+            var hasTasks= await _taskRepo.GetAll(a => a.CreatedByEmployeeId == id).AnyAsync();
+
+
+
+            if (hasActiveAssignments || hasTasks)
+                throw new AppException(
+                    ErrorCodes.EmployeeHasActiveTasks,
+                    StatusCodes.Status409Conflict);
+
 
             _employeeRepo.SoftDelete(employee);
             await _employeeRepo.SaveChangesAsync();
@@ -209,5 +546,103 @@ namespace TaskMangment.Infrastructure.Services
 
             return ApiResponse<bool>.Ok(true, "Employee deleted successfully");
         }
+
+        public async Task<ApiResponse<List<FunctionCodeEnumDto>>> GetFunctionCodesAsync()
+        {
+            var values = await _db.EmployeeTypes
+                .AsNoTracking()
+                .Where(x => !x.IsDeleted)
+                .OrderBy(x => x.Id)
+                .Select(x => new FunctionCodeEnumDto
+                {
+                    Id = x.Id,
+                    Name = x.NameEn,
+                    SeesAllTypesInBranchScope = x.SeesAllTypesInBranchScope
+                })
+                .ToListAsync();
+
+            return ApiResponse<List<FunctionCodeEnumDto>>.Ok(values);
+        }
+
+        private const int MaxRolesPerEmployee = 2;
+
+        /// <summary>
+        /// Optional role assignment on create/update. Empty list clears active roles.
+        /// </summary>
+        private async Task SyncEmployeeRolesAsync(int employeeId, List<int>? roleIds, int? employeeTypeId)
+        {
+            var desired = (roleIds ?? new List<int>())
+                .Where(id => id > 0)
+                .Distinct()
+                .ToList();
+
+            if (desired.Count > MaxRolesPerEmployee)
+                throw new AppException(ErrorCodes.EmployeeMaxRolesExceeded, StatusCodes.Status400BadRequest);
+
+            if (desired.Count > 0)
+            {
+                var roles = await _roleRepo
+                    .GetAll(r => desired.Contains(r.Id) && !r.IsDeleted)
+                    .Select(r => new
+                    {
+                        r.Id,
+                        r.RequiresEmployeeTypeScope,
+                        r.EmployeeTypeId
+                    })
+                    .ToListAsync();
+
+                if (roles.Count != desired.Count)
+                    throw new AppException(ErrorCodes.RoleNotFound, StatusCodes.Status400BadRequest);
+
+                foreach (var role in roles)
+                {
+                    if (!role.RequiresEmployeeTypeScope)
+                        continue;
+
+                    if (!role.EmployeeTypeId.HasValue || role.EmployeeTypeId.Value <= 0)
+                        throw new AppException(ErrorCodes.RoleEmployeeTypeRequired, StatusCodes.Status400BadRequest);
+
+                    if (employeeTypeId != role.EmployeeTypeId)
+                        throw new AppException(ErrorCodes.EmployeeTypeMismatch, StatusCodes.Status400BadRequest);
+                }
+            }
+
+            var existing = await _employeeRoleRepo
+                .GetAll(er => er.EmployeeId == employeeId && !er.IsDeleted)
+                .ToListAsync();
+
+            foreach (var er in existing)
+            {
+                if (desired.Contains(er.RoleId))
+                {
+                    er.IsAssigned = true;
+                    er.IsDeleted = false;
+                    er.DeletedDate = null;
+                    er.ModifiedDate = DateTime.UtcNow;
+                }
+                else if (er.IsAssigned)
+                {
+                    er.IsAssigned = false;
+                    er.ModifiedDate = DateTime.UtcNow;
+                }
+            }
+
+            var existingRoleIds = existing.Select(er => er.RoleId).ToHashSet();
+            foreach (var roleId in desired.Where(id => !existingRoleIds.Contains(id)))
+            {
+                await _employeeRoleRepo.AddAsync(new EmployeeRole
+                {
+                    EmployeeId = employeeId,
+                    RoleId = roleId,
+                    IsAssigned = true,
+                    CreatedDate = DateTime.UtcNow
+                });
+            }
+
+            // No SaveChanges here — caller saves once then _uow.CommitAsync().
+        }
+
+
+
     }
 }

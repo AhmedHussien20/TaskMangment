@@ -1,0 +1,345 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="SAVE_FAILED" xml:space="preserve">
+    <value>فشل</value>
+  </data>
+  <data name="WHATSAPP_NOT_CONFIGURED" xml:space="preserve">
+    <value>إعدادات واتساب غير مكتملة</value>
+  </data>
+  <data name="WHATSAPP_SEND_FAILED" xml:space="preserve">
+    <value>تعذر إرسال رسالة واتساب</value>
+  </data>
+  <data name="NOTIFICATION_SEND_FAILED" xml:space="preserve">
+    <value>تعذر إرسال الإشعار</value>
+  </data>
+  <data name="EMAIL_NOT_FOUND" xml:space="preserve">
+    <value>البريد الالكتروني غير موجود</value>
+  </data>
+  <data name="AREA_NOT_FOUND" xml:space="preserve">
+    <value>المنطقة غير موجودة</value>
+  </data>
+  <data name="INVALID_PASS_OR_EMAIL" xml:space="preserve">
+    <value>خطأ في كلمة السر او البريد</value>
+  </data>
+  <data name="BRANCH_NOT_FOUND" xml:space="preserve">
+    <value>الفرع غير موجود</value>
+  </data>
+  <data name="BRANCH_HAS_EMPLOYEES" xml:space="preserve">
+    <value>لا يمكن حذف الفرع لأنه يحتوي على موظفين</value>
+  </data>
+  <data name="AREA_HAS_BRANCHES" xml:space="preserve">
+    <value>لا يمكن حذف المنطقة لأنها تحتوي على فروع</value>
+  </data>
+  <data name="BRANCH_HAS_DEPARTMENTS" xml:space="preserve">
+    <value>لا يمكن حذف الفرع لأنه يحتوي على أقسام</value>
+  </data>
+  <data name="DEPARTMENT_HAS_JOBS" xml:space="preserve">
+    <value>لا يمكن حذف القسم لأنه يحتوي على وظائف</value>
+  </data>
+  <data name="DEPARTMENT_HAS_EMPLOYEES" xml:space="preserve">
+    <value>لا يمكن حذف القسم لأنه يحتوي على موظفين</value>
+  </data>
+  <data name="JOB_HAS_EMPLOYEES" xml:space="preserve">
+    <value>لا يمكن حذف الوظيفة لأنها مرتبطة بموظفين</value>
+  </data>
+  <data name="COMPANY_HAS_EMPLOYEES" xml:space="preserve">
+    <value>لا يمكن حذف الشركة لأنها تحتوي على موظفين</value>
+  </data>
+  <data name="COMPANY_HAS_AREAS" xml:space="preserve">
+    <value>لا يمكن حذف الشركة لأنها تحتوي على مناطق</value>
+  </data>
+  <data name="COMPANY_HAS_BRANCHES" xml:space="preserve">
+    <value>لا يمكن حذف الشركة لأنها تحتوي على فروع</value>
+  </data>
+  <data name="COMPANY_HAS_ROLES" xml:space="preserve">
+    <value>لا يمكن حذف الشركة لأنها تحتوي على أدوار</value>
+  </data>
+  <data name="ROLE_HAS_EMPLOYEES" xml:space="preserve">
+    <value>لا يمكن حذف الدور لأنه مُسند إلى موظفين</value>
+  </data>
+  <data name="PERMISSION_HAS_ROLES" xml:space="preserve">
+    <value>لا يمكن حذف الصلاحية لأنها مُسندة إلى أدوار</value>
+  </data>
+  <data name="LEAVE_TYPE_HAS_LEAVES" xml:space="preserve">
+    <value>لا يمكن حذف نوع الإجازة لأنه مرتبط بطلبات إجازة</value>
+  </data>
+  <data name="COURSE_HAS_SUBJECTS" xml:space="preserve">
+    <value>لا يمكن حذف الدورة لأنها تحتوي على مواد</value>
+  </data>
+  <data name="COURSE_HAS_OFFERS" xml:space="preserve">
+    <value>لا يمكن حذف الدورة لأنها مرتبطة بعروض</value>
+  </data>
+  <data name="OFFER_HAS_ASSIGNMENTS" xml:space="preserve">
+    <value>لا يمكن حذف العرض لأنه مرتبط بطلاب</value>
+  </data>
+  <data name="STUDENT_HAS_OFFER_ASSIGNMENTS" xml:space="preserve">
+    <value>لا يمكن حذف الطالب لأنه مرتبط بعروض</value>
+  </data>
+  <data name="COURSE_NOT_FOUND" xml:space="preserve">
+    <value>الكورس غير موجود</value>
+  </data>
+  <data name="EMPLOYEE_NOT_FOUND" xml:space="preserve">
+    <value>الموظف غير موجود</value>
+  </data>
+  <data name="EMPLOYEE_INACTIVE" xml:space="preserve">
+    <value>حساب الموظف غير نشط</value>
+  </data>
+  <data name="OFFER_NOT_FOUND" xml:space="preserve">
+    <value>العرض غير موجود</value>
+  </data>
+  <data name="STUDENT_NOT_FOUND" xml:space="preserve">
+    <value>الطالب غير موجود</value>
+  </data>
+  <data name="SUBJECT_NOT_FOUND" xml:space="preserve">
+    <value>المادة غير موجوده</value>
+  </data>
+  <data name="HAS_NO_ROLES" xml:space="preserve">
+    <value>المستخدم ليس له دور</value>
+  </data>
+  <data name="NOT_FOUND" xml:space="preserve">
+    <value>غير موجود</value>
+  </data>
+  <data name="NOT_ASSIGNED" xml:space="preserve">
+    <value>لم يتم تعينه</value>
+  </data>
+  <data name="ALREADY_REVIEWED" xml:space="preserve">
+    <value>تم تلقي هذا الطلب بالفعل</value>
+  </data>
+  <data name="DEPARTMENT_NOT_FOUND" xml:space="preserve">
+    <value>القسم غير موجود</value>
+  </data>
+  <data name="JOB_NOT_FOUND" xml:space="preserve">
+    <value>الوظيفة غير موجودة</value>
+  </data>
+  <data name="ROLE_NOT_FOUND" xml:space="preserve">
+    <value>الصلاحية غير موجودة</value>
+  </data>
+  <data name="EMPLOYEE_MAX_ROLES_EXCEEDED" xml:space="preserve">
+    <value>لا يمكن إضافة أكثر من صلاحيتين للموظف</value>
+  </data>
+  <data name="PERMISSION_NOT_FOUND" xml:space="preserve">
+    <value>الاذن غير موجود</value>
+  </data>
+  <data name="ALREADY_EXISTS" xml:space="preserve">
+    <value>موجود بالفعل</value>
+  </data>
+  <data name="ALREADY_ASSIGNED" xml:space="preserve">
+    <value>تم تعين هذا الموظف بالفعل</value>
+  </data>
+  <data name="Unauthorized" xml:space="preserve">
+    <value>ليس لديك اذن لاستخدام هذا المصدر</value>
+  </data>
+  <data name="OFFER_EXPIRED" xml:space="preserve">
+    <value>العرض انتهي</value>
+  </data>
+  <data name="INVALID_DATE" xml:space="preserve">
+    <value>ادخل التاريخ الصحيح</value>
+  </data>
+  <data name="DUE_DATE_ON_WEEKEND" xml:space="preserve">
+    <value>لا يمكن أن يكون تاريخ استحقاق المهمة يوم الجمعة أو السبت.</value>
+  </data>
+  <data name="DUE_DATE_IN_PAST" xml:space="preserve">
+    <value>لا يمكن أن يكون تاريخ استحقاق المهمة في الماضي.</value>
+  </data>
+  <data name="EXTENDAPPROVED" xml:space="preserve">
+    <value>تم الموافقة على تمديد المهمة</value>
+  </data>
+  <data name="LEAVEREQUESTCREATED" xml:space="preserve">
+    <value>تم إنشاء طلب إجازة</value>
+  </data>
+  <data name="LEAVE_APPROVED_NOTIFICATION" xml:space="preserve">
+    <value>تمت الموافقة على طلب الإجازة الخاص بك</value>
+  </data>
+  <data name="TASK_ASSIGNED_NOTIFICATION" xml:space="preserve">
+    <value>تم إسناد المهمة لـ {2}: مهمة رقم {0} بعنوان {1}</value>
+  </data>
+  <data name="TASK_PENALTY_NOTIFICATION" xml:space="preserve">
+    <value>تم تطبيق جزاء بقيمة {2} على المهمة {0} من {1}</value>
+  </data>
+  <data name="TASK_UNASSIGNED_NOTIFICATION" xml:space="preserve">
+    <value>تم إلغاء إسناد {2} من مهمة رقم {0} بعنوان {1}</value>
+  </data>
+  <data name="TASK_WARNING_NOTIFICATION" xml:space="preserve">
+    <value>تم توجيه تحذير على المهمة</value>
+  </data>
+  <data name="TASK_NOT_FOUND" xml:space="preserve">
+    <value>المهمة غير موجودة</value>
+  </data>
+  <data name="MANAGER_NOT_FOUND" xml:space="preserve">
+    <value>مدير غير موجود</value>
+  </data>
+  <data name="TASK_EXTENSION_REQUEST_NOTIFICATION" xml:space="preserve">
+    <value>تم إرسال طلب تمديد للمهمة</value>
+  </data>
+  <data name="TASK_CLOSE_REQUEST_NOTIFICATION" xml:space="preserve">
+    <value>تم إرسال طلب إغلاق للمهمة</value>
+  </data>
+  <data name="COMPANY_NOT_FOUND" xml:space="preserve">
+    <value>الشركة غير موجودة</value>
+  </data>
+  <data name="LEAVE_REJECTED_NOTIFICATION" xml:space="preserve">
+    <value>تم رفض طلب الإجازة الخاص بك</value>
+  </data>
+  <data name="CLOSEAPPROVED" xml:space="preserve">
+    <value>تم الموافقة على إغلاق المهمة</value>
+  </data>
+  <data name="TASKACHIEVEMENT" xml:space="preserve">
+    <value>تم إنجاز المهمة بنجاح</value>
+  </data>
+  <data name="EMAIL_ALREADY_EXISTS" xml:space="preserve">
+    <value>البريد الالكتروني مسجل بالفعل</value>
+  </data>
+  <data name="CANNOT_DELETE_TASK" xml:space="preserve">
+    <value>لا يمكنك حذف هذه المهمة، قم بإغلاقها بدلًا من ذلك.</value>
+  </data>
+  <data name="CLOSEREQUESTALREADYREQUESTED" xml:space="preserve">
+    <value>هناك طلب اغلاق علي المهمة بالفعل</value>
+  </data>
+  <data name="EMPLOYEE_HAS_ACTIVE_TASKS" xml:space="preserve">
+    <value>الموظف معين علي مهام نشطة لا يمكن حذفه</value>
+  </data>
+  <data name="TASK_MUST_BE_CLOSED_BEFORE_ARCHIVE" xml:space="preserve">
+    <value>يجب ان تكون المهمة مغلقه قبل الارشفة</value>
+  </data>
+  <data name="TASK_HAS_NO_PERCENTAGE" xml:space="preserve">
+    <value>يجب تقييم المهمة قبل قبول طلب الاغلاق</value>
+  </data>
+  <data name="INVALID_MANAGER_ROLE_LEVEL" xml:space="preserve">
+    <value>ليس لديه صلاحية مدير فرع</value>
+  </data>
+  <data name="INVALID_BRANCH_MANAGER_ROLE" xml:space="preserve">
+    <value>يجب أن يكون للموظف دور يسمح بتعيينه مديراً للفرع</value>
+  </data>
+  <data name="INVALID_AREA_MANAGER_ROLE" xml:space="preserve">
+    <value>يجب أن يكون للموظف دور يتطلب نطاق الفروع لتعيينه مديراً للمنطقة</value>
+  </data>
+  <data name="USE_AREA_FOR_BRANCH_SCOPE" xml:space="preserve">
+    <value>تغطية الفروع لهذا الدور تتم من صفحة المناطق وليس من نطاق التغطية</value>
+  </data>
+  <data name="INVALID_NOTIFICATION_SCOPE" xml:space="preserve">
+    <value>اختر نطاق الإشعارات (فرع / منطقة / شركة) عند تحديد الأدوار المصدر</value>
+  </data>
+  <data name="ROLE_EMPLOYEE_TYPE_REQUIRED" xml:space="preserve">
+    <value>يجب اختيار نوع الموظف للدور عند تفعيل يتطلب نطاق نوع الموظف</value>
+  </data>
+  <data name="EMPLOYEE_TYPE_MISMATCH" xml:space="preserve">
+    <value>نوع الموظف لا يطابق نوع الموظف المحدد للدور</value>
+  </data>
+</root>

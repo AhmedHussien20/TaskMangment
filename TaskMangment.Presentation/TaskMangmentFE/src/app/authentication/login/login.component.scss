@@ -52,6 +52,53 @@
 .dark .form-control::placeholder {
   color: #aaa;
 }
+/* الصفحة كلها عمودية */
+.login-wrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
 
+/* نخلي اللوجين ياخد المساحة اللي في النص */
+.login-page {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
- 
+/* الشريطين نفس الشكل */
+.top-logos,
+.bottom-logos {
+  width: 100%;
+  padding: 18px 0;
+  background: rgba(255,255,255,0.65);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+  overflow: hidden;
+}
+
+/* حركة اللوجوهات */
+.logos-marquee {
+  width: 100%;
+  overflow: hidden;
+}
+
+.logos-track {
+  display: flex;
+  gap: 70px;
+  width: max-content;
+  animation: scrollLogos 40s linear infinite;
+}
+
+.logos-track img {
+  height: 60px;
+  max-width: 150px;
+  object-fit: contain;
+  opacity: .85;
+}
+
+@keyframes scrollLogos {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}

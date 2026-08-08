@@ -1,0 +1,106 @@
+<div *ngIf="readonly" class="task-details-wrapper">
+
+  <div class="task-details-scroll">
+    <table class="table task-details-table">
+    <tbody>
+
+      <tr>
+        <th>{{ 'TASK.TASK_NUMBER' | translate }}</th>
+        <td>#{{ taskInfo?.id }}</td>
+      </tr>
+
+      <tr>
+        <th>{{ 'TASK.TITLE' | translate }}</th>
+        <td>{{ taskInfo?.title }}</td>
+      </tr>
+
+      <tr>
+        <th>{{ 'TASK.PRIORITY' | translate }}</th>
+        <td>
+          <span class="badge" [ngClass]="priorityBadgeClass">
+            {{ priorityLabelKey | translate }}
+          </span>
+        </td>
+      </tr>
+
+      <tr>
+        <th>{{ 'TASK.STATUS' | translate }}</th>
+        <td>
+          <span class="badge" [ngClass]="statusBadgeClass">
+            {{ statusLabelKey | translate }}
+          </span>
+        </td>
+      </tr>
+
+      <tr>
+        <th>{{ 'TASK.DESCRIPTION' | translate }}</th>
+        <td>{{ taskInfo?.description }}</td>
+      </tr>
+
+      <tr>
+        <th>{{ 'TASK.COMMENT_ALLOW_PERIOD' | translate }}</th>
+        <td>{{ taskInfo?.commentAllowPeriodDays }} يوم</td>
+      </tr>
+      <tr>
+        <th>{{ 'TASK.MIN_COMMENTS_PER_PERIOD' | translate }}</th>
+        <td>{{ taskInfo?.minCommentsPerPeriod ?? 1 }}</td>
+      </tr>
+
+      <tr>
+        <th>{{ 'TASK.MAX_WARNINGS_BEFORE_DISCOUNT' | translate }}</th>
+        <td>{{ taskInfo?.maxWarningsBeforeDiscount }}</td>
+      </tr>
+
+      <tr>
+        <th>{{ 'TASK.PENALTY_ON_AUTO_CLOSE' | translate }}</th>
+        <td>
+          <span class="money-badge danger">
+            {{ taskInfo?.penaltyOnAutoClose }}
+            <span class="currency">SAR</span>
+          </span>
+        </td>
+      </tr>
+
+      <tr>
+        <th>{{ 'TASK.PENALTY_ON_STOP_COMMENT' | translate }}</th>
+        <td>
+          <span class="money-badge">
+            {{ taskInfo?.penaltyOnStopComment }}
+            <span class="currency">SAR</span>
+          </span>
+        </td>
+      </tr>
+
+     <tr>
+        <th>{{ 'TASK.CREATED_AT' | translate }}</th>
+        <td>{{ taskInfo?.createdDate | myDate }}</td>
+      </tr>
+
+      <tr>
+        <th>{{ 'TASK.DUE_DATE' | translate }}</th>
+        <td>{{ taskInfo?.dueDate | myDate }}</td>
+      </tr>
+
+     <tr *ngIf="hasExtensions">
+  <th>{{ 'TASK.EXTENSIONS_COUNT' | translate }}</th>
+  <td>{{ taskInfo?.numberOfExtensions }}</td>
+</tr>
+
+<tr *ngIf="hasNewDate">
+  <th>{{ 'TASK.NEW_DUE_DATE' | translate }}</th>
+  <td>{{ taskInfo?.newDate | myDate }}</td>
+</tr>
+
+
+
+      <tr>
+        <th>{{ 'TASK.ASSIGNED_BY' | translate }}</th>
+        <td class="fw-semibold">{{ taskInfo?.assignedByName }}</td>
+      </tr>
+     
+
+    </tbody>
+  </table>
+
+</div>
+</div>

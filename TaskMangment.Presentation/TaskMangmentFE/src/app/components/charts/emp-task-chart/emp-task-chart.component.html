@@ -1,0 +1,79 @@
+<app-page-header [title]="title | translate" [title1]="breadcrumbs" [activeitem]="activeitem | translate">
+</app-page-header>
+
+<div class="row row-sm">
+  <div class="col-md-12 col-lg-12">
+    <div class="card custom-card">
+
+      <!-- Filters -->
+      <div class="card-header border-bottom-0">
+        <div class="d-flex justify-content-center gap-3 flex-wrap">
+
+          <div class="d-flex flex-column">
+            <label class="form-label small">{{ 'CHART.FROM' | translate }}</label>
+            <app-date-picker [(ngModel)]="fromDate" [placeholderKey]="'CHART.FROM'">
+            </app-date-picker>
+          </div>
+
+          <div class="d-flex flex-column">
+            <label class="form-label small">{{ 'CHART.TO' | translate }}</label>
+            <app-date-picker [(ngModel)]="toDate" [placeholderKey]="'CHART.TO'">
+            </app-date-picker>
+          </div>
+
+
+          <div *ngIf="isAdmin" class="d-flex flex-column">
+            <app-employee-ng-select [(selectedEmployeeId)]="selectedEmployeeId">
+            </app-employee-ng-select>
+          </div>
+
+
+
+          <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-primary btn-sm" (click)="onFilterApply()">
+              {{ 'COMMON.APPLY' | translate }}
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div *ngIf="isLoading" class="text-center my-3">
+          <div class="spinner-border" role="status">
+            <span class="visually-hidden">{{ 'TABLE.LOADING' | translate }}</span>
+          </div>
+        </div>
+
+        <div *ngIf="!isLoading" class="row">
+          <!-- BAR: Tasks + % -->
+          <div class="col-xl-7">
+            <div class="card custom-card">
+              <div class="card-header">
+                <div class="card-title">{{'CHART.TASK_PERCENT' | translate}}</div>
+              </div>
+              <div class="card-body" style="height: 420px;">
+                <spk-chartjs [type]="barChartType" [data]="barChartData" [options]="barChartOptions">
+                </spk-chartjs>
+              </div>
+            </div>
+          </div>
+
+          <!-- PIE: StatusCounts -->
+          <div class="col-xl-5">
+            <div class="card custom-card">
+              <div class="card-header">
+                <div class="card-title">{{'CHART.TASKS_STATUS'| translate}}</div>
+              </div>
+              <div class="card-body" style="height: 420px;">
+                <spk-echarts [echartId]="'emp-status-pie'" [options]="pieOptions"></spk-echarts>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

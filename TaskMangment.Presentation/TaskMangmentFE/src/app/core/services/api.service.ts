@@ -9,9 +9,12 @@ export class ApiService {
 
   constructor(private http: HttpClient) {}
 
-  get<T>(service: string, endpoint: string) {
-    return this.http.get<T>(`${this.baseUrl}/${service}/${endpoint}`);
-  }
+ get<T>(service: string, endpoint: string, params?: any): Observable<T> {
+  return this.http.get<T>(`${this.baseUrl}/${service}/${endpoint}`, {
+    params: params
+  });
+}
+
 
   post<T>(service: string, endpoint: string, body: any) {
     return this.http.post<T>(`${this.baseUrl}/${service}/${endpoint}`, body);
@@ -24,4 +27,14 @@ export class ApiService {
   delete<T>(service: string, endpoint: string) {
     return this.http.delete<T>(`${this.baseUrl}/${service}/${endpoint}`);
   }
+
+patch<T>(service: string, endpoint: string, body: any) {
+  return this.http.patch<T>(`${this.baseUrl}/${service}/${endpoint}`, body);
+}
+
+getBlob(service: string, endpoint: string): Observable<Blob> {
+  return this.http.get<Blob>(`${this.baseUrl}/${service}/${endpoint}`, { responseType: 'blob' as 'json' });
+}
+
+
 }

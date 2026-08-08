@@ -22,8 +22,8 @@ export class BranchService {
   }
 
   // GET /Branch/{id}
-  getById(id: number): Observable<BaseResponse<BranchAddEditDto>> {
-    return this.api.get<BaseResponse<BranchAddEditDto>>(this.service, `${id}`);
+  getById(id: number): Observable<BaseResponse<BranchGetDto>> {
+    return this.api.get<BaseResponse<BranchGetDto>>(this.service, `${id}`);
   }
 
   // POST /Branch

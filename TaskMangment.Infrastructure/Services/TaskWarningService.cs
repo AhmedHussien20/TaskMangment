@@ -1,4 +1,6 @@
-﻿using AutoMapper;
+using AutoMapper;
+using Azure.Core;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -6,13 +8,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TaskMangment.Application.Common.ApiRequests.Task;
+using TaskMangment.Application.Common.Errors;
+using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Responses;
+using TaskMangment.Application.Common.Security;
 using TaskMangment.Application.DTOs.TaskDTOs;
 using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
+using TaskMangment.Domain.Event;
 using TaskMangment.Infrastructure.Persistence.Extensions;
 
 namespace TaskMangment.Infrastructure.Services
@@ -21,47 +27,70 @@ namespace TaskMangment.Infrastructure.Services
     {
         private readonly IRepository<Warning> _warningRepo;
         private readonly IRepository<Employee> _employeeRepo;
+        private readonly IRepository<Branch> _branchRepo;
         private readonly IRepository<TaskAssignment> _taskAssignmentRepo;
+        private readonly IRepository<WorkTask> _taskRepo;
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
+        private readonly IDomainEventDispatcher _eventDispatcher;
+        private readonly IRepository<Notification> _notificationRepo;
+        private readonly INotificationRecipientBuilder _recipientBuilder;
+        private readonly IEmployeePermissionService _permissions;
+        private readonly TaskCreatedByMeEvaluator _createdByMe;
+
+
+
 
         public TaskWarningService(
             IRepository<Warning> warningRepo,
             IRepository<Employee> employeeRepo,
             IRepository<TaskAssignment> taskAssignmentRepo,
             IMapper mapper,
-            ICachingService cache)
+            ICachingService cache,
+            IRepository<WorkTask> taskRepo,
+            IDomainEventDispatcher eventDispatcher,
+            IRepository<Branch> branchRepo,
+            IRepository<Notification> notificationRepo,
+            INotificationRecipientBuilder recipientBuilder,
+            IEmployeePermissionService permissions,
+            TaskCreatedByMeEvaluator createdByMe)
         {
             _warningRepo = warningRepo;
             _employeeRepo = employeeRepo;
             _taskAssignmentRepo = taskAssignmentRepo;
             _mapper = mapper;
             _cache = cache;
+            _taskRepo = taskRepo;
+            _eventDispatcher = eventDispatcher;
+            _branchRepo = branchRepo;
+            _notificationRepo = notificationRepo;
+            _recipientBuilder = recipientBuilder;
+            _permissions = permissions;
+            _createdByMe = createdByMe;
         }
 
-        public async Task<ApiResponse<PagedResponse<WarningListDto>>> GetAllAsync(WarningRequest request)
+        public async Task<ApiResponse<PagedResponse<WarningGetDto>>> GetAllAsync(WarningRequest request)
         {
-            string safeTask = request.TaskAssignmentId?.ToString() ?? "null";
-            string safeEmployee = request.IssuedByEmployeeId?.ToString() ?? "null";
+            //string cacheKey = $"warnings:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}:{request.TaskId}";
 
-            string cacheKey = $"warnings-{request.PageIndex}-{request.PageSize}-{request.SortColumn}-{request.SortDirection}-{safeTask}-{safeEmployee}";
+            //if (!request.BypassCache)
+            //{
+            //    var cached = await _cache.GetAsync<PagedResponse<WarningListDto>>(cacheKey);
+            //    if (cached != null)
+            //        return ApiResponse<PagedResponse<WarningListDto>>.Ok(cached);
+            //}
 
-            if (!request.BypassCache)
-            {
-                var cached = await _cache.GetAsync<PagedResponse<WarningListDto>>(cacheKey);
-                if (cached != null)
-                    return ApiResponse<PagedResponse<WarningListDto>>.Ok(cached);
-            }
+            var task = await _taskRepo.GetByIDAsync(request.TaskId);
+            if (task == null)
+                throw new AppException(ErrorCodes.TaskNotFound, StatusCodes.Status404NotFound);
 
-            var query = _warningRepo.GetAll()
+            var query = _warningRepo.GetAll(c => c.TaskId == request.TaskId)
                 .Include(w => w.IssuedBy)
-                .AsQueryable();
+                .Include(w => w.Issued)
+                .Include(c => c.Task)
+                .ApplySearch(request.searchKey);
 
-            if (request.TaskAssignmentId.HasValue)
-                query = query.Where(w => w.TaskAssignmentId == request.TaskAssignmentId.Value);
 
-            if (request.IssuedByEmployeeId.HasValue)
-                query = query.Where(w => w.IssuedByEmployeeId == request.IssuedByEmployeeId.Value);
 
             var totalCount = await query.CountAsync();
             query = query.OrderByDynamicSafe(request.SortColumn, request.SortDirection);
@@ -71,12 +100,31 @@ namespace TaskMangment.Infrastructure.Services
                 .Take(request.PageSize)
                 .ToListAsync();
 
-            var dtos = _mapper.Map<ICollection<WarningListDto>>(list);
-            var response = new PagedResponse<WarningListDto>(dtos, totalCount, request.PageIndex, request.PageSize);
+            var dtos = _mapper.Map<ICollection<WarningGetDto>>(list);
 
-            await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
 
-            return ApiResponse<PagedResponse<WarningListDto>>.Ok(response);
+            var warningIds = dtos.Select(x => x.Id).ToList();
+
+            var notifReadMap = await _notificationRepo
+                .GetAll(n =>
+                    n.NotificationType == NotificationType.Warning &&
+                    warningIds.Contains(n.ReferenceId))
+                .Select(n => new { n.ReferenceId, n.IsRead })
+                .ToListAsync();
+
+            var readDict = notifReadMap
+                .GroupBy(x => x.ReferenceId)
+                .ToDictionary(g => g.Key, g => g.Any(x => x.IsRead));
+
+            foreach (var dto in dtos)
+            {
+                dto.IsRead = readDict.TryGetValue(dto.Id, out var isRead) && isRead;
+            }
+            var response = new PagedResponse<WarningGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
+
+            //await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
+
+            return ApiResponse<PagedResponse<WarningGetDto>>.Ok(response);
         }
 
         public async Task<ApiResponse<WarningGetDto>> GetByIdAsync(int id)
@@ -87,62 +135,177 @@ namespace TaskMangment.Infrastructure.Services
                 .FirstOrDefaultAsync();
 
             if (warning == null)
-                return ApiResponse<WarningGetDto>.Fail("Warning not found");
+                throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
 
             var dto = _mapper.Map<WarningGetDto>(warning);
+
+            dto.IsRead = await _notificationRepo.GetAll(n =>
+        n.NotificationType == NotificationType.Warning &&
+        n.ReferenceId == dto.Id)
+    .Select(n => n.IsRead)
+    .FirstOrDefaultAsync();
             return ApiResponse<WarningGetDto>.Ok(dto);
         }
 
-        public async Task<ApiResponse<WarningGetDto>> AddAsync(WarningAddEditDto dto, int taskId)
+        public async Task<ApiResponse<WarningGetDto>> AddAsync(WarningAddEditDto dto, int taskId, int employeeId)
         {
+            var task = await _taskRepo.GetByIDAsync(taskId);
+            if (task == null)
+                throw new AppException(ErrorCodes.TaskNotFound, StatusCodes.Status404NotFound);
 
-            var assignments = await _taskAssignmentRepo.GetAll(ta => ta.TaskId == taskId)
-       .Include(ta => ta.Employee)
-       .ToListAsync();
-
-            if (assignments == null || !assignments.Any())
-                return ApiResponse<WarningGetDto>.Fail("Task not found or has no assignments");
-
-            var assignment = assignments.FirstOrDefault(ta => ta.EmployeeId == dto.IssuedByEmployeeId);
+            var assignment = await _taskAssignmentRepo.GetAll(a =>
+                    a.TaskId == taskId &&
+                    a.EmployeeId == dto.IssuedEmployeeId &&
+                    a.IsActive)
+                .FirstOrDefaultAsync();
 
             if (assignment == null)
-                return ApiResponse<WarningGetDto>.Fail("This employee is not assigned to this task");
+                throw new AppException(ErrorCodes.NotAssigned, StatusCodes.Status400BadRequest);
+            var isActiveEmployee = await _employeeRepo.GetAll(e => e.Id == dto.IssuedEmployeeId && e.IsActive).AnyAsync();
+            if (!isActiveEmployee)
+                throw new AppException(ErrorCodes.EmployeeInactive, StatusCodes.Status400BadRequest);
+
+            if (assignment.IsClosed)
+                throw new AppException(ErrorCodes.TaskAlreadyClosed, StatusCodes.Status400BadRequest);
+
+            var actorIsAssignee = await _taskAssignmentRepo.GetAll(a =>
+                    a.TaskId == taskId &&
+                    a.EmployeeId == employeeId &&
+                    a.IsActive &&
+                    !a.IsDeleted)
+                .AnyAsync();
+            if (actorIsAssignee)
+                throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
+
+            await EnsureCanSendWarningAsync(employeeId, task);
 
             var warning = _mapper.Map<Warning>(dto);
             warning.TaskAssignmentId = assignment.Id;
+            warning.TaskId = taskId;
+            warning.IssuedByEmployeeId = employeeId;   // اللي بيعمل التحذير
+            warning.IssuedEmployeeId = dto.IssuedEmployeeId; // اللي بيتحذر
+            //warning.CreatedBy = employeeId;
+            //warning.CreatedDate = DateTime.UtcNow;
 
             await _warningRepo.AddAsync(warning);
+
             await _warningRepo.SaveChangesAsync();
 
-            var warningDto = _mapper.Map<WarningGetDto>(warning);
-            return ApiResponse<WarningGetDto>.Ok(warningDto, "Warning added successfully");
-        }
-        public async Task<ApiResponse<WarningGetDto>> UpdateAsync(int id, WarningAddEditDto dto)
+                await _cache.RemoveAsync("warnings:");
+
+
+            var employeeName = await _employeeRepo.GetAll(e => e.Id == employeeId).Select(e => e.FullName).FirstOrDefaultAsync();
+            var issuedEmployee = await _employeeRepo.GetAll(e => e.Id == dto.IssuedEmployeeId)
+                   .Select(e => new
+                   {
+                       e.BranchId,
+                       e.FullName
+                   }
+                   ).FirstOrDefaultAsync();
+
+            var branch = issuedEmployee.BranchId.HasValue
+                ? await _branchRepo.GetAll()
+                    .Include(b => b.Manager)
+                    .FirstOrDefaultAsync(b => b.Id == issuedEmployee.BranchId.Value)
+                : null;
+
+            // Subject who received the warning is the manager-anchor (not every task peer).
+            var sendToIds = await _recipientBuilder.BuildAsync(
+                peerIds: new[] { dto.IssuedEmployeeId },
+                actorIdToExclude: employeeId,
+                managerAnchorEmployeeId: dto.IssuedEmployeeId);
+
+            var IssuedToName = issuedEmployee.FullName;
+
+
+            if (sendToIds.Any())
+            {
+                await _eventDispatcher.PublishAsync(
+                        new TaskWarningEvent(
+                            warning.Id,
+                            taskId,
+                            employeeName,
+                            sendToIds,
+                            IssuedToName,
+                            task.Title,
+                            branch?.Name)
+                    );
+            }
+
+            var savedWarning = await _warningRepo.GetAll(w => w.Id == warning.Id)
+                .Include(w => w.IssuedBy)
+                .Include(w => w.Issued)
+                .Include(w => w.TaskAssignment)
+                    .ThenInclude(a => a.Task)
+                .AsNoTracking()
+                .FirstOrDefaultAsync();
+
+                var warningDto = _mapper.Map<WarningGetDto>(savedWarning);
+                warningDto.TaskTitle = savedWarning.TaskAssignment.Task?.Title;
+                warningDto.IssuedEmployeeName = savedWarning.Issued?.FullName;
+                warningDto.IssuedByName = savedWarning.IssuedBy?.FullName;
+
+                return ApiResponse<WarningGetDto>.Ok(warningDto, "Warning added successfully");
+            }
+        
+        
+
+        public async Task<ApiResponse<WarningGetDto>> UpdateAsync(int id, WarningAddEditDto dto, int modifiedByEmployeeId)
         {
             var warning = await _warningRepo.GetAll(w => w.Id == id)
                 .Include(w => w.TaskAssignment)
                 .FirstOrDefaultAsync();
 
             if (warning == null)
-                return ApiResponse<WarningGetDto>.Fail("Warning not found");
+                throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
 
-            if (!await _employeeRepo.IsExistAsync(dto.IssuedByEmployeeId))
-                return ApiResponse<WarningGetDto>.Fail("Employee not found");
+            var taskId = warning.TaskAssignment.TaskId;
 
-            var taskAssignments = await _taskAssignmentRepo.GetAll(ta => ta.TaskId == warning.TaskAssignment.TaskId)
+            var actorIsAssignee = await _taskAssignmentRepo.GetAll(a =>
+                    a.TaskId == taskId &&
+                    a.EmployeeId == modifiedByEmployeeId &&
+                    a.IsActive &&
+                    !a.IsDeleted)
+                .AnyAsync();
+            if (actorIsAssignee)
+                throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
+
+            var task = await _taskRepo.GetByIDAsync(taskId)
+                ?? throw new AppException(ErrorCodes.TaskNotFound, StatusCodes.Status404NotFound);
+            await EnsureCanSendWarningAsync(modifiedByEmployeeId, task);
+
+            var taskAssignments = await _taskAssignmentRepo.GetAll(ta => ta.TaskId == taskId)
                 .ToListAsync();
 
-            var assignment = taskAssignments.FirstOrDefault(ta => ta.EmployeeId == dto.IssuedByEmployeeId);
+            var assignment = taskAssignments.FirstOrDefault(ta => ta.EmployeeId == dto.IssuedEmployeeId);
 
             if (assignment == null)
-                return ApiResponse<WarningGetDto>.Fail("This employee is not assigned to the task");
+                throw new AppException(ErrorCodes.NotAssigned, StatusCodes.Status400BadRequest);
 
+            warning = _mapper.Map<Warning>(dto);
             warning.TaskAssignmentId = assignment.Id;
-            _mapper.Map(dto, warning);
+           // warning.ModifiedDate = DateTime.UtcNow;
+            warning.IssuedEmployeeId = dto.IssuedEmployeeId;
 
             await _warningRepo.SaveChangesAsync();
+            await _cache.RemoveAsync("warnings:");
 
-            var warningDto = _mapper.Map<WarningGetDto>(warning);
+
+            var savedRequest = await _warningRepo.GetAll(r => r.Id == warning.Id)
+                                                           .Include(r => r.IssuedBy)
+                                                           .Include(r => r.Issued)
+                                                           .Include(r => r.TaskAssignment)
+                                                           .ThenInclude(a => a.Employee)
+                                                           .Include(r => r.TaskAssignment)
+                                                           .ThenInclude(a => a.Task)
+                                                          .AsNoTracking()
+                                                          .FirstOrDefaultAsync();
+
+            var warningDto = _mapper.Map<WarningGetDto>(savedRequest);
+            warningDto.TaskTitle = savedRequest.TaskAssignment.Task?.Title;
+            warningDto.IssuedEmployeeName = savedRequest.Issued?.FullName;
+            warningDto.IssuedByName = savedRequest.IssuedBy?.FullName;
+
             return ApiResponse<WarningGetDto>.Ok(warningDto, "Warning updated successfully");
         }
 
@@ -151,12 +314,26 @@ namespace TaskMangment.Infrastructure.Services
         {
             var warning = await _warningRepo.GetByIDAsync(id);
             if (warning == null)
-                return ApiResponse<bool>.Fail("Warning not found");
+                throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
 
             _warningRepo.SoftDelete(warning);
             await _warningRepo.SaveChangesAsync();
+            await _cache.RemoveAsync("warnings:");
 
             return ApiResponse<bool>.Ok(true, "Warning deleted successfully");
+
+        }
+
+        private async Task EnsureCanSendWarningAsync(int employeeId, WorkTask task)
+        {
+            if (TaskCreatedByMeEvaluator.IsCreatorOrAssigner(employeeId, task))
+                return;
+
+            if (await _permissions.HasAsync(employeeId, PermissionCodes.IssueWarning) &&
+                await _createdByMe.IsCreatedByMeAsync(task, employeeId))
+                return;
+
+            throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
         }
     }
 }

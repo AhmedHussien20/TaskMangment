@@ -1,0 +1,97 @@
+<ul
+  ngbNav
+  #nav="ngbNav"
+  [(activeId)]="activeTab"
+  class="nav-tabs task-details-nav"
+>
+
+  <li ngbNavItem="basic" class="nav-item">
+    <a ngbNavLink>{{ 'TASK.BASIC_INFO' | translate }}</a>
+    <ng-template ngbNavContent>
+      <app-task-basic-info
+        [taskId]="taskId"
+        [taskInfo]="taskInfo"
+        [readonly]="readonly">
+      </app-task-basic-info>
+    </ng-template>
+  </li>
+
+  <li ngbNavItem="employees" class="nav-item">
+    <a ngbNavLink>{{ 'TASK.EMPLOYEES' | translate }}</a>
+    <ng-template ngbNavContent>
+      <app-task-employees
+        [taskId]="taskId"
+        [readonly]="readonly">
+      </app-task-employees>
+    </ng-template>
+  </li>
+
+  <li ngbNavItem="warnings" class="nav-item">
+  <a ngbNavLink>{{ 'TASK.WARNINGS' | translate }}</a>
+  <ng-template ngbNavContent>
+    <app-task-warnings
+      [taskId]="taskId"
+      [readonly]="readonly"
+      [canSendWarning]="canSendWarning">
+    </app-task-warnings>
+  </ng-template>
+</li>
+
+<li ngbNavItem="penalties" class="nav-item">
+  <a ngbNavLink>{{ 'TASK.PENALTIES' | translate }}</a>
+  <ng-template ngbNavContent>
+    <app-task-penalties
+      [taskId]="taskId"
+      [readonly]="readonly"
+      [canSendPenalty]="canSendPenalty">
+    </app-task-penalties>
+  </ng-template>
+</li>
+<li ngbNavItem="comments" class="nav-item">
+  <a ngbNavLink>{{ 'TASK.COMMENTS' | translate }}</a>
+  <ng-template ngbNavContent>
+    <app-task-comments [taskId]="taskId"></app-task-comments>
+  </ng-template>
+</li>
+
+<li ngbNavItem="updates" class="nav-item">
+  <a ngbNavLink>
+    <span class="tab-link-label">
+      {{ 'TASK.UPDATES_TAB' | translate }}
+      <span *ngIf="unreadNotificationsCount > 0" class="badge rounded-pill bg-danger tab-count-badge">
+        {{ unreadNotificationsCount }}
+      </span>
+    </span>
+  </a>
+  <ng-template ngbNavContent>
+    <app-task-updates
+      [taskId]="taskId"
+      (updatesViewed)="onUpdatesViewed()">
+    </app-task-updates>
+  </ng-template>
+</li>
+
+<li ngbNavItem="audit" class="nav-item">
+  <a ngbNavLink>{{ 'TASK.AUDIT' | translate }}</a>
+  <ng-template ngbNavContent>
+    <app-task-audit [taskId]="taskId"></app-task-audit>
+  </ng-template>
+</li>
+
+<li ngbNavItem="requests" class="nav-item">
+  <a ngbNavLink>
+    <span class="tab-link-label">
+      {{ 'TASK.REQUESTS_TAB' | translate }}
+      <span *ngIf="pendingRequestsCount > 0" class="badge rounded-pill bg-danger tab-count-badge">
+        {{ pendingRequestsCount }}
+      </span>
+    </span>
+  </a>
+  <ng-template ngbNavContent>
+    <app-task-requests [taskId]="taskId" [createdByMe]="createdByMe"></app-task-requests>
+  </ng-template>
+</li>
+
+</ul>
+
+<div [ngbNavOutlet]="nav" class="mt-3"></div>

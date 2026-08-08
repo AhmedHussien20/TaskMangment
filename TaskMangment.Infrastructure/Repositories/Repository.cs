@@ -102,5 +102,11 @@ namespace TaskMangment.Infrastructure.Repositories
                 .Where(predicate)
                 .CountAsync();
         }
+
+        public IQueryable<TEntity> Query()
+        {
+            return _context.Set<TEntity>().AsQueryable();
+        }
+
     }
 }

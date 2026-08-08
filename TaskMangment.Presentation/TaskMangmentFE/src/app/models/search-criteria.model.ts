@@ -9,9 +9,20 @@ export class SearchCriteria<T = any> {
   sortDirection: 'ASC' | 'DESC' = 'ASC';
 
   // Filter UI definition
-  filterTypes?: { [key: string]: 'text' | 'dropdown' | 'date' | 'radio' };
+  filterTypes?: { [key: string]: 'text' | 'dropdown' | 'date' | 'radio'| 'toggle' };
 
   constructor(init?: Partial<SearchCriteria<T>>) {
     Object.assign(this, init);
   }
+
+  searchKey?: string;
+  employeeIds?: number[];
+  statusId?: number | null;
+  direction?: number | null;
+  targetEmployeeId?: number | null;
+  priorityId?: number | null;
+  createdFrom?: string | null;
+  createdTo?: string | null;
+  dueFrom?: string | null;
+  dueTo?: string | null;
 }

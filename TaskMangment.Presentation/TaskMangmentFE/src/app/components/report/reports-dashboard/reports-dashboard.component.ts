@@ -1,0 +1,173 @@
+import { Component, OnInit } from '@angular/core'; // تغيير من Component فقط إلى Component, OnInit
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
+import { SpkDashboardComponent } from 'app/@spk/reusable-dashboard/spk-dashboard/spk-dashboard.component';
+import { PageHeaderComponent } from 'app/shared/components/page-header/page-header.component';
+import { Permissions } from 'app/core/constants/permissions';
+import { AuthService } from 'app/core/services/auth.service'; // إضافة هذا السطر
+
+interface ReportTile {
+  title: string;
+  icon: string;
+  route: string;
+}
+
+@Component({
+  selector: 'app-reports-dashboard',
+  standalone: true,
+  imports: [CommonModule, RouterModule, TranslateModule, SpkDashboardComponent, PageHeaderComponent],
+  templateUrl: './reports-dashboard.component.html',
+  styleUrls: ['./reports-dashboard.component.css']
+})
+export class ReportsDashboardComponent implements OnInit { // إضافة implements OnInit
+
+  title = 'MENU.REPORTS';
+  activeitem = 'MENU.REPORTS';
+  breadcrumbs = ['MENU.HOME', 'MENU.REPORTS'];
+  isLoading = false;
+  
+  // تعريف متغير للكروت المصفاة
+  filteredCards: any[] = [];
+  
+  REPORT_ICON_SVG = `
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+     viewBox="0 0 24 24" fill="none" stroke="currentColor"
+     stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+     class="feather feather-file-text text-primary">
+  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+  <polyline points="14 2 14 8 20 8"></polyline>
+  <line x1="16" y1="13" x2="8" y2="13"></line>
+  <line x1="16" y1="17" x2="8" y2="17"></line>
+  <polyline points="10 9 9 9 8 9"></polyline>
+</svg>
+`;
+
+  allCards = [
+    {
+      title: 'REPORTS.TOP_COMMENTER',
+      value: '',
+      svg: this.REPORT_ICON_SVG,
+      clickable: true,
+      url: '/report/top-commenter-list'
+    },
+    {
+      title: 'REPORTS.MOST_ASSIGNED',
+      value: '',
+      svg: this.REPORT_ICON_SVG,
+      clickable: true,
+      url: '/report/most-assigned-list'
+    },
+    {
+      title: 'REPORTS.ON_TIME',
+      value: '',
+      svg: this.REPORT_ICON_SVG,
+      clickable: true,
+      url: '/report/on-time-completion-list'
+    },
+    {
+      title: 'REPORTS.ARCHIVED',
+      value: '',
+      svg: this.REPORT_ICON_SVG,
+      clickable: true,
+      url: '/report/archived-tasks-list'
+    },
+    {
+      title: 'REPORTS.TASKS_DISCOUNT',
+      value: '',
+      svg: this.REPORT_ICON_SVG,
+      clickable: true,
+      url: '/report/tasks-discount-list'
+    },
+    {
+      title: 'REPORTS.TASK_ACTIVITY_REPORT',
+      value: '',
+      svg: this.REPORT_ICON_SVG,
+      clickable: true,
+      url: '/report/tasks-comment-activity-list'
+    },
+    {
+      title: 'REPORTS.TASK_MOVEMENT_TITLE',
+      value: '',
+      svg: this.REPORT_ICON_SVG,
+      clickable: true,
+      url: '/report/tasks-today-activity-list'
+    },
+    {
+      title: 'REPORTS.TASKS_CLOSING_SOON',
+      value: '',
+      svg: this.REPORT_ICON_SVG,
+      clickable: true,
+      url: '/report/tasks-closed-soon-list'
+    },
+    {
+      title: 'REPORTS.EMPLOYEE_TASK_TRACKING',
+      value: '',
+      svg: this.REPORT_ICON_SVG,
+      clickable: true,
+      url: '/report/employee-task-tracking'
+    },
+    {
+      title: 'REPORTS.BRANCH_TASK_TRACKING',
+      value: '',
+      svg: this.REPORT_ICON_SVG,
+      clickable: true,
+      url: '/report/branch-task-tracking'
+    },
+    {
+      title: 'REPORTS.EMPLOYEE_TASK_COMMENTS',
+      value: '',
+      svg: this.REPORT_ICON_SVG,
+      clickable: true,
+      url: '/report/employee-task-comments'
+    },
+    {
+      title: 'REPORTS.EMPLOYEE_TOTAL_DISCOUNTS',
+      value: '',
+      svg: this.REPORT_ICON_SVG,
+      clickable: true,
+      url: '/report/employee-total-discounts',
+      requiresCompanyReports: true
+    }
+  ];
+
+  constructor(private authService: AuthService) {}
+
+  ngOnInit(): void {
+    this.filterCardsByRole();
+  }
+
+  private filterCardsByRole(): void {
+    const canViewCompany = this.authService.hasPermission(Permissions.VIEW_COMPANY_REPORTS)
+      || this.authService.hasPermission(Permissions.VIEW_COMPANY_TASKS);
+    const canViewTeam = canViewCompany
+      || this.authService.hasPermission(Permissions.VIEW_SCOPED_REPORTS)
+      || this.authService.hasPermission(Permissions.VIEW_SCOPED_TASKS)
+      || this.authService.hasPermission(Permissions.VIEW_EMPLOYEES)
+      || this.authService.hasAccessScope();
+    const canCreateTask = this.authService.hasPermission(Permissions.CREATE_TASK);
+    // CREATE_TASK alone = creator reports (own + created), not full team/branch.
+
+    // Everyone can open reports; data is scoped by the API.
+    let cards = this.allCards.filter(card =>
+      !card.requiresCompanyReports || canViewCompany
+    );
+
+    // Branch tracking needs team/company visibility.
+    if (!canViewTeam) {
+      cards = cards.filter(card => card.title !== 'REPORTS.BRANCH_TASK_TRACKING');
+    }
+
+    // Pure own-data users: hide leaderboard-style cards that only make sense for teams.
+    if (!canViewTeam && !canCreateTask) {
+      const teamOnly = [
+        'REPORTS.TOP_COMMENTER',
+        'REPORTS.MOST_ASSIGNED',
+        'REPORTS.ARCHIVED'
+      ];
+      cards = cards.filter(card => !teamOnly.includes(card.title));
+    }
+
+    this.filteredCards = cards;
+  }
+}

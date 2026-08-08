@@ -48,7 +48,7 @@ namespace TaskMangment.Infrastructure.Services
                     EntityName = entityName,
                     EntityId = entityId,
                     Action = action,
-                    ChangedBy = _currentUserService.UserId,
+                    ChangedBy = _currentUserService.UserId.ToString(),
                     ChangedAt = DateTime.UtcNow,
                     Details = details
                 };

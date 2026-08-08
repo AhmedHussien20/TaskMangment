@@ -1,0 +1,84 @@
+.fc-event .bg-info{
+   color:#fff !important;
+}
+:host {
+  display: block;
+}
+
+/* Activity list spacing */
+.fullcalendar-events-activity li {
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(0,0,0,.06);
+}
+.fullcalendar-events-activity li:last-child {
+  border-bottom: none;
+}
+
+/* Make draggable categories look like Spruha */
+#external-events .fc-event {
+  cursor: grab;
+  margin-bottom: 10px;
+  border-radius: 6px;
+  padding: 10px;
+  color: #fff;
+}
+#external-events .fc-event:active {
+  cursor: grabbing;
+}
+
+/* RTL support (لو المشروع بيغير dir على html tag يبقى تمام)
+   هنا مجرد ضمان في حالة الصفحة لوحدها */
+:host-context([dir="rtl"]) {
+  .me-1 { margin-right: 0 !important; margin-left: .25rem !important; }
+  .me-2 { margin-right: 0 !important; margin-left: .5rem !important; }
+}
+
+/* Base event style */
+::ng-deep .fc-event {
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-size: 12px;
+  border: 1px solid transparent;
+}
+
+/* Primary */
+::ng-deep .bg-primary-transparent.fc-event {
+  background-color: rgba(112, 94, 200, 0.2) !important;
+  color: #705ec8 !important;
+  border-color: #705ec8 !important;
+}
+
+/* Success */
+::ng-deep .bg-success-transparent.fc-event {
+  background-color: rgba(40, 167, 69, 0.2) !important;
+  color: #28a745 !important;
+  border-color: #28a745 !important;
+}
+
+/* Info */
+::ng-deep .bg-info-transparent.fc-event {
+  background-color: rgba(23, 162, 184, 0.2) !important;
+  color: #17a2b8 !important;
+  border-color: #17a2b8 !important;
+}
+
+/* Warning */
+::ng-deep .bg-warning-transparent.fc-event {
+  background-color: rgba(255, 193, 7, 0.25) !important;
+  color: #ffc107 !important;
+  border-color: #ffc107 !important;
+}
+
+/* Danger */
+::ng-deep .bg-danger-transparent.fc-event {
+  background-color: rgba(220, 53, 69, 0.25) !important;
+  color: #dc3545 !important;
+  border-color: #dc3545 !important;
+}
+
+/* Teal (timeline) */
+::ng-deep .bg-teal-transparent.fc-event {
+  background-color: rgba(0, 172, 193, 0.25) !important;
+  color: #00acc1 !important;
+  border-color: #00acc1 !important;
+}

@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.SignalR;
-
+﻿
 namespace TaskMangment.Infrastructure.SignalR
 {
     using Microsoft.AspNetCore.SignalR;
@@ -8,7 +7,7 @@ namespace TaskMangment.Infrastructure.SignalR
     public class NotificationHub : Hub
     {
 
-        private static readonly ConcurrentDictionary<int, List<string>> _onlineUsers
+        public static readonly ConcurrentDictionary<int, List<string>> _onlineUsers
             = new ConcurrentDictionary<int, List<string>>();
 
         public override async Task OnConnectedAsync()
@@ -58,13 +57,13 @@ namespace TaskMangment.Infrastructure.SignalR
             return _onlineUsers.ContainsKey(userId);
         }
 
-        public async Task SendToUser(int userId, string message)
+        public async Task SendToUser(int userId, string message, int? taskId)
         {
             if (_onlineUsers.TryGetValue(userId, out var connections))
             {
                 foreach (var conn in connections)
                 {
-                    await Clients.Client(conn).SendAsync("ReceiveNotification", message);
+                    await Clients.Client(conn).SendAsync("ReceiveNotification",new { message, taskId});
                 }
             }
         }

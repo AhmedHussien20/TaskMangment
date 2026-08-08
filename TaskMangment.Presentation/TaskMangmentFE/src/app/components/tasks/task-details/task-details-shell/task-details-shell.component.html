@@ -1,0 +1,67 @@
+<div class="card position-relative">
+  <button type="button" class="btn-close position-absolute top-0 end-0 m-2" aria-label="Close"
+    (click)="closeDetails()"
+    [disabled]="isClosing">
+  </button>
+
+
+  <div class="card-body" >
+    <!-- HEADER -->
+    <app-page-header [title]="'TASK.TASK_DETAILS' | translate" [activeitem]="'TASK.TASK_DETAILS' | translate">
+    </app-page-header>
+
+    <!-- ACTION ICONS: hide when no permission; disable when task is closed -->
+    <div class="d-flex justify-content-center gap-4 mb-3">
+
+      <button *ngIf="canComment" class="btn btn-light" ngbTooltip="{{'TASK.ADD_COMMENT' | translate}}" container="body" placement="bottom"
+      [disabled]="isTaskClosed"
+        (click)="openAction('comment')">
+        <i class="bi bi-chat-dots"></i>
+      </button>
+
+      <button *ngIf="canCloseRequest" class="btn btn-light" ngbTooltip="{{'TASK.CLOSE_REQUEST_TITLE' | translate}}" container="body" placement="bottom"
+      [disabled]="isTaskClosed"
+        (click)="openAction('close')">
+        <i class="bi bi-x-square"></i>
+      </button>
+
+      <button class="btn btn-light" *ngIf="canSetPercentage" ngbTooltip="{{'TASK.ADD_PERCENTAGE' | translate}}" container="body" placement="bottom"
+      [disabled]="isTaskClosed"
+        (click)="openAction('percent')">
+<i class="bi bi-bar-chart"></i>
+      </button>
+
+      <button *ngIf="canExtendRequest" class="btn btn-light" ngbTooltip="{{'TASK.EXTEND_REQUEST_TITLE' | translate}}" container="body" placement="bottom"
+      [disabled]="isTaskClosed"
+        (click)="openAction('extend')">
+        <i class="bi bi-clock-history"></i>
+      </button>
+
+      <button class="btn btn-light" *ngIf="canSendWarning" ngbTooltip="{{'TASK.ADD_WARNING' | translate}}" container="body"  placement="bottom"
+      [disabled]="isTaskClosed"
+        (click)="openAction('warning')">
+        <i class="bi bi-exclamation-triangle"></i>
+      </button>
+
+      <button class="btn btn-light" *ngIf="canSendPenalty" ngbTooltip="{{'TASK.ADD_PENALTY' | translate}}" container="body"  placement="bottom"
+      [disabled]="isTaskClosed"
+        (click)="openAction('penalty')">
+        <i class="bi bi-cash-coin"></i>
+      </button>
+
+    </div>
+
+
+    <app-task-tabs
+      [taskId]="taskId"
+      [taskInfo]="taskInfo"
+      [readonly]="readonly"
+      [createdByMe]="canReviewRequests"
+      [canSendPenalty]="canSendPenalty"
+      [canSendWarning]="canSendWarning"
+      [initialTab]="initialTab"
+      (updatesViewed)="onUpdatesViewed()">
+    </app-task-tabs>
+
+  </div>
+</div>

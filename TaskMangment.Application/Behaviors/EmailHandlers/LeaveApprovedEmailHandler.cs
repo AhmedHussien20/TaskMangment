@@ -1,0 +1,33 @@
+﻿using TaskMangment.Application.Common.Interfaces;
+using TaskMangment.Application.Interfaces.Services;
+using TaskMangment.Domain.Entities;
+using TaskMangment.Domain.Event;
+
+namespace TaskMangment.Application.Behaviors.EmailHandlers
+{
+    public class LeaveApprovedEmailHandler : IEventHandler<LeaveApprovedEvent>
+    {
+        private readonly IEmailQueueService _emailQueue;
+
+        public LeaveApprovedEmailHandler(IEmailQueueService emailQueue)
+        {
+            _emailQueue = emailQueue;
+        }
+
+        public async Task Handle(LeaveApprovedEvent ev)
+        {
+            if (ev.EmployeeId == ev.ApprovedById)
+                return;
+
+            await _emailQueue.QueueAsync(new EmailQueueRequest
+            {
+                TemplateKey = "LeaveApproved",
+                ReferenceType = ReferenceType.Leave,
+                RecipientType = RecipientType.Employee,
+                ReferenceId = ev.LeaveId,
+                UserIds = new List<int> { ev.EmployeeId }
+            });
+        }
+    }
+
+}

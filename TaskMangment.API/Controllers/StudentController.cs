@@ -25,7 +25,7 @@ namespace TaskMangment.API.Controllers
                 return Fail(result.Message!);
 
             // Optional: Cache header
-            SetCacheHeader(600);
+            //SetCacheHeader(600);
 
             return Success(result.Data);
         }
@@ -34,10 +34,6 @@ namespace TaskMangment.API.Controllers
         public async Task<IActionResult> GetById(int id)
         {
             var result = await _service.GetByIdAsync(id);
-
-            if (!result.Success)
-                return Fail(result.Message!, 404);
-
             return Success(result.Data);
         }
 
@@ -45,10 +41,6 @@ namespace TaskMangment.API.Controllers
         public async Task<IActionResult> Add([FromBody] StudentAddEditDto dto)
         {
             var result = await _service.AddAsync(dto);
-
-            if (!result.Success)
-                return Fail(result.Message);
-
             return Success(result.Data, "Student added successfully");
         }
 
@@ -56,10 +48,6 @@ namespace TaskMangment.API.Controllers
         public async Task<IActionResult> Update(int id, [FromBody] StudentAddEditDto dto)
         {
             var result = await _service.UpdateAsync(id, dto);
-
-            if (!result.Success)
-                return Fail(result.Message, 404);
-
             return Success(result.Data, "Student updated successfully");
         }
 
@@ -67,10 +55,6 @@ namespace TaskMangment.API.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             var result = await _service.DeleteAsync(id);
-
-            if (!result.Success)
-                return Fail(result.Message, 404);
-
             return Success(true, "Student deleted successfully");
         }
     }

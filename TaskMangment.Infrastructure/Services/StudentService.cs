@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -6,6 +7,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TaskMangment.Application.Common.ApiRequests.Student;
+using TaskMangment.Application.Common.Errors;
+using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Responses;
 using TaskMangment.Application.DTOs;
@@ -20,29 +23,35 @@ namespace TaskMangment.Infrastructure.Services
     public class StudentService : IStudentService
     {
         private readonly IRepository<Student> _studentRepository;
+        private readonly IRepository<OfferAssignment> _offerAssignmentRepository;
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
 
-        public StudentService(IRepository<Student> studentRepository, IMapper mapper, ICachingService cache)
+        public StudentService(
+            IRepository<Student> studentRepository,
+            IRepository<OfferAssignment> offerAssignmentRepository,
+            IMapper mapper,
+            ICachingService cache)
         {
             _studentRepository = studentRepository;
+            _offerAssignmentRepository = offerAssignmentRepository;
             _mapper = mapper;
             _cache = cache;
         }
 
         public async Task<ApiResponse<PagedResponse<StudentGetDto>>> GetAllAsync(StudentRequest request)
         {
-            string cacheKey = $"students:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
+            //string cacheKey = $"students:{request.PageIndex}:{request.PageSize}:{request.SortColumn}:{request.SortDirection}:{request.searchKey}";
 
-            if (!request.BypassCache)
-            {
-                var cached = await _cache.GetAsync<PagedResponse<StudentGetDto>>(cacheKey);
-                if (cached != null)
-                    return ApiResponse<PagedResponse<StudentGetDto>>.Ok(cached);
-            }
+            //if (!request.BypassCache)
+            //{
+            //    var cached = await _cache.GetAsync<PagedResponse<StudentGetDto>>(cacheKey);
+            //    if (cached != null)
+            //        return ApiResponse<PagedResponse<StudentGetDto>>.Ok(cached);
+            //}
 
             var query = _studentRepository.GetAll()
-                .Include(s => s.OfferAssignments)
+                .Include(s => s.OfferAssignments.Where(oa => !oa.IsDeleted && !oa.Offer.IsDeleted))
                 .ApplySearch(request.searchKey);
 
             var totalCount = await query.CountAsync();
@@ -64,7 +73,7 @@ namespace TaskMangment.Infrastructure.Services
 
             var response = new PagedResponse<StudentGetDto>(dtos, totalCount, request.PageIndex, request.PageSize);
 
-            await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
+            //await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
 
             return ApiResponse<PagedResponse<StudentGetDto>>.Ok(response);
         }
@@ -72,12 +81,12 @@ namespace TaskMangment.Infrastructure.Services
         public async Task<ApiResponse<StudentGetDto>> GetByIdAsync(int id)
         {
             var student = await _studentRepository.GetAll(s => s.Id == id)
-                .Include(s => s.OfferAssignments)
+        .Include(s => s.OfferAssignments.Where(oa => !oa.IsDeleted && !oa.Offer.IsDeleted))
                 .AsNoTracking()
                 .FirstOrDefaultAsync();
 
             if (student == null)
-                return ApiResponse<StudentGetDto>.Fail("Student not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.StudentNotFound, StatusCodes.Status400BadRequest);
 
             var dto = _mapper.Map<StudentGetDto>(student);
             dto.OfferCount = student.OfferAssignments.Count;
@@ -104,7 +113,7 @@ namespace TaskMangment.Infrastructure.Services
         {
             var student = await _studentRepository.GetByIDAsync(id);
             if (student == null)
-                return ApiResponse<StudentGetDto>.Fail("Student not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.StudentNotFound, StatusCodes.Status400BadRequest);
 
             _mapper.Map(dto, student);
             await _studentRepository.SaveChangesAsync();
@@ -122,7 +131,10 @@ namespace TaskMangment.Infrastructure.Services
         {
             var student = await _studentRepository.GetByIDAsync(id);
             if (student == null)
-                return ApiResponse<bool>.Fail("Student not found", StatusCode.NotFound);
+                throw new AppException(ErrorCodes.StudentNotFound, StatusCodes.Status400BadRequest);
+
+            if (await _offerAssignmentRepository.GetAll(a => a.StudentId == id).AnyAsync())
+                throw new AppException(ErrorCodes.StudentHasOfferAssignments, StatusCodes.Status400BadRequest);
 
             _studentRepository.SoftDelete(student);
             await _studentRepository.SaveChangesAsync();

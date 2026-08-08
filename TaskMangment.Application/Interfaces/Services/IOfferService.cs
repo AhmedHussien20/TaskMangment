@@ -12,9 +12,9 @@ namespace TaskMangment.Application.Interfaces.Services
 {
     public interface IOfferService
     {
-        Task<ApiResponse<PagedResponse<OfferGetDto>>> GetAllAsync(OfferRequest request);
+        Task<ApiResponse<PagedResponse<OfferGetDto>>> GetAllAsync(OfferRequest request, int employeeId, int roleLevel);
         Task<ApiResponse<OfferGetDto>> GetByIdAsync(int id);
-        Task<ApiResponse<OfferGetDto>> AddAsync(OfferAddEditDto dto);
+        Task<ApiResponse<OfferGetDto>> AddAsync(OfferAddEditDto dto, int CreatedById);
         Task<ApiResponse<OfferGetDto>> UpdateAsync(int id, OfferAddEditDto dto);
         Task<ApiResponse<bool>> DeleteAsync(int id);
     }

@@ -1,5 +1,6 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router'; 
+import { AuthGuard } from 'app/core/auth/auth.guard';
 // import { admin, adminuiRoutingModule } from '../../components/adminui/adminui.routes';
 // import { chartsRoutingModule } from '../../components/charts/charts.routes';
 // import { dashboardRoutingModule } from '../../components/dashboard/dashboard.routes';
@@ -34,11 +35,42 @@ export const content: Routes = [
       { path: '', loadChildren: () => import('../../../app/components/Forms/Form-Elements/form-elements.routes').then(r => r.formelementsRoutingModule) },
       { path: '', loadChildren: () => import('../../../app/components/Forms/forms.routes').then(r => r.formsRoutingModule) },
       { path: '', loadChildren: () => import('../../../app/components/Forms/form-editor/form-editor.routes').then(r => r.formeditorRoutingModule) }, 
-      { path: 'area', loadChildren: () => import('../../../app/components/area/area.routes').then(r => r.AreaRoutingModule) },
-      { path: 'branch', loadChildren: () => import('../../../app/components/branch/branch.routes').then(r => r.BranchRoutingModule) },
-      { path: 'department', loadChildren: () => import('../../../app/components/department/department.routes').then(r => r.DepartmentRoutingModule) },
+      { path: 'area',
+         loadChildren: () => import('../../../app/components/area/area.routes').then(r => r.AreaRoutingModule),
+          canActivate: [AuthGuard],
+          canLoad: [AuthGuard],
+          data: { permissions: ['CREATE_AREA', 'UPDATE_AREA'] }
+       },
+      { path: 'branch',
+         loadChildren: () => import('../../../app/components/branch/branch.routes').then(r => r.BranchRoutingModule),
+          canActivate: [AuthGuard],
+          canLoad: [AuthGuard],
+          data: { permissions: ['CREATE_BRANCH', 'UPDATE_BRANCH'] }
+         },
+      { path: 'department', loadChildren: () => import('../../../app/components/department/department.routes').then(r => r.DepartmentRoutingModule),
+          canActivate: [AuthGuard],
+          canLoad: [AuthGuard],
+          data: { permissions: ['CREATE_DEPARTMENT', 'UPDATE_DEPARTMENT'] }
+       },
       { path: 'task', loadChildren: () => import('../../../app/components/tasks/task.routes').then(r => r.TaskRoutingModule) },
-      {path: 'employee', loadChildren: () => import('../../../app/components/employee/employee.routes').then(r => r.EmployeeRoutingModule)},
+      {path: 'employee',
+         loadChildren: () => import('../../../app/components/employee/employee.routes').then(r => r.EmployeeRoutingModule),
+          canActivate: [AuthGuard],
+          canLoad: [AuthGuard],
+          data: { permissions: ['VIEW_EMPLOYEES', 'CREATE_EMPLOYEE', 'UPDATE_EMPLOYEE'] }
+        },
+      {path: 'role',
+         loadChildren: () => import('../../../app/components/role/role.routes').then(r => r.RoleRoutingModule),
+         canActivate: [AuthGuard],
+          data: { permissions: ['ASSIGN_ROLE', 'CREATE_PERMISSION'] }
+        },
+      {path: 'student', loadChildren: () => import('../../../app/components/student/student.routes').then(r => r.StudentRoutingModule)},
+      {path: 'course', loadChildren: () => import('../../../app/components/course/course.routes').then(r => r.CourseRoutingModule)},
+      {path: 'offer', loadChildren: () => import('../../../app/components/offer/offer.routes').then(r => r.OfferRoutingModule)},
+      {path: 'report', loadChildren: () => import('../../../app/components/report/report.routes').then(r => r.ReportRoutingModule)},
+      {path: 'leave', loadChildren: () => import('../../../app/components/leave/leave.routes').then(r => r.LeaveRoutingModule)},
+      {path: 'charts',loadChildren: () => import('../../../app/components/charts/charts.route').then(r => r.chartsRoutingModule)},
+
 
        //    {
       //     path: '',
@@ -66,10 +98,7 @@ export const content: Routes = [
       //     path: '',
       //     loadChildren: () => import('../../../app/components/maps/maps.routes').then(r => r.mapsRoutingModule)
       //   },
-      //   {
-      //     path: '',
-      //     loadChildren: () => import('../../../app/components/charts/charts.routes').then(r => r.chartsRoutingModule)
-      //   },
+         
       //   {
       //     path: '',
       //     loadChildren: () => import('../../../app/components/pages/pages.routes').then(r => r.pagesRoutingModule)

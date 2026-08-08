@@ -1,13 +1,15 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Runtime.CompilerServices;
+using TaskMangment.API.Middlewares;
 using TaskMangment.Application.Common.ApiRequests.Task;
+using TaskMangment.Application.Common.Security;
 using TaskMangment.Application.DTOs.TaskDTOs;
 using TaskMangment.Application.Interfaces.Services;
 
 namespace TaskMangment.API.Controllers
 {
     [Route("api/[controller]")]
-    [ApiController]
     public class TaskWarningController : BaseController
     {
         private readonly ITaskWarningService _service;
@@ -24,7 +26,7 @@ namespace TaskMangment.API.Controllers
             if (!result.Success)
                 return Fail(result.Message!);
 
-            SetCacheHeader(600);
+            //SetCacheHeader(600);
 
             return Success(result.Data);
         }
@@ -33,39 +35,30 @@ namespace TaskMangment.API.Controllers
         public async Task<IActionResult> GetById(int id)
         {
             var result = await _service.GetByIdAsync(id);
-            if (!result.Success)
-                return Fail(result.Message!, 404);
-
             return Success(result.Data);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Add(int tasktId, [FromBody] WarningAddEditDto dto)
+        /// <summary>Allowed for literal task creator/assigner, or users with ISSUE_WARNING.</summary>
+        [HttpPost("{taskId}")]
+        public async Task<IActionResult> Add(int taskId, [FromBody] WarningAddEditDto dto)
         {
-            var result = await _service.AddAsync(dto, tasktId);
-            if (!result.Success)
-                return Fail(result.Message);
-
+            var result = await _service.AddAsync(dto, taskId,this.CurrentUserId);
             return Success(result.Data, "Warning added successfully");
         }
 
+        /// <summary>Allowed for literal task creator/assigner, or users with ISSUE_WARNING.</summary>
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] WarningAddEditDto dto)
         {
-            var result = await _service.UpdateAsync(id, dto);
-            if (!result.Success)
-                return Fail(result.Message, 404);
-
+            var result = await _service.UpdateAsync(id, dto, this.CurrentUserId);
             return Success(result.Data, "Warning updated successfully");
         }
 
         [HttpDelete("{id}")]
+        [PermissionAuthorize(PermissionCodes.DeleteWarning)]
         public async Task<IActionResult> Delete(int id)
         {
             var result = await _service.DeleteAsync(id);
-            if (!result.Success)
-                return Fail(result.Message, 404);
-
             return Success(true, "Warning deleted successfully");
         }
     }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,10 +12,14 @@ namespace TaskMangment.Application.Interfaces
 {
     public interface IRoleService
     {
-        Task<ApiResponse<int>> CreateRoleAsync(RoleAddDto dto);
-        Task<ApiResponse<bool>> AssignPermissionsAsync(int roleId, List<int> permissionIds);
-        Task<ApiResponse<bool>> AssignRoleToEmployeeAsync(int employeeId, int roleId);
-        Task<ApiResponse<List<RoleGetDto>>> GetRolesAsync(int companyId);
+        Task<ApiResponse<PagedResponse<RoleGetDto>>> GetAllAsync(RoleRequest request, int companyId);
+        Task<ApiResponse<RoleGetDto>> GetByIdAsync(int id, int companyId);
+        Task<ApiResponse<int>> CreateAsync(RoleAddEditDto dto, int companyId);
+        Task<ApiResponse<RoleGetDto>> UpdateAsync(int id, RoleAddEditDto dto, int companyId);
+        Task<ApiResponse<RoleGetDto>> UpdateNotificationsAsync(int id, RoleNotificationUpdateDto dto, int companyId);
+        Task<ApiResponse<bool>> DeleteAsync(int id, int companyId);
+
     }
+
 
 }

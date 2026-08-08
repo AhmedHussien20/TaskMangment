@@ -2,6 +2,7 @@
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Application.Responses;
 using Serilog;
+using TaskMangment.Application.Common.Exceptions;
 
 namespace TaskMangment.API.Middlewares
 {
@@ -9,12 +10,12 @@ namespace TaskMangment.API.Middlewares
     {
         private readonly RequestDelegate _next;
         private readonly Serilog.ILogger _logger;
-        private readonly IEmailService _emailService;
+       // private readonly IEmailService _emailService;
 
-        public ExceptionLogMiddleware(RequestDelegate next, IEmailService emailService)
+        public ExceptionLogMiddleware(RequestDelegate next)
         {
             _next = next;
-            _emailService = emailService;
+           // _emailService = emailService;
 
             var logDir = Path.Combine(Directory.GetCurrentDirectory(), "Logs");
             if (!Directory.Exists(logDir))
@@ -46,10 +47,10 @@ namespace TaskMangment.API.Middlewares
 
                 var firstLine = ex.StackTrace?.Split(Environment.NewLine).FirstOrDefault();
 
-                _ = _emailService.SendEmailAsync(
-                    "Unhandled Exception",
-                    $"Message: {ex.Message}<br>At: {firstLine}"
-                );
+                //_ = _emailService.SendEmailAsync(
+                //    "Unhandled Exception",
+                //    $"Message: {ex.Message}<br>At: {firstLine}"
+                //);
                 
                 StatusCode statusCode = StatusCode.InternalServerError;
                 string message = "Internal Server Error";
@@ -61,7 +62,7 @@ namespace TaskMangment.API.Middlewares
                 }
                 else if (ex is AppException appEx)
                 {
-                    statusCode = appEx.StatusCode;
+                    statusCode =(StatusCode)appEx.StatusCode;
                     message = appEx.Message;
                 }
                 else
@@ -87,15 +88,6 @@ namespace TaskMangment.API.Middlewares
             return context.Response.WriteAsJsonAsync(response);
         }
     }
+     
 
-    public class AppException : Exception
-    {
-        public StatusCode StatusCode { get; }
-
-        public AppException(string message, StatusCode statusCode) : base(message)
-        {
-            StatusCode = statusCode;
-        }
-    }
-    
 }

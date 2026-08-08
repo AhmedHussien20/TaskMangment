@@ -2,16 +2,20 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NgbModal, NgbModalModule, NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
-
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
-import { GenericTableComponent } from '../../../shared/components/generic-table/generic-table.component';
-
+import { GenericTableComponent, TableColumn } from '../../../shared/components/generic-table/generic-table.component';
 import { EmployeeService } from 'app/core/services/employee.service';
-
 import { SearchCriteria } from 'app/core/models/search-criteria.model';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Employee } from 'app/core/models/employee/employee';
 import { EmployeeCreateUpdateComponent } from '../employee-create-update/employee-create-update.component';
+import Swal from 'sweetalert2';
+import { ToastrService } from 'ngx-toastr';
+import { BranchService } from 'app/core/services/branch.service';
+import { AuthService } from 'app/core/services/auth.service';
+import { Permissions } from 'app/core/constants/permissions';
+import { Router } from '@angular/router';
+
 
 @Component({
   selector: 'app-employee-list',
@@ -32,17 +36,28 @@ import { EmployeeCreateUpdateComponent } from '../employee-create-update/employe
 export class EmployeeListComponent implements OnInit {
 
   title = 'EMPLOYEE.LIST_TITLE';
-  breadcrumbs = ['HOME', 'EMPLOYEES'];
   activeitem = 'EMPLOYEE.LIST_TITLE';
-
+  breadcrumbs = [
+    'MENU.HOME',
+    'MENU.EMPLOYEES',
+    'EMPLOYEE.LIST_TITLE'
+  ];
+  extraFilters: any = {
+    isActive: [
+      { id: true, name: 'TABLE.ACTIVE' },
+      { id: false, name: 'TABLE.INACTIVE' }
+    ]
+  };
+  branchOptions: { id: number; name: string }[] = [];
   // table columns
-  columns = [
+  columns: TableColumn[] = [
     { key: 'id', label: 'EMPLOYEE.ID' },
     { key: 'fullName', label: 'EMPLOYEE.NAME' },
     { key: 'branchName', label: 'EMPLOYEE.BRANCH' },
     { key: 'email', label: 'EMPLOYEE.EMAIL' },
     { key: 'mobile', label: 'EMPLOYEE.MOBILE' },
-    { key: 'roles', label: 'EMPLOYEE.ROLES' }
+    { key: 'roles', label: 'EMPLOYEE.ROLES' },
+    { key: 'lastLoginDate', label: 'EMPLOYEE.LAST_LOGIN', type: 'dateTime' }
   ];
 
   rows: Employee[] = [];
@@ -53,36 +68,56 @@ export class EmployeeListComponent implements OnInit {
 
   searchCriteria: SearchCriteria = {
     searchKey: '',
+    branchId: null as number | null,
+    isActive: null as boolean | null,
     pageIndex: this.page,
     pageSize: this.entries,
     sortColumn: 'Id',
-    sortDirection: 'ASC',
+    sortDirection: 'DESC',
     filterTypes: {
       searchKey: 'text',
+      branchId: 'dropdown',
+      isActive: 'dropdown'
     }
   };
 
   labels = {
-    searchKey: 'EMPLOYEE.searchKey'
+    searchKey: 'EMPLOYEE.searchKey',
+    branchId: 'EMPLOYEE.BRANCH',
+    isActive: 'TABLE.SELECT_ACTIVE_STATUS'
   };
 
   isLoading = false;
 
   selectedEmployeeId: number | null = null;
   isEdit = false;
+  canMakeChanges = false;
 
   constructor(
     private employeeService: EmployeeService,
-    private modalService: NgbModal
+    private modalService: NgbModal,
+    private translate: TranslateService,
+    private toastr: ToastrService,
+    private branchService: BranchService,
+    private auth: AuthService,
+    private router: Router
   ) { }
 
+  canCreate = false;
+  canEdit = false;
+  canDelete = false;
+
   ngOnInit(): void {
+    this.canCreate = this.auth.hasPermission(Permissions.CREATE_EMPLOYEE);
+    this.canEdit = this.auth.hasPermission(Permissions.UPDATE_EMPLOYEE);
+    this.canDelete = this.auth.hasPermission(Permissions.DELETE_EMPLOYEE);
+    this.canMakeChanges = this.canCreate || this.canEdit;
     this.loadData();
+    this.loadBranches();
   }
 
   loadData() {
     this.isLoading = true;
-
     this.employeeService.getAll(this.searchCriteria).subscribe({
       next: (res: any) => {
         this.rows = res.data.data;
@@ -96,6 +131,26 @@ export class EmployeeListComponent implements OnInit {
       }
     });
   }
+
+
+ loadBranches() {
+  const req = {
+    searchKey: '',
+    pageIndex: 1,
+    pageSize: 500,
+    sortColumn: 'Id',
+    sortDirection: 'DESC'
+  };
+
+  this.branchService.getAll(req).subscribe(res => {
+    const list = res.data.data;
+
+    this.branchOptions = list.map((b: any) => ({
+      id: b.id,
+      name: b.name
+    }));
+  });
+}
 
   onPageChange(page: number) {
     this.page = page;
@@ -140,8 +195,9 @@ export class EmployeeListComponent implements OnInit {
   open(content: any) {
     this.modalService.open(content, {
       centered: true,
-      backdrop: true,
-      size: 'lg',
+      backdrop: 'static',
+      keyboard: false,
+      size: 'xl',
       windowClass: 'effect-scale'
     });
   }
@@ -150,4 +206,61 @@ export class EmployeeListComponent implements OnInit {
     this.modalService.dismissAll();
     this.loadData();
   }
+
+  confirmDelete(empId: number) {
+    Swal.fire({
+      title: this.translate.instant('COMMON.CONFIRM_DELETE_TITLE'),
+      text: this.translate.instant('COMMON.CONFIRM_DELETE_TEXT'),
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: this.translate.instant('COMMON.DELETE_BUTTON'),
+      cancelButtonText: this.translate.instant('COMMON.CANCEL_BUTTON'),
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#6c757d'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.deleteEmployee(empId);
+      }
+    });
+  }
+
+  deleteEmployee(empId: number) {
+    this.isLoading = true;
+
+    this.employeeService.delete(empId).subscribe({
+      next: () => {
+        this.toastr.success(this.translate.instant('COMMON.DELETE_SUCCESS'));
+
+
+        this.isLoading = false;
+        this.loadData();
+      },
+      error: () => {
+        this.isLoading = false;
+      }
+    });
+  }
+
+  open360(id: number): void {
+    this.router.navigate(['/employee/360', id]);
+  }
+
+  onExportExcel(): void {
+    this.employeeService.exportExcel(this.searchCriteria).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'employees.xlsx';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      },
+      error: () => {
+        this.toastr.error(this.translate.instant('COMMON.ERROR_LOADING_DATA'));
+      }
+    });
+  }
+
 }

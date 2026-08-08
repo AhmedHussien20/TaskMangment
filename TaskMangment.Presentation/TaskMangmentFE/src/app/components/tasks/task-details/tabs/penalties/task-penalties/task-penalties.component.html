@@ -1,0 +1,17 @@
+<div class="table-responsive" style="max-height:400px; overflow:auto;">
+  <app-generic-table
+    [columns]="columns"
+    [data]="rows"
+    [page]="page"
+    [entries]="entries"
+    [totalItems]="totalItems"
+    [showAddButton]="canAdd"
+    [showEditButton]="canEdit"
+    [showFilters]="false"
+    [showPagination]="true"
+    [showExportExcel]="false"
+    [showDeleteButton]="canDelete"
+    (pageChange)="onPageChange($event)"
+    (entriesChange)="onEntriesChange($event)">
+  </app-generic-table>
+</div>

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -48,14 +48,24 @@ namespace TaskMangment.Domain.Entities
         public string? ResetPasswordToken { get; set; }
         public DateTime? ResetPasswordExpiry { get; set; }
 
+        public DateTime? LastLoginDate { get; set; }
+
+        /// <summary>FK to EmployeeTypes (replaces FunctionCode enum).</summary>
+        public int EmployeeTypeId { get; set; } = 1;
 
         // Navigation
         public Company Company { get; set; }
         public Branch Branch { get; set; }
         public Department Department { get; set; }
         public Job Job { get; set; }
+        public EmployeeType EmployeeType { get; set; }
+
+
 
         public ICollection<EmployeeRole> EmployeeRoles { get; set; } = new List<EmployeeRole>();
+
+        //public ICollection<Attachment> Attachments { get; set; } = new List<Attachment>();
+
 
     }
 

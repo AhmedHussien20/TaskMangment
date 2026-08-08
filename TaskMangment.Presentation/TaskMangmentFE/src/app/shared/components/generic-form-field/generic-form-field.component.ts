@@ -28,4 +28,8 @@ export class GenericFormFieldComponent {
 
     this.form.get(this.field.name)?.setValue(formArray);
   }
+ togglePassword(field: any) {
+  field.showPassword = !field.showPassword;
+}
+
 }

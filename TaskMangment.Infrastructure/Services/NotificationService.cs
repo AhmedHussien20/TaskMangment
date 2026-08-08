@@ -1,35 +1,201 @@
-﻿using Microsoft.AspNetCore.SignalR;
-using TaskMangment.Infrastructure.SignalR;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using System.Collections.Generic;
+using System.Linq;
+using TaskMangment.Application.Common.Notification;
+using TaskMangment.Application.DTOs;
+using TaskMangment.Application.DTOs.TaskDTOs;
+using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
+using TaskMangment.Domain.Entities;
+using TaskMangment.Infrastructure;
+using TaskMangment.Utilities.Localization.Resources;
 
 public class NotificationService : INotificationService
 {
-    private readonly IWhatsAppService _whatsapp;
-    private readonly IHubContext<NotificationHub> _hub;
-    private readonly IEmailService _email;
+    private readonly INotificationRepository _repo;
+    private readonly IEmailQueueService _emailQueueService;
+    private readonly INotificationSender _notificationSender;
+    private readonly IOnlineUserService _onlineUserService;
+    private readonly IStringLocalizer<TaskNotification> _L;
+    private readonly IRepository<Employee> _EmployeeRepo;
+    private readonly IRepository<Attachment> _attachmentRepo;
+    private readonly IBlobStorageService _blobStorageService;
+    private readonly IWhatsAppService _whatsAppService;
+    private readonly WhatsAppSettings _whatsAppSettings;
+    private readonly ILogger<NotificationService> _logger;
 
     public NotificationService(
-        IWhatsAppService whatsapp,
-        IHubContext<NotificationHub> hub,
-        IEmailService email)
+        INotificationRepository repo,
+        IEmailQueueService emailQueueService,
+        INotificationSender notificationSender,
+        IOnlineUserService onlineUserService,
+        IStringLocalizer<TaskNotification> localizer,
+        IWhatsAppService whatsAppService,
+        IOptions<WhatsAppSettings> whatsAppOptions,
+        IRepository<Employee> EmployeeRepo,
+        IRepository<Attachment> attachmentRepo,
+        IBlobStorageService blobStorageService,
+        ILogger<NotificationService> logger)
     {
-        _whatsapp = whatsapp;
-        _hub = hub;
-        _email = email;
+        _repo = repo;
+        _emailQueueService = emailQueueService;
+        _notificationSender = notificationSender;
+        _onlineUserService = onlineUserService;
+        _L = localizer;
+        _EmployeeRepo = EmployeeRepo;
+        _attachmentRepo = attachmentRepo;
+        _blobStorageService = blobStorageService;
+        _whatsAppService = whatsAppService;
+        _whatsAppSettings = whatsAppOptions.Value;
+        _logger = logger;
     }
 
-    public async Task SendAsync(int userId, string message, bool sendEmail, bool sendWhatsApp)
+    public async Task SendAsync(int userId, string messageKey, bool sendEmail, bool sendWhatsApp, int? taskId, NotificationType type, int referenceId, string? whatsAppMessage = null, IReadOnlyList<WhatsAppAttachment>? whatsAppAttachments = null)
     {
-        // 1) Web real-time
-        await _hub.Clients.User(userId.ToString())
-            .SendAsync("ReceiveNotification", message);
+        var message = messageKey;
+        var user = await _EmployeeRepo.GetByIDAsync(userId);
+        if (user == null || !user.IsActive)
+            return;
 
-        // 2) Email
-        if (sendEmail)
-            await _email.SendEmailAsync("user@mail.com", "Notification", message);
+        bool isOnline = _onlineUserService.IsUserOnline(userId);
 
-        // 3) WhatsApp
+        var notification = new Notification
+        {
+            UserId = userId,
+            Message = message,
+            NotificationType = type,
+            ReferenceId = referenceId,
+            IsRead = false,
+            TaskId = taskId
+        };
+
+        await _repo.AddAsync(notification);
+
+        if (isOnline)
+        {
+            try
+            {
+                await _notificationSender.SendWebAsync(userId, message, taskId, notification.Id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "SignalR notification failed for user {UserId}", userId);
+            }
+        }
         if (sendWhatsApp)
-            await _whatsapp.SendMessageAsync("01000000000", message);
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(user.Mobile))
+                {
+                    var whatsAppBody = BuildWhatsAppMessage(whatsAppMessage ?? message, taskId);
+                    await _whatsAppService.SendNotificationAsync(
+                        user.Mobile,
+                        user.FullName,
+                        whatsAppBody,
+                        whatsAppAttachments
+                    );
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "WhatsApp notification failed for user {UserId}", userId);
+            }
+        }
+    }
+
+    public Task<List<Notification>> GetUnreadAsync(int userId)
+        => _repo.GetUnreadAsync(userId);
+
+    public async Task<List<TaskNotificationDto>> GetByTaskAsync(int userId, int taskId)
+    {
+        var notifications = await _repo.GetByTaskAsync(userId, taskId);
+
+        var commentIds = notifications
+            .Where(n => n.NotificationType == NotificationType.Comments && n.ReferenceId > 0)
+            .Select(n => n.ReferenceId)
+            .Distinct()
+            .ToList();
+
+        var attachmentsByCommentId = new Dictionary<int, List<AttachmentVm>>();
+        if (commentIds.Count > 0)
+        {
+            var rows = await _attachmentRepo
+                .GetAll(a =>
+                    commentIds.Contains(a.ReferenceId) &&
+                    a.AttachmentType == AttachmentType.Comment &&
+                    !a.IsDeleted)
+                .OrderByDescending(a => a.UploadedAt)
+                .Select(a => new
+                {
+                    a.Id,
+                    a.ReferenceId,
+                    a.FileName,
+                    a.FilePath,
+                    a.BlobUrl,
+                    a.ContentType,
+                    a.Size,
+                    a.UploadedAt
+                })
+                .AsNoTracking()
+                .ToListAsync();
+
+            attachmentsByCommentId = rows
+                .GroupBy(a => a.ReferenceId)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Select(a =>
+                    {
+                        var path = !string.IsNullOrWhiteSpace(a.BlobUrl) ? a.BlobUrl! : a.FilePath;
+                        var sasUrl = _blobStorageService.WithSas(path);
+                        return new AttachmentVm
+                        {
+                            Id = a.Id,
+                            FileName = a.FileName,
+                            Url = sasUrl,
+                            UrlDownload = sasUrl,
+                            ContentType = a.ContentType,
+                            Size = a.Size,
+                            UploadedAt = a.UploadedAt
+                        };
+                    }).ToList());
+        }
+
+        return notifications.Select(n => new TaskNotificationDto
+        {
+            Id = n.Id,
+            Message = n.Message,
+            IsRead = n.IsRead,
+            NotificationType = n.NotificationType,
+            ReferenceId = n.ReferenceId,
+            TaskId = n.TaskId,
+            CreatedDate = n.CreatedDate,
+            Attachments = n.NotificationType == NotificationType.Comments
+                && attachmentsByCommentId.TryGetValue(n.ReferenceId, out var list)
+                    ? list
+                    : new List<AttachmentVm>()
+        }).ToList();
+    }
+
+    public Task MarkAsReadAsync(int notificationId)
+        => _repo.MarkAsReadAsync(notificationId);
+
+    public Task MarkAllAsReadAsync(int userId)
+        => _repo.MarkAllAsReadAsync(userId);
+
+    public Task MarkAsReadByTaskAsync(int userId, int taskId)
+        => _repo.MarkAsReadByTaskAsync(userId, taskId);
+
+    private string BuildWhatsAppMessage(string message, int? taskId)
+    {
+        if (!taskId.HasValue || string.IsNullOrWhiteSpace(_whatsAppSettings.FrontendUrl))
+            return message;
+
+        var taskUrl = $"{_whatsAppSettings.FrontendUrl.TrimEnd('/')}/task/task-list?taskId={taskId.Value}";
+        var taskLinkLabel = _L["TASK_LINK_LABEL"];
+        return $"{message}\n\n{taskLinkLabel}:\n{taskUrl}";
     }
 }
