@@ -19,6 +19,7 @@ namespace TaskMangment.Hangfire.Jobs
         private readonly IEmailTemplateRenderer _emailTemplateRenderer;
         private readonly IWhatsAppService _whatsAppService;
         private readonly IBlobStorageService _blobStorage;
+        private readonly IConfiguration _configuration;
         private readonly ILogger<SendMonthlyEmployeeDiscountsJob> _logger;
 
         public SendMonthlyEmployeeDiscountsJob(
@@ -27,6 +28,7 @@ namespace TaskMangment.Hangfire.Jobs
             IEmailTemplateRenderer emailTemplateRenderer,
             IWhatsAppService whatsAppService,
             IBlobStorageService blobStorage,
+            IConfiguration configuration,
             ILogger<SendMonthlyEmployeeDiscountsJob> logger)
         {
             _db = db;
@@ -34,11 +36,15 @@ namespace TaskMangment.Hangfire.Jobs
             _emailTemplateRenderer = emailTemplateRenderer;
             _whatsAppService = whatsAppService;
             _blobStorage = blobStorage;
+            _configuration = configuration;
             _logger = logger;
         }
 
         public async Task ExecuteAsync()
         {
+            if (HangfireQuietHours.ShouldSkipNow(_configuration))
+                return;
+
             var tz = TimeZoneHelper.GetSaudiArabia();
             var nowLocal = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, tz);
 

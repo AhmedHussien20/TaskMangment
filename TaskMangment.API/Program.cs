@@ -200,22 +200,35 @@ namespace TaskMangment.API
                 });
 
                 // =======================
-                // Configure Serilog
+                // Configure Serilog (+ optional Seq free UI)
                 // =======================
                 var logDir = Path.Combine(AppContext.BaseDirectory, "Logs");
                 Directory.CreateDirectory(logDir);
 
-                Log.Logger = new LoggerConfiguration()
+                var loggerConfig = new LoggerConfiguration()
                     .MinimumLevel.Error()
                     .Enrich.FromLogContext()
+                    .Enrich.WithEnvironmentName()
+                    .Enrich.WithMachineName()
                     .WriteTo.File(
                         path: Path.Combine(logDir, "log-.txt"),
                         rollingInterval: RollingInterval.Day,
                         retainedFileCountLimit: 30,
                         outputTemplate:
                         "{Timestamp:yyyy-MM-dd HH:mm:ss} [{Level}] {Message}{NewLine}{Exception}"
-                    )
-                    .CreateLogger();
+                    );
+
+                var seqEnabled = builder.Configuration.GetValue("Seq:Enabled", false);
+                var seqUrl = builder.Configuration["Seq:ServerUrl"];
+                if (seqEnabled && !string.IsNullOrWhiteSpace(seqUrl))
+                {
+                    var seqApiKey = builder.Configuration["Seq:ApiKey"];
+                    loggerConfig.WriteTo.Seq(
+                        seqUrl,
+                        apiKey: string.IsNullOrWhiteSpace(seqApiKey) ? null : seqApiKey);
+                }
+
+                Log.Logger = loggerConfig.CreateLogger();
 
                 builder.Host.UseSerilog();
             //builder.Services.AddCaching(builder.Configuration);

@@ -15,19 +15,25 @@ namespace TaskMangment.Hangfire.Jobs
         private readonly AppDbContext _db;
         private readonly IDomainEventDispatcher _eventDispatcher;
         private readonly IGetHigherManager _getHigherManager;
+        private readonly IConfiguration _configuration;
 
         public PenaltyForMissingCommentsJob(
             AppDbContext db,
             IDomainEventDispatcher eventDispatcher,
-            IGetHigherManager getHigherManager)
+            IGetHigherManager getHigherManager,
+            IConfiguration configuration)
         {
             _db = db;
             _eventDispatcher = eventDispatcher;
             _getHigherManager = getHigherManager;
+            _configuration = configuration;
         }
 
         public async Task ExecuteAsync()
         {
+            if (HangfireQuietHours.ShouldSkipNow(_configuration))
+                return;
+
             var tz = TimeZoneInfo.FindSystemTimeZoneById("Arab Standard Time");
             var today = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, tz).Date;
             var yesterday = today.AddDays(-1);

@@ -9,6 +9,7 @@ using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Domain.Entities;
 using TaskMangment.Infrastructure.DataContext;
 using TaskMangment.Utilities.Localization.Resources;
+using TaskMangment.Hangfire;
 
 namespace TaskMangment.Hangfire.Jobs
 {
@@ -18,20 +19,27 @@ namespace TaskMangment.Hangfire.Jobs
         private readonly IEmailService _emailService;
         private readonly IEmailTemplateRenderer _renderer;
         private readonly IStringLocalizer<DiscountAutoType> _localizer;
+        private readonly IConfiguration _configuration;
 
         public TaskDueTodayEmailsProcessorJob(
             AppDbContext db,
             IEmailService emailService,
-            IEmailTemplateRenderer renderer, IStringLocalizer<DiscountAutoType> localizer)
+            IEmailTemplateRenderer renderer,
+            IStringLocalizer<DiscountAutoType> localizer,
+            IConfiguration configuration)
         {
             _db = db;
             _emailService = emailService;
             _renderer = renderer;
             _localizer = localizer;
+            _configuration = configuration;
         }
        
         public async Task ExecuteAsync()
         {
+            if (HangfireQuietHours.ShouldSkipNow(_configuration))
+                return;
+
             var emails = await _db.EmailQueue
                 .Where(e =>
                     e.Status == EmailStatus.Pending &&

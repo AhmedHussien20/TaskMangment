@@ -148,45 +148,53 @@ app.UseHangfireDashboard("/hangfire", new DashboardOptions
 
 // =======================
 // Jobs
+// Quiet (Saudi): 01:00–09:00 daily, and all day Friday.
 // =======================
+var saudiTimeZone = TimeZoneHelper.GetSaudiArabia();
+var quietEnabled = builder.Configuration.GetValue("HangfireQuietHours:Enabled", true);
+var emailCron = quietEnabled ? HangfireQuietHours.CronOutsideQuietHours : Cron.Minutely();
+var penaltyCron = quietEnabled ? HangfireQuietHours.CronDailyAfterQuietHours : Cron.Daily(9, 0);
+var archiveCron = quietEnabled ? HangfireQuietHours.CronArchiveOutsideQuietHours : Cron.Daily(0, 1);
+Console.WriteLine("Saudi timezone for Hangfire cron = " + saudiTimeZone.Id);
+Console.WriteLine($"Hangfire quiet hours enabled = {quietEnabled}; email cron = {emailCron}");
+
 RecurringJob.AddOrUpdate<ProcessPendingEmailsJob>(
     "process-pending-emails",
     job => job.ExecuteAsync(),
-    Cron.Minutely);
+    emailCron,
+    saudiTimeZone);
 
 //RecurringJob.AddOrUpdate<AttachmentBlobMigrationJob>(
 //    "attachment-blob-migration",
 //    job => job.ExecuteAsync(),
 //    Cron.Minutely);
 
-var saudiTimeZone = TimeZoneHelper.GetSaudiArabia();
-Console.WriteLine("Saudi timezone for Hangfire cron = " + saudiTimeZone.Id);
-
 RecurringJob.AddOrUpdate<PenaltyForMissingCommentsJob>(
     "penalty-missing-comments",
     job => job.ExecuteAsync(),
-    Cron.Daily(8, 0),
+    penaltyCron,
     saudiTimeZone
 );
 
 // Close after the due day ends (Saudi calendar): due 27 Jul stays open all of 27 Jul, closes at 00:01 on 28 Jul.
+// Skipped on Friday when quiet hours are enabled.
 RecurringJob.AddOrUpdate<ArchiveOverdueTasksJob>(
     "archive-overdue-tasks",
     job => job.ExecuteAsync(),
-    Cron.Daily(0, 1),
+    archiveCron,
     saudiTimeZone
 );
 
 RecurringJob.AddOrUpdate<TaskDueTodayEmailsProcessorJob>(
-               "task-due-today-email-job",
-               job => job.ExecuteAsync(),
-               Cron.Minutely
-               );
+    "task-due-today-email-job",
+    job => job.ExecuteAsync(),
+    emailCron,
+    saudiTimeZone);
 
 RecurringJob.AddOrUpdate<SendMonthlyEmployeeDiscountsJob>(
     "send-monthly-employee-discounts",
     job => job.ExecuteAsync(),
-    Cron.Monthly(25, 8, 0),
+    Cron.Monthly(25, 9, 0),
     saudiTimeZone
 );
 

@@ -17,16 +17,25 @@ namespace TaskMangment.Hangfire.Jobs
         private readonly AppDbContext _db;
         private readonly IDomainEventDispatcher _eventDispatcher;
         private readonly IGetHigherManager _getHigherManager;
+        private readonly IConfiguration _configuration;
 
-        public ArchiveOverdueTasksJob(AppDbContext db, IDomainEventDispatcher eventDispatcher, IGetHigherManager getHigherManager)
+        public ArchiveOverdueTasksJob(
+            AppDbContext db,
+            IDomainEventDispatcher eventDispatcher,
+            IGetHigherManager getHigherManager,
+            IConfiguration configuration)
         {
             _db = db;
             _eventDispatcher = eventDispatcher;
             _getHigherManager = getHigherManager;
+            _configuration = configuration;
         }
 
         public async Task ExecuteAsync()
         {
+            if (HangfireQuietHours.ShouldSkipNow(_configuration))
+                return;
+
             // End-of-day rule (Saudi calendar): due date 27 Jul stays open all of 27 Jul;
             // it becomes overdue only when local date is 28 Jul (job runs at 00:01).
             var tz = TimeZoneHelper.GetSaudiArabia();
