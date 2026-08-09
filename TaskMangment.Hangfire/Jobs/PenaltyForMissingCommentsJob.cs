@@ -221,25 +221,30 @@ namespace TaskMangment.Hangfire.Jobs
                     var utcDayStart = TimeZoneInfo.ConvertTimeToUtc(localDayStart, tz);
                     var utcNextDay = TimeZoneInfo.ConvertTimeToUtc(localNextDay, tz);
 
+                    // Warnings apply only to the current open cycle (same last-chance date),
+                    // so completing a cycle starts a fresh warning ladder.
+                    var lastChanceDay = lastChanceDate.Date;
                     var existingAutoWarningCount = await _db.Warnings.CountAsync(w =>
                         w.TaskId == task.Id &&
                         w.IssuedEmployeeId == employeeId &&
                         w.AutoWarning &&
-                        !w.IsDeleted);
+                        !w.IsDeleted &&
+                        w.ViolationDate != null &&
+                        w.ViolationDate.Value.Date == lastChanceDay);
+
+                    var alreadyWarnedToday = await _db.Warnings.AnyAsync(w =>
+                        w.TaskId == task.Id &&
+                        w.IssuedEmployeeId == employeeId &&
+                        w.AutoWarning &&
+                        !w.IsDeleted &&
+                        w.IssuedAt >= utcDayStart &&
+                        w.IssuedAt < utcNextDay);
 
                     // Prefer warning count so a missed run can catch up warnings
                     // before applying a discount.
                     if (existingAutoWarningCount < maxWarningsBeforeDiscount)
                     {
-                        var alreadyWarned = await _db.Warnings.AnyAsync(w =>
-                            w.TaskId == task.Id &&
-                            w.IssuedEmployeeId == employeeId &&
-                            w.AutoWarning &&
-                            !w.IsDeleted &&
-                            w.IssuedAt >= utcDayStart &&
-                            w.IssuedAt < utcNextDay);
-
-                        if (alreadyWarned)
+                        if (alreadyWarnedToday)
                             continue;
 
                         var warning = new Warning
@@ -257,6 +262,11 @@ namespace TaskMangment.Hangfire.Jobs
                         warningsToPublish.Add((warning, assignment.Employee?.FullName ?? "", task.Id, task.Title));
                         continue;
                     }
+
+                    // Do not discount on the same day a warning was already issued
+                    // (e.g. job ran twice after issuing the final warning).
+                    if (alreadyWarnedToday)
+                        continue;
 
                     if (task.PenaltyOnStopComment <= 0)
                         continue;
