@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using TaskMangment.Application.Common.Validation;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Domain.Entities;
@@ -446,7 +447,8 @@ namespace TaskMangment.Hangfire.Jobs
             // Advance through completed cycles (minimum already met).
             while (true)
             {
-                lastChanceDate = cycleStart.AddDays(periodDays);
+                lastChanceDate = TaskDueDateRules.MoveToNextWorkday(
+                    cycleStart.AddDays(periodDays));
 
                 var datesInCycle = orderedDates
                     .Where(d =>

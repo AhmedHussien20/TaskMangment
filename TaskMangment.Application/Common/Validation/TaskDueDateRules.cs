@@ -15,6 +15,15 @@ namespace TaskMangment.Application.Common.Validation
             return day is DayOfWeek.Friday or DayOfWeek.Saturday;
         }
 
+        public static DateTime MoveToNextWorkday(DateTime date)
+        {
+            var result = date;
+            while (IsWeekend(result))
+                result = result.AddDays(1);
+
+            return result;
+        }
+
         public static bool IsPast(DateTime date) =>
             date.Date < DateTime.UtcNow.Date;
 

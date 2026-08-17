@@ -148,7 +148,7 @@ app.UseHangfireDashboard("/hangfire", new DashboardOptions
 
 // =======================
 // Jobs
-// Quiet (Saudi): 01:00–09:00 daily, and all day Friday.
+// Quiet (Saudi): 03:00–09:00 daily.
 // =======================
 var saudiTimeZone = TimeZoneHelper.GetSaudiArabia();
 var quietEnabled = builder.Configuration.GetValue("HangfireQuietHours:Enabled", true);
@@ -156,7 +156,7 @@ var quietEnabled = builder.Configuration.GetValue("HangfireQuietHours:Enabled", 
 // Email job: every 5 minutes (not every minute)
 // When quiet hours enabled, use the 5-minute cron that respects quiet hours
 // When disabled, use simple */5 * * * *
-var emailCron = quietEnabled? HangfireQuietHours.CronEvery5MinOutsideQuietHours  // "*/5 0,9-23 * * 0-4,6"
+var emailCron = quietEnabled? HangfireQuietHours.CronEvery5MinOutsideQuietHours  // "*/5 0-2,9-23 * * 0-4,6"
     : "*/5 * * * *";  // Every 5 minutes
 
 // Penalty job: monday to friday only, at 9:30 AM
@@ -164,8 +164,9 @@ var emailCron = quietEnabled? HangfireQuietHours.CronEvery5MinOutsideQuietHours 
 // This excludes Sunday (0) and Saturday (6)
 var penaltyCron = "30 9 * * 1-5";
 
+// Archive: 00:01 Monday–Friday (Thursday due → closes Friday 00:01)
 var archiveCron = quietEnabled ? HangfireQuietHours.CronArchiveOutsideQuietHours
-    : Cron.Daily(0, 1);
+    : "1 0 * * 1-5";
 
 Console.WriteLine("Saudi timezone for Hangfire cron = " + saudiTimeZone.Id);
 Console.WriteLine($"Hangfire quiet hours enabled = {quietEnabled}; email cron = {emailCron}");
@@ -188,8 +189,8 @@ RecurringJob.AddOrUpdate<PenaltyForMissingCommentsJob>(
     saudiTimeZone
 );
 
-// Close after the due day ends (Saudi calendar): due 27 Jul stays open all of 27 Jul, closes at 00:01 on 28 Jul.
-// Skipped on Friday when quiet hours are enabled.
+// Close after the due day ends (Saudi calendar): due Thursday stays open all Thursday,
+// closes at 00:01 Friday.
 RecurringJob.AddOrUpdate<ArchiveOverdueTasksJob>(
     "archive-overdue-tasks",
     job => job.ExecuteAsync(),

@@ -25,6 +25,24 @@ public class TaskDueDateRulesTests
         Assert.False(TaskDueDateRules.IsWeekend(new DateTime(y, m, d)));
     }
 
+    [Theory]
+    [InlineData(2026, 8, 14)] // Friday
+    [InlineData(2026, 8, 15)] // Saturday
+    public void MoveToNextWorkday_Weekend_ReturnsSunday(int y, int m, int d)
+    {
+        var result = TaskDueDateRules.MoveToNextWorkday(new DateTime(y, m, d));
+
+        Assert.Equal(new DateTime(2026, 8, 16), result);
+    }
+
+    [Fact]
+    public void MoveToNextWorkday_Workday_ReturnsSameDate()
+    {
+        var sunday = new DateTime(2026, 8, 16);
+
+        Assert.Equal(sunday, TaskDueDateRules.MoveToNextWorkday(sunday));
+    }
+
     [Fact]
     public void EnsureNotWeekend_Null_DoesNotThrow()
     {
