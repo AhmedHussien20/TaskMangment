@@ -152,9 +152,21 @@ app.UseHangfireDashboard("/hangfire", new DashboardOptions
 // =======================
 var saudiTimeZone = TimeZoneHelper.GetSaudiArabia();
 var quietEnabled = builder.Configuration.GetValue("HangfireQuietHours:Enabled", true);
-var emailCron = quietEnabled ? HangfireQuietHours.CronOutsideQuietHours : Cron.Minutely();
-var penaltyCron = quietEnabled ? HangfireQuietHours.CronDailyAfterQuietHours : Cron.Daily(9, 0);
-var archiveCron = quietEnabled ? HangfireQuietHours.CronArchiveOutsideQuietHours : Cron.Daily(0, 1);
+
+// Email job: every 5 minutes (not every minute)
+// When quiet hours enabled, use the 5-minute cron that respects quiet hours
+// When disabled, use simple */5 * * * *
+var emailCron = quietEnabled? HangfireQuietHours.CronEvery5MinOutsideQuietHours  // "*/5 0,9-23 * * 0-4,6"
+    : "*/5 * * * *";  // Every 5 minutes
+
+// Penalty job: monday to friday only, at 9:30 AM
+// Cron: 30 9 * * 1-5 (Monday=1, Tuesday=2, Wednesday=3, Thursday=4, Friday=5)
+// This excludes Sunday (0) and Saturday (6)
+var penaltyCron = "30 9 * * 1-5";
+
+var archiveCron = quietEnabled ? HangfireQuietHours.CronArchiveOutsideQuietHours
+    : Cron.Daily(0, 1);
+
 Console.WriteLine("Saudi timezone for Hangfire cron = " + saudiTimeZone.Id);
 Console.WriteLine($"Hangfire quiet hours enabled = {quietEnabled}; email cron = {emailCron}");
 
@@ -188,8 +200,10 @@ RecurringJob.AddOrUpdate<ArchiveOverdueTasksJob>(
 RecurringJob.AddOrUpdate<TaskDueTodayEmailsProcessorJob>(
     "task-due-today-email-job",
     job => job.ExecuteAsync(),
-    emailCron,
-    saudiTimeZone);
+    archiveCron,
+    saudiTimeZone
+);
+
 
 RecurringJob.AddOrUpdate<SendMonthlyEmployeeDiscountsJob>(
     "send-monthly-employee-discounts",

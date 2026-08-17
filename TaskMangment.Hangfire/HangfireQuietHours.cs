@@ -3,7 +3,7 @@ using TaskMangment.Infrastructure;
 namespace TaskMangment.Hangfire
 {
     /// <summary>
-    /// Saudi quiet rules: skip jobs 01:00–09:00, and all day Friday (configurable).
+    /// Saudi quiet rules: skip jobs 03:00–09:00, and all day Friday (configurable).
     /// </summary>
     public static class HangfireQuietHours
     {
@@ -12,6 +12,11 @@ namespace TaskMangment.Hangfire
         /// Cron day-of-week: 0=Sunday … 5=Friday … 6=Saturday.
         /// </summary>
         public const string CronOutsideQuietHours = "* 0,9-23 * * 0-4,6";
+
+        /// <summary>
+        /// Every 5 minutes at hours 00 and 09–23, Sun–Thu + Sat (excludes Friday).
+        /// </summary>
+        public const string CronEvery5MinOutsideQuietHours = "*/5 0,9-23 * * 0-4,6";
 
         public const string CronDailyAfterQuietHours = "0 9 * * 0-4,6";
         public const string CronArchiveOutsideQuietHours = "1 0 * * 0-4,6";
@@ -27,7 +32,7 @@ namespace TaskMangment.Hangfire
                 && nowLocal.DayOfWeek == DayOfWeek.Friday)
                 return true;
 
-            var startHour = configuration.GetValue("HangfireQuietHours:StartHour", 1);
+            var startHour = configuration.GetValue("HangfireQuietHours:StartHour", 3); // Changed to 3
             var endHour = configuration.GetValue("HangfireQuietHours:EndHour", 9);
 
             if (startHour == endHour)
