@@ -48,6 +48,7 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<WorkTask> _taskRepo;
         private readonly IAccessScopeResolver _scopeResolver;
         private readonly IEmployeePermissionService _permissions;
+        private readonly IRepository<EmployeeFunctionalScope> _employeeFunctionScopeRepo;
 
 
 
@@ -69,7 +70,8 @@ namespace TaskMangment.Infrastructure.Services
             IRepository<TaskAssignment> taskAssignmentRepo,
             IRepository<WorkTask> taskRepo,
             IAccessScopeResolver scopeResolver,
-            IEmployeePermissionService permissions
+            IEmployeePermissionService permissions,
+            IRepository<EmployeeFunctionalScope> employeeFunctionScopeRepo
             )
         {
             _employeeRepo = employeeRepo;
@@ -90,6 +92,7 @@ namespace TaskMangment.Infrastructure.Services
             _taskRepo = taskRepo;
             _scopeResolver = scopeResolver;
             _permissions = permissions;
+            _employeeFunctionScopeRepo = employeeFunctionScopeRepo;
         }
 
         public async Task<ApiResponse<PagedResponse<EmployeeGetDto>>> GetAllAsync(EmployeeRequest request,int employeeId,int roleLevel) 
@@ -568,6 +571,7 @@ namespace TaskMangment.Infrastructure.Services
 
         /// <summary>
         /// Optional role assignment on create/update. Empty list clears active roles.
+        /// Also reconciles EmployeeFunctionalScope for type-scoped roles.
         /// </summary>
         private async Task SyncEmployeeRolesAsync(int employeeId, List<int>? roleIds, int? employeeTypeId)
         {
@@ -578,6 +582,8 @@ namespace TaskMangment.Infrastructure.Services
 
             if (desired.Count > MaxRolesPerEmployee)
                 throw new AppException(ErrorCodes.EmployeeMaxRolesExceeded, StatusCodes.Status400BadRequest);
+
+            var desiredTypeIds = new List<int>();
 
             if (desired.Count > 0)
             {
@@ -604,7 +610,11 @@ namespace TaskMangment.Infrastructure.Services
 
                     if (employeeTypeId != role.EmployeeTypeId)
                         throw new AppException(ErrorCodes.EmployeeTypeMismatch, StatusCodes.Status400BadRequest);
+
+                    desiredTypeIds.Add(role.EmployeeTypeId.Value);
                 }
+
+                desiredTypeIds = desiredTypeIds.Distinct().ToList();
             }
 
             var existing = await _employeeRoleRepo
@@ -639,7 +649,42 @@ namespace TaskMangment.Infrastructure.Services
                 });
             }
 
+            await ReconcileEmployeeTypeScopeAsync(employeeId, desiredTypeIds);
+
             // No SaveChanges here — caller saves once then _uow.CommitAsync().
+        }
+
+        private async Task ReconcileEmployeeTypeScopeAsync(int employeeId, IReadOnlyList<int> typeIds)
+        {
+            var existingScopes = await _employeeFunctionScopeRepo
+                .GetAll(x => x.EmployeeId == employeeId && !x.IsDeleted)
+                .ToListAsync();
+
+            if (typeIds == null || typeIds.Count == 0)
+            {
+                foreach (var scope in existingScopes)
+                    _employeeFunctionScopeRepo.SoftDelete(scope);
+                return;
+            }
+
+            var typeId = typeIds[0];
+            var keep = existingScopes.FirstOrDefault();
+            if (keep != null)
+            {
+                keep.EmployeeTypeId = typeId;
+                keep.IsDeleted = false;
+                keep.DeletedDate = null;
+                foreach (var extra in existingScopes.Skip(1))
+                    _employeeFunctionScopeRepo.SoftDelete(extra);
+            }
+            else
+            {
+                await _employeeFunctionScopeRepo.AddAsync(new EmployeeFunctionalScope
+                {
+                    EmployeeId = employeeId,
+                    EmployeeTypeId = typeId
+                });
+            }
         }
 
 

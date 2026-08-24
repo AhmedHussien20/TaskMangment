@@ -87,6 +87,7 @@ namespace TaskMangment.Application.Common.Errors
         public const string UseAreaForBranchScope = "USE_AREA_FOR_BRANCH_SCOPE";
         public const string InvalidNotificationScope = "INVALID_NOTIFICATION_SCOPE";
         public const string LeaveTypeHasLeaves = "LEAVE_TYPE_HAS_LEAVES";
+        public const string LeaveRejectReasonRequired = "LEAVE_REJECT_REASON_REQUIRED";
         public const string RoleEmployeeTypeRequired = "ROLE_EMPLOYEE_TYPE_REQUIRED";
         public const string EmployeeTypeMismatch = "EMPLOYEE_TYPE_MISMATCH";
     }

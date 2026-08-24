@@ -342,4 +342,7 @@
   <data name="EMPLOYEE_TYPE_MISMATCH" xml:space="preserve">
     <value>نوع الموظف لا يطابق نوع الموظف المحدد للدور</value>
   </data>
+  <data name="LEAVE_REJECT_REASON_REQUIRED" xml:space="preserve">
+    <value>سبب الرفض مطلوب</value>
+  </data>
 </root>

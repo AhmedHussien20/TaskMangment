@@ -153,9 +153,6 @@ namespace TaskMangment.Infrastructure.Services
                             IsAssigned = true
                         });
                     }
-
-                    if (role.RequiresEmployeeTypeScope && role.EmployeeTypeId.HasValue)
-                        await UpsertEmployeeTypeScopeAsync(assignment.EmployeeId, role.EmployeeTypeId.Value);
                 }
                 else
                 {
@@ -174,28 +171,64 @@ namespace TaskMangment.Infrastructure.Services
             }
 
             await _employeeRoleRepo.SaveChangesAsync();
+
+            foreach (var employeeId in employeeIds)
+                await ReconcileEmployeeTypeScopeAsync(employeeId);
+
             await _employeeFunctionScopeRepo.SaveChangesAsync();
             return ApiResponse<bool>.Ok(true, "Employees assigned/unassigned successfully");
         }
 
-        private async Task UpsertEmployeeTypeScopeAsync(int employeeId, int employeeTypeId)
+        private async Task ReconcileEmployeeTypeScopeAsync(int employeeId)
         {
-            var existingScope = await _employeeFunctionScopeRepo
-                .GetAll(x => x.EmployeeId == employeeId && !x.IsDeleted)
-                .FirstOrDefaultAsync();
+            var assignedRoleIds = await _employeeRoleRepo
+                .GetAll(er =>
+                    er.EmployeeId == employeeId &&
+                    er.IsAssigned &&
+                    !er.IsDeleted)
+                .Select(er => er.RoleId)
+                .ToListAsync();
 
-            if (existingScope != null)
+            var typeIds = assignedRoleIds.Count == 0
+                ? new List<int>()
+                : await _roleRepo
+                    .GetAll(r =>
+                        assignedRoleIds.Contains(r.Id) &&
+                        !r.IsDeleted &&
+                        r.RequiresEmployeeTypeScope &&
+                        r.EmployeeTypeId != null)
+                    .Select(r => r.EmployeeTypeId!.Value)
+                    .Distinct()
+                    .ToListAsync();
+
+            var existingScopes = await _employeeFunctionScopeRepo
+                .GetAll(x => x.EmployeeId == employeeId && !x.IsDeleted)
+                .ToListAsync();
+
+            if (typeIds.Count == 0)
             {
-                existingScope.EmployeeTypeId = employeeTypeId;
-                existingScope.IsDeleted = false;
-                existingScope.DeletedDate = null;
+                foreach (var scope in existingScopes)
+                    _employeeFunctionScopeRepo.SoftDelete(scope);
+                return;
+            }
+
+            // One active functional scope per employee (matches existing assign/upsert behavior).
+            var typeId = typeIds[0];
+            var keep = existingScopes.FirstOrDefault();
+            if (keep != null)
+            {
+                keep.EmployeeTypeId = typeId;
+                keep.IsDeleted = false;
+                keep.DeletedDate = null;
+                foreach (var extra in existingScopes.Skip(1))
+                    _employeeFunctionScopeRepo.SoftDelete(extra);
             }
             else
             {
                 await _employeeFunctionScopeRepo.AddAsync(new EmployeeFunctionalScope
                 {
                     EmployeeId = employeeId,
-                    EmployeeTypeId = employeeTypeId
+                    EmployeeTypeId = typeId
                 });
             }
         }

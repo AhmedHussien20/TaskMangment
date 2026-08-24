@@ -14,7 +14,6 @@ using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
 using TaskMangment.Infrastructure.Helpers;
-using TaskMangment.Infrastructure.Persistence.Extensions;
 using TaskMangment.Utilities.Localization.Resources;
 
 namespace TaskMangment.Infrastructure.Services
@@ -102,34 +101,58 @@ namespace TaskMangment.Infrastructure.Services
             var scope = await _scopeResolver.ResolveAsync(employeeId);
             var access = await _accessProvider.GetAsync(employeeId);
 
-            var branchesQuery = _branchRepo
-                .GetAll(b => b.CompanyId == companyId && !b.IsDeleted);
-
-            branchesQuery = branchesQuery.ApplyAccessScope(access);
-
-            // Company-wide report/task viewers see all company branches; others without manager scope get own branch.
-            if (!scope.IsCompanyWide && !access.BranchIds.Any() && !access.EmployeeTypeIds.Any())
+            async Task<List<BranchFilterDto>> LoadAllCompanyBranchesAsync()
             {
-                var myBranch = await _employeeRepo
-                    .GetAll(e => e.Id == employeeId && e.CompanyId == companyId)
-                    .Select(e => new { e.BranchId, BranchName = e.Branch.Name })
-                    .FirstOrDefaultAsync();
-
-                if (myBranch?.BranchId == null)
-                    return ApiResponse<List<BranchFilterDto>>.Ok(new List<BranchFilterDto>());
-
-                return ApiResponse<List<BranchFilterDto>>.Ok(new List<BranchFilterDto>
-                {
-                    new BranchFilterDto { Id = myBranch.BranchId.Value, Name = myBranch.BranchName }
-                });
+                return await _branchRepo
+                    .GetAll(b => b.CompanyId == companyId && !b.IsDeleted)
+                    .Select(b => new BranchFilterDto { Id = b.Id, Name = b.Name })
+                    .OrderBy(b => b.Name)
+                    .ToListAsync();
             }
 
-            var branches = await branchesQuery
-                .Select(b => new BranchFilterDto { Id = b.Id, Name = b.Name })
-                .OrderBy(b => b.Name)
-                .ToListAsync();
+            async Task<List<BranchFilterDto>> LoadOwnBranchAsync()
+            {
+                if (scope.OwnBranchId is not int ownBranchId)
+                    return new List<BranchFilterDto>();
 
-            return ApiResponse<List<BranchFilterDto>>.Ok(branches);
+                var name = await _branchRepo
+                    .GetAll(b => b.Id == ownBranchId && b.CompanyId == companyId && !b.IsDeleted)
+                    .Select(b => b.Name)
+                    .FirstOrDefaultAsync();
+
+                if (string.IsNullOrWhiteSpace(name))
+                    return new List<BranchFilterDto>();
+
+                return new List<BranchFilterDto>
+                {
+                    new BranchFilterDto { Id = ownBranchId, Name = name }
+                };
+            }
+
+            // Company-wide viewers see every branch.
+            if (scope.IsCompanyWide)
+                return ApiResponse<List<BranchFilterDto>>.Ok(await LoadAllCompanyBranchesAsync());
+
+            // Branch/area managers see managed branches only.
+            if (access.BranchIds != null && access.BranchIds.Count > 0)
+            {
+                var managedIds = access.BranchIds.ToList();
+                var managed = await _branchRepo
+                    .GetAll(b =>
+                        b.CompanyId == companyId &&
+                        !b.IsDeleted &&
+                        managedIds.Contains(b.Id))
+                    .Select(b => new BranchFilterDto { Id = b.Id, Name = b.Name })
+                    .OrderBy(b => b.Name)
+                    .ToListAsync();
+
+                return ApiResponse<List<BranchFilterDto>>.Ok(managed);
+            }
+
+            // Type-scoped / OwnBranch / SelfOnly: never list the whole company.
+            // (Previously, having EmployeeTypeIds skipped the own-branch path and
+            // Branch.ApplyAccessScope returned every branch when BranchIds was empty.)
+            return ApiResponse<List<BranchFilterDto>>.Ok(await LoadOwnBranchAsync());
         }
 
         public async Task<ApiResponse<AdminDashboardDto>> GetDashboardAsync(

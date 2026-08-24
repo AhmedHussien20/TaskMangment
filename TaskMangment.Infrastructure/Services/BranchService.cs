@@ -1,12 +1,9 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using Pipelines.Sockets.Unofficial.Arenas;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.Design;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using TaskMangment.Application.Common.ApiRequests.Branch;
 using TaskMangment.Application.Common.Errors;
@@ -37,9 +34,8 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<Employee> _employeeRepo;
         private readonly IRepository<Role> _RoleRepo;
         private readonly IRepository<EmployeeRole> _employeeRolesRepository;
-
-
-
+        private readonly IAccessScopeResolver _scopeResolver;
+        private readonly IEmployeePermissionService _permissions;
 
         public BranchService(
             IRepository<Branch> branchRepository,
@@ -52,7 +48,10 @@ namespace TaskMangment.Infrastructure.Services
             IRepository<Department> departmentRepository,
             IUserAccessContextProvider accessProvider,
             IRepository<Employee> employeeRepo,
-            IRepository<Role> roleRepo, IRepository<EmployeeRole> employeeRolesRepository
+            IRepository<Role> roleRepo,
+            IRepository<EmployeeRole> employeeRolesRepository,
+            IAccessScopeResolver scopeResolver,
+            IEmployeePermissionService permissions
         )
         {
             _branchRepository = branchRepository;
@@ -67,22 +66,52 @@ namespace TaskMangment.Infrastructure.Services
             _employeeRepo = employeeRepo;
             _RoleRepo = roleRepo;
             _employeeRolesRepository = employeeRolesRepository;
+            _scopeResolver = scopeResolver;
+            _permissions = permissions;
         }
 
         public async Task<ApiResponse<PagedResponse<BranchGetDto>>> GetAllAsync(
-    BranchRequest request,
-    int employeeId,
-    int roleLevel,int companyId)
+            BranchRequest request,
+            int employeeId,
+            int roleLevel,
+            int companyId)
         {
+            _ = roleLevel;
+            var scope = await _scopeResolver.ResolveAsync(employeeId);
             var access = await _accessProvider.GetAsync(employeeId);
+
+            var canManageBranches =
+                await _permissions.HasAsync(employeeId, PermissionCodes.CreateBranch) ||
+                await _permissions.HasAsync(employeeId, PermissionCodes.UpdateBranch) ||
+                await _permissions.HasAsync(employeeId, PermissionCodes.DeleteBranch);
+
             var query = _branchRepository
                 .GetAll(b => b.CompanyId == companyId && !b.IsDeleted)
                 .Include(b => b.Manager)
                 .Include(b => b.Responsible)
                 .Include(b => b.Area)
-                .ApplySearch(request.searchKey)
-                .ApplyAccessScope(access);
+                .ApplySearch(request.searchKey);
 
+            // Same rules as dashboard branch filter: company-wide / branch-admins see all;
+            // managers see managed branches; everyone else sees home branch only.
+            // (Reports use this endpoint for branch dropdowns.)
+            if (scope.IsCompanyWide || canManageBranches)
+            {
+                // no extra branch filter
+            }
+            else if (access.BranchIds != null && access.BranchIds.Count > 0)
+            {
+                var managedIds = access.BranchIds.ToList();
+                query = query.Where(b => managedIds.Contains(b.Id));
+            }
+            else if (scope.OwnBranchId is int ownBranchId)
+            {
+                query = query.Where(b => b.Id == ownBranchId);
+            }
+            else
+            {
+                query = query.Where(b => false);
+            }
 
             var totalCount = await query.CountAsync();
 
@@ -100,7 +129,6 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<PagedResponse<BranchGetDto>>.Ok(response);
         }
 
-
         public async Task<ApiResponse<BranchGetDto>> GetByIdAsync(int id)
         {
             var branch = await _branchRepository.GetAll(b => b.Id == id && !b.IsDeleted)
@@ -111,9 +139,9 @@ namespace TaskMangment.Infrastructure.Services
                 .FirstOrDefaultAsync();
 
             if (branch == null)
-                    throw new AppException(
-                        ErrorCodes.BranchNotFound,
-                        StatusCodes.Status404NotFound);
+                throw new AppException(
+                    ErrorCodes.BranchNotFound,
+                    StatusCodes.Status404NotFound);
 
             var dto = _mapper.Map<BranchGetDto>(branch);
             return ApiResponse<BranchGetDto>.Ok(dto);
@@ -180,7 +208,6 @@ namespace TaskMangment.Infrastructure.Services
 
             return ApiResponse<BranchGetDto>.Ok(branchdto, "Branch added successfully");
         }
-
 
         public async Task<ApiResponse<BranchGetDto>> UpdateAsync(int id, BranchAddEditDto dto)
         {
@@ -254,7 +281,6 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<BranchGetDto>.Ok(branchdto, "Branch updated successfully");
         }
 
-
         public async Task<ApiResponse<bool>> DeleteAsync(int id)
         {
             var branch = await _branchRepository.GetByIDAsync(id);
@@ -289,11 +315,9 @@ namespace TaskMangment.Infrastructure.Services
             await _managerBranchesRepo.SaveChangesAsync();
             await _cache.RemoveAsync("branches:");
 
-
             // TODO: Optional: Invalidate cache
 
             return ApiResponse<bool>.Ok(true, "Branch deleted successfully");
         }
     }
 }
-

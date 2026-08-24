@@ -75,7 +75,7 @@ namespace TaskMangment.Infrastructure.Services
                 throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
 
             if (dto.EndDate < dto.StartDate)
-                throw new AppException(ErrorCodes.Invalid, StatusCodes.Status400BadRequest);
+                throw new AppException(ErrorCodes.InvalidDate, StatusCodes.Status400BadRequest);
 
             var leave = new Leave
             {
@@ -97,19 +97,16 @@ namespace TaskMangment.Infrastructure.Services
                 .Include(l => l.LeaveType)
                 .FirstAsync();
 
-            var managerIds = await _getHigherManager.GetDirectHigherManagerIdsAsync(employeeId);
-            managerIds = managerIds?.Where(id => id != employeeId).ToList() ?? new List<int>();
+            // Higher managers + RoleNotificationSource listeners (may be empty).
+            var recipientIds = await _getHigherManager.GetDirectHigherManagerIdsAsync(employeeId);
+            recipientIds = recipientIds?.Where(id => id != employeeId).Distinct().ToList()
+                ?? new List<int>();
 
-            if (!managerIds.Any())
-            {
-                throw new AppException(ErrorCodes.Invalid, StatusCodes.Status400BadRequest);
-            }
-
-            foreach (var managerId in managerIds)
+            foreach (var recipientId in recipientIds)
             {
                 await _eventDispatcher.PublishAsync(new LeaveEvent(
                                                       leave.Id,
-                                                      managerId,
+                                                      recipientId,
                                                       full.Employee.FullName,
                                                       full.LeaveType.NameAr,
                                                       leave.StartDate,
@@ -298,7 +295,7 @@ namespace TaskMangment.Infrastructure.Services
                 throw new AppException(ErrorCodes.InvalidOperation, StatusCodes.Status400BadRequest);
 
             if (string.IsNullOrWhiteSpace(rejectLeaveDto.reason))
-                throw new AppException(ErrorCodes.Invalid, StatusCodes.Status400BadRequest);
+                throw new AppException(ErrorCodes.LeaveRejectReasonRequired, StatusCodes.Status400BadRequest);
 
             var manager = await _empRepo.GetByIDAsync(managerId);
             if (manager == null)
