@@ -479,7 +479,7 @@
                           <th>{{ 'LEAVE.END_DATE' | translate }}</th>
                           <th>{{ 'LEAVE.NOTES' | translate }}</th>
                           <th>{{ 'LEAVE.STATUS' | translate }}</th>
-                          <th *ngIf="canReviewLeave" class="text-end">{{ 'COMMON.ACTIONS' | translate }}</th>
+                          <th *ngIf="canShowLeaveActions" class="text-end">{{ 'COMMON.ACTIONS' | translate }}</th>
                         </tr></thead>
                         <tbody>
                           <tr *ngFor="let l of pagedLeaveHistory">
@@ -492,8 +492,15 @@
                                 {{ ('LEAVE.' + (l.status | uppercase)) | translate }}
                               </span>
                             </td>
-                            <td *ngIf="canReviewLeave" class="text-end text-nowrap">
-                              <ng-container *ngIf="isLeavePending(l.status)">
+                            <td *ngIf="canShowLeaveActions" class="text-end text-nowrap">
+                              <ng-container *ngIf="canDeleteLeave(l.status)">
+                                <button type="button"
+                                  class="btn btn-sm btn-outline-danger me-1"
+                                  (click)="deleteLeave(l.id)">
+                                  {{ 'COMMON.DELETE_BUTTON' | translate }}
+                                </button>
+                              </ng-container>
+                              <ng-container *ngIf="isLeavePending(l.status) && canReviewLeave">
                                 <button *ngIf="canApproveLeave" type="button"
                                   class="btn btn-sm btn-success me-1"
                                   (click)="approveLeave(l.id)">

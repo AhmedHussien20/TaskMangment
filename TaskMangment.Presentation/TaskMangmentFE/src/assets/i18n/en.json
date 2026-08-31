@@ -1148,7 +1148,9 @@
     "LEAVES": "Leaves",
     "ALL_LEAVES_IN_SCOPE": "All leaves",
     "ALL_REQUESTS": "All requests",
-    "PENDING_FOR_APPROVAL": "Pending for approval"
+    "PENDING_FOR_APPROVAL": "Pending for approval",
+    "DELETE_CONFIRM": "Delete this pending leave request?",
+    "DELETE_SUCCESS": "Leave request deleted successfully"
   },
   "LEAVE_TYPE": {
     "ADD": "Add Leave Type",

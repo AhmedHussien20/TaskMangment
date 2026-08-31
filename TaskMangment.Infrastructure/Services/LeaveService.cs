@@ -116,6 +116,7 @@ namespace TaskMangment.Infrastructure.Services
             }
 
             var result = _mapper.Map<LeaveGetDto>(full);
+            result.CanDelete = true;
 
             return ApiResponse<LeaveGetDto>.Ok(result, "Leave request submitted");
         }
@@ -184,6 +185,7 @@ namespace TaskMangment.Infrastructure.Services
                 .ToListAsync();
 
             var dtos = _mapper.Map<ICollection<LeaveGetDto>>(list);
+            await ApplyCanDeleteAsync(dtos, list, employeeId);
 
             var response = new PagedResponse<LeaveGetDto>(
                 dtos,
@@ -221,11 +223,31 @@ namespace TaskMangment.Infrastructure.Services
                 .ToListAsync();
 
             var dtos = _mapper.Map<ICollection<LeaveGetDto>>(list);
+            await ApplyCanDeleteAsync(dtos, list, managerId);
 
             var response = new PagedResponse<LeaveGetDto>(
                 dtos, totalCount, request.PageIndex, request.PageSize);
 
             return ApiResponse<PagedResponse<LeaveGetDto>>.Ok(response);
+        }
+
+        public async Task<ApiResponse<bool>> DeleteAsync(int leaveId, int actorId)
+        {
+            var leave = await _leaveRepo.GetAll(l => l.Id == leaveId)
+                .FirstOrDefaultAsync();
+
+            if (leave == null)
+                throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
+
+            if (leave.Status != LeaveStatus.Pending)
+                throw new AppException(ErrorCodes.InvalidOperation, StatusCodes.Status400BadRequest);
+
+            await EnsureCanDeleteLeaveAsync(actorId, leave);
+
+            _leaveRepo.SoftDelete(leave);
+            await _leaveRepo.SaveChangesAsync();
+
+            return ApiResponse<bool>.Ok(true, "Leave request deleted");
         }
 
         // =========================
@@ -327,7 +349,7 @@ namespace TaskMangment.Infrastructure.Services
         }
 
 
-        public async Task<ApiResponse<LeaveGetDto>> GetByIdAsync(int leaveId)
+        public async Task<ApiResponse<LeaveGetDto>> GetByIdAsync(int leaveId, int actorId)
         {
             var leave = await _leaveRepo.GetAll(l => l.Id == leaveId)
                                         .Include(l => l.Employee)
@@ -338,8 +360,83 @@ namespace TaskMangment.Infrastructure.Services
                 throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
 
             var dto = _mapper.Map<LeaveGetDto>(leave);
+            dto.CanDelete = await CanDeleteLeaveAsync(leave, actorId);
 
             return ApiResponse<LeaveGetDto>.Ok(dto);
+        }
+
+        private async Task EnsureCanDeleteLeaveAsync(int actorId, Leave leave)
+        {
+            if (await CanDeleteLeaveAsync(leave, actorId))
+                return;
+
+            throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
+        }
+
+        private async Task ApplyCanDeleteAsync(
+            ICollection<LeaveGetDto> dtos,
+            ICollection<Leave> leaves,
+            int actorId)
+        {
+            var scopedEmployeeIds = await GetScopedEmployeeIdsAsync(actorId);
+
+            foreach (var dto in dtos)
+            {
+                var leave = leaves.First(l => l.Id == dto.Id);
+                dto.CanDelete = await CanDeleteLeaveAsync(
+                    leave,
+                    actorId,
+                    scopedEmployeeIds);
+            }
+        }
+
+        private async Task<bool> CanDeleteLeaveAsync(
+            Leave leave,
+            int actorId,
+            HashSet<int>? scopedEmployeeIds = null)
+        {
+            if (leave.Status != LeaveStatus.Pending)
+                return false;
+
+            if (leave.EmployeeId == actorId)
+                return true;
+
+            if (!await _permissions.HasAnyAsync(
+                    actorId,
+                    PermissionCodes.ApproveLeave,
+                    PermissionCodes.RejectLeave))
+                return false;
+
+            var visibleIds = await GetLeaveVisibleEmployeeIdsAsync(actorId);
+            if (visibleIds.Contains(leave.EmployeeId))
+                return true;
+
+            scopedEmployeeIds ??= await GetScopedEmployeeIdsAsync(actorId);
+            if (scopedEmployeeIds != null && scopedEmployeeIds.Contains(leave.EmployeeId))
+                return true;
+
+            return false;
+        }
+
+        private async Task<HashSet<int>?> GetScopedEmployeeIdsAsync(int actorId)
+        {
+            var scope = await _scopeResolver.ResolveAsync(actorId);
+            var canViewScoped =
+                scope.Kind is AccessScopeKind.ManagerScoped or AccessScopeKind.CompanyWide
+                || await _permissions.HasAsync(actorId, PermissionCodes.ViewScopedTasks)
+                || await _permissions.HasAsync(actorId, PermissionCodes.ViewCompanyTasks);
+
+            if (!canViewScoped)
+                return null;
+
+            var ids = await _scopeResolver
+                .FilterEmployees(
+                    _employeeRepo.GetAll(e => e.CompanyId == scope.CompanyId && e.IsActive),
+                    scope)
+                .Select(e => e.Id)
+                .ToListAsync();
+
+            return ids.ToHashSet();
         }
 
         private async Task EnsureCanApproveLeaveAsync(int managerId, int leaveEmployeeId)

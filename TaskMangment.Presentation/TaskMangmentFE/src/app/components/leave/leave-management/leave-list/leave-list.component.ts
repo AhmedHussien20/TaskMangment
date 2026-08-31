@@ -19,6 +19,7 @@ import {
 } from 'app/shared/components/generic-table/generic-table.component';
 import { AuthService } from 'app/core/services/auth.service';
 import { LeaveCreateUpdateComponent } from '../leave-create-update/leave-create-update.component';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-leave-list',
@@ -160,6 +161,43 @@ export class LeaveListComponent implements OnInit {
 
   get canReview(): boolean {
     return this.canApprove || this.canReject;
+  }
+
+  disableDeleteRow = (row: LeaveGetDto) => !row.canDelete;
+
+  confirmDelete(leaveId: number, modal?: any) {
+    Swal.fire({
+      title: this.translate.instant('COMMON.CONFIRM_DELETE_TITLE'),
+      text: this.translate.instant('LEAVE.DELETE_CONFIRM'),
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: this.translate.instant('COMMON.DELETE_BUTTON'),
+      cancelButtonText: this.translate.instant('COMMON.CANCEL_BUTTON'),
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#6c757d'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.deleteLeave(leaveId, modal);
+      }
+    });
+  }
+
+  deleteLeave(leaveId: number, modal?: any) {
+    this.isLoading = true;
+    this.leaveService.delete(leaveId).subscribe({
+      next: () => {
+        this.toastr.success(this.translate.instant('LEAVE.DELETE_SUCCESS'));
+        this.isLoading = false;
+        if (modal) {
+          modal.close();
+        }
+        this.loadData();
+      },
+      error: () => {
+        this.isLoading = false;
+        this.toastr.error(this.translate.instant('COMMON.ERROR_LOADING_DATA'));
+      },
+    });
   }
 
   loadData() {

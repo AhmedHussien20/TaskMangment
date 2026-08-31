@@ -180,7 +180,8 @@ namespace TaskMangment.Hangfire.Jobs
                     }
 
                     var hasLeave = await _db.Leaves
-                      .Where(l => l.EmployeeId == employeeId &&
+                      .Where(l => !l.IsDeleted &&
+                                  l.EmployeeId == employeeId &&
                                   l.StartDate.Date <= yesterday &&
                                   l.EndDate.Date >= yesterday &&
                                   l.Status == LeaveStatus.Approved)

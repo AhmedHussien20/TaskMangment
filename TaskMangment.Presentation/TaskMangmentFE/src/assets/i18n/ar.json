@@ -1170,7 +1170,9 @@
     "LEAVES": "الاجازات",
     "ALL_REQUESTS": "كل الطلبات",
     "ALL_LEAVES_IN_SCOPE": "جميع الاجازات",
-    "PENDING_FOR_APPROVAL": "بانتظار الموافقة"
+    "PENDING_FOR_APPROVAL": "بانتظار الموافقة",
+    "DELETE_CONFIRM": "حذف طلب الإجازة المعلّق؟",
+    "DELETE_SUCCESS": "تم حذف طلب الإجازة بنجاح"
   },
   "LEAVE_TYPE" : 
   {

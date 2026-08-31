@@ -13,6 +13,7 @@ export interface LeaveAddDto {
 
 export interface LeaveGetDto {
   id: number;
+  employeeId: number;
   employeeName: string;
   leaveTypeName: string;
   leaveTypeId : number;
@@ -22,6 +23,7 @@ export interface LeaveGetDto {
   statusName: string;
   rejectionReason?: string | null;
   notes?: string | null;
+  canDelete?: boolean;
 }
 
 export interface LeavePagedResponse {

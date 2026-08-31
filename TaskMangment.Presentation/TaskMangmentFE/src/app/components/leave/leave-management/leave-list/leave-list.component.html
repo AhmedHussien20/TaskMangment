@@ -8,10 +8,11 @@
         <div>
           <app-generic-table [title]="title" [breadcrumbs]="breadcrumbs" [columns]="columns" [data]="rows"
             [entries]="entries" [page]="page" [labels]="labels" [totalItems]="totalItems" [showAddButton]="canCreate"
-            [showDetailsButton]="true" [showFilters]="true" [searchCriteria]="searchCriteria"
+            [showDetailsButton]="true" [showDeleteButton]="true" [disableDeleteFn]="disableDeleteRow"
+            [showFilters]="true" [searchCriteria]="searchCriteria"
             [extraFilterOptions]="showScopedLeaves ? leaveScopeFilterOptions : {}"
             [onSearch]="applyFilters.bind(this)" (pageChange)="onPageChange($event)" (entriesChange)="onEntriesChange($event)" (addClick)="openAdd(leaveModal)"
-            (details)="openDetailsModal($event)" [addButtonLabel]="'LEAVE.ADD' | translate" [statusOptions]="status">
+            (details)="openDetailsModal($event)" (delete)="confirmDelete($event)" [addButtonLabel]="'LEAVE.ADD' | translate" [statusOptions]="status">
           </app-generic-table>
         </div>
       </div>
@@ -125,11 +126,21 @@
         </div>
 
         <div class="mt-3 text-end">
+          <button *ngIf="selectedLeave.canDelete" type="button" class="btn btn-outline-danger me-2"
+            (click)="confirmDelete(selectedLeave.id, modal)">
+            {{ 'COMMON.DELETE_BUTTON' | translate }}
+          </button>
           <button class="btn btn-primary" (click)="confirmReview(modal)">
             {{ 'FORM.SAVE' | translate }}
           </button>
         </div>
 
+      </div>
+
+      <div *ngIf="!canReview && selectedLeave.canDelete" class="mt-3 text-end">
+        <button type="button" class="btn btn-outline-danger" (click)="confirmDelete(selectedLeave.id, modal)">
+          {{ 'COMMON.DELETE_BUTTON' | translate }}
+        </button>
       </div>
 
     </div>

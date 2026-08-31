@@ -294,6 +294,18 @@ export class Employee360Component implements OnInit {
     return this.canApproveLeave || this.canRejectLeave;
   }
 
+  get currentUserId(): number {
+    return this.auth.getUser()?.userId ?? 0;
+  }
+
+  get canShowLeaveActions(): boolean {
+    return this.canReviewLeave || this.currentUserId === this.employeeId;
+  }
+
+  canDeleteLeave(status: string): boolean {
+    return this.isLeavePending(status);
+  }
+
   /** First day of current month → today (yyyy-MM-dd). */
   private setDefaultMonthRange(): void {
     const now = new Date();
@@ -650,6 +662,29 @@ export class Employee360Component implements OnInit {
       this.leaveService.reject(leaveId, String(result.value).trim()).subscribe({
         next: () => {
           this.toastr.success(this.translate.instant('LEAVE.REJECTED_SUCCESS'));
+          this.loadLeave();
+          this.load360(false);
+        },
+        error: () => this.toastr.error(this.translate.instant('COMMON.ERROR_LOADING_DATA'))
+      });
+    });
+  }
+
+  deleteLeave(leaveId: number): void {
+    Swal.fire({
+      title: this.translate.instant('COMMON.CONFIRM_DELETE_TITLE'),
+      text: this.translate.instant('LEAVE.DELETE_CONFIRM'),
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: this.translate.instant('COMMON.DELETE_BUTTON'),
+      cancelButtonText: this.translate.instant('COMMON.CANCEL_BUTTON'),
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#6c757d'
+    }).then(result => {
+      if (!result.isConfirmed) return;
+      this.leaveService.delete(leaveId).subscribe({
+        next: () => {
+          this.toastr.success(this.translate.instant('LEAVE.DELETE_SUCCESS'));
           this.loadLeave();
           this.load360(false);
         },

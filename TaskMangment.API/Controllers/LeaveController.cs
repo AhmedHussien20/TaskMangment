@@ -36,7 +36,7 @@ namespace TaskMangment.API.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var result = await _service.GetByIdAsync(id);
+            var result = await _service.GetByIdAsync(id, this.CurrentUserId);
             return Success(result.Data);
         }
 
@@ -61,6 +61,13 @@ namespace TaskMangment.API.Controllers
         public async Task<IActionResult> Reject(int id, [FromBody] RejectLeaveDto rejectLeaveDto)
         {
             var result = await _service.RejectAsync(id, this.CurrentUserId, rejectLeaveDto);
+            return Success(true);
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            await _service.DeleteAsync(id, this.CurrentUserId);
             return Success(true);
         }
     }

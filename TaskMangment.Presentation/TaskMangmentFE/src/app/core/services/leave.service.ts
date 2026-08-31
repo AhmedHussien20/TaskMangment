@@ -38,6 +38,10 @@ export class LeaveService {
 );
 }
 
+  delete(id: number): Observable<BaseResponse<boolean>> {
+    return this.api.delete<BaseResponse<boolean>>(this.service, `${id}`);
+  }
+
 
  private buildQuery(req: any): string {
   const params = [];
