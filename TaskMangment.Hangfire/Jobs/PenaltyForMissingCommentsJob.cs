@@ -165,6 +165,32 @@ namespace TaskMangment.Hangfire.Jobs
                         .Select(c => c.CreatedDate)
                         .ToListAsync();
 
+                    // Already-handled miss deadlines (one sanction per last-chance date).
+                    // Used to advance the cycle so consecutive misses get their own warning.
+                    var sanctionedViolationDates = await _db.Warnings
+                        .Where(w =>
+                            w.TaskId == task.Id &&
+                            w.IssuedEmployeeId == employeeId &&
+                            w.AutoWarning &&
+                            !w.IsDeleted &&
+                            w.ViolationDate != null)
+                        .Select(w => w.ViolationDate!.Value.Date)
+                        .ToListAsync();
+
+                    var discountedViolationDates = await _db.Discounts
+                        .Where(d =>
+                            d.TaskId == task.Id &&
+                            d.EmployeeId == employeeId &&
+                            d.discountType == DiscountType.StopCommentDiscount &&
+                            d.AutoDiscount &&
+                            !d.IsDeleted)
+                        .Select(d => d.ViolationDate.Date)
+                        .ToListAsync();
+
+                    var handledLastChanceDates = sanctionedViolationDates
+                        .Concat(discountedViolationDates)
+                        .ToHashSet();
+
                     if (!TryGetOpenCommentCycle(
                             assignment.AssignedAt.Date,
                             periodDays,
@@ -172,6 +198,7 @@ namespace TaskMangment.Hangfire.Jobs
                             commentDates,
                             today,
                             yesterday,
+                            handledLastChanceDates,
                             out var lastChanceDate,
                             out _))
                     {
@@ -217,38 +244,23 @@ namespace TaskMangment.Hangfire.Jobs
                         }
                     }
 
-                    // One auto sanction per job calendar day (Arab local).
-                    var localDayStart = new DateTime(today.Year, today.Month, today.Day, 0, 0, 0, DateTimeKind.Unspecified);
-                    var localNextDay = localDayStart.AddDays(1);
-                    var utcDayStart = TimeZoneInfo.ConvertTimeToUtc(localDayStart, tz);
-                    var utcNextDay = TimeZoneInfo.ConvertTimeToUtc(localNextDay, tz);
+                    // ViolationDate = the allow-period last-chance day the employee missed.
+                    // One warning or discount per that date — never stack daily for the same miss.
+                    var violationDay = lastChanceDate.Date;
 
-                    // Warnings apply only to the current open cycle (same last-chance date),
-                    // so completing a cycle starts a fresh warning ladder.
-                    var lastChanceDay = lastChanceDate.Date;
-                    var existingAutoWarningCount = await _db.Warnings.CountAsync(w =>
+                    if (handledLastChanceDates.Contains(violationDay))
+                        continue;
+
+                    // Ladder is across the whole task assignment (all missed cycles),
+                    // not reset per last-chance date.
+                    var totalAutoWarnings = await _db.Warnings.CountAsync(w =>
                         w.TaskId == task.Id &&
                         w.IssuedEmployeeId == employeeId &&
                         w.AutoWarning &&
-                        !w.IsDeleted &&
-                        w.ViolationDate != null &&
-                        w.ViolationDate.Value.Date == lastChanceDay);
+                        !w.IsDeleted);
 
-                    var alreadyWarnedToday = await _db.Warnings.AnyAsync(w =>
-                        w.TaskId == task.Id &&
-                        w.IssuedEmployeeId == employeeId &&
-                        w.AutoWarning &&
-                        !w.IsDeleted &&
-                        w.IssuedAt >= utcDayStart &&
-                        w.IssuedAt < utcNextDay);
-
-                    // Prefer warning count so a missed run can catch up warnings
-                    // before applying a discount.
-                    if (existingAutoWarningCount < maxWarningsBeforeDiscount)
+                    if (totalAutoWarnings < maxWarningsBeforeDiscount)
                     {
-                        if (alreadyWarnedToday)
-                            continue;
-
                         var warning = new Warning
                         {
                             TaskId = task.Id,
@@ -257,31 +269,16 @@ namespace TaskMangment.Hangfire.Jobs
                             Reason = StopCommentWarningReason,
                             IssuedAt = DateTime.UtcNow,
                             AutoWarning = true,
-                            ViolationDate = lastChanceDate
+                            ViolationDate = violationDay
                         };
 
                         await _db.Warnings.AddAsync(warning);
+                        handledLastChanceDates.Add(violationDay);
                         warningsToPublish.Add((warning, assignment.Employee?.FullName ?? "", task.Id, task.Title));
                         continue;
                     }
 
-                    // Do not discount on the same day a warning was already issued
-                    // (e.g. job ran twice after issuing the final warning).
-                    if (alreadyWarnedToday)
-                        continue;
-
                     if (task.PenaltyOnStopComment <= 0)
-                        continue;
-
-                    var alreadyDiscounted = await _db.Discounts.AnyAsync(d =>
-                        d.TaskId == task.Id &&
-                        d.EmployeeId == employeeId &&
-                        d.discountType == DiscountType.StopCommentDiscount &&
-                        d.AutoDiscount &&
-                        d.CreatedDate >= utcDayStart &&
-                        d.CreatedDate < utcNextDay);
-
-                    if (alreadyDiscounted)
                         continue;
 
                     var discount = new Discount
@@ -293,10 +290,11 @@ namespace TaskMangment.Hangfire.Jobs
                         AutoDiscount = true,
                         CreatedDate = DateTime.UtcNow,
                         discountType = DiscountType.StopCommentDiscount,
-                        ViolationDate = lastChanceDate
+                        ViolationDate = violationDay
                     };
 
                     await _db.Discounts.AddAsync(discount);
+                    handledLastChanceDates.Add(violationDay);
                     discountsToPublish.Add((discount, assignment.Employee?.FullName ?? "", task.Id, task.Title));
                 }
             }
@@ -420,6 +418,8 @@ namespace TaskMangment.Hangfire.Jobs
         /// and the employee is still under the minimum — i.e. should warn/penalize.
         /// When the minimum is met (on time or late), the next cycle starts from that
         /// completion date (next last-chance = completionDate + periodDays).
+        /// Cycles already sanctioned (warning/discount for that last-chance date) are
+        /// treated as closed so the next miss can get its own sanction.
         /// </summary>
         private static bool TryGetOpenCommentCycle(
             DateTime assignedAt,
@@ -428,6 +428,7 @@ namespace TaskMangment.Hangfire.Jobs
             List<DateTime> commentDates,
             DateTime today,
             DateTime yesterday,
+            HashSet<DateTime> handledLastChanceDates,
             out DateTime lastChanceDate,
             out int commentCountInCycle)
         {
@@ -445,7 +446,7 @@ namespace TaskMangment.Hangfire.Jobs
             var cycleStart = assignedAt.Date;
             var startExclusive = false; // first cycle includes assignment day
 
-            // Advance through completed cycles (minimum already met).
+            // Advance through completed cycles (minimum already met, or already sanctioned).
             while (true)
             {
                 lastChanceDate = TaskDueDateRules.MoveToNextWorkday(
@@ -459,13 +460,26 @@ namespace TaskMangment.Hangfire.Jobs
 
                 commentCountInCycle = datesInCycle.Count;
 
-                if (commentCountInCycle < minCommentsRequired)
-                    break;
+                if (commentCountInCycle >= minCommentsRequired)
+                {
+                    // Nth comment that completed this cycle → next cycle starts there.
+                    var completionDate = datesInCycle[minCommentsRequired - 1];
+                    cycleStart = completionDate;
+                    startExclusive = true;
+                    continue;
+                }
 
-                // Nth comment that completed this cycle → next cycle starts there.
-                var completionDate = datesInCycle[minCommentsRequired - 1];
-                cycleStart = completionDate;
-                startExclusive = true; // next comments must be after completion day
+                // Already warned/discounted for this last-chance day → close cycle and move on
+                // so consecutive missed days each get one sanction of their own.
+                if (handledLastChanceDates.Contains(lastChanceDate.Date) &&
+                    yesterday >= lastChanceDate.Date)
+                {
+                    cycleStart = lastChanceDate.Date;
+                    startExclusive = true;
+                    continue;
+                }
+
+                break;
             }
 
             // Still inside allow period (deadline not reached yet as of yesterday).
