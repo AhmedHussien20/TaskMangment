@@ -31,7 +31,7 @@ export class SignalRService {
     }
 
     this.hubConnection = new signalR.HubConnectionBuilder()
-      .withUrl(`https://taskmangmentapicopy.azurewebsites.net/notifications?userId=${userId}`)
+      .withUrl(`https://taskmangmentapi-bzh2erdwazfea9g8.westeurope-01.azurewebsites.net/notifications?userId=${userId}`)
       //.withUrl(`https://localhost:7115/notifications?userId=${userId}`)
       .withAutomaticReconnect()
       .build();
