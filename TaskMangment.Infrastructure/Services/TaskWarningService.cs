@@ -174,7 +174,7 @@ namespace TaskMangment.Infrastructure.Services
                     a.IsActive &&
                     !a.IsDeleted)
                 .AnyAsync();
-            if (actorIsAssignee)
+            if (actorIsAssignee && !TaskCreatedByMeEvaluator.IsCreatorOrAssigner(employeeId, task))
                 throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
 
             await EnsureCanSendWarningAsync(employeeId, task);
@@ -261,17 +261,18 @@ namespace TaskMangment.Infrastructure.Services
 
             var taskId = warning.TaskAssignment.TaskId;
 
+            var task = await _taskRepo.GetByIDAsync(taskId)
+                ?? throw new AppException(ErrorCodes.TaskNotFound, StatusCodes.Status404NotFound);
+
             var actorIsAssignee = await _taskAssignmentRepo.GetAll(a =>
                     a.TaskId == taskId &&
                     a.EmployeeId == modifiedByEmployeeId &&
                     a.IsActive &&
                     !a.IsDeleted)
                 .AnyAsync();
-            if (actorIsAssignee)
+            if (actorIsAssignee && !TaskCreatedByMeEvaluator.IsCreatorOrAssigner(modifiedByEmployeeId, task))
                 throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
 
-            var task = await _taskRepo.GetByIDAsync(taskId)
-                ?? throw new AppException(ErrorCodes.TaskNotFound, StatusCodes.Status404NotFound);
             await EnsureCanSendWarningAsync(modifiedByEmployeeId, task);
 
             var taskAssignments = await _taskAssignmentRepo.GetAll(ta => ta.TaskId == taskId)

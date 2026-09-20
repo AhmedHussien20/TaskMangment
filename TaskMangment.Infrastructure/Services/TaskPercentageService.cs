@@ -117,7 +117,8 @@ namespace TaskMangment.Infrastructure.Services
                     a.IsActive &&
                     !a.IsDeleted)
                 .AnyAsync();
-            if (actorIsAssignee)
+            // Self-created tasks: creator is also assignee — still allow creator actions.
+            if (actorIsAssignee && !TaskCreatedByMeEvaluator.IsCreatorOrAssigner(employeeId, task))
                 throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
 
             if (role != "Manager" && task.CreatedByEmployeeId != employeeId)
@@ -187,13 +188,14 @@ namespace TaskMangment.Infrastructure.Services
             if (entity == null)
                 throw new AppException("TaskPercentage not found", StatusCodes.Status404NotFound);
 
+            var task = await _taskRepo.GetByIDAsync(entity.TaskId);
             var actorIsAssignee = await _taskAssignmentRepo.GetAll(a =>
                     a.TaskId == entity.TaskId &&
                     a.EmployeeId == modifiedByEmployeeId &&
                     a.IsActive &&
                     !a.IsDeleted)
                 .AnyAsync();
-            if (actorIsAssignee)
+            if (actorIsAssignee && (task == null || !TaskCreatedByMeEvaluator.IsCreatorOrAssigner(modifiedByEmployeeId, task)))
                 throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
 
             entity.AchievementPercent = dto.AchievementPercent;

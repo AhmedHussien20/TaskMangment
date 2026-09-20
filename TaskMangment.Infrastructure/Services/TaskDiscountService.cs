@@ -186,7 +186,7 @@ namespace TaskMangment.Infrastructure.Services
                     a.EmployeeId == createdByEmployeeId &&
                     a.IsActive &&
                     !a.IsDeleted);
-            if (isAssignee)
+            if (isAssignee && !TaskCreatedByMeEvaluator.IsCreatorOrAssigner(createdByEmployeeId, task))
                 throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
 
             await EnsureCanSendPenaltyAsync(createdByEmployeeId, task);
@@ -275,7 +275,7 @@ namespace TaskMangment.Infrastructure.Services
                     a.EmployeeId == ModifiedByEmployeeId &&
                     a.IsActive &&
                     !a.IsDeleted);
-            if (isAssignee)
+            if (isAssignee && !TaskCreatedByMeEvaluator.IsCreatorOrAssigner(ModifiedByEmployeeId, task))
                 throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
 
             await EnsureCanSendPenaltyAsync(ModifiedByEmployeeId, task);

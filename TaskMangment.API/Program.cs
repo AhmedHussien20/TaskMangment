@@ -245,10 +245,13 @@ namespace TaskMangment.API
             //if (app.Environment.IsDevelopment())
             //{
             app.UseSwagger();
-            app.UseSwaggerUI();
-                //}
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "TaskMangment.API v1");
+            });
+            //}
 
-                var supportedCultures = new[]
+            var supportedCultures = new[]
                 {
                 new CultureInfo("en"),
                 new CultureInfo("ar")

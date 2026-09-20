@@ -148,21 +148,22 @@ export class TaskDetailsShellComponent implements OnInit, OnChanges, OnDestroy {
     const isCreatorSide = this.createdByMe;
     const isLiteralOwner = !!this.taskInfo?.isCreatorOrAssigner;
 
-    // Employee-side actions (close/extend request) — not for creator-side viewers.
+    // Close/extend: any active assignee (incl. self-created creator). Pure creators review instead.
     this.canComment =
       this.auth.hasPermission(Permissions.COMMENT_TASK) || isCreatorSide;
     this.canCloseRequest =
-      !isCreatorSide && this.auth.hasPermission(Permissions.REQUEST_TASK_CLOSE);
+      isAssignee && this.auth.hasPermission(Permissions.REQUEST_TASK_CLOSE);
     this.canExtendRequest =
-      !isCreatorSide && this.auth.hasPermission(Permissions.REQUEST_DUE_DATE_EXTENSION);
+      isAssignee && this.auth.hasPermission(Permissions.REQUEST_DUE_DATE_EXTENSION);
 
-    // Warn/penalty: literal owner always; scope-only viewers need ISSUE_* permission.
+    // Warn/penalty: literal owner always (even if also assignee on self-created tasks);
+    // scope-only viewers need ISSUE_* and must not be assignees.
     this.canSendWarning =
-      !isAssignee && (isLiteralOwner || (isCreatorSide && this.auth.hasPermission(Permissions.ISSUE_WARNING)));
+      isLiteralOwner || (!isAssignee && isCreatorSide && this.auth.hasPermission(Permissions.ISSUE_WARNING));
     this.canSendPenalty =
-      !isAssignee && (isLiteralOwner || (isCreatorSide && this.auth.hasPermission(Permissions.ISSUE_PENALTY)));
-    // Percentage has no dedicated permission — literal owner only.
-    this.canSetPercentage = isLiteralOwner && !isAssignee;
+      isLiteralOwner || (!isAssignee && isCreatorSide && this.auth.hasPermission(Permissions.ISSUE_PENALTY));
+    // Percentage has no dedicated permission — literal owner only (incl. self-assigned).
+    this.canSetPercentage = isLiteralOwner;
     this.canReviewRequests = isCreatorSide && this.auth.hasAnyPermission(
       Permissions.APPROVE_TASK_REQUEST,
       Permissions.REJECT_TASK_REQUEST
