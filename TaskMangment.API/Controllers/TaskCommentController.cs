@@ -37,6 +37,8 @@ namespace TaskMangment.API.Controllers
 
         [HttpPost("{taskId}")]
         [Consumes("multipart/form-data")]
+        [RequestSizeLimit(100L * 1024 * 1024)] // 100 MB
+        [RequestFormLimits(MultipartBodyLengthLimit = 100L * 1024 * 1024)]
         [PermissionAuthorize(PermissionCodes.CommentTask)]
         public async Task<IActionResult> Add(int taskId, [FromForm] TaskCommentAddEditDto dto)
         {

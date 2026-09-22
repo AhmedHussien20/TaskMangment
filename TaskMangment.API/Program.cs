@@ -26,6 +26,17 @@ namespace TaskMangment.API
             
                 var builder = WebApplication.CreateBuilder(args);
 
+                // Allow larger multipart uploads (e.g. comment attachments / folders)
+                const long maxUploadBytes = 100L * 1024 * 1024; // 100 MB
+                builder.WebHost.ConfigureKestrel(options =>
+                {
+                    options.Limits.MaxRequestBodySize = maxUploadBytes;
+                });
+                builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
+                {
+                    options.MultipartBodyLengthLimit = maxUploadBytes;
+                });
+
                 // ------------------------------
                 // DATABASE
                 // ------------------------------
