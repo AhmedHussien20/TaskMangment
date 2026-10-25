@@ -8,6 +8,7 @@ namespace TaskMangment.Domain.Entities
 {
     public class Notification : BaseEntity
     {
+        public int CompanyId { get; set; }
         public int UserId { get; set; }
         public string Message { get; set; }
         public NotificationChannel Channel { get; set; }

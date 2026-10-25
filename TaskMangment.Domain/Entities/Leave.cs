@@ -11,6 +11,8 @@ namespace TaskMangment.Domain.Entities
     public class Leave : BaseEntity
     {
         [Required]
+        public int CompanyId { get; set; }
+        [Required]
         public int EmployeeId { get; set; }
 
         [Required]

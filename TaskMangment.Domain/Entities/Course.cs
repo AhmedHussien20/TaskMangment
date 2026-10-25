@@ -9,6 +9,7 @@ namespace TaskMangment.Domain.Entities
 {
     public class Course : BaseEntity
     {
+        public int CompanyId { get; set; }
         [MaxLength(250)] 
         public string Title { get; set; }
         [MaxLength(1000)] 

@@ -1,0 +1,83 @@
+.login-page {
+  background:
+    radial-gradient(circle at top left, rgba(200, 200, 255, 0.3), transparent 50%),
+    radial-gradient(circle at bottom right, rgba(255, 200, 220, 0.3), transparent 50%),
+    #f8f9fc;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--bs-body-bg);
+  transition: 0.3s ease-in-out;
+  border-radius: 14px;
+}
+
+.login-wrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.login-page {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.top-logos,
+.bottom-logos {
+  width: 100%;
+  padding: 18px 0;
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.logos-marquee {
+  width: 100%;
+  overflow: hidden;
+}
+
+.logos-track {
+  display: flex;
+  gap: 70px;
+  width: max-content;
+  animation: scrollLogos 40s linear infinite;
+}
+
+.logos-track img {
+  height: 60px;
+  max-width: 150px;
+  object-fit: contain;
+  opacity: 0.85;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+@keyframes scrollLogos {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.platform-flag {
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+
+.app-header {
+  padding-inline-start: 0 !important;
+}
+
+.platform-content {
+  margin-inline-start: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}

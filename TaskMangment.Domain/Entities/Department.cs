@@ -10,6 +10,8 @@ namespace TaskMangment.Domain.Entities
 {
     public class Department : BaseEntity
     {
+        [Required]
+        public int CompanyId { get; set; }
         [Required] 
         public int BranchId { get; set; }
         [Required, MaxLength(200)] 

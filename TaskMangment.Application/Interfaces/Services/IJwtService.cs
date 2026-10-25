@@ -5,6 +5,7 @@ namespace TaskMangment.Application.Interfaces.Services
 {
     public interface IJwtService
     {
-        Task<string> GenerateTokenAsync(Employee user);
+        Task<string> GenerateTokenAsync(Employee user, string schema);
+        string GeneratePlatformToken(PlatformUser user);
     }
 }

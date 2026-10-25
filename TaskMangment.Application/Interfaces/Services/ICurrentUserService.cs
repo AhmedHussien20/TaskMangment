@@ -11,6 +11,7 @@ namespace TaskMangment.Application.Interfaces.Services
         int? UserId { get; } 
         string? UserName { get; }
         int? CompanyId { get; }
+        string? Schema { get; }
     }
 
 }

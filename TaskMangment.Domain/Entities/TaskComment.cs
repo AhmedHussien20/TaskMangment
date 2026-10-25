@@ -11,6 +11,7 @@ namespace TaskMangment.Domain.Entities
     public class TaskComment : BaseEntity
     {
 
+        public int CompanyId { get; set; }
         [Required] 
         public int TaskId { get; set; }
         public int? EmployeeId { get; set; }

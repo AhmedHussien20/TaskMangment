@@ -16,6 +16,10 @@ export const App_Route: Route[] = [
     loadChildren: () => import('./authentication/authentications.routes').then(m => m.authenticationsRoutingModule)
   } ,
   {
+    path: 'platform',
+    loadComponent: () => import('./platform/platform.component').then(m => m.PlatformComponent)
+  },
+  {
     path: '',
     component: FullLayoutComponent,
     children: content,

@@ -10,6 +10,7 @@ namespace TaskMangment.Domain.Entities
 {
     public class Attachment : BaseEntity
     { 
+        public int CompanyId { get; set; }
         [Required, MaxLength(300)] 
         public string FileName { get; set; }
         [Required, MaxLength(1000)] 

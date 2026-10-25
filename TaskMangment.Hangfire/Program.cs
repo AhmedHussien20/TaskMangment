@@ -52,9 +52,8 @@ builder.Services.AddLocalization();
 // =======================
 // Database
 // =======================
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddOperationalDatabases(
+    builder.Configuration.GetConnectionString("DefaultConnection")!);
 
 QuestPDF.Settings.License = LicenseType.Community;
 QuestPDF.Settings.CheckIfAllTextGlyphsAreAvailable = false;
@@ -110,6 +109,10 @@ if (args.Contains("--sync-db", StringComparer.OrdinalIgnoreCase))
         await db.Database.MigrateAsync();
         var migrator = scope.ServiceProvider.GetRequiredService<RolePermissionPackMigrator>();
         await migrator.MigrateAsync();
+        var training = scope.ServiceProvider.GetRequiredService<TrainingDbContext>();
+        await training.Database.MigrateAsync();
+        await TrainingCatalogSeeder.CopyIfEmptyAsync(db, training);
+        await PlatformAdminSeeder.EnsureAsync(db, app.Configuration);
     }
     Console.WriteLine("DB sync completed (schema + email templates + permissions).");
     return;
@@ -171,9 +174,9 @@ var archiveCron = quietEnabled ? HangfireQuietHours.CronArchiveOutsideQuietHours
 Console.WriteLine("Saudi timezone for Hangfire cron = " + saudiTimeZone.Id);
 Console.WriteLine($"Hangfire quiet hours enabled = {quietEnabled}; email cron = {emailCron}");
 
-RecurringJob.AddOrUpdate<ProcessPendingEmailsJob>(
+RecurringJob.AddOrUpdate<SchemaDispatchJob>(
     "process-pending-emails",
-    job => job.ExecuteAsync(),
+    job => job.ExecuteAsync("emails"),
     emailCron,
     saudiTimeZone);
 
@@ -182,33 +185,33 @@ RecurringJob.AddOrUpdate<ProcessPendingEmailsJob>(
 //    job => job.ExecuteAsync(),
 //    Cron.Minutely);
 
-RecurringJob.AddOrUpdate<PenaltyForMissingCommentsJob>(
+RecurringJob.AddOrUpdate<SchemaDispatchJob>(
     "penalty-missing-comments",
-    job => job.ExecuteAsync(),
+    job => job.ExecuteAsync("penalty"),
     penaltyCron,
     saudiTimeZone
 );
 
 // Close after the due day ends (Saudi calendar): due Thursday stays open all Thursday,
 // closes at 00:01 Friday.
-RecurringJob.AddOrUpdate<ArchiveOverdueTasksJob>(
+RecurringJob.AddOrUpdate<SchemaDispatchJob>(
     "archive-overdue-tasks",
-    job => job.ExecuteAsync(),
+    job => job.ExecuteAsync("archive"),
     archiveCron,
     saudiTimeZone
 );
 
-RecurringJob.AddOrUpdate<TaskDueTodayEmailsProcessorJob>(
+RecurringJob.AddOrUpdate<SchemaDispatchJob>(
     "task-due-today-email-job",
-    job => job.ExecuteAsync(),
+    job => job.ExecuteAsync("due-today"),
     archiveCron,
     saudiTimeZone
 );
 
 
-RecurringJob.AddOrUpdate<SendMonthlyEmployeeDiscountsJob>(
+RecurringJob.AddOrUpdate<SchemaDispatchJob>(
     "send-monthly-employee-discounts",
-    job => job.ExecuteAsync(),
+    job => job.ExecuteAsync("monthly-discounts"),
     Cron.Monthly(25, 9, 0),
     saudiTimeZone
 );

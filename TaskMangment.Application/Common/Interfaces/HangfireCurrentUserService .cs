@@ -11,6 +11,7 @@ public class HangfireCurrentUserService : ICurrentUserService
     public string? UserName => "Hangfire";
     public bool IsAuthenticated => false;
 
-    public int? CompanyId => throw new NotImplementedException();
+    public int? CompanyId => null;
+    public string? Schema => null;
 }
 

@@ -1,11 +1,4 @@
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection.Emit;
-using System.Text;
-using System.Threading.Tasks;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Domain.Entities;
 
@@ -18,15 +11,36 @@ namespace TaskMangment.Infrastructure.DataContext
         public AppDbContext(
             DbContextOptions<AppDbContext> options,
             ICurrentUserService currentUserService)
+            : this((DbContextOptions)options, currentUserService)
+        {
+        }
+
+        protected AppDbContext(
+            DbContextOptions options,
+            ICurrentUserService currentUserService)
             : base(options)
         {
             _currentUserService = currentUserService;
         }
 
-        public override async Task<int> SaveChangesAsync( CancellationToken cancellationToken = default)
+        protected ICurrentUserService CurrentUser => _currentUserService;
+
+        public override int SaveChanges()
         {
-            var userId = 
-                _currentUserService.UserId;
+            StampAuditAndCompany();
+            return base.SaveChanges();
+        }
+
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            StampAuditAndCompany();
+            return await base.SaveChangesAsync(cancellationToken);
+        }
+
+        private void StampAuditAndCompany()
+        {
+            var userId = _currentUserService.UserId;
+            StampCompanyId();
 
             foreach (var entry in ChangeTracker.Entries<BaseEntity>())
             {
@@ -46,14 +60,78 @@ namespace TaskMangment.Infrastructure.DataContext
                     entry.Entity.DeletedDate = DateTime.UtcNow;
                 }
             }
-
-            return await base.SaveChangesAsync(cancellationToken);
         }
-     
 
-    public DbSet<Area> Areas { get; set; }
+        private void StampCompanyId()
+        {
+            var userCompany = _currentUserService.CompanyId;
+            foreach (var entry in ChangeTracker.Entries().Where(e => e.State == EntityState.Added).ToList())
+            {
+                var property = entry.Properties.FirstOrDefault(p =>
+                    p.Metadata.Name == "CompanyId" && p.Metadata.ClrType == typeof(int));
+                if (property == null)
+                    continue;
+
+                if (property.CurrentValue is int existing && existing > 0)
+                    continue;
+
+                var resolved = userCompany.GetValueOrDefault();
+                if (resolved == 0)
+                    resolved = ResolveCompanyId(entry);
+
+                if (resolved > 0)
+                    property.CurrentValue = resolved;
+            }
+        }
+
+        private int ResolveCompanyId(Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry entry)
+        {
+            if (TryInt(entry, "EmployeeId", out var employeeId))
+            {
+                var company = Employees.IgnoreQueryFilters().Where(e => e.Id == employeeId).Select(e => (int?)e.CompanyId).FirstOrDefault();
+                if (company.GetValueOrDefault() > 0)
+                    return company!.Value;
+            }
+
+            if (TryInt(entry, "UserId", out var userId))
+            {
+                var company = Employees.IgnoreQueryFilters().Where(e => e.Id == userId).Select(e => (int?)e.CompanyId).FirstOrDefault();
+                if (company.GetValueOrDefault() > 0)
+                    return company!.Value;
+            }
+
+            if (TryInt(entry, "TaskId", out var taskId))
+            {
+                var company = Tasks.IgnoreQueryFilters().Where(t => t.Id == taskId).Select(t => (int?)t.CompanyId).FirstOrDefault();
+                if (company.GetValueOrDefault() > 0)
+                    return company!.Value;
+            }
+
+            if (TryInt(entry, "BranchId", out var branchId))
+            {
+                var company = Branches.IgnoreQueryFilters().Where(b => b.Id == branchId).Select(b => (int?)b.CompanyId).FirstOrDefault();
+                if (company.GetValueOrDefault() > 0)
+                    return company!.Value;
+            }
+
+            return 0;
+        }
+
+        private static bool TryInt(Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry entry, string propertyName, out int value)
+        {
+            value = 0;
+            var property = entry.Properties.FirstOrDefault(p => p.Metadata.Name == propertyName);
+            if (property?.CurrentValue is int number && number > 0)
+            {
+                value = number;
+                return true;
+            }
+
+            return false;
+        }
+
+        public DbSet<Area> Areas { get; set; }
         public DbSet<Attachment> Attachments { get; set; }
-
         public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<Branch> Branches { get; set; }
         public DbSet<CalendarEvent> CalendarEvents { get; set; }
@@ -91,249 +169,12 @@ namespace TaskMangment.Infrastructure.DataContext
         public DbSet<EmployeeFunctionalScope> EmployeeFunctionalScopes { get; set; }
         public DbSet<EmployeeType> EmployeeTypes { get; set; }
         public DbSet<RoleNotificationSource> RoleNotificationSources { get; set; }
-
+        public DbSet<Organization> Organizations { get; set; }
+        public DbSet<PlatformUser> PlatformUsers { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
-            base.OnModelCreating(builder);
-            builder.Entity<RolePermission>(entity =>
-            {
-                entity.ToTable("RolePermission");
-
-                entity.HasKey(rp => rp.Id); 
-
-                entity.HasOne(rp => rp.Role)
-                    .WithMany(r => r.RolePermissions)
-                    .HasForeignKey(rp => rp.RoleId)
-                    .OnDelete(DeleteBehavior.Restrict);
-
-                entity.HasOne(rp => rp.Permission)
-                    .WithMany(p => p.RolePermissions)
-                    .HasForeignKey(rp => rp.PermissionId)
-                    .OnDelete(DeleteBehavior.Restrict);
-            });
-
-            builder.Entity<Branch>()
-                    .HasMany(b => b.Employees)
-                    .WithOne(e => e.Branch)
-                    .HasForeignKey(e => e.BranchId)
-                    .OnDelete(DeleteBehavior.Restrict);
-
-            builder.Entity<Branch>()
-                    .HasOne(b => b.Manager)
-                    .WithMany()
-                    .HasForeignKey(b => b.ManagerID)
-                    .OnDelete(DeleteBehavior.Restrict);
-
-            builder.Entity<Branch>()
-                .HasOne(b => b.Responsible)
-                .WithMany()
-                .HasForeignKey(b => b.ResponsibleID)
-                .OnDelete(DeleteBehavior.Restrict);
-
-
-            builder.Entity<Company>()
-                   .HasOne(c => c.FinancialManager)
-                   .WithMany()
-                   .HasForeignKey(c => c.FinancialManagerId)
-                   .OnDelete(DeleteBehavior.Restrict);
-
-            builder.Entity<Company>()
-                 .HasOne(c => c.TechnicalManager)
-                 .WithMany()
-                 .HasForeignKey(c => c.TechnicalManagerId)
-                 .OnDelete(DeleteBehavior.Restrict);
-
-            builder.Entity<WorkTask>()
-                 .HasOne(t => t.AssignedBy)
-                 .WithMany()
-                 .HasForeignKey(t => t.AssignedByEmployeeId)
-                 .OnDelete(DeleteBehavior.Restrict);
-
-            builder.Entity<WorkTask>()
-                 .HasOne(t => t.CreatedBy)
-                 .WithMany()
-                 .HasForeignKey(t => t.CreatedByEmployeeId)
-                 .OnDelete(DeleteBehavior.Restrict);
-             
-            builder.Entity<TaskAssignment>()
-                 .HasOne(a => a.Employee)
-                 .WithMany()
-                 .HasForeignKey(a => a.EmployeeId)
-                 .OnDelete(DeleteBehavior.Restrict);
-
-            builder.Entity<TaskAssignment>()
-                 .HasOne(a => a.Task)
-                 .WithMany(t => t.Assignments)
-                 .HasForeignKey(a => a.TaskId)
-                 .OnDelete(DeleteBehavior.Restrict);
-
-            builder.Entity<Attachment>()
-                 .HasOne(a => a.UploadedByEmployee)
-                 .WithMany()
-                 .HasForeignKey(a => a.UploadedBy)
-                 .OnDelete(DeleteBehavior.Restrict);
-
-            builder.Entity<Attachment>()
-                .HasIndex(a => new { a.ReferenceId, a.AttachmentType, a.IsDeleted })
-                .HasDatabaseName("IX_Attachments_ReferenceId_AttachmentType_IsDeleted");
-
-            
-            builder.Entity<TaskExtensionRequest>()
-                 .HasOne(r => r.TaskAssignment)
-                 .WithMany(a => a.ExtensionRequests)
-                 .HasForeignKey(r => r.TaskAssignmentId)
-                 .OnDelete(DeleteBehavior.NoAction);
-
-            builder.Entity<TaskCloseRequest>()
-                 .HasOne(r => r.TaskAssignment)
-                 .WithMany(a => a.CloseRequests)
-                 .HasForeignKey(r => r.TaskAssignmentId)
-                 .OnDelete(DeleteBehavior.NoAction);
-
-            builder.Entity<TaskCloseRequest>()
-                    .HasOne(tcr => tcr.Task)
-                    .WithMany(t => t.CloseRequests)  
-                    .HasForeignKey(tcr => tcr.TaskId)
-                    .OnDelete(DeleteBehavior.Restrict);
-
-
-            builder.Entity<Warning>()
-                 .HasOne(w => w.TaskAssignment)
-                 .WithMany(a => a.Warnings)
-                 .HasForeignKey(w => w.TaskAssignmentId)
-                 .OnDelete(DeleteBehavior.NoAction);
-
-            builder.Entity<Notification>(entity =>
-            {
-                entity.ToTable("Notifications");
-
-                entity.HasKey(x => x.Id);
-
-                entity.Property(x => x.Message)
-                      .IsRequired()
-                      .HasMaxLength(1000);
-
-                entity.HasIndex(x => new { x.UserId, x.IsRead });
-            });
-
-            builder.Entity<EmailQueue>(entity =>
-            {
-                entity.ToTable("EmailQueue");
-
-                entity.HasKey(x => x.Id);
-
-                entity.Property(x => x.ToEmail)
-                      .IsRequired()
-                      .HasMaxLength(256);
-
-                entity.Property(x => x.TemplateKey)
-                      .IsRequired()
-                      .HasMaxLength(100);
-
-                entity.Property(x => x.Status)
-                      .HasConversion<int>()
-                      .IsRequired();
-
-                entity.Property(x => x.ReferenceType)
-                      .HasConversion<int>();
-
-                entity.HasIndex(x => new { x.Status, x.ScheduledAt });
-                entity.HasIndex(x => x.UserId);
-
-            });
-
-            builder.Entity<EmailTemplate>(entity =>
-            {
-                entity.ToTable("EmailTemplates");
-
-                entity.HasKey(x => x.Id);
-
-                entity.Property(x => x.Key)
-                      .IsRequired()
-                      .HasMaxLength(100);
-
-                entity.Property(x => x.SubjectTemplate)
-                      .IsRequired()
-                      .HasMaxLength(300);
-
-                entity.Property(x => x.BodyTemplate)
-                      .IsRequired();
-
-                entity.HasIndex(x => x.Key)
-                      .IsUnique();
-            });
-
-            builder.Entity<WhatsAppQueue>(entity =>
-            {
-                entity.ToTable("WhatsAppQueue");
-
-                entity.HasKey(x => x.Id); 
-                entity.Property(x => x.Message)
-                      .IsRequired()
-                      .HasMaxLength(1000);             
-            });
-
-            builder.Entity<ManagerBranches>()
-    .HasOne(x => x.Manager)
-    .WithMany()
-    .HasForeignKey(x => x.ManagerId)
-    .OnDelete(DeleteBehavior.Restrict);
-
-            builder.Entity<ManagerBranches>()
-                .HasOne(x => x.Branch)
-                .WithMany()
-                .HasForeignKey(x => x.BranchId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            builder.Entity<ManagerBranches>()
-                .HasIndex(x => new { x.ManagerId, x.BranchId })
-                .IsUnique();
-
-            builder.Entity<RoleNotificationSource>(entity =>
-            {
-                entity.ToTable("RoleNotificationSources");
-                entity.HasOne(x => x.Role)
-                    .WithMany(r => r.NotificationSources)
-                    .HasForeignKey(x => x.RoleId)
-                    .OnDelete(DeleteBehavior.Restrict);
-                entity.HasOne(x => x.SourceRole)
-                    .WithMany()
-                    .HasForeignKey(x => x.SourceRoleId)
-                    .OnDelete(DeleteBehavior.Restrict);
-                entity.HasIndex(x => new { x.RoleId, x.SourceRoleId }).IsUnique();
-            });
-
-            builder.Entity<EmployeeType>(entity =>
-            {
-                entity.ToTable("EmployeeTypes");
-                entity.HasIndex(x => x.Code).IsUnique();
-                entity.Property(x => x.Code).HasMaxLength(50).IsRequired();
-                entity.Property(x => x.NameEn).HasMaxLength(100).IsRequired();
-                entity.Property(x => x.NameAr).HasMaxLength(100).IsRequired();
-            });
-
-            builder.Entity<Employee>()
-                .HasOne(e => e.EmployeeType)
-                .WithMany(t => t.Employees)
-                .HasForeignKey(e => e.EmployeeTypeId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            builder.Entity<EmployeeFunctionalScope>()
-                .HasOne(x => x.EmployeeType)
-                .WithMany(t => t.FunctionalScopes)
-                .HasForeignKey(x => x.EmployeeTypeId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            // Map legacy column names during transition (migration renames FunctionCode → EmployeeTypeId).
-            builder.Entity<Employee>()
-                .Property(e => e.EmployeeTypeId)
-                .HasColumnName("FunctionCode");
-
-            builder.Entity<EmployeeFunctionalScope>()
-                .Property(x => x.EmployeeTypeId)
-                .HasColumnName("FunctionCode");
+            OperationalModel.Configure(builder, OperationalSchema.Dbo);
         }
-
     }
 }

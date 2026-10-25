@@ -33,6 +33,11 @@ namespace TaskMangment.Domain.Entities
         public Employee FinancialManager { get; set; }
 
         public bool IsActive { get; set; } = true;
+
+        /// <summary>
+        /// Set on trainee copies in the training schema. Ignored on the main company in dbo.
+        /// </summary>
+        public int? OrganizationId { get; set; }
     }
 
 }

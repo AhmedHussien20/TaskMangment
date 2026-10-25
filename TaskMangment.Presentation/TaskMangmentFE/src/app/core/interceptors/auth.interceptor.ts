@@ -9,9 +9,12 @@ export const AuthInterceptor: HttpInterceptorFn = (req, next) => {
 
   console.log('%c[INTERCEPTOR] Request intercepted', 'color: green', req.url);
 
-  const token = localStorage.getItem('authToken');
+  const isPlatformRequest = req.url.includes('/platform');
+  const token = isPlatformRequest
+    ? localStorage.getItem('platformToken')
+    : localStorage.getItem('authToken');
 
-  if (token) {
+  if (token && !req.url.includes('/platform/login')) {
     req = req.clone({
       setHeaders: { Authorization: `Bearer ${token}` }
     });
@@ -20,7 +23,8 @@ export const AuthInterceptor: HttpInterceptorFn = (req, next) => {
   return next(req).pipe(
     tap({
       error: (err) => {
-        const isAuthRequest = /\/auth\/(login|forgot-password|verify-reset-code|reset-password)/i.test(req.url);
+        const isAuthRequest = /\/auth\/(login|forgot-password|verify-reset-code|reset-password)/i.test(req.url)
+          || req.url.includes('/platform');
 
         const isInactiveAccount =
           err.status === 403 && err.error?.errorCode === 'EMPLOYEE_INACTIVE';

@@ -10,6 +10,7 @@ namespace TaskMangment.Application.Interfaces.Services
     {
         public int? UserId => null;
         public int? CompanyId => null;
+        public string? Schema => null;
         public string? UserName => "DesignTime";
     }
 }

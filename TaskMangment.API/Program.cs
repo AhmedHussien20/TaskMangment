@@ -40,9 +40,6 @@ namespace TaskMangment.API
                 // ------------------------------
                 // DATABASE
                 // ------------------------------
-                builder.Services.AddDbContext<AppDbContext>(options =>
-                    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
                 builder.Services.ConfigureEmailSettings(builder.Configuration);
             builder.Services.Configure<WhatsAppSettings>(opts =>
             {
@@ -63,6 +60,7 @@ namespace TaskMangment.API
             //builder.Services.AddHangfireServer();
 
             builder.Services.AddDI();
+            builder.Services.AddOperationalDatabases(builder.Configuration.GetConnectionString("DefaultConnection")!);
 
             builder.Services.AddHttpClient();
             builder.Services.AddHttpClient<IWhatsAppService, WhatsAppService>(client =>
@@ -287,6 +285,23 @@ namespace TaskMangment.API
                 //app.UseMiddleware<ExceptionLogMiddleware>();
 
                 app.UseAuthentication();
+                app.Use(async (ctx, next) =>
+                {
+                    var isPlatformLogin = ctx.Request.Path.StartsWithSegments("/api/platform/login");
+                    if (!isPlatformLogin && ctx.User.Identity?.IsAuthenticated == true)
+                    {
+                        var actor = ctx.User.FindFirst("Actor")?.Value;
+                        var isPlatform = string.Equals(actor, "Platform", StringComparison.OrdinalIgnoreCase);
+                        var isPlatformPath = ctx.Request.Path.StartsWithSegments("/api/platform");
+                        if (isPlatform != isPlatformPath)
+                        {
+                            ctx.Response.StatusCode = StatusCodes.Status403Forbidden;
+                            return;
+                        }
+                    }
+
+                    await next();
+                });
                 app.UseAuthorization();
 
                 // SignalR Hub

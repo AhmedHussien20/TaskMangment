@@ -10,6 +10,7 @@ namespace TaskMangment.Domain.Entities
 {
     public class Job : BaseEntity
     {
+        public int CompanyId { get; set; }
         public int? DepartmentId { get; set; }
         [Required, MaxLength(200)] public string Title { get; set; }
         [MaxLength(1000)] public string Description { get; set; }

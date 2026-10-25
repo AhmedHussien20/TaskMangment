@@ -53,6 +53,7 @@ namespace TaskMangment.Application.Common.ApiRequests.Auth
         public int EmployeeTypeId { get; set; } = 1;
 
         public bool HasAccessScope { get; set; }
+        public string Schema { get; set; } = "dbo";
 
 
     }

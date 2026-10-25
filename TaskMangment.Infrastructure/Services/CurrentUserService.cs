@@ -38,6 +38,9 @@ namespace TaskMangment.Infrastructure.Services
                    .FindFirst("CompanyId")?.Value,
                out var companyId) ? companyId : null;
 
+        public string? Schema =>
+            _httpContextAccessor.HttpContext?.User?.FindFirst("Schema")?.Value;
+
         public string? UserName => throw new NotImplementedException();
     }
 }

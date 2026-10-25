@@ -10,6 +10,7 @@ namespace TaskMangment.Domain.Entities
 {
     public class TaskAssignment : BaseEntity
     {
+        public int CompanyId { get; set; }
         [Required] 
         public int TaskId { get; set; }
         [Required] 

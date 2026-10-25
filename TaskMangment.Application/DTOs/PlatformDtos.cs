@@ -1,0 +1,61 @@
+namespace TaskMangment.Application.DTOs
+{
+    public class PlatformLoginRequest
+    {
+        public string Email { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+    }
+
+    public class PlatformLoginResponse
+    {
+        public int UserId { get; set; }
+        public string FullName { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string Role { get; set; } = string.Empty;
+        public int? OrganizationId { get; set; }
+        public string? OrganizationName { get; set; }
+        public string Token { get; set; } = string.Empty;
+    }
+
+    public class CreateOrganizationRequest
+    {
+        public string Name { get; set; } = string.Empty;
+        public string AdminFullName { get; set; } = string.Empty;
+        public string AdminEmail { get; set; } = string.Empty;
+        public string AdminPassword { get; set; } = string.Empty;
+    }
+
+    public class OrganizationListItemDto
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public bool IsActive { get; set; }
+        public DateTime CreatedDate { get; set; }
+        public string? AdminEmail { get; set; }
+        public string? AdminFullName { get; set; }
+    }
+
+    public class CreateTraineeRequest
+    {
+        public string CompanyName { get; set; } = string.Empty;
+        public string AdminFullName { get; set; } = string.Empty;
+        public string AdminEmail { get; set; } = string.Empty;
+        public string AdminPassword { get; set; } = string.Empty;
+    }
+
+    public class TraineeCopyDto
+    {
+        public int CompanyId { get; set; }
+        public string CompanyName { get; set; } = string.Empty;
+        public string AdminEmail { get; set; } = string.Empty;
+        public string AdminFullName { get; set; } = string.Empty;
+        public bool IsActive { get; set; }
+        public DateTime CreatedDate { get; set; }
+        public int OrganizationId { get; set; }
+    }
+
+    public class SetTraineeActiveRequest
+    {
+        public bool IsActive { get; set; }
+    }
+}

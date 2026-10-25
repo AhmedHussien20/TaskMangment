@@ -3,6 +3,7 @@ using Azure.Storage.Blobs.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using TaskMangment.Application.Interfaces.Services;
+using TaskMangment.Infrastructure.DataContext;
 
 namespace TaskMangment.Infrastructure.Services
 {
@@ -13,10 +14,12 @@ namespace TaskMangment.Infrastructure.Services
         private readonly string _containerName;
         private readonly string _accountUrl;
         private readonly ILogger<BlobStorageService>? _logger;
+        private readonly ICurrentUserService? _currentUser;
 
-        public BlobStorageService(IConfiguration config, ILogger<BlobStorageService>? logger = null)
+        public BlobStorageService(IConfiguration config, ICurrentUserService? currentUser = null, ILogger<BlobStorageService>? logger = null)
         {
             _logger = logger;
+            _currentUser = currentUser;
 
             var accountUrl = config["Blob:AccountUrl"]
                 ?? Environment.GetEnvironmentVariable("BLOB_ACCOUNT_URL");
@@ -55,6 +58,7 @@ namespace TaskMangment.Infrastructure.Services
         {
             // Azure returns InvalidUri for blob names containing U+FFFD or unpaired surrogates.
             var safeName = new string(fileName.Where(c => c != '\uFFFD' && !char.IsSurrogate(c)).ToArray());
+            folder = PrefixTrainingFolder(folder);
             var blobName = $"{folder.Trim('/')}/{Guid.NewGuid()}_{safeName}";
             var blob = _container.GetBlobClient(blobName);
             await blob.UploadAsync(stream, new BlobUploadOptions
@@ -206,6 +210,22 @@ namespace TaskMangment.Infrastructure.Services
                 yield return fileName;
                 yield return $"attachments/{fileName}";
             }
+        }
+
+        private string PrefixTrainingFolder(string folder)
+        {
+            var schema = _currentUser?.Schema;
+            if (string.IsNullOrWhiteSpace(schema))
+                schema = OperationalSchemaAmbient.Current;
+
+            if (!string.Equals(schema, OperationalSchema.Training, StringComparison.OrdinalIgnoreCase))
+                return folder;
+
+            var companyId = _currentUser?.CompanyId?.ToString() ?? "0";
+            var trimmed = (folder ?? string.Empty).Trim('/');
+            return string.IsNullOrEmpty(trimmed)
+                ? $"training/{companyId}"
+                : $"training/{companyId}/{trimmed}";
         }
     }
 }

@@ -16,13 +16,14 @@ namespace TaskMangment.Infrastructure.DataContext
             var config = new ConfigurationBuilder()
                 .SetBasePath(basePath)
                 .AddJsonFile("appsettings.json", optional: false)
+                .AddJsonFile("appsettings.Development.json", optional: true)
                 .Build();
 
             var connectionString =
                 config.GetConnectionString("DefaultConnection");
 
             var builder = new DbContextOptionsBuilder<AppDbContext>();
-            builder.UseSqlServer(connectionString);
+            builder.UseSqlServer(connectionString, sql => sql.CommandTimeout(3600));
 
             return new AppDbContext(
                 builder.Options,

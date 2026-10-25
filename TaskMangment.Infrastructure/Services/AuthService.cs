@@ -24,10 +24,12 @@ public class AuthService : IAuthService
     private readonly IRepository<RolePermission> _rolePerRepo;
     private readonly IBlobStorageService _blobStorageService;
     private readonly IAccessScopeResolver _scopeResolver;
+    private readonly TrainingDbContext _training;
 
-    public AuthService(AppDbContext db, IJwtService jwt, IEmailService email, IRepository<RolePermission> rolePerRepo, IRoleAssignmentService roleService, IRolePermissionService permissionService, IBlobStorageService blobStorageService, IAccessScopeResolver scopeResolver)
+    public AuthService(AppDbContext db, TrainingDbContext training, IJwtService jwt, IEmailService email, IRepository<RolePermission> rolePerRepo, IRoleAssignmentService roleService, IRolePermissionService permissionService, IBlobStorageService blobStorageService, IAccessScopeResolver scopeResolver)
     {
         _db = db;
+        _training = training;
         _jwt = jwt;
         _email = email;
         _rolePerRepo = rolePerRepo;
@@ -39,12 +41,7 @@ public class AuthService : IAuthService
 
     public async Task<ApiResponse<LoginResponse>> LoginAsync(LoginRequest request)
     {
-        var user = await _db.Employees
-    .Include(u => u.Company)
-    .Include(u => u.Branch)
-    .Include(u => u.Department)
-    .FirstOrDefaultAsync(u => u.Email == request.Email && !u.IsDeleted);
-
+        var (user, db, schema) = await FindEmployeeAsync(request.Email);
 
         if (user == null)
             throw new AppException(
@@ -56,7 +53,7 @@ public class AuthService : IAuthService
                  ErrorCodes.Invalid,
                 StatusCodes.Status400BadRequest);
 
-        if (!user.IsActive || user.IsDeleted)
+        if (!user.IsActive || user.IsDeleted || (user.Company != null && !user.Company.IsActive))
             throw new AppException(
                 ErrorCodes.EmployeeInactive,
                 StatusCodes.Status403Forbidden);
@@ -84,7 +81,17 @@ public class AuthService : IAuthService
 
 
 
-        var userRoles = await _roleService.GetUserRolesAsync(user.Id);
+        var userRoles = await db.EmployeeRoles
+            .IgnoreQueryFilters()
+            .AsNoTracking()
+            .Where(er =>
+                er.EmployeeId == user.Id &&
+                er.IsAssigned &&
+                !er.IsDeleted &&
+                er.Role != null &&
+                !er.Role.IsDeleted)
+            .Select(er => new { er.Role.Name, er.Role.Level })
+            .ToListAsync();
 
         var roles = userRoles
             .Select(r => r.Name)
@@ -98,8 +105,24 @@ public class AuthService : IAuthService
         string roleLevelName =
             Enum.GetName(typeof(RoleLevelEnum), roleLevel) ?? "Employee";
 
-        var permissions = await _permissionService
-                            .GetUserPermissionsAsync(user.Id);
+        var permissions = await db.EmployeeRoles
+            .IgnoreQueryFilters()
+            .AsNoTracking()
+            .Where(er =>
+                er.EmployeeId == user.Id &&
+                er.IsAssigned &&
+                !er.IsDeleted &&
+                er.Role != null &&
+                !er.Role.IsDeleted)
+            .SelectMany(er => er.Role.RolePermissions)
+            .Where(rp =>
+                rp.IsAssigned &&
+                !rp.IsDeleted &&
+                rp.Permission != null &&
+                !rp.Permission.IsDeleted)
+            .Select(rp => rp.Permission.Code)
+            .Distinct()
+            .ToListAsync();
 
         // Same gate as AccessScopeResolver: no role / SelfOnly must not unlock نطاق المهام in the UI.
         var scope = await _scopeResolver.ResolveAsync(user.Id);
@@ -109,10 +132,10 @@ public class AuthService : IAuthService
                 string.Equals(p, PermissionCodes.ViewCompanyTasks, StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(p, PermissionCodes.ViewScopedTasks, StringComparison.OrdinalIgnoreCase));
 
-        var token = await _jwt.GenerateTokenAsync(user);
+        var token = await _jwt.GenerateTokenAsync(user, schema);
 
         user.LastLoginDate = DateTime.UtcNow;
-        await _db.SaveChangesAsync();
+        await db.SaveChangesAsync();
 
         return ApiResponse<LoginResponse>.Ok(new LoginResponse
         {
@@ -140,15 +163,40 @@ public class AuthService : IAuthService
             RoleLevelName = roleLevelName,
             EmployeeTypeId = user.EmployeeTypeId,
             HasAccessScope = hasAccessScope,
+            Schema = schema,
 
             Token = token
         });
     }
 
+    private async Task<(Employee? User, AppDbContext Db, string Schema)> FindEmployeeAsync(string email)
+    {
+        var dboUser = await _db.Employees
+            .Include(u => u.Company)
+            .Include(u => u.Branch)
+            .Include(u => u.Department)
+            .FirstOrDefaultAsync(u => u.Email == email && !u.IsDeleted);
+
+        if (dboUser != null)
+            return (dboUser, _db, OperationalSchema.Dbo);
+
+        var trainingUser = await _training.Employees
+            .IgnoreQueryFilters()
+            .Include(u => u.Company)
+            .Include(u => u.Branch)
+            .Include(u => u.Department)
+            .FirstOrDefaultAsync(u => u.Email == email && !u.IsDeleted);
+
+        if (trainingUser != null)
+            return (trainingUser, _training, OperationalSchema.Training);
+
+        return (null, _db, OperationalSchema.Dbo);
+    }
+
 
     public async Task<ApiResponse<bool>> ForgotPasswordAsync(string email)
     {
-        var user = await _db.Employees.FirstOrDefaultAsync(u => u.Email == email);
+        var (user, db, _) = await FindEmployeeAsync(email);
 
         if (user == null)
             throw new AppException(
@@ -166,7 +214,7 @@ public class AuthService : IAuthService
         user.ResetPasswordToken = BCrypt.Net.BCrypt.HashPassword(resetCode);
         user.ResetPasswordExpiry = DateTime.UtcNow.AddMinutes(30);
 
-        await _db.SaveChangesAsync();
+        await db.SaveChangesAsync();
 
         await _email.SendEmailAsync(email, "Password Reset Code", $"Your reset code: {resetCode}");
 
@@ -176,10 +224,9 @@ public class AuthService : IAuthService
 
     public async Task<ApiResponse<bool>> VerifyResetCodeAsync(VerifyResetCodeRequest request)
     {
-        var user = await _db.Employees
-            .FirstOrDefaultAsync(u =>
-                u.Email == request.Email &&
-                u.ResetPasswordExpiry > DateTime.UtcNow);
+        var (user, _, _) = await FindEmployeeAsync(request.Email);
+        if (user != null && user.ResetPasswordExpiry.GetValueOrDefault() <= DateTime.UtcNow)
+            user = null;
 
         if (user == null)
             throw new AppException(
@@ -203,8 +250,7 @@ public class AuthService : IAuthService
 
     public async Task<ApiResponse<bool>> UpdatePasswordAsync(UpdatePasswordRequest request)
     {
-        var user = await _db.Employees
-            .FirstOrDefaultAsync(u => u.Email == request.Email);
+        var (user, db, _) = await FindEmployeeAsync(request.Email);
 
         if (user == null)
             throw new AppException(
@@ -221,7 +267,7 @@ public class AuthService : IAuthService
         user.ResetPasswordToken = string.Empty;
         user.ResetPasswordExpiry = null;
 
-        await _db.SaveChangesAsync();
+        await db.SaveChangesAsync();
 
         return ApiResponse<bool>.Ok(true, "Password reset successfully");
     }

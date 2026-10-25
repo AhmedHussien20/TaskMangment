@@ -21,6 +21,10 @@ namespace TaskMangment.API.Filters
             if (context.HttpContext.User.Identity?.IsAuthenticated != true)
                 return;
 
+            var actor = context.HttpContext.User.FindFirst("Actor")?.Value;
+            if (string.Equals(actor, "Platform", StringComparison.OrdinalIgnoreCase))
+                return;
+
             var userIdClaim = context.HttpContext.User.FindFirst("UserId");
             if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out var userId))
                 return;

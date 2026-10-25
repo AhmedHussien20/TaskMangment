@@ -75,6 +75,7 @@ namespace TaskMangment.Infrastructure.Services
             services.AddScoped<IRoleService, RoleService>();
             services.AddScoped<INotificationRepository, NotificationRepository>();
             services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IPlatformService, PlatformService>();
             services.AddScoped<IJwtService, JwtService>();
             // Domain Events
             services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
