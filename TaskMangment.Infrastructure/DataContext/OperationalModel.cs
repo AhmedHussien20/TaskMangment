@@ -13,6 +13,30 @@ namespace TaskMangment.Infrastructure.DataContext
             ConfigureRelationships(builder);
             ConfigurePlatform(builder, schema);
             ConfigureTenantCompanyLinks(builder);
+            ConfigureTraineeCatalogs(builder, schema);
+        }
+
+        /// <summary>
+        /// In training every trainee copy owns its own employee types, permissions, leave types and audit log,
+        /// so one trainee cannot change another's. Rows with CompanyId 0 are templates copied into each new copy.
+        /// dbo keeps its single shared catalog.
+        /// </summary>
+        private static void ConfigureTraineeCatalogs(ModelBuilder builder, string schema)
+        {
+            if (!string.Equals(schema, OperationalSchema.Training, StringComparison.OrdinalIgnoreCase))
+            {
+                builder.Entity<EmployeeType>().Ignore(x => x.CompanyId);
+                builder.Entity<Permission>().Ignore(x => x.CompanyId);
+                builder.Entity<LeaveType>().Ignore(x => x.CompanyId);
+                builder.Entity<AuditLog>().Ignore(x => x.CompanyId);
+                builder.Entity<EmployeeType>().HasIndex(x => x.Code).IsUnique();
+                return;
+            }
+
+            builder.Entity<EmployeeType>().HasIndex(x => new { x.CompanyId, x.Code }).IsUnique();
+            builder.Entity<Permission>().HasIndex(x => new { x.CompanyId, x.Code }).IsUnique();
+            builder.Entity<LeaveType>().HasIndex(x => x.CompanyId);
+            builder.Entity<AuditLog>().HasIndex(x => x.CompanyId);
         }
 
         private static void ConfigurePlatform(ModelBuilder builder, string schema)
@@ -272,7 +296,7 @@ namespace TaskMangment.Infrastructure.DataContext
             builder.Entity<EmployeeType>(entity =>
             {
                 entity.ToTable("EmployeeTypes");
-                entity.HasIndex(x => x.Code).IsUnique();
+                // Unique Code index is per schema: see ConfigureTraineeCatalogs.
                 entity.Property(x => x.Code).HasMaxLength(50).IsRequired();
                 entity.Property(x => x.NameEn).HasMaxLength(100).IsRequired();
                 entity.Property(x => x.NameAr).HasMaxLength(100).IsRequired();

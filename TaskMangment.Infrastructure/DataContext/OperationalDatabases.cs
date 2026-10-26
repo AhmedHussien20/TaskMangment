@@ -34,6 +34,8 @@ namespace TaskMangment.Infrastructure.DataContext
                 return new AppDbContext(options, currentUser);
             });
 
+            services.AddScoped<OperationalEmailRegistry>();
+
             return services;
         }
     }

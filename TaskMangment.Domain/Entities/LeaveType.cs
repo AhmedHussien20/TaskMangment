@@ -19,7 +19,10 @@ namespace TaskMangment.Domain.Entities
 
         public bool IsPaid { get; set; }
 
-        public int? MaxDaysPerYear { get; set; }  
+        public int? MaxDaysPerYear { get; set; }
+
+        /// <summary>Training schema only: owning trainee copy, or 0 for the template. Ignored in dbo.</summary>
+        public int CompanyId { get; set; }
 
         public ICollection<Leave> Leaves { get; set; }
     }

@@ -22,6 +22,12 @@ namespace TaskMangment.Domain.Entities
         /// </summary>
         public bool SeesAllTypesInBranchScope { get; set; }
 
+        /// <summary>
+        /// Training schema only: the trainee copy that owns this row, or 0 for the template copied into each new copy.
+        /// Ignored in dbo.
+        /// </summary>
+        public int CompanyId { get; set; }
+
         public ICollection<Employee> Employees { get; set; } = new List<Employee>();
         public ICollection<EmployeeFunctionalScope> FunctionalScopes { get; set; } = new List<EmployeeFunctionalScope>();
     }

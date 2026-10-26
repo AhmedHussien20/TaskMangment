@@ -19,12 +19,14 @@ namespace TaskMangment.Infrastructure.Services
         private readonly AppDbContext _dbo;
         private readonly TrainingDbContext _training;
         private readonly IJwtService _jwt;
+        private readonly OperationalEmailRegistry _emails;
 
-        public PlatformService(AppDbContext dbo, TrainingDbContext training, IJwtService jwt)
+        public PlatformService(AppDbContext dbo, TrainingDbContext training, IJwtService jwt, OperationalEmailRegistry emails)
         {
             _dbo = dbo;
             _training = training;
             _jwt = jwt;
+            _emails = emails;
         }
 
         public async Task<ApiResponse<PlatformLoginResponse>> LoginAsync(PlatformLoginRequest request)
@@ -248,20 +250,29 @@ namespace TaskMangment.Infrastructure.Services
             if (await EmailTakenAsync(adminEmail))
                 throw new AppException(ErrorCodes.EmailAlreadyExists, StatusCodes.Status400BadRequest);
 
-            var employeeTypeId = await _training.EmployeeTypes
+            // Templates (CompanyId 0) are copied into the new copy so it owns, and can change, its own catalogs.
+            var typeTemplates = await _training.EmployeeTypes
                 .IgnoreQueryFilters()
-                .Where(t => !t.IsDeleted)
+                .AsNoTracking()
+                .Where(t => t.CompanyId == 0 && !t.IsDeleted)
                 .OrderBy(t => t.Id)
-                .Select(t => t.Id)
-                .FirstOrDefaultAsync();
+                .ToListAsync();
 
-            if (employeeTypeId == 0)
+            if (typeTemplates.Count == 0)
                 throw new AppException(ErrorCodes.SaveFailed, StatusCodes.Status500InternalServerError);
 
-            var permissions = await _training.Permissions
+            var permissionTemplates = await _training.Permissions
                 .IgnoreQueryFilters()
-                .Where(p => !p.IsDeleted)
-                .Select(p => p.Id)
+                .AsNoTracking()
+                .Where(p => p.CompanyId == 0 && !p.IsDeleted)
+                .OrderBy(p => p.Id)
+                .ToListAsync();
+
+            var leaveTypeTemplates = await _training.LeaveTypes
+                .IgnoreQueryFilters()
+                .AsNoTracking()
+                .Where(l => l.CompanyId == 0 && !l.IsDeleted)
+                .OrderBy(l => l.Id)
                 .ToListAsync();
 
             await using var tx = await _training.Database.BeginTransactionAsync();
@@ -282,6 +293,38 @@ namespace TaskMangment.Infrastructure.Services
             };
             _training.Companies.Add(company);
             await _training.SaveChangesAsync();
+
+            var employeeTypes = typeTemplates.Select(t => new EmployeeType
+            {
+                CompanyId = company.Id,
+                Code = t.Code,
+                NameEn = t.NameEn,
+                NameAr = t.NameAr,
+                SeesAllTypesInBranchScope = t.SeesAllTypesInBranchScope,
+                CreatedBy = platformUserId
+            }).ToList();
+            var permissions = permissionTemplates.Select(p => new Permission
+            {
+                CompanyId = company.Id,
+                Code = p.Code,
+                Name = p.Name,
+                Description = p.Description,
+                CreatedBy = platformUserId
+            }).ToList();
+            _training.EmployeeTypes.AddRange(employeeTypes);
+            _training.Permissions.AddRange(permissions);
+            _training.LeaveTypes.AddRange(leaveTypeTemplates.Select(l => new LeaveType
+            {
+                CompanyId = company.Id,
+                NameAr = l.NameAr,
+                NameEn = l.NameEn,
+                IsPaid = l.IsPaid,
+                MaxDaysPerYear = l.MaxDaysPerYear,
+                CreatedBy = platformUserId
+            }));
+            await _training.SaveChangesAsync();
+
+            var employeeTypeId = employeeTypes[0].Id;
 
             var employee = new Employee
             {
@@ -312,10 +355,10 @@ namespace TaskMangment.Infrastructure.Services
             _training.Roles.Add(role);
             await _training.SaveChangesAsync();
 
-            _training.RolePermissions.AddRange(permissions.Select(permissionId => new RolePermission
+            _training.RolePermissions.AddRange(permissions.Select(permission => new RolePermission
             {
                 RoleId = role.Id,
-                PermissionId = permissionId,
+                PermissionId = permission.Id,
                 IsAssigned = true,
                 CreatedBy = platformUserId
             }));
@@ -560,13 +603,6 @@ namespace TaskMangment.Infrastructure.Services
             return user;
         }
 
-        private async Task<bool> EmailTakenAsync(string email)
-        {
-            if (await _dbo.PlatformUsers.AnyAsync(u => u.Email == email && !u.IsDeleted))
-                return true;
-            if (await _dbo.Employees.AnyAsync(e => e.Email == email && !e.IsDeleted))
-                return true;
-            return await _training.Employees.IgnoreQueryFilters().AnyAsync(e => e.Email == email && !e.IsDeleted);
-        }
+        private Task<bool> EmailTakenAsync(string email) => _emails.IsTakenAsync(email);
     }
 }

@@ -49,6 +49,7 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IAccessScopeResolver _scopeResolver;
         private readonly IEmployeePermissionService _permissions;
         private readonly IRepository<EmployeeFunctionalScope> _employeeFunctionScopeRepo;
+        private readonly OperationalEmailRegistry _emails;
 
 
 
@@ -71,7 +72,8 @@ namespace TaskMangment.Infrastructure.Services
             IRepository<WorkTask> taskRepo,
             IAccessScopeResolver scopeResolver,
             IEmployeePermissionService permissions,
-            IRepository<EmployeeFunctionalScope> employeeFunctionScopeRepo
+            IRepository<EmployeeFunctionalScope> employeeFunctionScopeRepo,
+            OperationalEmailRegistry emails
             )
         {
             _employeeRepo = employeeRepo;
@@ -93,6 +95,7 @@ namespace TaskMangment.Infrastructure.Services
             _scopeResolver = scopeResolver;
             _permissions = permissions;
             _employeeFunctionScopeRepo = employeeFunctionScopeRepo;
+            _emails = emails;
         }
 
         public async Task<ApiResponse<PagedResponse<EmployeeGetDto>>> GetAllAsync(EmployeeRequest request,int employeeId,int roleLevel) 
@@ -305,6 +308,10 @@ namespace TaskMangment.Infrastructure.Services
             if (existingByEmail != null && !existingByEmail.IsDeleted)
                 throw new AppException(ErrorCodes.EmailAlreadyExists, StatusCodes.Status400BadRequest);
 
+            // The check above only sees the caller's own schema and trainee company.
+            if (await _emails.IsTakenAsync(dto.Email, existingByEmail?.Id))
+                throw new AppException(ErrorCodes.EmailAlreadyExists, StatusCodes.Status400BadRequest);
+
             await _uow.BeginTransactionAsync();
             string? blobUrl = null;
 
@@ -414,6 +421,9 @@ namespace TaskMangment.Infrastructure.Services
                 throw new AppException(ErrorCodes.EmployeeNotFound, StatusCodes.Status400BadRequest);
 
             if (await _employeeRepo.GetAll(e => e.Email == dto.Email && e.Id != id).AnyAsync())
+                throw new AppException(ErrorCodes.EmailAlreadyExists, StatusCodes.Status400BadRequest);
+
+            if (await _emails.IsTakenAsync(dto.Email, id))
                 throw new AppException(ErrorCodes.EmailAlreadyExists, StatusCodes.Status400BadRequest);
 
             await _uow.BeginTransactionAsync();

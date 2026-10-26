@@ -180,12 +180,15 @@ public class AuthService : IAuthService
         if (dboUser != null)
             return (dboUser, _db, OperationalSchema.Dbo);
 
+        // Oldest first, so rows duplicated before emails were unique across trainees resolve the same way every time.
         var trainingUser = await _training.Employees
             .IgnoreQueryFilters()
             .Include(u => u.Company)
             .Include(u => u.Branch)
             .Include(u => u.Department)
-            .FirstOrDefaultAsync(u => u.Email == email && !u.IsDeleted);
+            .Where(u => u.Email == email && !u.IsDeleted)
+            .OrderBy(u => u.Id)
+            .FirstOrDefaultAsync();
 
         if (trainingUser != null)
             return (trainingUser, _training, OperationalSchema.Training);

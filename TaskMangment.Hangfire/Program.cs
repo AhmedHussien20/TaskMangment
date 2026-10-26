@@ -44,6 +44,13 @@ builder.Services.AddScoped<IEmailTemplateRenderer, EmailTemplateRenderer>();
 builder.Services.AddScoped<IBlobStorageService, BlobStorageService>();
 builder.Services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
 
+// SchemaDispatchJob resolves these per schema from a scope, so they must be registered.
+builder.Services.AddScoped<ProcessPendingEmailsJob>();
+builder.Services.AddScoped<PenaltyForMissingCommentsJob>();
+builder.Services.AddScoped<ArchiveOverdueTasksJob>();
+builder.Services.AddScoped<TaskDueTodayEmailsProcessorJob>();
+builder.Services.AddScoped<SendMonthlyEmployeeDiscountsJob>();
+
 
 
 builder.Services.AddLocalization();

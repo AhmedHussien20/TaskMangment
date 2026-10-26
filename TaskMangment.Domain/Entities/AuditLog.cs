@@ -16,5 +16,8 @@ namespace TaskMangment.Domain.Entities
         public string ChangedBy { get; set; } // username or employee id
         public DateTime ChangedAt { get; set; } = DateTime.UtcNow;
         public string Details { get; set; } // optional JSON diff
+
+        /// <summary>Training schema only: the trainee copy the entry belongs to. Ignored in dbo.</summary>
+        public int CompanyId { get; set; }
     }
 }

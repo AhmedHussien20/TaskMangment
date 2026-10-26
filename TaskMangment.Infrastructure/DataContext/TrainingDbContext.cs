@@ -57,6 +57,10 @@ namespace TaskMangment.Infrastructure.DataContext
             builder.Entity<Warning>().HasQueryFilter(e => CurrentCompanyId == 0 || e.Task.CompanyId == CurrentCompanyId);
             builder.Entity<Deduction>().HasQueryFilter(e => CurrentCompanyId == 0 || e.Employee.CompanyId == CurrentCompanyId);
             builder.Entity<Discount>().HasQueryFilter(e => CurrentCompanyId == 0 || e.Employee.CompanyId == CurrentCompanyId);
+            builder.Entity<EmployeeType>().HasQueryFilter(e => CurrentCompanyId == 0 || e.CompanyId == CurrentCompanyId);
+            builder.Entity<Permission>().HasQueryFilter(e => CurrentCompanyId == 0 || e.CompanyId == CurrentCompanyId);
+            builder.Entity<LeaveType>().HasQueryFilter(e => CurrentCompanyId == 0 || e.CompanyId == CurrentCompanyId);
+            builder.Entity<AuditLog>().HasQueryFilter(e => CurrentCompanyId == 0 || e.CompanyId == CurrentCompanyId);
         }
     }
 }

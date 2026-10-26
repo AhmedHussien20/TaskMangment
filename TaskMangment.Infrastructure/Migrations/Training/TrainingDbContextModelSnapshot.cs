@@ -190,6 +190,9 @@ namespace TaskMangment.Infrastructure.Migrations.Training
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("int");
+
                     b.Property<int?>("CreatedBy")
                         .HasColumnType("int");
 
@@ -223,6 +226,8 @@ namespace TaskMangment.Infrastructure.Migrations.Training
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CompanyId");
 
                     b.ToTable("AuditLogs", "training");
                 });
@@ -1125,6 +1130,9 @@ namespace TaskMangment.Infrastructure.Migrations.Training
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("int");
+
                     b.Property<int?>("CreatedBy")
                         .HasColumnType("int");
 
@@ -1161,7 +1169,7 @@ namespace TaskMangment.Infrastructure.Migrations.Training
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Code")
+                    b.HasIndex("CompanyId", "Code")
                         .IsUnique();
 
                     b.ToTable("EmployeeTypes", "training");
@@ -1301,6 +1309,9 @@ namespace TaskMangment.Infrastructure.Migrations.Training
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("int");
+
                     b.Property<int?>("CreatedBy")
                         .HasColumnType("int");
 
@@ -1339,6 +1350,8 @@ namespace TaskMangment.Infrastructure.Migrations.Training
                         .HasColumnType("nvarchar(200)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CompanyId");
 
                     b.ToTable("LeaveTypes", "training");
                 });
@@ -1646,6 +1659,9 @@ namespace TaskMangment.Infrastructure.Migrations.Training
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("int");
+
                     b.Property<int?>("CreatedBy")
                         .HasColumnType("int");
 
@@ -1678,6 +1694,9 @@ namespace TaskMangment.Infrastructure.Migrations.Training
                         .HasColumnType("nvarchar(200)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CompanyId", "Code")
+                        .IsUnique();
 
                     b.ToTable("Permissions", "training");
                 });

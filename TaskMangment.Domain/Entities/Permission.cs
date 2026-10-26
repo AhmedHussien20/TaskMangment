@@ -13,6 +13,9 @@ namespace TaskMangment.Domain.Entities
         [Required, MaxLength(200)] public string Name { get; set; }
         [MaxLength(500)] public string Description { get; set; }
 
+        /// <summary>Training schema only: owning trainee copy, or 0 for the template. Ignored in dbo.</summary>
+        public int CompanyId { get; set; }
+
         public ICollection<RolePermission> RolePermissions { get; set; }=new  List<RolePermission>();
     }
 }
