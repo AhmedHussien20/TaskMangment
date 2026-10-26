@@ -3,6 +3,7 @@ using TaskMangment.Application.Common.ApiRequests.Notification;
 using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Domain.Entities;
+using TaskMangment.Infrastructure.DataContext;
 using TaskMangment.Infrastructure.SignalR;
 
 namespace TaskMangment.Infrastructure.Services
@@ -25,12 +26,16 @@ namespace TaskMangment.Infrastructure.Services
                     Channel = channel,
                 });
 
-                if (channel == NotificationChannel.Web &&
-                    NotificationHub.IsUserOnline(command.UserId))
+                if (channel == NotificationChannel.Web)
                 {
-                    await _hub.Clients
-                        .Client(command.UserId.ToString())
-                        .SendAsync("ReceiveNotification", command.Message);
+                    // Runs from jobs, so the schema comes from the Hangfire pass rather than a request.
+                    var key = NotificationHub.ConnectionKey(OperationalSchemaAmbient.Current, command.UserId);
+                    foreach (var connectionId in NotificationHub.ConnectionsFor(key))
+                    {
+                        await _hub.Clients
+                            .Client(connectionId)
+                            .SendAsync("ReceiveNotification", command.Message);
+                    }
                 }
 
                 if (channel == NotificationChannel.Email) { }

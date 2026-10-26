@@ -1,6 +1,10 @@
 import { Injectable } from '@angular/core';
 import * as signalR from '@microsoft/signalr';
 import { BehaviorSubject } from 'rxjs';
+import { environment } from '../../../environments/environment';
+
+// Same server as the REST API: `.../api` -> `.../notifications`.
+const HUB_URL = environment.apiUrl.replace(/\/api\/?$/, '') + '/notifications';
 
 export interface SignalRNotification {
   id?: number;
@@ -30,9 +34,9 @@ export class SignalRService {
       this.stop();
     }
 
+    // The hub identifies the user (and their schema) from the token, never from the URL.
     this.hubConnection = new signalR.HubConnectionBuilder()
-      .withUrl(`https://taskmangmentapi-bzh2erdwazfea9g8.westeurope-01.azurewebsites.net/notifications?userId=${userId}`)
-      //.withUrl(`https://localhost:7115/notifications?userId=${userId}`)
+      .withUrl(HUB_URL, { accessTokenFactory: () => localStorage.getItem('authToken') ?? '' })
       .withAutomaticReconnect()
       .build();
 
