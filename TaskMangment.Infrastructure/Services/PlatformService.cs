@@ -1,12 +1,16 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using TaskMangment.Application.ApiRequests;
+using TaskMangment.Application.ApiRequests.Platform;
 using TaskMangment.Application.Common.Errors;
 using TaskMangment.Application.Common.Exceptions;
+using TaskMangment.Application.Common.Responses;
 using TaskMangment.Application.DTOs;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
 using TaskMangment.Infrastructure.DataContext;
+using TaskMangment.Infrastructure.Persistence.Extensions;
 
 namespace TaskMangment.Infrastructure.Services
 {
@@ -52,14 +56,32 @@ namespace TaskMangment.Infrastructure.Services
             });
         }
 
-        public async Task<ApiResponse<List<OrganizationListItemDto>>> GetOrganizationsAsync(int platformUserId)
+        public async Task<ApiResponse<PagedResponse<OrganizationListItemDto>>> GetOrganizationsAsync(int platformUserId, OrganizationListRequest request)
         {
-            var actor = await RequirePlatformAdminAsync(platformUserId);
+            await RequireInstituteStaffAsync(platformUserId);
+            var (pageIndex, pageSize) = NormalizePage(request);
 
-            var items = await _dbo.Organizations
+            var query = _dbo.Organizations
                 .AsNoTracking()
-                .Where(o => !o.IsDeleted)
-                .OrderByDescending(o => o.Id)
+                .Where(o => !o.IsDeleted);
+
+            if (request.IsActive.HasValue)
+                query = query.Where(o => o.IsActive == request.IsActive.Value);
+
+            var term = (request.searchKey ?? string.Empty).Trim();
+            if (term.Length > 0)
+            {
+                query = query.Where(o =>
+                    o.Name.Contains(term) ||
+                    o.Admins.Any(a => !a.IsDeleted && a.Role == PlatformRole.OrganizationAdmin &&
+                        (a.FullName.Contains(term) || a.Email.Contains(term))));
+            }
+
+            var total = await query.CountAsync();
+            var items = await query
+                .OrderByDynamicSafe(OrganizationSortColumn(request.SortColumn), request.SortDirection)
+                .Skip((pageIndex - 1) * pageSize)
+                .Take(pageSize)
                 .Select(o => new OrganizationListItemDto
                 {
                     Id = o.Id,
@@ -79,7 +101,8 @@ namespace TaskMangment.Infrastructure.Services
                 })
                 .ToListAsync();
 
-            return ApiResponse<List<OrganizationListItemDto>>.Ok(items);
+            return ApiResponse<PagedResponse<OrganizationListItemDto>>.Ok(
+                new PagedResponse<OrganizationListItemDto>(items, total, pageIndex, pageSize));
         }
 
         public async Task<ApiResponse<OrganizationListItemDto>> CreateOrganizationAsync(int platformUserId, CreateOrganizationRequest request)
@@ -131,16 +154,15 @@ namespace TaskMangment.Infrastructure.Services
             });
         }
 
-        public async Task<ApiResponse<List<TraineeCopyDto>>> GetTraineesAsync(int platformUserId)
+        public async Task<ApiResponse<PagedResponse<TraineeCopyDto>>> GetTraineesAsync(int platformUserId, TraineeCopyListRequest request)
         {
-            var actor = await RequireOrganizationAdminAsync(platformUserId);
-            var organizationId = actor.OrganizationId!.Value;
+            var scope = await RequireTraineeActorAsync(platformUserId);
+            var (pageIndex, pageSize) = NormalizePage(request);
 
             var companies = await _training.Companies
                 .IgnoreQueryFilters()
                 .AsNoTracking()
-                .Where(c => !c.IsDeleted && c.OrganizationId == organizationId)
-                .OrderByDescending(c => c.Id)
+                .Where(c => !c.IsDeleted && (scope == null || c.OrganizationId == scope))
                 .ToListAsync();
 
             var companyIds = companies.Select(c => c.Id).ToList();
@@ -151,9 +173,20 @@ namespace TaskMangment.Infrastructure.Services
                 .OrderBy(e => e.Id)
                 .ToListAsync();
 
+            var organizationIds = companies
+                .Where(c => c.OrganizationId.HasValue)
+                .Select(c => c.OrganizationId!.Value)
+                .Distinct()
+                .ToList();
+            var organizationNames = await _dbo.Organizations
+                .AsNoTracking()
+                .Where(o => organizationIds.Contains(o.Id))
+                .ToDictionaryAsync(o => o.Id, o => o.Name);
+
             var items = companies.Select(c =>
             {
                 var admin = admins.FirstOrDefault(e => e.CompanyId == c.Id);
+                var organizationId = c.OrganizationId ?? 0;
                 return new TraineeCopyDto
                 {
                     CompanyId = c.Id,
@@ -162,11 +195,40 @@ namespace TaskMangment.Infrastructure.Services
                     AdminFullName = admin?.FullName ?? string.Empty,
                     IsActive = c.IsActive && (admin?.IsActive ?? false),
                     CreatedDate = c.CreatedDate,
-                    OrganizationId = organizationId
+                    OrganizationId = organizationId,
+                    OrganizationName = organizationNames.GetValueOrDefault(organizationId) ?? string.Empty
                 };
             }).ToList();
 
-            return ApiResponse<List<TraineeCopyDto>>.Ok(items);
+            var term = (request.searchKey ?? string.Empty).Trim();
+            if (term.Length > 0)
+            {
+                items = items.Where(row =>
+                    row.CompanyName.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                    row.AdminFullName.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                    row.AdminEmail.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                    row.OrganizationName.Contains(term, StringComparison.OrdinalIgnoreCase)).ToList();
+            }
+
+            if (request.IsActive.HasValue)
+                items = items.Where(row => row.IsActive == request.IsActive.Value).ToList();
+
+            var descending = !string.Equals(request.SortDirection, "ASC", StringComparison.OrdinalIgnoreCase);
+            items = (request.SortColumn ?? string.Empty).ToLowerInvariant() switch
+            {
+                "companyname" => Order(items, row => row.CompanyName, descending),
+                "adminfullname" => Order(items, row => row.AdminFullName, descending),
+                "adminemail" => Order(items, row => row.AdminEmail, descending),
+                "organizationname" => Order(items, row => row.OrganizationName, descending),
+                "createddate" => Order(items, row => row.CreatedDate, descending),
+                "isactive" => Order(items, row => row.IsActive, descending),
+                _ => Order(items, row => row.CompanyId, descending)
+            };
+
+            var total = items.Count;
+            var page = items.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToList();
+            return ApiResponse<PagedResponse<TraineeCopyDto>>.Ok(
+                new PagedResponse<TraineeCopyDto>(page, total, pageIndex, pageSize));
         }
 
         public async Task<ApiResponse<TraineeCopyDto>> CreateTraineeAsync(int platformUserId, CreateTraineeRequest request)
@@ -283,12 +345,11 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<TraineeCopyDto>> SetTraineeActiveAsync(int platformUserId, int companyId, bool isActive)
         {
-            var actor = await RequireOrganizationAdminAsync(platformUserId);
-            var organizationId = actor.OrganizationId!.Value;
+            var scope = await RequireTraineeActorAsync(platformUserId);
 
             var company = await _training.Companies
                 .IgnoreQueryFilters()
-                .FirstOrDefaultAsync(c => c.Id == companyId && !c.IsDeleted && c.OrganizationId == organizationId);
+                .FirstOrDefaultAsync(c => c.Id == companyId && !c.IsDeleted && (scope == null || c.OrganizationId == scope));
 
             if (company == null)
                 throw new AppException(ErrorCodes.CompanyNotFound, StatusCodes.Status404NotFound);
@@ -313,8 +374,167 @@ namespace TaskMangment.Infrastructure.Services
                 AdminFullName = admin?.FullName ?? string.Empty,
                 IsActive = isActive,
                 CreatedDate = company.CreatedDate,
-                OrganizationId = organizationId
+                OrganizationId = company.OrganizationId ?? 0,
+                OrganizationName = company.OrganizationId.HasValue
+                    ? await _dbo.Organizations.Where(o => o.Id == company.OrganizationId).Select(o => o.Name).FirstOrDefaultAsync() ?? string.Empty
+                    : string.Empty
             });
+        }
+
+        private async Task<int?> RequireTraineeActorAsync(int platformUserId)
+        {
+            var user = await _dbo.PlatformUsers
+                .Include(u => u.Organization)
+                .FirstOrDefaultAsync(u => u.Id == platformUserId && !u.IsDeleted && u.IsActive);
+
+            if (user == null)
+                throw new AppException(ErrorCodes.NotAuthorized, StatusCodes.Status403Forbidden);
+
+            if (user.Role == PlatformRole.PlatformAdmin || user.Role == PlatformRole.SuperAdmin)
+                return null;
+
+            if (user.Role != PlatformRole.OrganizationAdmin || user.OrganizationId == null ||
+                user.Organization == null || !user.Organization.IsActive || user.Organization.IsDeleted)
+                throw new AppException(ErrorCodes.NotAuthorized, StatusCodes.Status403Forbidden);
+
+            return user.OrganizationId;
+        }
+
+        public async Task<ApiResponse<PagedResponse<PlatformAdminListItemDto>>> GetPlatformAdminsAsync(int platformUserId, PlatformAdminListRequest request)
+        {
+            await RequireSuperAdminAsync(platformUserId);
+            var (pageIndex, pageSize) = NormalizePage(request);
+
+            var query = _dbo.PlatformUsers
+                .AsNoTracking()
+                .Where(u => !u.IsDeleted && u.Role == PlatformRole.PlatformAdmin);
+
+            if (request.IsActive.HasValue)
+                query = query.Where(u => u.IsActive == request.IsActive.Value);
+
+            var term = (request.searchKey ?? string.Empty).Trim();
+            if (term.Length > 0)
+                query = query.Where(u => u.FullName.Contains(term) || u.Email.Contains(term));
+
+            var total = await query.CountAsync();
+            var items = await query
+                .OrderByDynamicSafe(AdminSortColumn(request.SortColumn), request.SortDirection)
+                .Skip((pageIndex - 1) * pageSize)
+                .Take(pageSize)
+                .Select(u => new PlatformAdminListItemDto
+                {
+                    Id = u.Id,
+                    FullName = u.FullName,
+                    Email = u.Email,
+                    IsActive = u.IsActive,
+                    CreatedDate = u.CreatedDate
+                })
+                .ToListAsync();
+
+            return ApiResponse<PagedResponse<PlatformAdminListItemDto>>.Ok(
+                new PagedResponse<PlatformAdminListItemDto>(items, total, pageIndex, pageSize));
+        }
+
+        public async Task<ApiResponse<PlatformAdminListItemDto>> CreatePlatformAdminAsync(int platformUserId, CreatePlatformAdminRequest request)
+        {
+            await RequireSuperAdminAsync(platformUserId);
+
+            var name = (request.FullName ?? string.Empty).Trim();
+            var email = (request.Email ?? string.Empty).Trim();
+            var password = request.Password ?? string.Empty;
+
+            if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(email) || password.Length < 6)
+                throw new AppException(ErrorCodes.ValidationError, StatusCodes.Status400BadRequest);
+
+            if (await EmailTakenAsync(email))
+                throw new AppException(ErrorCodes.EmailAlreadyExists, StatusCodes.Status400BadRequest);
+
+            var admin = new PlatformUser
+            {
+                FullName = name,
+                Email = email,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(password),
+                Role = PlatformRole.PlatformAdmin,
+                IsActive = true,
+                CreatedBy = platformUserId
+            };
+
+            _dbo.PlatformUsers.Add(admin);
+            await _dbo.SaveChangesAsync();
+
+            return ApiResponse<PlatformAdminListItemDto>.Ok(ToAdminDto(admin));
+        }
+
+        public async Task<ApiResponse<PlatformAdminListItemDto>> SetPlatformAdminActiveAsync(int platformUserId, int adminId, bool isActive)
+        {
+            await RequireSuperAdminAsync(platformUserId);
+
+            var admin = await _dbo.PlatformUsers
+                .FirstOrDefaultAsync(u => u.Id == adminId && !u.IsDeleted && u.Role == PlatformRole.PlatformAdmin);
+
+            if (admin == null)
+                throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
+
+            admin.IsActive = isActive;
+            await _dbo.SaveChangesAsync();
+
+            return ApiResponse<PlatformAdminListItemDto>.Ok(ToAdminDto(admin));
+        }
+
+        private static (int PageIndex, int PageSize) NormalizePage(BaseApiRequest request)
+        {
+            var pageIndex = request.PageIndex < 1 ? 1 : request.PageIndex;
+            var pageSize = request.PageSize < 1 ? 10 : request.PageSize;
+            return (pageIndex, pageSize);
+        }
+
+        private static string OrganizationSortColumn(string? column) => (column ?? string.Empty).ToLowerInvariant() switch
+        {
+            "name" => "Name",
+            "createddate" => "CreatedDate",
+            "isactive" => "IsActive",
+            _ => "Id"
+        };
+
+        private static string AdminSortColumn(string? column) => (column ?? string.Empty).ToLowerInvariant() switch
+        {
+            "fullname" => "FullName",
+            "email" => "Email",
+            "createddate" => "CreatedDate",
+            "isactive" => "IsActive",
+            _ => "Id"
+        };
+
+        private static List<T> Order<T, TKey>(List<T> items, Func<T, TKey> key, bool descending)
+        {
+            return descending
+                ? items.OrderByDescending(key).ToList()
+                : items.OrderBy(key).ToList();
+        }
+
+        private static PlatformAdminListItemDto ToAdminDto(PlatformUser admin) => new()
+        {
+            Id = admin.Id,
+            FullName = admin.FullName,
+            Email = admin.Email,
+            IsActive = admin.IsActive,
+            CreatedDate = admin.CreatedDate
+        };
+
+        private async Task<PlatformUser> RequireSuperAdminAsync(int platformUserId)
+        {
+            var user = await _dbo.PlatformUsers.FirstOrDefaultAsync(u => u.Id == platformUserId && !u.IsDeleted && u.IsActive);
+            if (user == null || user.Role != PlatformRole.SuperAdmin)
+                throw new AppException(ErrorCodes.NotAuthorized, StatusCodes.Status403Forbidden);
+            return user;
+        }
+
+        private async Task<PlatformUser> RequireInstituteStaffAsync(int platformUserId)
+        {
+            var user = await _dbo.PlatformUsers.FirstOrDefaultAsync(u => u.Id == platformUserId && !u.IsDeleted && u.IsActive);
+            if (user == null || (user.Role != PlatformRole.PlatformAdmin && user.Role != PlatformRole.SuperAdmin))
+                throw new AppException(ErrorCodes.NotAuthorized, StatusCodes.Status403Forbidden);
+            return user;
         }
 
         private async Task<PlatformUser> RequirePlatformAdminAsync(int platformUserId)

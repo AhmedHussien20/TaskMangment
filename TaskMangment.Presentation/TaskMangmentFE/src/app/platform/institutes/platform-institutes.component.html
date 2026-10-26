@@ -1,0 +1,46 @@
+<app-page-header
+  [title]="'PLATFORM.INSTITUTES'"
+  [title1]="['PLATFORM.TITLE', 'PLATFORM.INSTITUTES']"
+  [activeitem]="'PLATFORM.INSTITUTES'">
+</app-page-header>
+
+<div class="row row-sm">
+  <div class="col-md-12">
+    <div class="card custom-card">
+      <app-generic-table
+        [title]="'PLATFORM.INSTITUTES'"
+        [columns]="columns"
+        [data]="rows"
+        [entries]="entries"
+        [page]="page"
+        [totalItems]="total"
+        [labels]="labels"
+        [searchCriteria]="criteria"
+        [extraFilterOptions]="{ status: statusOptions }"
+        [showAddButton]="session.isPlatformAdmin"
+        [addButtonLabel]="'PLATFORM.NEW_INSTITUTE'"
+        [showFilters]="true"
+        [showPagination]="true"
+        [showExportExcel]="false"
+        [onSearch]="applyFilters.bind(this)"
+        (pageChange)="onPageChange($event)"
+        (entriesChange)="onEntriesChange($event)"
+        (addClick)="openModal(organizationModal)">
+      </app-generic-table>
+    </div>
+  </div>
+</div>
+
+<ng-template #organizationModal let-modal>
+  <div class="modal-header">
+    <h6 class="modal-title">{{ 'PLATFORM.NEW_INSTITUTE' | translate }}</h6>
+    <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    <app-generic-form
+      [formGroup]="form"
+      [formConfig]="formConfig"
+      (formSubmit)="create()">
+    </app-generic-form>
+  </div>
+</ng-template>

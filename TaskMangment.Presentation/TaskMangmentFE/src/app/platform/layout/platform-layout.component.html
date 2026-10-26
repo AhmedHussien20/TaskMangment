@@ -1,0 +1,114 @@
+<div class="page">
+  <header class="app-header">
+    <div class="main-header-container container-fluid">
+      <div class="header-content-left">
+        <div class="header-element">
+          <a href="javascript:void(0);" class="sidemenu-toggle header-link animated-arrow hor-toggle horizontal-navtoggle"
+            (click)="toggleSidebar()">
+            <span></span>
+          </a>
+        </div>
+        <div class="header-element d-flex align-items-center">
+          <span class="fw-semibold">{{ 'PLATFORM.TITLE' | translate }}</span>
+        </div>
+      </div>
+      <div class="header-content-right">
+        <div class="header-element header-theme-mode">
+          <a href="javascript:void(0);" class="header-link layout-setting">
+            <span class="light-layout" (click)="updateTheme('dark')">
+              <i class="fe fe-moon header-link-icon lh-2"></i>
+            </span>
+            <span class="dark-layout" (click)="updateTheme('light')">
+              <i class="fe fe-sun header-link-icon lh-2"></i>
+            </span>
+          </a>
+        </div>
+
+        <div class="header-element country-selector" ngbDropdown [autoClose]="'outside'">
+          <a href="javascript:void(0);" class="header-link dropdown-toggle country-Flag" ngbDropdownToggle>
+            <img [src]="'assets/flags/' + countryFlag + '.svg'" alt="" class="platform-flag">
+          </a>
+          <ul class="main-header-dropdown dropdown-menu dropdown-menu-end" ngbDropdownMenu>
+            <li>
+              <a ngbDropdownItem class="dropdown-item d-flex align-items-center" href="javascript:void(0);"
+                (click)="changeLanguage('en')">
+                <span class="avatar avatar-xs lh-1 me-2">
+                  <img src="assets/flags/gb.svg" alt="" class="platform-flag">
+                </span>
+                English
+              </a>
+            </li>
+            <li>
+              <a ngbDropdownItem class="dropdown-item d-flex align-items-center" href="javascript:void(0);"
+                (click)="changeLanguage('ar')">
+                <span class="avatar avatar-xs lh-1 me-2">
+                  <img src="assets/flags/sa.svg" alt="" class="platform-flag">
+                </span>
+                Arabic
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <div class="header-element header-fullscreen d-xl-flex d-none">
+          <a href="javascript:void(0);" class="header-link" (click)="toggleFullscreen()">
+            <i class="fe fe-maximize full-screen-open header-link-icon" [ngClass]="{ 'd-none': isFullscreen }"></i>
+            <i class="fe fe-minimize full-screen-close header-link-icon" [ngClass]="{ 'd-none': !isFullscreen }"></i>
+          </a>
+        </div>
+
+        <div class="header-element d-flex align-items-center gap-3">
+          <div class="text-end">
+            <p class="fw-semibold mb-0">{{ sessionService.current?.fullName }}</p>
+            <span class="text-muted fs-12">{{ sessionService.roleLabel ? (sessionService.roleLabel | translate) : sessionService.current?.organizationName }}</span>
+          </div>
+          <button type="button" class="btn btn-outline-danger btn-sm" (click)="logout()">
+            <i class="fe fe-power me-1"></i>
+            {{ 'HEADER.LOGOUT' | translate }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <aside class="app-sidebar sticky" id="sidebar">
+    <div class="main-sidebar-header">
+      <a routerLink="/platform" class="header-logo text-logo">
+        <span class="logo-full">{{ 'PLATFORM.TITLE' | translate }}</span>
+      </a>
+    </div>
+    <div class="main-sidebar" id="sidebar-scroll">
+      <nav class="main-menu-container nav nav-pills flex-column sub-open">
+        <ul class="main-menu">
+          <li class="slide__category">
+            <span class="category-name">{{ 'PLATFORM.MENU' | translate }}</span>
+          </li>
+          <li class="slide" *ngIf="sessionService.isSuperAdmin" routerLinkActive="active">
+            <a routerLink="/platform/admins" routerLinkActive="active" class="side-menu__item">
+              <i class="side-menu__icon fe fe-user-check"></i>
+              <span class="side-menu__label">{{ 'PLATFORM.ADMINS' | translate }}</span>
+            </a>
+          </li>
+          <li class="slide" *ngIf="sessionService.isSuperAdmin || sessionService.isPlatformAdmin" routerLinkActive="active">
+            <a routerLink="/platform/institutes" routerLinkActive="active" class="side-menu__item">
+              <i class="side-menu__icon fe fe-home"></i>
+              <span class="side-menu__label">{{ 'PLATFORM.INSTITUTES' | translate }}</span>
+            </a>
+          </li>
+          <li class="slide" routerLinkActive="active">
+            <a routerLink="/platform/trainees" routerLinkActive="active" class="side-menu__item">
+              <i class="side-menu__icon fe fe-users"></i>
+              <span class="side-menu__label">{{ 'PLATFORM.TRAINEE_COPIES' | translate }}</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </aside>
+
+  <div class="main-content app-content">
+    <div class="container-fluid">
+      <router-outlet></router-outlet>
+    </div>
+  </div>
+</div>

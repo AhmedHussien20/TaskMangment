@@ -52,10 +52,27 @@ namespace TaskMangment.Application.DTOs
         public bool IsActive { get; set; }
         public DateTime CreatedDate { get; set; }
         public int OrganizationId { get; set; }
+        public string OrganizationName { get; set; } = string.Empty;
     }
 
     public class SetTraineeActiveRequest
     {
         public bool IsActive { get; set; }
+    }
+
+    public class CreatePlatformAdminRequest
+    {
+        public string FullName { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+    }
+
+    public class PlatformAdminListItemDto
+    {
+        public int Id { get; set; }
+        public string FullName { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public bool IsActive { get; set; }
+        public DateTime CreatedDate { get; set; }
     }
 }

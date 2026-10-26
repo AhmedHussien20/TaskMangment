@@ -314,6 +314,8 @@ namespace TaskMangment.API
             {
                 var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
                 await EmployeeTypeSeeder.EnsureSeededAsync(db);
+                if (app.Environment.IsDevelopment())
+                    await PlatformAdminSeeder.EnsureSuperAdminAsync(db, app.Configuration);
 
                 var migrator = scope.ServiceProvider.GetRequiredService<RolePermissionPackMigrator>();
                 await migrator.MigrateAsync();

@@ -180,7 +180,7 @@
                                 </i>
                             </span>
 
-                            <span *ngIf="col.type !== 'notification-count'"
+                            <span *ngIf="col.type !== 'notification-count' && col.type !== 'menu'"
                                 class="col-resizer"
                                 (mousedown)="startResize($event, col.key)"></span>
                         </div>
@@ -246,6 +246,28 @@
                                     {{ getValue(item, col.key) }}
                                 </span>
                             </button>
+                        </ng-container>
+
+                        <ng-container *ngSwitchCase="'menu'">
+                            <div ngbDropdown container="body" placement="bottom-end" class="d-inline-block"
+                                (click)="$event.stopPropagation()">
+                                <button type="button"
+                                    class="btn btn-light btn-sm table-actions-toggle"
+                                    ngbDropdownToggle
+                                    [attr.aria-label]="col.label | translate">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <div ngbDropdownMenu class="table-actions-menu dropdown-menu-end">
+                                    <button *ngFor="let action of col.menuItems?.(item) || []"
+                                        type="button"
+                                        class="dropdown-item"
+                                        [class.text-danger]="action.danger"
+                                        (click)="iconAction.emit({ type: action.value || col.key, row: item })">
+                                        <i *ngIf="action.icon" [class]="action.icon"></i>
+                                        <span>{{ action.label | translate }}</span>
+                                    </button>
+                                </div>
+                            </div>
                         </ng-container>
 
                         <!-- NOTIFICATION COUNT (compact bell + badge) -->

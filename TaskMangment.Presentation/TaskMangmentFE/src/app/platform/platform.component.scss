@@ -72,12 +72,17 @@
   display: block;
 }
 
-.app-header {
-  padding-inline-start: 0 !important;
+.text-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 60px;
+  font-weight: 700;
+  text-decoration: none;
 }
 
-.platform-content {
-  margin-inline-start: 0 !important;
-  margin-left: 0 !important;
-  margin-right: 0 !important;
+.logo-full {
+  font-size: 16px;
+  color: var(--menu-prime-color, #fff);
+  white-space: nowrap;
 }

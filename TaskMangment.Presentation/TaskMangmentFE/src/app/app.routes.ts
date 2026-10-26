@@ -8,6 +8,7 @@ import { ContentLayoutComponent } from './shared/layouts/content-layout/content-
 import { LandingpageLayoutComponent } from './shared/layouts/landingpage-layout/landingpage-layout.component';
 import { landing } from './shared/routes/landingpage';
 import { AuthGuard } from './core/auth/auth.guard';
+import { platformAuthGuard, platformGuestGuard, platformRoleGuard } from './platform/platform.guard';
 
 export const App_Route: Route[] = [
   { path: '', redirectTo: 'auth/login', pathMatch: 'full' },
@@ -17,7 +18,38 @@ export const App_Route: Route[] = [
   } ,
   {
     path: 'platform',
-    loadComponent: () => import('./platform/platform.component').then(m => m.PlatformComponent)
+    children: [
+      {
+        path: 'login',
+        canActivate: [platformGuestGuard],
+        loadComponent: () => import('./platform/login/platform-login.component').then(m => m.PlatformLoginComponent)
+      },
+      {
+        path: '',
+        canActivate: [platformAuthGuard],
+        loadComponent: () => import('./platform/layout/platform-layout.component').then(m => m.PlatformLayoutComponent),
+        children: [
+          {
+            path: 'admins',
+            canActivate: [platformRoleGuard],
+            data: { roles: ['SuperAdmin'] },
+            loadComponent: () => import('./platform/admins/platform-admins.component').then(m => m.PlatformAdminsComponent)
+          },
+          {
+            path: 'institutes',
+            canActivate: [platformRoleGuard],
+            data: { roles: ['SuperAdmin', 'PlatformAdmin'] },
+            loadComponent: () => import('./platform/institutes/platform-institutes.component').then(m => m.PlatformInstitutesComponent)
+          },
+          {
+            path: 'trainees',
+            canActivate: [platformRoleGuard],
+            data: { roles: ['SuperAdmin', 'PlatformAdmin', 'OrganizationAdmin'] },
+            loadComponent: () => import('./platform/trainees/platform-trainees.component').then(m => m.PlatformTraineesComponent)
+          }
+        ]
+      }
+    ]
   },
   {
     path: '',

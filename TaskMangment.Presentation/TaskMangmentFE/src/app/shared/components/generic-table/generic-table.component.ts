@@ -16,6 +16,7 @@ type SelectOption =
 export type ColumnType =
   | 'text'
   | 'icon-action'
+  | 'menu'
   | 'notification-count'
   | 'icon'
   | 'badge'
@@ -31,6 +32,13 @@ export interface BadgeConfig {
   icon?: string;
 }
 
+export interface TableMenuItem {
+  label: string;
+  icon?: string;
+  value?: string;
+  danger?: boolean;
+}
+
 export interface TableColumn {
   key: string;
   label: string;
@@ -40,6 +48,7 @@ export interface TableColumn {
   displayField?: string;
   /** Optional fixed/min width (e.g. '56px'). */
   width?: string;
+  menuItems?: (row: any) => TableMenuItem[];
 }
 export interface ExtraMenuItem {
   label: string;
@@ -478,7 +487,7 @@ ngOnChanges(changes: SimpleChanges): void {
   }
 
   isCenteredColumn(col: TableColumn): boolean {
-    return col.type === 'notification-count';
+    return col.type === 'notification-count' || col.type === 'menu';
   }
 
   ngOnDestroy(): void {
