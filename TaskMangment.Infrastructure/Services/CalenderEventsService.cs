@@ -21,6 +21,7 @@ namespace TaskMangment.Infrastructure.Services
     {
         private readonly IRepository<CalendarEvent> _eventRepo;
         private readonly IRepository<Employee> _employeeRepo;
+        private readonly IRepository<WorkTask> _taskRepo;
         private readonly ICachingService _cache;
         private readonly IMapper _mapper;
         private readonly IDomainEventDispatcher _eventDispatcher;
@@ -28,12 +29,14 @@ namespace TaskMangment.Infrastructure.Services
         public CalendarEventService(
             IRepository<CalendarEvent> eventRepo,
             IRepository<Employee> employeeRepo,
+            IRepository<WorkTask> taskRepo,
             IMapper mapper,
             ICachingService cache,
             IDomainEventDispatcher eventDispatcher)
         {
             _eventRepo = eventRepo;
             _employeeRepo = employeeRepo;
+            _taskRepo = taskRepo;
             _cache = cache;
             _mapper = mapper;
             _eventDispatcher = eventDispatcher;
@@ -130,6 +133,8 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<CalendarEventGetDto>> AddAsync(CalendarEventAddEditDto dto, int createdByEmployeeId, int? companyId)
         {
+            await EnsureRelatedTaskInScopeAsync(dto.RelatedTaskId);
+
             var ev = _mapper.Map<CalendarEvent>(dto);
             ev.CreatedByEmployeeId = createdByEmployeeId;
             ev.CompanyId = companyId;
@@ -166,6 +171,8 @@ namespace TaskMangment.Infrastructure.Services
             if (!(isOwner || isPrivileged))
                 throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
 
+            await EnsureRelatedTaskInScopeAsync(dto.RelatedTaskId);
+
             _mapper.Map(dto, ev);
 
             await _eventRepo.SaveChangesAsync();
@@ -173,6 +180,19 @@ namespace TaskMangment.Infrastructure.Services
             var calendarEventdto = _mapper.Map<CalendarEventGetDto>(ev);
 
             return ApiResponse<CalendarEventGetDto>.Ok(calendarEventdto, "Event updated");
+        }
+
+        /// <summary>
+        /// RelatedTaskId must resolve through the company-filtered WorkTask set so a trainee
+        /// cannot attach another institute's task id.
+        /// </summary>
+        private async Task EnsureRelatedTaskInScopeAsync(int? relatedTaskId)
+        {
+            if (!relatedTaskId.HasValue || relatedTaskId.Value <= 0)
+                return;
+
+            if (!await _taskRepo.IsExistAsync(relatedTaskId.Value))
+                throw new AppException(ErrorCodes.TaskNotFound, StatusCodes.Status400BadRequest);
         }
 
         public async Task<ApiResponse<bool>> DeleteAsync(int id, int currentEmployeeId, int roleLevel)

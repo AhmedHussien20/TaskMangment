@@ -9,7 +9,6 @@ using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Domain.Entities;
 using TaskMangment.Domain.Event;
 using TaskMangment.Infrastructure.DataContext;
-using TaskMangment.Infrastructure.SignalR;
 
 namespace TaskMangment.Infrastructure.Services
 {
@@ -91,7 +90,7 @@ namespace TaskMangment.Infrastructure.Services
         {
             var when = scheduledAt ?? DateTime.UtcNow;
 
-            await _db.EmailQueue.AddAsync(new EmailQueue
+            var item = new EmailQueue
             {
                 ToEmail = toEmail,
                 TemplateKey = "DeveloperErrorAlert",
@@ -99,10 +98,15 @@ namespace TaskMangment.Infrastructure.Services
                 ReferenceId = 0,
                 ScheduledAt = when,
                 Status = EmailStatus.Pending,
-
                 ErrorMessage = subject + "\n\n" + htmlBody
-            });
+            };
 
+            // Background DevAlerts set OperationalCompanyAmbient; stamp here so training rows
+            // never land as CompanyId=0 even if SaveChanges stamp misses the ambient.
+            if (OperationalCompanyAmbient.Current is int ambientCompany && ambientCompany > 0)
+                item.CompanyId = ambientCompany;
+
+            await _db.EmailQueue.AddAsync(item);
             await _db.SaveChangesAsync();
         }
 

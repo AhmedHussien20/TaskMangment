@@ -64,7 +64,8 @@ namespace TaskMangment.Infrastructure.DataContext
 
         private void StampCompanyId()
         {
-            var userCompany = _currentUserService.CompanyId;
+            // Prefer JWT company; Hangfire / DevAlert background work use OperationalCompanyAmbient.
+            var userCompany = _currentUserService.CompanyId ?? OperationalCompanyAmbient.Current;
             foreach (var entry in ChangeTracker.Entries().Where(e => e.State == EntityState.Added).ToList())
             {
                 var property = entry.Properties.FirstOrDefault(p =>

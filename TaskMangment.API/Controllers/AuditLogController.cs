@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using TaskMangment.API.Middlewares;
 using TaskMangment.Application.Common.ApiRequests.AuditLogs;
 using TaskMangment.Application.Common.ApiRequests.Employee;
+using TaskMangment.Application.Common.Security;
 using TaskMangment.Application.Interfaces.Services;
 
 namespace TaskMangment.API.Controllers
@@ -42,6 +44,7 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpDelete("{id}")]
+        [PermissionAuthorize(PermissionCodes.CreatePermission)]
         public async Task<IActionResult> Delete(int id)
         {
             var result = await _service.DeleteAsync(id);

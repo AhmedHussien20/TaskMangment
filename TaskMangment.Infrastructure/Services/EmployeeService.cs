@@ -299,6 +299,8 @@ namespace TaskMangment.Infrastructure.Services
             if (!await _companyRepository.IsExistAsync(CampanyId))
                 throw new AppException(ErrorCodes.CompanyNotFound, StatusCodes.Status400BadRequest);
 
+            await EnsureJobAndEmployeeTypeInScopeAsync(dto.JobId, dto.EmployeeTypeId);
+
             if (string.IsNullOrWhiteSpace(dto.Password))
                 throw new AppException(ErrorCodes.Invalid, StatusCodes.Status400BadRequest);
 
@@ -415,6 +417,8 @@ namespace TaskMangment.Infrastructure.Services
         {
             if (dto.BranchId.HasValue && !await _branchRepo.IsExistAsync(dto.BranchId.Value))
                 throw new AppException(ErrorCodes.BranchNotFound, StatusCodes.Status400BadRequest);
+
+            await EnsureJobAndEmployeeTypeInScopeAsync(dto.JobId, dto.EmployeeTypeId);
 
             var employee = await _employeeRepo.GetByIDAsync(id);
             if (employee == null)
@@ -578,6 +582,24 @@ namespace TaskMangment.Infrastructure.Services
         }
 
         private const int MaxRolesPerEmployee = 2;
+
+        /// <summary>
+        /// Job / EmployeeType FKs must exist in the caller's filtered company set (training isolation).
+        /// </summary>
+        private async Task EnsureJobAndEmployeeTypeInScopeAsync(int? jobId, int? employeeTypeId)
+        {
+            if (jobId.HasValue && jobId.Value > 0)
+            {
+                if (!await _db.Jobs.AnyAsync(j => j.Id == jobId.Value && !j.IsDeleted))
+                    throw new AppException(ErrorCodes.JobNotFound, StatusCodes.Status400BadRequest);
+            }
+
+            if (employeeTypeId.HasValue && employeeTypeId.Value > 0)
+            {
+                if (!await _db.EmployeeTypes.AnyAsync(t => t.Id == employeeTypeId.Value && !t.IsDeleted))
+                    throw new AppException(ErrorCodes.NotFound, StatusCodes.Status400BadRequest);
+            }
+        }
 
         /// <summary>
         /// Optional role assignment on create/update. Empty list clears active roles.

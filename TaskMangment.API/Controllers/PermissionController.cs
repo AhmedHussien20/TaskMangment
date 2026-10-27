@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using TaskMangment.API.Middlewares;
 using TaskMangment.Application.Common.ApiRequests.Role;
+using TaskMangment.Application.Common.Security;
 using TaskMangment.Application.DTOs;
 using TaskMangment.Application.Interfaces.Services;
 
@@ -32,6 +34,7 @@ namespace TaskMangment.API.Controllers
 
       
         [HttpPost]
+        [PermissionAuthorize(PermissionCodes.CreatePermission)]
         public async Task<IActionResult> Add([FromBody] PermissionAddDto dto)
         {
             var result = await _service.CreateAsync(dto);
@@ -39,6 +42,7 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpPut("{id}")]
+        [PermissionAuthorize(PermissionCodes.CreatePermission)]
         public async Task<IActionResult> Update(int id, [FromBody] PermissionAddDto dto)
         {
             var result = await _service.UpdateAsync(id, dto);
@@ -46,6 +50,7 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpDelete("{id}")]
+        [PermissionAuthorize(PermissionCodes.CreatePermission)]
         public async Task<IActionResult> Delete(int id)
         {
             var result = await _service.DeleteAsync(id);

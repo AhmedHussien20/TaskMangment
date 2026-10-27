@@ -135,6 +135,20 @@ public class AuthService : IAuthService
         var token = await _jwt.GenerateTokenAsync(user, schema);
 
         user.LastLoginDate = DateTime.UtcNow;
+
+        // Login is anonymous to AuditLogAttribute; write against the same db/schema that authenticated
+        // the user so trainee logins never land in dbo.AuditLogs.
+        db.Set<AuditLog>().Add(new AuditLog
+        {
+            EntityName = "Auth",
+            EntityId = user.Id,
+            Action = "LOGIN",
+            ChangedBy = user.Id.ToString(),
+            ChangedAt = DateTime.UtcNow,
+            CompanyId = user.CompanyId,
+            Details = System.Text.Json.JsonSerializer.Serialize(new { user.Email, Schema = schema })
+        });
+
         await db.SaveChangesAsync();
 
         return ApiResponse<LoginResponse>.Ok(new LoginResponse

@@ -1,8 +1,13 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+using TaskMangment.API.Middlewares;
 using TaskMangment.Application.Common.ApiRequests.Company;
+using TaskMangment.Application.Common.Errors;
+using TaskMangment.Application.Common.Security;
 using TaskMangment.Application.DTOs;
 using TaskMangment.Application.Interfaces.Services;
+using TaskMangment.Infrastructure.DataContext;
 
 namespace TaskMangment.API.Controllers
 {
@@ -37,13 +42,21 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpPost]
+        [PermissionAuthorize(PermissionCodes.CreateArea)]
         public async Task<IActionResult> Add([FromBody] CompanyAddEditDto dto)
         {
+            // Trainee companies are provisioned only via the platform; never create a sibling
+            // company row inside training from the company API.
+            var schema = User.FindFirstValue("Schema");
+            if (string.Equals(schema, OperationalSchema.Training, StringComparison.OrdinalIgnoreCase))
+                return Fail(L[ErrorCodes.Unauthorized], StatusCodes.Status403Forbidden);
+
             var result = await _service.AddAsync(dto);
             return Success(true, "Company added successfully");
         }
 
         [HttpPut("{id}")]
+        [PermissionAuthorize(PermissionCodes.CreateArea)]
         public async Task<IActionResult> Update(int id, [FromBody] CompanyAddEditDto dto)
         {
             var result = await _service.UpdateAsync(id, dto);
@@ -51,6 +64,7 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpDelete("{id}")]
+        [PermissionAuthorize(PermissionCodes.CreateArea)]
         public async Task<IActionResult> Delete(int id)
         {
             var result = await _service.DeleteAsync(id);

@@ -1,8 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc.Filters;
-using System.Security.Claims;
 using System.Text.Json;
 using TaskMangment.Application.Interfaces.Services;
-using TaskMangment.Domain.Entities;
 
 namespace TaskMangment.API.Filters
 {
@@ -19,7 +17,7 @@ namespace TaskMangment.API.Filters
             _currentUserService = currentUserService;
         }
 
-        public override async Task OnActionExecutionAsync(ActionExecutingContext context,ActionExecutionDelegate next)
+        public override async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
         {
             var controllerName = context.Controller.GetType().Name.Replace("Controller", "");
             var actionName = context.ActionDescriptor.DisplayName;
@@ -31,7 +29,7 @@ namespace TaskMangment.API.Filters
 
             try
             {
-                result = await next();  
+                result = await next();
             }
             catch (Exception ex)
             {
@@ -42,8 +40,26 @@ namespace TaskMangment.API.Filters
 
             await LogAudit(context, controllerName, actionName, httpMethod, entityId, null);
         }
-        private async Task LogAudit(ActionExecutingContext context,string controllerName,string actionName,string httpMethod,int? entityId,Exception? exception)
+
+        private async Task LogAudit(
+            ActionExecutingContext context,
+            string controllerName,
+            string actionName,
+            string httpMethod,
+            int? entityId,
+            Exception? exception)
         {
+            // Anonymous calls (login / password reset) have no schema yet — AuthService writes login audit
+            // against the db that actually found the employee. Platform actors must not write into dbo
+            // company AuditLogs via this employee filter.
+            var user = context.HttpContext.User;
+            if (user?.Identity?.IsAuthenticated != true)
+                return;
+
+            var actor = user.FindFirst("Actor")?.Value;
+            if (string.Equals(actor, "Platform", StringComparison.OrdinalIgnoreCase))
+                return;
+
             var details = new
             {
                 Controller = controllerName,
