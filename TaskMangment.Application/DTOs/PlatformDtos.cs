@@ -25,12 +25,22 @@ namespace TaskMangment.Application.DTOs
         public string AdminPassword { get; set; } = string.Empty;
     }
 
+    public class UpdateOrganizationRequest
+    {
+        public string Name { get; set; } = string.Empty;
+        public string AdminFullName { get; set; } = string.Empty;
+        public string AdminEmail { get; set; } = string.Empty;
+        /// <summary>Optional. Empty keeps the current password.</summary>
+        public string? AdminPassword { get; set; }
+    }
+
     public class OrganizationListItemDto
     {
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public bool IsActive { get; set; }
         public DateTime CreatedDate { get; set; }
+        public int? AdminId { get; set; }
         public string? AdminEmail { get; set; }
         public string? AdminFullName { get; set; }
     }
@@ -41,6 +51,17 @@ namespace TaskMangment.Application.DTOs
         public string AdminFullName { get; set; } = string.Empty;
         public string AdminEmail { get; set; } = string.Empty;
         public string AdminPassword { get; set; } = string.Empty;
+        /// <summary>Required for SuperAdmin / PlatformAdmin. Ignored for OrganizationAdmin (uses their own org).</summary>
+        public int? OrganizationId { get; set; }
+    }
+
+    public class UpdateTraineeRequest
+    {
+        public string CompanyName { get; set; } = string.Empty;
+        public string AdminFullName { get; set; } = string.Empty;
+        public string AdminEmail { get; set; } = string.Empty;
+        /// <summary>Optional. Empty keeps the current password.</summary>
+        public string? AdminPassword { get; set; }
     }
 
     public class TraineeCopyDto
@@ -65,6 +86,14 @@ namespace TaskMangment.Application.DTOs
         public string FullName { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
+    }
+
+    public class UpdatePlatformAdminRequest
+    {
+        public string FullName { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        /// <summary>Optional. Empty keeps the current password.</summary>
+        public string? Password { get; set; }
     }
 
     public class PlatformAdminListItemDto

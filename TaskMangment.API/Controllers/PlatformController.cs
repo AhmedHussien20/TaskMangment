@@ -39,6 +39,20 @@ namespace TaskMangment.API.Controllers
             return Success(result.Data);
         }
 
+        [HttpPut("organizations/{organizationId:int}")]
+        public async Task<IActionResult> UpdateOrganization(int organizationId, [FromBody] UpdateOrganizationRequest request)
+        {
+            var result = await _platform.UpdateOrganizationAsync(CurrentUserId, organizationId, request);
+            return Success(result.Data);
+        }
+
+        [HttpDelete("organizations/{organizationId:int}")]
+        public async Task<IActionResult> DeleteOrganization(int organizationId)
+        {
+            var result = await _platform.DeleteOrganizationAsync(CurrentUserId, organizationId);
+            return Success(result.Data);
+        }
+
         [HttpGet("trainees")]
         public async Task<IActionResult> Trainees([FromQuery] TraineeCopyListRequest request)
         {
@@ -50,6 +64,20 @@ namespace TaskMangment.API.Controllers
         public async Task<IActionResult> CreateTrainee([FromBody] CreateTraineeRequest request)
         {
             var result = await _platform.CreateTraineeAsync(CurrentUserId, request);
+            return Success(result.Data);
+        }
+
+        [HttpPut("trainees/{companyId:int}")]
+        public async Task<IActionResult> UpdateTrainee(int companyId, [FromBody] UpdateTraineeRequest request)
+        {
+            var result = await _platform.UpdateTraineeAsync(CurrentUserId, companyId, request);
+            return Success(result.Data);
+        }
+
+        [HttpDelete("trainees/{companyId:int}")]
+        public async Task<IActionResult> DeleteTrainee(int companyId)
+        {
+            var result = await _platform.DeleteTraineeAsync(CurrentUserId, companyId);
             return Success(result.Data);
         }
 
@@ -71,6 +99,20 @@ namespace TaskMangment.API.Controllers
         public async Task<IActionResult> CreateAdmin([FromBody] CreatePlatformAdminRequest request)
         {
             var result = await _platform.CreatePlatformAdminAsync(CurrentUserId, request);
+            return Success(result.Data);
+        }
+
+        [HttpPut("admins/{adminId:int}")]
+        public async Task<IActionResult> UpdateAdmin(int adminId, [FromBody] UpdatePlatformAdminRequest request)
+        {
+            var result = await _platform.UpdatePlatformAdminAsync(CurrentUserId, adminId, request);
+            return Success(result.Data);
+        }
+
+        [HttpDelete("admins/{adminId:int}")]
+        public async Task<IActionResult> DeleteAdmin(int adminId)
+        {
+            var result = await _platform.DeletePlatformAdminAsync(CurrentUserId, adminId);
             return Success(result.Data);
         }
 

@@ -90,6 +90,11 @@ namespace TaskMangment.Infrastructure.Services
                     Name = o.Name,
                     IsActive = o.IsActive,
                     CreatedDate = o.CreatedDate,
+                    AdminId = o.Admins
+                        .Where(a => !a.IsDeleted && a.Role == PlatformRole.OrganizationAdmin)
+                        .OrderBy(a => a.Id)
+                        .Select(a => (int?)a.Id)
+                        .FirstOrDefault(),
                     AdminEmail = o.Admins
                         .Where(a => !a.IsDeleted && a.Role == PlatformRole.OrganizationAdmin)
                         .OrderBy(a => a.Id)
@@ -145,15 +150,86 @@ namespace TaskMangment.Infrastructure.Services
             _dbo.PlatformUsers.Add(admin);
             await _dbo.SaveChangesAsync();
 
-            return ApiResponse<OrganizationListItemDto>.Ok(new OrganizationListItemDto
-            {
-                Id = organization.Id,
-                Name = organization.Name,
-                IsActive = organization.IsActive,
-                CreatedDate = organization.CreatedDate,
-                AdminEmail = admin.Email,
-                AdminFullName = admin.FullName
-            });
+            return ApiResponse<OrganizationListItemDto>.Ok(ToOrganizationDto(organization, admin));
+        }
+
+        public async Task<ApiResponse<OrganizationListItemDto>> UpdateOrganizationAsync(
+            int platformUserId, int organizationId, UpdateOrganizationRequest request)
+        {
+            await RequirePlatformAdminAsync(platformUserId);
+
+            var name = (request.Name ?? string.Empty).Trim();
+            var adminName = (request.AdminFullName ?? string.Empty).Trim();
+            var adminEmail = (request.AdminEmail ?? string.Empty).Trim();
+            var password = request.AdminPassword ?? string.Empty;
+
+            if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(adminName) ||
+                string.IsNullOrWhiteSpace(adminEmail))
+                throw new AppException(ErrorCodes.ValidationError, StatusCodes.Status400BadRequest);
+
+            if (password.Length > 0 && password.Length < 6)
+                throw new AppException(ErrorCodes.ValidationError, StatusCodes.Status400BadRequest);
+
+            var organization = await _dbo.Organizations
+                .FirstOrDefaultAsync(o => o.Id == organizationId && !o.IsDeleted);
+
+            if (organization == null)
+                throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
+
+            var admin = await _dbo.PlatformUsers
+                .Where(a => a.OrganizationId == organizationId && !a.IsDeleted && a.Role == PlatformRole.OrganizationAdmin)
+                .OrderBy(a => a.Id)
+                .FirstOrDefaultAsync();
+
+            if (admin == null)
+                throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
+
+            if (await EmailTakenAsync(adminEmail, exceptPlatformUserId: admin.Id))
+                throw new AppException(ErrorCodes.EmailAlreadyExists, StatusCodes.Status400BadRequest);
+
+            organization.Name = name;
+            organization.ModifiedBy = platformUserId;
+
+            admin.FullName = adminName;
+            admin.Email = adminEmail;
+            admin.ModifiedBy = platformUserId;
+            if (password.Length >= 6)
+                admin.PasswordHash = BCrypt.Net.BCrypt.HashPassword(password);
+
+            await _dbo.SaveChangesAsync();
+            return ApiResponse<OrganizationListItemDto>.Ok(ToOrganizationDto(organization, admin));
+        }
+
+        public async Task<ApiResponse<bool>> DeleteOrganizationAsync(int platformUserId, int organizationId)
+        {
+            await RequirePlatformAdminAsync(platformUserId);
+
+            var organization = await _dbo.Organizations
+                .FirstOrDefaultAsync(o => o.Id == organizationId && !o.IsDeleted);
+
+            if (organization == null)
+                throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
+
+            SoftDelete(organization, platformUserId);
+
+            var admins = await _dbo.PlatformUsers
+                .Where(a => a.OrganizationId == organizationId && !a.IsDeleted)
+                .ToListAsync();
+            foreach (var admin in admins)
+                SoftDelete(admin, platformUserId);
+
+            var companies = await _training.Companies
+                .IgnoreQueryFilters()
+                .Where(c => c.OrganizationId == organizationId && !c.IsDeleted)
+                .ToListAsync();
+
+            foreach (var company in companies)
+                await SoftDeleteTraineeCompanyAsync(company, platformUserId);
+
+            await _dbo.SaveChangesAsync();
+            await _training.SaveChangesAsync();
+
+            return ApiResponse<bool>.Ok(true);
         }
 
         public async Task<ApiResponse<PagedResponse<TraineeCopyDto>>> GetTraineesAsync(int platformUserId, TraineeCopyListRequest request)
@@ -235,8 +311,7 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<TraineeCopyDto>> CreateTraineeAsync(int platformUserId, CreateTraineeRequest request)
         {
-            var actor = await RequireOrganizationAdminAsync(platformUserId);
-            var organizationId = actor.OrganizationId!.Value;
+            var organizationId = await ResolveTraineeOrganizationIdAsync(platformUserId, request.OrganizationId);
 
             var companyName = (request.CompanyName ?? string.Empty).Trim();
             var adminName = (request.AdminFullName ?? string.Empty).Trim();
@@ -386,6 +461,74 @@ namespace TaskMangment.Infrastructure.Services
             });
         }
 
+        public async Task<ApiResponse<TraineeCopyDto>> UpdateTraineeAsync(
+            int platformUserId, int companyId, UpdateTraineeRequest request)
+        {
+            var scope = await RequireTraineeActorAsync(platformUserId);
+
+            var companyName = (request.CompanyName ?? string.Empty).Trim();
+            var adminName = (request.AdminFullName ?? string.Empty).Trim();
+            var adminEmail = (request.AdminEmail ?? string.Empty).Trim();
+            var password = request.AdminPassword ?? string.Empty;
+
+            if (string.IsNullOrWhiteSpace(companyName) || string.IsNullOrWhiteSpace(adminName) ||
+                string.IsNullOrWhiteSpace(adminEmail))
+                throw new AppException(ErrorCodes.ValidationError, StatusCodes.Status400BadRequest);
+
+            if (password.Length > 0 && password.Length < 6)
+                throw new AppException(ErrorCodes.ValidationError, StatusCodes.Status400BadRequest);
+
+            var company = await _training.Companies
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(c => c.Id == companyId && !c.IsDeleted && (scope == null || c.OrganizationId == scope));
+
+            if (company == null)
+                throw new AppException(ErrorCodes.CompanyNotFound, StatusCodes.Status404NotFound);
+
+            var admin = await _training.Employees
+                .IgnoreQueryFilters()
+                .Where(e => e.CompanyId == companyId && !e.IsDeleted)
+                .OrderBy(e => e.Id)
+                .FirstOrDefaultAsync();
+
+            if (admin == null)
+                throw new AppException(ErrorCodes.EmployeeNotFound, StatusCodes.Status404NotFound);
+
+            if (await EmailTakenAsync(adminEmail, exceptTrainingEmployeeId: admin.Id))
+                throw new AppException(ErrorCodes.EmailAlreadyExists, StatusCodes.Status400BadRequest);
+
+            company.Name = companyName;
+            company.Email = adminEmail;
+            company.ModifiedBy = platformUserId;
+
+            admin.FullName = adminName;
+            admin.Email = adminEmail;
+            admin.ModifiedBy = platformUserId;
+            if (password.Length >= 6)
+                admin.PasswordHash = BCrypt.Net.BCrypt.HashPassword(password);
+
+            await _training.SaveChangesAsync();
+
+            return ApiResponse<TraineeCopyDto>.Ok(await ToTraineeDtoAsync(company, admin));
+        }
+
+        public async Task<ApiResponse<bool>> DeleteTraineeAsync(int platformUserId, int companyId)
+        {
+            var scope = await RequireTraineeActorAsync(platformUserId);
+
+            var company = await _training.Companies
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(c => c.Id == companyId && !c.IsDeleted && (scope == null || c.OrganizationId == scope));
+
+            if (company == null)
+                throw new AppException(ErrorCodes.CompanyNotFound, StatusCodes.Status404NotFound);
+
+            await SoftDeleteTraineeCompanyAsync(company, platformUserId);
+            await _training.SaveChangesAsync();
+
+            return ApiResponse<bool>.Ok(true);
+        }
+
         public async Task<ApiResponse<TraineeCopyDto>> SetTraineeActiveAsync(int platformUserId, int companyId, bool isActive)
         {
             var scope = await RequireTraineeActorAsync(platformUserId);
@@ -409,19 +552,7 @@ namespace TaskMangment.Infrastructure.Services
             await _training.SaveChangesAsync();
 
             var admin = employees.OrderBy(e => e.Id).FirstOrDefault();
-            return ApiResponse<TraineeCopyDto>.Ok(new TraineeCopyDto
-            {
-                CompanyId = company.Id,
-                CompanyName = company.Name,
-                AdminEmail = admin?.Email ?? string.Empty,
-                AdminFullName = admin?.FullName ?? string.Empty,
-                IsActive = isActive,
-                CreatedDate = company.CreatedDate,
-                OrganizationId = company.OrganizationId ?? 0,
-                OrganizationName = company.OrganizationId.HasValue
-                    ? await _dbo.Organizations.Where(o => o.Id == company.OrganizationId).Select(o => o.Name).FirstOrDefaultAsync() ?? string.Empty
-                    : string.Empty
-            });
+            return ApiResponse<TraineeCopyDto>.Ok(await ToTraineeDtoAsync(company, admin, isActive));
         }
 
         private async Task<int?> RequireTraineeActorAsync(int platformUserId)
@@ -508,6 +639,56 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<PlatformAdminListItemDto>.Ok(ToAdminDto(admin));
         }
 
+        public async Task<ApiResponse<PlatformAdminListItemDto>> UpdatePlatformAdminAsync(
+            int platformUserId, int adminId, UpdatePlatformAdminRequest request)
+        {
+            await RequireSuperAdminAsync(platformUserId);
+
+            var name = (request.FullName ?? string.Empty).Trim();
+            var email = (request.Email ?? string.Empty).Trim();
+            var password = request.Password ?? string.Empty;
+
+            if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(email))
+                throw new AppException(ErrorCodes.ValidationError, StatusCodes.Status400BadRequest);
+
+            if (password.Length > 0 && password.Length < 6)
+                throw new AppException(ErrorCodes.ValidationError, StatusCodes.Status400BadRequest);
+
+            var admin = await _dbo.PlatformUsers
+                .FirstOrDefaultAsync(u => u.Id == adminId && !u.IsDeleted && u.Role == PlatformRole.PlatformAdmin);
+
+            if (admin == null)
+                throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
+
+            if (await EmailTakenAsync(email, exceptPlatformUserId: admin.Id))
+                throw new AppException(ErrorCodes.EmailAlreadyExists, StatusCodes.Status400BadRequest);
+
+            admin.FullName = name;
+            admin.Email = email;
+            admin.ModifiedBy = platformUserId;
+            if (password.Length >= 6)
+                admin.PasswordHash = BCrypt.Net.BCrypt.HashPassword(password);
+
+            await _dbo.SaveChangesAsync();
+            return ApiResponse<PlatformAdminListItemDto>.Ok(ToAdminDto(admin));
+        }
+
+        public async Task<ApiResponse<bool>> DeletePlatformAdminAsync(int platformUserId, int adminId)
+        {
+            await RequireSuperAdminAsync(platformUserId);
+
+            var admin = await _dbo.PlatformUsers
+                .FirstOrDefaultAsync(u => u.Id == adminId && !u.IsDeleted && u.Role == PlatformRole.PlatformAdmin);
+
+            if (admin == null)
+                throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
+
+            SoftDelete(admin, platformUserId);
+            await _dbo.SaveChangesAsync();
+
+            return ApiResponse<bool>.Ok(true);
+        }
+
         public async Task<ApiResponse<PlatformAdminListItemDto>> SetPlatformAdminActiveAsync(int platformUserId, int adminId, bool isActive)
         {
             await RequireSuperAdminAsync(platformUserId);
@@ -564,6 +745,59 @@ namespace TaskMangment.Infrastructure.Services
             CreatedDate = admin.CreatedDate
         };
 
+        private static OrganizationListItemDto ToOrganizationDto(Organization organization, PlatformUser admin) => new()
+        {
+            Id = organization.Id,
+            Name = organization.Name,
+            IsActive = organization.IsActive,
+            CreatedDate = organization.CreatedDate,
+            AdminId = admin.Id,
+            AdminEmail = admin.Email,
+            AdminFullName = admin.FullName
+        };
+
+        private async Task<TraineeCopyDto> ToTraineeDtoAsync(Company company, Employee? admin, bool? isActiveOverride = null)
+        {
+            var organizationId = company.OrganizationId ?? 0;
+            return new TraineeCopyDto
+            {
+                CompanyId = company.Id,
+                CompanyName = company.Name,
+                AdminEmail = admin?.Email ?? string.Empty,
+                AdminFullName = admin?.FullName ?? string.Empty,
+                IsActive = isActiveOverride ?? (company.IsActive && (admin?.IsActive ?? false)),
+                CreatedDate = company.CreatedDate,
+                OrganizationId = organizationId,
+                OrganizationName = organizationId > 0
+                    ? await _dbo.Organizations.Where(o => o.Id == organizationId).Select(o => o.Name).FirstOrDefaultAsync() ?? string.Empty
+                    : string.Empty
+            };
+        }
+
+        private async Task SoftDeleteTraineeCompanyAsync(Company company, int platformUserId)
+        {
+            SoftDelete(company, platformUserId);
+            company.IsActive = false;
+
+            var employees = await _training.Employees
+                .IgnoreQueryFilters()
+                .Where(e => e.CompanyId == company.Id && !e.IsDeleted)
+                .ToListAsync();
+
+            foreach (var employee in employees)
+            {
+                SoftDelete(employee, platformUserId);
+                employee.IsActive = false;
+            }
+        }
+
+        private static void SoftDelete(BaseEntity entity, int platformUserId)
+        {
+            entity.IsDeleted = true;
+            entity.DeletedBy = platformUserId;
+            entity.DeletedDate = DateTime.UtcNow;
+        }
+
         private async Task<PlatformUser> RequireSuperAdminAsync(int platformUserId)
         {
             var user = await _dbo.PlatformUsers.FirstOrDefaultAsync(u => u.Id == platformUserId && !u.IsDeleted && u.IsActive);
@@ -580,10 +814,12 @@ namespace TaskMangment.Infrastructure.Services
             return user;
         }
 
+        /// <summary>PlatformAdmin or SuperAdmin may manage institutes (create/edit/delete).</summary>
         private async Task<PlatformUser> RequirePlatformAdminAsync(int platformUserId)
         {
             var user = await _dbo.PlatformUsers.FirstOrDefaultAsync(u => u.Id == platformUserId && !u.IsDeleted && u.IsActive);
-            if (user == null || user.Role != PlatformRole.PlatformAdmin)
+            if (user == null ||
+                (user.Role != PlatformRole.PlatformAdmin && user.Role != PlatformRole.SuperAdmin))
                 throw new AppException(ErrorCodes.NotAuthorized, StatusCodes.Status403Forbidden);
             return user;
         }
@@ -603,6 +839,47 @@ namespace TaskMangment.Infrastructure.Services
             return user;
         }
 
-        private Task<bool> EmailTakenAsync(string email) => _emails.IsTakenAsync(email);
+        /// <summary>
+        /// Org admin → own organization. SuperAdmin / PlatformAdmin → request.OrganizationId required.
+        /// </summary>
+        private async Task<int> ResolveTraineeOrganizationIdAsync(int platformUserId, int? requestedOrganizationId)
+        {
+            var user = await _dbo.PlatformUsers
+                .Include(u => u.Organization)
+                .FirstOrDefaultAsync(u => u.Id == platformUserId && !u.IsDeleted && u.IsActive);
+
+            if (user == null)
+                throw new AppException(ErrorCodes.NotAuthorized, StatusCodes.Status403Forbidden);
+
+            if (user.Role == PlatformRole.OrganizationAdmin)
+            {
+                if (user.OrganizationId == null ||
+                    user.Organization == null || !user.Organization.IsActive || user.Organization.IsDeleted)
+                    throw new AppException(ErrorCodes.EmployeeInactive, StatusCodes.Status403Forbidden);
+                return user.OrganizationId.Value;
+            }
+
+            if (user.Role != PlatformRole.PlatformAdmin && user.Role != PlatformRole.SuperAdmin)
+                throw new AppException(ErrorCodes.NotAuthorized, StatusCodes.Status403Forbidden);
+
+            if (!requestedOrganizationId.HasValue || requestedOrganizationId.Value <= 0)
+                throw new AppException(ErrorCodes.ValidationError, StatusCodes.Status400BadRequest);
+
+            var orgExists = await _dbo.Organizations.AnyAsync(o =>
+                o.Id == requestedOrganizationId.Value && !o.IsDeleted && o.IsActive);
+            if (!orgExists)
+                throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
+
+            return requestedOrganizationId.Value;
+        }
+
+        private Task<bool> EmailTakenAsync(
+            string email,
+            int? exceptPlatformUserId = null,
+            int? exceptTrainingEmployeeId = null) =>
+            _emails.IsTakenAsync(
+                email,
+                exceptPlatformUserId: exceptPlatformUserId,
+                exceptTrainingEmployeeId: exceptTrainingEmployeeId);
     }
 }

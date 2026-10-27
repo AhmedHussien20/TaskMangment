@@ -22,6 +22,14 @@ export class PlatformApiService {
     return this.http.post(`${this.base}/admins`, body);
   }
 
+  updateAdmin(id: number, body: { fullName: string; email: string; password?: string }): Observable<any> {
+    return this.http.put(`${this.base}/admins/${id}`, body);
+  }
+
+  deleteAdmin(id: number): Observable<any> {
+    return this.http.delete(`${this.base}/admins/${id}`);
+  }
+
   setAdminActive(id: number, isActive: boolean): Observable<any> {
     return this.http.post(`${this.base}/admins/${id}/active`, { isActive });
   }
@@ -30,16 +38,53 @@ export class PlatformApiService {
     return this.http.get(`${this.base}/organizations`, { params: this.params(criteria) });
   }
 
-  createOrganization(body: { name: string; adminFullName: string; adminEmail: string; adminPassword: string }): Observable<any> {
+  createOrganization(body: {
+    name: string;
+    adminFullName: string;
+    adminEmail: string;
+    adminPassword: string;
+  }): Observable<any> {
     return this.http.post(`${this.base}/organizations`, body);
+  }
+
+  updateOrganization(id: number, body: {
+    name: string;
+    adminFullName: string;
+    adminEmail: string;
+    adminPassword?: string;
+  }): Observable<any> {
+    return this.http.put(`${this.base}/organizations/${id}`, body);
+  }
+
+  deleteOrganization(id: number): Observable<any> {
+    return this.http.delete(`${this.base}/organizations/${id}`);
   }
 
   trainees(criteria: SearchCriteria): Observable<any> {
     return this.http.get(`${this.base}/trainees`, { params: this.params(criteria) });
   }
 
-  createTrainee(body: { companyName: string; adminFullName: string; adminEmail: string; adminPassword: string }): Observable<any> {
+  createTrainee(body: {
+    companyName: string;
+    adminFullName: string;
+    adminEmail: string;
+    adminPassword: string;
+    organizationId?: number;
+  }): Observable<any> {
     return this.http.post(`${this.base}/trainees`, body);
+  }
+
+  updateTrainee(companyId: number, body: {
+    companyName: string;
+    adminFullName: string;
+    adminEmail: string;
+    adminPassword?: string;
+  }): Observable<any> {
+    return this.http.put(`${this.base}/trainees/${companyId}`, body);
+  }
+
+  deleteTrainee(companyId: number): Observable<any> {
+    return this.http.delete(`${this.base}/trainees/${companyId}`);
   }
 
   setTraineeActive(companyId: number, isActive: boolean): Observable<any> {

@@ -17,7 +17,7 @@
         [labels]="labels"
         [searchCriteria]="criteria"
         [extraFilterOptions]="{ status: statusOptions }"
-        [showAddButton]="session.isOrganizationAdmin"
+        [showAddButton]="canCreate"
         [addButtonLabel]="'PLATFORM.NEW_TRAINEE'"
         [showFilters]="true"
         [showPagination]="true"
@@ -26,7 +26,7 @@
         (pageChange)="onPageChange($event)"
         (entriesChange)="onEntriesChange($event)"
         (iconAction)="onAction($event)"
-        (addClick)="openModal(traineeModal)">
+        (addClick)="openCreate(traineeModal)">
       </app-generic-table>
     </div>
   </div>
@@ -34,14 +34,14 @@
 
 <ng-template #traineeModal let-modal>
   <div class="modal-header">
-    <h6 class="modal-title">{{ 'PLATFORM.NEW_TRAINEE' | translate }}</h6>
+    <h6 class="modal-title">{{ modalTitle | translate }}</h6>
     <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
   </div>
   <div class="modal-body">
     <app-generic-form
       [formGroup]="form"
       [formConfig]="formConfig"
-      (formSubmit)="create()">
+      (formSubmit)="save()">
     </app-generic-form>
   </div>
 </ng-template>

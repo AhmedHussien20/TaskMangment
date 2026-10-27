@@ -17,7 +17,7 @@
         [labels]="labels"
         [searchCriteria]="criteria"
         [extraFilterOptions]="{ status: statusOptions }"
-        [showAddButton]="session.isPlatformAdmin"
+        [showAddButton]="canManage"
         [addButtonLabel]="'PLATFORM.NEW_INSTITUTE'"
         [showFilters]="true"
         [showPagination]="true"
@@ -25,7 +25,8 @@
         [onSearch]="applyFilters.bind(this)"
         (pageChange)="onPageChange($event)"
         (entriesChange)="onEntriesChange($event)"
-        (addClick)="openModal(organizationModal)">
+        (iconAction)="onAction($event)"
+        (addClick)="openCreate(organizationModal)">
       </app-generic-table>
     </div>
   </div>
@@ -33,14 +34,14 @@
 
 <ng-template #organizationModal let-modal>
   <div class="modal-header">
-    <h6 class="modal-title">{{ 'PLATFORM.NEW_INSTITUTE' | translate }}</h6>
+    <h6 class="modal-title">{{ modalTitle | translate }}</h6>
     <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
   </div>
   <div class="modal-body">
     <app-generic-form
       [formGroup]="form"
       [formConfig]="formConfig"
-      (formSubmit)="create()">
+      (formSubmit)="save()">
     </app-generic-form>
   </div>
 </ng-template>

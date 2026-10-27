@@ -26,7 +26,7 @@
         (pageChange)="onPageChange($event)"
         (entriesChange)="onEntriesChange($event)"
         (iconAction)="onAction($event)"
-        (addClick)="openModal(adminModal)">
+        (addClick)="openCreate(adminModal)">
       </app-generic-table>
     </div>
   </div>
@@ -34,14 +34,14 @@
 
 <ng-template #adminModal let-modal>
   <div class="modal-header">
-    <h6 class="modal-title">{{ 'PLATFORM.NEW_ADMIN' | translate }}</h6>
+    <h6 class="modal-title">{{ modalTitle | translate }}</h6>
     <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
   </div>
   <div class="modal-body">
     <app-generic-form
       [formGroup]="form"
       [formConfig]="formConfig"
-      (formSubmit)="create()">
+      (formSubmit)="save()">
     </app-generic-form>
   </div>
 </ng-template>

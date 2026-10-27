@@ -24,7 +24,13 @@ namespace TaskMangment.Infrastructure.DataContext
         }
 
         /// <param name="exceptEmployeeId">An employee in the caller's own schema to ignore (the one being edited or restored).</param>
-        public async Task<bool> IsTakenAsync(string? email, int? exceptEmployeeId = null)
+        /// <param name="exceptPlatformUserId">Platform user to ignore when editing an admin / institute manager.</param>
+        /// <param name="exceptTrainingEmployeeId">Training-schema employee to ignore (platform editing a trainee copy).</param>
+        public async Task<bool> IsTakenAsync(
+            string? email,
+            int? exceptEmployeeId = null,
+            int? exceptPlatformUserId = null,
+            int? exceptTrainingEmployeeId = null)
         {
             var value = (email ?? string.Empty).Trim();
             if (value.Length == 0)
@@ -36,7 +42,9 @@ namespace TaskMangment.Infrastructure.DataContext
                 StringComparison.OrdinalIgnoreCase);
 
             int? exceptDbo = callerIsTraining ? null : exceptEmployeeId;
-            int? exceptTraining = callerIsTraining ? exceptEmployeeId : null;
+            int? exceptTraining = callerIsTraining
+                ? exceptEmployeeId
+                : exceptTrainingEmployeeId;
 
             await using var dbo = new AppDbContext(_dboOptions, _currentUser);
 
@@ -44,12 +52,16 @@ namespace TaskMangment.Infrastructure.DataContext
                     e.Email == value && !e.IsDeleted && (exceptDbo == null || e.Id != exceptDbo)))
                 return true;
 
-            if (await dbo.PlatformUsers.AnyAsync(u => u.Email == value && !u.IsDeleted))
+            if (await dbo.PlatformUsers.AnyAsync(u =>
+                    u.Email == value && !u.IsDeleted &&
+                    (exceptPlatformUserId == null || u.Id != exceptPlatformUserId)))
                 return true;
 
             return await _training.Employees
                 .IgnoreQueryFilters()
-                .AnyAsync(e => e.Email == value && !e.IsDeleted && (exceptTraining == null || e.Id != exceptTraining));
+                .AnyAsync(e =>
+                    e.Email == value && !e.IsDeleted &&
+                    (exceptTraining == null || e.Id != exceptTraining));
         }
     }
 }
