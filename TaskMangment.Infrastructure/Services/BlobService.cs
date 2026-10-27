@@ -221,7 +221,14 @@ namespace TaskMangment.Infrastructure.Services
             if (!string.Equals(schema, OperationalSchema.Training, StringComparison.OrdinalIgnoreCase))
                 return folder;
 
-            var companyId = _currentUser?.CompanyId?.ToString() ?? "0";
+            // Request users carry CompanyId on the JWT; Hangfire sets OperationalCompanyAmbient
+            // for the trainee copy being processed so uploads never land under training/0.
+            var companyId = _currentUser?.CompanyId
+                ?? OperationalCompanyAmbient.Current;
+            if (companyId is null or <= 0)
+                throw new InvalidOperationException(
+                    "Training blob uploads require a company id (JWT CompanyId or OperationalCompanyAmbient).");
+
             var trimmed = (folder ?? string.Empty).Trim('/');
             return string.IsNullOrEmpty(trimmed)
                 ? $"training/{companyId}"

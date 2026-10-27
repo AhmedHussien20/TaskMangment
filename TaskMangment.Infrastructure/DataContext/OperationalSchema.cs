@@ -19,4 +19,19 @@ namespace TaskMangment.Infrastructure.DataContext
             set => CurrentSchema.Value = value;
         }
     }
+
+    /// <summary>
+    /// Request-less company selection used by Hangfire when a job uploads blobs (or stamps data)
+    /// for one trainee copy inside the shared training schema.
+    /// </summary>
+    public static class OperationalCompanyAmbient
+    {
+        private static readonly AsyncLocal<int?> CurrentCompany = new();
+
+        public static int? Current
+        {
+            get => CurrentCompany.Value;
+            set => CurrentCompany.Value = value;
+        }
+    }
 }

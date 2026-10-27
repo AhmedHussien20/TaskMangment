@@ -59,12 +59,24 @@ namespace TaskMangment.Application.Interfaces.Services
                         await fileStream.CopyToAsync(memoryStream);
                         memoryStream.Position = 0;
 
-                        var blobUrl = await _blob.UploadAsync(
-                            memoryStream,
-                            att.FileName,
-                            att.ContentType,
-                            "attachments"
-                        );
+                        string blobUrl;
+                        var previousCompany = OperationalCompanyAmbient.Current;
+                        try
+                        {
+                            if (_db is TrainingDbContext && att.CompanyId > 0)
+                                OperationalCompanyAmbient.Current = att.CompanyId;
+
+                            blobUrl = await _blob.UploadAsync(
+                                memoryStream,
+                                att.FileName,
+                                att.ContentType,
+                                "attachments"
+                            );
+                        }
+                        finally
+                        {
+                            OperationalCompanyAmbient.Current = previousCompany;
+                        }
 
                         att.BlobUrl = blobUrl;
                         att.FilePath = blobUrl;

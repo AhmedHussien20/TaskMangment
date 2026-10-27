@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks; 
-using TaskMangment.Application.Interfaces.Services;
+﻿using TaskMangment.Application.Interfaces.Services;
 
 public class HangfireCurrentUserService : ICurrentUserService
 {
@@ -11,7 +6,8 @@ public class HangfireCurrentUserService : ICurrentUserService
     public string? UserName => "Hangfire";
     public bool IsAuthenticated => false;
 
+    // Hangfire has no JWT. Schema/company for jobs come from OperationalSchemaAmbient /
+    // OperationalCompanyAmbient, which BlobStorageService and DbContext resolve separately.
     public int? CompanyId => null;
     public string? Schema => null;
 }
-

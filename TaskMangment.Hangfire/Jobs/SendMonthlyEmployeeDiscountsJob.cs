@@ -147,11 +147,13 @@ namespace TaskMangment.Hangfire.Jobs
                 discountRows.Select(x => x.BranchId).Distinct().Count(),
                 accountants.Count);
 
-            var branchNames = await _db.Branches
+            var branches = await _db.Branches
                 .AsNoTracking()
                 .Where(b => !b.IsDeleted)
-                .Select(b => new { b.Id, b.Name })
-                .ToDictionaryAsync(b => b.Id, b => b.Name);
+                .Select(b => new { b.Id, b.Name, b.CompanyId })
+                .ToListAsync();
+            var branchNames = branches.ToDictionary(b => b.Id, b => b.Name);
+            var branchCompanies = branches.ToDictionary(b => b.Id, b => b.CompanyId);
 
             var discountsByBranch = discountRows
                 .GroupBy(x => x.BranchId)
@@ -174,13 +176,28 @@ namespace TaskMangment.Hangfire.Jobs
 
                 try
                 {
-                    await SendBranchReportAsync(
-                        branchId,
-                        branchNames.GetValueOrDefault(branchId, "-"),
-                        rows,
-                        branchAccountants,
-                        fromDate,
-                        toDate);
+                    var previousCompany = OperationalCompanyAmbient.Current;
+                    try
+                    {
+                        if (_db is TrainingDbContext &&
+                            branchCompanies.TryGetValue(branchId, out var companyId) &&
+                            companyId > 0)
+                        {
+                            OperationalCompanyAmbient.Current = companyId;
+                        }
+
+                        await SendBranchReportAsync(
+                            branchId,
+                            branchNames.GetValueOrDefault(branchId, "-"),
+                            rows,
+                            branchAccountants,
+                            fromDate,
+                            toDate);
+                    }
+                    finally
+                    {
+                        OperationalCompanyAmbient.Current = previousCompany;
+                    }
                 }
                 catch (Exception ex)
                 {
