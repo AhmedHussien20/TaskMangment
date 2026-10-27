@@ -30,6 +30,12 @@ namespace TaskMangment.Domain.Entities
         /// <summary>Optional JSON object of extra template tokens (e.g. EmployeeName).</summary>
         public string? MetadataJson { get; set; }
 
+        /// <summary>
+        /// Training schema only: the trainee copy the email belongs to, so a ForAll email reaches only that copy.
+        /// Ignored in dbo.
+        /// </summary>
+        public int CompanyId { get; set; }
+
     }
 
 }

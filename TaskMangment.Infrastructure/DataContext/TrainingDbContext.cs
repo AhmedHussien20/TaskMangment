@@ -61,6 +61,7 @@ namespace TaskMangment.Infrastructure.DataContext
             builder.Entity<Permission>().HasQueryFilter(e => CurrentCompanyId == 0 || e.CompanyId == CurrentCompanyId);
             builder.Entity<LeaveType>().HasQueryFilter(e => CurrentCompanyId == 0 || e.CompanyId == CurrentCompanyId);
             builder.Entity<AuditLog>().HasQueryFilter(e => CurrentCompanyId == 0 || e.CompanyId == CurrentCompanyId);
+            builder.Entity<EmailQueue>().HasQueryFilter(e => CurrentCompanyId == 0 || e.CompanyId == CurrentCompanyId);
         }
     }
 }

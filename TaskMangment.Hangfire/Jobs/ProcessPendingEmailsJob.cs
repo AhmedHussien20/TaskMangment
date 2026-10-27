@@ -133,6 +133,12 @@ namespace TaskMangment.Hangfire.Jobs
             const int chunkSize = 200;
             int lastId = 0;
 
+            // The training pass reads every trainee copy at once: "all employees" means the copy that queued it.
+            var trainingCompanyId = _db is TrainingDbContext ? batchEmail.CompanyId : (int?)null;
+            if (trainingCompanyId == 0)
+                throw new InvalidOperationException(
+                    $"ForAll email {batchEmail.Id} has no trainee company; not sending it to every trainee.");
+
             var rendered = await _renderer.RenderAsync(
                 batchEmail.TemplateKey,
                 batchEmail.ReferenceType,
@@ -146,6 +152,7 @@ namespace TaskMangment.Hangfire.Jobs
                 var recipients = await _db.Employees
                     .AsNoTracking()
                     .Where(e => e.Id > lastId && !string.IsNullOrEmpty(e.Email))
+                    .Where(e => trainingCompanyId == null || e.CompanyId == trainingCompanyId)
                     .OrderBy(e => e.Id)
                     .Select(e => new { e.Id, e.Email })
                     .Take(chunkSize)

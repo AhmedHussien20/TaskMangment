@@ -3,35 +3,26 @@ using TaskMangment.Infrastructure.DataContext;
 namespace TaskMangment.Hangfire.Jobs
 {
     /// <summary>
-    /// Runs an operational job once against dbo and once against the training schema.
+    /// Runs an operational job against one schema. Each schema is its own recurring job, so a failure in the
+    /// training pass shows as failed in the dashboard and retries on its own without re-running dbo.
     /// </summary>
     public class SchemaDispatchJob
     {
         private readonly IServiceScopeFactory _scopes;
-        private readonly ILogger<SchemaDispatchJob> _logger;
 
-        public SchemaDispatchJob(IServiceScopeFactory scopes, ILogger<SchemaDispatchJob> logger)
+        public SchemaDispatchJob(IServiceScopeFactory scopes)
         {
             _scopes = scopes;
-            _logger = logger;
         }
 
-        public async Task ExecuteAsync(string jobName)
-        {
-            await RunAsync(OperationalSchema.Dbo, jobName);
+        /// <summary>Kept so jobs enqueued before the per-schema split still deserialize; runs dbo only.</summary>
+        public Task ExecuteAsync(string jobName) => ExecuteAsync(jobName, OperationalSchema.Dbo);
 
-            try
-            {
-                await RunAsync(OperationalSchema.Training, jobName);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Training schema pass failed for job {JobName}", jobName);
-            }
-        }
-
-        private async Task RunAsync(string schema, string jobName)
+        public async Task ExecuteAsync(string jobName, string schema)
         {
+            if (schema != OperationalSchema.Dbo && schema != OperationalSchema.Training)
+                throw new InvalidOperationException($"Unknown schema '{schema}'.");
+
             OperationalSchemaAmbient.Current = schema;
             try
             {

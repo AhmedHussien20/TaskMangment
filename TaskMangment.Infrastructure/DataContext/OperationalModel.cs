@@ -29,6 +29,7 @@ namespace TaskMangment.Infrastructure.DataContext
                 builder.Entity<Permission>().Ignore(x => x.CompanyId);
                 builder.Entity<LeaveType>().Ignore(x => x.CompanyId);
                 builder.Entity<AuditLog>().Ignore(x => x.CompanyId);
+                builder.Entity<EmailQueue>().Ignore(x => x.CompanyId);
                 builder.Entity<EmployeeType>().HasIndex(x => x.Code).IsUnique();
                 return;
             }
@@ -37,6 +38,7 @@ namespace TaskMangment.Infrastructure.DataContext
             builder.Entity<Permission>().HasIndex(x => new { x.CompanyId, x.Code }).IsUnique();
             builder.Entity<LeaveType>().HasIndex(x => x.CompanyId);
             builder.Entity<AuditLog>().HasIndex(x => x.CompanyId);
+            builder.Entity<EmailQueue>().HasIndex(x => x.CompanyId);
         }
 
         private static void ConfigurePlatform(ModelBuilder builder, string schema)

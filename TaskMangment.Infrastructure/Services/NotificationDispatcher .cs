@@ -29,7 +29,8 @@ namespace TaskMangment.Infrastructure.Services
                 if (channel == NotificationChannel.Web)
                 {
                     // Runs from jobs, so the schema comes from the Hangfire pass rather than a request.
-                    var key = NotificationHub.ConnectionKey(OperationalSchemaAmbient.Current, command.UserId);
+                    // No caller company here, so training keys resolve to null and nothing is sent across copies.
+                    var key = NotificationHub.ConnectionKey(OperationalSchemaAmbient.Current, null, command.UserId);
                     foreach (var connectionId in NotificationHub.ConnectionsFor(key))
                     {
                         await _hub.Clients

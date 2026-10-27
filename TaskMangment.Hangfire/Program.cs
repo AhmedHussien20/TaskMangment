@@ -181,47 +181,32 @@ var archiveCron = quietEnabled ? HangfireQuietHours.CronArchiveOutsideQuietHours
 Console.WriteLine("Saudi timezone for Hangfire cron = " + saudiTimeZone.Id);
 Console.WriteLine($"Hangfire quiet hours enabled = {quietEnabled}; email cron = {emailCron}");
 
-RecurringJob.AddOrUpdate<SchemaDispatchJob>(
-    "process-pending-emails",
-    job => job.ExecuteAsync("emails"),
-    emailCron,
-    saudiTimeZone);
+// Each job is registered once per schema: the dbo job keeps its original id, the training job
+// gets a "-training" suffix, so each one succeeds, fails and retries on its own.
+void AddPerSchema(string id, string jobName, string cron)
+{
+    RecurringJob.AddOrUpdate<SchemaDispatchJob>(
+        id, job => job.ExecuteAsync(jobName, OperationalSchema.Dbo), cron, saudiTimeZone);
+    RecurringJob.AddOrUpdate<SchemaDispatchJob>(
+        $"{id}-training", job => job.ExecuteAsync(jobName, OperationalSchema.Training), cron, saudiTimeZone);
+}
+
+AddPerSchema("process-pending-emails", "emails", emailCron);
 
 //RecurringJob.AddOrUpdate<AttachmentBlobMigrationJob>(
 //    "attachment-blob-migration",
 //    job => job.ExecuteAsync(),
 //    Cron.Minutely);
 
-RecurringJob.AddOrUpdate<SchemaDispatchJob>(
-    "penalty-missing-comments",
-    job => job.ExecuteAsync("penalty"),
-    penaltyCron,
-    saudiTimeZone
-);
+AddPerSchema("penalty-missing-comments", "penalty", penaltyCron);
 
 // Close after the due day ends (Saudi calendar): due Thursday stays open all Thursday,
 // closes at 00:01 Friday.
-RecurringJob.AddOrUpdate<SchemaDispatchJob>(
-    "archive-overdue-tasks",
-    job => job.ExecuteAsync("archive"),
-    archiveCron,
-    saudiTimeZone
-);
+AddPerSchema("archive-overdue-tasks", "archive", archiveCron);
 
-RecurringJob.AddOrUpdate<SchemaDispatchJob>(
-    "task-due-today-email-job",
-    job => job.ExecuteAsync("due-today"),
-    archiveCron,
-    saudiTimeZone
-);
+AddPerSchema("task-due-today-email-job", "due-today", archiveCron);
 
-
-RecurringJob.AddOrUpdate<SchemaDispatchJob>(
-    "send-monthly-employee-discounts",
-    job => job.ExecuteAsync("monthly-discounts"),
-    Cron.Monthly(25, 9, 0),
-    saudiTimeZone
-);
+AddPerSchema("send-monthly-employee-discounts", "monthly-discounts", Cron.Monthly(25, 9, 0));
 
 using (var scope = app.Services.CreateScope())
 {

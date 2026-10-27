@@ -44,17 +44,22 @@ namespace TaskMangment.Hangfire.Jobs
                 return;
 
             // أجازة رسمية
-            var isPublicHoliday = await _db.CalendarEvents
+            var holidayCompanyIds = await _db.CalendarEvents
                 .AsNoTracking()
-                .AnyAsync(e =>
+                .Where(e =>
                     e.Public == true &&
                     e.EventType == CalendarEventType.Holiday &&
                     !e.IsDeleted &&
                     e.StartDate.Date <= yesterday &&
-                    (e.EndDate == null ? e.StartDate.Date >= yesterday : e.EndDate.Value.Date >= yesterday)
-                );
+                    (e.EndDate == null ? e.StartDate.Date >= yesterday : e.EndDate.Value.Date >= yesterday))
+                .Select(e => e.CompanyId)
+                .Distinct()
+                .ToListAsync();
 
-            if (isPublicHoliday)
+            // The training pass sees every trainee copy at once, so a holiday only exempts its own copy's tasks.
+            // dbo keeps the original rule: any public holiday stops the run.
+            var perCompanyHolidays = _db is TrainingDbContext;
+            if (!perCompanyHolidays && holidayCompanyIds.Count > 0)
                 return;
 
             var tasks = await _db.Tasks
@@ -72,7 +77,9 @@ namespace TaskMangment.Hangfire.Jobs
 
             foreach (var task in tasks)
             {
-              
+                if (perCompanyHolidays && holidayCompanyIds.Contains(task.CompanyId))
+                    continue;
+
                 bool hasCloseRequest = await _db.TaskCloseRequests
                     .AnyAsync(r => r.TaskId == task.Id);
 

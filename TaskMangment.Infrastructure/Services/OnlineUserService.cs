@@ -21,7 +21,8 @@ namespace TaskMangment.Infrastructure.Services
         public bool IsUserOnline(int userId)
         {
             return NotificationHub.IsUserOnline(
-                NotificationHub.ConnectionKey(_currentUser.Schema ?? OperationalSchemaAmbient.Current, userId));
+                NotificationHub.ConnectionKey(
+                    _currentUser.Schema ?? OperationalSchemaAmbient.Current, _currentUser.CompanyId, userId));
         }
     }
 

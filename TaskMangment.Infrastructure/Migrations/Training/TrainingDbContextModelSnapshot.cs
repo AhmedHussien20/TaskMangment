@@ -786,6 +786,9 @@ namespace TaskMangment.Infrastructure.Migrations.Training
                     b.Property<string>("Cc")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("int");
+
                     b.Property<int?>("CreatedBy")
                         .HasColumnType("int");
 
@@ -848,6 +851,8 @@ namespace TaskMangment.Infrastructure.Migrations.Training
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CompanyId");
 
                     b.HasIndex("UserId");
 
