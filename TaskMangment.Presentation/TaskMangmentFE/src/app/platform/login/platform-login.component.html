@@ -49,8 +49,6 @@
           </div>
         </div>
 
-        <div class="alert alert-danger py-2" *ngIf="error">{{ error }}</div>
-
         <button class="btn btn-primary btn-lg w-100 mt-2" [disabled]="loginForm.invalid || loading">
           <span *ngIf="!loading">{{ 'PLATFORM.LOGIN' | translate }}</span>
           <span *ngIf="loading" class="spinner-border spinner-border-sm"></span>

@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslateModule } from '@ngx-translate/core';
 import { PlatformApiService } from '../platform-api.service';
 import { PlatformSessionService } from '../platform-session.service';
 
@@ -18,9 +18,7 @@ export class PlatformLoginComponent implements OnInit, OnDestroy {
   private api = inject(PlatformApiService);
   private session = inject(PlatformSessionService);
   private router = inject(Router);
-  private translate = inject(TranslateService);
 
-  error = '';
   loading = false;
   showLoginPassword = false;
 
@@ -46,7 +44,6 @@ export class PlatformLoginComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.error = '';
     this.loading = true;
     const value = this.loginForm.getRawValue();
     this.api.login(value.email || '', value.password || '').subscribe({
@@ -55,9 +52,8 @@ export class PlatformLoginComponent implements OnInit, OnDestroy {
         this.session.save(res.data);
         this.router.navigateByUrl(this.session.homePath);
       },
-      error: (err) => {
+      error: () => {
         this.loading = false;
-        this.error = err?.error?.message || this.translate.instant('PLATFORM.LOGIN_FAILED');
       }
     });
   }

@@ -60,6 +60,8 @@ $gf-error-height: 1rem;
 
     > .btn {
       height: $gf-control-height;
+      white-space: nowrap;
+      flex: 0 0 auto;
     }
   }
 
@@ -70,15 +72,13 @@ $gf-error-height: 1rem;
 
   .invalid-feedback,
   .text-danger.mt-1 {
-    position: absolute;
-    right: calc(var(--bs-gutter-x, 0.75rem) * 0.5);
-    left: calc(var(--bs-gutter-x, 0.75rem) * 0.5);
-    bottom: 0.1rem;
+    position: static;
     display: block;
-    width: auto;
-    margin-top: 0;
+    width: 100%;
+    margin-top: 0.25rem;
     font-size: 0.8rem;
     line-height: 1.2;
+    white-space: normal;
   }
 
   .mb-3 {

@@ -23,36 +23,41 @@
           {{ field.label | translate }}
           <span *ngIf="isFieldRequired(field)" class="text-danger ms-1">*</span>
         </label>
-        <div
-          *ngIf="field.inputType !== 'mobile' && (field.type === 'input' || field.type === 'text' || field.type === 'number' || field.inputType === 'password')"
-          class="input-group">
-          <div *ngIf="field.prefix" class="input-group-text">
-            {{ field.prefix | translate}}
+        <ng-container
+          *ngIf="field.inputType !== 'mobile' && (field.type === 'input' || field.type === 'text' || field.type === 'number' || field.inputType === 'password')">
+          <div class="input-group">
+            <div *ngIf="field.prefix" class="input-group-text">
+              {{ field.prefix | translate}}
+            </div>
+            <input [type]="field.inputType === 'password' && field.showPassword ? 'text' : field.inputType"
+              class="form-control" [id]="field.name" [formControlName]="field.name"
+              [placeholder]="field.placeholder ? (field.placeholder | translate) : (field.label | translate)"
+              [readOnly]="field.disabled" [disabled]="field.disabled" autocomplete="new-password" [ngClass]="{
+      'is-invalid':
+        formGroup.controls[field.name].invalid &&
+        (formGroup.controls[field.name].dirty ||
+          formGroup.controls[field.name].touched)
+    }" />
+
+            <button *ngIf="field.name === 'password'" type="button" class="btn btn-outline-secondary"
+              (click)="onGeneratePassword(field.name)">
+              {{ 'FORM.GENERATE' | translate }}
+            </button>
+            <button *ngIf="field.inputType === 'password'" type="button" class="btn btn-outline-secondary"
+              (click)="field.showPassword = !field.showPassword">
+              <i [class]="field.showPassword ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
+            </button>
           </div>
-          <input [type]="field.inputType === 'password' && field.showPassword ? 'text' : field.inputType"
-            class="form-control" [id]="field.name" [formControlName]="field.name"
-            [placeholder]="field.placeholder ? (field.placeholder | translate) : (field.label | translate)"
-            [readOnly]="field.disabled" [disabled]="field.disabled" autocomplete="new-password" [ngClass]="{
-    'is-invalid':
-      formGroup.controls[field.name].invalid &&
-      (formGroup.controls[field.name].dirty ||
-        formGroup.controls[field.name].touched)
-  }" />
 
-          <button *ngIf="field.name === 'password'" type="button" class="btn btn-outline-secondary"
-            (click)="onGeneratePassword(field.name)">
-            {{ 'FORM.GENERATE' | translate }}
-          </button>
-          <button *ngIf="field.inputType === 'password'" type="button" class="btn btn-outline-secondary"
-            (click)="field.showPassword = !field.showPassword">
-            <i [class]="field.showPassword ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
-          </button>
-
+          <!-- Outside input-group so feedback is not squeezed between Generate / eye buttons -->
           <div *ngIf="
               formGroup.controls[field.name].invalid &&
               (formGroup.controls[field.name].dirty ||
                 formGroup.controls[field.name].touched)
-            " class="invalid-feedback">
+            " class="invalid-feedback d-block">
+            <div *ngIf="formGroup.controls[field.name].errors?.['required']">
+              {{ 'FORM.IS_REQUIRED' | translate }}
+            </div>
             <div *ngIf="formGroup.controls[field.name].errors?.['minlength']">
               {{ 'FORM.MINIMUM_LENGTH' | translate }}
               {{ formGroup.controls[field.name].errors?.['minlength'].requiredLength }}
@@ -65,7 +70,7 @@
             </div>
 
             <div *ngIf="formGroup.controls[field.name].errors?.['decimal']
-            && field.inputType === 'number'" class="input-group">
+            && field.inputType === 'number'">
               {{ 'FORM.INVALID_DECIMAL_NUMBER' | translate }}
             </div>
 
@@ -76,17 +81,14 @@
             formGroup.controls[field.name].errors?.['pattern']&& field.name === 'mobile'">
               {{ 'FORM.INVALID_SAUDI_MOBILE' | translate }}
             </div>
-            <!-- Password mismatch message -->
-            <!-- Password mismatch -->
             <div *ngIf="
   field.name === 'confirmPassword' &&
   formGroup.controls[field.name]?.errors?.['passwordMismatch']
 ">
               {{ 'FORM.PASSWORD_MISMATCH' | translate }}
             </div>
-
           </div>
-        </div>
+        </ng-container>
 
         <div *ngIf="field.inputType === 'mobile'" class="input-group">
 

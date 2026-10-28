@@ -59,38 +59,8 @@ export class PlatformTraineesComponent implements OnInit {
     sortDirection: 'ASC',
     filterTypes: { searchKey: 'text', status: 'dropdown' }
   });
-  private traineeColumns: TableColumn[] = [
-    { key: 'companyName', label: 'PLATFORM.COMPANY' },
-    { key: 'adminFullName', label: 'PLATFORM.MANAGER' },
-    { key: 'adminEmail', label: 'PLATFORM.EMAIL_COL' },
-    { key: 'createdDate', label: 'PLATFORM.CREATED', type: 'date' },
-    {
-      key: 'isActive',
-      label: 'PLATFORM.STATUS',
-      type: 'badge',
-      badgeMap: {
-        true: { text: 'PLATFORM.ACTIVE_F', class: 'bg-success' },
-        false: { text: 'PLATFORM.SUSPENDED_F', class: 'bg-danger' }
-      }
-    },
-    {
-      key: 'actions',
-      label: 'PLATFORM.ACTION',
-      type: 'menu',
-      width: '72px',
-      menuItems: (row: TraineeRow) => [
-        { label: 'PLATFORM.EDIT', icon: 'fe fe-edit', value: 'edit' },
-        {
-          label: row.isActive ? 'PLATFORM.SUSPEND' : 'PLATFORM.ACTIVATE',
-          icon: row.isActive ? 'fe fe-pause-circle' : 'fe fe-play-circle',
-          value: 'toggle',
-          danger: row.isActive
-        },
-        { label: 'PLATFORM.DELETE', icon: 'fe fe-trash-2', value: 'delete', danger: true }
-      ]
-    }
-  ];
-  organizationOptions: { label: string; value: number }[] = [];
+  // Stable reference — avoid recreating the columns array every CD cycle (breaks ngbDropdown).
+  columns: TableColumn[] = [];
   form = this.fb.group({
     organizationId: [null as number | null],
     companyName: ['', Validators.required],
@@ -100,11 +70,6 @@ export class PlatformTraineesComponent implements OnInit {
     confirmPassword: ['', Validators.required]
   }, { validators: this.passwordsMatch });
   formConfig: FormFieldConfig[] = [];
-
-  get columns(): TableColumn[] {
-    if (this.session.isOrganizationAdmin) return this.traineeColumns;
-    return [{ key: 'organizationName', label: 'PLATFORM.INSTITUTE' }, ...this.traineeColumns];
-  }
 
   get canCreate(): boolean {
     return this.session.isOrganizationAdmin || this.session.isPlatformAdmin || this.session.isSuperAdmin;
@@ -119,8 +84,41 @@ export class PlatformTraineesComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.columns = [
+      ...(this.session.isOrganizationAdmin
+        ? []
+        : [{ key: 'organizationName', label: 'PLATFORM.INSTITUTE' } as TableColumn]),
+      { key: 'companyName', label: 'PLATFORM.COMPANY' },
+      { key: 'adminFullName', label: 'PLATFORM.MANAGER' },
+      { key: 'adminEmail', label: 'PLATFORM.EMAIL_COL' },
+      { key: 'createdDate', label: 'PLATFORM.CREATED', type: 'date' },
+      {
+        key: 'isActive',
+        label: 'PLATFORM.STATUS',
+        type: 'badge',
+        badgeMap: {
+          true: { text: 'PLATFORM.ACTIVE_F', class: 'bg-success' },
+          false: { text: 'PLATFORM.SUSPENDED_F', class: 'bg-danger' }
+        }
+      },
+      {
+        key: 'actions',
+        label: 'PLATFORM.ACTION',
+        type: 'menu',
+        width: '72px',
+        menuItems: (row: TraineeRow) => [
+          { label: 'PLATFORM.EDIT', icon: 'fe fe-edit', value: 'edit' },
+          {
+            label: row.isActive ? 'PLATFORM.SUSPEND' : 'PLATFORM.ACTIVATE',
+            icon: row.isActive ? 'fe fe-pause-circle' : 'fe fe-play-circle',
+            value: 'toggle',
+            danger: row.isActive
+          },
+          { label: 'PLATFORM.DELETE', icon: 'fe fe-trash-2', value: 'delete', danger: true }
+        ]
+      }
+    ];
     this.rebuildFormConfig();
-    if (this.needsOrganizationPicker) this.loadOrganizations();
     this.load();
   }
 
@@ -263,28 +261,6 @@ export class PlatformTraineesComponent implements OnInit {
     });
   }
 
-  private loadOrganizations(): void {
-    this.api.organizations(new SearchCriteria({
-      searchKey: '',
-      pageIndex: 1,
-      pageSize: 200,
-      sortColumn: 'name',
-      sortDirection: 'ASC',
-      status: 'active',
-      filterTypes: { searchKey: 'text', status: 'dropdown' }
-    })).subscribe({
-      next: (res) => {
-        const page = res.data || {};
-        this.organizationOptions = (page.data || []).map((o: { id: number; name: string }) => ({
-          label: o.name,
-          value: o.id
-        }));
-        this.rebuildFormConfig(!this.editingId);
-      },
-      error: () => this.toastr.error(this.translate.instant('PLATFORM.LOAD_INSTITUTES_FAILED'))
-    });
-  }
-
   private rebuildFormConfig(includeOrganization = !this.editingId && this.needsOrganizationPicker): void {
     const fields: FormFieldConfig[] = [];
     if (includeOrganization && this.needsOrganizationPicker) {
@@ -293,8 +269,20 @@ export class PlatformTraineesComponent implements OnInit {
         label: 'PLATFORM.INSTITUTE',
         name: 'organizationId',
         selectType: 'simple',
-        options: this.organizationOptions,
-        validations: { required: true }
+        options: [],
+        validations: { required: true },
+        isPaginated: true,
+        // Loaded only when the dropdown opens (generic-form onSelectOpen / search / scroll).
+        searchFunction: (searchTerm: string, page: number) =>
+          this.api.organizations(new SearchCriteria({
+            searchKey: searchTerm || '',
+            pageIndex: page || 1,
+            pageSize: 20,
+            sortColumn: 'name',
+            sortDirection: 'ASC',
+            status: 'active',
+            filterTypes: { searchKey: 'text', status: 'dropdown' }
+          }))
       });
     }
     fields.push(

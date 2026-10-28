@@ -425,6 +425,8 @@ namespace TaskMangment.Infrastructure.Services
                 Name = "Company Admin",
                 Description = "مدير نسخة المتدرب",
                 Level = (int)RoleLevelEnum.Admin,
+                // So the seeded admin can own the main branch and create more branches later.
+                CanBeBranchManager = true,
                 CreatedBy = platformUserId
             };
             _training.Roles.Add(role);
@@ -445,6 +447,41 @@ namespace TaskMangment.Infrastructure.Services
                 IsAssigned = true,
                 CreatedBy = platformUserId
             });
+
+            // Bootstrap org tree: empty trainee companies cannot create branches (need a manager)
+            // or employees that expect a branch. Seed one main branch owned by the company admin.
+            var mainBranch = new Branch
+            {
+                CompanyId = company.Id,
+                Name = "الفرع الرئيسي",
+                Address = string.Empty,
+                Phone = string.Empty,
+                Mobile = string.Empty,
+                Fax = string.Empty,
+                Email = adminEmail,
+                ManagerID = employee.Id,
+                ResponsibleID = employee.Id,
+                IsActive = true,
+                MainBranch = true,
+                CreatedBy = platformUserId
+            };
+            _training.Branches.Add(mainBranch);
+            await _training.SaveChangesAsync();
+
+            var mainDepartment = new Department
+            {
+                CompanyId = company.Id,
+                BranchId = mainBranch.Id,
+                Name = "الإدارة الرئيسية",
+                ManagerEmployeeId = employee.Id,
+                CreatedBy = platformUserId
+            };
+            _training.Departments.Add(mainDepartment);
+            await _training.SaveChangesAsync();
+
+            employee.BranchId = mainBranch.Id;
+            employee.DepartmentId = mainDepartment.Id;
+            employee.ModifiedBy = platformUserId;
 
             await _training.SaveChangesAsync();
             await tx.CommitAsync();

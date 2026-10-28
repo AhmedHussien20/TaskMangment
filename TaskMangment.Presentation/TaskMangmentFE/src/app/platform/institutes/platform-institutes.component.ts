@@ -58,7 +58,8 @@ export class PlatformInstitutesComponent implements OnInit {
     sortDirection: 'ASC',
     filterTypes: { searchKey: 'text', status: 'dropdown' }
   });
-  private baseColumns: TableColumn[] = [
+  // Stable reference — a getter that allocates a new array each CD cycle breaks ngbDropdown.
+  columns: TableColumn[] = [
     { key: 'name', label: 'PLATFORM.INSTITUTE' },
     { key: 'adminFullName', label: 'PLATFORM.ADMIN' },
     { key: 'adminEmail', label: 'PLATFORM.EMAIL_COL' },
@@ -73,23 +74,6 @@ export class PlatformInstitutesComponent implements OnInit {
       }
     }
   ];
-
-  get columns(): TableColumn[] {
-    if (!this.canManage) return this.baseColumns;
-    return [
-      ...this.baseColumns,
-      {
-        key: 'actions',
-        label: 'PLATFORM.ACTION',
-        type: 'menu',
-        width: '72px',
-        menuItems: () => [
-          { label: 'PLATFORM.EDIT', icon: 'fe fe-edit', value: 'edit' },
-          { label: 'PLATFORM.DELETE', icon: 'fe fe-trash-2', value: 'delete', danger: true }
-        ]
-      }
-    ];
-  }
   form = this.fb.group({
     name: ['', Validators.required],
     adminFullName: ['', Validators.required],
@@ -114,6 +98,21 @@ export class PlatformInstitutesComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    if (this.canManage) {
+      this.columns = [
+        ...this.columns,
+        {
+          key: 'actions',
+          label: 'PLATFORM.ACTION',
+          type: 'menu',
+          width: '72px',
+          menuItems: () => [
+            { label: 'PLATFORM.EDIT', icon: 'fe fe-edit', value: 'edit' },
+            { label: 'PLATFORM.DELETE', icon: 'fe fe-trash-2', value: 'delete', danger: true }
+          ]
+        }
+      ];
+    }
     this.load();
   }
 
