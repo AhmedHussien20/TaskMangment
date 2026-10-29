@@ -52,8 +52,10 @@ namespace TaskMangment.Infrastructure.DataContext
                     e.Email == value && !e.IsDeleted && (exceptDbo == null || e.Id != exceptDbo)))
                 return true;
 
+            // Unique index IX_PlatformUsers_Email is not filtered by IsDeleted — soft-deleted
+            // rows still block the address, so count them as taken.
             if (await dbo.PlatformUsers.AnyAsync(u =>
-                    u.Email == value && !u.IsDeleted &&
+                    u.Email == value &&
                     (exceptPlatformUserId == null || u.Id != exceptPlatformUserId)))
                 return true;
 

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Http;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using TaskMangment.Application.ApiRequests;
 using TaskMangment.Application.ApiRequests.Platform;
@@ -148,7 +149,7 @@ namespace TaskMangment.Infrastructure.Services
 
             _dbo.Organizations.Add(organization);
             _dbo.PlatformUsers.Add(admin);
-            await _dbo.SaveChangesAsync();
+            await SaveDboAsync();
 
             return ApiResponse<OrganizationListItemDto>.Ok(ToOrganizationDto(organization, admin));
         }
@@ -196,7 +197,7 @@ namespace TaskMangment.Infrastructure.Services
             if (password.Length >= 6)
                 admin.PasswordHash = BCrypt.Net.BCrypt.HashPassword(password);
 
-            await _dbo.SaveChangesAsync();
+            await SaveDboAsync();
             return ApiResponse<OrganizationListItemDto>.Ok(ToOrganizationDto(organization, admin));
         }
 
@@ -226,7 +227,7 @@ namespace TaskMangment.Infrastructure.Services
             foreach (var company in companies)
                 await SoftDeleteTraineeCompanyAsync(company, platformUserId);
 
-            await _dbo.SaveChangesAsync();
+            await SaveDboAsync();
             await _training.SaveChangesAsync();
 
             return ApiResponse<bool>.Ok(true);
@@ -671,7 +672,7 @@ namespace TaskMangment.Infrastructure.Services
             };
 
             _dbo.PlatformUsers.Add(admin);
-            await _dbo.SaveChangesAsync();
+            await SaveDboAsync();
 
             return ApiResponse<PlatformAdminListItemDto>.Ok(ToAdminDto(admin));
         }
@@ -706,7 +707,7 @@ namespace TaskMangment.Infrastructure.Services
             if (password.Length >= 6)
                 admin.PasswordHash = BCrypt.Net.BCrypt.HashPassword(password);
 
-            await _dbo.SaveChangesAsync();
+            await SaveDboAsync();
             return ApiResponse<PlatformAdminListItemDto>.Ok(ToAdminDto(admin));
         }
 
@@ -721,7 +722,7 @@ namespace TaskMangment.Infrastructure.Services
                 throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
 
             SoftDelete(admin, platformUserId);
-            await _dbo.SaveChangesAsync();
+            await SaveDboAsync();
 
             return ApiResponse<bool>.Ok(true);
         }
@@ -737,7 +738,7 @@ namespace TaskMangment.Infrastructure.Services
                 throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
 
             admin.IsActive = isActive;
-            await _dbo.SaveChangesAsync();
+            await SaveDboAsync();
 
             return ApiResponse<PlatformAdminListItemDto>.Ok(ToAdminDto(admin));
         }
@@ -918,5 +919,32 @@ namespace TaskMangment.Infrastructure.Services
                 email,
                 exceptPlatformUserId: exceptPlatformUserId,
                 exceptTrainingEmployeeId: exceptTrainingEmployeeId);
+
+        private async Task SaveDboAsync()
+        {
+            try
+            {
+                await _dbo.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex) when (IsDuplicateEmailConstraint(ex))
+            {
+                throw new AppException(ErrorCodes.EmailAlreadyExists, StatusCodes.Status400BadRequest);
+            }
+        }
+
+        private static bool IsDuplicateEmailConstraint(DbUpdateException ex)
+        {
+            if (ex.InnerException is not SqlException sql)
+                return false;
+
+            // 2601 = unique index, 2627 = unique/primary key constraint
+            if (sql.Number is not (2601 or 2627))
+                return false;
+
+            var message = sql.Message ?? string.Empty;
+            return message.Contains("IX_PlatformUsers_Email", StringComparison.OrdinalIgnoreCase)
+                || message.Contains("PlatformUsers", StringComparison.OrdinalIgnoreCase)
+                || message.Contains("Email", StringComparison.OrdinalIgnoreCase);
+        }
     }
 }
