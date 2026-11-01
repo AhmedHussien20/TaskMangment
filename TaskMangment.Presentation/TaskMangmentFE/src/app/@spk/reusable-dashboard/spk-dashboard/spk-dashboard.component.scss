@@ -1,3 +1,9 @@
+:host.tile-host {
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
+
 .dashboard-card {
   transition: all 0.2s ease-in-out;
 }
@@ -9,4 +15,67 @@
 .dashboard-card.clickable:hover {
   transform: translateY(-4px);
   box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+}
+
+.dashboard-card.metric-tile {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  width: 100%;
+  margin-block-end: 0;
+  border: 1px solid #e7edf5;
+  border-radius: 12px;
+  box-shadow: none;
+  background: #fff;
+  height: 100%;
+
+  .card-body {
+    flex: 1;
+    padding: 14px 16px 12px;
+  }
+
+  .card-item {
+    position: relative;
+    min-height: 68px;
+  }
+
+  .card-item-icon.card-icon {
+    width: 36px;
+    height: 36px;
+    inset-inline-end: 0;
+    inset-block-start: 0;
+    inset-block-end: auto;
+    border-radius: 10px;
+    background: #eef3fb;
+  }
+
+  .card-item-title {
+    margin-block-end: 0;
+    padding-inline-end: 46px;
+  }
+
+  .main-content-label {
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 500;
+    font-size: 13px;
+    line-height: 1.35;
+    color: #6b7280;
+    margin-block-end: 8px;
+  }
+
+  h4 {
+    margin: 0;
+    padding-inline-end: 46px;
+    font-size: 1.55rem;
+    font-weight: 700;
+    line-height: 1.15;
+    color: #111827;
+  }
+}
+
+.dashboard-card.metric-tile.clickable:hover {
+  transform: none;
+  border-color: #c5d2e4;
+  box-shadow: 0 6px 16px rgba(16, 24, 40, 0.06);
 }

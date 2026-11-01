@@ -1,4 +1,5 @@
 <div class="card custom-card dashboard-card"
+  [class.metric-tile]="variant === 'tile'"
   [class.clickable]="card.clickable"
   (click)="onClick()">
   <div class="card-body">

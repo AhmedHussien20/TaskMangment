@@ -30,40 +30,34 @@
 </div>
 
 
-<div class="row row-sm">
-
-    <div class="col-12 col-md-6 col-xl-3" *ngFor="let card of statCards; let i = index">
-        <div (click)="openCard(card)" style="cursor: pointer;">
-            <spk-dashboard [card]="card"></spk-dashboard>
+<div class="dash-sections" [class.dash-sections--split]="employeeTypeCards.length">
+    <section class="dash-panel">
+        <h3 class="dash-panel-title">{{ 'DASHBOARD.SECTION_OVERVIEW' | translate }}</h3>
+        <div class="dash-panel-grid">
+            <div *ngFor="let card of statCards" (click)="openCard(card)" [class.dash-tile-click]="card.clickable">
+                <spk-dashboard [card]="card" variant="tile"></spk-dashboard>
+            </div>
+            <div *ngFor="let card of kpiCards" (click)="openCard(card)" [class.dash-tile-click]="card.clickable">
+                <spk-dashboard [card]="card" variant="tile"></spk-dashboard>
+            </div>
         </div>
-    </div>
+    </section>
 
-    <div class="col-12 col-md-6 col-xl-3" *ngFor="let card of kpiCards; let i = index">
-        <div (click)="openCard(card)" style="cursor: pointer;">
-            <spk-dashboard [card]="card"></spk-dashboard>
+    <section class="dash-panel" *ngIf="employeeTypeCards.length">
+        <h3 class="dash-panel-title">{{ 'DASHBOARD.TASKS_BY_EMPLOYEE_TYPE' | translate }}</h3>
+        <div class="dash-panel-grid">
+            <div *ngFor="let card of employeeTypeCards" (click)="openCard(card)" class="dash-tile-click">
+                <spk-dashboard [card]="card" variant="tile"></spk-dashboard>
+            </div>
         </div>
-    </div>
-
-</div>
-
-<div class="row row-sm" *ngIf="employeeTypeCards.length">
-    <div class="col-12 mb-2">
-        <h5 class="mb-0">{{ 'DASHBOARD.TASKS_BY_EMPLOYEE_TYPE' | translate }}</h5>
-    </div>
-
-    <div class="col-12 col-md-6 col-xl-3" *ngFor="let card of employeeTypeCards">
-        <div (click)="openCard(card)" style="cursor: pointer;">
-            <spk-dashboard [card]="card"></spk-dashboard>
-        </div>
-    </div>
+    </section>
 </div>
 
 <!-- Admin Section -->
-<div class="row row-sm" *ngIf="isAdmin">
+<div class="dash-lower" *ngIf="isAdmin">
 
-    <!-- Top Delayed Employees -->
-    <div class="col-12 col-xl-6">
-        <div class="card custom-card overflow-hidden" *ngIf="topDelayedEmployees.length">
+    <div class="dash-lower-side">
+        <div class="card custom-card overflow-hidden dash-lower-card" *ngIf="topDelayedEmployees.length">
             <div class="card-header border-bottom-0 pb-0">
                 <label class="main-content-label">
                     {{ 'DASHBOARD.TOP_DELAYED_EMPLOYEES' | translate }}
@@ -89,22 +83,8 @@
                 </ul>
             </div>
         </div>
-    </div>
 
-    <!-- Today In Progress Tasks -->
-    <div class="col-12 col-xl-6">
-        <div class="card custom-card overflow-hidden">
-<app-task-today-updated
-  [currentPeriod]="currentPeriod"
-  [currentBranchId]="selectedBranchId">
-</app-task-today-updated>
-
-        </div>
-    </div>
-
-    <!-- Completed Today -->
-    <div class="col-12 col-xl-4 mt-xl-4">
-        <div class="card custom-card card-dashboard-calendar" *ngIf="completedTasksToday.length">
+        <div class="card custom-card card-dashboard-calendar dash-lower-card" *ngIf="completedTasksToday.length">
             <label class="main-content-label mb-2 pt-1">
                 {{ 'DASHBOARD.COMPLETED_TODAY' | translate }}
             </label>
@@ -150,14 +130,16 @@
         </div>
     </div>
 
+    <div class="dash-lower-main">
+        <app-task-today-updated
+            [currentPeriod]="currentPeriod"
+            [currentBranchId]="selectedBranchId">
+        </app-task-today-updated>
+    </div>
 
 </div>
 
 
-<div class="row row-sm">
-  <div class="col-12 col-xl-6">
-    <div class="card custom-card overflow-hidden">
-      <app-task-today-comment></app-task-today-comment>
-    </div>
-  </div>
+<div class="dash-lower-comments">
+    <app-task-today-comment></app-task-today-comment>
 </div>
