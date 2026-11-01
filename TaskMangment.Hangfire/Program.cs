@@ -118,7 +118,7 @@ if (args.Contains("--sync-db", StringComparer.OrdinalIgnoreCase))
         await migrator.MigrateAsync();
         var training = scope.ServiceProvider.GetRequiredService<TrainingDbContext>();
         await training.Database.MigrateAsync();
-        await TrainingCatalogSeeder.CopyIfEmptyAsync(db, training);
+        await TrainingCatalogSeeder.EnsureTemplatesAsync(db, training);
         await PlatformAdminSeeder.EnsureAsync(db, app.Configuration);
     }
     Console.WriteLine("DB sync completed (schema + email templates + permissions).");

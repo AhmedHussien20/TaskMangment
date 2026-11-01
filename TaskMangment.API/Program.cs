@@ -317,6 +317,9 @@ namespace TaskMangment.API
 
                 var migrator = scope.ServiceProvider.GetRequiredService<RolePermissionPackMigrator>();
                 await migrator.MigrateAsync();
+
+                var training = scope.ServiceProvider.GetRequiredService<TrainingDbContext>();
+                await TrainingCatalogSeeder.EnsureTemplatesAsync(db, training);
             }
 
             //using (var scope = app.Services.CreateScope())
