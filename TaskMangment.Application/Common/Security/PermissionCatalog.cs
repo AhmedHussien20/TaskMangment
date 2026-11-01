@@ -39,6 +39,7 @@ namespace TaskMangment.Application.Common.Security
             new(PermissionCodes.ViewOwnTasks, "View Own Tasks", "عرض المهام الخاصة بالموظف"),
             new(PermissionCodes.ViewScopedTasks, "View Scoped Tasks", "عرض مهام الموظفين ضمن نطاق الصلاحية"),
             new(PermissionCodes.ViewCompanyTasks, "View Company Tasks", "عرض كل مهام الشركة"),
+            new(PermissionCodes.ViewEmployeeTypeTaskCards, "View Employee Type Task Cards", "عرض بطاقات مهام أنواع الموظفين في لوحة التحكم"),
 
             // Tasks — CRUD
             new(PermissionCodes.CreateTask, "Create Tasks", "إنشاء مهام جديدة وتحديد مواعيدها وأولوياتها والمكلفين بها"),

@@ -18,5 +18,14 @@ namespace TaskMangment.Application.DTOs
         public string Name { get; set; } = "";
     }
 
+    public class EmployeeTypeTaskCardDto
+    {
+        public int EmployeeTypeId { get; set; }
+        public string Code { get; set; } = "";
+        public string NameAr { get; set; } = "";
+        public string NameEn { get; set; } = "";
+        public int ActiveTaskCount { get; set; }
+    }
+
 
 }

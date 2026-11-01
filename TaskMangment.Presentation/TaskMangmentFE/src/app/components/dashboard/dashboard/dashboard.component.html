@@ -46,6 +46,18 @@
 
 </div>
 
+<div class="row row-sm" *ngIf="employeeTypeCards.length">
+    <div class="col-12 mb-2">
+        <h5 class="mb-0">{{ 'DASHBOARD.TASKS_BY_EMPLOYEE_TYPE' | translate }}</h5>
+    </div>
+
+    <div class="col-12 col-md-6 col-xl-3" *ngFor="let card of employeeTypeCards">
+        <div (click)="openCard(card)" style="cursor: pointer;">
+            <spk-dashboard [card]="card"></spk-dashboard>
+        </div>
+    </div>
+</div>
+
 <!-- Admin Section -->
 <div class="row row-sm" *ngIf="isAdmin">
 

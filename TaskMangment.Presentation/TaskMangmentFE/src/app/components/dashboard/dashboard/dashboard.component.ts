@@ -14,6 +14,7 @@ import {
   AdminDashboardDto,
   AdminKpisExtendedDto,
   BranchFilterDto,
+  EmployeeTypeTaskCardDto,
   CompletedTasksTodayDto,
   EmployeeDashboardDto,
   EmployeeKpisExtendedDto,
@@ -88,6 +89,8 @@ export class DashboardComponent {
 
   kpiCards: any[] = [];
   statCards: any[] = [];
+  employeeTypeCards: any[] = [];
+  canViewEmployeeTypeCards = false;
   tasks: any[] = [];
 
   // charts
@@ -180,6 +183,9 @@ export class DashboardComponent {
 
     if (canViewAdminDashboard) {
       this.isAdmin = true;
+      this.canViewEmployeeTypeCards = this.authService.hasPermission(
+        Permissions.VIEW_EMPLOYEE_TYPE_TASK_CARDS
+      );
 
       // branches مرة واحدة
       this.loadBranchesForFilter();
@@ -206,6 +212,7 @@ export class DashboardComponent {
     if (this.isAdmin) {
       this.loadAdminKpis();
       this.loadAdminDashboard();
+      this.loadEmployeeTypeCards();
       this.loadCompletedTasksToday();
       this.loadPendingCloseRequests();
       // لو عندك شاشة today updated هتضيفيها هنا مع branchId
@@ -302,6 +309,44 @@ export class DashboardComponent {
           
         ];
       });
+  }
+
+  private loadEmployeeTypeCards() {
+    if (!this.canViewEmployeeTypeCards) {
+      this.employeeTypeCards = [];
+      return;
+    }
+
+    this.dashboardService
+      .getAdminEmployeeTypeCards(this.selectedBranchId)
+      .subscribe((res) => {
+        const rows = res.data ?? [];
+        this.employeeTypeCards = rows.map((row) => ({
+          title: this.employeeTypeCardTitle(row),
+          value: row.activeTaskCount,
+          svg: `
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                 viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                 class="feather feather-users text-primary">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+          `,
+          clickable: true,
+          rawTitle: true,
+          status: 'Active',
+          employeeTypeId: row.employeeTypeId,
+        }));
+      });
+  }
+
+  private employeeTypeCardTitle(row: EmployeeTypeTaskCardDto): string {
+    const lang = (this.translate.currentLang || this.translate.getDefaultLang() || 'ar').toLowerCase();
+    const name = lang.startsWith('en') ? row.nameEn : row.nameAr;
+    return name || row.nameAr || row.nameEn || row.code;
   }
 
   private loadAdminKpis() {
@@ -572,6 +617,10 @@ export class DashboardComponent {
       period: this.currentPeriod
     };
     modalRef.componentInstance.branchId = this.selectedBranchId;
+    if (card.employeeTypeId) {
+      modalRef.componentInstance.employeeTypeId = card.employeeTypeId;
+      modalRef.componentInstance.title = card.title;
+    }
 
     modalRef.componentInstance.loadPageData();
     return;

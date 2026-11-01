@@ -292,6 +292,63 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<AdminDashboardDto>.Ok(dto);
         }
 
+        public async Task<ApiResponse<List<EmployeeTypeTaskCardDto>>> GetEmployeeTypeCardsAsync(
+            int companyId,
+            int roleLevel,
+            int? employeeId,
+            int? branchId = null)
+        {
+            string cacheKey = $"dashboard:admin:type-cards:{companyId}:{employeeId}:{branchId}";
+            var cached = await _cache.GetAsync<List<EmployeeTypeTaskCardDto>>(cacheKey);
+            if (cached != null)
+                return ApiResponse<List<EmployeeTypeTaskCardDto>>.Ok(cached);
+
+            var (scopedEmployeesQuery, scopedEmployeeIds) =
+                await GetScopedEmployeesAsync(companyId, roleLevel, employeeId, branchId);
+
+            var types = await scopedEmployeesQuery
+                .Where(e => e.EmployeeType != null && !e.EmployeeType.IsDeleted)
+                .Select(e => new
+                {
+                    e.EmployeeTypeId,
+                    e.EmployeeType.Code,
+                    e.EmployeeType.NameAr,
+                    e.EmployeeType.NameEn
+                })
+                .Distinct()
+                .ToListAsync();
+
+            var openTasks = _taskRepo.GetAll(t =>
+                t.CompanyId == companyId &&
+                (t.Status == WorkTaskStatus.New || t.Status == WorkTaskStatus.InProgress));
+
+            var counts = await openTasks
+                .SelectMany(t => t.Assignments
+                    .Where(a => scopedEmployeeIds.Contains(a.EmployeeId))
+                    .Select(a => new { TaskId = t.Id, TypeId = a.Employee.EmployeeTypeId }))
+                .Distinct()
+                .GroupBy(x => x.TypeId)
+                .Select(g => new { TypeId = g.Key, Count = g.Count() })
+                .ToListAsync();
+
+            var countByType = counts.ToDictionary(x => x.TypeId, x => x.Count);
+
+            var cards = types
+                .Select(t => new EmployeeTypeTaskCardDto
+                {
+                    EmployeeTypeId = t.EmployeeTypeId,
+                    Code = t.Code,
+                    NameAr = t.NameAr,
+                    NameEn = t.NameEn,
+                    ActiveTaskCount = countByType.GetValueOrDefault(t.EmployeeTypeId)
+                })
+                .OrderBy(t => t.NameAr)
+                .ToList();
+
+            await _cache.SetAsync(cacheKey, cards, TimeSpan.FromMinutes(5));
+            return ApiResponse<List<EmployeeTypeTaskCardDto>>.Ok(cards);
+        }
+
         public async Task<ApiResponse<PagedResponse<UpdatedTodayTaskDto>>> GetTodayUpdatedInProgressTasksAsync(
             int companyId,
             int roleLevel,
@@ -465,7 +522,8 @@ namespace TaskMangment.Infrastructure.Services
     int roleLevel,
     int? employeeId,
     TasksByStatusRequest request,
-    int? branchId = null)
+    int? branchId = null,
+    int? employeeTypeId = null)
         {
             var range = PeriodHelper.GetRange(request.Period);
 
@@ -507,7 +565,15 @@ namespace TaskMangment.Infrastructure.Services
                         t.ClosedAt <= range.End);
                     break;
             }
-            if (employeeId.HasValue || branchId.HasValue)
+            if (employeeTypeId.HasValue)
+            {
+                var typeId = employeeTypeId.Value;
+                tasksQuery = tasksQuery.Where(t =>
+                    t.Assignments.Any(a =>
+                        scopedEmployeeIds.Contains(a.EmployeeId) &&
+                        a.Employee.EmployeeTypeId == typeId));
+            }
+            else if (employeeId.HasValue || branchId.HasValue)
             {
                 tasksQuery = tasksQuery.Where(t =>
                     t.Assignments.Any(a => scopedEmployeeIds.Contains(a.EmployeeId)));

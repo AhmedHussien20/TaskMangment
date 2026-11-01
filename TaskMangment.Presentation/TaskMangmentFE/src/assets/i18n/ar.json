@@ -38,7 +38,8 @@
     "YEAR" : "السنه",
     "SELECT_BRANCH" : "اختر فرع",
     "NOT_COMMENTED_EMPLOYEES": "موظفنين لم يعلقو",
-    "NEW_TASKS" : "مهام لم يتم العمل عليها"
+    "NEW_TASKS" : "مهام لم يتم العمل عليها",
+    "TASKS_BY_EMPLOYEE_TYPE": "مهام حسب نوع الموظف"
 
   },
   "MENU": {

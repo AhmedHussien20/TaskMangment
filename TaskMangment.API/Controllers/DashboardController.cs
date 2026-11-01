@@ -112,12 +112,28 @@ namespace TaskMangment.API.Controllers
             return Success(result.Data);
         }
 
+        [HttpGet("admin/employee-type-cards")]
+        [PermissionAuthorize(
+            PermissionCodes.ViewScopedTasks, PermissionCodes.ViewCompanyTasks)]
+        public async Task<IActionResult> GetEmployeeTypeCards(int? branchId = null)
+        {
+            if (!HasPermission(PermissionCodes.ViewEmployeeTypeTaskCards))
+                return Fail("Not Allowed (No Permission)", StatusCodes.Status403Forbidden);
+
+            var result = await _adminService.GetEmployeeTypeCardsAsync(
+                CompanyId, RoleLevel, CurrentUserId, branchId);
+            return Success(result.Data);
+        }
+
         [HttpGet("admin/tasks-by-status")]
         [PermissionAuthorize(
             PermissionCodes.ViewScopedTasks, PermissionCodes.ViewCompanyTasks)]
-        public async Task<IActionResult> GetAdminTasksByStatus([FromQuery] string status,[FromQuery] TasksByStatusRequest request,int? branchId = null)
+        public async Task<IActionResult> GetAdminTasksByStatus([FromQuery] string status,[FromQuery] TasksByStatusRequest request,int? branchId = null, int? employeeTypeId = null)
         {
-            var result = await _adminService.GetTasksByStatusAsync(CompanyId, status,RoleLevel,CurrentUserId,request,branchId);
+            if (employeeTypeId.HasValue && !HasPermission(PermissionCodes.ViewEmployeeTypeTaskCards))
+                return Fail("Not Allowed (No Permission)", StatusCodes.Status403Forbidden);
+
+            var result = await _adminService.GetTasksByStatusAsync(CompanyId, status,RoleLevel,CurrentUserId,request,branchId, employeeTypeId);
             return Success(result.Data);
         }
 

@@ -13,6 +13,7 @@ namespace TaskMangment.Application.Common.Security
         public const string ViewOwnTasks = "VIEW_OWN_TASKS";
         public const string ViewScopedTasks = "VIEW_SCOPED_TASKS";
         public const string ViewCompanyTasks = "VIEW_COMPANY_TASKS";
+        public const string ViewEmployeeTypeTaskCards = "VIEW_EMPLOYEE_TYPE_TASK_CARDS";
 
         // Tasks — assignee requests
         public const string RequestTaskClose = "REQUEST_TASK_CLOSE";

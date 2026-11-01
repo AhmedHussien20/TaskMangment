@@ -16,7 +16,8 @@ import { DashboardService } from 'app/core/services/dashboar.service';
   ],
   template: `
     <div class="modal-header">
-      <h5 class="modal-title">{{ 'TASK.LIST_TITLE' | translate }}</h5>
+      <h5 class="modal-title" *ngIf="title">{{ title }}</h5>
+      <h5 class="modal-title" *ngIf="!title">{{ 'TASK.LIST_TITLE' | translate }}</h5>
       <button type="button" class="btn-close" (click)="activeModal.close()"></button>
     </div>
 
@@ -53,6 +54,8 @@ export class TaskStatusPopupComponent {
   @Input() status: 'Active' | 'Overdue' | 'Completed' | 'New' = 'Active';
   @Input() request: any = { pageIndex: 1, pageSize: 20, period: null };
   @Input() branchId?: number;
+  @Input() employeeTypeId?: number;
+  @Input() title?: string;
 
   tasks: TaskStatusDto[] = [];
   tasksRows: any[] = [];
@@ -87,7 +90,7 @@ export class TaskStatusPopupComponent {
     if (!this.status || !this.request.period) return;
 
     this.dashboardService
-      .getAdminTasksByStatus(this.status, this.request, this.branchId)
+      .getAdminTasksByStatus(this.status, this.request, this.branchId, this.employeeTypeId)
       .subscribe(res => {
         const data = res.data;
         this.tasks = data.data || [];
