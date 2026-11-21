@@ -24,6 +24,8 @@ namespace TaskMangment.Application.Interfaces.Services
         Task<ApiResponse<TaskRequestsDto>> GetTaskRequestsAsync(int taskId);
         Task<ApiResponse<TaskActivitySummaryDTO>> GetTaskActivitySummaryAsync(int taskId);
         Task<ApiResponse<bool>> ArchiveClosedTasksAsync(List<int> taskIds);
+        Task<ApiResponse<bool>> ReopenAsync(int id, ReopenTaskDto dto, int employeeId);
+        Task<ApiResponse<List<TaskReopenHistoryDto>>> GetReopenHistoryAsync(int taskId);
 
 
     }

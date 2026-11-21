@@ -15,6 +15,9 @@ import { AuthService } from 'app/core/services/auth.service';
 import { CommonModule } from '@angular/common';
 import { PercentageModalComponent } from '../actions/task-percentage/percentage-modal/percentage-modal.component';
 import { Permissions } from 'app/core/constants/permissions';
+import { TaskStatus } from 'app/core/models/task/task';
+import { ReopenTaskModalComponent } from '../actions/reopen/reopen-task-modal.component';
+import { isPastDueDate } from 'app/shared/validations/weekend-due-date.validator';
 import { NotificationApiService } from 'app/core/services/notification.service';
 import { Subscription } from 'rxjs';
 
@@ -193,9 +196,38 @@ export class TaskDetailsShellComponent implements OnInit, OnChanges, OnDestroy {
 
   get isTaskClosed(): boolean {
     const status = this.taskInfo?.status;
-    return status === 5
-      || status === 4
-      || status === 3;
+    return status === TaskStatus.AutoClose
+      || status === TaskStatus.Archived
+      || status === TaskStatus.Closed;
+  }
+
+  get canReopen(): boolean {
+    const status = this.taskInfo?.status;
+    const reopenable = status === TaskStatus.Closed || status === TaskStatus.AutoClose;
+    if (!reopenable) return false;
+    return !!this.taskInfo?.isCreatorOrAssigner
+      || this.auth.hasPermission(Permissions.REOPEN_TASK);
+  }
+
+  openReopen(): void {
+    if (!this.canReopen) return;
+
+    const ref = this.modal.open(ReopenTaskModalComponent, {
+      size: 'lg',
+      backdrop: 'static'
+    });
+    ref.componentInstance.taskId = this.taskId;
+    ref.componentInstance.dueDateRequired = isPastDueDate(this.taskInfo?.dueDate);
+
+    ref.result.then(
+      success => {
+        if (success) {
+          this.loadTask();
+          this.refreshService.trigger('reopen');
+        }
+      },
+      () => { }
+    );
   }
 
   openAction(action: string) {

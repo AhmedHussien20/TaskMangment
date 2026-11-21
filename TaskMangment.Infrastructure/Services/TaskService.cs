@@ -50,6 +50,7 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<Attachment> _attachmentRepo;
         private readonly IRepository<TaskPercentage> _percentRepo;
         private readonly IRepository<Notification> _notificationRepo;
+        private readonly IRepository<TaskReopenHistory> _reopenHistoryRepo;
 
         private readonly IAppUnitOfWork _uow;
         private readonly IUserAccessContextProvider _accessProvider;
@@ -76,6 +77,7 @@ namespace TaskMangment.Infrastructure.Services
            IRepository<Attachment> attachmentRepo,
            IRepository<TaskPercentage> percentRepo,
            IRepository<Notification> notificationRepo,
+           IRepository<TaskReopenHistory> reopenHistoryRepo,
            IAppUnitOfWork uow,
            IUserAccessContextProvider accessProvider,
            IAccessScopeResolver scopeResolver,
@@ -101,6 +103,7 @@ namespace TaskMangment.Infrastructure.Services
             _attachmentRepo = attachmentRepo;
             _percentRepo = percentRepo;
             _notificationRepo = notificationRepo;
+            _reopenHistoryRepo = reopenHistoryRepo;
             _uow = uow;
             _accessProvider = accessProvider;
             _scopeResolver = scopeResolver;
@@ -971,6 +974,112 @@ namespace TaskMangment.Infrastructure.Services
             // await _cache.RemoveAsync("tasks:");
 
             return ApiResponse<bool>.Ok(true);
+        }
+
+        public async Task<ApiResponse<bool>> ReopenAsync(int id, ReopenTaskDto dto, int employeeId)
+        {
+            dto ??= new ReopenTaskDto();
+
+            var task = await _taskRepo.GetByIDAsync(id);
+            if (task == null)
+                throw new AppException(ErrorCodes.TaskNotFound, StatusCodes.Status400BadRequest);
+
+            await EnsureCanReopenTaskAsync(employeeId, task);
+
+            if (!TaskReopenRules.IsReopenable(task.Status))
+                throw new AppException(ErrorCodes.TaskNotReopenable, StatusCodes.Status400BadRequest);
+
+            DateTime? newDueDate = null;
+            var dueDateIsPast = task.DueDate.HasValue && TaskDueDateRules.IsPast(task.DueDate.Value);
+            if (dueDateIsPast && dto.DueDate == null)
+                throw new AppException(ErrorCodes.DueDateInPast, StatusCodes.Status400BadRequest);
+
+            if (dto.DueDate.HasValue)
+            {
+                TaskDueDateRules.EnsureValidDueDate(dto.DueDate);
+                newDueDate = dto.DueDate;
+            }
+
+            var reopenedAt = DateTime.UtcNow;
+            var history = TaskReopenRules.Capture(task, employeeId, newDueDate, reopenedAt);
+
+            var assignments = await _assignmentRepo
+                .GetAll(a => a.TaskId == id)
+                .ToListAsync();
+
+            TaskReopenRules.ApplyOpenState(task, assignments, newDueDate);
+
+            await _reopenHistoryRepo.AddAsync(history);
+            await _audit.AddAsync(new AuditLog
+            {
+                EntityName = nameof(WorkTask),
+                EntityId = task.Id,
+                Action = "Reopen",
+                ChangedBy = employeeId.ToString(),
+                ChangedAt = reopenedAt,
+                Details =
+                    $"PreviousStatus={history.PreviousStatus};" +
+                    $"PreviousCloseReason={history.PreviousCloseReason};" +
+                    $"PreviousClosedAt={history.PreviousClosedAt:o};" +
+                    $"PreviousDueDate={history.PreviousDueDate:o};" +
+                    $"NewDueDate={history.NewDueDate:o}"
+            });
+
+            await _taskRepo.SaveChangesAsync();
+
+            return ApiResponse<bool>.Ok(true, "Task reopened successfully");
+        }
+
+        public async Task<ApiResponse<List<TaskReopenHistoryDto>>> GetReopenHistoryAsync(int taskId)
+        {
+            var rows = await _reopenHistoryRepo
+                .GetAll(h => h.TaskId == taskId)
+                .Include(h => h.ReopenedBy)
+                .OrderByDescending(h => h.ReopenedAt)
+                .AsNoTracking()
+                .ToListAsync();
+
+            var dtos = rows.Select(h => new TaskReopenHistoryDto
+            {
+                Id = h.Id,
+                TaskId = h.TaskId,
+                ReopenedByEmployeeId = h.ReopenedByEmployeeId,
+                ReopenedByName = h.ReopenedBy?.FullName ?? string.Empty,
+                ReopenedAt = h.ReopenedAt,
+                PreviousStatus = h.PreviousStatus,
+                PreviousClosedAt = h.PreviousClosedAt,
+                PreviousCloseReason = h.PreviousCloseReason,
+                PreviousDueDate = h.PreviousDueDate,
+                NewDueDate = h.NewDueDate
+            }).ToList();
+
+            return ApiResponse<List<TaskReopenHistoryDto>>.Ok(dtos);
+        }
+
+        private async Task EnsureCanReopenTaskAsync(int employeeId, WorkTask task)
+        {
+            if (TaskCreatedByMeEvaluator.IsCreatorOrAssigner(employeeId, task))
+                return;
+
+            if (!await _permissions.HasAsync(employeeId, PermissionCodes.ReopenTask))
+                throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
+
+            var scope = await _scopeResolver.ResolveAsync(employeeId);
+            if (scope.Kind == AccessScopeKind.CompanyWide && task.CompanyId == scope.CompanyId)
+                return;
+
+            if (TaskCreatedByMeEvaluator.AllowsScopeInferredCreatorSide(scope.Kind)
+                && task.CreatedByEmployeeId is int creatorId
+                && creatorId > 0)
+            {
+                var creatorInScope = await _scopeResolver
+                    .FilterEmployees(_employeeRepo.GetAll(e => e.Id == creatorId), scope)
+                    .AnyAsync();
+                if (creatorInScope)
+                    return;
+            }
+
+            throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
         }
 
         private async Task EnsureCanMutateTaskAsync(int employeeId, WorkTask task, string permissionCode)

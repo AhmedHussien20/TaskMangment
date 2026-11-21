@@ -49,6 +49,11 @@
         <i class="bi bi-cash-coin"></i>
       </button>
 
+      <button *ngIf="canReopen" class="btn btn-light" ngbTooltip="{{'TASK.REOPEN_TASK' | translate}}" container="body" placement="bottom"
+        (click)="openReopen()">
+        <i class="bi bi-arrow-counterclockwise"></i>
+      </button>
+
     </div>
 
 

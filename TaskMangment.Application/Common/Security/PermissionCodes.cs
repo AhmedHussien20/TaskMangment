@@ -23,6 +23,7 @@ namespace TaskMangment.Application.Common.Security
         public const string ApproveTaskRequest = "APPROVE_TASK_REQUEST";
         public const string RejectTaskRequest = "REJECT_TASK_REQUEST";
         public const string ArchiveTask = "ARCHIVE_TASK";
+        public const string ReopenTask = "REOPEN_TASK";
         public const string IssueWarning = "ISSUE_WARNING";
         public const string DeleteWarning = "DELETE_WARNING";
         public const string IssuePenalty = "ISSUE_PENALTY";

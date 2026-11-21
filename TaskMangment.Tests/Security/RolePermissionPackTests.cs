@@ -16,6 +16,7 @@ public class RolePermissionPackTests
         Assert.Contains(PermissionCodes.AssignRole, pack);
         Assert.Contains(PermissionCodes.ReceiveOrgEscalations, pack);
         Assert.Contains(PermissionCodes.CreateTask, pack);
+        Assert.Contains(PermissionCodes.ReopenTask, pack);
         Assert.Contains(PermissionCodes.EnableEmployee, pack);
         Assert.Contains(PermissionCodes.CommentTask, pack);
         Assert.Contains(PermissionCodes.RequestTaskClose, pack);
@@ -74,6 +75,7 @@ public class RolePermissionPackTests
         Assert.Contains(PermissionCodes.RequestDueDateExtension, pack);
         Assert.DoesNotContain(PermissionCodes.IssuePenalty, pack);
         Assert.DoesNotContain(PermissionCodes.CreateTask, pack);
+        Assert.DoesNotContain(PermissionCodes.ReopenTask, pack);
     }
 
     [Fact]

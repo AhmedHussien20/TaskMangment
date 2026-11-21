@@ -5,6 +5,8 @@ import { TaskDetailsRefreshService } from '../../../task-details-refresh.service
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { TaskService } from 'app/core/services/task.service';
 import { MyDatePipe } from 'app/components/utilities/pipline/MyDatePipe';
+import { TaskReopenHistory } from 'app/core/models/task/task-reopen-history';
+import { TaskStatus } from 'app/core/models/task/task';
 
 interface AuditItem {
   id: number;
@@ -35,6 +37,7 @@ export class TaskAuditComponent implements OnInit, OnDestroy {
   extensionItems: AuditItem[] = [];
   closeItems: AuditItem[] = [];
   percentageItems: AuditItem[] = [];
+  reopenItems: TaskReopenHistory[] = [];
   
   counts: Record<string, number> = {};
   private sub!: Subscription;
@@ -56,6 +59,7 @@ export class TaskAuditComponent implements OnInit, OnDestroy {
     if (!this.taskId) return;
 
     this.isLoading = true;
+    this.loadReopenHistory();
     this.taskService.getTaskActivitySummary(this.taskId).subscribe({
       next: (res) => {
         this.items = [];
@@ -176,6 +180,27 @@ message: this.translate.instant('TASK.ACHIEVEMENT') + ': ' + summary.lastPercent
         this.isLoading = false;
       }
     });
+  }
+
+  private loadReopenHistory(): void {
+    this.taskService.getReopenHistory(this.taskId).subscribe({
+      next: (res) => {
+        this.reopenItems = res.success && res.data ? res.data : [];
+      },
+      error: () => {
+        this.reopenItems = [];
+      }
+    });
+  }
+
+  statusLabel(status: number): string {
+    switch (status) {
+      case TaskStatus.Closed: return 'TASK.STATUS_CLOSED';
+      case TaskStatus.AutoClose: return 'TASK.STATUS_AUTOCLOSE';
+      case TaskStatus.Archived: return 'TASK.STATUS_ARCHIVED';
+      case TaskStatus.InProgress: return 'TASK.STATUS_IN_PROGRESS';
+      default: return 'TASK.STATUS_NEW';
+    }
   }
 
   ngOnDestroy(): void {

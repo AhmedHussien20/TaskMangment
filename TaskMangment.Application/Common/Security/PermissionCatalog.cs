@@ -47,6 +47,7 @@ namespace TaskMangment.Application.Common.Security
             new(PermissionCodes.DeleteTask, "Delete Tasks", "حذف مهام من النظام بشكل نهائي بعد انتهائها أو إلغائها"),
             new(PermissionCodes.CommentTask, "Comment on Tasks", "إضافة تعليقات وتحديثات على المهام لمتابعة التقدم والتواصل مع الفريق"),
             new(PermissionCodes.ArchiveTask, "Archive Tasks", "نقل المهام المنتهية إلى الأرشيف للحفاظ على النظام وتقليل التكدس"),
+            new(PermissionCodes.ReopenTask, "Reopen Tasks", "إعادة فتح مهمة مغلقة أو مغلقة تلقائياً مع الاحتفاظ بالخصومات والجزاءات"),
 
             // Tasks — assignee requests
             new(PermissionCodes.RequestTaskClose, "Request Task Close", "تقديم طلب إغلاق المهمة بعد إنجازها"),

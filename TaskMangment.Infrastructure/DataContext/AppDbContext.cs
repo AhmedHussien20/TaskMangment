@@ -79,6 +79,7 @@ namespace TaskMangment.Infrastructure.DataContext
         public DbSet<WorkTask> Tasks { get; set; }
         public DbSet<TaskAssignment> TaskAssignments { get; set; }
         public DbSet<TaskCloseRequest> TaskCloseRequests { get; set; }
+        public DbSet<TaskReopenHistory> TaskReopenHistories { get; set; }
         public DbSet<TaskComment> TaskComments { get; set; }
         public DbSet<TaskExtensionRequest> TaskExtensionRequests { get; set; }
         public DbSet<TaskPercentage> TaskPercentages { get; set; }
@@ -155,6 +156,21 @@ namespace TaskMangment.Infrastructure.DataContext
                  .WithMany()
                  .HasForeignKey(t => t.CreatedByEmployeeId)
                  .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<TaskReopenHistory>()
+                 .HasOne(h => h.Task)
+                 .WithMany(t => t.ReopenHistory)
+                 .HasForeignKey(h => h.TaskId)
+                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<TaskReopenHistory>()
+                 .HasOne(h => h.ReopenedBy)
+                 .WithMany()
+                 .HasForeignKey(h => h.ReopenedByEmployeeId)
+                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<TaskReopenHistory>()
+                 .HasIndex(h => h.TaskId);
              
             builder.Entity<TaskAssignment>()
                  .HasOne(a => a.Employee)

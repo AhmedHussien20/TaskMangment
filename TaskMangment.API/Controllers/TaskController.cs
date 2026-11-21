@@ -92,6 +92,21 @@ namespace TaskMangment.API.Controllers
             return Ok(result);
         }
 
+        /// <summary>Creator/assigner, or a user with REOPEN_TASK inside their scope. Deductions are kept.</summary>
+        [HttpPost("{id}/reopen")]
+        public async Task<IActionResult> Reopen(int id, [FromBody] ReopenTaskDto dto)
+        {
+            var result = await _service.ReopenAsync(id, dto, this.CurrentUserId);
+            return Success(result.Data, result.Message);
+        }
+
+        [HttpGet("{id}/reopen-history")]
+        public async Task<IActionResult> GetReopenHistory(int id)
+        {
+            var result = await _service.GetReopenHistoryAsync(id);
+            return Success(result.Data);
+        }
+
         [HttpPost("archive-closed")]
         [PermissionAuthorize(PermissionCodes.ArchiveTask)]
         public async Task<IActionResult> ArchiveClosed([FromBody] List<int> taskIds)
