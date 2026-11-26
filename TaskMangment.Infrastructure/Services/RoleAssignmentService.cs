@@ -173,9 +173,13 @@ namespace TaskMangment.Infrastructure.Services
             await _employeeRoleRepo.SaveChangesAsync();
 
             foreach (var employeeId in employeeIds)
+            {
                 await ReconcileEmployeeTypeScopeAsync(employeeId);
+                await DeactivateManagerBranchesIfNotBranchManagerAsync(employeeId);
+            }
 
             await _employeeFunctionScopeRepo.SaveChangesAsync();
+            await _managerBranchesRepo.SaveChangesAsync();
             return ApiResponse<bool>.Ok(true, "Employees assigned/unassigned successfully");
         }
 
@@ -232,6 +236,30 @@ namespace TaskMangment.Infrastructure.Services
                 });
             }
         }
+
+        private async Task DeactivateManagerBranchesIfNotBranchManagerAsync(int employeeId)
+        {
+            var keepsBranchManager = await _employeeRoleRepo
+                .GetAll(er =>
+                    er.EmployeeId == employeeId &&
+                    er.IsAssigned &&
+                    !er.IsDeleted &&
+                    er.Role != null &&
+                    !er.Role.IsDeleted &&
+                    er.Role.CanBeBranchManager)
+                .AnyAsync();
+
+            if (keepsBranchManager)
+                return;
+
+            var links = await _managerBranchesRepo
+                .GetAll(x => x.ManagerId == employeeId && x.IsActive && !x.IsDeleted)
+                .ToListAsync();
+
+            foreach (var link in links)
+                link.IsActive = false;
+        }
+
         public async Task<ApiResponse<PagedResponse<AssignedEmployeeDto>>>GetAssignedEmployeesPagedAsync(int roleId, RoleAssignmentReguest request)
         {
 

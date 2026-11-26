@@ -650,8 +650,26 @@ namespace TaskMangment.Infrastructure.Services
             }
 
             await ReconcileEmployeeTypeScopeAsync(employeeId, desiredTypeIds);
+            await DeactivateManagerBranchesIfNotBranchManagerAsync(employeeId, desired);
 
             // No SaveChanges here — caller saves once then _uow.CommitAsync().
+        }
+
+        private async Task DeactivateManagerBranchesIfNotBranchManagerAsync(int employeeId, List<int> desiredRoleIds)
+        {
+            var keepsBranchManager = desiredRoleIds.Count > 0 && await _roleRepo
+                .GetAll(r => desiredRoleIds.Contains(r.Id) && !r.IsDeleted && r.CanBeBranchManager)
+                .AnyAsync();
+
+            if (keepsBranchManager)
+                return;
+
+            var links = await _managerBranchesRepo
+                .GetAll(x => x.ManagerId == employeeId && x.IsActive && !x.IsDeleted)
+                .ToListAsync();
+
+            foreach (var link in links)
+                link.IsActive = false;
         }
 
         private async Task ReconcileEmployeeTypeScopeAsync(int employeeId, IReadOnlyList<int> typeIds)
