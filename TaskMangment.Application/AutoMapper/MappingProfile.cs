@@ -1,4 +1,4 @@
-﻿
+
 using TaskMangment.Application.DTOs;
 using TaskMangment.Domain.Entities;
 using AutoMapper;
@@ -27,28 +27,45 @@ namespace TaskMangment.Application.AutoMapper
             CreateMap<BranchAddEditDto, Branch>();
             CreateMap<Employee, EmployeeGetDto>()
                 .ForMember(dest => dest.BranchName, opt => opt.MapFrom(src => src.Branch != null ? src.Branch.Name : null))
-                .ForMember(dest => dest.Roles, opt => opt.MapFrom(src => src.EmployeeRoles.Select(er => er.Role.Name).ToList()))
+                .ForMember(dest => dest.Roles, opt => opt.MapFrom(src =>
+                    src.EmployeeRoles
+                        .Where(er => er.IsAssigned && !er.IsDeleted && er.Role != null)
+                        .Select(er => er.Role.Name)
+                        .ToList()))
+                .ForMember(dest => dest.RoleIds, opt => opt.MapFrom(src =>
+                    src.EmployeeRoles
+                        .Where(er => er.IsAssigned && !er.IsDeleted)
+                        .Select(er => er.RoleId)
+                        .ToList()))
                 .ForMember(dest => dest.JobName, opt => opt.MapFrom(src => src.Job != null ? src.Job.Title : null))
-                .ForMember(dest => dest.DepartmentName, opt => opt.MapFrom(src => src.Department != null ? src.Department.Name : null));
+                .ForMember(dest => dest.DepartmentName, opt => opt.MapFrom(src => src.Department != null ? src.Department.Name : null))
+                .ForMember(dest => dest.EmployeeTypeName, opt => opt.MapFrom(src =>
+                    src.EmployeeType == null
+                        ? null
+                        : (src.EmployeeType.NameEn ?? src.EmployeeType.NameAr ?? src.EmployeeType.Code)));
+
+            CreateMap<EmployeeType, EmployeeTypeGetDto>();
+            CreateMap<EmployeeTypeAddEditDto, EmployeeType>();
 
 
 
             CreateMap<EmployeeAddEditDto, Employee>()
-                .ForMember(dest => dest.PasswordHash, opt => opt.Ignore());
+                .ForMember(dest => dest.PasswordHash, opt => opt.Ignore())
+                .ForMember(dest => dest.EmployeeRoles, opt => opt.Ignore());
 
 
             CreateMap<Role, RoleGetDto>()
-     .ForMember(
-         d => d.LevelName,
-         o => o.MapFrom(s =>
-             Enum.IsDefined(typeof(RoleLevelEnum), s.Level)
-                 ? Enum.GetName(typeof(RoleLevelEnum), s.Level)
-                 : "Custom"
-         )
-     );
+                .ForMember(dest => dest.NotifyFromRoleIds, opt => opt.Ignore())
+                .ForMember(dest => dest.EmployeeTypeName, opt => opt.MapFrom(src =>
+                    src.EmployeeType == null
+                        ? null
+                        : (src.EmployeeType.NameAr ?? src.EmployeeType.NameEn ?? src.EmployeeType.Code)));
 
-            CreateMap<RoleAddEditDto, Role>();
-            //CreateMap<Role, RoleWithPermissionsDto>();
+            CreateMap<RoleAddEditDto, Role>()
+                .ForMember(dest => dest.Level, opt => opt.Ignore())
+                .ForMember(dest => dest.NotificationScope, opt => opt.Ignore())
+                .ForMember(dest => dest.NotificationSources, opt => opt.Ignore())
+                .ForMember(dest => dest.EmployeeType, opt => opt.Ignore());
 
             CreateMap<Permission, PermissionGetDto>();
             CreateMap<PermissionAddDto, Permission>();
@@ -240,7 +257,11 @@ namespace TaskMangment.Application.AutoMapper
             CreateMap<AuditLog,AuditLogDTO>()
                 .ForMember(dest => dest.ChangedBy, opt => opt.MapFrom(src => src.ChangedBy != null ? src.ChangedBy : "System"));
              
-            CreateMap<RoleAddEditDto, Role>();
+            CreateMap<RoleAddEditDto, Role>()
+                .ForMember(dest => dest.Level, opt => opt.Ignore())
+                .ForMember(dest => dest.NotificationScope, opt => opt.Ignore())
+                .ForMember(dest => dest.NotificationSources, opt => opt.Ignore())
+                .ForMember(dest => dest.EmployeeType, opt => opt.Ignore());
             //CreateMap<Role, RoleWithPermissionsDto>()
             //    .ForMember(dest => dest.Permissions, opt => opt.MapFrom(src => src.RolePermissions.Select(rp => rp.Permission)));
 
@@ -251,6 +272,9 @@ namespace TaskMangment.Application.AutoMapper
             CreateMap<LeaveTypeAddEditDto, LeaveType>();
 
             CreateMap<Leave, LeaveGetDto>()
+               .ForMember(dest => dest.EmployeeId,
+                   opt => opt.MapFrom(src => src.EmployeeId))
+
                .ForMember(dest => dest.EmployeeName,
                    opt => opt.MapFrom(src => src.Employee.FullName))
 

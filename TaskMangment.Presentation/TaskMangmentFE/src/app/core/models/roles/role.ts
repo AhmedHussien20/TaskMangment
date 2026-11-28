@@ -2,13 +2,32 @@ export interface Role {
   id: number;
   name: string;
   description?: string;
-  level:string;
-  levelName:string;
+  employeeCount?: number;
+  permissionCount?: number;
+  notifyFromEmployeeCount?: number;
+  requiresBranchScope?: boolean;
+  requiresEmployeeTypeScope?: boolean;
+  employeeTypeId?: number | null;
+  employeeTypeName?: string | null;
+  restrictEmployeeTypeToBranch?: boolean;
+  canBeBranchManager?: boolean;
+  notificationScope?: number;
+  notifyFromRoleIds?: number[];
 }
 
 export interface RoleAddEdit {
   name: string;
   description?: string;
+  requiresBranchScope?: boolean;
+  requiresEmployeeTypeScope?: boolean;
+  employeeTypeId?: number | null;
+  restrictEmployeeTypeToBranch?: boolean;
+  canBeBranchManager?: boolean;
+}
+
+export interface RoleNotificationUpdate {
+  notificationScope: number;
+  notifyFromRoleIds: number[];
 }
 
 export interface RolePermissionAssign {
@@ -33,7 +52,7 @@ export interface RolePagedResponse {
   totalCount: number;
   pageIndex: number;
   pageSize: number;
-  
+
   employeeCount: number;
   permissionCount: number;
 }
@@ -42,14 +61,20 @@ export interface BranchLookupDto {
   id: number;
   name: string;
 }
+
 export interface GetManagerBranchesDto {
   managerId: number;
   branchIds: number[];
   branchLookupDtos: BranchLookupDto[];
-  functionCode: number
+  employeeTypeId?: number;
+  /** @deprecated */
+  functionCode?: number;
 }
 
-export interface RoleLevelDto {
-  value: number;
-  label: string;
+/** Matches backend NotificationScope enum */
+export enum NotificationScope {
+  None = 0,
+  Branch = 1,
+  Area = 2,
+  Company = 3
 }

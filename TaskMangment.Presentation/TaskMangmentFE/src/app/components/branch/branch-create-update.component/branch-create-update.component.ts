@@ -76,7 +76,8 @@ export class BranchCreateUpdateComponent implements OnInit {
             pageIndex: 1,
             pageSize: 20, 
             sortColumn: 'Id',
-            sortDirection: 'DESC'
+            sortDirection: 'DESC',
+            canBeBranchManager: true
           };
           
           return this.employeeService.getAll(request);
@@ -134,7 +135,7 @@ Validators.pattern('^\\+?[0-9]+$')
       Validators.email
     ]],
 
-    areaId: [null, Validators.required],
+    areaId: [null],
 
     managerId: [null,Validators.required],
 
@@ -213,7 +214,7 @@ Validators.pattern('^\\+?[0-9]+$')
       pageSize: 20,
       sortColumn: 'Id',
       sortDirection: 'DESC',
-      roleLevel: 70
+      canBeBranchManager: true
     };
     return this.employeeService.getAll(request);
   };

@@ -19,6 +19,7 @@ import {
 } from 'app/shared/components/generic-table/generic-table.component';
 import { AuthService } from 'app/core/services/auth.service';
 import { LeaveCreateUpdateComponent } from '../leave-create-update/leave-create-update.component';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-leave-list',
@@ -38,8 +39,10 @@ import { LeaveCreateUpdateComponent } from '../leave-create-update/leave-create-
 })
 export class LeaveListComponent implements OnInit {
   canCreate = false;
-  canEdit = false;
-  canDelete = false;
+  canApprove = false;
+  canReject = false;
+  /** Same gate as task "كل المهام" — managers with AccessScope. */
+  showScopedLeaves = false;
   status: { id: number; name: string }[] = [];
 
   title = 'LEAVE.LIST_TITLE';
@@ -73,16 +76,14 @@ export class LeaveListComponent implements OnInit {
     },
   ];
 
-  
   reviewModel = {
     status: null as 'Approved' | 'Rejected' | null,
     rejectReason: '',
   };
- 
+
   rows: LeaveGetDto[] = [];
   totalItems = 0;
 
- 
   page = 1;
   entries = 10;
 
@@ -90,35 +91,40 @@ export class LeaveListComponent implements OnInit {
     { id: 1, name: 'LEAVE.PENDING' },
     { id: 2, name: 'LEAVE.APPROVED' },
     { id: 3, name: 'LEAVE.REJECTED' },
-   
   ];
 
   searchCriteria: SearchCriteria = {
-     searchKey: '',
-     statusId: null,
-     pageIndex: this.page,
-     pageSize: this.entries,
-     sortColumn: 'Id',
-     sortDirection: 'DESC',
-     filterTypes: {
-       searchKey: 'text',
-       statusId: 'dropdown'
-     }
-   };
- 
- 
-   labels = {
-     searchKey: 'LEAVE.SEARCH',
-     statusId: 'LEAVE.STATUS'
-   };  
-   isLoading = false;
+    searchKey: '',
+    statusId: null,
+    pageIndex: this.page,
+    pageSize: this.entries,
+    sortColumn: 'Id',
+    sortDirection: 'DESC',
+    filterTypes: {
+      searchKey: 'text',
+      statusId: 'dropdown',
+    },
+  };
 
-  // MODALS
+  labels = {
+    searchKey: 'LEAVE.SEARCH',
+    statusId: 'LEAVE.STATUS',
+    viewScopedLeaves: 'LEAVE.LEAVE_SCOPE',
+  };
+
+  leaveScopeFilterOptions: Record<string, { id: string; name: string }[]> = {
+    viewScopedLeaves: [
+      { id: 'my', name: 'LEAVE.LEAVES' },
+      { id: 'scoped', name: 'LEAVE.ALL_LEAVES_IN_SCOPE' },
+    ],
+  };
+
+  isLoading = false;
+
   isEdit = false;
   selectedLeaveId: number | null = null;
   selectedLeave: LeaveGetDto | null = null;
   @ViewChild('detailsModal') detailsModal: any;
-  
 
   constructor(
     private leaveService: LeaveService,
@@ -130,18 +136,79 @@ export class LeaveListComponent implements OnInit {
 
   ngOnInit(): void {
     const roleLevel = this.auth.getRoleLevel();
+    const user = this.auth.getUser() ?? this.auth.getCurrentUser();
 
     this.status = this.statusOptions;
     this.canCreate = roleLevel >= 10;
-    this.canEdit = roleLevel >= 70;
-    this.canDelete = roleLevel >= 70;
+    this.canApprove = this.auth.hasPermission('APPROVE_LEAVE');
+    this.canReject = this.auth.hasPermission('REJECT_LEAVE');
+    this.showScopedLeaves = !!user?.hasAccessScope;
+
+    if (this.showScopedLeaves) {
+      this.searchCriteria = {
+        ...this.searchCriteria,
+        viewScopedLeaves: 'my',
+        filterTypes: {
+          viewScopedLeaves: 'dropdown',
+          searchKey: 'text',
+          statusId: 'dropdown',
+        },
+      };
+    }
 
     this.loadData();
   }
 
+  get canReview(): boolean {
+    return this.canApprove || this.canReject;
+  }
+
+  disableDeleteRow = (row: LeaveGetDto) => !row.canDelete;
+
+  confirmDelete(leaveId: number, modal?: any) {
+    Swal.fire({
+      title: this.translate.instant('COMMON.CONFIRM_DELETE_TITLE'),
+      text: this.translate.instant('LEAVE.DELETE_CONFIRM'),
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: this.translate.instant('COMMON.DELETE_BUTTON'),
+      cancelButtonText: this.translate.instant('COMMON.CANCEL_BUTTON'),
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#6c757d'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.deleteLeave(leaveId, modal);
+      }
+    });
+  }
+
+  deleteLeave(leaveId: number, modal?: any) {
+    this.isLoading = true;
+    this.leaveService.delete(leaveId).subscribe({
+      next: () => {
+        this.toastr.success(this.translate.instant('LEAVE.DELETE_SUCCESS'));
+        this.isLoading = false;
+        if (modal) {
+          modal.close();
+        }
+        this.loadData();
+      },
+      error: () => {
+        this.isLoading = false;
+        this.toastr.error(this.translate.instant('COMMON.ERROR_LOADING_DATA'));
+      },
+    });
+  }
+
   loadData() {
     this.isLoading = true;
-    this.leaveService.LeaveRequests(this.searchCriteria).subscribe({
+    const scope = (this.searchCriteria as any).viewScopedLeaves;
+    const criteria = {
+      ...this.searchCriteria,
+      viewScopedLeaves: scope === 'scoped' ? true : undefined,
+    };
+
+    this.leaveService.LeaveRequests(criteria).subscribe({
       next: (res: any) => {
         const pageData = res.data;
 
@@ -157,24 +224,6 @@ export class LeaveListComponent implements OnInit {
       },
     });
   }
-loadPendingLeaves() {
-  this.isLoading = true;
-  this.leaveService.getPending(this.searchCriteria).subscribe({
-    next: (res: any) => {
-      const pageData = res.data;
-
-      this.rows = pageData.data ?? [];
-      this.totalItems = pageData.totalCount ?? 0;
-      this.page = pageData.pageIndex ?? 1;
-      this.entries = pageData.pageSize ?? 10;
-
-      this.isLoading = false;
-    },
-    error: () => {
-      this.isLoading = false;
-    }
-  });
-}
 
   onPageChange(page: number) {
     this.page = page;
@@ -190,11 +239,11 @@ loadPendingLeaves() {
     this.loadData();
   }
 
-   applyFilters(filters: any) {
+  applyFilters(filters: any) {
     this.searchCriteria = {
       ...this.searchCriteria,
       ...filters,
-      pageIndex: 1
+      pageIndex: 1,
     };
 
     this.page = 1;
@@ -217,6 +266,7 @@ loadPendingLeaves() {
     this.modalService.dismissAll();
     this.loadData();
   }
+
   openDetailsModal(id: number) {
     this.reviewModel = {
       status: null,
@@ -240,14 +290,27 @@ loadPendingLeaves() {
     if (!this.selectedLeave || !this.reviewModel.status) return;
 
     if (this.reviewModel.status === 'Approved') {
-      this.leaveService.approve(this.selectedLeave.id).subscribe(() => {
-        this.toastr.success(this.translate.instant('LEAVE.APPROVED_SUCCESS'));
-        modal.close();
-        this.loadData();
+      if (!this.canApprove) {
+        this.toastr.error(this.translate.instant('FORBIDDEN.MESSAGE'));
+        return;
+      }
+      this.leaveService.approve(this.selectedLeave.id).subscribe({
+        next: () => {
+          this.toastr.success(this.translate.instant('LEAVE.APPROVED_SUCCESS'));
+          modal.close();
+          this.loadData();
+        },
+        error: () => {
+          this.toastr.error(this.translate.instant('COMMON.ERROR_LOADING_DATA'));
+        },
       });
     }
 
     if (this.reviewModel.status === 'Rejected') {
+      if (!this.canReject) {
+        this.toastr.error(this.translate.instant('FORBIDDEN.MESSAGE'));
+        return;
+      }
       if (!this.reviewModel.rejectReason) {
         this.toastr.error(
           this.translate.instant('LEAVE.REJECT_REASON_REQUIRED')
@@ -257,10 +320,15 @@ loadPendingLeaves() {
 
       this.leaveService
         .reject(this.selectedLeave.id, this.reviewModel.rejectReason)
-        .subscribe(() => {
-          this.toastr.success(this.translate.instant('LEAVE.REJECTED_SUCCESS'));
-          modal.close();
-          this.loadData();
+        .subscribe({
+          next: () => {
+            this.toastr.success(this.translate.instant('LEAVE.REJECTED_SUCCESS'));
+            modal.close();
+            this.loadData();
+          },
+          error: () => {
+            this.toastr.error(this.translate.instant('COMMON.ERROR_LOADING_DATA'));
+          },
         });
     }
   }

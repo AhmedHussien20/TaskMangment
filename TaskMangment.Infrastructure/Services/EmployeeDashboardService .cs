@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Localization;
 using TaskMangment.Application.ApiRequests;
 using TaskMangment.Application.Common.DiscountTypes;
@@ -9,6 +9,7 @@ using TaskMangment.Application.Dashboards.Employee;
 using TaskMangment.Application.DTOs;
 using TaskMangment.Application.DTOs.TaskDTOs;
 using TaskMangment.Application.Interfaces.IRepository;
+using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
 using TaskMangment.Infrastructure.Helpers;
@@ -30,6 +31,8 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<Employee> _employeeRepo;
         private readonly IUserAccessContextProvider _accessProvider;
         private readonly IRepository<WorkTask> _taskRepo;
+        private readonly IAccessScopeResolver _scopeResolver;
+        private readonly IEmployeePermissionService _permissions;
 
 
 
@@ -44,7 +47,9 @@ namespace TaskMangment.Infrastructure.Services
             IRepository<ManagerBranches> managerBranchesRepo,
             IRepository<Employee> employeeRepo,
             IUserAccessContextProvider accessProvider,
-            IRepository<WorkTask> taskRepo
+            IRepository<WorkTask> taskRepo,
+            IAccessScopeResolver scopeResolver,
+            IEmployeePermissionService permissions
 )
         {
             _assignmentRepo = assignmentRepo;
@@ -57,6 +62,8 @@ namespace TaskMangment.Infrastructure.Services
             _employeeRepo = employeeRepo;
             _accessProvider = accessProvider;
             _taskRepo = taskRepo;
+            _scopeResolver = scopeResolver;
+            _permissions = permissions;
         }
 
         public async Task<ApiResponse<EmployeeDashboardDto>> GetDashboardAsync(
@@ -79,6 +86,7 @@ namespace TaskMangment.Infrastructure.Services
             // Base query: assignments الخاصة بالموظف أو المهام اللي هو أنشأها
             // --------
             var baseAssignmentsQuery = _assignmentRepo.GetAll(a =>
+                !a.Task.IsDeleted &&
                 (a.EmployeeId == employeeId || a.Task.CreatedByEmployeeId == employeeId));
 
             // --------
@@ -200,43 +208,36 @@ namespace TaskMangment.Infrastructure.Services
      int employeeId,
      int roleLevel)
         {
+            _ = roleLevel;
             var today = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime.UtcNow, "Arab Standard Time").Date;
             var allowedStatuses = new[] { WorkTaskStatus.New, WorkTaskStatus.InProgress };
 
             var baseQuery = _assignmentRepo.GetAll(a =>
                 a.IsActive &&
                 !a.IsClosed &&
+                !a.Task.IsDeleted &&
                 allowedStatuses.Contains(a.Task.Status) &&
                 !a.Task.Comments.Any(c => c.CreatedDate >= today && c.EmployeeId == a.EmployeeId)
             );
 
-            if (roleLevel < 50)
+            var canViewScoped = await _permissions.HasAnyAsync(
+                employeeId,
+                PermissionCodes.ViewScopedTasks,
+                    PermissionCodes.ViewCompanyTasks);
+
+            if (!canViewScoped)
             {
                 baseQuery = baseQuery.Where(a => a.EmployeeId == employeeId);
             }
             else
             {
-                var access = await _accessProvider.GetAsync(employeeId);
-
-                var companyId = await _employeeRepo.GetAll(e => e.Id == employeeId)
-                    .Select(e => e.CompanyId)
-                    .FirstAsync();
-
-                IQueryable<Employee> scopedEmployeesQuery = _employeeRepo
-                    .GetAll(e => e.CompanyId == companyId && e.IsActive)
-                    .ApplyAccessScope(access);
-
-
-                if (roleLevel != 100)
-                    scopedEmployeesQuery = scopedEmployeesQuery.ApplyRoleHierarchy(roleLevel);
-
-                var scopedEmployeeIds = scopedEmployeesQuery.Select(e => e.Id);
+                var scope = await _scopeResolver.ResolveAsync(employeeId);
+                var scopedEmployeeIds = _scopeResolver
+                    .FilterEmployees(_employeeRepo.GetAll(e => e.IsActive), scope)
+                    .Select(e => e.Id);
 
                 baseQuery = baseQuery.Where(a => scopedEmployeeIds.Contains(a.EmployeeId));
             }
-
-            baseQuery = baseQuery.Where(a =>
-                a.EmployeeId == employeeId || a.Task.AssignedByEmployeeId == employeeId);
 
             if (!string.IsNullOrWhiteSpace(request.searchKey))
             {
@@ -304,6 +305,7 @@ namespace TaskMangment.Infrastructure.Services
                     Id = w.Id,
                     Reason = w.Reason,
                     CreatedDate = w.CreatedDate,
+                    TaskId = w.TaskId,
                     TaskTitle = w.TaskAssignment.Task.Title,
                     TaskStatus = w.TaskAssignment.Task.Status.ToString()
                 })
@@ -326,7 +328,13 @@ namespace TaskMangment.Infrastructure.Services
                     Id = d.Id,
                     Amount = d.Amount,
                     Reason = d.Reason,
-                    TaskTitle = d.Task.Title,
+                    TaskId = d.TaskId,
+                    TaskTitle = d.Task != null ? d.Task.Title : string.Empty,
+                    TaskStatusText = d.Task != null ? d.Task.Status.ToString() : null,
+                    TaskAssignedByName = d.Task != null && d.Task.AssignedBy != null
+                        ? d.Task.AssignedBy.FullName
+                        : null,
+                    TaskDueDate = d.Task != null ? d.Task.DueDate : null,
                     CreatedDate = d.ViolationDate,
                     AutoDiscount = d.AutoDiscount,
                     DiscountType = d.discountType
@@ -357,6 +365,7 @@ namespace TaskMangment.Infrastructure.Services
             var assignments = await _assignmentRepo
                 .GetAll(a =>
         (a.EmployeeId == employeeId || a.Task.CreatedByEmployeeId == employeeId) &&
+                    !a.Task.IsDeleted &&
                     a.IsActive &&
                     !a.IsClosed &&
                     a.Task.DueDate != null &&
@@ -402,6 +411,7 @@ namespace TaskMangment.Infrastructure.Services
 
             var closedTasksQuery = _assignmentRepo.GetAll(a =>
                 (a.EmployeeId == employeeId || a.Task.CreatedByEmployeeId == employeeId) &&
+                !a.Task.IsDeleted &&
                 a.IsClosed &&
                 a.Task.ClosedAt != null &&
                 a.Task.ClosedAt >= range.Start &&
@@ -440,6 +450,7 @@ namespace TaskMangment.Infrastructure.Services
             var tasks = await _assignmentRepo
                 .GetAll(a =>
                     (a.EmployeeId == employeeId || a.Task.CreatedByEmployeeId == employeeId) &&
+                    !a.Task.IsDeleted &&
                     a.IsClosed &&
                     a.Task.ClosedAt != null &&
                     a.Task.ClosedAt >= range.Start &&

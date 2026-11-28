@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -11,6 +11,7 @@ using TaskMangment.Application.Common.Errors;
 using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Responses;
+using TaskMangment.Application.Common.Security;
 using TaskMangment.Application.DTOs.TaskDTOs;
 using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
@@ -32,7 +33,9 @@ namespace TaskMangment.Infrastructure.Services
         private readonly ICachingService _cache;
         private readonly IDomainEventDispatcher _eventDispatcher;
         private readonly IRepository<TaskPercentage> _AchievementRepo;
-        private readonly IGetHigherManager _getHigherManager;
+        private readonly INotificationRecipientBuilder _recipientBuilder;
+        private readonly TaskCreatedByMeEvaluator _createdByMe;
+        private readonly IEmployeePermissionService _permissions;
 
 
 
@@ -44,7 +47,9 @@ namespace TaskMangment.Infrastructure.Services
             IRepository<WorkTask> taskRepo,
             IRepository<Employee> employeeRepo,
             IDomainEventDispatcher eventDispatcher, IRepository<TaskPercentage> AchievementRepo,
-            IGetHigherManager getHigherManager)
+            INotificationRecipientBuilder recipientBuilder,
+            TaskCreatedByMeEvaluator createdByMe,
+            IEmployeePermissionService permissions)
 
         {
             _requestRepo = requestRepo;
@@ -55,7 +60,9 @@ namespace TaskMangment.Infrastructure.Services
             _employeeRepo = employeeRepo;
             _eventDispatcher = eventDispatcher;
             _AchievementRepo = AchievementRepo;
-            _getHigherManager = getHigherManager;
+            _recipientBuilder = recipientBuilder;
+            _createdByMe = createdByMe;
+            _permissions = permissions;
         }
 
         public async Task<ApiResponse<PagedResponse<TaskCloseRequestListDto>>> GetAllAsync(TaskCloseRequestRequest request)
@@ -150,38 +157,35 @@ namespace TaskMangment.Infrastructure.Services
             await _requestRepo.SaveChangesAsync();
             //await _cache.RemoveAsync("taskCloseRequests:");
 
-            var assignedEmployeeIds = await _taskAssignmentRepo
+            var peerIds = await _taskAssignmentRepo
        .GetAll(a => a.TaskId == taskId && a.IsActive)
  .Select(a => a.EmployeeId)
  .ToListAsync();
 
-            var employeeName = await _employeeRepo.GetAll(e => e.Id == employeeId).Select(e => e.FullName).FirstOrDefaultAsync();
+            var employeeInfo = await _employeeRepo.GetAll(e => e.Id == employeeId)
+                .Select(e => new { e.FullName, BranchName = e.Branch != null ? e.Branch.Name : null })
+                .FirstOrDefaultAsync();
 
-            if (task.AssignedByEmployeeId.HasValue && !assignedEmployeeIds.Contains(task.AssignedByEmployeeId.Value))
+            if (task.AssignedByEmployeeId.HasValue && !peerIds.Contains(task.AssignedByEmployeeId.Value))
             {
-                assignedEmployeeIds.Add(task.AssignedByEmployeeId.Value);
-            }
-            assignedEmployeeIds.Remove(employeeId);
-            assignedEmployeeIds = await _employeeRepo.GetAll(e => assignedEmployeeIds.Contains(e.Id) && e.IsActive)
-                .Select(e => e.Id)
-                .ToListAsync();
-
-            foreach (var recipientId in assignedEmployeeIds.ToList())
-            {
-                var managerIds = await _getHigherManager.GetDirectHigherManagerIdsAsync(recipientId);
-                assignedEmployeeIds.AddRange(managerIds.Where(id => !assignedEmployeeIds.Contains(id)));
+                peerIds.Add(task.AssignedByEmployeeId.Value);
             }
 
-            assignedEmployeeIds.Remove(employeeId);
-            assignedEmployeeIds = await _employeeRepo.GetAll(e => assignedEmployeeIds.Contains(e.Id) && e.IsActive)
-                .Select(e => e.Id)
-                .ToListAsync();
-
+            var assignedEmployeeIds = await _recipientBuilder.BuildAsync(
+                peerIds,
+                actorIdToExclude: employeeId,
+                managerAnchorEmployeeId: employeeId);
 
             if (assignedEmployeeIds.Any())
             {
                 await _eventDispatcher.PublishAsync(
-                    new TaskCloseRequestEvent(request.Id, taskId, employeeName, assignedEmployeeIds, task.Title)
+                    new TaskCloseRequestEvent(
+                        request.Id,
+                        taskId,
+                        employeeInfo?.FullName,
+                        assignedEmployeeIds,
+                        task.Title,
+                        employeeInfo?.BranchName)
                 );
             }
 
@@ -223,6 +227,15 @@ namespace TaskMangment.Infrastructure.Services
             if (request.Status != CloseRequestStatus.Pending)
                 throw new AppException(ErrorCodes.AlreadyReviewed, StatusCodes.Status400BadRequest);
 
+            if (!await _createdByMe.IsCreatedByMeAsync(task, reviewerId))
+                throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
+
+            var requiredPermission = status == CloseRequestStatus.Approved
+                ? PermissionCodes.ApproveTaskRequest
+                : PermissionCodes.RejectTaskRequest;
+            if (!await _permissions.HasAsync(reviewerId, requiredPermission))
+                throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
+
             var taskAssignments = await _taskAssignmentRepo
                     .GetAll(a => a.TaskId == task.Id && a.IsActive)
                     .ToListAsync();
@@ -260,21 +273,15 @@ namespace TaskMangment.Infrastructure.Services
                     assignedEmployeeIds.Add(task.AssignedByEmployeeId.Value);
                 }
 
-                assignedEmployeeIds.Remove(reviewerId);
-                assignedEmployeeIds = await _employeeRepo.GetAll(e => assignedEmployeeIds.Contains(e.Id) && e.IsActive)
-                    .Select(e => e.Id)
-                    .ToListAsync();
+                assignedEmployeeIds = await _recipientBuilder.BuildAsync(
+                    assignedEmployeeIds,
+                    actorIdToExclude: reviewerId,
+                    managerAnchorEmployeeId: reviewerId);
 
-                foreach (var recipientId in assignedEmployeeIds.ToList())
-                {
-                    var managerIds = await _getHigherManager.GetDirectHigherManagerIdsAsync(recipientId);
-                    assignedEmployeeIds.AddRange(managerIds.Where(id => !assignedEmployeeIds.Contains(id)));
-                }
-
-                assignedEmployeeIds.Remove(reviewerId);
-                assignedEmployeeIds = await _employeeRepo.GetAll(e => assignedEmployeeIds.Contains(e.Id) && e.IsActive)
-                    .Select(e => e.Id)
-                    .ToListAsync();
+                var requesterBranchName = await _employeeRepo
+                    .GetAll(e => e.Id == request.RequestedByEmployeeId)
+                    .Select(e => e.Branch != null ? e.Branch.Name : null)
+                    .FirstOrDefaultAsync();
 
                 if (assignedEmployeeIds.Any())
                 {
@@ -283,7 +290,8 @@ namespace TaskMangment.Infrastructure.Services
                             request.Id,
                             task.Id,
                             task.Title,
-                            assignedEmployeeIds
+                            assignedEmployeeIds,
+                            requesterBranchName
                         )
                     );
                 }

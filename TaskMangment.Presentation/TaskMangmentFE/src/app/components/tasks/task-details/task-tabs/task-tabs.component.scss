@@ -1,0 +1,48 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+/* Equal share when space allows; horizontal scroll when narrow — no overlap */
+:host ::ng-deep ul.task-details-nav.nav-tabs {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  align-items: stretch;
+  -webkit-overflow-scrolling: touch;
+}
+
+:host ::ng-deep ul.task-details-nav > .nav-item {
+  flex: 1 0 auto !important;
+  margin: 0 !important;
+  margin-inline-end: 0 !important;
+  text-align: center;
+  min-width: max-content;
+}
+
+:host ::ng-deep ul.task-details-nav > .nav-item > .nav-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  margin: 0;
+  padding-left: 0.65rem;
+  padding-right: 0.65rem;
+}
+
+.tab-link-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  white-space: nowrap;
+}
+
+.tab-count-badge {
+  font-size: 0.7rem;
+  min-width: 1.25rem;
+  padding: 0.2em 0.45em;
+  flex-shrink: 0;
+}

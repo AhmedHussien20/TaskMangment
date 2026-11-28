@@ -17,6 +17,7 @@ namespace TaskMangment.Application.DTOs
     public class LeaveGetDto
     {
         public int Id { get; set; }
+        public int EmployeeId { get; set; }
         public string EmployeeName { get; set; }
         public int LeaveTypeId { get; set; }
         public string LeaveTypeName { get; set; }
@@ -29,6 +30,7 @@ namespace TaskMangment.Application.DTOs
 
         public string? RejectionReason { get; set; }
         public bool CanEdit { get; set; } = false;
+        public bool CanDelete { get; set; } = false;
 
     }
     public class RejectLeaveDto

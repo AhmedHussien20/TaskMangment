@@ -22,6 +22,8 @@ export interface FormFieldConfig {
   
   selectType?: 'simple' | 'employee' | 'custom';
   multiple?: boolean;
+  /** ng-select: max items when multiple is true */
+  maxSelectedItems?: number;
 
   prefix?: string;
   placeholder?: string;
@@ -47,4 +49,11 @@ export interface FormFieldConfig {
   isPaginated?: boolean;
   searchFunction?: (searchTerm: string, page: number) => Observable<any>;
   isLoading?: boolean;
+
+  /** Mat datepicker: earliest selectable date */
+  minDate?: Date | null;
+  /** Mat datepicker: latest selectable date */
+  maxDate?: Date | null;
+  /** Mat datepicker filter — return false to disable a day */
+  dateFilter?: (date: Date | null) => boolean;
 }

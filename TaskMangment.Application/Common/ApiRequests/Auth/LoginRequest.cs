@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -50,7 +50,7 @@ namespace TaskMangment.Application.Common.ApiRequests.Auth
         // JWT Token
         public string Token { get; set; }
         public string? ProfileImage { get; set; }
-        public FunctionCode FunctionCode { get; set; } = FunctionCode.Operations;
+        public int EmployeeTypeId { get; set; } = 1;
 
         public bool HasAccessScope { get; set; }
 

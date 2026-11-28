@@ -1,0 +1,38 @@
+<form [formGroup]="form">
+  <div class="modal-header">
+    <h6 class="modal-title">{{ 'TASK.REOPEN_TASK' | translate }}</h6>
+    <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
+  </div>
+
+  <div class="modal-body">
+    <div class="alert alert-warning text-center">
+      {{ 'TASK.REOPEN_TASK_NOTE' | translate }}
+    </div>
+
+    <div class="mb-3" *ngIf="dueDateRequired">
+      <label class="form-label">{{ 'TASK.NEW_DATE' | translate }}</label>
+      <input type="date" class="form-control" formControlName="dueDate" />
+      <div class="text-muted small mt-1">{{ 'TASK.REOPEN_DUE_DATE_HINT' | translate }}</div>
+      <div class="text-danger small mt-1" *ngIf="form.controls['dueDate'].touched && form.controls['dueDate'].invalid">
+        <div *ngIf="form.controls['dueDate'].errors?.['required']">
+          {{ 'TASK.REQUIRED_FIELD' | translate }}
+        </div>
+        <div *ngIf="form.controls['dueDate'].errors?.['weekendDueDate']">
+          {{ 'TASK.DUE_DATE_WEEKEND' | translate }}
+        </div>
+        <div *ngIf="form.controls['dueDate'].errors?.['pastDueDate']">
+          {{ 'TASK.DUE_DATE_PAST' | translate }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">
+      {{ 'FORM.CANCEL' | translate }}
+    </button>
+    <button type="button" class="btn btn-primary" [disabled]="form.invalid || isSubmitting" (click)="submit()">
+      {{ 'TASK.REOPEN_TASK' | translate }}
+    </button>
+  </div>
+</form>

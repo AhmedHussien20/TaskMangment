@@ -3857,3 +3857,13 @@ dropzone.dropzone-container>.dropzone.dz-wrapper .dz-message .dz-text{
   color: variables.$default-text-color;
   opacity: 0.8;
 }
+/** Task details modal - larger than default xl **/
+.task-details-modal .modal-dialog {
+  max-width: min(1400px, 96vw);
+  width: 96vw;
+  margin: 0.75rem auto;
+}
+
+.task-details-modal .modal-content {
+  max-height: 94vh;
+}

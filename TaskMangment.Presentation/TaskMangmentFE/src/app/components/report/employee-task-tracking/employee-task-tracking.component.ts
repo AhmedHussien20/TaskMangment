@@ -13,9 +13,11 @@ import { EmployeeNgSelectComponent } from 'app/components/employee-select/employ
 import { ReportListService } from 'app/core/services/report-list.service';
 import { ReportPdfService } from 'app/core/services/report-pdf.service';
 import { AuthService } from 'app/core/services/auth.service';
+import { Permissions } from 'app/core/constants/permissions';
 
 import { EmployeeTaskTrackingReportDto, ExportType } from 'app/core/models/reports/reports';
 import { TaskDetailsShellComponent } from 'app/components/tasks/task-details/task-details-shell/task-details-shell.component';
+import { ReportStatusFilterComponent } from '../shared/report-status-filter.component';
 
 @Component({
   selector: 'app-employee-task-tracking',
@@ -28,7 +30,8 @@ import { TaskDetailsShellComponent } from 'app/components/tasks/task-details/tas
     GenericTableComponent,
     PageHeaderComponent,
     DatePickerComponent,
-    EmployeeNgSelectComponent
+    EmployeeNgSelectComponent,
+    ReportStatusFilterComponent
   ],
   templateUrl: './employee-task-tracking.component.html',
   styleUrls: ['./employee-task-tracking.component.scss']
@@ -56,6 +59,7 @@ rows: any[] = [];
 
   fromDate?: string;
   toDate?: string;
+  status?: string;
 
   isLoading = false;
   isAdmin = false;
@@ -72,8 +76,14 @@ rows: any[] = [];
   ) {}
 
   ngOnInit(): void {
-    const roleLevel = this.authService.getRoleLevel() ?? 0;
-    this.isAdmin = roleLevel >= 50;
+    this.isAdmin = this.authService.hasAnyPermission(
+      Permissions.VIEW_SCOPED_REPORTS,
+      Permissions.VIEW_COMPANY_REPORTS,
+      Permissions.VIEW_SCOPED_TASKS,
+      Permissions.VIEW_COMPANY_TASKS,
+      Permissions.VIEW_EMPLOYEES,
+      Permissions.CREATE_TASK
+    ) || this.authService.hasAccessScope();
 
     const user = this.authService.getCurrentUser();
 
@@ -101,7 +111,7 @@ rows: any[] = [];
       return;
     }
     this.isLoading = true;
-    this.reportService.getEmployeeTaskTracking(this.selectedEmployeeId!, this.fromDate, this.toDate)
+    this.reportService.getEmployeeTaskTracking(this.selectedEmployeeId!, this.fromDate, this.toDate, this.status)
       .subscribe({
         next: (res) => {
 this.rows = (res.data ?? []).map((t: EmployeeTaskTrackingReportDto) => ({
@@ -145,7 +155,8 @@ this.rows = (res.data ?? []).map((t: EmployeeTaskTrackingReportDto) => ({
       ExportType.Pdf,
       this.selectedEmployeeId!,
       this.fromDate,
-      this.toDate
+      this.toDate,
+      this.status
     ).subscribe({
       next: (blob) => {
         const url = window.URL.createObjectURL(blob);
@@ -175,7 +186,8 @@ this.rows = (res.data ?? []).map((t: EmployeeTaskTrackingReportDto) => ({
       ExportType.Excel,
       this.selectedEmployeeId!,
       this.fromDate,
-      this.toDate
+      this.toDate,
+      this.status
     ).subscribe({
       next: (blob) => {
         const url = window.URL.createObjectURL(blob);
@@ -203,6 +215,7 @@ onEdit(id: number) {
 
   const modalRef = this.modalService.open(TaskDetailsShellComponent, {
       size: 'xl',
+      windowClass: 'task-details-modal',
       backdrop: 'static',
       scrollable: true
     });

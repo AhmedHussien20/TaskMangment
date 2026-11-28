@@ -8,7 +8,10 @@ export interface BaseApiRequest {
   bypassCache?: boolean;  // default false
 }
 
-export interface CalendarEventRequest extends BaseApiRequest {}
+export interface CalendarEventRequest extends BaseApiRequest {
+  from?: string;
+  to?: string;
+}
 
 export enum CalendarEventType {
   Meeting = 1,
@@ -18,8 +21,8 @@ export enum CalendarEventType {
   Reminder = 5,
   Birthday = 6,
   Anniversar = 7,
-  Comment = 8
-  
+  Comment = 8,
+  Leave = 9
 }
 export interface CalendarEventGetDto {
   title: string;

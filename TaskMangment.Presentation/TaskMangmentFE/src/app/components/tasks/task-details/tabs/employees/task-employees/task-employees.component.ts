@@ -18,6 +18,7 @@ export class TaskEmployeesComponent implements OnInit, OnDestroy {
   @Input() readonly = false;
 
   rows: TaskAssignedEmployee[] = [];
+  allRows: TaskAssignedEmployee[] = [];
   columns:TableColumn[] = [
     { key: 'employeeName', label: 'EMPLOYEE.NAME' },
     { key: 'role', label: 'EMPLOYEE.ROLE' },
@@ -35,6 +36,8 @@ export class TaskEmployeesComponent implements OnInit, OnDestroy {
 
 
   totalItems = 0;
+  page = 1;
+  entries = 10;
   private sub!: Subscription;
 
   constructor(
@@ -62,18 +65,37 @@ export class TaskEmployeesComponent implements OnInit, OnDestroy {
     this.taskService.getAssignedEmployees(this.taskId).subscribe({
       next: res => {
         if (res.success && res.data) {
-          this.rows = res.data;
-          this.totalItems = this.rows.length;
+          this.allRows = res.data;
+          this.totalItems = this.allRows.length;
+          this.applyPage();
         } else {
+          this.allRows = [];
           this.rows = [];
           this.totalItems = 0;
         }
       },
       error: err => {
         console.error('Failed to load assigned employees', err);
+        this.allRows = [];
         this.rows = [];
         this.totalItems = 0;
       }
     });
+  }
+
+  private applyPage(): void {
+    const start = (this.page - 1) * this.entries;
+    this.rows = this.allRows.slice(start, start + this.entries);
+  }
+
+  onPageChange(page: number): void {
+    this.page = page;
+    this.applyPage();
+  }
+
+  onEntriesChange(entries: number): void {
+    this.entries = entries;
+    this.page = 1;
+    this.applyPage();
   }
 }

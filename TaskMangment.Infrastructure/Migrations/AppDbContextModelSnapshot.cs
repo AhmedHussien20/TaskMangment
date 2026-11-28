@@ -159,6 +159,9 @@ namespace TaskMangment.Infrastructure.Migrations
 
                     b.HasIndex("UploadedBy");
 
+                    b.HasIndex("ReferenceId", "AttachmentType", "IsDeleted")
+                        .HasDatabaseName("IX_Attachments_ReferenceId_AttachmentType_IsDeleted");
+
                     b.ToTable("Attachments");
                 });
 
@@ -779,6 +782,9 @@ namespace TaskMangment.Infrastructure.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
+                    b.Property<string>("MetadataJson")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int?>("ModifiedBy")
                         .HasColumnType("int");
 
@@ -918,13 +924,14 @@ namespace TaskMangment.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<int>("EmployeeTypeId")
+                        .HasColumnType("int")
+                        .HasColumnName("FunctionCode");
+
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasMaxLength(250)
                         .HasColumnType("nvarchar(250)");
-
-                    b.Property<int>("FunctionCode")
-                        .HasColumnType("int");
 
                     b.Property<string>("IdentityNumber")
                         .IsRequired()
@@ -986,6 +993,8 @@ namespace TaskMangment.Infrastructure.Migrations
 
                     b.HasIndex("CompanyId");
 
+                    b.HasIndex("EmployeeTypeId");
+
                     b.HasIndex("JobId");
 
                     b.ToTable("Employees");
@@ -1014,8 +1023,9 @@ namespace TaskMangment.Infrastructure.Migrations
                     b.Property<int>("EmployeeId")
                         .HasColumnType("int");
 
-                    b.Property<int>("FunctionCode")
-                        .HasColumnType("int");
+                    b.Property<int>("EmployeeTypeId")
+                        .HasColumnType("int")
+                        .HasColumnName("FunctionCode");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
@@ -1029,6 +1039,8 @@ namespace TaskMangment.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("EmployeeId");
+
+                    b.HasIndex("EmployeeTypeId");
 
                     b.ToTable("EmployeeFunctionalScopes");
                 });
@@ -1078,6 +1090,61 @@ namespace TaskMangment.Infrastructure.Migrations
                     b.HasIndex("RoleId");
 
                     b.ToTable("EmployeeRoles");
+                });
+
+            modelBuilder.Entity("TaskMangment.Domain.Entities.EmployeeType", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("DeletedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("ModifiedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("NameAr")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("NameEn")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("SeesAllTypesInBranchScope")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("EmployeeTypes", (string)null);
                 });
 
             modelBuilder.Entity("TaskMangment.Domain.Entities.Job", b =>
@@ -1583,6 +1650,9 @@ namespace TaskMangment.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<bool>("CanBeBranchManager")
+                        .HasColumnType("bit");
+
                     b.Property<int?>("CompanyId")
                         .HasColumnType("int");
 
@@ -1603,6 +1673,9 @@ namespace TaskMangment.Infrastructure.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
+                    b.Property<int?>("EmployeeTypeId")
+                        .HasColumnType("int");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
@@ -1620,11 +1693,70 @@ namespace TaskMangment.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<byte>("NotificationScope")
+                        .HasColumnType("tinyint");
+
+                    b.Property<bool>("RequiresBranchScope")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("RequiresEmployeeTypeScope")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("RestrictEmployeeTypeToBranch")
+                        .HasColumnType("bit");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CompanyId");
 
+                    b.HasIndex("EmployeeTypeId");
+
                     b.ToTable("Roles");
+                });
+
+            modelBuilder.Entity("TaskMangment.Domain.Entities.RoleNotificationSource", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("DeletedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("ModifiedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("RoleId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SourceRoleId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SourceRoleId");
+
+                    b.HasIndex("RoleId", "SourceRoleId")
+                        .IsUnique();
+
+                    b.ToTable("RoleNotificationSources", (string)null);
                 });
 
             modelBuilder.Entity("TaskMangment.Domain.Entities.RolePermission", b =>
@@ -2023,6 +2155,68 @@ namespace TaskMangment.Infrastructure.Migrations
                     b.ToTable("TaskPercentages");
                 });
 
+            modelBuilder.Entity("TaskMangment.Domain.Entities.TaskReopenHistory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("DeletedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("ModifiedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("NewDueDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("PreviousCloseReason")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("PreviousClosedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("PreviousDueDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte>("PreviousStatus")
+                        .HasColumnType("tinyint");
+
+                    b.Property<DateTime>("ReopenedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ReopenedByEmployeeId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TaskId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReopenedByEmployeeId");
+
+                    b.HasIndex("TaskId");
+
+                    b.ToTable("TaskReopenHistories");
+                });
+
             modelBuilder.Entity("TaskMangment.Domain.Entities.Warning", b =>
                 {
                     b.Property<int>("Id")
@@ -2177,6 +2371,9 @@ namespace TaskMangment.Infrastructure.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("MaxWarningsBeforeDiscount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MinCommentsPerPeriod")
                         .HasColumnType("int");
 
                     b.Property<int?>("ModifiedBy")
@@ -2402,6 +2599,12 @@ namespace TaskMangment.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("TaskMangment.Domain.Entities.EmployeeType", "EmployeeType")
+                        .WithMany("Employees")
+                        .HasForeignKey("EmployeeTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("TaskMangment.Domain.Entities.Job", "Job")
                         .WithMany("Employees")
                         .HasForeignKey("JobId");
@@ -2409,6 +2612,8 @@ namespace TaskMangment.Infrastructure.Migrations
                     b.Navigation("Branch");
 
                     b.Navigation("Company");
+
+                    b.Navigation("EmployeeType");
 
                     b.Navigation("Job");
                 });
@@ -2421,7 +2626,15 @@ namespace TaskMangment.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("TaskMangment.Domain.Entities.EmployeeType", "EmployeeType")
+                        .WithMany("FunctionalScopes")
+                        .HasForeignKey("EmployeeTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.Navigation("Employee");
+
+                    b.Navigation("EmployeeType");
                 });
 
             modelBuilder.Entity("TaskMangment.Domain.Entities.EmployeeRole", b =>
@@ -2565,7 +2778,32 @@ namespace TaskMangment.Infrastructure.Migrations
                         .WithMany()
                         .HasForeignKey("CompanyId");
 
+                    b.HasOne("TaskMangment.Domain.Entities.EmployeeType", "EmployeeType")
+                        .WithMany()
+                        .HasForeignKey("EmployeeTypeId");
+
                     b.Navigation("Company");
+
+                    b.Navigation("EmployeeType");
+                });
+
+            modelBuilder.Entity("TaskMangment.Domain.Entities.RoleNotificationSource", b =>
+                {
+                    b.HasOne("TaskMangment.Domain.Entities.Role", "Role")
+                        .WithMany("NotificationSources")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TaskMangment.Domain.Entities.Role", "SourceRole")
+                        .WithMany()
+                        .HasForeignKey("SourceRoleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Role");
+
+                    b.Navigation("SourceRole");
                 });
 
             modelBuilder.Entity("TaskMangment.Domain.Entities.RolePermission", b =>
@@ -2702,6 +2940,25 @@ namespace TaskMangment.Infrastructure.Migrations
                     b.Navigation("Task");
                 });
 
+            modelBuilder.Entity("TaskMangment.Domain.Entities.TaskReopenHistory", b =>
+                {
+                    b.HasOne("TaskMangment.Domain.Entities.Employee", "ReopenedBy")
+                        .WithMany()
+                        .HasForeignKey("ReopenedByEmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TaskMangment.Domain.Entities.WorkTask", "Task")
+                        .WithMany("ReopenHistory")
+                        .HasForeignKey("TaskId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ReopenedBy");
+
+                    b.Navigation("Task");
+                });
+
             modelBuilder.Entity("TaskMangment.Domain.Entities.Warning", b =>
                 {
                     b.HasOne("TaskMangment.Domain.Entities.Employee", "IssuedBy")
@@ -2790,6 +3047,13 @@ namespace TaskMangment.Infrastructure.Migrations
                     b.Navigation("EmployeeRoles");
                 });
 
+            modelBuilder.Entity("TaskMangment.Domain.Entities.EmployeeType", b =>
+                {
+                    b.Navigation("Employees");
+
+                    b.Navigation("FunctionalScopes");
+                });
+
             modelBuilder.Entity("TaskMangment.Domain.Entities.Job", b =>
                 {
                     b.Navigation("Employees");
@@ -2813,6 +3077,8 @@ namespace TaskMangment.Infrastructure.Migrations
             modelBuilder.Entity("TaskMangment.Domain.Entities.Role", b =>
                 {
                     b.Navigation("EmployeeRoles");
+
+                    b.Navigation("NotificationSources");
 
                     b.Navigation("RolePermissions");
                 });
@@ -2845,6 +3111,8 @@ namespace TaskMangment.Infrastructure.Migrations
                     b.Navigation("Comments");
 
                     b.Navigation("ExtensionRequests");
+
+                    b.Navigation("ReopenHistory");
                 });
 #pragma warning restore 612, 618
         }

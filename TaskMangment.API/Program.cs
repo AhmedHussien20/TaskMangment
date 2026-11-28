@@ -26,6 +26,17 @@ namespace TaskMangment.API
             
                 var builder = WebApplication.CreateBuilder(args);
 
+                // Allow larger multipart uploads (e.g. comment attachments / folders)
+                const long maxUploadBytes = 100L * 1024 * 1024; // 100 MB
+                builder.WebHost.ConfigureKestrel(options =>
+                {
+                    options.Limits.MaxRequestBodySize = maxUploadBytes;
+                });
+                builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
+                {
+                    options.MultipartBodyLengthLimit = maxUploadBytes;
+                });
+
                 // ------------------------------
                 // DATABASE
                 // ------------------------------
@@ -200,22 +211,35 @@ namespace TaskMangment.API
                 });
 
                 // =======================
-                // Configure Serilog
+                // Configure Serilog (+ optional Seq free UI)
                 // =======================
                 var logDir = Path.Combine(AppContext.BaseDirectory, "Logs");
                 Directory.CreateDirectory(logDir);
 
-                Log.Logger = new LoggerConfiguration()
+                var loggerConfig = new LoggerConfiguration()
                     .MinimumLevel.Error()
                     .Enrich.FromLogContext()
+                    .Enrich.WithEnvironmentName()
+                    .Enrich.WithMachineName()
                     .WriteTo.File(
                         path: Path.Combine(logDir, "log-.txt"),
                         rollingInterval: RollingInterval.Day,
                         retainedFileCountLimit: 30,
                         outputTemplate:
                         "{Timestamp:yyyy-MM-dd HH:mm:ss} [{Level}] {Message}{NewLine}{Exception}"
-                    )
-                    .CreateLogger();
+                    );
+
+                var seqEnabled = builder.Configuration.GetValue("Seq:Enabled", false);
+                var seqUrl = builder.Configuration["Seq:ServerUrl"];
+                if (seqEnabled && !string.IsNullOrWhiteSpace(seqUrl))
+                {
+                    var seqApiKey = builder.Configuration["Seq:ApiKey"];
+                    loggerConfig.WriteTo.Seq(
+                        seqUrl,
+                        apiKey: string.IsNullOrWhiteSpace(seqApiKey) ? null : seqApiKey);
+                }
+
+                Log.Logger = loggerConfig.CreateLogger();
 
                 builder.Host.UseSerilog();
             //builder.Services.AddCaching(builder.Configuration);
@@ -232,10 +256,13 @@ namespace TaskMangment.API
             //if (app.Environment.IsDevelopment())
             //{
             app.UseSwagger();
-            app.UseSwaggerUI();
-                //}
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "TaskMangment.API v1");
+            });
+            //}
 
-                var supportedCultures = new[]
+            var supportedCultures = new[]
                 {
                 new CultureInfo("en"),
                 new CultureInfo("ar")
@@ -267,6 +294,16 @@ namespace TaskMangment.API
 
                 // API Controllers
                 app.MapControllers();
+
+            using (var scope = app.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                await db.Database.MigrateAsync();
+                await EmployeeTypeSeeder.EnsureSeededAsync(db);
+
+                var migrator = scope.ServiceProvider.GetRequiredService<RolePermissionPackMigrator>();
+                await migrator.MigrateAsync();
+            }
 
             //using (var scope = app.Services.CreateScope())
             //{

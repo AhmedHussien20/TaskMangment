@@ -15,6 +15,7 @@ import { BranchCreateUpdateComponent  } from '../branch-create-update.component/
 import { ToastrService } from 'ngx-toastr';
 import Swal from 'sweetalert2';
 import { AuthService } from 'app/core/services/auth.service';
+import { Permissions } from 'app/core/constants/permissions';
 
 @Component({
   selector: 'app-branch-list',
@@ -88,10 +89,9 @@ export class BranchListComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    const roleLevel = this.auth.getRoleLevel();
-    this.canCreate = roleLevel >= 80;
-    this.canEdit = roleLevel >= 80;
-    this.canDelete = roleLevel > 80;
+    this.canCreate = this.auth.hasPermission(Permissions.CREATE_BRANCH);
+    this.canEdit = this.auth.hasPermission(Permissions.UPDATE_BRANCH);
+    this.canDelete = this.auth.hasPermission(Permissions.DELETE_BRANCH);
     this.loadData();
   }
 

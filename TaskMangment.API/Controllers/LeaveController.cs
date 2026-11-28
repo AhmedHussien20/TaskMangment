@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
+using TaskMangment.API.Middlewares;
 using TaskMangment.Application.ApiRequests;
 using TaskMangment.Application.Authorization;
 using TaskMangment.Application.Common.ApiRequests.Leave;
+using TaskMangment.Application.Common.Security;
 using TaskMangment.Application.DTOs;
 using TaskMangment.Application.Interfaces.Services;
 
@@ -34,12 +36,12 @@ namespace TaskMangment.API.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var result = await _service.GetByIdAsync(id);
+            var result = await _service.GetByIdAsync(id, this.CurrentUserId);
             return Success(result.Data);
         }
 
         [HttpGet("pending")]
-        [HasRole("Manager")]
+        [PermissionAuthorize(PermissionCodes.ApproveLeave, PermissionCodes.RejectLeave)]
         public async Task<IActionResult> Pending([FromQuery] LeaveRequest request)
         {
             var result = await _service.GetPendingForApprovalAsync(this.CurrentUserId, request);
@@ -47,7 +49,7 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpPost("{id}/approve")]
-        [HasRole("Manager")]
+        [PermissionAuthorize(PermissionCodes.ApproveLeave)]
         public async Task<IActionResult> Approve(int id)
         {
             var result = await _service.ApproveAsync(id, this.CurrentUserId, this.CurrentUserFullName);
@@ -55,10 +57,17 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpPost("{id}/reject")]
-        [HasRole("Manager")]
+        [PermissionAuthorize(PermissionCodes.RejectLeave)]
         public async Task<IActionResult> Reject(int id, [FromBody] RejectLeaveDto rejectLeaveDto)
         {
             var result = await _service.RejectAsync(id, this.CurrentUserId, rejectLeaveDto);
+            return Success(true);
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            await _service.DeleteAsync(id, this.CurrentUserId);
             return Success(true);
         }
     }

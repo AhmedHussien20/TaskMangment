@@ -2,8 +2,10 @@ using DocumentFormat.OpenXml.Bibliography;
 using Microsoft.AspNetCore.Mvc;
 using QuestPDF.Fluent;
 using System.Reflection.Metadata;
+using TaskMangment.API.Middlewares;
 using TaskMangment.API.Reports.Task;
 using TaskMangment.API.Reports.Excel;
+using TaskMangment.Application.Common.Security;
 using TaskMangment.Application.DTOs.ReportsDTO;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Application.Responses;
@@ -150,11 +152,9 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpGet("employee-total-discounts/pdf")]
+        [PermissionAuthorize(PermissionCodes.ViewCompanyReports)]
         public async Task<IActionResult> GetEmployeeTotalDiscountsPdf(ExportType exportType, [FromQuery] EmployeeTotalDiscountReportFilterDto filter)
         {
-            if (this.RoleLevel < 100)
-                return Forbid();
-
             if (filter.ToDate.HasValue && !filter.FromDate.HasValue)
                 return BadRequest("fromDate is required when toDate is selected.");
 
@@ -216,12 +216,12 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpGet("closing-soon-tasks/pdf")]
-        public async Task<IActionResult> GetClosingSoonTasksPdf(ExportType exportType, int? employeeId)
+        public async Task<IActionResult> GetClosingSoonTasksPdf(ExportType exportType, int? employeeId, WorkTaskStatus? status)
         {
             var now = DateTime.UtcNow;
             var next3Days = now.AddDays(3);
 
-            var tasks = await _reportService.GetTasksClosingSoonAsync(this.CurrentUserId,this.RoleLevel, employeeId, now, next3Days);
+            var tasks = await _reportService.GetTasksClosingSoonAsync(this.CurrentUserId,this.RoleLevel, employeeId, now, next3Days, status);
             if (exportType == ExportType.Pdf)
             {
                 var doc = new ClosingSoonTasksPdfReport(tasks);
@@ -237,10 +237,10 @@ namespace TaskMangment.API.Controllers
 
         }
         [HttpGet("employee-task-tracking/pdf")]
-        public async Task<IActionResult> EmployeeTaskTrackingPdf(ExportType exportType,int? employeeId,DateTime fromDate,DateTime? toDate)
+        public async Task<IActionResult> EmployeeTaskTrackingPdf(ExportType exportType,int? employeeId,DateTime fromDate,DateTime? toDate, WorkTaskStatus? status)
         {
             var effectiveToDate = toDate ?? DateTime.UtcNow;
-            var tasks = await _reportService.GetEmployeeTaskTrackingAsync(this.CurrentUserId,this.RoleLevel,employeeId,fromDate,effectiveToDate);
+            var tasks = await _reportService.GetEmployeeTaskTrackingAsync(this.CurrentUserId,this.RoleLevel,employeeId,fromDate,effectiveToDate, status);
 
             if (exportType == ExportType.Pdf)
             {
@@ -257,7 +257,7 @@ namespace TaskMangment.API.Controllers
 
 
         [HttpGet("branch-tasks/pdf")]
-        public async Task<IActionResult> GetBranchTasksReportPdf(ExportType exportType,int branchId,DateTime fromDate,DateTime? toDate)
+        public async Task<IActionResult> GetBranchTasksReportPdf(ExportType exportType,int branchId,DateTime fromDate,DateTime? toDate, WorkTaskStatus? status)
         {
             var effectiveToDate = toDate ?? DateTime.UtcNow;
             string branchName = "-";
@@ -265,7 +265,8 @@ namespace TaskMangment.API.Controllers
             {
                 BranchId = branchId,
                 FromDate = fromDate,
-                ToDate = effectiveToDate
+                ToDate = effectiveToDate,
+                Status = status
             };
 
             var data = await _reportService.GetBranchTasksReportAsync(

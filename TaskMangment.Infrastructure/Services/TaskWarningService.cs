@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Azure.Core;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -12,6 +12,7 @@ using TaskMangment.Application.Common.Errors;
 using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Responses;
+using TaskMangment.Application.Common.Security;
 using TaskMangment.Application.DTOs.TaskDTOs;
 using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
@@ -33,7 +34,9 @@ namespace TaskMangment.Infrastructure.Services
         private readonly ICachingService _cache;
         private readonly IDomainEventDispatcher _eventDispatcher;
         private readonly IRepository<Notification> _notificationRepo;
-        private readonly IGetHigherManager _getHigherManager;
+        private readonly INotificationRecipientBuilder _recipientBuilder;
+        private readonly IEmployeePermissionService _permissions;
+        private readonly TaskCreatedByMeEvaluator _createdByMe;
 
 
 
@@ -48,7 +51,9 @@ namespace TaskMangment.Infrastructure.Services
             IDomainEventDispatcher eventDispatcher,
             IRepository<Branch> branchRepo,
             IRepository<Notification> notificationRepo,
-            IGetHigherManager getHigherManager)
+            INotificationRecipientBuilder recipientBuilder,
+            IEmployeePermissionService permissions,
+            TaskCreatedByMeEvaluator createdByMe)
         {
             _warningRepo = warningRepo;
             _employeeRepo = employeeRepo;
@@ -59,7 +64,9 @@ namespace TaskMangment.Infrastructure.Services
             _eventDispatcher = eventDispatcher;
             _branchRepo = branchRepo;
             _notificationRepo = notificationRepo;
-            _getHigherManager = getHigherManager;
+            _recipientBuilder = recipientBuilder;
+            _permissions = permissions;
+            _createdByMe = createdByMe;
         }
 
         public async Task<ApiResponse<PagedResponse<WarningGetDto>>> GetAllAsync(WarningRequest request)
@@ -161,6 +168,16 @@ namespace TaskMangment.Infrastructure.Services
             if (assignment.IsClosed)
                 throw new AppException(ErrorCodes.TaskAlreadyClosed, StatusCodes.Status400BadRequest);
 
+            var actorIsAssignee = await _taskAssignmentRepo.GetAll(a =>
+                    a.TaskId == taskId &&
+                    a.EmployeeId == employeeId &&
+                    a.IsActive &&
+                    !a.IsDeleted)
+                .AnyAsync();
+            if (actorIsAssignee && !TaskCreatedByMeEvaluator.IsCreatorOrAssigner(employeeId, task))
+                throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
+
+            await EnsureCanSendWarningAsync(employeeId, task);
 
             var warning = _mapper.Map<Warning>(dto);
             warning.TaskAssignmentId = assignment.Id;
@@ -192,13 +209,11 @@ namespace TaskMangment.Infrastructure.Services
                     .FirstOrDefaultAsync(b => b.Id == issuedEmployee.BranchId.Value)
                 : null;
 
-            var managerIds = await _getHigherManager.GetDirectHigherManagerIdsAsync(dto.IssuedEmployeeId);
-            var sendToIds = new List<int> { dto.IssuedEmployeeId };
-            sendToIds.AddRange(managerIds.Where(id => !sendToIds.Contains(id)));
-            sendToIds.Remove(employeeId);
-            sendToIds = await _employeeRepo.GetAll(e => sendToIds.Contains(e.Id) && e.IsActive)
-                .Select(e => e.Id)
-                .ToListAsync();
+            // Subject who received the warning is the manager-anchor (not every task peer).
+            var sendToIds = await _recipientBuilder.BuildAsync(
+                peerIds: new[] { dto.IssuedEmployeeId },
+                actorIdToExclude: employeeId,
+                managerAnchorEmployeeId: dto.IssuedEmployeeId);
 
             var IssuedToName = issuedEmployee.FullName;
 
@@ -206,7 +221,14 @@ namespace TaskMangment.Infrastructure.Services
             if (sendToIds.Any())
             {
                 await _eventDispatcher.PublishAsync(
-                        new TaskWarningEvent(warning.Id, taskId, employeeName, sendToIds, IssuedToName, task.Title)
+                        new TaskWarningEvent(
+                            warning.Id,
+                            taskId,
+                            employeeName,
+                            sendToIds,
+                            IssuedToName,
+                            task.Title,
+                            branch?.Name)
                     );
             }
 
@@ -228,7 +250,7 @@ namespace TaskMangment.Infrastructure.Services
         
         
 
-        public async Task<ApiResponse<WarningGetDto>> UpdateAsync(int id, WarningAddEditDto dto)
+        public async Task<ApiResponse<WarningGetDto>> UpdateAsync(int id, WarningAddEditDto dto, int modifiedByEmployeeId)
         {
             var warning = await _warningRepo.GetAll(w => w.Id == id)
                 .Include(w => w.TaskAssignment)
@@ -237,9 +259,23 @@ namespace TaskMangment.Infrastructure.Services
             if (warning == null)
                 throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
 
+            var taskId = warning.TaskAssignment.TaskId;
 
+            var task = await _taskRepo.GetByIDAsync(taskId)
+                ?? throw new AppException(ErrorCodes.TaskNotFound, StatusCodes.Status404NotFound);
 
-            var taskAssignments = await _taskAssignmentRepo.GetAll(ta => ta.TaskId == warning.TaskAssignment.TaskId)
+            var actorIsAssignee = await _taskAssignmentRepo.GetAll(a =>
+                    a.TaskId == taskId &&
+                    a.EmployeeId == modifiedByEmployeeId &&
+                    a.IsActive &&
+                    !a.IsDeleted)
+                .AnyAsync();
+            if (actorIsAssignee && !TaskCreatedByMeEvaluator.IsCreatorOrAssigner(modifiedByEmployeeId, task))
+                throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
+
+            await EnsureCanSendWarningAsync(modifiedByEmployeeId, task);
+
+            var taskAssignments = await _taskAssignmentRepo.GetAll(ta => ta.TaskId == taskId)
                 .ToListAsync();
 
             var assignment = taskAssignments.FirstOrDefault(ta => ta.EmployeeId == dto.IssuedEmployeeId);
@@ -287,6 +323,18 @@ namespace TaskMangment.Infrastructure.Services
 
             return ApiResponse<bool>.Ok(true, "Warning deleted successfully");
 
+        }
+
+        private async Task EnsureCanSendWarningAsync(int employeeId, WorkTask task)
+        {
+            if (TaskCreatedByMeEvaluator.IsCreatorOrAssigner(employeeId, task))
+                return;
+
+            if (await _permissions.HasAsync(employeeId, PermissionCodes.IssueWarning) &&
+                await _createdByMe.IsCreatedByMeAsync(task, employeeId))
+                return;
+
+            throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
         }
     }
 }

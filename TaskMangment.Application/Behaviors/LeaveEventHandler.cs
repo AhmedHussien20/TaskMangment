@@ -37,7 +37,8 @@ namespace TaskMangment.Application.Behaviors
                 ev.LeaveTypeName,
                 ev.EmployeeName,
                 ev.StartDate.ToString("yyyy-MM-dd"),
-                ev.EndDate.ToString("yyyy-MM-dd")
+                ev.EndDate.ToString("yyyy-MM-dd"),
+                ev.BranchName
             );
 
             await _notificationService.SendAsync(

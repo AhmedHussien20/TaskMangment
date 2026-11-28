@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using TaskMangment.API.Filters;
+using TaskMangment.API.Middlewares;
 using TaskMangment.Application.Common.ApiRequests.Department;
+using TaskMangment.Application.Common.Security;
 using TaskMangment.Application.DTOs;
 using TaskMangment.Application.Interfaces.Services;
 
@@ -38,6 +40,7 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpPost]
+        [PermissionAuthorize(PermissionCodes.CreateDepartment)]
         public async Task<IActionResult> Add([FromBody] DepartmentAddEditDto dto)
         {
             var result = await _service.AddAsync(dto);
@@ -45,6 +48,7 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpPut("{id}")]
+        [PermissionAuthorize(PermissionCodes.UpdateDepartment)]
         public async Task<IActionResult> Update(int id, [FromBody] DepartmentAddEditDto dto)
         {
             var result = await _service.UpdateAsync(id, dto);
@@ -52,6 +56,7 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpDelete("{id}")]
+        [PermissionAuthorize(PermissionCodes.DeleteDepartment)]
         public async Task<IActionResult> Delete(int id)
         {
             var result = await _service.DeleteAsync(id);

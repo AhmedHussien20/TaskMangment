@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TaskMangment.Domain.Entities;
 
 namespace TaskMangment.Application.DTOs.ReportsDTO
 {
@@ -11,6 +12,7 @@ namespace TaskMangment.Application.DTOs.ReportsDTO
         public int BranchId { get; set; }
         public DateTime FromDate { get; set; }
         public DateTime? ToDate { get; set; }
+        public WorkTaskStatus? Status { get; set; }
     }
 
     public class EmployeeMiniDto

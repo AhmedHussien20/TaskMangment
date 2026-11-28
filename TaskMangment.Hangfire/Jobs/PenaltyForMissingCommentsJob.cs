@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+using TaskMangment.Application.Common.Validation;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Domain.Entities;
@@ -15,19 +16,25 @@ namespace TaskMangment.Hangfire.Jobs
         private readonly AppDbContext _db;
         private readonly IDomainEventDispatcher _eventDispatcher;
         private readonly IGetHigherManager _getHigherManager;
+        private readonly IConfiguration _configuration;
 
         public PenaltyForMissingCommentsJob(
             AppDbContext db,
             IDomainEventDispatcher eventDispatcher,
-            IGetHigherManager getHigherManager)
+            IGetHigherManager getHigherManager,
+            IConfiguration configuration)
         {
             _db = db;
             _eventDispatcher = eventDispatcher;
             _getHigherManager = getHigherManager;
+            _configuration = configuration;
         }
 
         public async Task ExecuteAsync()
         {
+            if (HangfireQuietHours.ShouldSkipNow(_configuration))
+                return;
+
             var tz = TimeZoneInfo.FindSystemTimeZoneById("Arab Standard Time");
             var today = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, tz).Date;
             var yesterday = today.AddDays(-1);
@@ -75,6 +82,9 @@ namespace TaskMangment.Hangfire.Jobs
                 var periodDays = (int)task.CommentAllowPeriodDays!.Value;
                 if (periodDays < 1) periodDays = 1;
 
+                var minCommentsRequired = task.MinCommentsPerPeriod;
+                if (minCommentsRequired < 1) minCommentsRequired = 1;
+
                 var maxWarningsBeforeDiscount = task.MaxWarningsBeforeDiscount;
                 if (maxWarningsBeforeDiscount < 0) maxWarningsBeforeDiscount = 0;
                 if (maxWarningsBeforeDiscount > 3) maxWarningsBeforeDiscount = 3;
@@ -89,23 +99,31 @@ namespace TaskMangment.Hangfire.Jobs
 
                 candidateIds = candidateIds.Distinct().ToList();
 
-                var roleLevels = await _db.EmployeeRoles
+                var companyWideEmployeeIds = await (
+                    from er in _db.EmployeeRoles
+                    where candidateIds.Contains(er.EmployeeId)
+                          && er.IsAssigned && !er.IsDeleted
+                          && er.Role != null && !er.Role.IsDeleted
+                    from rp in er.Role.RolePermissions
+                    where rp.IsAssigned && !rp.IsDeleted
+                          && rp.Permission != null && !rp.Permission.IsDeleted
+                          && (rp.Permission.Code == "VIEW_COMPANY_TASKS"
+                              || rp.Permission.Code == "VIEW_COMPANY_REPORTS"
+                              || rp.Permission.Code == "RECEIVE_ORG_ESCALATIONS")
+                    select er.EmployeeId
+                ).Distinct().ToListAsync();
+
+                var legacyAdminIds = await _db.EmployeeRoles
                     .Where(er => candidateIds.Contains(er.EmployeeId)
                                  && er.IsAssigned
                                  && !er.IsDeleted
-                                 && er.Role != null)
-                    .GroupBy(er => er.EmployeeId)
-                    .Select(g => new
-                    {
-                        EmployeeId = g.Key,
-                        RoleLevel = g.Max(x => x.Role.Level)
-                    })
+                                 && er.Role != null
+                                 && er.Role.Level == 100)
+                    .Select(er => er.EmployeeId)
+                    .Distinct()
                     .ToListAsync();
 
-                var exemptIds = new HashSet<int>(
-                    roleLevels.Where(x => x.RoleLevel == 100)
-                              .Select(x => x.EmployeeId)
-                );
+                var exemptIds = new HashSet<int>(companyWideEmployeeIds.Concat(legacyAdminIds));
 
                 //var level80Ids = roleLevels
                 //    .Where(x => x.RoleLevel == 80)
@@ -116,7 +134,7 @@ namespace TaskMangment.Hangfire.Jobs
                 //{
                 //    var ops80Ids = await _db.Employees
                 //        .Where(e => level80Ids.Contains(e.Id)
-                //                    && e.FunctionCode == FunctionCode.Operations)
+                //                    && e.EmployeeType != null && e.EmployeeType.Code == EmployeeTypeCodes.Operations)
                 //        .Select(e => e.Id)
                 //        .ToListAsync();
 
@@ -136,26 +154,73 @@ namespace TaskMangment.Hangfire.Jobs
                     if (exemptIds.Contains(employeeId))
                         continue;
 
-                    var lastComment = await _db.TaskComments
-                        .Where(c => c.TaskId == task.Id && c.EmployeeId == employeeId && !c.IsDeleted)
-                        .OrderByDescending(c => c.CreatedDate)
-                        .FirstOrDefaultAsync();
+                    // Rolling allow-period: when the employee completes the minimum
+                    // (even late), the next period starts from that completion date.
+                    // Comment calendar days use Saudi (Arab Standard Time), same as the job clock.
+                    var commentDatesUtc = await _db.TaskComments
+                        .Where(c =>
+                            c.TaskId == task.Id &&
+                            c.EmployeeId == employeeId &&
+                            !c.IsDeleted)
+                        .Select(c => c.CreatedDate)
+                        .ToListAsync();
 
-                    var baseDate = assignment.AssignedAt.Date;
+                    var commentDatesLocal = commentDatesUtc
+                        .Select(d => TimeZoneInfo.ConvertTimeFromUtc(
+                            DateTime.SpecifyKind(d, DateTimeKind.Utc), tz).Date)
+                        .ToList();
 
-                    if (lastComment != null && lastComment.CreatedDate.Date > baseDate)
-                        baseDate = lastComment.CreatedDate.Date;
+                    // Daily (period=1): one sanction per last-chance day; advance after sanction.
+                    // Weekly+ (period>1): keep cycle open until min comments met; escalate daily.
+                    var isDailyPeriod = periodDays <= 1;
 
-                    var dueDate = baseDate.AddDays(periodDays);
+                    var sanctionedViolationDates = await _db.Warnings
+                        .Where(w =>
+                            w.TaskId == task.Id &&
+                            w.IssuedEmployeeId == employeeId &&
+                            w.AutoWarning &&
+                            !w.IsDeleted &&
+                            w.ViolationDate != null)
+                        .Select(w => w.ViolationDate!.Value.Date)
+                        .ToListAsync();
 
-                    if (dueDate > yesterday)
+                    var discountedViolationDates = await _db.Discounts
+                        .Where(d =>
+                            d.TaskId == task.Id &&
+                            d.EmployeeId == employeeId &&
+                            d.discountType == DiscountType.StopCommentDiscount &&
+                            d.AutoDiscount &&
+                            !d.IsDeleted)
+                        .Select(d => d.ViolationDate.Date)
+                        .ToListAsync();
+
+                    var handledLastChanceDates = sanctionedViolationDates
+                        .Concat(discountedViolationDates)
+                        .ToHashSet();
+
+                    var assignedAtLocal = TimeZoneInfo.ConvertTimeFromUtc(
+                        DateTime.SpecifyKind(assignment.AssignedAt, DateTimeKind.Utc), tz).Date;
+
+                    if (!TryGetOpenCommentCycle(
+                            assignedAtLocal,
+                            periodDays,
+                            minCommentsRequired,
+                            commentDatesLocal,
+                            today,
+                            yesterday,
+                            isDailyPeriod ? handledLastChanceDates : null,
+                            out var cycleStart,
+                            out var startExclusive,
+                            out var lastChanceDate,
+                            out _))
+                    {
+                        // Still inside allow period, or minimum already met for current cycle.
                         continue;
-
-                    if (lastComment != null && lastComment.CreatedDate.Date == dueDate)
-                        continue;
+                    }
 
                     var hasLeave = await _db.Leaves
-                      .Where(l => l.EmployeeId == employeeId &&
+                      .Where(l => !l.IsDeleted &&
+                                  l.EmployeeId == employeeId &&
                                   l.StartDate.Date <= yesterday &&
                                   l.EndDate.Date >= yesterday &&
                                   l.Status == LeaveStatus.Approved)
@@ -168,7 +233,7 @@ namespace TaskMangment.Hangfire.Jobs
                     {
                         var isAccountant = await _db.Employees
                             .Where(e => e.Id == employeeId)
-                            .Select(e => e.FunctionCode == FunctionCode.Accounting) 
+                            .Select(e => e.EmployeeType != null && e.EmployeeType.Code == EmployeeTypeCodes.Accounting)
                             .FirstOrDefaultAsync();
 
                         if (isAccountant)
@@ -191,27 +256,56 @@ namespace TaskMangment.Hangfire.Jobs
                         }
                     }
 
-                    var existingAutoWarningCount = await _db.Warnings.CountAsync(w =>
-                        w.TaskId == task.Id &&
-                        w.IssuedEmployeeId == employeeId &&
-                        w.AutoWarning &&
-                        !w.IsDeleted);
+                    // One auto sanction per job calendar day (Arab local) for this employee+task.
+                    var localDayStart = new DateTime(today.Year, today.Month, today.Day, 0, 0, 0, DateTimeKind.Unspecified);
+                    var localNextDay = localDayStart.AddDays(1);
+                    var utcDayStart = TimeZoneInfo.ConvertTimeToUtc(localDayStart, tz);
+                    var utcNextDay = TimeZoneInfo.ConvertTimeToUtc(localNextDay, tz);
 
-                    // Prefer warning count so a missed run can catch up warnings
-                    // before applying a discount.
-                    if (existingAutoWarningCount < maxWarningsBeforeDiscount)
-                    {
-                        var alreadyWarned = await _db.Warnings.AnyAsync(w =>
+                    var alreadySanctionedToday =
+                        await _db.Warnings.AnyAsync(w =>
                             w.TaskId == task.Id &&
                             w.IssuedEmployeeId == employeeId &&
                             w.AutoWarning &&
                             !w.IsDeleted &&
-                            w.ViolationDate != null &&
-                            w.ViolationDate.Value.Date == yesterday);
+                            w.IssuedAt >= utcDayStart &&
+                            w.IssuedAt < utcNextDay)
+                        || await _db.Discounts.AnyAsync(d =>
+                            d.TaskId == task.Id &&
+                            d.EmployeeId == employeeId &&
+                            d.discountType == DiscountType.StopCommentDiscount &&
+                            d.AutoDiscount &&
+                            !d.IsDeleted &&
+                            d.CreatedDate >= utcDayStart &&
+                            d.CreatedDate < utcNextDay);
 
-                        if (alreadyWarned)
-                            continue;
+                    if (alreadySanctionedToday)
+                        continue;
 
+                    // ViolationDate = allow-period last-chance day this sanction is for.
+                    var violationDay = lastChanceDate.Date;
+
+                    // Daily: never repeat the same last-chance day.
+                    if (isDailyPeriod && handledLastChanceDates.Contains(violationDay))
+                        continue;
+
+                    // Weekly+: already sanctioned this last-chance today is covered above;
+                    // further days keep same ViolationDate while cycle stays open.
+
+                    // Warning ladder is per current comment cycle (resets when cycle completes).
+                    var warningsInCycle = await _db.Warnings.CountAsync(w =>
+                        w.TaskId == task.Id &&
+                        w.IssuedEmployeeId == employeeId &&
+                        w.AutoWarning &&
+                        !w.IsDeleted &&
+                        w.ViolationDate != null &&
+                        (startExclusive
+                            ? w.ViolationDate.Value.Date > cycleStart.Date
+                            : w.ViolationDate.Value.Date >= cycleStart.Date) &&
+                        w.ViolationDate.Value.Date <= lastChanceDate.Date);
+
+                    if (warningsInCycle < maxWarningsBeforeDiscount)
+                    {
                         var warning = new Warning
                         {
                             TaskId = task.Id,
@@ -220,10 +314,11 @@ namespace TaskMangment.Hangfire.Jobs
                             Reason = StopCommentWarningReason,
                             IssuedAt = DateTime.UtcNow,
                             AutoWarning = true,
-                            ViolationDate = yesterday
+                            ViolationDate = violationDay
                         };
 
                         await _db.Warnings.AddAsync(warning);
+                        handledLastChanceDates.Add(violationDay);
                         warningsToPublish.Add((warning, assignment.Employee?.FullName ?? "", task.Id, task.Title));
                         continue;
                     }
@@ -231,14 +326,12 @@ namespace TaskMangment.Hangfire.Jobs
                     if (task.PenaltyOnStopComment <= 0)
                         continue;
 
-                    var alreadyDiscounted = await _db.Discounts.AnyAsync(d =>
-                        d.TaskId == task.Id &&
-                        d.EmployeeId == employeeId &&
-                        d.discountType == DiscountType.StopCommentDiscount &&
-                        d.AutoDiscount &&
-                        d.ViolationDate.Date == yesterday);
-
-                    if (alreadyDiscounted)
+                    // Weekly+: at most one discount per last-chance date (then keep warning? or stop?)
+                    // User: after 3 warnings, discount. Subsequent days while still open → more discounts
+                    // once per day. Allow multiple discounts same ViolationDate on different days.
+                    // Daily: one discount per violation day (handled set).
+                    if (isDailyPeriod &&
+                        discountedViolationDates.Contains(violationDay))
                         continue;
 
                     var discount = new Discount
@@ -250,10 +343,11 @@ namespace TaskMangment.Hangfire.Jobs
                         AutoDiscount = true,
                         CreatedDate = DateTime.UtcNow,
                         discountType = DiscountType.StopCommentDiscount,
-                        ViolationDate = yesterday
+                        ViolationDate = violationDay
                     };
 
                     await _db.Discounts.AddAsync(discount);
+                    handledLastChanceDates.Add(violationDay);
                     discountsToPublish.Add((discount, assignment.Employee?.FullName ?? "", task.Id, task.Title));
                 }
             }
@@ -276,6 +370,13 @@ namespace TaskMangment.Hangfire.Jobs
 
                     if (issuedEmployee == null) continue;
 
+                    var branchName = issuedEmployee.BranchId.HasValue
+                        ? await _db.Branches
+                            .Where(b => b.Id == issuedEmployee.BranchId.Value)
+                            .Select(b => b.Name)
+                            .FirstOrDefaultAsync()
+                        : null;
+
                     var managerIds = await _getHigherManager.GetDirectHigherManagerIdsAsync(warning.IssuedEmployeeId!.Value);
 
                     var sendToIds = new List<int> { warning.IssuedEmployeeId!.Value };
@@ -293,7 +394,8 @@ namespace TaskMangment.Hangfire.Jobs
                             "النظام",
                             sendToIds,
                             issuedEmployee.FullName,
-                            taskTitle
+                            taskTitle,
+                            branchName
                         )
                     );
                 }
@@ -318,6 +420,13 @@ namespace TaskMangment.Hangfire.Jobs
                         .FirstOrDefaultAsync();
 
                     if (issuedEmployee == null) continue;
+
+                    var branchName = issuedEmployee.BranchId.HasValue
+                        ? await _db.Branches
+                            .Where(b => b.Id == issuedEmployee.BranchId.Value)
+                            .Select(b => b.Name)
+                            .FirstOrDefaultAsync()
+                        : null;
 
                     var managerIds = await _getHigherManager.GetDirectHigherManagerIdsAsync(discount.EmployeeId);
 
@@ -344,7 +453,8 @@ namespace TaskMangment.Hangfire.Jobs
                             sendToIds,
                             issuedToName,
                             taskTitle,
-                            discount.Amount
+                            discount.Amount,
+                            branchName
                         )
                     );
                 }
@@ -353,6 +463,119 @@ namespace TaskMangment.Hangfire.Jobs
                     // intentionally ignored (same as original behavior)
                 }
             }
+        }
+
+        /// <summary>
+        /// Resolves the current comment allow-cycle.
+        /// Returns true when the cycle deadline has passed (as of yesterday)
+        /// and the employee is still under the minimum — i.e. should warn/penalize.
+        /// cycleStart/startExclusive are the comment-based cycle bounds used for the
+        /// per-cycle warning ladder (not moved by daily sanction advances).
+        /// Daily periods may pass handledLastChanceDates to pick the next unsanctioned
+        /// last-chance day; weekly+ passes null so the same last-chance stays open.
+        /// </summary>
+        private static bool TryGetOpenCommentCycle(
+            DateTime assignedAt,
+            int periodDays,
+            int minCommentsRequired,
+            List<DateTime> commentDatesLocal,
+            DateTime today,
+            DateTime yesterday,
+            HashSet<DateTime>? handledLastChanceDates,
+            out DateTime cycleStart,
+            out bool startExclusive,
+            out DateTime lastChanceDate,
+            out int commentCountInCycle)
+        {
+            lastChanceDate = default;
+            commentCountInCycle = 0;
+
+            if (periodDays < 1) periodDays = 1;
+            if (minCommentsRequired < 1) minCommentsRequired = 1;
+
+            var orderedDates = commentDatesLocal
+                .Select(d => d.Date)
+                .OrderBy(d => d)
+                .ToList();
+
+            cycleStart = assignedAt.Date;
+            startExclusive = false;
+
+            // Phase 1: advance only when minimum comments are met (on time or late).
+            while (true)
+            {
+                lastChanceDate = TaskDueDateRules.MoveToNextWorkday(
+                    cycleStart.AddDays(periodDays));
+
+                var start = cycleStart.Date;
+                var exclusive = startExclusive;
+                var datesInCycle = orderedDates
+                    .Where(d =>
+                        d <= today &&
+                        (exclusive ? d > start : d >= start))
+                    .ToList();
+
+                commentCountInCycle = datesInCycle.Count;
+
+                if (commentCountInCycle < minCommentsRequired)
+                    break;
+
+                cycleStart = datesInCycle[minCommentsRequired - 1];
+                startExclusive = true;
+            }
+
+            if (yesterday < lastChanceDate)
+                return false;
+
+            if (commentCountInCycle >= minCommentsRequired)
+                return false;
+
+            // Ladder bounds stay on this comment cycle even if we advance last-chance below.
+            var ladderCycleStart = cycleStart.Date;
+            var ladderExclusive = startExclusive;
+
+            // Phase 2 (daily only): skip last-chance days already sanctioned once.
+            if (handledLastChanceDates != null)
+            {
+                var cursorStart = cycleStart.Date;
+                var cursorExclusive = startExclusive;
+
+                while (handledLastChanceDates.Contains(lastChanceDate.Date) &&
+                       yesterday >= lastChanceDate.Date)
+                {
+                    cursorStart = lastChanceDate.Date;
+                    cursorExclusive = true;
+                    lastChanceDate = TaskDueDateRules.MoveToNextWorkday(
+                        cursorStart.AddDays(periodDays));
+
+                    var datesInNext = orderedDates
+                        .Where(d =>
+                            d <= today &&
+                            (cursorExclusive ? d > cursorStart : d >= cursorStart))
+                        .ToList();
+
+                    if (datesInNext.Count >= minCommentsRequired)
+                    {
+                        // Completed a later window — treat as finished for sanctioning.
+                        cycleStart = ladderCycleStart;
+                        startExclusive = ladderExclusive;
+                        return false;
+                    }
+
+                    commentCountInCycle = datesInNext.Count;
+                }
+
+                if (yesterday < lastChanceDate)
+                {
+                    cycleStart = ladderCycleStart;
+                    startExclusive = ladderExclusive;
+                    return false;
+                }
+            }
+
+            cycleStart = ladderCycleStart;
+            startExclusive = ladderExclusive;
+            return true;
         }
     }
 }

@@ -16,6 +16,7 @@ type SelectOption =
 export type ColumnType =
   | 'text'
   | 'icon-action'
+  | 'notification-count'
   | 'icon'
   | 'badge'
   | 'custom'
@@ -37,7 +38,8 @@ export interface TableColumn {
   badgeMap?: Record<string, BadgeConfig>;
   icon?: string;
   displayField?: string;
-
+  /** Optional fixed/min width (e.g. '56px'). */
+  width?: string;
 }
 export interface ExtraMenuItem {
   label: string;
@@ -280,9 +282,13 @@ ngOnChanges(changes: SimpleChanges): void {
       });
   }
 
+  isScopeFilterKey(key: string): boolean {
+    return key === 'viewScopedTasks' || key === 'viewScopedLeaves';
+  }
+
   onFilterChange(key: string, value: any) {
     (this.searchCriteria as any)[key] = value;
-    if (key === 'viewScopedTasks') {
+    if (this.isScopeFilterKey(key)) {
       (this.searchCriteria as any).pageIndex = 1;
       this.applyFilters();
       return;
@@ -337,7 +343,7 @@ ngOnChanges(changes: SimpleChanges): void {
         if (this.isMultiSelect(key)) {
           (this.searchCriteria as any)[key] = [];
         } else {
-          (this.searchCriteria as any)[key] = (key === 'statusId') ? 0 : (key === 'viewScopedTasks') ? 'my' : null;
+          (this.searchCriteria as any)[key] = (key === 'statusId') ? 0 : (this.isScopeFilterKey(key) ? 'my' : null);
         }
 
       } else if (type === 'date') {
@@ -404,6 +410,10 @@ ngOnChanges(changes: SimpleChanges): void {
 
   // ---------- Actions ----------
 
+  get hasRowActions(): boolean {
+    return this.showEditButton || this.showDeleteButton || this.showDetailsButton || this.showCopyButton;
+  }
+
   editItem(id: number) {
     this.edit.emit(id);
   }
@@ -460,7 +470,15 @@ ngOnChanges(changes: SimpleChanges): void {
   };
 
   getColumnStyle(key: string) {
-    return this.columnWidths[key] ? { width: this.columnWidths[key] } : {};
+    if (this.columnWidths[key]) {
+      return { width: this.columnWidths[key] };
+    }
+    const col = this.columns.find(c => c.key === key);
+    return col?.width ? { width: col.width, minWidth: col.width } : {};
+  }
+
+  isCenteredColumn(col: TableColumn): boolean {
+    return col.type === 'notification-count';
   }
 
   ngOnDestroy(): void {
@@ -478,7 +496,10 @@ ngOnChanges(changes: SimpleChanges): void {
     if (
       target.closest('button') ||
       target.closest('input') ||
-      target.closest('a')
+      target.closest('a') ||
+      target.closest('.dropdown') ||
+      target.closest('.dropdown-menu') ||
+      target.closest('.table-actions-col')
     ) {
       return;
     }

@@ -15,6 +15,24 @@
       </tr>
 
       <tr>
+        <th>{{ 'TASK.PRIORITY' | translate }}</th>
+        <td>
+          <span class="badge" [ngClass]="priorityBadgeClass">
+            {{ priorityLabelKey | translate }}
+          </span>
+        </td>
+      </tr>
+
+      <tr>
+        <th>{{ 'TASK.STATUS' | translate }}</th>
+        <td>
+          <span class="badge" [ngClass]="statusBadgeClass">
+            {{ statusLabelKey | translate }}
+          </span>
+        </td>
+      </tr>
+
+      <tr>
         <th>{{ 'TASK.DESCRIPTION' | translate }}</th>
         <td>{{ taskInfo?.description }}</td>
       </tr>
@@ -22,6 +40,10 @@
       <tr>
         <th>{{ 'TASK.COMMENT_ALLOW_PERIOD' | translate }}</th>
         <td>{{ taskInfo?.commentAllowPeriodDays }} يوم</td>
+      </tr>
+      <tr>
+        <th>{{ 'TASK.MIN_COMMENTS_PER_PERIOD' | translate }}</th>
+        <td>{{ taskInfo?.minCommentsPerPeriod ?? 1 }}</td>
       </tr>
 
       <tr>

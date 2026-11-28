@@ -37,7 +37,8 @@ namespace TaskMangment.Application.Behaviors
                 ev.TaskId,
                 ev.TaskTitle,
                 ev.EmployeeName,
-                ev.Percent
+                ev.Percent,
+                ev.BranchName
             );
 
             foreach (var empId in ev.Recipients)

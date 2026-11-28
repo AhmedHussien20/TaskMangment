@@ -13,6 +13,7 @@ export interface Employee {
 export interface EnumItemDto {
   id: number;
   name: string;
+  seesAllTypesInBranchScope?: boolean;
 }
 
 
@@ -28,10 +29,14 @@ export interface EmployeeAddEdit {
   address?: string;
   qualification?: string;
   roleIds: number[];
+  /** Role names from GET (aligned with roleIds). */
+  roles?: string[];
   email?: string;
   password?: string;
   attachments?: File;
-  functionCode?: EnumItemDto;
+  employeeTypeId?: number;
+  /** @deprecated use employeeTypeId */
+  functionCode?: number;
   isActive?: boolean;
 }
 

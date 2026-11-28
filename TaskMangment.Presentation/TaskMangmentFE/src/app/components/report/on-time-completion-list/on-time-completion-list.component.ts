@@ -13,6 +13,7 @@ import { EmployeeOnTimeReportDto, ExportType } from 'app/core/models/reports/rep
 import { DatePickerComponent } from 'app/components/date-picker/date-picker.component';
 import { ReportRoleFilterComponent } from '../shared/report-role-filter.component';
 import { getReportRoleFilterParams } from '../shared/report-role-filter.helper';
+import { ReportStatusFilterComponent } from '../shared/report-status-filter.component';
 
 @Component({
   selector: 'app-on-time-completion-list',
@@ -25,7 +26,8 @@ import { getReportRoleFilterParams } from '../shared/report-role-filter.helper';
     GenericTableComponent,
     PageHeaderComponent,
     DatePickerComponent,
-    ReportRoleFilterComponent
+    ReportRoleFilterComponent,
+    ReportStatusFilterComponent
   ],
   templateUrl: './on-time-completion-list.component.html',
   styleUrls: ['./on-time-completion-list.component.scss']
@@ -55,6 +57,7 @@ export class OnTimeCompletionListComponent implements OnInit {
   fromDate?: string;
   toDate?: string;
   selectedRoleId?: number;
+  status?: string;
 
   isLoading = false;
 
@@ -74,7 +77,7 @@ export class OnTimeCompletionListComponent implements OnInit {
 
     const { roleId, roleTitle } = getReportRoleFilterParams(this.roleFilter, this.selectedRoleId);
     this.reportService
-      .getOnTimeCompletion(this.fromDate, this.toDate, roleId, roleTitle)
+      .getOnTimeCompletion(this.fromDate, this.toDate, roleId, roleTitle, this.status)
       .subscribe({
         next: (res) => {
           this.rows = res.data;
@@ -107,7 +110,7 @@ export class OnTimeCompletionListComponent implements OnInit {
   onExportPdf(): void {
     const { roleId, roleTitle } = getReportRoleFilterParams(this.roleFilter, this.selectedRoleId);
     this.reportPdfService
-      .getOnTimeCompletionPdf(ExportType.Pdf, this.fromDate, this.toDate, roleId, roleTitle)
+      .getOnTimeCompletionPdf(ExportType.Pdf, this.fromDate, this.toDate, roleId, roleTitle, this.status)
       .subscribe({
         next: (blob) => {
           const url = window.URL.createObjectURL(blob);
@@ -129,7 +132,7 @@ export class OnTimeCompletionListComponent implements OnInit {
   onExportExcel(): void {
     const { roleId, roleTitle } = getReportRoleFilterParams(this.roleFilter, this.selectedRoleId);
     this.reportPdfService
-      .getOnTimeCompletionPdf(ExportType.Excel, this.fromDate, this.toDate, roleId, roleTitle)
+      .getOnTimeCompletionPdf(ExportType.Excel, this.fromDate, this.toDate, roleId, roleTitle, this.status)
       .subscribe({
         next: (blob) => {
           const url = window.URL.createObjectURL(blob);

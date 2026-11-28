@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -20,6 +20,7 @@ namespace TaskMangment.Application.DTOs
         public int Id { get; set; }
         public string Reason { get; set; } = string.Empty;
         public DateTime CreatedDate { get; set; }
+        public int? TaskId { get; set; }
         public string TaskTitle { get; set; } = string.Empty;
         public string TaskStatus { get; set; } = string.Empty;
     }
@@ -29,7 +30,11 @@ namespace TaskMangment.Application.DTOs
         public int Id { get; set; }
         public decimal Amount { get; set; }
         public string Reason { get; set; } = string.Empty;
+        public int? TaskId { get; set; }
         public string TaskTitle { get; set; } = string.Empty;
+        public string? TaskStatusText { get; set; }
+        public string? TaskAssignedByName { get; set; }
+        public DateTime? TaskDueDate { get; set; }
         public DateTime CreatedDate { get; set; }
         public bool AutoDiscount { get; set; }
         public DiscountType DiscountType { get; set; }

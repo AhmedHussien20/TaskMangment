@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -36,7 +36,13 @@ namespace TaskMangment.Application.DTOs
         [MaxLength(200)]
         public string Qualification { get; set; }
 
-        public List<int> RoleIds { get; set; } = new(); 
+        public List<int> RoleIds { get; set; } = new();
+
+        /// <summary>
+        /// When true, <see cref="RoleIds"/> replaces the employee's assigned roles
+        /// (empty list clears). When false/null, roles are left unchanged.
+        /// </summary>
+        public bool UpdateRoles { get; set; }
 
 
         [MaxLength(200)]
@@ -46,7 +52,7 @@ namespace TaskMangment.Application.DTOs
         public string? Password { get; set; }
 
         public IFormFile? Attachments { get; set; }
-        public FunctionCode? FunctionCode { get; set; }
+        public int? EmployeeTypeId { get; set; }
 
         public bool IsActive { get; set; } = true;
 
@@ -75,10 +81,12 @@ namespace TaskMangment.Application.DTOs
         public string IdentityNumber { get; set; }
         public string ImageUrl { get; set; }
         public List<string> Roles { get; set; } = new();
+        public List<int> RoleIds { get; set; } = new();
         public DateTime? LastLoginDate { get; set; }
         public bool IsActive { get; set; }
 
-        public FunctionCode? FunctionCode { get; set; }
+        public int? EmployeeTypeId { get; set; }
+        public string? EmployeeTypeName { get; set; }
 
 
     }
@@ -86,6 +94,7 @@ namespace TaskMangment.Application.DTOs
     {
         public int Id { get; set; }
         public string Name { get; set; } = null!;
+        public bool SeesAllTypesInBranchScope { get; set; }
     }
 
 }

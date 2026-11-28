@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Localization; 
+using Microsoft.Extensions.Localization; 
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Notification;
 using TaskMangment.Application.Interfaces.Services;
@@ -33,7 +33,8 @@ namespace TaskMangment.Application.Behaviors
                 ev.TaskId,
                 ev.TaskTitle,
                 ev.IssuedbyName,
-                string.IsNullOrWhiteSpace(ev.IssuedToName) ? "-" : ev.IssuedToName
+                string.IsNullOrWhiteSpace(ev.IssuedToName) ? "-" : ev.IssuedToName,
+                string.IsNullOrWhiteSpace(ev.BranchName) ? "-" : ev.BranchName
             );
 
             foreach (var empId in ev.SendTo)

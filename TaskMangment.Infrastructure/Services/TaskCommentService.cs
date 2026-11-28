@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Azure.Core;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +13,7 @@ using TaskMangment.Application.Common.Errors;
 using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Responses;
+using TaskMangment.Application.Common.Security;
 using TaskMangment.Application.DTOs.TaskDTOs;
 using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
@@ -36,7 +37,8 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IDomainEventDispatcher _eventDispatcher;
         private readonly IBlobStorageService _blobStorageService;
         private readonly IAppUnitOfWork _uow;
-        private readonly IGetHigherManager _getHigherManager;
+        private readonly INotificationRecipientBuilder _recipientBuilder;
+        private readonly IEmployeePermissionService _permissions;
 
 
 
@@ -51,7 +53,8 @@ namespace TaskMangment.Infrastructure.Services
             IRepository<Employee> employeeRepo,
             IBlobStorageService blobStorageService,
             IAppUnitOfWork uow,
-            IGetHigherManager getHigherManager
+            INotificationRecipientBuilder recipientBuilder,
+            IEmployeePermissionService permissions
             )
         {
             _commentRepo = commentRepo;
@@ -64,8 +67,8 @@ namespace TaskMangment.Infrastructure.Services
             _employeeRepo = employeeRepo;
             _blobStorageService = blobStorageService;
             _uow = uow;
-            _getHigherManager = getHigherManager;
-
+            _recipientBuilder = recipientBuilder;
+            _permissions = permissions;
         }
 
         public async Task<ApiResponse<PagedResponse<TaskCommentGetDto>>> GetAllAsync(TaskCommentRequest request)
@@ -147,8 +150,17 @@ namespace TaskMangment.Infrastructure.Services
                          && a.IsActive)
                 .FirstOrDefaultAsync();
 
-            if (assignment == null && roleLevel != 100 && roleLevel != 80 && roleLevel != 70)
-                throw new AppException(ErrorCodes.NotAssigned, StatusCodes.Status400BadRequest);
+            // Unassigned commenters need scoped/company task visibility (replaces manager roleLevel bypass).
+            _ = roleLevel;
+            if (assignment == null)
+            {
+                var canCommentUnassigned = await _permissions.HasAnyAsync(
+                    employeeId,
+                    PermissionCodes.ViewScopedTasks,
+                    PermissionCodes.ViewCompanyTasks);
+                if (!canCommentUnassigned)
+                    throw new AppException(ErrorCodes.NotAssigned, StatusCodes.Status400BadRequest);
+            }
 
             if (assignment != null && assignment.IsClosed)
                 throw new AppException(ErrorCodes.TaskAlreadyClosed, StatusCodes.Status400BadRequest);
@@ -215,42 +227,38 @@ namespace TaskMangment.Infrastructure.Services
                 await _uow.CommitAsync();
 
                 // ==== Notifications/Event ====
-                var assignedEmployeeIds = await _taskAssignmentRepo
+                // Peers = assignees + AssignedBy; managers only of the commenter (actor), not every peer.
+                var peerIds = await _taskAssignmentRepo
                     .GetAll(a => a.TaskId == taskId && a.IsActive)
                     .Select(a => a.EmployeeId)
                     .ToListAsync();
 
-                var employeeName = await _employeeRepo
+                var employeeInfo = await _employeeRepo
                     .GetAll(e => e.Id == employeeId)
-                    .Select(e => e.FullName)
+                    .Select(e => new { e.FullName, BranchName = e.Branch != null ? e.Branch.Name : null })
                     .FirstOrDefaultAsync();
 
                 if (task.AssignedByEmployeeId.HasValue &&
-                    !assignedEmployeeIds.Contains(task.AssignedByEmployeeId.Value))
+                    !peerIds.Contains(task.AssignedByEmployeeId.Value))
                 {
-                    assignedEmployeeIds.Add(task.AssignedByEmployeeId.Value);
+                    peerIds.Add(task.AssignedByEmployeeId.Value);
                 }
 
-                assignedEmployeeIds.Remove(employeeId);
-                assignedEmployeeIds = await _employeeRepo.GetAll(e => assignedEmployeeIds.Contains(e.Id) && e.IsActive)
-                    .Select(e => e.Id)
-                    .ToListAsync();
-
-                foreach (var recipientId in assignedEmployeeIds.ToList())
-                {
-                    var managerIds = await _getHigherManager.GetDirectHigherManagerIdsAsync(recipientId);
-                    assignedEmployeeIds.AddRange(managerIds.Where(id => !assignedEmployeeIds.Contains(id)));
-                }
-
-                assignedEmployeeIds.Remove(employeeId);
-                assignedEmployeeIds = await _employeeRepo.GetAll(e => assignedEmployeeIds.Contains(e.Id) && e.IsActive)
-                    .Select(e => e.Id)
-                    .ToListAsync();
+                var assignedEmployeeIds = await _recipientBuilder.BuildAsync(
+                    peerIds,
+                    actorIdToExclude: employeeId,
+                    managerAnchorEmployeeId: employeeId);
 
                 if (assignedEmployeeIds.Any())
                 {
                     await _eventDispatcher.PublishAsync(
-                        new TaskCommentAddedEvent(comment.Id, taskId, employeeName, assignedEmployeeIds, task.Title)
+                        new TaskCommentAddedEvent(
+                            comment.Id,
+                            taskId,
+                            employeeInfo?.FullName,
+                            assignedEmployeeIds,
+                            task.Title,
+                            employeeInfo?.BranchName)
                     );
                 }
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,7 +15,7 @@ namespace TaskMangment.Application.Interfaces.Services
         Task<ApiResponse<PagedResponse<TaskPercentageGetDto>>> GetAllAsync(TaskPercentRequest request);
         Task<ApiResponse<TaskPercentageGetDto>> GetByIdAsync(int id);
         Task<ApiResponse<TaskPercentageGetDto>> AddAsync(int taskId, int employeeId, string role , TaskPercentageAddEditDto dto);
-        Task<ApiResponse<TaskPercentageGetDto>> UpdateAsync(int id, TaskPercentageAddEditDto dto);
+        Task<ApiResponse<TaskPercentageGetDto>> UpdateAsync(int id, int modifiedByEmployeeId, TaskPercentageAddEditDto dto);
         Task<ApiResponse<bool>> DeleteAsync(int id);
     }
 }

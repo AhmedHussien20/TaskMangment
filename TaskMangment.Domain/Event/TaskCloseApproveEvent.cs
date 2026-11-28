@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace TaskMangment.Domain.Event
 {
@@ -12,13 +8,20 @@ namespace TaskMangment.Domain.Event
         public int TaskId { get; }
         public string TaskTitle { get; }
         public List<int> AssignedEmployeeIds { get; }
+        public string BranchName { get; }
 
-        public TaskCloseApproveEvent(int requestId, int taskId, string taskTitle, List<int> assignedEmployeeIds)
+        public TaskCloseApproveEvent(
+            int requestId,
+            int taskId,
+            string taskTitle,
+            List<int> assignedEmployeeIds,
+            string? branchName = null)
         {
             RequestId = requestId;
             TaskId = taskId;
             TaskTitle = taskTitle;
             AssignedEmployeeIds = assignedEmployeeIds;
+            BranchName = string.IsNullOrWhiteSpace(branchName) ? "-" : branchName;
         }
     }
 }

@@ -1,8 +1,10 @@
-﻿
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR; 
+using TaskMangment.API.Middlewares;
 using TaskMangment.Application.Authorization;
-using TaskMangment.Application.Common.ApiRequests.Task; 
+using TaskMangment.Application.Common.ApiRequests.Task;
+using TaskMangment.Application.Common.Security;
 using TaskMangment.Application.DTOs.TaskDTOs;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Domain.Entities;
@@ -42,6 +44,7 @@ namespace TaskMangment.API.Controllers
             return Success(result.Data);
         }
         [HttpPost]
+        [PermissionAuthorize(PermissionCodes.CreateTask)]
         public async Task<IActionResult> Add([FromBody] TaskAddEditDto dto)
         {
            
@@ -49,6 +52,7 @@ namespace TaskMangment.API.Controllers
             return Success(result.Data, "Task added successfully");
         }
 
+        /// <summary>Allowed for literal task creator/assigner, or users with UPDATE_TASK.</summary>
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] TaskAddEditDto dto)
         {
@@ -56,10 +60,11 @@ namespace TaskMangment.API.Controllers
             return Success(result.Data, "Task updated successfully");
         }
 
+        /// <summary>Allowed for literal task creator/assigner, or users with DELETE_TASK.</summary>
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var result = await _service.DeleteAsync(id);
+            var result = await _service.DeleteAsync(id, this.CurrentUserId);
             return Success(true, "Task deleted successfully");
         }
 
@@ -87,7 +92,23 @@ namespace TaskMangment.API.Controllers
             return Ok(result);
         }
 
+        /// <summary>Creator/assigner, or a user with REOPEN_TASK inside their scope. Deductions are kept.</summary>
+        [HttpPost("{id}/reopen")]
+        public async Task<IActionResult> Reopen(int id, [FromBody] ReopenTaskDto dto)
+        {
+            var result = await _service.ReopenAsync(id, dto, this.CurrentUserId);
+            return Success(result.Data, result.Message);
+        }
+
+        [HttpGet("{id}/reopen-history")]
+        public async Task<IActionResult> GetReopenHistory(int id)
+        {
+            var result = await _service.GetReopenHistoryAsync(id);
+            return Success(result.Data);
+        }
+
         [HttpPost("archive-closed")]
+        [PermissionAuthorize(PermissionCodes.ArchiveTask)]
         public async Task<IActionResult> ArchiveClosed([FromBody] List<int> taskIds)
         {
             var result = await _service.ArchiveClosedTasksAsync(taskIds);

@@ -46,12 +46,19 @@ export class AuthService {
     return this.authRepository.login(userCode, password).pipe(
       map(response => {
         if (response.data !== null) {
-          localStorage.setItem('authToken', response.data.token);
-          localStorage.setItem('userData', JSON.stringify(response.data));
+          const data: any = response.data;
+          const employeeTypeId = data.employeeTypeId ?? data.functionCode;
+          const userData = {
+            ...data,
+            employeeTypeId,
+            functionCode: employeeTypeId
+          };
+          localStorage.setItem('authToken', userData.token);
+          localStorage.setItem('userData', JSON.stringify(userData));
     this.store.dispatch(NavActions.initializeMenu());
 
-          this.store.dispatch(loginSuccess({ token: response.data.token }));
-          return response;
+          this.store.dispatch(loginSuccess({ token: userData.token }));
+          return { ...response, data: userData };
         } else {
           this.store.dispatch(loginFailure({ error: response.errorList.join('\n') }));
           throw new Error(response.errorList.join('\n'));
@@ -115,16 +122,35 @@ export class AuthService {
 
   getUser(): AuthUser | null {
     const u = localStorage.getItem('userData');
-    return u ? JSON.parse(u) : null;
+    if (!u) return null;
+    const user = JSON.parse(u) as AuthUser;
+    const employeeTypeId = user.employeeTypeId ?? user.functionCode;
+    if (employeeTypeId != null && (user.employeeTypeId == null || user.functionCode == null)) {
+      user.employeeTypeId = employeeTypeId;
+      user.functionCode = employeeTypeId;
+    }
+    return user;
   }
   hasPermission(permission: string): boolean {
-    return this.getUser()?.permissions.includes(permission) ?? false;
+    const perms = this.getUser()?.permissions;
+    if (!perms?.length || !permission) return false;
+    return perms.some(p => p.toUpperCase() === permission.toUpperCase());
   }
 
+  hasAnyPermission(...permissions: string[]): boolean {
+    return permissions.some(p => this.hasPermission(p));
+  }
+
+  hasAccessScope(): boolean {
+    return !!this.getUser()?.hasAccessScope;
+  }
+
+  /** @deprecated Prefer hasPermission / hasAnyPermission. Kept for dual-read during migration. */
   hasMinRoleLevel(level: number): boolean {
     return (this.getUser()?.roleLevel ?? 0) >= level;
   }
 
+  /** @deprecated Prefer hasPermission. Kept for dual-read during migration. */
   getRoleLevel(): number {
     return this.getUser()?.roleLevel ?? 0;
   }

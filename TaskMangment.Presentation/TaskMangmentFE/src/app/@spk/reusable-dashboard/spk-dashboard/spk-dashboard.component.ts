@@ -21,10 +21,14 @@ interface DashboardCard {
   imports: [  CommonModule,                 // ✅ إجباري لـ *ngIf
     TranslateModule],
   templateUrl: './spk-dashboard.component.html',
-  styleUrl: './spk-dashboard.component.scss'
+  styleUrl: './spk-dashboard.component.scss',
+  host: {
+    '[class.tile-host]': 'variant === "tile"'
+  }
 })
 export class SpkDashboardComponent {
   @Input() card!: any;
+  @Input() variant: 'default' | 'tile' = 'default';
 
   constructor(private sanitizer: DomSanitizer ,    private router: Router) {}
 

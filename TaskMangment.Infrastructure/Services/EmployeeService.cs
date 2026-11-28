@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Azure.Core;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -46,6 +46,9 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IUserAccessContextProvider _accessProvider;
         private readonly IRepository<TaskAssignment> _taskAssignmentRepo;
         private readonly IRepository<WorkTask> _taskRepo;
+        private readonly IAccessScopeResolver _scopeResolver;
+        private readonly IEmployeePermissionService _permissions;
+        private readonly IRepository<EmployeeFunctionalScope> _employeeFunctionScopeRepo;
 
 
 
@@ -65,7 +68,10 @@ namespace TaskMangment.Infrastructure.Services
             IRepository<ManagerBranches> managerBranchesRepo,
             IUserAccessContextProvider accessProvider,
             IRepository<TaskAssignment> taskAssignmentRepo,
-            IRepository<WorkTask> taskRepo
+            IRepository<WorkTask> taskRepo,
+            IAccessScopeResolver scopeResolver,
+            IEmployeePermissionService permissions,
+            IRepository<EmployeeFunctionalScope> employeeFunctionScopeRepo
             )
         {
             _employeeRepo = employeeRepo;
@@ -84,6 +90,9 @@ namespace TaskMangment.Infrastructure.Services
             _env = env;
             _taskAssignmentRepo = taskAssignmentRepo;
             _taskRepo = taskRepo;
+            _scopeResolver = scopeResolver;
+            _permissions = permissions;
+            _employeeFunctionScopeRepo = employeeFunctionScopeRepo;
         }
 
         public async Task<ApiResponse<PagedResponse<EmployeeGetDto>>> GetAllAsync(EmployeeRequest request,int employeeId,int roleLevel) 
@@ -151,14 +160,10 @@ namespace TaskMangment.Infrastructure.Services
             int employeeId,
             int roleLevel)
         {
-            var access = await _accessProvider.GetAsync(employeeId);
+            var scope = await _scopeResolver.ResolveAsync(employeeId);
 
-            var myBranchId = await _employeeRepo.GetAll(e => e.Id == employeeId)
-                .Select(e => e.BranchId)
-                .FirstOrDefaultAsync();
-
-            if (myBranchId == 0)
-                throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
+            var isCreateTaskPicker = !string.IsNullOrWhiteSpace(request.PermissionCode)
+                && request.PermissionCode == PermissionCodes.CreateTask;
 
             var empQuery = _employeeRepo.GetAll()
                 .Include(e => e.Branch)
@@ -167,8 +172,20 @@ namespace TaskMangment.Infrastructure.Services
                 .Include(e => e.EmployeeRoles.Where(er => er.IsAssigned && !er.IsDeleted))
                     .ThenInclude(er => er.Role)
                 .ApplySearch(request.searchKey)
-                .ApplyAccessScope(access)
                 .AsNoTracking();
+
+            // Assign picker must NOT use View excludes (branch/area superiors / company-wide).
+            // ASSIGN_OUTSIDE_SCOPE widens the picker to the whole company.
+            if (isCreateTaskPicker &&
+                await _permissions.HasAsync(employeeId, PermissionCodes.AssignOutsideScope))
+            {
+                empQuery = empQuery.Where(e => e.CompanyId == scope.CompanyId && !e.IsDeleted && e.IsActive);
+            }
+            else
+            {
+                var intent = isCreateTaskPicker ? AccessIntent.Assign : AccessIntent.View;
+                empQuery = _scopeResolver.FilterEmployees(empQuery, scope, intent);
+            }
 
             if (request.BranchId.HasValue)
                 empQuery = empQuery.Where(e => e.BranchId == request.BranchId.Value);
@@ -176,30 +193,72 @@ namespace TaskMangment.Infrastructure.Services
             if (request.IsActive.HasValue)
                 empQuery = empQuery.Where(e => e.IsActive == request.IsActive.Value);
 
-            if (!access.BranchIds.Any() && !access.FunctionCodes.Any() && roleLevel != 100 && string.IsNullOrWhiteSpace(request.PermissionCode))
-                empQuery = empQuery.Where(e => e.Id == employeeId);
-
-            if (!access.BranchIds.Any() && !access.FunctionCodes.Any() && roleLevel >= 70 && roleLevel < 100)
-                empQuery = empQuery.Where(e => e.Id == employeeId);
-
-            if (!string.IsNullOrWhiteSpace(request.PermissionCode) && request.PermissionCode == "CREATE_TASK" && roleLevel < 60)
+            if (request.CanBeBranchManager == true || request.RequiresBranchScope == true)
             {
-                empQuery = empQuery
-                    .Where(e => e.IsActive)
-                    .Where(e => e.BranchId == myBranchId)
-                    .Where(e => e.EmployeeRoles.Any(er =>
-                        er.IsAssigned &&
-                        !er.IsDeleted &&
-                        er.Role != null &&
-                        er.Role.Level < 60));
+                // Manager pickers never include inactive employees.
+                empQuery = empQuery.Where(e => e.IsActive);
             }
-            else
-            {
-                if (!string.IsNullOrWhiteSpace(request.PermissionCode) && request.PermissionCode == "CREATE_TASK")
-                    empQuery = empQuery.Where(e => e.IsActive);
 
-                if (roleLevel != 100)
-                    empQuery = empQuery.ApplyRoleHierarchy(roleLevel);
+            if (request.CanBeBranchManager == true)
+            {
+                empQuery = empQuery.Where(e =>
+                    e.EmployeeRoles.Any(er =>
+                        er.IsAssigned && !er.IsDeleted &&
+                        er.Role != null && !er.Role.IsDeleted &&
+                        er.Role.CanBeBranchManager));
+            }
+
+            if (request.RequiresBranchScope == true)
+            {
+                empQuery = empQuery.Where(e =>
+                    e.EmployeeRoles.Any(er =>
+                        er.IsAssigned && !er.IsDeleted &&
+                        er.Role != null && !er.Role.IsDeleted &&
+                        er.Role.RequiresBranchScope));
+            }
+
+            if (isCreateTaskPicker)
+            {
+                empQuery = empQuery.Where(e => e.IsActive);
+
+                var canAssignManagers = await _permissions.HasAsync(employeeId, PermissionCodes.AssignToManagers);
+                var canAssignOutside = await _permissions.HasAsync(employeeId, PermissionCodes.AssignOutsideScope);
+                // Outside-scope already includes managers company-wide; only block superiors when neither grant exists.
+                if (!canAssignManagers && !canAssignOutside && scope.OwnBranchId.HasValue)
+                {
+                    var branchId = scope.OwnBranchId.Value;
+                    var blockedIds = await _branchRepo.GetAll(b => b.Id == branchId && !b.IsDeleted && b.ManagerID > 0)
+                        .Select(b => b.ManagerID)
+                        .ToListAsync();
+
+                    var scopeManagers = await _managerBranchesRepo.GetAll(mb =>
+                            mb.BranchId == branchId &&
+                            mb.IsActive &&
+                            !mb.IsDeleted &&
+                            mb.Branch != null &&
+                            !mb.Branch.IsDeleted &&
+                            mb.Branch.IsActive)
+                        .Select(mb => mb.ManagerId)
+                        .ToListAsync();
+                    blockedIds.AddRange(scopeManagers);
+
+                    var areaId = await _branchRepo.GetAll(b => b.Id == branchId && !b.IsDeleted)
+                        .Select(b => b.AreaId)
+                        .FirstOrDefaultAsync();
+                    if (areaId.HasValue)
+                    {
+                        var areaManagerId = await _db.Set<Area>()
+                            .Where(a => a.Id == areaId.Value && !a.IsDeleted && a.ManagerEmployeeId != null)
+                            .Select(a => a.ManagerEmployeeId!.Value)
+                            .FirstOrDefaultAsync();
+                        if (areaManagerId > 0)
+                            blockedIds.Add(areaManagerId);
+                    }
+
+                    blockedIds = blockedIds.Where(id => id != employeeId).Distinct().ToList();
+                    if (blockedIds.Count > 0)
+                        empQuery = empQuery.Where(e => !blockedIds.Contains(e.Id));
+                }
             }
 
             return empQuery;
@@ -213,6 +272,7 @@ namespace TaskMangment.Infrastructure.Services
                 .Include(e => e.Branch)
                 .Include(e => e.Department)
                 .Include(e => e.Job)
+                .Include(e => e.EmployeeType)
                 .Include(e => e.EmployeeRoles)
                     .ThenInclude(er => er.Role)
                 .AsNoTracking()
@@ -269,7 +329,11 @@ namespace TaskMangment.Infrastructure.Services
                 employee.CompanyId = CampanyId;
                 employee.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
 
+                // Need employee Id before roles; still inside UoW transaction.
                 await _employeeRepo.SaveChangesAsync();
+
+                if (dto.UpdateRoles)
+                    await SyncEmployeeRolesAsync(employee.Id, dto.RoleIds, employee.EmployeeTypeId);
 
                 if (dto.Attachments != null)
                 {
@@ -302,13 +366,11 @@ namespace TaskMangment.Infrastructure.Services
 
 
                     await _attachmentRepo.AddAsync(attachment);
-                    await _attachmentRepo.SaveChangesAsync();
-
-                    
                 }
 
+                // Single flush for roles (+ attachment) then commit — all or nothing.
+                await _employeeRepo.SaveChangesAsync();
                 await _cache.RemoveAsync("employees:");
-
                 await _uow.CommitAsync();
 
                 var fullEmployee = await _employeeRepo.GetAll(e => e.Id == employee.Id)
@@ -366,6 +428,9 @@ namespace TaskMangment.Infrastructure.Services
                 if (!string.IsNullOrWhiteSpace(dto.Password))
                     employee.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
 
+                if (dto.UpdateRoles)
+                    await SyncEmployeeRolesAsync(employee.Id, dto.RoleIds, dto.EmployeeTypeId ?? employee.EmployeeTypeId);
+
                 if (dto.Attachments != null)
                 {
                     var oldAttachment = await _attachmentRepo
@@ -396,8 +461,6 @@ namespace TaskMangment.Infrastructure.Services
                         oldAttachment.BlobUrl = newBlobUrl;
                         oldAttachment.BlobUploadedAt = DateTime.UtcNow;
                         oldAttachment.IsUploadedToBlob = true;
-
-                        await _attachmentRepo.SaveChangesAsync();
                     }
                     else
                     {
@@ -417,13 +480,12 @@ namespace TaskMangment.Infrastructure.Services
                         };
 
                         await _attachmentRepo.AddAsync(attachment);
-                        await _attachmentRepo.SaveChangesAsync();
                     }
                 }
 
+                // One SaveChanges for employee + roles (+ attachment), then UoW commit.
                 await _employeeRepo.SaveChangesAsync();
                 await _cache.RemoveAsync("employees:");
-
                 await _uow.CommitAsync();
 
                 if (!string.IsNullOrWhiteSpace(oldBlobUrl) &&
@@ -488,13 +550,159 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<bool>.Ok(true, "Employee deleted successfully");
         }
 
-        public Task<ApiResponse<List<FunctionCodeEnumDto>>> GetFunctionCodesAsync()
+        public async Task<ApiResponse<List<FunctionCodeEnumDto>>> GetFunctionCodesAsync()
         {
-            var values = Enum.GetValues<FunctionCode>()
-                .Select(x => new FunctionCodeEnumDto { Id = (int)x, Name = x.ToString() })
+            var values = await _db.EmployeeTypes
+                .AsNoTracking()
+                .Where(x => !x.IsDeleted)
+                .OrderBy(x => x.Id)
+                .Select(x => new FunctionCodeEnumDto
+                {
+                    Id = x.Id,
+                    Name = x.NameEn,
+                    SeesAllTypesInBranchScope = x.SeesAllTypesInBranchScope
+                })
+                .ToListAsync();
+
+            return ApiResponse<List<FunctionCodeEnumDto>>.Ok(values);
+        }
+
+        private const int MaxRolesPerEmployee = 2;
+
+        /// <summary>
+        /// Optional role assignment on create/update. Empty list clears active roles.
+        /// Also reconciles EmployeeFunctionalScope for type-scoped roles.
+        /// </summary>
+        private async Task SyncEmployeeRolesAsync(int employeeId, List<int>? roleIds, int? employeeTypeId)
+        {
+            var desired = (roleIds ?? new List<int>())
+                .Where(id => id > 0)
+                .Distinct()
                 .ToList();
 
-            return Task.FromResult(ApiResponse<List<FunctionCodeEnumDto>>.Ok(values));
+            if (desired.Count > MaxRolesPerEmployee)
+                throw new AppException(ErrorCodes.EmployeeMaxRolesExceeded, StatusCodes.Status400BadRequest);
+
+            var desiredTypeIds = new List<int>();
+
+            if (desired.Count > 0)
+            {
+                var roles = await _roleRepo
+                    .GetAll(r => desired.Contains(r.Id) && !r.IsDeleted)
+                    .Select(r => new
+                    {
+                        r.Id,
+                        r.RequiresEmployeeTypeScope,
+                        r.EmployeeTypeId
+                    })
+                    .ToListAsync();
+
+                if (roles.Count != desired.Count)
+                    throw new AppException(ErrorCodes.RoleNotFound, StatusCodes.Status400BadRequest);
+
+                foreach (var role in roles)
+                {
+                    if (!role.RequiresEmployeeTypeScope)
+                        continue;
+
+                    if (!role.EmployeeTypeId.HasValue || role.EmployeeTypeId.Value <= 0)
+                        throw new AppException(ErrorCodes.RoleEmployeeTypeRequired, StatusCodes.Status400BadRequest);
+
+                    if (employeeTypeId != role.EmployeeTypeId)
+                        throw new AppException(ErrorCodes.EmployeeTypeMismatch, StatusCodes.Status400BadRequest);
+
+                    desiredTypeIds.Add(role.EmployeeTypeId.Value);
+                }
+
+                desiredTypeIds = desiredTypeIds.Distinct().ToList();
+            }
+
+            var existing = await _employeeRoleRepo
+                .GetAll(er => er.EmployeeId == employeeId && !er.IsDeleted)
+                .ToListAsync();
+
+            foreach (var er in existing)
+            {
+                if (desired.Contains(er.RoleId))
+                {
+                    er.IsAssigned = true;
+                    er.IsDeleted = false;
+                    er.DeletedDate = null;
+                    er.ModifiedDate = DateTime.UtcNow;
+                }
+                else if (er.IsAssigned)
+                {
+                    er.IsAssigned = false;
+                    er.ModifiedDate = DateTime.UtcNow;
+                }
+            }
+
+            var existingRoleIds = existing.Select(er => er.RoleId).ToHashSet();
+            foreach (var roleId in desired.Where(id => !existingRoleIds.Contains(id)))
+            {
+                await _employeeRoleRepo.AddAsync(new EmployeeRole
+                {
+                    EmployeeId = employeeId,
+                    RoleId = roleId,
+                    IsAssigned = true,
+                    CreatedDate = DateTime.UtcNow
+                });
+            }
+
+            await ReconcileEmployeeTypeScopeAsync(employeeId, desiredTypeIds);
+            await DeactivateManagerBranchesIfNotBranchManagerAsync(employeeId, desired);
+
+            // No SaveChanges here — caller saves once then _uow.CommitAsync().
+        }
+
+        private async Task DeactivateManagerBranchesIfNotBranchManagerAsync(int employeeId, List<int> desiredRoleIds)
+        {
+            var keepsBranchManager = desiredRoleIds.Count > 0 && await _roleRepo
+                .GetAll(r => desiredRoleIds.Contains(r.Id) && !r.IsDeleted && r.CanBeBranchManager)
+                .AnyAsync();
+
+            if (keepsBranchManager)
+                return;
+
+            var links = await _managerBranchesRepo
+                .GetAll(x => x.ManagerId == employeeId && x.IsActive && !x.IsDeleted)
+                .ToListAsync();
+
+            foreach (var link in links)
+                link.IsActive = false;
+        }
+
+        private async Task ReconcileEmployeeTypeScopeAsync(int employeeId, IReadOnlyList<int> typeIds)
+        {
+            var existingScopes = await _employeeFunctionScopeRepo
+                .GetAll(x => x.EmployeeId == employeeId && !x.IsDeleted)
+                .ToListAsync();
+
+            if (typeIds == null || typeIds.Count == 0)
+            {
+                foreach (var scope in existingScopes)
+                    _employeeFunctionScopeRepo.SoftDelete(scope);
+                return;
+            }
+
+            var typeId = typeIds[0];
+            var keep = existingScopes.FirstOrDefault();
+            if (keep != null)
+            {
+                keep.EmployeeTypeId = typeId;
+                keep.IsDeleted = false;
+                keep.DeletedDate = null;
+                foreach (var extra in existingScopes.Skip(1))
+                    _employeeFunctionScopeRepo.SoftDelete(extra);
+            }
+            else
+            {
+                await _employeeFunctionScopeRepo.AddAsync(new EmployeeFunctionalScope
+                {
+                    EmployeeId = employeeId,
+                    EmployeeTypeId = typeId
+                });
+            }
         }
 
 

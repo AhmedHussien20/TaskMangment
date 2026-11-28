@@ -45,6 +45,10 @@ export class DatePickerComponent implements ControlValueAccessor {
 
   @Input() min?: string | Date | null;
   @Input() max?: string | Date | null;
+  /** Return false to disable a calendar day. */
+  @Input() dateFilter?: (date: Date | null) => boolean;
+  /** When true, disables Friday, Saturday, and days before today. */
+  @Input() blockWeekendAndPast = false;
 
   @Input() outputFormat: 'yyyy-MM-dd' | 'iso' = 'yyyy-MM-dd';
 
@@ -106,12 +110,33 @@ export class DatePickerComponent implements ControlValueAccessor {
   }
 
   get minDate(): Date | null {
+    if (this.blockWeekendAndPast && !this.min) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return today;
+    }
     if (!this.min) return null;
-    return this.min instanceof Date ? this.min : this.parseToDate(this.min) ;
+    return this.min instanceof Date ? this.min : this.parseToDate(this.min);
   }
 
   get maxDate(): Date | null {
     if (!this.max) return null;
-    return this.max instanceof Date ? this.max : this.parseToDate(this.max) ;
+    return this.max instanceof Date ? this.max : this.parseToDate(this.max);
   }
+
+  readonly calendarFilter = (date: Date | null): boolean => {
+    if (this.dateFilter) {
+      return this.dateFilter(date);
+    }
+    if (!this.blockWeekendAndPast) {
+      return true;
+    }
+    if (!date) return false;
+    const day = date.getDay();
+    if (day === 5 || day === 6) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    return d >= today;
+  };
 }

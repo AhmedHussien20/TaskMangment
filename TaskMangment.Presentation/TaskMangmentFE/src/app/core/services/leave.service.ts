@@ -38,6 +38,10 @@ export class LeaveService {
 );
 }
 
+  delete(id: number): Observable<BaseResponse<boolean>> {
+    return this.api.delete<BaseResponse<boolean>>(this.service, `${id}`);
+  }
+
 
  private buildQuery(req: any): string {
   const params = [];
@@ -58,7 +62,18 @@ export class LeaveService {
   }
   if (req.sortDirection) {
     params.push(`SortDirection=${req.sortDirection}`);
-  }  
+  }
+
+  if (Array.isArray(req.employeeIds) && req.employeeIds.length > 0) {
+    req.employeeIds.forEach((id: number) => {
+      params.push(`EmployeeIds=${id}`);
+    });
+  }
+
+  if (req.viewScopedLeaves === true || req.viewScopedLeaves === 'true' || req.viewScopedLeaves === 'scoped') {
+    params.push('viewScopedLeaves=true');
+  }
+
   return params.join('&');
 }
 }

@@ -1,7 +1,9 @@
 import { Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
 
 import { TaskDetailsRefreshService } from '../../../task-details-refresh.service';
 import { TaskCommentService } from 'app/core/services/task-comment.service';
@@ -23,7 +25,7 @@ type CommentRow = TaskCommentGetDto & { timeLabel?: string };
 @Component({
   selector: 'app-task-comments',
   standalone: true,
-  imports: [CommonModule, TranslateModule, MyDatePipe],
+  imports: [CommonModule, FormsModule, TranslateModule, MyDatePipe, NgbPaginationModule],
   templateUrl: './task-comments.component.html',
   styleUrls: ['./task-comments.component.scss']
 })
@@ -31,6 +33,9 @@ export class TaskCommentsComponent implements OnInit, OnDestroy {
   @Input() taskId!: number;
 
   comments: CommentRow[] = [];
+  totalItems = 0;
+  page = 1;
+  entries = 10;
   private sub?: Subscription;
 
   // attachments state
@@ -53,12 +58,12 @@ export class TaskCommentsComponent implements OnInit, OnDestroy {
     this.sub?.unsubscribe();
   }
 
-  loadComments(): void {
+  loadComments(pageIndex = this.page, pageSize = this.entries): void {
     const request = {
       taskId: this.taskId,
       searchKey: '',
-      pageIndex: 1,
-      pageSize: 10,
+      pageIndex,
+      pageSize,
       sortColumn: 'CreatedDate',
       sortDirection: 'DESC'
     };
@@ -70,6 +75,8 @@ export class TaskCommentsComponent implements OnInit, OnDestroy {
             ...c,
             timeLabel: this.timeAgo(c.createdDate)
           }));
+          this.totalItems = res.data.totalCount ?? 0;
+          this.page = res.data.pageIndex ?? pageIndex;
 
           // لو comment اتقفل attachments panel قبل كده، نقفله لو اختفى من الصفحة
           if (this.openAttachmentsForCommentId) {
@@ -78,10 +85,22 @@ export class TaskCommentsComponent implements OnInit, OnDestroy {
           }
         } else {
           this.comments = [];
+          this.totalItems = 0;
         }
       },
       error: (err: any) => console.error('Failed to load comments', err)
     });
+  }
+
+  onPageChange(page: number): void {
+    this.page = page;
+    this.loadComments(page, this.entries);
+  }
+
+  onEntriesChange(entries: number): void {
+    this.entries = Number(entries);
+    this.page = 1;
+    this.loadComments(1, this.entries);
   }
 
   // ===== Attachments UI =====

@@ -38,7 +38,7 @@
             <div class="filter-grid">
 
                 <div class="filter-item" *ngFor="let key of objectKeys(searchCriteria?.filterTypes)"
-                    [hidden]="(key === 'employeeIds' && !showEmployeeFilter) || (key === 'viewScopedTasks' && !extraFilterOptions?.['viewScopedTasks']?.length)"
+                    [hidden]="(key === 'employeeIds' && !showEmployeeFilter) || (isScopeFilterKey(key) && !extraFilterOptions?.[key]?.length)"
                     (click)="$event.stopPropagation()">
 
                     <label>{{ getLabel(key) | translate }}</label>
@@ -68,7 +68,7 @@
                                 <ng-select [items]="getDropdownOptions(key)" bindValue="id" bindLabel="name"
                                     [ngModel]="searchCriteria[key]" (ngModelChange)="onFilterChange(key, $event)"
                                     [multiple]="isMultiSelect(key)" [closeOnSelect]="!isMultiSelect(key)"
-                                    [clearable]="key !== 'viewScopedTasks'" [searchable]="key !== 'viewScopedTasks'"
+                                    [clearable]="!isScopeFilterKey(key)" [searchable]="!isScopeFilterKey(key)"
                                     appendTo="body">
 
                                     <ng-template ng-option-tmp let-item="item">
@@ -159,21 +159,35 @@
                         <input type="checkbox" (change)="toggleSelectAll($event)" />
                     </th>
 
-                    <th *ngFor="let col of columns" [ngStyle]="getColumnStyle(col.key)">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span (click)="sort(col.key)" class="cursor-pointer">
-                                {{ col.label | translate }}
+                    <th *ngFor="let col of columns"
+                        [ngStyle]="getColumnStyle(col.key)"
+                        [class.text-center]="isCenteredColumn(col)"
+                        [class.notification-count-col]="col.type === 'notification-count'">
+                        <div class="d-flex align-items-center"
+                            [class.justify-content-between]="!isCenteredColumn(col)"
+                            [class.justify-content-center]="isCenteredColumn(col)">
+                            <span (click)="sort(col.key)" class="cursor-pointer"
+                                [ngbTooltip]="col.type === 'notification-count' ? (col.label | translate) : null"
+                                container="body">
+                                <ng-container *ngIf="col.type === 'notification-count'; else defaultHeader">
+                                    <i [class]="col.icon || 'bi bi-bell'"></i>
+                                </ng-container>
+                                <ng-template #defaultHeader>
+                                    {{ col.label | translate }}
+                                </ng-template>
                                 <i *ngIf="sortColumn === col.key">
                                     {{ sortDirection === 'ASC' ? '↑' : '↓' }}
                                 </i>
                             </span>
 
-                            <span class="col-resizer" (mousedown)="startResize($event, col.key)"></span>
+                            <span *ngIf="col.type !== 'notification-count'"
+                                class="col-resizer"
+                                (mousedown)="startResize($event, col.key)"></span>
                         </div>
                     </th>
 
-                    <th *ngIf="showEditButton || showDeleteButton || showDetailsButton" class="text-center">
-                        {{ 'TABLE.ACTIONS' | translate }}
+                    <th *ngIf="hasRowActions" class="text-center table-actions-col">
+                        <span class="visually-hidden">{{ 'TABLE.ACTIONS' | translate }}</span>
                     </th>
 
                 </tr>
@@ -193,7 +207,11 @@
 
 
                     <!-- Columns -->
-                    <td *ngFor="let col of columns" [ngSwitch]="col.type">
+                    <td *ngFor="let col of columns"
+                        [ngSwitch]="col.type"
+                        [ngStyle]="getColumnStyle(col.key)"
+                        [class.text-center]="isCenteredColumn(col)"
+                        [class.notification-count-col]="col.type === 'notification-count'">
 
                         <!-- ASSIGNEES -->
                         <ng-container *ngSwitchCase="'assignees'">
@@ -226,6 +244,22 @@
                                 <i [class]="col.icon"></i>
                                 <span class="badge bg-info ms-1">
                                     {{ getValue(item, col.key) }}
+                                </span>
+                            </button>
+                        </ng-container>
+
+                        <!-- NOTIFICATION COUNT (compact bell + badge) -->
+                        <ng-container *ngSwitchCase="'notification-count'">
+                            <button type="button"
+                                class="notification-count-btn"
+                                [class.has-unread]="(+getValue(item, col.key) || 0) > 0"
+                                [ngbTooltip]="col.label | translate"
+                                container="body"
+                                (click)="iconAction.emit({ type: col.key, row: item })">
+                                <i [class]="col.icon || 'bi bi-bell'"></i>
+                                <span *ngIf="(+getValue(item, col.key) || 0) > 0"
+                                    class="notification-count-badge">
+                                    {{ getValue(item, col.key) > 99 ? '99+' : getValue(item, col.key) }}
                                 </span>
                             </button>
                         </ng-container>
@@ -268,44 +302,67 @@
 
 
 
-                    <!-- ACTIONS -->
-                    <td *ngIf="showEditButton || showDeleteButton || showDetailsButton || showCopyButton" class="text-center">
+                    <!-- ACTIONS (kebab / 3-dots menu) -->
+                    <td *ngIf="hasRowActions" class="text-center table-actions-col" (click)="$event.stopPropagation()">
+                        <div ngbDropdown container="body" placement="bottom-end" class="d-inline-block">
+                            <button type="button"
+                                class="btn btn-light btn-sm table-actions-toggle"
+                                ngbDropdownToggle
+                                [disabled]="disableActions"
+                                [attr.aria-label]="'TABLE.ACTIONS' | translate"
+                                [ngbTooltip]="'TABLE.ACTIONS' | translate"
+                                container="body">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
 
-                        <!-- DETAILS -->
-                        <button *ngIf="showDetailsButton" class="btn btn-outline-info btn-sm me-1"
-                            [disabled]="disableDetailsFn ? disableDetailsFn(item) : false"
-                            (click)="viewDetails(getItemId(item))">
-                            <i class="bi bi-eye"></i>
-                        </button>
+                            <div ngbDropdownMenu class="table-actions-menu dropdown-menu-end">
+                                <button *ngIf="showDetailsButton"
+                                    type="button"
+                                    class="dropdown-item"
+                                    [disabled]="disableDetailsFn ? disableDetailsFn(item) : false"
+                                    (click)="viewDetails(getItemId(item))">
+                                    <i class="bi bi-eye"></i>
+                                    <span>{{ 'TABLE.VIEW_DETAILS' | translate }}</span>
+                                </button>
 
-                        <!-- EDIT -->
-                        <button *ngIf="showEditButton" class="btn btn-outline-primary btn-sm"
-                            [disabled]="disableEditFn ? disableEditFn(item) : false"
-                            (click)="editItem(getItemId(item))">
-                            <i class="bi bi-pencil-square"></i>
-                        </button>
+                                <button *ngIf="showEditButton"
+                                    type="button"
+                                    class="dropdown-item"
+                                    [disabled]="disableEditFn ? disableEditFn(item) : false"
+                                    (click)="editItem(getItemId(item))">
+                                    <i class="bi bi-pencil-square"></i>
+                                    <span>{{ 'TABLE.EDIT_ITEM' | translate }}</span>
+                                </button>
 
-                        <!-- DELETE -->
-                        <button *ngIf="showDeleteButton" class="btn btn-outline-danger btn-sm ms-1"
-                            [disabled]="disableDeleteFn ? disableDeleteFn(item) : false"
-                            (click)="deleteItem(getItemId(item))">
-                            <i class="bi bi-trash"></i>
-                        </button>
+                                <button *ngIf="showCopyButton"
+                                    type="button"
+                                    class="dropdown-item"
+                                    [disabled]="disableCopyFn ? disableCopyFn(item) : false"
+                                    (click)="copyItem(getItemId(item))">
+                                    <i class="bi bi-files"></i>
+                                    <span>{{ 'TABLE.COPY_ITEM' | translate }}</span>
+                                </button>
 
-                        <!-- COPY -->
-                        <button *ngIf="showCopyButton" class="btn btn-outline-secondary btn-sm ms-1"
-                            [disabled]="disableCopyFn ? disableCopyFn(item) : false"
-                            (click)="copyItem(getItemId(item))">
-                            <i class="bi bi-files"></i>
-                        </button>
+                                <div *ngIf="showDeleteButton && (showDetailsButton || showEditButton || showCopyButton)"
+                                    class="dropdown-divider"></div>
 
+                                <button *ngIf="showDeleteButton"
+                                    type="button"
+                                    class="dropdown-item text-danger"
+                                    [disabled]="disableDeleteFn ? disableDeleteFn(item) : false"
+                                    (click)="deleteItem(getItemId(item))">
+                                    <i class="bi bi-trash"></i>
+                                    <span>{{ 'TABLE.DELETE_ITEM' | translate }}</span>
+                                </button>
+                            </div>
+                        </div>
                     </td>
 
                 </tr>
 
                 <!-- NO DATA -->
                 <tr *ngIf="!data || data.length === 0">
-                    <td [attr.colspan]="columns.length + (showCheckbox?1:0) + (showEditButton||showDeleteButton?1:0)"
+                    <td [attr.colspan]="columns.length + (showCheckbox?1:0) + (hasRowActions?1:0)"
                         class="text-center text-muted py-3">
                         {{ 'TABLE.NO_DATA' | translate }}
                     </td>

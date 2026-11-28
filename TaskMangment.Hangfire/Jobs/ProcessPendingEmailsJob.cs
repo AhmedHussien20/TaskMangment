@@ -1,9 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using TaskMangment.Application.DTOs.ReportsDTO;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Domain.Entities;
 using TaskMangment.Infrastructure.DataContext;
+using TaskMangment.Hangfire;
 
 namespace TaskMangment.Hangfire.Jobs
 {
@@ -15,6 +16,7 @@ namespace TaskMangment.Hangfire.Jobs
         private readonly IOfferSendService _offerPdfService;
         private readonly IBlobStorageService _blobStorage;
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IConfiguration _configuration;
         private readonly ILogger<ProcessPendingEmailsJob> _logger;
 
         public ProcessPendingEmailsJob(
@@ -24,6 +26,7 @@ namespace TaskMangment.Hangfire.Jobs
             IOfferSendService offerPdfService,
             IBlobStorageService blobStorage,
             IHttpClientFactory httpClientFactory,
+            IConfiguration configuration,
             ILogger<ProcessPendingEmailsJob> logger)
         {
             _db = db;
@@ -32,11 +35,15 @@ namespace TaskMangment.Hangfire.Jobs
             _offerPdfService = offerPdfService;
             _blobStorage = blobStorage;
             _httpClientFactory = httpClientFactory;
+            _configuration = configuration;
             _logger = logger;
         }
 
         public async Task ExecuteAsync()
         {
+            if (HangfireQuietHours.ShouldSkipNow(_configuration))
+                return;
+
             var emails = await _db.EmailQueue
                 .Where(x => x.Status == EmailStatus.Pending && x.ScheduledAt <= DateTime.UtcNow)
                 .Take(50)
@@ -94,7 +101,8 @@ namespace TaskMangment.Hangfire.Jobs
                 email.TemplateKey,
                 email.ReferenceType,
                 email.ReferenceId,
-                email.UserId);
+                email.UserId,
+                ParseMetadataTokens(email.MetadataJson));
 
             var attachments = await BuildAttachmentsAsync(email);
 
@@ -103,6 +111,21 @@ namespace TaskMangment.Hangfire.Jobs
                 rendered.Subject,
                 rendered.Body,
                 attachments);
+        }
+
+        private static IReadOnlyDictionary<string, string>? ParseMetadataTokens(string? metadataJson)
+        {
+            if (string.IsNullOrWhiteSpace(metadataJson))
+                return null;
+
+            try
+            {
+                return System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(metadataJson);
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         private async Task SendToAllEmployeesAsync(EmailQueue batchEmail)

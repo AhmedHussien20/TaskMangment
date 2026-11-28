@@ -14,7 +14,8 @@ import { CloseRequestStatus, TaskCloseRequestGet } from 'app/core/models/task/ta
 import { TaskService } from 'app/core/services/task.service';
 import { NgSelectModule } from '@ng-select/ng-select';
 import { DatePickerComponent } from 'app/components/date-picker/date-picker.component';
-
+import { isPastDueDate, isWeekendDueDate } from 'app/shared/validations/weekend-due-date.validator';
+import { TaskDetailsRefreshService } from '../../../task-details-refresh.service';
 
 @Component({
   selector: 'app-task-requests',
@@ -25,10 +26,12 @@ import { DatePickerComponent } from 'app/components/date-picker/date-picker.comp
 export class TaskRequestsComponent implements OnInit, OnChanges, AfterViewInit {
 
   @Input() taskId!: number;
+  /** Already gated by shell: createdByMe && approve/reject/extend permission. */
   @Input() createdByMe: boolean = false;
   canReview: boolean = false;
 
   isLoading = false;
+  allRows: any[] = [];
   rows: any[] = [];
   totalItems = 0;
   page = 1;
@@ -89,14 +92,14 @@ export class TaskRequestsComponent implements OnInit, OnChanges, AfterViewInit {
     private modalService: NgbModal,
     private toastr: ToastrService,
     private taskService: TaskService,
-
+    private refreshService: TaskDetailsRefreshService
   ) { }
 
  extensionStatusOptions: { label: string; value: ExtensionRequestStatus }[] = [];
 closeStatusOptions: { label: string; value: CloseRequestStatus }[] = [];
 
 ngOnInit(): void {
-  this.canReview= this.createdByMe;
+  this.refreshCanReview();
   this.extensionStatusOptions = [
     { label: this.translate.instant('TASK.STATUS_APPROVED'), value: ExtensionRequestStatus.Approved },
     { label: this.translate.instant('TASK.STATUS_REJECTED'), value: ExtensionRequestStatus.Rejected },
@@ -107,21 +110,36 @@ ngOnInit(): void {
     { label: this.translate.instant('TASK.STATUS_REJECTED'), value: CloseRequestStatus.Rejected },
   ];
 
-  console.log('CreatedByMe:', this.createdByMe);
-    if (this.createdByMe) {
-    this.columns.push({
-      key: 'review',
-      label: 'TABLE.ACTIONS',
-      type: 'icon-action',
-      icon: 'bi bi-pencil-square'
-    });
-  }
+  this.ensureReviewColumn();
 }
   ngOnChanges(changes: SimpleChanges): void {
-
+    if (changes['createdByMe']) {
+      this.refreshCanReview();
+      this.ensureReviewColumn();
+    }
     if (changes['taskId'] && this.taskId && this.initialized) {
       this.page = 1;
       this.loadRequests();
+    }
+  }
+
+  private refreshCanReview(): void {
+    // Shell passes createdByMe && canReviewRequests — do not re-OR permissions here.
+    this.canReview = this.createdByMe;
+  }
+
+  private ensureReviewColumn(): void {
+    const hasReviewCol = this.columns.some(c => c.key === 'review');
+    if (this.canReview && !hasReviewCol) {
+      this.columns.push({
+        key: 'review',
+        label: 'TABLE.ACTIONS',
+        type: 'icon-action',
+        icon: 'bi bi-pencil-square'
+      });
+    }
+    if (!this.canReview && hasReviewCol) {
+      this.columns = this.columns.filter(c => c.key !== 'review');
     }
   }
 
@@ -146,6 +164,7 @@ ngOnInit(): void {
   this.taskService.getTaskRequests(this.taskId).subscribe({
     next: (res) => {
       if (!res.success || !res.data) {
+        this.allRows = [];
         this.rows = [];
         this.totalItems = 0;
         this.isLoading = false;
@@ -173,14 +192,13 @@ const closeRows = res.data.closeRequests.map((x: TaskCloseRequestGet) => ({
   responseDate: x.reviewedAt || null
 }));
 
-      this.rows = [...extensionRows, ...closeRows]
+      this.allRows = [...extensionRows, ...closeRows]
         .filter(item => item.createdAt)
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-      this.totalItems = this.rows.length;
+      this.totalItems = this.allRows.length;
+      this.applyPage();
       this.isLoading = false;
-
-      console.log('Rows loaded:', this.rows.length, 'items');
     },
     error: (err) => {
       console.error('Error loading requests:', err);
@@ -188,6 +206,22 @@ const closeRows = res.data.closeRequests.map((x: TaskCloseRequestGet) => ({
     }
   });
 }
+
+  private applyPage(): void {
+    const start = (this.page - 1) * this.entries;
+    this.rows = this.allRows.slice(start, start + this.entries);
+  }
+
+  onPageChange(page: number): void {
+    this.page = page;
+    this.applyPage();
+  }
+
+  onEntriesChange(entries: number): void {
+    this.entries = entries;
+    this.page = 1;
+    this.applyPage();
+  }
 
 
 
@@ -208,13 +242,6 @@ const closeRows = res.data.closeRequests.map((x: TaskCloseRequestGet) => ({
 
 
   refresh(): void {
-    console.log('Refreshing requests');
-    this.loadRequests();
-  }
-
-  onPageChange(page: number): void {
-    console.log('Page changed to:', page);
-    this.page = page;
     this.loadRequests();
   }
 
@@ -245,11 +272,20 @@ const closeRows = res.data.closeRequests.map((x: TaskCloseRequestGet) => ({
     if (this.reviewModel.status === ExtensionRequestStatus.Approved && !this.reviewModel.newDueDate) {
         this.toastr.warning(this.translate.instant('TASK.ENTER_NEW_DATE'));
       return;}
+    if (this.reviewModel.status === ExtensionRequestStatus.Approved && isWeekendDueDate(this.reviewModel.newDueDate)) {
+      this.toastr.error(this.translate.instant('TASK.DUE_DATE_WEEKEND'));
+      return;
+    }
+    if (this.reviewModel.status === ExtensionRequestStatus.Approved && isPastDueDate(this.reviewModel.newDueDate)) {
+      this.toastr.error(this.translate.instant('TASK.DUE_DATE_PAST'));
+      return;
+    }
     this.extensionService.review(this.selectedRequestId, this.reviewModel).subscribe({
       next: () => {
         this.toastr.success(this.translate.instant('TASK.SAVED_SUCCESS'));
         this.modalService.dismissAll();
         this.refresh();
+        this.refreshService.trigger('requests');
       }
     });
   }
@@ -260,6 +296,7 @@ submitCloseReview(status: CloseRequestStatus | null) {
       this.toastr.success(this.translate.instant('TASK.SAVED_SUCCESS'));
       this.modalService.dismissAll();
       this.refresh();
+      this.refreshService.trigger('requests');
     });
 }
 

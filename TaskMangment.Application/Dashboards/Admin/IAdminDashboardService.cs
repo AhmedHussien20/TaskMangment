@@ -13,7 +13,8 @@ namespace TaskMangment.Application.Dashboards.Admin
         Task<ApiResponse<List<CompletedTodayEmployeeDto>>> GetEmployeesCompletedTasksTodayAsync(int companyId, int roleLevel,int? employeeId, PeriodDto period, int? branchId = null);
         Task<ApiResponse<List<PendingCloseRequestTaskDto>>>GetPendingCloseRequestsAsync(int companyId, int roleLevel,int? employeeId, PeriodDto period, int? branchId = null);
 
-        Task<ApiResponse<PagedResponse<TaskStatusDto>>> GetTasksByStatusAsync(int companyId, string status,int roleLevel,int? employeeId,TasksByStatusRequest request, int? branchId = null);
+        Task<ApiResponse<PagedResponse<TaskStatusDto>>> GetTasksByStatusAsync(int companyId, string status,int roleLevel,int? employeeId,TasksByStatusRequest request, int? branchId = null, int? employeeTypeId = null);
+        Task<ApiResponse<List<EmployeeTypeTaskCardDto>>> GetEmployeeTypeCardsAsync(int companyId, int roleLevel, int? employeeId, int? branchId = null);
         Task<ApiResponse<AdminKpisExtendedDto>> GetKpisAsync(int companyId, int roleLevel,  int? employeeId, PeriodDto period, int? branchId = null);
         Task<ApiResponse<PagedResponse<DiscountGetDto>>> GetDiscountsAsync(int companyId,int roleLevel,int? employeeId,DiscountsRequest request,int? branchId = null);        
         Task<ApiResponse<PagedResponse<HighPriorityTaskDto>>> GetHighPriorityTasksAsync(int companyId,int roleLevel,int? employeeId,TasksHighPriorityRequest request,int? branchId = null);       

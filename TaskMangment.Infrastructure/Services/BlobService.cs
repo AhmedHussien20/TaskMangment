@@ -53,7 +53,9 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<string> UploadAsync(Stream stream, string fileName, string contentType, string folder)
         {
-            var blobName = $"{folder.Trim('/')}/{Guid.NewGuid()}_{fileName}";
+            // Azure returns InvalidUri for blob names containing U+FFFD or unpaired surrogates.
+            var safeName = new string(fileName.Where(c => c != '\uFFFD' && !char.IsSurrogate(c)).ToArray());
+            var blobName = $"{folder.Trim('/')}/{Guid.NewGuid()}_{safeName}";
             var blob = _container.GetBlobClient(blobName);
             await blob.UploadAsync(stream, new BlobUploadOptions
             {

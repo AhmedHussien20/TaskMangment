@@ -43,7 +43,7 @@ export class RoleAssignmentService {
   );
 }
 
-  setManagerBranches(managerId: number, payload: { functionCode: number; branchIds?: number[] }) {
+  setManagerBranches(managerId: number, payload: { employeeTypeId?: number; branchIds?: number[] }) {
   return this.api.post<BaseResponse<any>>(
     this.service,
     `manager-branches/${managerId}`,

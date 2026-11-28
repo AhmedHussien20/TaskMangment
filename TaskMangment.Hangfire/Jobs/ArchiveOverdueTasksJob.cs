@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,6 +7,7 @@ using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Domain.Entities;
 using TaskMangment.Domain.Event;
+using TaskMangment.Infrastructure;
 using TaskMangment.Infrastructure.DataContext;
 
 namespace TaskMangment.Hangfire.Jobs
@@ -16,21 +17,34 @@ namespace TaskMangment.Hangfire.Jobs
         private readonly AppDbContext _db;
         private readonly IDomainEventDispatcher _eventDispatcher;
         private readonly IGetHigherManager _getHigherManager;
+        private readonly IConfiguration _configuration;
 
-        public ArchiveOverdueTasksJob(AppDbContext db, IDomainEventDispatcher eventDispatcher, IGetHigherManager getHigherManager)
+        public ArchiveOverdueTasksJob(
+            AppDbContext db,
+            IDomainEventDispatcher eventDispatcher,
+            IGetHigherManager getHigherManager,
+            IConfiguration configuration)
         {
             _db = db;
             _eventDispatcher = eventDispatcher;
             _getHigherManager = getHigherManager;
+            _configuration = configuration;
         }
 
         public async Task ExecuteAsync()
         {
-            var todayUtc = DateTime.UtcNow.Date;
+            if (HangfireQuietHours.ShouldSkipNow(_configuration))
+                return;
+
+            // End-of-day rule (Saudi calendar): due date 27 Jul stays open all of 27 Jul;
+            // it becomes overdue only when local date is 28 Jul (job runs at 00:01).
+            var tz = TimeZoneHelper.GetSaudiArabia();
+            var todayLocal = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, tz).Date;
 
             var overdueTasks = await _db.Tasks
                 .Include(t => t.Assignments)
-                .Where(t => t.DueDate < todayUtc
+                .Where(t => t.DueDate.HasValue
+                            && t.DueDate.Value.Date < todayLocal
                             && t.Status != WorkTaskStatus.Closed
                             && t.Status != WorkTaskStatus.Archived
                             && t.Status != WorkTaskStatus.AutoClose && !t.IsDeleted)
@@ -46,10 +60,12 @@ namespace TaskMangment.Hangfire.Jobs
                 if (hasCloseRequest)
                     continue;
 
+                // Approved extension keeps the task open through the full NewDueDate day.
                 var approvedExtension = await _db.TaskExtensionRequests
                     .Where(r => r.TaskId == task.Id
                          && r.Status == ExtensionRequestStatus.Approved
-                         && r.NewDueDate > DateTime.UtcNow)
+                         && !r.IsDeleted
+                         && r.NewDueDate.Date >= todayLocal)
                     .FirstOrDefaultAsync();
 
                 if (approvedExtension != null)
@@ -82,23 +98,31 @@ namespace TaskMangment.Hangfire.Jobs
 
                     candidateIds = candidateIds.Distinct().ToList();
 
-                    var roleLevels = await _db.EmployeeRoles
+                    var companyWideEmployeeIds = await (
+                        from er in _db.EmployeeRoles
+                        where candidateIds.Contains(er.EmployeeId)
+                              && er.IsAssigned && !er.IsDeleted
+                              && er.Role != null && !er.Role.IsDeleted
+                        from rp in er.Role.RolePermissions
+                        where rp.IsAssigned && !rp.IsDeleted
+                              && rp.Permission != null && !rp.Permission.IsDeleted
+                              && (rp.Permission.Code == "VIEW_COMPANY_TASKS"
+                                  || rp.Permission.Code == "VIEW_COMPANY_REPORTS"
+                                  || rp.Permission.Code == "RECEIVE_ORG_ESCALATIONS")
+                        select er.EmployeeId
+                    ).Distinct().ToListAsync();
+
+                    var legacyAdminIds = await _db.EmployeeRoles
                         .Where(er => candidateIds.Contains(er.EmployeeId)
                                      && er.IsAssigned
                                      && !er.IsDeleted
-                                     && er.Role != null)
-                        .GroupBy(er => er.EmployeeId)
-                        .Select(g => new
-                        {
-                            EmployeeId = g.Key,
-                            RoleLevel = g.Max(x => x.Role.Level)
-                        })
+                                     && er.Role != null
+                                     && er.Role.Level == 100)
+                        .Select(er => er.EmployeeId)
+                        .Distinct()
                         .ToListAsync();
 
-                    var exemptIds = new HashSet<int>(
-                        roleLevels.Where(x => x.RoleLevel == 100)
-                                  .Select(x => x.EmployeeId)
-                    );
+                    var exemptIds = new HashSet<int>(companyWideEmployeeIds.Concat(legacyAdminIds));
 
                     //var level80Ids = roleLevels
                     //    .Where(x => x.RoleLevel == 80)
@@ -109,7 +133,7 @@ namespace TaskMangment.Hangfire.Jobs
                     //{
                     //    var ops80Ids = await _db.Employees
                     //        .Where(e => level80Ids.Contains(e.Id)
-                    //                    && e.FunctionCode == FunctionCode.Operations)
+                    //                    && e.EmployeeType != null && e.EmployeeType.Code == EmployeeTypeCodes.Operations)
                     //        .Select(e => e.Id)
                     //        .ToListAsync();
 
@@ -232,6 +256,13 @@ namespace TaskMangment.Hangfire.Jobs
                             })
                             .FirstOrDefaultAsync();
 
+                        var branchName = issuedEmployee?.BranchId != null
+                            ? await _db.Branches
+                                .Where(b => b.Id == issuedEmployee.BranchId.Value)
+                                .Select(b => b.Name)
+                                .FirstOrDefaultAsync()
+                            : null;
+
                         var managerIds = await _getHigherManager.GetDirectHigherManagerIdsAsync(discount.EmployeeId);
 
                         var sendToIds = new List<int> { discount.EmployeeId };
@@ -247,7 +278,8 @@ namespace TaskMangment.Hangfire.Jobs
                                 sendToIds,
                                 issuedToName,
                                 task.Title,
-                                discount.Amount
+                                discount.Amount,
+                                branchName
                             )
                         );
                     }

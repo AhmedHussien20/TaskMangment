@@ -4,6 +4,7 @@ import { ApiService } from "./api.service";
 import { BaseResponse } from 'app/models/base.response.model'; 
 import { Observable } from "rxjs";
 import { TaskActivitySummary } from "../models/task/task-activity-summary";
+import { TaskReopenHistory } from "../models/task/task-reopen-history";
 
 @Injectable({ providedIn: 'root' })
 export class TaskService {
@@ -115,6 +116,14 @@ private buildQuery(req: any): string {
   archiveClosed(taskIds: number[]): Observable<BaseResponse<boolean>> {
   return this.api.post<BaseResponse<boolean>>(this.service, 'archive-closed', taskIds);
 }
+
+  reopen(taskId: number, dueDate?: string): Observable<BaseResponse<boolean>> {
+    return this.api.post<BaseResponse<boolean>>(this.service, `${taskId}/reopen`, { dueDate: dueDate ?? null });
+  }
+
+  getReopenHistory(taskId: number): Observable<BaseResponse<TaskReopenHistory[]>> {
+    return this.api.get<BaseResponse<TaskReopenHistory[]>>(this.service, `${taskId}/reopen-history`);
+  }
 
 }
 

@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
@@ -22,6 +22,8 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<Employee> _employeeRepository;
         private readonly IRepository<Branch> _branchRepository;
         private readonly IRepository<Company> _companyRepo;
+        private readonly IRepository<EmployeeRole> _employeeRoleRepo;
+        private readonly IRepository<Role> _roleRepo;
         private readonly IMapper _mapper;
         private readonly ICachingService _cache;
 
@@ -30,6 +32,8 @@ namespace TaskMangment.Infrastructure.Services
             IRepository<Employee> employeeRepository,
             IRepository<Branch> branchRepository,
             IRepository<Company> companyRepo,
+            IRepository<EmployeeRole> employeeRoleRepo,
+            IRepository<Role> roleRepo,
             IMapper mapper,
             ICachingService cache)
         {
@@ -37,6 +41,8 @@ namespace TaskMangment.Infrastructure.Services
             _employeeRepository = employeeRepository;
             _branchRepository = branchRepository;
             _companyRepo = companyRepo;
+            _employeeRoleRepo = employeeRoleRepo;
+            _roleRepo = roleRepo;
             _mapper = mapper;
             _cache = cache;
         }
@@ -122,6 +128,8 @@ namespace TaskMangment.Infrastructure.Services
                     ErrorCodes.ManagerNotFound,
                     StatusCodes.Status404NotFound);
 
+            await EnsureCanBeAreaManagerAsync(dto.ManagerEmployeeId);
+
             if (!await _companyRepo.IsExistAsync(companyId))
                 throw new AppException(
                     ErrorCodes.CompanyNotFound,
@@ -168,6 +176,8 @@ namespace TaskMangment.Infrastructure.Services
                     ErrorCodes.ManagerNotFound,
                     StatusCodes.Status404NotFound);
 
+            await EnsureCanBeAreaManagerAsync(dto.ManagerEmployeeId);
+
             //var isManagerUsed = await _areaRepository
             //    .GetAll(a => a.ManagerEmployeeId == dto.ManagerEmployeeId && a.Id != id)
             //    .AnyAsync();
@@ -213,6 +223,30 @@ namespace TaskMangment.Infrastructure.Services
             await _cache.RemoveAsync("areas:");
 
             return ApiResponse<bool>.Ok(true, "Area deleted successfully");
+        }
+
+        private async Task EnsureCanBeAreaManagerAsync(int employeeId)
+        {
+            var employee = await _employeeRepository.GetAll(e => e.Id == employeeId && !e.IsDeleted)
+                .Select(e => new { e.IsActive })
+                .FirstOrDefaultAsync();
+            if (employee == null)
+                throw new AppException(ErrorCodes.EmployeeNotFound, StatusCodes.Status404NotFound);
+            if (!employee.IsActive)
+                throw new AppException(ErrorCodes.EmployeeInactive, StatusCodes.Status400BadRequest);
+
+            var allowed = await _employeeRoleRepo.GetAll(er =>
+                    er.EmployeeId == employeeId &&
+                    er.IsAssigned &&
+                    !er.IsDeleted)
+                .Join(_roleRepo.GetAll(r => !r.IsDeleted && r.RequiresBranchScope),
+                    er => er.RoleId,
+                    r => r.Id,
+                    (er, r) => r.Id)
+                .AnyAsync();
+
+            if (!allowed)
+                throw new AppException(ErrorCodes.InvalidAreaManagerRole, StatusCodes.Status400BadRequest);
         }
     }
 }

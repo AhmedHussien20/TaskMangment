@@ -15,6 +15,8 @@ import { DepartmentCreateUpdateComponent } from '../department-create-update/dep
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import Swal from 'sweetalert2';
 import { ToastrService } from 'ngx-toastr';
+import { AuthService } from 'app/core/services/auth.service';
+import { Permissions } from 'app/core/constants/permissions';
 
 @Component({
   selector: 'app-department-list',
@@ -73,6 +75,9 @@ export class DepartmentListComponent implements OnInit {
   };
 
   isLoading = false;
+  canCreate = false;
+  canEdit = false;
+  canDelete = false;
 
   selectedDeptId: number | null = null;
   isEdit = false;
@@ -81,10 +86,14 @@ export class DepartmentListComponent implements OnInit {
     private deptService: DepartmentService,
     private modalService: NgbModal,
     private translate: TranslateService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private auth: AuthService
   ) { }
 
   ngOnInit(): void {
+    this.canCreate = this.auth.hasPermission(Permissions.CREATE_DEPARTMENT);
+    this.canEdit = this.auth.hasPermission(Permissions.UPDATE_DEPARTMENT);
+    this.canDelete = this.auth.hasPermission(Permissions.DELETE_DEPARTMENT);
     this.loadData();
   }
 

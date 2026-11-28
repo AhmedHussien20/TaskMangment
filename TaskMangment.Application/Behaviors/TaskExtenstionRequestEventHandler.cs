@@ -34,7 +34,8 @@ namespace TaskMangment.Application.Behaviors
                 messageTemplate,
                 ev.TaskId,
                 ev.taskTitle,
-                ev.EmployeeName
+                ev.EmployeeName,
+                ev.BranchName
             );
 
             foreach (var empId in ev.Recipients)

@@ -36,6 +36,7 @@ export interface TaskAddEdit {
   title: string;
   description: string;
   commentAllowPeriodDays?: number;
+  minCommentsPerPeriod?: number;
   maxWarningsBeforeDiscount: number;
   maxWarnings: number;
   penaltyAtMaxWarnings: number;
@@ -64,6 +65,7 @@ export interface TaskGet {
   status: TaskStatus;
   dueDate?: string;
   commentAllowPeriodDays?: number;
+  minCommentsPerPeriod?: number;
   maxWarningsBeforeDiscount?: number;
   maxWarnings?: number;
   penaltyAtMaxWarnings?: number;
@@ -75,7 +77,11 @@ export interface TaskGet {
   requireUploadFile: boolean;
   newDate?: string;
   numberOfExtensions?: number;
-  createdByMe: boolean
+  createdByMe: boolean;
+  /** True only when current user is CreatedBy or AssignedBy (not scope-inferred). */
+  isCreatorOrAssigner?: boolean;
+  pendingRequestsCount?: number;
+  unreadNotificationsCount?: number;
 }
 
 export interface TaskSummary {

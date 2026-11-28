@@ -17,13 +17,13 @@ namespace TaskMangment.Application.Interfaces.Services
         Task<List<TaskDiscountReportDto>> GetTaskDiscountReportAsync( int currentEmployeeId, int roleLevel, TaskDiscountReportFilterDto dto);
         Task<List<TaskActivityReportDto>> GetTaskActivityReportAsync(int employeeId, int roleLevel, ExportType exportType, DateRangeReportFilterDto filter);
         Task<List<TaskMovementReportDto>> GetTaskMovementReportAsync(int currentEmployeeId, int roleLevel, TaskMovementReportFilterDto dto, ExportType exportTypee);
-        Task<List<TasksClosingSoonDto>> GetTasksClosingSoonAsync(int currentEmployeeId, int roleLevel, int? employeeId, DateTime fromDate, DateTime toDate);
+        Task<List<TasksClosingSoonDto>> GetTasksClosingSoonAsync(int currentEmployeeId, int roleLevel, int? employeeId, DateTime fromDate, DateTime toDate, WorkTaskStatus? status = null);
         Task<List<EmployeeCommentsActivityReportDto>> GetEmployeesCommentsActivityAsync(int currentEmployeeId, int roleLevel, DateRangeReportFilterDto filter);
         Task<List<ReportRoleOptionDto>> GetReportFilterRolesAsync(int currentEmployeeId, int roleLevel);
         Task<TaskDiscountAuditReportDto> GetTaskDiscountAuditReportAsync(int currentEmployeeId, int roleLevel, TaskDiscountReportFilterDto dto);
         Task<List<EmployeeTotalDiscountReportRowDto>> GetEmployeeTotalDiscountReportAsync(int currentEmployeeId, int roleLevel, EmployeeTotalDiscountReportFilterDto dto);
 
-        Task<List<EmployeeTaskTrackingReportDto>> GetEmployeeTaskTrackingAsync(int currentEmployeeId,int roleLevel,int? employeeId,DateTime fromDate,DateTime? toDate = null);
+        Task<List<EmployeeTaskTrackingReportDto>> GetEmployeeTaskTrackingAsync(int currentEmployeeId,int roleLevel,int? employeeId,DateTime fromDate,DateTime? toDate = null, WorkTaskStatus? status = null);
         Task<List<BranchTaskReportRowDto>> GetBranchTasksReportAsync(int currentEmployeeId,int roleLevel, BranchTasksReportFilterDto dto);
 
         Task<List<EmployeeAssignedTaskOptionDto>> GetEmployeeAssignedTasksAsync(

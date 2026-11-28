@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Microsoft.AspNetCore.Http; 
 using Microsoft.EntityFrameworkCore;
 using TaskMangment.Application.ApiRequests;
@@ -13,6 +13,7 @@ using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Application.Responses;
 using TaskMangment.Domain.Entities;
+using TaskMangment.Domain.Entities.Enum;
 using TaskMangment.Domain.Event;
 using TaskMangment.Infrastructure.Persistence.Extensions;
 
@@ -20,36 +21,49 @@ namespace TaskMangment.Infrastructure.Services
 {
     public class LeaveService : ILeaveService
     {
+        private const string LeaveCalendarDescriptionPrefix = "LeaveId:";
+
         private readonly IRepository<Leave> _leaveRepo;
         private readonly IRepository<Employee> _employeeRepo;
         private readonly IRepository<LeaveType> _leaveTypeRepo;
+        private readonly IRepository<CalendarEvent> _calendarEventRepo;
         private readonly IMapper _mapper;
         private readonly IDomainEventDispatcher _eventDispatcher;
         private readonly IRepository<Employee> _empRepo;
         private readonly IUserAccessContextProvider _accessProvider;
         private readonly IGetHigherManager _getHigherManager;
+        private readonly IAccessScopeResolver _scopeResolver;
+        private readonly IEmployeePermissionService _permissions;
+        private readonly IOrgManagerResolver _orgManagers;
 
 
         public LeaveService(
             IRepository<Leave> leaveRepo,
             IRepository<Employee> employeeRepo,
             IRepository<LeaveType> leaveTypeRepo,
+            IRepository<CalendarEvent> calendarEventRepo,
             IMapper mapper,
             IDomainEventDispatcher eventDispatcher,
             IRepository<Employee> empRepo,
             IUserAccessContextProvider accessProvider,
-            IGetHigherManager getHigherManager
-
+            IGetHigherManager getHigherManager,
+            IAccessScopeResolver scopeResolver,
+            IEmployeePermissionService permissions,
+            IOrgManagerResolver orgManagers
             )
         {
             _leaveRepo = leaveRepo;
             _employeeRepo = employeeRepo;
             _leaveTypeRepo = leaveTypeRepo;
+            _calendarEventRepo = calendarEventRepo;
             _mapper = mapper;
             _eventDispatcher = eventDispatcher;
             _empRepo = empRepo;
             _accessProvider = accessProvider;
             _getHigherManager = getHigherManager;
+            _scopeResolver = scopeResolver;
+            _permissions = permissions;
+            _orgManagers = orgManagers;
         }
          
         public async Task<ApiResponse<LeaveGetDto>> CreateAsync(LeaveAddDto dto, int employeeId)
@@ -61,7 +75,7 @@ namespace TaskMangment.Infrastructure.Services
                 throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
 
             if (dto.EndDate < dto.StartDate)
-                throw new AppException(ErrorCodes.Invalid, StatusCodes.Status400BadRequest);
+                throw new AppException(ErrorCodes.InvalidDate, StatusCodes.Status400BadRequest);
 
             var leave = new Leave
             {
@@ -83,27 +97,26 @@ namespace TaskMangment.Infrastructure.Services
                 .Include(l => l.LeaveType)
                 .FirstAsync();
 
-            var managerIds = await _getHigherManager.GetDirectHigherManagerIdsAsync(employeeId);
-            managerIds = managerIds?.Where(id => id != employeeId).ToList() ?? new List<int>();
+            // Higher managers + RoleNotificationSource listeners (may be empty).
+            var recipientIds = await _getHigherManager.GetDirectHigherManagerIdsAsync(employeeId);
+            recipientIds = recipientIds?.Where(id => id != employeeId).Distinct().ToList()
+                ?? new List<int>();
 
-            if (!managerIds.Any())
-            {
-                throw new AppException(ErrorCodes.Invalid, StatusCodes.Status400BadRequest);
-            }
-
-            foreach (var managerId in managerIds)
+            foreach (var recipientId in recipientIds)
             {
                 await _eventDispatcher.PublishAsync(new LeaveEvent(
                                                       leave.Id,
-                                                      managerId,
+                                                      recipientId,
                                                       full.Employee.FullName,
                                                       full.LeaveType.NameAr,
                                                       leave.StartDate,
-                                                      leave.EndDate
+                                                      leave.EndDate,
+                                                      full.Employee.Branch?.Name
                                                     ));
             }
 
             var result = _mapper.Map<LeaveGetDto>(full);
+            result.CanDelete = true;
 
             return ApiResponse<LeaveGetDto>.Ok(result, "Leave request submitted");
         }
@@ -121,28 +134,40 @@ namespace TaskMangment.Infrastructure.Services
             if (request.StatusId.HasValue)
                 query = query.Where(l => l.Status == (LeaveStatus)request.StatusId.Value);
 
-            if (roleLevel < 60)
+            _ = roleLevel;
+            var canReviewLeave = await _permissions.HasAnyAsync(
+                employeeId,
+                PermissionCodes.ApproveLeave,
+                PermissionCodes.RejectLeave);
+
+            var scope = await _scopeResolver.ResolveAsync(employeeId);
+            var canViewScoped =
+                scope.Kind is AccessScopeKind.ManagerScoped or AccessScopeKind.CompanyWide
+                || await _permissions.HasAsync(employeeId, PermissionCodes.ViewScopedTasks)
+                || await _permissions.HasAsync(employeeId, PermissionCodes.ViewCompanyTasks);
+
+            // جميع الاجازات = AccessScope (like tasks). Default reviewer list stays notification-based.
+            if (request.ViewScopedLeaves == true && canViewScoped)
+            {
+                var scopedEmployeeIds = _scopeResolver
+                    .FilterEmployees(
+                        _employeeRepo.GetAll(e => e.CompanyId == scope.CompanyId && e.IsActive),
+                        scope)
+                    .Select(e => e.Id);
+
+                query = query.Where(l => scopedEmployeeIds.Contains(l.EmployeeId));
+
+                if (request.EmployeeIds != null && request.EmployeeIds.Any())
+                    query = query.Where(l => request.EmployeeIds.Contains(l.EmployeeId));
+            }
+            else if (!canReviewLeave)
             {
                 query = query.Where(l => l.EmployeeId == employeeId);
             }
             else
             {
-                var access = await _accessProvider.GetAsync(employeeId);
-
-                var companyId = await _employeeRepo.GetAll(e => e.Id == employeeId)
-                    .Select(e => e.CompanyId)
-                    .FirstAsync();
-
-                IQueryable<Employee> scopedEmployeesQuery = _employeeRepo
-                    .GetAll(e => e.CompanyId == companyId && e.IsActive)
-                    .ApplyAccessScope(access);
-
-                if (roleLevel != 100)
-                    scopedEmployeesQuery = scopedEmployeesQuery.ApplyRoleHierarchy(roleLevel);
-
-                var scopedEmployeeIds = scopedEmployeesQuery.Select(e => e.Id);
-
-                query = query.Where(l => scopedEmployeeIds.Contains(l.EmployeeId));
+                var visibleEmployeeIds = await GetLeaveVisibleEmployeeIdsAsync(employeeId);
+                query = query.Where(l => visibleEmployeeIds.Contains(l.EmployeeId));
 
                 if (request.EmployeeIds != null && request.EmployeeIds.Any())
                     query = query.Where(l => request.EmployeeIds.Contains(l.EmployeeId));
@@ -160,6 +185,7 @@ namespace TaskMangment.Infrastructure.Services
                 .ToListAsync();
 
             var dtos = _mapper.Map<ICollection<LeaveGetDto>>(list);
+            await ApplyCanDeleteAsync(dtos, list, employeeId);
 
             var response = new PagedResponse<LeaveGetDto>(
                 dtos,
@@ -173,14 +199,23 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<PagedResponse<LeaveGetDto>>> GetPendingForApprovalAsync(int managerId, LeaveRequest request)
         {
+            var visibleEmployeeIds = await GetLeaveVisibleEmployeeIdsAsync(managerId);
 
-            IQueryable<Leave> query = _leaveRepo.GetAll(l => l.Status == LeaveStatus.Pending)
+            IQueryable<Leave> query = _leaveRepo.GetAll(l =>
+                    l.Status == LeaveStatus.Pending &&
+                    visibleEmployeeIds.Contains(l.EmployeeId))
                 .Include(l => l.Employee)
-                .Include(l => l.LeaveType);
+                .Include(l => l.LeaveType)
+                .ApplySearch(request.searchKey);
+
+            if (request.EmployeeIds != null && request.EmployeeIds.Any())
+                query = query.Where(l => request.EmployeeIds.Contains(l.EmployeeId));
 
             var totalCount = await query.CountAsync();
 
-            query = query.OrderBy(l => l.CreatedDate);
+            query = query.OrderByDynamicSafe(
+                request.SortColumn ?? "CreatedDate",
+                request.SortDirection ?? "ASC");
 
             var list = await query
                 .Skip((request.PageIndex - 1) * request.PageSize)
@@ -188,11 +223,31 @@ namespace TaskMangment.Infrastructure.Services
                 .ToListAsync();
 
             var dtos = _mapper.Map<ICollection<LeaveGetDto>>(list);
+            await ApplyCanDeleteAsync(dtos, list, managerId);
 
             var response = new PagedResponse<LeaveGetDto>(
                 dtos, totalCount, request.PageIndex, request.PageSize);
 
             return ApiResponse<PagedResponse<LeaveGetDto>>.Ok(response);
+        }
+
+        public async Task<ApiResponse<bool>> DeleteAsync(int leaveId, int actorId)
+        {
+            var leave = await _leaveRepo.GetAll(l => l.Id == leaveId)
+                .FirstOrDefaultAsync();
+
+            if (leave == null)
+                throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
+
+            if (leave.Status != LeaveStatus.Pending)
+                throw new AppException(ErrorCodes.InvalidOperation, StatusCodes.Status400BadRequest);
+
+            await EnsureCanDeleteLeaveAsync(actorId, leave);
+
+            _leaveRepo.SoftDelete(leave);
+            await _leaveRepo.SaveChangesAsync();
+
+            return ApiResponse<bool>.Ok(true, "Leave request deleted");
         }
 
         // =========================
@@ -202,6 +257,7 @@ namespace TaskMangment.Infrastructure.Services
         {
             var leave = await _leaveRepo.GetAll(l => l.Id == leaveId)
                 .Include(l => l.Employee)
+                .ThenInclude(e => e.Branch)
                 .Include(l => l.ApprovedBy)
                 .Include(l => l.LeaveType)
                 .FirstOrDefaultAsync();
@@ -218,21 +274,15 @@ namespace TaskMangment.Infrastructure.Services
 
 
 
-            var managerLevel = await GetEmployeeRoleLevelAsync(managerId);
-
-            if (leave.EmployeeId == managerId && managerLevel != 100)
-                throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
-
-            var employeeLevel = await GetEmployeeRoleLevelAsync(leave.EmployeeId);
-
-            if (managerLevel != 100 && employeeLevel > managerLevel)
-                throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
+            await EnsureCanApproveLeaveAsync(managerId, leave.EmployeeId);
 
             leave.Status = LeaveStatus.Approved;
             leave.ApprovedById = managerId;
             leave.ApprovedAt = DateTime.UtcNow;
 
             await _leaveRepo.SaveChangesAsync();
+
+            await EnsureLeaveCalendarEventAsync(leave, managerId);
 
             await _eventDispatcher.PublishAsync(new LeaveApprovedEvent(
                 leave.Id,
@@ -242,7 +292,8 @@ namespace TaskMangment.Infrastructure.Services
                 managerFullName,
                 leave.LeaveType.NameAr,
                 leave.StartDate,
-                leave.EndDate
+                leave.EndDate,
+                leave.Employee.Branch?.Name
             ));
 
             return ApiResponse<bool>.Ok(true, "Leave approved");
@@ -254,6 +305,7 @@ namespace TaskMangment.Infrastructure.Services
         {
             var leave = await _leaveRepo.GetAll(l => l.Id == leaveId)
                 .Include(l => l.Employee)
+                .ThenInclude(e => e.Branch)
                 .Include(l => l.ApprovedBy)
                 .Include(l => l.LeaveType)
                 .FirstOrDefaultAsync();
@@ -265,22 +317,13 @@ namespace TaskMangment.Infrastructure.Services
                 throw new AppException(ErrorCodes.InvalidOperation, StatusCodes.Status400BadRequest);
 
             if (string.IsNullOrWhiteSpace(rejectLeaveDto.reason))
-                throw new AppException(ErrorCodes.Invalid, StatusCodes.Status400BadRequest);
+                throw new AppException(ErrorCodes.LeaveRejectReasonRequired, StatusCodes.Status400BadRequest);
 
             var manager = await _empRepo.GetByIDAsync(managerId);
             if (manager == null)
                 throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
 
-            var managerLevel = await GetEmployeeRoleLevelAsync(managerId);
-
-            if (leave.EmployeeId == managerId && managerLevel != 100)
-                throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
-
-            var employeeLevel = await GetEmployeeRoleLevelAsync(leave.EmployeeId);
-
-            if (managerLevel != 100 && employeeLevel > managerLevel)
-                throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
-
+            await EnsureCanRejectLeaveAsync(managerId, leave.EmployeeId);
 
             leave.Status = LeaveStatus.Rejected;
             leave.RejectionReason = rejectLeaveDto.reason;
@@ -298,14 +341,15 @@ namespace TaskMangment.Infrastructure.Services
                 leave.LeaveType.NameAr,
                 leave.RejectionReason,
                 leave.StartDate,
-                leave.EndDate
+                leave.EndDate,
+                leave.Employee.Branch?.Name
             ));
 
             return ApiResponse<bool>.Ok(true, "Leave rejected");
         }
 
 
-        public async Task<ApiResponse<LeaveGetDto>> GetByIdAsync(int leaveId)
+        public async Task<ApiResponse<LeaveGetDto>> GetByIdAsync(int leaveId, int actorId)
         {
             var leave = await _leaveRepo.GetAll(l => l.Id == leaveId)
                                         .Include(l => l.Employee)
@@ -316,23 +360,171 @@ namespace TaskMangment.Infrastructure.Services
                 throw new AppException(ErrorCodes.NotFound, StatusCodes.Status404NotFound);
 
             var dto = _mapper.Map<LeaveGetDto>(leave);
+            dto.CanDelete = await CanDeleteLeaveAsync(leave, actorId);
 
             return ApiResponse<LeaveGetDto>.Ok(dto);
         }
 
-        private async Task<int> GetEmployeeRoleLevelAsync(int employeeId)
+        private async Task EnsureCanDeleteLeaveAsync(int actorId, Leave leave)
         {
-            var query = _empRepo.GetAll(e => e.Id == employeeId)
-                .SelectMany(e => e.EmployeeRoles)
-                .Where(er => er.IsAssigned && !er.IsDeleted && er.Role != null)
-                .Select(er => (int?)er.Role.Level); 
-            var maxLevel = await query.MaxAsync();
+            if (await CanDeleteLeaveAsync(leave, actorId))
+                return;
 
-            return maxLevel ?? (int)RoleLevelEnum.Employee;
+            throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
         }
 
+        private async Task ApplyCanDeleteAsync(
+            ICollection<LeaveGetDto> dtos,
+            ICollection<Leave> leaves,
+            int actorId)
+        {
+            var scopedEmployeeIds = await GetScopedEmployeeIdsAsync(actorId);
 
+            foreach (var dto in dtos)
+            {
+                var leave = leaves.First(l => l.Id == dto.Id);
+                dto.CanDelete = await CanDeleteLeaveAsync(
+                    leave,
+                    actorId,
+                    scopedEmployeeIds);
+            }
+        }
 
+        private async Task<bool> CanDeleteLeaveAsync(
+            Leave leave,
+            int actorId,
+            HashSet<int>? scopedEmployeeIds = null)
+        {
+            if (leave.Status != LeaveStatus.Pending)
+                return false;
+
+            if (leave.EmployeeId == actorId)
+                return true;
+
+            if (!await _permissions.HasAnyAsync(
+                    actorId,
+                    PermissionCodes.ApproveLeave,
+                    PermissionCodes.RejectLeave))
+                return false;
+
+            var visibleIds = await GetLeaveVisibleEmployeeIdsAsync(actorId);
+            if (visibleIds.Contains(leave.EmployeeId))
+                return true;
+
+            scopedEmployeeIds ??= await GetScopedEmployeeIdsAsync(actorId);
+            if (scopedEmployeeIds != null && scopedEmployeeIds.Contains(leave.EmployeeId))
+                return true;
+
+            return false;
+        }
+
+        private async Task<HashSet<int>?> GetScopedEmployeeIdsAsync(int actorId)
+        {
+            var scope = await _scopeResolver.ResolveAsync(actorId);
+            var canViewScoped =
+                scope.Kind is AccessScopeKind.ManagerScoped or AccessScopeKind.CompanyWide
+                || await _permissions.HasAsync(actorId, PermissionCodes.ViewScopedTasks)
+                || await _permissions.HasAsync(actorId, PermissionCodes.ViewCompanyTasks);
+
+            if (!canViewScoped)
+                return null;
+
+            var ids = await _scopeResolver
+                .FilterEmployees(
+                    _employeeRepo.GetAll(e => e.CompanyId == scope.CompanyId && e.IsActive),
+                    scope)
+                .Select(e => e.Id)
+                .ToListAsync();
+
+            return ids.ToHashSet();
+        }
+
+        private async Task EnsureCanApproveLeaveAsync(int managerId, int leaveEmployeeId)
+        {
+            if (!await _permissions.HasAsync(managerId, PermissionCodes.ApproveLeave))
+                throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
+
+            await EnsureCanSeeLeaveEmployeeForReviewAsync(managerId, leaveEmployeeId);
+        }
+
+        private async Task EnsureCanRejectLeaveAsync(int managerId, int leaveEmployeeId)
+        {
+            if (!await _permissions.HasAsync(managerId, PermissionCodes.RejectLeave))
+                throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
+
+            await EnsureCanSeeLeaveEmployeeForReviewAsync(managerId, leaveEmployeeId);
+        }
+
+        /// <summary>
+        /// Visibility for review: notification listeners only (same as leave list).
+        /// Self-review only when company-wide view perms exist (legacy admin).
+        /// </summary>
+        private async Task EnsureCanSeeLeaveEmployeeForReviewAsync(int managerId, int leaveEmployeeId)
+        {
+            if (leaveEmployeeId == managerId)
+            {
+                var canSelfReview = await _permissions.HasAnyAsync(
+                    managerId,
+                    PermissionCodes.ViewCompanyReports,
+                    PermissionCodes.ViewCompanyTasks);
+                if (!canSelfReview)
+                    throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
+                return;
+            }
+
+            var visibleIds = await GetLeaveVisibleEmployeeIdsAsync(managerId);
+            if (!visibleIds.Contains(leaveEmployeeId))
+                throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
+        }
+
+        /// <summary>
+        /// Leave list for reviewers = RoleNotificationSource subjects only (استقبال إشعارات من),
+        /// same graph as leave notifications — not access-scope / all branch staff.
+        /// </summary>
+        private async Task<List<int>> GetLeaveVisibleEmployeeIdsAsync(int viewerId)
+        {
+            var fromListeners = await _orgManagers.GetListenableSubjectIdsAsync(viewerId);
+            return fromListeners
+                .Append(viewerId)
+                .Distinct()
+                .ToList();
+        }
+
+        private async Task EnsureLeaveCalendarEventAsync(Leave leave, int managerId)
+        {
+            var marker = $"{LeaveCalendarDescriptionPrefix}{leave.Id}";
+            var exists = await _calendarEventRepo.GetAll(e =>
+                    !e.IsDeleted &&
+                    e.EventType == CalendarEventType.Leave &&
+                    e.Description != null &&
+                    e.Description.Contains(marker))
+                .AnyAsync();
+
+            if (exists)
+                return;
+
+            var leaveTypeName = leave.LeaveType?.NameEn
+                ?? leave.LeaveType?.NameAr
+                ?? "Leave";
+            var employeeName = leave.Employee?.FullName ?? "Employee";
+
+            var calendarEvent = new CalendarEvent
+            {
+                CompanyId = leave.Employee?.CompanyId,
+                Title = $"{employeeName} - {leaveTypeName}",
+                Description = marker,
+                StartDate = leave.StartDate.Date,
+                EndDate = leave.EndDate.Date.AddDays(1), // exclusive end for all-day ranges
+                AllDay = true,
+                EventType = CalendarEventType.Leave,
+                Public = true,
+                CreatedByEmployeeId = managerId,
+                reminder = 0
+            };
+
+            await _calendarEventRepo.AddAsync(calendarEvent);
+            await _calendarEventRepo.SaveChangesAsync();
+        }
     }
 
 }

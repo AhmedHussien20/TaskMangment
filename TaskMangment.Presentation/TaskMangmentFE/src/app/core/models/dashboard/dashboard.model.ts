@@ -93,6 +93,14 @@ export interface TaskStatusDto {
     createdByMe: boolean
 
 }
+export interface EmployeeTypeTaskCardDto {
+  employeeTypeId: number;
+  code: string;
+  nameAr: string;
+  nameEn: string;
+  activeTaskCount: number;
+}
+
 export interface AdminKpisExtendedDto {
   averageCompletionHours: number;
   onTimeRatePercent: number;

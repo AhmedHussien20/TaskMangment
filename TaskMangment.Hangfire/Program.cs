@@ -12,6 +12,7 @@ using TaskMangment.Hangfire;
 using TaskMangment.Hangfire.Jobs;
 using TaskMangment.Infrastructure;
 using TaskMangment.Infrastructure.DataContext;
+using TaskMangment.Infrastructure.Seeding;
 using TaskMangment.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -99,6 +100,21 @@ if (args.Contains("--seed-email-templates-only", StringComparer.OrdinalIgnoreCas
     return;
 }
 
+// One-shot: schema migrate + email templates + permission catalog/role packs, then exit.
+if (args.Contains("--sync-db", StringComparer.OrdinalIgnoreCase))
+{
+    using (var scope = app.Services.CreateScope())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        Console.WriteLine("Applying pending EF migrations...");
+        await db.Database.MigrateAsync();
+        var migrator = scope.ServiceProvider.GetRequiredService<RolePermissionPackMigrator>();
+        await migrator.MigrateAsync();
+    }
+    Console.WriteLine("DB sync completed (schema + email templates + permissions).");
+    return;
+}
+
 var defaultCulture = new CultureInfo("ar");
 
 CultureInfo.DefaultThreadCurrentCulture = defaultCulture;
@@ -132,47 +148,76 @@ app.UseHangfireDashboard("/hangfire", new DashboardOptions
 
 // =======================
 // Jobs
+// Quiet (Saudi): 03:00–09:00 daily.
 // =======================
+var saudiTimeZone = TimeZoneHelper.GetSaudiArabia();
+var quietEnabled = builder.Configuration.GetValue("HangfireQuietHours:Enabled", true);
+
+// Email job: every 5 minutes (not every minute)
+// When quiet hours enabled, use the 5-minute cron that respects quiet hours
+// When disabled, use simple */5 * * * *
+var emailCron = quietEnabled? HangfireQuietHours.CronEvery5MinOutsideQuietHours  // "*/5 0-2,9-23 * * 0-4,6"
+    : "*/5 * * * *";  // Every 5 minutes
+
+// Penalty job: monday to friday only, at 9:30 AM
+// Cron: 30 9 * * 1-5 (Monday=1, Tuesday=2, Wednesday=3, Thursday=4, Friday=5)
+// This excludes Sunday (0) and Saturday (6)
+var penaltyCron = "30 9 * * 1-5";
+
+// Archive: 00:01 Monday–Friday (Thursday due → closes Friday 00:01)
+var archiveCron = quietEnabled ? HangfireQuietHours.CronArchiveOutsideQuietHours
+    : "1 0 * * 1-5";
+
+Console.WriteLine("Saudi timezone for Hangfire cron = " + saudiTimeZone.Id);
+Console.WriteLine($"Hangfire quiet hours enabled = {quietEnabled}; email cron = {emailCron}");
+
 RecurringJob.AddOrUpdate<ProcessPendingEmailsJob>(
     "process-pending-emails",
     job => job.ExecuteAsync(),
-    Cron.Minutely);
+    emailCron,
+    saudiTimeZone);
 
 //RecurringJob.AddOrUpdate<AttachmentBlobMigrationJob>(
 //    "attachment-blob-migration",
 //    job => job.ExecuteAsync(),
 //    Cron.Minutely);
 
-var saudiTimeZone = TimeZoneHelper.GetSaudiArabia();
-Console.WriteLine("Saudi timezone for Hangfire cron = " + saudiTimeZone.Id);
-
 RecurringJob.AddOrUpdate<PenaltyForMissingCommentsJob>(
     "penalty-missing-comments",
     job => job.ExecuteAsync(),
-    Cron.Daily(8, 0),
+    penaltyCron,
     saudiTimeZone
 );
 
+// Close after the due day ends (Saudi calendar): due Thursday stays open all Thursday,
+// closes at 00:01 Friday.
 RecurringJob.AddOrUpdate<ArchiveOverdueTasksJob>(
     "archive-overdue-tasks",
     job => job.ExecuteAsync(),
-    Cron.Daily(8, 0),
+    archiveCron,
     saudiTimeZone
 );
 
 RecurringJob.AddOrUpdate<TaskDueTodayEmailsProcessorJob>(
-               "task-due-today-email-job",
-               job => job.ExecuteAsync(),
-               Cron.Minutely
-               );
+    "task-due-today-email-job",
+    job => job.ExecuteAsync(),
+    archiveCron,
+    saudiTimeZone
+);
+
 
 RecurringJob.AddOrUpdate<SendMonthlyEmployeeDiscountsJob>(
     "send-monthly-employee-discounts",
     job => job.ExecuteAsync(),
-    Cron.Monthly(25, 8, 0),
+    Cron.Monthly(25, 9, 0),
     saudiTimeZone
 );
 
+using (var scope = app.Services.CreateScope())
+{
+    var migrator = scope.ServiceProvider.GetRequiredService<RolePermissionPackMigrator>();
+    await migrator.MigrateAsync();
+}
 
 app.Run();
 

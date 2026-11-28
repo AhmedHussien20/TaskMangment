@@ -13,6 +13,7 @@ import { EmployeeArchivedTasksReportDto, ExportType } from 'app/core/models/repo
 import { DatePickerComponent } from 'app/components/date-picker/date-picker.component';
 import { ReportRoleFilterComponent } from '../shared/report-role-filter.component';
 import { getReportRoleFilterParams } from '../shared/report-role-filter.helper';
+import { ReportStatusFilterComponent } from '../shared/report-status-filter.component';
 
 @Component({
   selector: 'app-archived-tasks-list',
@@ -25,7 +26,8 @@ import { getReportRoleFilterParams } from '../shared/report-role-filter.helper';
     GenericTableComponent,
     PageHeaderComponent,
     DatePickerComponent,
-    ReportRoleFilterComponent
+    ReportRoleFilterComponent,
+    ReportStatusFilterComponent
   ],
   templateUrl: './archived-tasks-list.component.html',
   styleUrls: ['./archived-tasks-list.component.scss']
@@ -55,6 +57,7 @@ export class ArchivedTasksListComponent implements OnInit {
   fromDate?: string;
   toDate?: string;
   selectedRoleId?: number;
+  status?: string;
 
   isLoading = false;
 
@@ -74,7 +77,7 @@ export class ArchivedTasksListComponent implements OnInit {
 
     const { roleId, roleTitle } = getReportRoleFilterParams(this.roleFilter, this.selectedRoleId);
     this.reportService
-      .getArchivedTasks(this.fromDate, this.toDate, roleId, roleTitle)
+      .getArchivedTasks(this.fromDate, this.toDate, roleId, roleTitle, this.status)
       .subscribe({
         next: (res) => {
           this.rows = res.data;
@@ -107,7 +110,7 @@ export class ArchivedTasksListComponent implements OnInit {
   onExportPdf(): void {
     const { roleId, roleTitle } = getReportRoleFilterParams(this.roleFilter, this.selectedRoleId);
     this.reportPdfService
-      .getArchivedTasksPdf(this.exportType, this.fromDate, this.toDate, roleId, roleTitle)
+      .getArchivedTasksPdf(this.exportType, this.fromDate, this.toDate, roleId, roleTitle, this.status)
       .subscribe({
         next: (blob) => {
           const url = window.URL.createObjectURL(blob);
@@ -129,7 +132,7 @@ export class ArchivedTasksListComponent implements OnInit {
   onExportExcel(): void {
     const { roleId, roleTitle } = getReportRoleFilterParams(this.roleFilter, this.selectedRoleId);
     this.reportPdfService
-      .getArchivedTasksPdf(ExportType.Excel, this.fromDate, this.toDate, roleId, roleTitle)
+      .getArchivedTasksPdf(ExportType.Excel, this.fromDate, this.toDate, roleId, roleTitle, this.status)
       .subscribe({
         next: (blob) => {
           const url = window.URL.createObjectURL(blob);

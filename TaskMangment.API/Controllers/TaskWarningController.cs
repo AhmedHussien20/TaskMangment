@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Runtime.CompilerServices;
+using TaskMangment.API.Middlewares;
 using TaskMangment.Application.Common.ApiRequests.Task;
+using TaskMangment.Application.Common.Security;
 using TaskMangment.Application.DTOs.TaskDTOs;
 using TaskMangment.Application.Interfaces.Services;
 
@@ -36,6 +38,7 @@ namespace TaskMangment.API.Controllers
             return Success(result.Data);
         }
 
+        /// <summary>Allowed for literal task creator/assigner, or users with ISSUE_WARNING.</summary>
         [HttpPost("{taskId}")]
         public async Task<IActionResult> Add(int taskId, [FromBody] WarningAddEditDto dto)
         {
@@ -43,14 +46,16 @@ namespace TaskMangment.API.Controllers
             return Success(result.Data, "Warning added successfully");
         }
 
+        /// <summary>Allowed for literal task creator/assigner, or users with ISSUE_WARNING.</summary>
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] WarningAddEditDto dto)
         {
-            var result = await _service.UpdateAsync(id, dto);
+            var result = await _service.UpdateAsync(id, dto, this.CurrentUserId);
             return Success(result.Data, "Warning updated successfully");
         }
 
         [HttpDelete("{id}")]
+        [PermissionAuthorize(PermissionCodes.DeleteWarning)]
         public async Task<IActionResult> Delete(int id)
         {
             var result = await _service.DeleteAsync(id);

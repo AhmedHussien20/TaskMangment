@@ -39,7 +39,8 @@ namespace TaskMangment.Application.Behaviors
                 ev.TaskId,
                 ev.TaskTitle,
                 ev.OldDueDate,
-                ev.NewDueDate
+                ev.NewDueDate,
+                ev.BranchName
             );
 
             foreach (var empId in ev.AssignedEmployeeIds)

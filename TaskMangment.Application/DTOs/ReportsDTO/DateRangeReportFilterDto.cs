@@ -1,4 +1,5 @@
 using System;
+using TaskMangment.Domain.Entities;
 
 namespace TaskMangment.Application.DTOs.ReportsDTO
 {
@@ -8,6 +9,7 @@ namespace TaskMangment.Application.DTOs.ReportsDTO
         public DateTime? ToDate { get; set; }
         public int? RoleId { get; set; }
         public string? RoleTitle { get; set; }
+        public WorkTaskStatus? Status { get; set; }
     }
 
     public class ReportRoleOptionDto

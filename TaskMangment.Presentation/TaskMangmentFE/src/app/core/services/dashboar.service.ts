@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { ApiService } from 'app/core/services/api.service';
 import { Observable } from 'rxjs';
 import { BaseResponse } from 'app/models/base.response.model';
-import { AdminDashboardDto, AdminKpisExtendedDto, CompletedTasksTodayDto, PenalityDto, EmployeeDashboardDto, InProgressUpdatedTodayDto, MyTaskDto, PendingCloseRequestDto, TasksPagedResponse, TaskStatusDto, TodayCommentTaskDto, WarningDto, EmployeeKpisExtendedDto, PagedResponse, BranchFilterDto } from '../models/dashboard/dashboard.model';
+import { AdminDashboardDto, AdminKpisExtendedDto, CompletedTasksTodayDto, PenalityDto, EmployeeDashboardDto, InProgressUpdatedTodayDto, MyTaskDto, PendingCloseRequestDto, TasksPagedResponse, TaskStatusDto, TodayCommentTaskDto, WarningDto, EmployeeKpisExtendedDto, PagedResponse, BranchFilterDto, EmployeeTypeTaskCardDto } from '../models/dashboard/dashboard.model';
 import { PeriodDto } from 'app/models/period-type.model';
 import { SearchCriteria } from '../models/search-criteria.model';
 import { HttpParams } from '@angular/common/http';
@@ -91,9 +91,20 @@ getEmployeeCompletedTasksDetails(period: PeriodDto) {
   );
 } */
 
+getAdminEmployeeTypeCards(branchId?: number): Observable<BaseResponse<EmployeeTypeTaskCardDto[]>> {
+  const query: any = {};
+  if (branchId != null) query.branchId = branchId;
+
+  return this.api.get<BaseResponse<EmployeeTypeTaskCardDto[]>>(
+    this.service,
+    'admin/employee-type-cards',
+    query
+  );
+}
+
 getAdminTasksByStatus(
   status: 'Active' | 'Overdue' | 'Completed' | 'New',
-request: any,  branchId?: number
+request: any,  branchId?: number, employeeTypeId?: number
 ) {
   const query: any = {
     searchKey: request.searchKey ?? '',
@@ -108,6 +119,7 @@ request: any,  branchId?: number
   if (request.period?.to) query['Period.To'] = request.period.to;
 
   if (branchId != null) query.branchId = branchId;
+  if (employeeTypeId != null) query.employeeTypeId = employeeTypeId;
   return this.api.get<BaseResponse<any>>(
     this.service,
     `admin/tasks-by-status?status=${status}`,

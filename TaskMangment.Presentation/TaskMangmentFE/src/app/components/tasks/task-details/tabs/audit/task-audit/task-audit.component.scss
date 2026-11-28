@@ -1,22 +1,19 @@
 .task-audit {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  min-height: 0;              /* مهم جدًا مع flex + scroll */
+  max-height: min(55vh, 520px);
+  min-height: 0;
 }
 
 .task-audit-content {
-  flex: 1;
-  min-height: 0;              /* مهم */
-  overflow: visible;          /* بدل auto */
-  padding-right: 4px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-inline-end: 4px;
+  -webkit-overflow-scrolling: touch;
 }
 
-/* خلي ده هو اللي بيعمل scroll */
-.modal-body {
-  max-height: calc(100vh - 200px);
-  overflow-y: auto;
-}
 .task-audit .fw-semibold,
 .task-audit .list-group-item {
   white-space: normal;

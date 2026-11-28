@@ -36,7 +36,8 @@ namespace TaskMangment.Application.Behaviors
             var message = string.Format(
                 messageTemplate,
                 ev.TaskId,
-                ev.TaskTitle
+                ev.TaskTitle,
+                ev.BranchName
             );
 
             foreach (var empId in ev.AssignedEmployeeIds)

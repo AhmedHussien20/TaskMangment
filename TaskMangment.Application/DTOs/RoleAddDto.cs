@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -18,8 +18,20 @@ namespace TaskMangment.Application.DTOs
         [MaxLength(500)]
         public string? Description { get; set; }
 
-        public int Level { get; set; } = 10;
+        public bool RequiresBranchScope { get; set; }
+        public bool RequiresEmployeeTypeScope { get; set; }
+        /// <summary>Required when RequiresEmployeeTypeScope is true — one type for the whole role.</summary>
+        public int? EmployeeTypeId { get; set; }
+        /// <summary>With RequiresEmployeeTypeScope: limit that type to assignee branch only.</summary>
+        public bool RestrictEmployeeTypeToBranch { get; set; }
+        public bool CanBeBranchManager { get; set; }
+    }
 
+    public class RoleNotificationUpdateDto
+    {
+        public NotificationScope NotificationScope { get; set; } = NotificationScope.None;
+        /// <summary>Role IDs this role receives notifications from.</summary>
+        public List<int> NotifyFromRoleIds { get; set; } = new();
     }
 
     public class RoleGetDto
@@ -28,11 +40,19 @@ namespace TaskMangment.Application.DTOs
         public int? CompanyId { get; set; }
         public string Name { get; set; }
         public string? Description { get; set; }
-        public int Level { get; set; }
-        public string? LevelName { get; set; }
 
         public int EmployeeCount { get; set; }
         public int PermissionCount { get; set; }
+        /// <summary>Distinct active employees this role actually receives notifications from (scoped).</summary>
+        public int NotifyFromEmployeeCount { get; set; }
+        public bool RequiresBranchScope { get; set; }
+        public bool RequiresEmployeeTypeScope { get; set; }
+        public int? EmployeeTypeId { get; set; }
+        public string? EmployeeTypeName { get; set; }
+        public bool RestrictEmployeeTypeToBranch { get; set; }
+        public bool CanBeBranchManager { get; set; }
+        public NotificationScope NotificationScope { get; set; }
+        public List<int> NotifyFromRoleIds { get; set; } = new();
     }
 
     public class PermissionAddDto
@@ -114,8 +134,4 @@ public class AssignedPermissionDto
 
 
 
-public class RoleLevelEnumDto
-{
-    public int Value { get; set; }
-    public string Label { get; set; } = null!;
-}
+

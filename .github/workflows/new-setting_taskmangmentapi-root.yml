@@ -1,7 +1,8 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
+# Production deploy: API, Hangfire, and the Angular app.
+# API app is the live host behind taskmangmentapi-*.azurewebsites.net.
+# Frontend app serves https://sarkha.cloud.
 
-name: Build and deploy ASP.Net Core app to Azure Web App - TaskMangmentApi-root
+name: Deploy production API, Hangfire, and frontend
 
 on:
   push:
@@ -9,45 +10,76 @@ on:
       - New-Setting
   workflow_dispatch:
 
-jobs:
-  build:
-    runs-on: windows-latest
-    permissions:
-      contents: read #This is required for actions/checkout
+permissions:
+  contents: read
+  id-token: write
 
+jobs:
+  build-dotnet:
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up .NET Core
+      - name: Set up .NET 8
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.x'
 
-      - name: Build with dotnet
-        run: dotnet build --configuration Release
+      - name: Publish API
+        run: dotnet publish TaskMangment.API/TaskMangment.API.csproj -c Release -o ./publish/api
 
-      - name: dotnet publish
-        run: dotnet publish -c Release -o "${{env.DOTNET_ROOT}}/myapp"
+      - name: Publish Hangfire
+        run: dotnet publish TaskMangment.Hangfire/TaskMangment.Hangfire.csproj -c Release -o ./publish/hangfire
 
-      - name: Upload artifact for deployment job
+      - name: Upload API artifact
         uses: actions/upload-artifact@v4
         with:
-          name: .net-app
-          path: ${{env.DOTNET_ROOT}}/myapp
+          name: api
+          path: ./publish/api
 
-  deploy:
+      - name: Upload Hangfire artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hangfire
+          path: ./publish/hangfire
+
+  build-frontend:
     runs-on: windows-latest
-    needs: build
-    permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
-
+    defaults:
+      run:
+        working-directory: TaskMangment.Presentation/TaskMangmentFE
     steps:
-      - name: Download artifact from build job
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: TaskMangment.Presentation/TaskMangmentFE/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Angular production
+        run: npx ng build --configuration production
+
+      - name: Upload frontend artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend
+          path: TaskMangment.Presentation/TaskMangmentFE/dist/task-manger/browser
+
+  deploy-api:
+    runs-on: windows-latest
+    needs: build-dotnet
+    steps:
+      - name: Download API artifact
         uses: actions/download-artifact@v4
         with:
-          name: .net-app
-      
+          name: api
+          path: ./package
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -55,11 +87,57 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_B70C250D85E74792B3B18109FDCB8664 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_5FEAFD9677C548C3AED26D14BD401697 }}
 
-      - name: Deploy to Azure Web App
-        id: deploy-to-webapp
+      - name: Deploy API
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'TaskMangmentApi-root'
-          slot-name: 'Production'
-          package: .
-          
+          app-name: TaskMangmentApi-root
+          slot-name: Production
+          package: ./package
+
+  deploy-hangfire:
+    runs-on: windows-latest
+    needs: build-dotnet
+    steps:
+      - name: Download Hangfire artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: hangfire
+          path: ./package
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_336E07FCBE2F496CB7FDAC9FAE6AE1FC }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_B70C250D85E74792B3B18109FDCB8664 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_5FEAFD9677C548C3AED26D14BD401697 }}
+
+      - name: Deploy Hangfire
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: taskmangment-hangfire
+          slot-name: Production
+          package: ./package
+
+  deploy-frontend:
+    runs-on: windows-latest
+    needs: build-frontend
+    steps:
+      - name: Download frontend artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend
+          path: ./package
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_336E07FCBE2F496CB7FDAC9FAE6AE1FC }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_B70C250D85E74792B3B18109FDCB8664 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_5FEAFD9677C548C3AED26D14BD401697 }}
+
+      - name: Deploy frontend
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: taskmangment-Presentation
+          slot-name: Production
+          package: ./package

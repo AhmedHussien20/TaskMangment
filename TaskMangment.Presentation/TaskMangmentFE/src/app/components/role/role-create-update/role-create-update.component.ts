@@ -6,11 +6,9 @@ import { ToastrService } from 'ngx-toastr';
 
 import { GenericFormComponent } from 'app/shared/components/generic-form/generic-form.component';
 import { RoleService } from 'app/core/services/role.service';
-import { RoleAddEdit, RoleLevelDto } from 'app/core/models/roles/role';
+import { RoleAddEdit } from 'app/core/models/roles/role';
 import { FormFieldConfig } from 'app/core/models/form-field-config';
-import { labels1 } from 'app/components/charts/chartjs-charts/chartjs';
-
- 
+import { EmployeeService } from 'app/core/services/employee.service';
 
 @Component({
   selector: 'app-role-create-update',
@@ -25,10 +23,6 @@ import { labels1 } from 'app/components/charts/chartjs-charts/chartjs';
 })
 export class RoleCreateUpdateComponent implements OnInit {
 
-roleLevelsOptions: RoleLevelDto [] = [];
-
-
-
   @Input() isEdit = false;
   @Input() roleId: number | null = null;
   @Output() formSubmitted = new EventEmitter<void>();
@@ -38,107 +32,145 @@ roleLevelsOptions: RoleLevelDto [] = [];
   activeitem = 'ROLE.CREATE';
 
   formGroup!: FormGroup;
+  formConfig: FormFieldConfig[] = [];
 
-  formConfig: FormFieldConfig[] = [
-  {
-    type: 'input',
-    label: 'ROLE.NAME',
-    name: 'name',
-    validations: { required: true, maxlength: 100 }
-  },
-  {
-    type: 'textarea',
-    label: 'ROLE.DESCRIPTION',
-    name: 'description'
-  },
-  {
-    type: 'select',
-    label: 'ROLE.LEVEL',
-    name: 'level',
-    placeholder: 'FORM.SELECT',
-    options: this.roleLevelsOptions,
-    selectType: 'simple',
-    validations: { required: true },
-    errorMessages: {
-      required: 'FORM.REQUIRED'
-    }
-  }
-];
-
+  private employeeTypeOptions: { label: string; value: number }[] = [];
 
   constructor(
     private fb: FormBuilder,
     private roleService: RoleService,
+    private employeeService: EmployeeService,
     private toastr: ToastrService,
     private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
-  this.initForm();
-
-  this.roleService.getRoleLevels().subscribe({
-    next: (res) => {
-      const data = res.data ?? [];
-
-      this.roleLevelsOptions = data.map(x => ({
-        value: x.value,
-        label: x.label
-      }));
-
-      const field = this.formConfig.find(f => f.name === 'level');
-      if (field) field.options = this.roleLevelsOptions;
-
-      this.formConfig = [...this.formConfig];
-
+    this.initForm();
+    this.buildFormConfig(false);
+    this.loadEmployeeTypes().then(() => {
       if (this.isEdit && this.roleId) {
         this.loadRole();
       }
-    }
-  });
-}
+    });
 
+    this.formGroup.get('requiresEmployeeTypeScope')?.valueChanges.subscribe(required => {
+      this.toggleEmployeeTypeFields(!!required);
+    });
+  }
 
   initForm() {
     this.formGroup = this.fb.group({
       name: ['', [Validators.required, Validators.maxLength(100)]],
       description: [''],
-      level: [null, Validators.required]
+      requiresBranchScope: [false],
+      requiresEmployeeTypeScope: [false],
+      employeeTypeId: [null],
+      restrictEmployeeTypeToBranch: [false],
+      canBeBranchManager: [false]
     });
   }
 
-loadRole() {
-  if (!this.roleId) return;
-
-  this.roleService.getById(this.roleId).subscribe(res => {
-    const role = res.data;
-
-    this.formGroup.patchValue({
-      name: role.name,
-      description: role.description,
-      level: role.level   
-    });
-  });
-}
-
-
-loadRoleLevels() {
-  this.roleService.getRoleLevels().subscribe({
-    next: (res) => {
-      this.roleLevelsOptions = res.data ?? [];
-
-      const field = this.formConfig.find(f => f.name === 'level');
-      if (field) {
-        field.options = this.roleLevelsOptions;
+  private buildFormConfig(showEmployeeType: boolean) {
+    const fields: FormFieldConfig[] = [
+      {
+        type: 'input',
+        label: 'ROLE.NAME',
+        name: 'name',
+        validations: { required: true, maxlength: 100 }
+      },
+      {
+        type: 'textarea',
+        label: 'ROLE.DESCRIPTION',
+        name: 'description'
+      },
+      {
+        type: 'checkbox',
+        label: 'ROLE.REQUIRES_BRANCH_SCOPE',
+        name: 'requiresBranchScope',
+        defaultValue: false
+      },
+      {
+        type: 'checkbox',
+        label: 'ROLE.REQUIRES_EMPLOYEE_TYPE_SCOPE',
+        name: 'requiresEmployeeTypeScope',
+        defaultValue: false
       }
+    ];
 
-      this.formConfig = [...this.formConfig];
-    },
-    error: () => {
-      this.toastr.error(this.translate.instant('COMMON.LOAD_FAILED'));
+    if (showEmployeeType) {
+      fields.push({
+        type: 'select',
+        label: 'ROLE.ROLE_EMPLOYEE_TYPE',
+        selectType: 'simple',
+        name: 'employeeTypeId',
+        options: this.employeeTypeOptions,
+        validations: { required: true }
+      });
+      fields.push({
+        type: 'checkbox',
+        label: 'ROLE.RESTRICT_EMPLOYEE_TYPE_TO_BRANCH',
+        name: 'restrictEmployeeTypeToBranch',
+        defaultValue: false
+      });
     }
-  });
-}
 
+    fields.push({
+      type: 'checkbox',
+      label: 'ROLE.CAN_BE_BRANCH_MANAGER',
+      name: 'canBeBranchManager',
+      defaultValue: false
+    });
+
+    this.formConfig = fields;
+  }
+
+  private toggleEmployeeTypeFields(required: boolean) {
+    const typeControl = this.formGroup.get('employeeTypeId');
+    const branchOnlyControl = this.formGroup.get('restrictEmployeeTypeToBranch');
+    if (required) {
+      typeControl?.setValidators([Validators.required]);
+    } else {
+      typeControl?.clearValidators();
+      typeControl?.setValue(null, { emitEvent: false });
+      branchOnlyControl?.setValue(false, { emitEvent: false });
+    }
+    typeControl?.updateValueAndValidity({ emitEvent: false });
+    this.buildFormConfig(required);
+  }
+
+  private loadEmployeeTypes(): Promise<void> {
+    return new Promise(resolve => {
+      this.employeeService.getFunctionCodes().subscribe({
+        next: res => {
+          this.employeeTypeOptions = (res.data ?? []).map(x => ({
+            label: x.name,
+            value: x.id
+          }));
+          resolve();
+        },
+        error: () => resolve()
+      });
+    });
+  }
+
+  loadRole() {
+    if (!this.roleId) return;
+
+    this.roleService.getById(this.roleId).subscribe(res => {
+      const role = res.data;
+      const requiresType = role.requiresEmployeeTypeScope ?? false;
+      this.formGroup.patchValue({
+        name: role.name,
+        description: role.description,
+        requiresBranchScope: role.requiresBranchScope ?? false,
+        requiresEmployeeTypeScope: requiresType,
+        employeeTypeId: role.employeeTypeId ?? null,
+        restrictEmployeeTypeToBranch: role.restrictEmployeeTypeToBranch ?? false,
+        canBeBranchManager: role.canBeBranchManager ?? false
+      });
+      this.toggleEmployeeTypeFields(requiresType);
+    });
+  }
 
   onSubmit(formValue: RoleAddEdit) {
     if (this.formGroup.invalid) {
@@ -147,18 +179,25 @@ loadRoleLevels() {
       return;
     }
 
-    // EDIT
+    const payload: RoleAddEdit = {
+      ...formValue,
+      employeeTypeId: formValue.requiresEmployeeTypeScope
+        ? formValue.employeeTypeId
+        : null,
+      restrictEmployeeTypeToBranch: formValue.requiresEmployeeTypeScope
+        ? !!formValue.restrictEmployeeTypeToBranch
+        : false
+    };
+
     if (this.isEdit && this.roleId) {
-      this.roleService.update(this.roleId, formValue).subscribe({
+      this.roleService.update(this.roleId, payload).subscribe({
         next: () => {
           this.toastr.success(this.translate.instant('ROLE.UPDATE_SUCCESS'));
           this.formSubmitted.emit();
         }
       });
-    }
-    // CREATE
-    else {
-      this.roleService.create(formValue).subscribe({
+    } else {
+      this.roleService.create(payload).subscribe({
         next: () => {
           this.toastr.success(this.translate.instant('ROLE.CREATE_SUCCESS'));
           this.formSubmitted.emit();

@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TaskMangment.Domain.Event
 {
@@ -15,8 +12,16 @@ namespace TaskMangment.Domain.Event
         public DateTime? OldDueDate { get; }
         public DateTime? NewDueDate { get; }
         public List<int> AssignedEmployeeIds { get; }
+        public string BranchName { get; }
 
-        public TaskExtendApproveEvent(int requestId,int taskId, string taskTitle, DateTime? oldDueDate, DateTime? newDueDate, List<int> assignedEmployeeIds)
+        public TaskExtendApproveEvent(
+            int requestId,
+            int taskId,
+            string taskTitle,
+            DateTime? oldDueDate,
+            DateTime? newDueDate,
+            List<int> assignedEmployeeIds,
+            string? branchName = null)
         {
             RequestId = requestId;
             TaskId = taskId;
@@ -24,6 +29,7 @@ namespace TaskMangment.Domain.Event
             NewDueDate = newDueDate;
             OldDueDate = oldDueDate;
             AssignedEmployeeIds = assignedEmployeeIds;
+            BranchName = string.IsNullOrWhiteSpace(branchName) ? "-" : branchName;
         }
     }
 }

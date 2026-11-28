@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
+import { Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
 import { TaskTabsComponent } from '../task-tabs/task-tabs.component';
 import { PageHeaderComponent } from 'app/shared/components/page-header/page-header.component';
 import { TranslateModule } from '@ngx-translate/core';
@@ -14,6 +14,12 @@ import { TaskGet } from 'app/core/models/task/task';
 import { AuthService } from 'app/core/services/auth.service';
 import { CommonModule } from '@angular/common';
 import { PercentageModalComponent } from '../actions/task-percentage/percentage-modal/percentage-modal.component';
+import { Permissions } from 'app/core/constants/permissions';
+import { TaskStatus } from 'app/core/models/task/task';
+import { ReopenTaskModalComponent } from '../actions/reopen/reopen-task-modal.component';
+import { isPastDueDate } from 'app/shared/validations/weekend-due-date.validator';
+import { NotificationApiService } from 'app/core/services/notification.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-task-details-shell',
@@ -27,38 +33,150 @@ import { PercentageModalComponent } from '../actions/task-percentage/percentage-
     CommonModule
   ]
 })
-export class TaskDetailsShellComponent implements OnInit, OnChanges {
+export class TaskDetailsShellComponent implements OnInit, OnChanges, OnDestroy {
 
   @Input() taskId!: number;
   @Input() createdByMe: boolean = false;
+  @Input() initialTab?: string;
   requireUploadFile = false;
 
   readonly = false;
-  showAdminPages = true;
+
+  /** Permission-driven action visibility (hide when no permission). */
+  canComment = false;
+  canCloseRequest = false;
+  canExtendRequest = false;
+  canSendWarning = false;
+  canSendPenalty = false;
+  canSetPercentage = false;
+  canReviewRequests = false;
+  isClosing = false;
+
+  private refreshSub?: Subscription;
+  /** True after the مستجدات tab was opened (used by list on dismiss). */
+  updatesViewed = false;
+  private markedSeen = false;
 
   constructor(
     private modal: NgbModal,
     private refreshService: TaskDetailsRefreshService,
     private taskService: TaskService,
     public modall: NgbActiveModal,
-    private auth: AuthService
+    private auth: AuthService,
+    private notificationService: NotificationApiService
   ) { }
 
   taskInfo: TaskGet | null = null;
+  private loadedTaskId: number | null = null;
 
   ngOnInit(): void {
-    const roleLevel = this.auth.getRoleLevel();
-    this.showAdminPages = this.createdByMe || roleLevel >= 80;
-
-    if (this.taskId) {
-      this.loadTask();
+    if (this.initialTab === 'updates') {
+      this.updatesViewed = true;
     }
+    this.refreshPermissions();
+    this.ensureTaskLoaded();
+    this.refreshSub = this.refreshService.refresh$.subscribe(() => {
+      if (this.taskId) this.loadTask();
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.refreshSub?.unsubscribe();
+    // Escape / backdrop dismiss path
+    this.markTaskUpdatesSeen(false);
+  }
+
+  onUpdatesViewed(): void {
+    this.updatesViewed = true;
+  }
+
+  closeDetails(): void {
+    if (this.isClosing) return;
+
+    if (!this.shouldMarkUpdatesSeen()) {
+      this.modall.dismiss();
+      return;
+    }
+
+    this.isClosing = true;
+    this.markTaskUpdatesSeen(true);
+  }
+
+  private shouldMarkUpdatesSeen(): boolean {
+    return this.updatesViewed
+      && !this.markedSeen
+      && !!this.taskId
+      && (this.taskInfo?.unreadNotificationsCount ?? 0) > 0;
+  }
+
+  private markTaskUpdatesSeen(closeModal: boolean): void {
+    if (!this.shouldMarkUpdatesSeen()) {
+      if (closeModal) this.modall.dismiss();
+      return;
+    }
+
+    this.markedSeen = true;
+    this.notificationService.markAsReadByTask(this.taskId).subscribe({
+      next: () => {
+        this.notificationService.notifyUnreadChanged();
+        if (closeModal) {
+          this.modall.close({ markedSeen: true, taskId: this.taskId });
+        }
+      },
+      error: () => {
+        this.markedSeen = false;
+        this.isClosing = false;
+        if (closeModal) this.modall.dismiss();
+      }
+    });
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    if (changes['taskId'] && this.taskId) {
-      this.loadTask();
+    if (changes['taskId']) {
+      this.ensureTaskLoaded();
     }
+    if (changes['createdByMe']) {
+      this.refreshPermissions();
+    }
+  }
+
+  private ensureTaskLoaded(): void {
+    if (!this.taskId || this.loadedTaskId === this.taskId) return;
+    this.loadedTaskId = this.taskId;
+    this.loadTask();
+  }
+
+  private refreshPermissions(): void {
+    const isAssignee = this.isCurrentUserAssignee();
+    const isCreatorSide = this.createdByMe;
+    const isLiteralOwner = !!this.taskInfo?.isCreatorOrAssigner;
+
+    // Close/extend: any active assignee (incl. self-created creator). Pure creators review instead.
+    this.canComment =
+      this.auth.hasPermission(Permissions.COMMENT_TASK) || isCreatorSide;
+    this.canCloseRequest =
+      isAssignee && this.auth.hasPermission(Permissions.REQUEST_TASK_CLOSE);
+    this.canExtendRequest =
+      isAssignee && this.auth.hasPermission(Permissions.REQUEST_DUE_DATE_EXTENSION);
+
+    // Warn/penalty: literal owner always (even if also assignee on self-created tasks);
+    // scope-only viewers need ISSUE_* and must not be assignees.
+    this.canSendWarning =
+      isLiteralOwner || (!isAssignee && isCreatorSide && this.auth.hasPermission(Permissions.ISSUE_WARNING));
+    this.canSendPenalty =
+      isLiteralOwner || (!isAssignee && isCreatorSide && this.auth.hasPermission(Permissions.ISSUE_PENALTY));
+    // Percentage has no dedicated permission — literal owner only (incl. self-assigned).
+    this.canSetPercentage = isLiteralOwner;
+    this.canReviewRequests = isCreatorSide && this.auth.hasAnyPermission(
+      Permissions.APPROVE_TASK_REQUEST,
+      Permissions.REJECT_TASK_REQUEST
+    );
+  }
+
+  private isCurrentUserAssignee(): boolean {
+    const userId = this.auth.getUser()?.userId ?? this.auth.getCurrentUser()?.userId;
+    if (!userId || !this.taskInfo?.assignEmployee?.length) return false;
+    return this.taskInfo.assignEmployee.some(e => e.id === userId);
   }
 
   loadTask() {
@@ -67,9 +185,7 @@ export class TaskDetailsShellComponent implements OnInit, OnChanges {
         this.taskInfo = res.data;
         this.requireUploadFile = this.taskInfo.requireUploadFile;
         this.createdByMe = !!this.taskInfo.createdByMe;
-
-        const roleLevel = this.auth.getRoleLevel();
-        this.showAdminPages = this.createdByMe || roleLevel >= 80;
+        this.refreshPermissions();
       },
       error: err => {
         console.error('Failed to load task', err);
@@ -80,15 +196,45 @@ export class TaskDetailsShellComponent implements OnInit, OnChanges {
 
   get isTaskClosed(): boolean {
     const status = this.taskInfo?.status;
-    return status === 5
-      || status === 4
-      || status === 3;
+    return status === TaskStatus.AutoClose
+      || status === TaskStatus.Archived
+      || status === TaskStatus.Closed;
+  }
+
+  get canReopen(): boolean {
+    const status = this.taskInfo?.status;
+    const reopenable = status === TaskStatus.Closed || status === TaskStatus.AutoClose;
+    if (!reopenable) return false;
+    return !!this.taskInfo?.isCreatorOrAssigner
+      || this.auth.hasPermission(Permissions.REOPEN_TASK);
+  }
+
+  openReopen(): void {
+    if (!this.canReopen) return;
+
+    const ref = this.modal.open(ReopenTaskModalComponent, {
+      size: 'lg',
+      backdrop: 'static'
+    });
+    ref.componentInstance.taskId = this.taskId;
+    ref.componentInstance.dueDateRequired = isPastDueDate(this.taskInfo?.dueDate);
+
+    ref.result.then(
+      success => {
+        if (success) {
+          this.loadTask();
+          this.refreshService.trigger('reopen');
+        }
+      },
+      () => { }
+    );
   }
 
   openAction(action: string) {
     if (this.isTaskClosed) return;
 
     if (action === 'comment') {
+      if (!this.canComment) return;
       const ref = this.modal.open(CommentModalComponent, {
         size: 'lg',
         backdrop: 'static'
@@ -108,6 +254,7 @@ export class TaskDetailsShellComponent implements OnInit, OnChanges {
       );
     }
     if (action === 'warning') {
+      if (!this.canSendWarning) return;
       const ref = this.modal.open(WarningModalComponent, { size: 'lg' });
       ref.componentInstance.taskId = this.taskId;
 
@@ -118,6 +265,7 @@ export class TaskDetailsShellComponent implements OnInit, OnChanges {
     }
 
     if (action === 'percent') {
+      if (!this.canSetPercentage) return;
       const ref = this.modal.open(PercentageModalComponent, {
         size: 'lg',
         backdrop: 'static'
@@ -136,6 +284,7 @@ export class TaskDetailsShellComponent implements OnInit, OnChanges {
     }
 
     if (action === 'penalty') {
+      if (!this.canSendPenalty) return;
       const ref = this.modal.open(PenaltyModalComponent, { size: 'lg' });
       ref.componentInstance.taskId = this.taskId;
 
@@ -145,6 +294,7 @@ export class TaskDetailsShellComponent implements OnInit, OnChanges {
       );
     }
     if (action === 'extend') {
+      if (!this.canExtendRequest) return;
       const ref = this.modal.open(ExtendRequestComponent, {
         size: 'lg',
         backdrop: 'static'
@@ -154,6 +304,7 @@ export class TaskDetailsShellComponent implements OnInit, OnChanges {
       return;
     }
     if (action === 'close') {
+      if (!this.canCloseRequest) return;
       const ref = this.modal.open(CloseRequestModalComponent, {
         size: 'lg',
         backdrop: 'static'

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -18,12 +18,14 @@ namespace TaskMangment.Application.Interfaces.Services
         Task<ApiResponse<TaskGetDto>> GetByIdAsync(int id, int roleLevel, int employeeId);
         Task<ApiResponse<TaskGetDto>> AddAsync(TaskAddEditDto dto, int createdUser, int companyId);
         Task<ApiResponse<TaskGetDto>> UpdateAsync(int id, TaskAddEditDto dto, int modifierUser);
-        Task<ApiResponse<bool>> DeleteAsync(int id);
+        Task<ApiResponse<bool>> DeleteAsync(int id, int employeeId);
         Task<ApiResponse<List<TaskAssignmentDto>>> GetAssignedEmployeesAsync(int taskId);
         Task<List<TaskReportDto>> GetTasksForReportAsync(int? assignedUserId = null,int? status = null,DateTime? fromDate = null,DateTime? toDate = null);
         Task<ApiResponse<TaskRequestsDto>> GetTaskRequestsAsync(int taskId);
         Task<ApiResponse<TaskActivitySummaryDTO>> GetTaskActivitySummaryAsync(int taskId);
         Task<ApiResponse<bool>> ArchiveClosedTasksAsync(List<int> taskIds);
+        Task<ApiResponse<bool>> ReopenAsync(int id, ReopenTaskDto dto, int employeeId);
+        Task<ApiResponse<List<TaskReopenHistoryDto>>> GetReopenHistoryAsync(int taskId);
 
 
     }

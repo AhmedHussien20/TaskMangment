@@ -11,6 +11,12 @@ export const EmployeeRoutes: Routes = [
         .then(m => m.EmployeeListComponent)
   },
   {
+    path: '360/:id',
+    loadComponent: () =>
+      import('./employee-360/employee-360.component')
+        .then(m => m.Employee360Component)
+  },
+  {
     path: 'add',
     loadComponent: () =>
       import('./employee-create-update/employee-create-update.component')
@@ -21,6 +27,12 @@ export const EmployeeRoutes: Routes = [
     loadComponent: () =>
       import('./employee-create-update/employee-create-update.component')
         .then(m => m.EmployeeCreateUpdateComponent),
+  },
+  {
+    path: 'employee-types',
+    loadComponent: () =>
+      import('./employee-type/employee-type-list/employee-type-list.component')
+        .then(m => m.EmployeeTypeListComponent)
   }
 ];
 

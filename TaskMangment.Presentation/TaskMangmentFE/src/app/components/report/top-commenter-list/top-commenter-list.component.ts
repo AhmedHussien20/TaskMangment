@@ -13,6 +13,7 @@ import { ReportPdfService } from 'app/core/services/report-pdf.service';
 import { DatePickerComponent } from 'app/components/date-picker/date-picker.component';
 import { ReportRoleFilterComponent } from '../shared/report-role-filter.component';
 import { getReportRoleFilterParams } from '../shared/report-role-filter.helper';
+import { ReportStatusFilterComponent } from '../shared/report-status-filter.component';
 
 @Component({
   selector: 'app-top-commenters-list',
@@ -25,7 +26,8 @@ import { getReportRoleFilterParams } from '../shared/report-role-filter.helper';
     GenericTableComponent,
     PageHeaderComponent,
     DatePickerComponent,
-    ReportRoleFilterComponent
+    ReportRoleFilterComponent,
+    ReportStatusFilterComponent
   ],
   templateUrl: './top-commenter-list.component.html',
   styleUrls: ['./top-commenter-list.component.scss']
@@ -55,6 +57,7 @@ export class TopCommenterListComponent implements OnInit {
   fromDate?: string;
   toDate?: string;
   selectedRoleId?: number;
+  status?: string;
 
   isLoading = false;
 
@@ -74,7 +77,7 @@ export class TopCommenterListComponent implements OnInit {
     this.isLoading = true;
 
     const { roleId, roleTitle } = getReportRoleFilterParams(this.roleFilter, this.selectedRoleId);
-    this.reportService.getTopCommenters(this.fromDate, this.toDate, roleId, roleTitle).subscribe({
+    this.reportService.getTopCommenters(this.fromDate, this.toDate, roleId, roleTitle, this.status).subscribe({
       next: (res) => {
         this.rows = res.data;
         this.totalItems = res.data.length;
@@ -97,7 +100,7 @@ export class TopCommenterListComponent implements OnInit {
 
   onExportPdf(): void {
   const { roleId, roleTitle } = getReportRoleFilterParams(this.roleFilter, this.selectedRoleId);
-  this.reportPdfService.getTopCommentersPdf(ExportType.Pdf, this.fromDate, this.toDate, roleId, roleTitle).subscribe({
+  this.reportPdfService.getTopCommentersPdf(ExportType.Pdf, this.fromDate, this.toDate, roleId, roleTitle, this.status).subscribe({
     next: (blob) => {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -115,7 +118,7 @@ export class TopCommenterListComponent implements OnInit {
 }
  onExportExcel(): void {
   const { roleId, roleTitle } = getReportRoleFilterParams(this.roleFilter, this.selectedRoleId);
-  this.reportPdfService.getTopCommentersPdf(ExportType.Excel, this.fromDate, this.toDate, roleId, roleTitle).subscribe({
+  this.reportPdfService.getTopCommentersPdf(ExportType.Excel, this.fromDate, this.toDate, roleId, roleTitle, this.status).subscribe({
     next: (blob) => {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');

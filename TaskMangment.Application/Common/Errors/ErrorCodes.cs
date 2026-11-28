@@ -21,6 +21,7 @@ namespace TaskMangment.Application.Common.Errors
         public const string NotAssigned = "NOT_ASSIGNED";
         public const string AlreadyReviewed = "ALREADY_REVIEWED";
         public const string TaskAlreadyClosed = "TASK_ALREADY_CLOSED";
+        public const string TaskNotReopenable = "TASK_NOT_REOPENABLE";
         public const string TaskMustBeClosedBeforeArchive = "TASK_MUST_BE_CLOSED_BEFORE_ARCHIVE";
         public const string TaskHasNoPercentage = "TASK_HAS_NO_PERCENTAGE";
 
@@ -67,19 +68,29 @@ namespace TaskMangment.Application.Common.Errors
 
         public const string RoleNotFound = "ROLE_NOT_FOUND";
         public const string RoleHasEmployees = "ROLE_HAS_EMPLOYEES";
+        public const string EmployeeMaxRolesExceeded = "EMPLOYEE_MAX_ROLES_EXCEEDED";
         public const string PermissionNotFound = "PERMISSION_NOT_FOUND";
         public const string PermissionHasRoles = "PERMISSION_HAS_ROLES";
         public const string AlreadyExists = "ALREADY_EXISTS";
         public const string AlreadyAssigned = "ALREADY_ASSIGNED";
 
         public const string InvalidDate = "INVALID_DATE";
+        public const string DueDateOnWeekend = "DUE_DATE_ON_WEEKEND";
+        public const string DueDateInPast = "DUE_DATE_IN_PAST";
 
         public const string Unauthorized = "Unauthorized";
 
         public const string InvalidOperation = "INVALID_OPERATION";
         public const string CloseRequestAlreadyPending = "CLOSEREQUESTALREADYREQUESTED";
         public const string InvalidManagerRoleLevel = "INVALID_MANAGER_ROLE_LEVEL";
+        public const string InvalidBranchManagerRole = "INVALID_BRANCH_MANAGER_ROLE";
+        public const string InvalidAreaManagerRole = "INVALID_AREA_MANAGER_ROLE";
+        public const string UseAreaForBranchScope = "USE_AREA_FOR_BRANCH_SCOPE";
+        public const string InvalidNotificationScope = "INVALID_NOTIFICATION_SCOPE";
         public const string LeaveTypeHasLeaves = "LEAVE_TYPE_HAS_LEAVES";
+        public const string LeaveRejectReasonRequired = "LEAVE_REJECT_REASON_REQUIRED";
+        public const string RoleEmployeeTypeRequired = "ROLE_EMPLOYEE_TYPE_REQUIRED";
+        public const string EmployeeTypeMismatch = "EMPLOYEE_TYPE_MISMATCH";
     }
 
 }

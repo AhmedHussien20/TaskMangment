@@ -1,0 +1,9 @@
+ROLES
+16|Accounting|scope=3|typeScope=True|typeId=2|Accounting|محاسبة|restrictBranch=False
+18|محاسب فرع |scope=1|typeScope=True|typeId=2|Accounting|محاسبة|restrictBranch=True
+SOURCES
+16|Accounting <- 7|موظف
+18|محاسب فرع  <- 7|موظف
+EMP
+341|هديل الذيبه|fc=1
+380|محاسب تجربة|fc=2

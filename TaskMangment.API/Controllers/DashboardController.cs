@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TaskMangment.API.Middlewares;
 using TaskMangment.Application.ApiRequests;
+using TaskMangment.Application.Common.Security;
 using TaskMangment.Application.Dashboards.Admin;
 using TaskMangment.Application.Dashboards.Employee;
 using TaskMangment.Application.DTOs;
@@ -24,6 +26,8 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpGet("admin")]
+        [PermissionAuthorize(
+            PermissionCodes.ViewScopedTasks, PermissionCodes.ViewCompanyTasks)]
         public async Task<IActionResult> GetAdminDashboard([FromQuery] PeriodDto period, int? branchId = null)
         {
             var result = await _adminService.GetDashboardAsync(CompanyId,this.RoleLevel,CurrentUserId, period, branchId);
@@ -80,6 +84,8 @@ namespace TaskMangment.API.Controllers
 
 
         [HttpGet("admin/in-progress-updated-today")]
+        [PermissionAuthorize(
+            PermissionCodes.ViewScopedTasks, PermissionCodes.ViewCompanyTasks)]
         public async Task<IActionResult> GetTodayUpdatedInProgressTasks([FromQuery] UpdatedTodayTasksRequest request, int? branchId = null)
         {
             var result = await _adminService.GetTodayUpdatedInProgressTasksAsync(CompanyId, this.RoleLevel, CurrentUserId, request, branchId);
@@ -87,6 +93,8 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpGet("admin/completed-tasks-today")]
+        [PermissionAuthorize(
+            PermissionCodes.ViewScopedTasks, PermissionCodes.ViewCompanyTasks)]
         public async Task<IActionResult> GetEmployeesCompletedTasksToday([FromQuery] PeriodDto period, int? branchId = null)
         {
             var result = await _adminService.GetEmployeesCompletedTasksTodayAsync(CompanyId, this.RoleLevel, CurrentUserId, period, branchId);
@@ -96,20 +104,42 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpGet("admin/pending-close-requests")]
+        [PermissionAuthorize(
+            PermissionCodes.ViewScopedTasks, PermissionCodes.ViewCompanyTasks)]
         public async Task<IActionResult> GetPendingCloseRequests([FromQuery] PeriodDto period, int? branchId = null)
         {
             var result = await _adminService .GetPendingCloseRequestsAsync(CompanyId, this.RoleLevel, CurrentUserId, period, branchId);
             return Success(result.Data);
         }
 
-        [HttpGet("admin/tasks-by-status")]
-        public async Task<IActionResult> GetAdminTasksByStatus([FromQuery] string status,[FromQuery] TasksByStatusRequest request,int? branchId = null)
+        [HttpGet("admin/employee-type-cards")]
+        [PermissionAuthorize(
+            PermissionCodes.ViewScopedTasks, PermissionCodes.ViewCompanyTasks)]
+        public async Task<IActionResult> GetEmployeeTypeCards(int? branchId = null)
         {
-            var result = await _adminService.GetTasksByStatusAsync(CompanyId, status,RoleLevel,CurrentUserId,request,branchId);
+            if (!HasPermission(PermissionCodes.ViewEmployeeTypeTaskCards))
+                return Fail("Not Allowed (No Permission)", StatusCodes.Status403Forbidden);
+
+            var result = await _adminService.GetEmployeeTypeCardsAsync(
+                CompanyId, RoleLevel, CurrentUserId, branchId);
+            return Success(result.Data);
+        }
+
+        [HttpGet("admin/tasks-by-status")]
+        [PermissionAuthorize(
+            PermissionCodes.ViewScopedTasks, PermissionCodes.ViewCompanyTasks)]
+        public async Task<IActionResult> GetAdminTasksByStatus([FromQuery] string status,[FromQuery] TasksByStatusRequest request,int? branchId = null, int? employeeTypeId = null)
+        {
+            if (employeeTypeId.HasValue && !HasPermission(PermissionCodes.ViewEmployeeTypeTaskCards))
+                return Fail("Not Allowed (No Permission)", StatusCodes.Status403Forbidden);
+
+            var result = await _adminService.GetTasksByStatusAsync(CompanyId, status,RoleLevel,CurrentUserId,request,branchId, employeeTypeId);
             return Success(result.Data);
         }
 
         [HttpGet("admin/kpis")]
+        [PermissionAuthorize(
+            PermissionCodes.ViewScopedTasks, PermissionCodes.ViewCompanyTasks)]
         public async Task<IActionResult> GetAdminKpis([FromQuery] PeriodDto period, int? branchId = null)
         {
             var result = await _adminService.GetKpisAsync(CompanyId, this.RoleLevel, CurrentUserId, period,branchId);
@@ -117,6 +147,8 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpGet("admin/discounts")]
+        [PermissionAuthorize(
+            PermissionCodes.ViewScopedTasks, PermissionCodes.ViewCompanyTasks)]
         public async Task<IActionResult> GetDiscounts([FromQuery] DiscountsRequest request, int? branchId = null)
         {
             var result = await _adminService.GetDiscountsAsync(CompanyId,this.RoleLevel,CurrentUserId,request,branchId);
@@ -124,6 +156,8 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpGet("admin/high-priority-tasks")]
+        [PermissionAuthorize(
+            PermissionCodes.ViewScopedTasks, PermissionCodes.ViewCompanyTasks)]
         public async Task<IActionResult> GetHighPriorityTasks([FromQuery] TasksHighPriorityRequest request,int? branchId = null)
         {
             var result = await _adminService.GetHighPriorityTasksAsync(this.CompanyId,this.RoleLevel,this.CurrentUserId,request,branchId);
@@ -131,6 +165,8 @@ namespace TaskMangment.API.Controllers
         }
 
         [HttpGet("admin/completed-tasks-details")]
+        [PermissionAuthorize(
+            PermissionCodes.ViewScopedTasks, PermissionCodes.ViewCompanyTasks)]
         public async Task<IActionResult> GetCompletedTasksDetails([FromQuery] PeriodDto period, int? branchId = null)
         {
             var result = await _adminService.GetCompletedTasksDetailsAsync(CompanyId, this.RoleLevel, CurrentUserId, period,branchId);
@@ -139,6 +175,8 @@ namespace TaskMangment.API.Controllers
 
         
         [HttpGet("admin/branches-for-filter")]
+        [PermissionAuthorize(
+            PermissionCodes.ViewScopedTasks, PermissionCodes.ViewCompanyTasks)]
         public async Task<IActionResult> GetBranchesForFilter()
         {
             var result = await _adminService.GetBranchesForFilterAsync(

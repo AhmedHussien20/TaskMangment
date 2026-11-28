@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Azure.Core;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -14,6 +14,7 @@ using TaskMangment.Application.Common.Errors;
 using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Responses;
+using TaskMangment.Application.Common.Security;
 using TaskMangment.Application.DTOs.TaskDTOs;
 using TaskMangment.Application.Interfaces.IRepository;
 using TaskMangment.Application.Interfaces.Services;
@@ -35,7 +36,9 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IDomainEventDispatcher _eventDispatcher;
         private readonly IStringLocalizer<DiscountAutoType> _localizer;
         private readonly IRepository<Notification> _notificationRepo;
-        private readonly IGetHigherManager _getHigherManager;
+        private readonly INotificationRecipientBuilder _recipientBuilder;
+        private readonly IEmployeePermissionService _permissions;
+        private readonly TaskCreatedByMeEvaluator _createdByMe;
 
 
 
@@ -50,7 +53,9 @@ namespace TaskMangment.Infrastructure.Services
             IStringLocalizer<DiscountAutoType> localizer,
             IRepository<Branch> branchRepo,
             IRepository<Notification> notificationRepo,
-            IGetHigherManager getHigherManager)
+            INotificationRecipientBuilder recipientBuilder,
+            IEmployeePermissionService permissions,
+            TaskCreatedByMeEvaluator createdByMe)
         {
             _discountRepo = discountRepo;
             _employeeRepo = employeeRepo;
@@ -61,7 +66,9 @@ namespace TaskMangment.Infrastructure.Services
             _localizer = localizer;
             _branchRepo = branchRepo;
             _notificationRepo = notificationRepo;
-            _getHigherManager = getHigherManager;
+            _recipientBuilder = recipientBuilder;
+            _permissions = permissions;
+            _createdByMe = createdByMe;
         }
 
         public async Task<ApiResponse<PagedResponse<DiscountGetDto>>> GetAllAsync(TaskDiscountRequest request)
@@ -173,6 +180,17 @@ namespace TaskMangment.Infrastructure.Services
                 );
             }
 
+            var isAssignee = await _taskRepo.GetAll(t => t.Id == TaskID)
+                .SelectMany(t => t.Assignments)
+                .AnyAsync(a =>
+                    a.EmployeeId == createdByEmployeeId &&
+                    a.IsActive &&
+                    !a.IsDeleted);
+            if (isAssignee && !TaskCreatedByMeEvaluator.IsCreatorOrAssigner(createdByEmployeeId, task))
+                throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
+
+            await EnsureCanSendPenaltyAsync(createdByEmployeeId, task);
+
             var discount = _mapper.Map<Discount>(dto);
             discount.TaskId = TaskID;
             discount.CreatedByEmployeeId = createdByEmployeeId;
@@ -200,21 +218,26 @@ namespace TaskMangment.Infrastructure.Services
                     .FirstOrDefaultAsync(b => b.Id == issuedEmployee.BranchId.Value)
                 : null;
 
-            var managerIds = await _getHigherManager.GetDirectHigherManagerIdsAsync(dto.EmployeeId);
-
-            var sendToIds = new List<int> { dto.EmployeeId };
-            sendToIds.AddRange(managerIds.Where(id => !sendToIds.Contains(id)));
-            sendToIds.Remove(createdByEmployeeId);
-            sendToIds = await _employeeRepo.GetAll(e => sendToIds.Contains(e.Id) && e.IsActive)
-                .Select(e => e.Id)
-                .ToListAsync();
+            // Subject who received the penalty is the manager-anchor.
+            var sendToIds = await _recipientBuilder.BuildAsync(
+                peerIds: new[] { dto.EmployeeId },
+                actorIdToExclude: createdByEmployeeId,
+                managerAnchorEmployeeId: dto.EmployeeId);
 
             var IssuedToName = issuedEmployee.FullName;
 
             if (sendToIds.Any())
             {
                 await _eventDispatcher.PublishAsync(
-                         new TaskPenaltyEvent(discount.Id, TaskID, employeeName, sendToIds, IssuedToName, task.Title, discount.Amount)
+                         new TaskPenaltyEvent(
+                             discount.Id,
+                             TaskID,
+                             employeeName,
+                             sendToIds,
+                             IssuedToName,
+                             task.Title,
+                             discount.Amount,
+                             branch?.Name)
                      );
             }
 
@@ -239,12 +262,23 @@ namespace TaskMangment.Infrastructure.Services
             if (!await _employeeRepo.IsExistAsync(dto.EmployeeId))
                 throw new AppException(ErrorCodes.EmployeeNotFound, StatusCodes.Status404NotFound);
 
-            if (!await _taskRepo.IsExistAsync(TaskID))
+            var task = await _taskRepo.GetByIDAsync(TaskID);
+            if (task == null)
                 throw new AppException(ErrorCodes.TaskNotFound, StatusCodes.Status404NotFound);
 
             if (!await _employeeRepo.IsExistAsync(ModifiedByEmployeeId))
                 return ApiResponse<DiscountGetDto>.Fail("ModifiedByEmployee not found");
 
+            var isAssignee = await _taskRepo.GetAll(t => t.Id == TaskID)
+                .SelectMany(t => t.Assignments)
+                .AnyAsync(a =>
+                    a.EmployeeId == ModifiedByEmployeeId &&
+                    a.IsActive &&
+                    !a.IsDeleted);
+            if (isAssignee && !TaskCreatedByMeEvaluator.IsCreatorOrAssigner(ModifiedByEmployeeId, task))
+                throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
+
+            await EnsureCanSendPenaltyAsync(ModifiedByEmployeeId, task);
 
             _mapper.Map(dto, discount);
             discount.TaskId = TaskID;
@@ -276,6 +310,18 @@ namespace TaskMangment.Infrastructure.Services
 
 
             return ApiResponse<bool>.Ok(true, "Discount deleted successfully");
+        }
+
+        private async Task EnsureCanSendPenaltyAsync(int employeeId, WorkTask task)
+        {
+            if (TaskCreatedByMeEvaluator.IsCreatorOrAssigner(employeeId, task))
+                return;
+
+            if (await _permissions.HasAsync(employeeId, PermissionCodes.IssuePenalty) &&
+                await _createdByMe.IsCreatedByMeAsync(task, employeeId))
+                return;
+
+            throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
         }
     }
 }

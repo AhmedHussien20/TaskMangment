@@ -1,4 +1,5 @@
 <div class="card custom-card dashboard-card"
+  [class.metric-tile]="variant === 'tile'"
   [class.clickable]="card.clickable"
   (click)="onClick()">
   <div class="card-body">
@@ -14,7 +15,7 @@
       <!-- TITLE + SUBTITLE -->
       <div class="card-item-title mb-2">
         <label class="main-content-label fs-13 font-weight-bold mb-1">
-          {{ card.title | translate }}
+          {{ card.rawTitle ? card.title : (card.title | translate) }}
         </label>
 
         <span

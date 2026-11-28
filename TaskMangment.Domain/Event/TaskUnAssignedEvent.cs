@@ -1,8 +1,4 @@
-﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TaskMangment.Domain.Event
 {
@@ -10,14 +6,30 @@ namespace TaskMangment.Domain.Event
     {
         public int TaskId { get; }
         public string TaskTitle { get; }
-        public List<int> UnAssignedEmployeeIds { get; }
+        /// <summary>Subject who was unassigned (the person listeners care about).</summary>
+        public int SubjectEmployeeId { get; }
+        public string SubjectEmployeeName { get; }
+        /// <summary>Subject + role listeners (excludes actor).</summary>
+        public List<int> RecipientIds { get; }
+        public string BranchName { get; }
 
-        public TaskUnAssignedEvent(int taskId, string taskTitle, List<int> unAssignedEmployeeIds)
+        public TaskUnAssignedEvent(
+            int taskId,
+            string taskTitle,
+            int subjectEmployeeId,
+            string subjectEmployeeName,
+            List<int> recipientIds,
+            string? branchName = null)
         {
             TaskId = taskId;
             TaskTitle = taskTitle;
-            UnAssignedEmployeeIds = unAssignedEmployeeIds;
+            SubjectEmployeeId = subjectEmployeeId;
+            SubjectEmployeeName = subjectEmployeeName ?? string.Empty;
+            RecipientIds = recipientIds ?? new List<int>();
+            BranchName = string.IsNullOrWhiteSpace(branchName) ? "-" : branchName;
         }
-    }
 
+        /// <summary>Backward-compatible alias.</summary>
+        public List<int> UnAssignedEmployeeIds => RecipientIds;
+    }
 }

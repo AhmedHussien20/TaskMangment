@@ -30,6 +30,9 @@ export class GenericFormComponent implements OnInit {
   @Output() formSubmit = new EventEmitter<any>();
   hidden?: boolean = false;
 
+  /** Fallback: allow all dates when field.dateFilter is not set */
+  readonly defaultDateFilter = (_date: Date | null): boolean => true;
+
   constructor(private location: Location) { }
 
   ngOnInit() { }

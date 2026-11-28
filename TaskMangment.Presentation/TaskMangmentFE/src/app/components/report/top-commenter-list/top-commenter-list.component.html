@@ -10,6 +10,8 @@
 
           <app-report-role-filter [(selectedRoleId)]="selectedRoleId"></app-report-role-filter>
 
+          <app-report-status-filter [(status)]="status"></app-report-status-filter>
+
           <div class="d-flex flex-column">
             <label class="form-label small">{{ 'CHART.FROM' | translate }}</label>
             <app-date-picker [(ngModel)]="fromDate" [placeholderKey]="'REPORTS.FROM'">

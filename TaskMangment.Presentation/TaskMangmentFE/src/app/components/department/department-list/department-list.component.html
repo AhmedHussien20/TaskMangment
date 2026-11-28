@@ -12,11 +12,11 @@
         <div>
           <app-generic-table [title]="title" [breadcrumbs]="breadcrumbs" [activeitem]="activeitem" [labels]="labels"
             [columns]="columns" [data]="rows" [entries]="entries" [page]="page" [totalItems]="totalItems"
-            [showAddButton]="true" [addButtonLabel]="'DEPARTMENT.ADD' | translate" (addClick)="openAdd(departmentModal)"
-            [showFilters]="true" [showEditButton]="true" [showDeleteButton]="false" [searchCriteria]="searchCriteria"
+            [showAddButton]="canCreate" [addButtonLabel]="'DEPARTMENT.ADD' | translate" (addClick)="openAdd(departmentModal)"
+            [showFilters]="true" [showEditButton]="canEdit" [searchCriteria]="searchCriteria"
             [onSearch]="applyFilters.bind(this)" (pageChange)="onPageChange($event)"
             (entriesChange)="onEntriesChange($event)" (edit)="openEdit($event, departmentModal)"
-            [showDeleteButton]="true" (delete)="confirmDelete($event)">
+            [showDeleteButton]="canDelete" (delete)="confirmDelete($event)">
           </app-generic-table>
         </div>
       </div>

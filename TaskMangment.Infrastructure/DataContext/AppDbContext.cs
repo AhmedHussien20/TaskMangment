@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -79,6 +79,7 @@ namespace TaskMangment.Infrastructure.DataContext
         public DbSet<WorkTask> Tasks { get; set; }
         public DbSet<TaskAssignment> TaskAssignments { get; set; }
         public DbSet<TaskCloseRequest> TaskCloseRequests { get; set; }
+        public DbSet<TaskReopenHistory> TaskReopenHistories { get; set; }
         public DbSet<TaskComment> TaskComments { get; set; }
         public DbSet<TaskExtensionRequest> TaskExtensionRequests { get; set; }
         public DbSet<TaskPercentage> TaskPercentages { get; set; }
@@ -89,6 +90,8 @@ namespace TaskMangment.Infrastructure.DataContext
         public DbSet<WhatsAppQueue> WhatsAppQueue { get; set; }
         public DbSet<ManagerBranches> managerBranches { get; set; }
         public DbSet<EmployeeFunctionalScope> EmployeeFunctionalScopes { get; set; }
+        public DbSet<EmployeeType> EmployeeTypes { get; set; }
+        public DbSet<RoleNotificationSource> RoleNotificationSources { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -153,6 +156,21 @@ namespace TaskMangment.Infrastructure.DataContext
                  .WithMany()
                  .HasForeignKey(t => t.CreatedByEmployeeId)
                  .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<TaskReopenHistory>()
+                 .HasOne(h => h.Task)
+                 .WithMany(t => t.ReopenHistory)
+                 .HasForeignKey(h => h.TaskId)
+                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<TaskReopenHistory>()
+                 .HasOne(h => h.ReopenedBy)
+                 .WithMany()
+                 .HasForeignKey(h => h.ReopenedByEmployeeId)
+                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<TaskReopenHistory>()
+                 .HasIndex(h => h.TaskId);
              
             builder.Entity<TaskAssignment>()
                  .HasOne(a => a.Employee)
@@ -171,6 +189,10 @@ namespace TaskMangment.Infrastructure.DataContext
                  .WithMany()
                  .HasForeignKey(a => a.UploadedBy)
                  .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Attachment>()
+                .HasIndex(a => new { a.ReferenceId, a.AttachmentType, a.IsDeleted })
+                .HasDatabaseName("IX_Attachments_ReferenceId_AttachmentType_IsDeleted");
 
             
             builder.Entity<TaskExtensionRequest>()
@@ -284,6 +306,49 @@ namespace TaskMangment.Infrastructure.DataContext
                 .HasIndex(x => new { x.ManagerId, x.BranchId })
                 .IsUnique();
 
+            builder.Entity<RoleNotificationSource>(entity =>
+            {
+                entity.ToTable("RoleNotificationSources");
+                entity.HasOne(x => x.Role)
+                    .WithMany(r => r.NotificationSources)
+                    .HasForeignKey(x => x.RoleId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(x => x.SourceRole)
+                    .WithMany()
+                    .HasForeignKey(x => x.SourceRoleId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                entity.HasIndex(x => new { x.RoleId, x.SourceRoleId }).IsUnique();
+            });
+
+            builder.Entity<EmployeeType>(entity =>
+            {
+                entity.ToTable("EmployeeTypes");
+                entity.HasIndex(x => x.Code).IsUnique();
+                entity.Property(x => x.Code).HasMaxLength(50).IsRequired();
+                entity.Property(x => x.NameEn).HasMaxLength(100).IsRequired();
+                entity.Property(x => x.NameAr).HasMaxLength(100).IsRequired();
+            });
+
+            builder.Entity<Employee>()
+                .HasOne(e => e.EmployeeType)
+                .WithMany(t => t.Employees)
+                .HasForeignKey(e => e.EmployeeTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<EmployeeFunctionalScope>()
+                .HasOne(x => x.EmployeeType)
+                .WithMany(t => t.FunctionalScopes)
+                .HasForeignKey(x => x.EmployeeTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Map legacy column names during transition (migration renames FunctionCode → EmployeeTypeId).
+            builder.Entity<Employee>()
+                .Property(e => e.EmployeeTypeId)
+                .HasColumnName("FunctionCode");
+
+            builder.Entity<EmployeeFunctionalScope>()
+                .Property(x => x.EmployeeTypeId)
+                .HasColumnName("FunctionCode");
         }
 
     }

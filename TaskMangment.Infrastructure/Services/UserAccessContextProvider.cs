@@ -1,67 +1,107 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using TaskMangment.Application.Common.Security;
 using TaskMangment.Application.Interfaces.IRepository;
+using TaskMangment.Application.Interfaces.Services;
 using TaskMangment.Domain.Entities;
-using TaskMangment.Infrastructure.DataContext;
 
 namespace TaskMangment.Infrastructure.Services
 {
+    /// <summary>
+    /// Access branches from Branch.ManagerID and Area.ManagerEmployeeId (not ManagerBranches).
+    /// Employee type scope from EmployeeFunctionalScope.
+    /// Branch-restricted types come from Role.RestrictEmployeeTypeToBranch
+    /// (independent of RequiresBranchScope / Areas page).
+    /// </summary>
     public class UserAccessContextProvider : IUserAccessContextProvider
     {
-        private readonly IRepository<ManagerBranches> _managerBranchesRepo;
+        private readonly IRepository<Branch> _branchRepo;
+        private readonly IRepository<Area> _areaRepo;
         private readonly IRepository<EmployeeFunctionalScope> _employeeFunctionalScopeRepo;
+        private readonly IRepository<EmployeeRole> _employeeRoleRepo;
 
-        public UserAccessContextProvider(IRepository<ManagerBranches> managerBranchesRepo, IRepository<EmployeeFunctionalScope> employeeFunctionalScopeRepo)
+        public UserAccessContextProvider(
+            IRepository<Branch> branchRepo,
+            IRepository<Area> areaRepo,
+            IRepository<EmployeeFunctionalScope> employeeFunctionalScopeRepo,
+            IRepository<EmployeeRole> employeeRoleRepo)
         {
-            _managerBranchesRepo = managerBranchesRepo;
+            _branchRepo = branchRepo;
+            _areaRepo = areaRepo;
             _employeeFunctionalScopeRepo = employeeFunctionalScopeRepo;
+            _employeeRoleRepo = employeeRoleRepo;
         }
 
         public async Task<UserAccessContext> GetAsync(int employeeId)
         {
-            var branchIds = await _managerBranchesRepo.GetAll()
-                .Where(x => x.ManagerId == employeeId && x.IsActive)
-                .Select(x => x.BranchId)
+            var asBranchManager = await _branchRepo.GetAll(b =>
+                    b.ManagerID == employeeId &&
+                    !b.IsDeleted &&
+                    b.IsActive)
+                .Select(b => b.Id)
                 .ToListAsync();
 
-            var functionCodes = await _employeeFunctionalScopeRepo.GetAll()
-                .Where(x => x.EmployeeId == employeeId && !x.IsDeleted)
-                .Select(x => x.FunctionCode)
+            var managedAreaIds = await _areaRepo.GetAll(a =>
+                    a.ManagerEmployeeId == employeeId &&
+                    !a.IsDeleted)
+                .Select(a => a.Id)
                 .ToListAsync();
+
+            var asAreaManager = managedAreaIds.Count == 0
+                ? new List<int>()
+                : await _branchRepo.GetAll(b =>
+                        b.AreaId != null &&
+                        managedAreaIds.Contains(b.AreaId.Value) &&
+                        !b.IsDeleted &&
+                        b.IsActive)
+                    .Select(b => b.Id)
+                    .ToListAsync();
+
+            var branchIds = asBranchManager.Concat(asAreaManager).Distinct().ToList();
+
+            var typeRows = await _employeeFunctionalScopeRepo.GetAll()
+                .Where(x => x.EmployeeId == employeeId && !x.IsDeleted)
+                .Select(x => new
+                {
+                    x.EmployeeTypeId,
+                    SeesAll = x.EmployeeType != null && x.EmployeeType.SeesAllTypesInBranchScope
+                })
+                .ToListAsync();
+
+            var roleTypeFlags = await _employeeRoleRepo.GetAll(er =>
+                    er.EmployeeId == employeeId &&
+                    er.IsAssigned &&
+                    !er.IsDeleted &&
+                    er.Role != null &&
+                    !er.Role.IsDeleted &&
+                    er.Role.RequiresEmployeeTypeScope &&
+                    er.Role.EmployeeTypeId != null)
+                .Select(er => new
+                {
+                    TypeId = er.Role!.EmployeeTypeId!.Value,
+                    BranchRestricted = er.Role.RestrictEmployeeTypeToBranch
+                })
+                .ToListAsync();
+
+            var companyWideTypeIds = roleTypeFlags
+                .Where(x => !x.BranchRestricted)
+                .Select(x => x.TypeId)
+                .Distinct()
+                .ToHashSet();
+
+            var branchRestrictedTypeIds = roleTypeFlags
+                .Where(x => x.BranchRestricted && !companyWideTypeIds.Contains(x.TypeId))
+                .Select(x => x.TypeId)
+                .Distinct()
+                .ToList();
 
             return new UserAccessContext
             {
                 EmployeeId = employeeId,
                 BranchIds = branchIds,
-                FunctionCodes = functionCodes
+                EmployeeTypeIds = typeRows.Select(x => x.EmployeeTypeId).Distinct().ToList(),
+                BranchRestrictedEmployeeTypeIds = branchRestrictedTypeIds,
+                SeesAllTypesInBranchScope = typeRows.Any(x => x.SeesAll)
             };
         }
-
-    //    var areaIds = await _managerBranchesRepo.GetAll()
-    //   .Where(x => x.ManagerId == employeeId
-    //               && x.IsActive
-    //               && x.Type == ManagerScopeType.Area
-    //               && x.AreaId.HasValue)
-    //   .Select(x => x.AreaId!.Value)
-    //   .Distinct()
-    //   .ToListAsync();
-
-    //    List<int> branchIds;
-
-    //if (areaIds.Any())
-    //{
-    //    // ✅ Get all branches under these areas
-    //    branchIds = await _branchRepo.GetAll()
-    //        .Where(b => b.AreaId.HasValue && areaIds.Contains(b.AreaId.Value))
-    //        .Select(b => b.Id)
-    //        .Distinct()
-    //        .ToListAsync();
-    //}
-}
-
+    }
 }

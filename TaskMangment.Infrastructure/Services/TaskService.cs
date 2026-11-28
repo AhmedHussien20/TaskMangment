@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +13,7 @@ using TaskMangment.Application.Common.Exceptions;
 using TaskMangment.Application.Common.Interfaces;
 using TaskMangment.Application.Common.Responses;
 using TaskMangment.Application.Common.Security;
+using TaskMangment.Application.Common.Validation;
 using TaskMangment.Application.DTOs;
 using TaskMangment.Application.DTOs.TaskDTOs;
 using TaskMangment.Application.Interfaces.IRepository;
@@ -49,13 +50,14 @@ namespace TaskMangment.Infrastructure.Services
         private readonly IRepository<Attachment> _attachmentRepo;
         private readonly IRepository<TaskPercentage> _percentRepo;
         private readonly IRepository<Notification> _notificationRepo;
+        private readonly IRepository<TaskReopenHistory> _reopenHistoryRepo;
 
         private readonly IAppUnitOfWork _uow;
         private readonly IUserAccessContextProvider _accessProvider;
-
-
-
-
+        private readonly IAccessScopeResolver _scopeResolver;
+        private readonly IEmployeePermissionService _permissions;
+        private readonly INotificationRecipientBuilder _recipientBuilder;
+        private readonly TaskCreatedByMeEvaluator _createdByMe;
 
         public TaskService(
              IRepository<WorkTask> taskRepo,
@@ -75,11 +77,13 @@ namespace TaskMangment.Infrastructure.Services
            IRepository<Attachment> attachmentRepo,
            IRepository<TaskPercentage> percentRepo,
            IRepository<Notification> notificationRepo,
+           IRepository<TaskReopenHistory> reopenHistoryRepo,
            IAppUnitOfWork uow,
-           IUserAccessContextProvider accessProvider
-
-
-
+           IUserAccessContextProvider accessProvider,
+           IAccessScopeResolver scopeResolver,
+           IEmployeePermissionService permissions,
+           INotificationRecipientBuilder recipientBuilder,
+           TaskCreatedByMeEvaluator createdByMe
 )
         {
             _taskRepo = taskRepo;
@@ -99,8 +103,13 @@ namespace TaskMangment.Infrastructure.Services
             _attachmentRepo = attachmentRepo;
             _percentRepo = percentRepo;
             _notificationRepo = notificationRepo;
+            _reopenHistoryRepo = reopenHistoryRepo;
             _uow = uow;
             _accessProvider = accessProvider;
+            _scopeResolver = scopeResolver;
+            _permissions = permissions;
+            _recipientBuilder = recipientBuilder;
+            _createdByMe = createdByMe;
         }
 
         public async Task<ApiResponse<PagedResponse<TaskGetDto>>> GetAllAsync(TaskRequest request, int CompanyId, int roleLevel, int employeeId)
@@ -115,49 +124,52 @@ namespace TaskMangment.Infrastructure.Services
             //        return ApiResponse<PagedResponse<TaskGetDto>>.Ok(cached);
             //}
 
-            var query = _taskRepo.GetAll()
+            IQueryable<WorkTask> query = _taskRepo.GetAll()
                 .Include(t => t.CreatedBy)
                 .Include(t => t.Assignments).ThenInclude(a => a.Employee)
-                .Include(t => t.AssignedBy)
-                .ApplySearch(request.searchKey);
+                .Include(t => t.AssignedBy);
 
             bool requestedAdvanced =
-     request.Direction.HasValue ||
-     request.TargetEmployeeId.HasValue ||
-     request.PriorityId.HasValue ||
-     request.CreatedFrom.HasValue || request.CreatedTo.HasValue ||
-     request.DueFrom.HasValue || request.DueTo.HasValue;
+                request.Direction.HasValue ||
+                request.TargetEmployeeId.HasValue ||
+                request.PriorityId.HasValue ||
+                request.CreatedFrom.HasValue || request.CreatedTo.HasValue ||
+                request.DueFrom.HasValue || request.DueTo.HasValue;
 
-            if (roleLevel == 100 && requestedAdvanced)
+            var scope = await _scopeResolver.ResolveAsync(employeeId);
+            var canViewCompany = scope.IsCompanyWide ||
+                await _permissions.HasAsync(employeeId, PermissionCodes.ViewCompanyTasks);
+
+            var canViewScoped = await _permissions.HasAsync(employeeId, PermissionCodes.ViewScopedTasks)
+                || scope.Kind is AccessScopeKind.ManagerScoped or AccessScopeKind.CompanyWide
+                || canViewCompany;
+
+            // Deep search ("عرض البيانات"): company/scoped viewers may query by employee/direction/dates.
+            if (canViewCompany && requestedAdvanced)
             {
                 query = query.ApplyTaskFilters(request, employeeId);
             }
             else
             {
-                // 1) exclude archived by default unless explicitly requested
+                // Default list: exclude archived unless explicitly requested
                 if (!request.StatusId.HasValue || request.StatusId.Value != (int)WorkTaskStatus.Archived)
                 {
                     query = query.Where(t => t.Status != WorkTaskStatus.Archived);
                 }
-
 
                 if (request.StatusId.HasValue)
                 {
                     query = query.Where(t => (int)t.Status == request.StatusId.Value);
                 }
 
-                var access = await _accessProvider.GetAsync(employeeId);
-                var hasAccessScope = access.BranchIds.Any() || access.FunctionCodes.Any();
-                var viewScopedTasks = request.ViewScopedTasks == true && hasAccessScope;
+                // Default = own tasks. Expand to access-scope only when نطاق المهام = كل المهام.
+                var viewAllInScope = request.ViewScopedTasks == true && canViewScoped;
 
-                if (viewScopedTasks)
+                if (viewAllInScope)
                 {
-                    var scopedEmployeesQuery = _employeeRepo
-                        .GetAll(e => e.CompanyId == CompanyId && e.IsActive)
-                        .ApplyAccessScope(access);
-
-                    if (roleLevel != 100)
-                        scopedEmployeesQuery = scopedEmployeesQuery.ApplyRoleHierarchy(roleLevel);
+                    var scopedEmployeesQuery = _scopeResolver.FilterEmployees(
+                        _employeeRepo.GetAll(e => e.CompanyId == CompanyId && e.IsActive),
+                        scope);
 
                     var scopedEmployeeIds = scopedEmployeesQuery.Select(e => e.Id);
 
@@ -177,6 +189,33 @@ namespace TaskMangment.Infrastructure.Services
                     query = query.Where(t =>
                         t.Assignments.Any(a => a.IsActive && request.EmployeeIds.Contains(a.EmployeeId)));
                 }
+
+                if (request.PriorityId.HasValue)
+                    query = query.Where(t => (int)t.Priority == request.PriorityId.Value);
+
+                if (request.CreatedFrom.HasValue)
+                    query = query.Where(t => t.CreatedDate >= request.CreatedFrom.Value.Date);
+
+                if (request.CreatedTo.HasValue)
+                {
+                    var createdTo = request.CreatedTo.Value.TimeOfDay == TimeSpan.Zero
+                        ? request.CreatedTo.Value.Date.AddDays(1).AddTicks(-1)
+                        : request.CreatedTo.Value;
+                    query = query.Where(t => t.CreatedDate <= createdTo);
+                }
+
+                if (request.DueFrom.HasValue)
+                    query = query.Where(t => t.DueDate.HasValue && t.DueDate.Value >= request.DueFrom.Value.Date);
+
+                if (request.DueTo.HasValue)
+                {
+                    var dueTo = request.DueTo.Value.TimeOfDay == TimeSpan.Zero
+                        ? request.DueTo.Value.Date.AddDays(1).AddTicks(-1)
+                        : request.DueTo.Value;
+                    query = query.Where(t => t.DueDate.HasValue && t.DueDate.Value <= dueTo);
+                }
+
+                query = query.ApplyTaskSearch(request.searchKey);
             }
 
 
@@ -191,7 +230,7 @@ namespace TaskMangment.Infrastructure.Services
 
             var dtos = _mapper.Map<ICollection<TaskGetDto>>(list);
 
-            var hasCreatorPrivileges = await HasCreatorPrivilegesAsync(roleLevel, employeeId);
+            var scopedActorIds = await GetScopedCreatorOrAssignerIdsAsync(list, scope);
 
             foreach (var dto in dtos)
             {
@@ -208,8 +247,28 @@ namespace TaskMangment.Infrastructure.Services
                     .ToList();
 
                 dto.AssignedByName = task.AssignedBy?.FullName;
-                dto.CreatedByMe = ResolveCreatedByMe(roleLevel, employeeId, task, hasCreatorPrivileges);
+                dto.IsCreatorOrAssigner = TaskCreatedByMeEvaluator.IsCreatorOrAssigner(employeeId, task);
+                dto.CreatedByMe = ResolveCreatedByMe(employeeId, task, scopedActorIds, scope);
 
+            }
+
+            var pageTaskIds = list.Select(t => t.Id).ToList();
+            if (pageTaskIds.Count > 0)
+            {
+                var unreadCounts = await _notificationRepo.GetAll()
+                    .Where(n => n.UserId == employeeId
+                        && !n.IsRead
+                        && n.TaskId != null
+                        && pageTaskIds.Contains(n.TaskId.Value))
+                    .GroupBy(n => n.TaskId!.Value)
+                    .Select(g => new { TaskId = g.Key, Count = g.Count() })
+                    .ToListAsync();
+
+                var unreadMap = unreadCounts.ToDictionary(x => x.TaskId, x => x.Count);
+                foreach (var dto in dtos)
+                {
+                    dto.UnreadNotificationsCount = unreadMap.TryGetValue(dto.Id, out var count) ? count : 0;
+                }
             }
 
             var summary = new TaskSummaryDto
@@ -266,6 +325,19 @@ namespace TaskMangment.Infrastructure.Services
             dto.NumberOfExtensions = numberOfExtensions;
             dto.NewDate = newDate;
 
+            var pendingExtensions = await _extensionRequestRepo.GetAll()
+                .Where(x => x.TaskId == task.Id && !x.IsDeleted && x.Status == ExtensionRequestStatus.Pending)
+                .CountAsync();
+
+            var pendingCloses = await _closeRequestRepo.GetAll()
+                .Where(x => x.TaskId == task.Id && !x.IsDeleted && x.Status == CloseRequestStatus.Pending)
+                .CountAsync();
+
+            dto.PendingRequestsCount = pendingExtensions + pendingCloses;
+
+            dto.UnreadNotificationsCount = await _notificationRepo.GetAll()
+                .Where(n => n.UserId == employeeId && !n.IsRead && n.TaskId == task.Id)
+                .CountAsync();
 
             dto.AssignEmployee = task.Assignments
                 .Where(a => a.IsActive && a.Employee.IsActive)
@@ -278,8 +350,10 @@ namespace TaskMangment.Infrastructure.Services
 
             dto.AssignedByName = task.AssignedBy?.FullName;
 
-            var hasCreatorPrivileges = await HasCreatorPrivilegesAsync(roleLevel, employeeId);
-            dto.CreatedByMe = ResolveCreatedByMe(roleLevel, employeeId, task, hasCreatorPrivileges);
+            var scope = await _scopeResolver.ResolveAsync(employeeId);
+            var scopedActorIds = await GetScopedCreatorOrAssignerIdsAsync(new[] { task }, scope);
+            dto.IsCreatorOrAssigner = TaskCreatedByMeEvaluator.IsCreatorOrAssigner(employeeId, task);
+            dto.CreatedByMe = ResolveCreatedByMe(employeeId, task, scopedActorIds, scope);
 
             return ApiResponse<TaskGetDto>.Ok(dto);
         }
@@ -288,6 +362,8 @@ namespace TaskMangment.Infrastructure.Services
 
         public async Task<ApiResponse<TaskGetDto>> AddAsync(TaskAddEditDto dto, int createdUser, int companyId)
         {
+            TaskDueDateRules.EnsureValidDueDate(dto.DueDate);
+
             await _uow.BeginTransactionAsync();
 
             try
@@ -302,6 +378,9 @@ namespace TaskMangment.Infrastructure.Services
                         if (employee == null || !employee.IsActive)
                             throw new AppException(ErrorCodes.EmployeeInactive, StatusCodes.Status400BadRequest);
 
+                        if (!await _scopeResolver.CanAssignAsync(createdUser, empId))
+                            throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
+
                         var task = _mapper.Map<WorkTask>(dto);
                         task.PenaltyAtMaxWarnings = 0;
                         task.MaxWarnings = 3;
@@ -315,6 +394,16 @@ namespace TaskMangment.Infrastructure.Services
                 }
                 else
                 {
+                    foreach (var empId in dto.AssignedEmployeeIds.Distinct())
+                    {
+                        var employee = await _employeeRepo.GetAll(e => e.Id == empId).Select(e => new { e.Id, e.IsActive }).FirstOrDefaultAsync();
+                        if (employee == null || !employee.IsActive)
+                            throw new AppException(ErrorCodes.EmployeeInactive, StatusCodes.Status400BadRequest);
+
+                        if (!await _scopeResolver.CanAssignAsync(createdUser, empId))
+                            throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
+                    }
+
                     var task = _mapper.Map<WorkTask>(dto);
                     task.PenaltyAtMaxWarnings = 0;
                     task.MaxWarnings = 3;
@@ -360,13 +449,7 @@ namespace TaskMangment.Infrastructure.Services
                         ? new List<int> { dto.AssignedEmployeeIds[tasksToAdd.IndexOf(task)] }
                         : dto.AssignedEmployeeIds;
 
-                    empIds = await _employeeRepo.GetAll(e => empIds.Contains(e.Id) && e.IsActive)
-                        .Select(e => e.Id)
-                        .ToListAsync();
-                    empIds.Remove(createdUser);
-
-                    if (empIds.Any())
-                        await _eventDispatcher.PublishAsync(new TaskAssignedEvent(task.Id, task.Title, empIds));
+                    await PublishAssignNotificationsAsync(task.Id, task.Title, empIds, createdUser);
                 }
 
                 var firstTaskId = tasksToAdd.First().Id;
@@ -392,9 +475,13 @@ namespace TaskMangment.Infrastructure.Services
         }
         public async Task<ApiResponse<TaskGetDto>> UpdateAsync(int id, TaskAddEditDto dto, int modifierUser)
         {
+            TaskDueDateRules.EnsureValidDueDate(dto.DueDate);
+
             var task = await _taskRepo.GetByIDAsync(id);
             if (task == null)
                 throw new AppException(ErrorCodes.TaskNotFound, StatusCodes.Status400BadRequest);
+
+            await EnsureCanMutateTaskAsync(modifierUser, task, PermissionCodes.UpdateTask);
 
             var currentStatus = task.Status;
 
@@ -505,38 +592,16 @@ namespace TaskMangment.Infrastructure.Services
 
             if (newlyAssignedEmployeeIds.Any())
             {
-                var activeNewlyAssignedEmployeeIds = await _employeeRepo
-                    .GetAll(e => newlyAssignedEmployeeIds.Contains(e.Id) && e.IsActive && e.Id != modifierUser)
-                    .Select(e => e.Id)
-                    .ToListAsync();
-
-                if (activeNewlyAssignedEmployeeIds.Any())
-                    await _eventDispatcher.PublishAsync(
-                        new TaskAssignedEvent(task.Id, task.Title, activeNewlyAssignedEmployeeIds)
-                    );
+                await PublishAssignNotificationsAsync(task.Id, task.Title, newlyAssignedEmployeeIds, modifierUser);
             }
 
             if (reactivatedEmployeeIds.Any())
             {
-                var activeReactivatedEmployeeIds = await _employeeRepo
-                    .GetAll(e => reactivatedEmployeeIds.Contains(e.Id) && e.IsActive && e.Id != modifierUser)
-                    .Select(e => e.Id)
-                    .ToListAsync();
-
-                if (activeReactivatedEmployeeIds.Any())
-                    await _eventDispatcher.PublishAsync(
-                        new TaskAssignedEvent(task.Id, task.Title, activeReactivatedEmployeeIds)
-                    );
+                await PublishAssignNotificationsAsync(task.Id, task.Title, reactivatedEmployeeIds, modifierUser);
             }
             if (unAssignedEmployeeIds.Any())
             {
-                var activeUnAssignedEmployeeIds = await _employeeRepo
-                    .GetAll(e => unAssignedEmployeeIds.Contains(e.Id) && e.IsActive && e.Id != modifierUser)
-                    .Select(e => e.Id)
-                    .ToListAsync();
-
-                if (activeUnAssignedEmployeeIds.Any())
-                    await _eventDispatcher.PublishAsync(new TaskUnAssignedEvent(task.Id, task.Title, activeUnAssignedEmployeeIds));
+                await PublishUnassignNotificationsAsync(task.Id, task.Title, unAssignedEmployeeIds, modifierUser);
             }
 
             var fullTask = await _taskRepo.GetAll(t => t.Id == task.Id)
@@ -555,11 +620,13 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<TaskGetDto>.Ok(taskDto, "Task updated successfully");
         }
 
-        public async Task<ApiResponse<bool>> DeleteAsync(int id)
+        public async Task<ApiResponse<bool>> DeleteAsync(int id, int employeeId)
         {
             var task = await _taskRepo.GetByIDAsync(id);
             if (task == null)
                 throw new AppException(ErrorCodes.TaskNotFound, StatusCodes.Status400BadRequest);
+
+            await EnsureCanMutateTaskAsync(employeeId, task, PermissionCodes.DeleteTask);
 
 
             var hasDependencies =
@@ -909,32 +976,265 @@ namespace TaskMangment.Infrastructure.Services
             return ApiResponse<bool>.Ok(true);
         }
 
-        private static bool ResolveCreatedByMe(int roleLevel, int employeeId, WorkTask task, bool hasCreatorPrivileges)
+        public async Task<ApiResponse<bool>> ReopenAsync(int id, ReopenTaskDto dto, int employeeId)
         {
-            if (roleLevel == 80
-                && task.CreatedByEmployeeId != employeeId
-                && task.Assignments.Any(a => a.EmployeeId == employeeId && a.IsActive))
-                return false;
+            dto ??= new ReopenTaskDto();
 
-            return hasCreatorPrivileges || task.CreatedByEmployeeId == employeeId;
-        }
+            var task = await _taskRepo.GetByIDAsync(id);
+            if (task == null)
+                throw new AppException(ErrorCodes.TaskNotFound, StatusCodes.Status400BadRequest);
 
-        private async Task<bool> HasCreatorPrivilegesAsync(int roleLevel, int employeeId)
-        {
-            if (roleLevel == 100)
-                return true;
+            await EnsureCanReopenTaskAsync(employeeId, task);
 
-            if (roleLevel == 80)
+            if (!TaskReopenRules.IsReopenable(task.Status))
+                throw new AppException(ErrorCodes.TaskNotReopenable, StatusCodes.Status400BadRequest);
+
+            DateTime? newDueDate = null;
+            var dueDateIsPast = task.DueDate.HasValue && TaskDueDateRules.IsPast(task.DueDate.Value);
+            if (dueDateIsPast && dto.DueDate == null)
+                throw new AppException(ErrorCodes.DueDateInPast, StatusCodes.Status400BadRequest);
+
+            if (dto.DueDate.HasValue)
             {
-                var functionCode = await _employeeRepo.GetAll(e => e.Id == employeeId)
-                    .Select(e => e.FunctionCode)
-                    .FirstOrDefaultAsync();
-                return functionCode == FunctionCode.Operations;
+                TaskDueDateRules.EnsureValidDueDate(dto.DueDate);
+                newDueDate = dto.DueDate;
             }
 
-            return false;
+            var reopenedAt = DateTime.UtcNow;
+            var history = TaskReopenRules.Capture(task, employeeId, newDueDate, reopenedAt);
+
+            var assignments = await _assignmentRepo
+                .GetAll(a => a.TaskId == id)
+                .ToListAsync();
+
+            TaskReopenRules.ApplyOpenState(task, assignments, newDueDate);
+
+            await _reopenHistoryRepo.AddAsync(history);
+            await _audit.AddAsync(new AuditLog
+            {
+                EntityName = nameof(WorkTask),
+                EntityId = task.Id,
+                Action = "Reopen",
+                ChangedBy = employeeId.ToString(),
+                ChangedAt = reopenedAt,
+                Details =
+                    $"PreviousStatus={history.PreviousStatus};" +
+                    $"PreviousCloseReason={history.PreviousCloseReason};" +
+                    $"PreviousClosedAt={history.PreviousClosedAt:o};" +
+                    $"PreviousDueDate={history.PreviousDueDate:o};" +
+                    $"NewDueDate={history.NewDueDate:o}"
+            });
+
+            await _taskRepo.SaveChangesAsync();
+
+            return ApiResponse<bool>.Ok(true, "Task reopened successfully");
         }
 
+        public async Task<ApiResponse<List<TaskReopenHistoryDto>>> GetReopenHistoryAsync(int taskId)
+        {
+            var rows = await _reopenHistoryRepo
+                .GetAll(h => h.TaskId == taskId)
+                .Include(h => h.ReopenedBy)
+                .OrderByDescending(h => h.ReopenedAt)
+                .AsNoTracking()
+                .ToListAsync();
+
+            var dtos = rows.Select(h => new TaskReopenHistoryDto
+            {
+                Id = h.Id,
+                TaskId = h.TaskId,
+                ReopenedByEmployeeId = h.ReopenedByEmployeeId,
+                ReopenedByName = h.ReopenedBy?.FullName ?? string.Empty,
+                ReopenedAt = h.ReopenedAt,
+                PreviousStatus = h.PreviousStatus,
+                PreviousClosedAt = h.PreviousClosedAt,
+                PreviousCloseReason = h.PreviousCloseReason,
+                PreviousDueDate = h.PreviousDueDate,
+                NewDueDate = h.NewDueDate
+            }).ToList();
+
+            return ApiResponse<List<TaskReopenHistoryDto>>.Ok(dtos);
+        }
+
+        private async Task EnsureCanReopenTaskAsync(int employeeId, WorkTask task)
+        {
+            if (TaskCreatedByMeEvaluator.IsCreatorOrAssigner(employeeId, task))
+                return;
+
+            if (!await _permissions.HasAsync(employeeId, PermissionCodes.ReopenTask))
+                throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
+
+            var scope = await _scopeResolver.ResolveAsync(employeeId);
+            if (scope.Kind == AccessScopeKind.CompanyWide && task.CompanyId == scope.CompanyId)
+                return;
+
+            if (TaskCreatedByMeEvaluator.AllowsScopeInferredCreatorSide(scope.Kind)
+                && task.CreatedByEmployeeId is int creatorId
+                && creatorId > 0)
+            {
+                var creatorInScope = await _scopeResolver
+                    .FilterEmployees(_employeeRepo.GetAll(e => e.Id == creatorId), scope)
+                    .AnyAsync();
+                if (creatorInScope)
+                    return;
+            }
+
+            throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
+        }
+
+        private async Task EnsureCanMutateTaskAsync(int employeeId, WorkTask task, string permissionCode)
+        {
+            if (TaskCreatedByMeEvaluator.IsCreatorOrAssigner(employeeId, task))
+                return;
+
+            // Scope-inferred creator-side still requires the mutation permission.
+            if (await _permissions.HasAsync(employeeId, permissionCode) &&
+                await _createdByMe.IsCreatedByMeAsync(task, employeeId))
+                return;
+
+            throw new AppException(ErrorCodes.Unauthorized, StatusCodes.Status403Forbidden);
+        }
+
+        private static bool ResolveCreatedByMe(
+            int employeeId,
+            WorkTask task,
+            IReadOnlySet<int> scopedCreatorOrAssignerIds,
+            ResolvedAccessScope scope)
+        {
+            var isActiveAssignee = task.Assignments != null &&
+                task.Assignments.Any(a => a.IsActive && a.EmployeeId == employeeId);
+
+            return TaskCreatedByMeEvaluator.Resolve(
+                employeeId,
+                task,
+                scopedCreatorOrAssignerIds,
+                scope,
+                isActiveAssignee);
+        }
+
+        private async Task<HashSet<int>> GetScopedCreatorOrAssignerIdsAsync(
+            IEnumerable<WorkTask> tasks,
+            ResolvedAccessScope scope)
+        {
+            var ids = tasks
+                .SelectMany(t => new int?[] { t.CreatedByEmployeeId, t.AssignedByEmployeeId })
+                .Where(id => id.HasValue && id.Value > 0)
+                .Select(id => id!.Value)
+                .Distinct()
+                .ToList();
+
+            if (ids.Count == 0)
+                return new HashSet<int>();
+
+            // OwnBranch / SelfOnly: do not treat same-branch peers/bosses as creator-side.
+            if (!TaskCreatedByMeEvaluator.AllowsScopeInferredCreatorSide(scope.Kind))
+                return ids.Contains(scope.EmployeeId) ? new HashSet<int> { scope.EmployeeId } : new HashSet<int>();
+
+            var inScope = await _scopeResolver
+                .FilterEmployees(_employeeRepo.GetAll(e => ids.Contains(e.Id) && !e.IsDeleted), scope)
+                .Select(e => e.Id)
+                .ToListAsync();
+
+            return inScope.ToHashSet();
+        }
+
+        /// <summary>
+        /// Same pattern as warning/penalty: for each subject, notify them + RoleNotificationSource
+        /// listeners of that subject; exclude the actor.
+        /// </summary>
+        private async Task<List<int>> BuildSubjectScopedRecipientsAsync(
+            IEnumerable<int> subjectEmployeeIds,
+            int actorIdToExclude)
+        {
+            var all = new HashSet<int>();
+            foreach (var subjectId in subjectEmployeeIds.Where(id => id > 0).Distinct())
+            {
+                var part = await _recipientBuilder.BuildAsync(
+                    peerIds: new[] { subjectId },
+                    actorIdToExclude: actorIdToExclude,
+                    managerAnchorEmployeeId: subjectId);
+                foreach (var id in part)
+                    all.Add(id);
+            }
+
+            return all.ToList();
+        }
+
+        private async Task PublishAssignNotificationsAsync(
+            int taskId,
+            string taskTitle,
+            IEnumerable<int> subjectEmployeeIds,
+            int actorIdToExclude)
+        {
+            var subjects = subjectEmployeeIds.Where(id => id > 0 && id != actorIdToExclude).Distinct().ToList();
+            if (subjects.Count == 0)
+                return;
+
+            var taskMeta = await _taskRepo.GetAll(t => t.Id == taskId)
+                .Select(t => new
+                {
+                    PeriodDays = t.CommentAllowPeriodDays.HasValue ? (int?)t.CommentAllowPeriodDays.Value : null,
+                    t.MinCommentsPerPeriod
+                })
+                .FirstOrDefaultAsync();
+
+            var names = await _employeeRepo.GetAll(e => subjects.Contains(e.Id))
+                .Select(e => new { e.Id, e.FullName, BranchName = e.Branch != null ? e.Branch.Name : null })
+                .ToListAsync();
+
+            foreach (var subjectId in subjects)
+            {
+                var recipients = await _recipientBuilder.BuildAsync(
+                    peerIds: new[] { subjectId },
+                    actorIdToExclude: actorIdToExclude,
+                    managerAnchorEmployeeId: subjectId);
+                if (recipients.Count == 0)
+                    continue;
+
+                var subject = names.FirstOrDefault(n => n.Id == subjectId);
+                var name = subject?.FullName ?? "-";
+                await _eventDispatcher.PublishAsync(
+                    new TaskAssignedEvent(
+                        taskId,
+                        taskTitle,
+                        subjectId,
+                        name,
+                        recipients,
+                        subject?.BranchName,
+                        taskMeta?.PeriodDays,
+                        taskMeta?.MinCommentsPerPeriod ?? 1));
+            }
+        }
+
+        private async Task PublishUnassignNotificationsAsync(
+            int taskId,
+            string taskTitle,
+            IEnumerable<int> subjectEmployeeIds,
+            int actorIdToExclude)
+        {
+            var subjects = subjectEmployeeIds.Where(id => id > 0 && id != actorIdToExclude).Distinct().ToList();
+            if (subjects.Count == 0)
+                return;
+
+            var names = await _employeeRepo.GetAll(e => subjects.Contains(e.Id))
+                .Select(e => new { e.Id, e.FullName, BranchName = e.Branch != null ? e.Branch.Name : null })
+                .ToListAsync();
+
+            foreach (var subjectId in subjects)
+            {
+                var recipients = await _recipientBuilder.BuildAsync(
+                    peerIds: new[] { subjectId },
+                    actorIdToExclude: actorIdToExclude,
+                    managerAnchorEmployeeId: subjectId);
+                if (recipients.Count == 0)
+                    continue;
+
+                var subject = names.FirstOrDefault(n => n.Id == subjectId);
+                var name = subject?.FullName ?? "-";
+                await _eventDispatcher.PublishAsync(
+                    new TaskUnAssignedEvent(taskId, taskTitle, subjectId, name, recipients, subject?.BranchName));
+            }
+        }
 
     }
 }

@@ -14,8 +14,10 @@ import { SimpleEmployee } from 'app/core/models/task/task';
 import { EmployeeService } from 'app/core/services/employee.service';
 import { ExportType, TasksClosingSoonDto } from 'app/core/models/reports/reports';
 import { AuthService } from 'app/core/services/auth.service';
+import { Permissions } from 'app/core/constants/permissions';
 import { EmployeeNgSelectComponent } from 'app/components/employee-select/employee-select.component';
 import { TaskDetailsShellComponent } from 'app/components/tasks/task-details/task-details-shell/task-details-shell.component';
+import { ReportStatusFilterComponent, REPORT_STATUS_OPTIONS } from '../shared/report-status-filter.component';
 
 @Component({
   selector: 'app-task-closed-soon-report',
@@ -27,7 +29,8 @@ import { TaskDetailsShellComponent } from 'app/components/tasks/task-details/tas
     TranslateModule,
     GenericTableComponent,
     PageHeaderComponent,
-    EmployeeNgSelectComponent
+    EmployeeNgSelectComponent,
+    ReportStatusFilterComponent
   ],
   templateUrl: './task-closed-soon-report.component.html',
 })
@@ -57,6 +60,10 @@ export class TaskClosedSoonReportComponent implements OnInit {
 
   fromDate?: string;
   toDate?: string;
+  status?: string;
+  closingSoonStatusOptions = REPORT_STATUS_OPTIONS.filter(
+    s => !s.value || s.value === 'New' || s.value === 'InProgress'
+  );
 
   isLoading = false;
   isAdmin = false;
@@ -73,8 +80,14 @@ export class TaskClosedSoonReportComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    const roleLevel = this.authService.getRoleLevel() ?? 0;
-    this.isAdmin = roleLevel >= 50;
+    this.isAdmin = this.authService.hasAnyPermission(
+      Permissions.VIEW_SCOPED_REPORTS,
+      Permissions.VIEW_COMPANY_REPORTS,
+      Permissions.VIEW_SCOPED_TASKS,
+      Permissions.VIEW_COMPANY_TASKS,
+      Permissions.VIEW_EMPLOYEES,
+      Permissions.CREATE_TASK
+    ) || this.authService.hasAccessScope();
 
     if (this.isAdmin) {
       this.selectedEmployeeId = undefined; 
@@ -90,7 +103,7 @@ export class TaskClosedSoonReportComponent implements OnInit {
   loadData(): void {
 
     this.isLoading = true;
-    this.reportService.getClosedSoonReports(this.selectedEmployeeId).subscribe({
+    this.reportService.getClosedSoonReports(this.selectedEmployeeId, this.status).subscribe({
       next: (res) => {
         this.rows = res.data.map(t => ({ 
           id: t.taskId,
@@ -126,7 +139,7 @@ export class TaskClosedSoonReportComponent implements OnInit {
 
   onExportPdf(): void {
     //if (!this.selectedEmployeeId) return;
-    this.reportPdfService.getTaskClosedSoonReportsPdf(ExportType.Pdf, this.selectedEmployeeId).subscribe({
+    this.reportPdfService.getTaskClosedSoonReportsPdf(ExportType.Pdf, this.selectedEmployeeId, this.status).subscribe({
       next: (blob) => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -147,7 +160,7 @@ export class TaskClosedSoonReportComponent implements OnInit {
 
    onExportExcel(): void {
     //if (!this.selectedEmployeeId) return;
-    this.reportPdfService.getTaskClosedSoonReportsPdf(ExportType.Excel, this.selectedEmployeeId).subscribe({
+    this.reportPdfService.getTaskClosedSoonReportsPdf(ExportType.Excel, this.selectedEmployeeId, this.status).subscribe({
       next: (blob) => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -176,6 +189,7 @@ onEdit(id: number) {
 
   const modalRef = this.modalService.open(TaskDetailsShellComponent, {
       size: 'xl',
+      windowClass: 'task-details-modal',
       backdrop: 'static',
       scrollable: true
     });

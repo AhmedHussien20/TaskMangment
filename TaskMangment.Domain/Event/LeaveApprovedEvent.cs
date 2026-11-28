@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace TaskMangment.Domain.Event
+﻿namespace TaskMangment.Domain.Event
 {
     public class LeaveApprovedEvent
     {
@@ -16,8 +10,18 @@ namespace TaskMangment.Domain.Event
         public string LeaveTypeName { get; }
         public DateTime StartDate { get; }
         public DateTime EndDate { get; }
+        public string BranchName { get; }
 
-        public LeaveApprovedEvent(int leaveId,int employeeId,int approvedById,string employeeName,string approvedByName, string leaveTypeName,DateTime startDate,DateTime endDate)
+        public LeaveApprovedEvent(
+            int leaveId,
+            int employeeId,
+            int approvedById,
+            string employeeName,
+            string approvedByName,
+            string leaveTypeName,
+            DateTime startDate,
+            DateTime endDate,
+            string? branchName = null)
         {
             LeaveId = leaveId;
             EmployeeId = employeeId;
@@ -27,7 +31,7 @@ namespace TaskMangment.Domain.Event
             LeaveTypeName = leaveTypeName;
             StartDate = startDate;
             EndDate = endDate;
+            BranchName = string.IsNullOrWhiteSpace(branchName) ? "-" : branchName;
         }
     }
-
 }

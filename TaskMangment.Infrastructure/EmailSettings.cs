@@ -10,5 +10,10 @@ namespace TaskMangment.Infrastructure
         public string Password { get; set; } = string.Empty;
         public bool EnableSsl { get; set; } = true;
         public string? BrevoApiKey { get; set; }
+
+        /// <summary>
+        /// When false, emails are not sent via Brevo/SMTP (queue still marks Sent). Default true for production.
+        /// </summary>
+        public bool SendEnabled { get; set; } = true;
     }
 }

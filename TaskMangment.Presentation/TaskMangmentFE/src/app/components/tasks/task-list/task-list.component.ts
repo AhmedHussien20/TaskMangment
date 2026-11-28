@@ -14,6 +14,7 @@ import { TaskDetailsShellComponent } from "../task-details/task-details-shell/ta
 import Swal from 'sweetalert2';
 import { ToastrService } from "ngx-toastr";
 import { AuthService } from "app/core/services/auth.service";
+import { Permissions } from "app/core/constants/permissions";
 import { SpkDashboardComponent } from "app/@spk/reusable-dashboard/spk-dashboard/spk-dashboard.component";
 import { EmployeeService } from "app/core/services/employee.service";
 import { TasksEmployeeDeepSearchComponent } from "../tasks-employee-deep-search/tasks-employee-deep-search.component";
@@ -70,6 +71,13 @@ deepSearchComp?: TasksEmployeeDeepSearchComponent;
   isLoading = false;
 
   columns: TableColumn[] = [
+    {
+      key: 'unreadNotificationsCount',
+      label: 'TASK.UPDATES_TAB',
+      type: 'notification-count',
+      icon: 'bi bi-bell',
+      width: '56px'
+    },
     { key: 'id', label: 'TASK.ID' },
     { key: 'title', label: 'TASK.TITLE' },
     { key: 'assignedByName', label: 'TASK.ASSIGNED_BY' },
@@ -165,8 +173,11 @@ deepSearchComp?: TasksEmployeeDeepSearchComponent;
   ) { }
 
   ngOnInit() {
-    const roleLevel = this.auth.getRoleLevel();
-    this.showEmployeeFilter = roleLevel >= 50;
+    this.showEmployeeFilter = this.auth.hasAnyPermission(
+      Permissions.VIEW_SCOPED_TASKS,
+      Permissions.VIEW_COMPANY_TASKS,
+      Permissions.VIEW_EMPLOYEES
+    );
 
     this.status = this.statusOptions;
 
@@ -186,16 +197,19 @@ deepSearchComp?: TasksEmployeeDeepSearchComponent;
       };
     }
 
-    this.canCreate = roleLevel >= 50;
-    this.canEdit = roleLevel >= 70;
-    this.canDelete = roleLevel >= 70;
-    this.canCopy = roleLevel >= 70;
-    this.canShowExtraTasks = roleLevel == 100
-
-if (this.auth.hasPermission('CREATE_TASK')) {
-  this.canCreate = true;
-  this.canEdit = true;
-}
+    this.canCreate = this.auth.hasPermission(Permissions.CREATE_TASK);
+    // Show action columns when user may own tasks and/or has update/delete permission.
+    this.canEdit =
+      this.auth.hasPermission(Permissions.UPDATE_TASK) ||
+      this.auth.hasPermission(Permissions.CREATE_TASK);
+    this.canDelete =
+      this.auth.hasPermission(Permissions.DELETE_TASK) ||
+      this.auth.hasPermission(Permissions.CREATE_TASK);
+    this.canCopy = this.auth.hasPermission(Permissions.CREATE_TASK);
+    this.canArchive = this.auth.hasPermission(Permissions.ARCHIVE_TASK);
+    this.canShowExtraTasks = this.auth.hasPermission(
+      Permissions.VIEW_COMPANY_TASKS
+    );
 
     this.loadData();
     this.openTaskFromQueryIfAny();
@@ -363,7 +377,7 @@ openCopy(id: number, modal: any) {
     this.loadData();
   }
 
- openDetails(taskId: number) {
+ openDetails(taskId: number, initialTab?: string) {
   const task = this.rows.find(x => x.id === taskId);
 
   // Verify access before opening popup so users can't open tasks that aren't theirs.
@@ -372,19 +386,49 @@ openCopy(id: number, modal: any) {
       const modalRef = this.modalService.open(TaskDetailsShellComponent, {
         size: 'xl',
         backdrop: 'static',
-        scrollable: true
+        scrollable: true,
+        windowClass: 'task-details-modal'
       });
 
       modalRef.componentInstance.taskId = taskId;
       modalRef.componentInstance.readonly = true;
       modalRef.componentInstance.createdByMe =
         res?.data?.createdByMe ?? task?.createdByMe ?? false;
+      if (initialTab) {
+        modalRef.componentInstance.initialTab = initialTab;
+      }
+
+      modalRef.result.then(
+        (result) => {
+          if (result?.markedSeen) {
+            this.clearUnreadCount(taskId);
+          }
+        },
+        () => {
+          // Dismissed (e.g. Escape) — mark runs in shell destroy; clear badge locally if updates were viewed.
+          if (initialTab === 'updates' || modalRef.componentInstance?.updatesViewed) {
+            this.clearUnreadCount(taskId);
+          }
+        }
+      );
     },
     error: () => {
       this.toastr.error(this.translate.instant('COMMON.ERROR_LOADING_DATA'));
     }
   });
 }
+
+  onIconAction(e: { type: string; row: TaskGet }) {
+    if (e.type === 'unreadNotificationsCount') {
+      this.openDetails(e.row.id, 'updates');
+    }
+  }
+
+  private clearUnreadCount(taskId: number): void {
+    this.rows = this.rows.map(r =>
+      r.id === taskId ? { ...r, unreadNotificationsCount: 0 } : r
+    );
+  }
 
   confirmDelete(taskId: number) {
     Swal.fire({
@@ -418,17 +462,26 @@ openCopy(id: number, modal: any) {
     });
   }
 
- disableEditRow = (row: TaskGet) => {
-  return !row.createdByMe || row.status === 3 || row.status === 4 || row.status === 5;
-};
+  /** Literal owner can edit; scope-only needs UPDATE_TASK. */
+  disableEditRow = (row: TaskGet) => {
+    const closed = row.status === 3 || row.status === 4 || row.status === 5;
+    if (closed) return true;
+    if (row.isCreatorOrAssigner) return false;
+    return !(row.createdByMe && this.auth.hasPermission(Permissions.UPDATE_TASK));
+  };
 
-disableDeleteRow = (row: TaskGet) => {
-  return !row.createdByMe || row.status === 3 || row.status === 4 || row.status === 5;
-};
+  /** Literal owner can delete; scope-only needs DELETE_TASK. */
+  disableDeleteRow = (row: TaskGet) => {
+    const closed = row.status === 3 || row.status === 4 || row.status === 5;
+    if (closed) return true;
+    if (row.isCreatorOrAssigner) return false;
+    return !(row.createdByMe && this.auth.hasPermission(Permissions.DELETE_TASK));
+  };
 
-disableCopyRow = (row: TaskGet): boolean => {
-  return !row.createdByMe;
-};
+  disableCopyRow = (row: TaskGet): boolean => {
+    if (row.isCreatorOrAssigner) return false;
+    return !(row.createdByMe && this.auth.hasPermission(Permissions.CREATE_TASK));
+  };
 deepSearchTitleKey: string = 'TASK.DEEP_SEARCH';
 extraMenuItems = [
   { label: 'TASK.OUTGOING_NEW', value: { direction: 2, statusId: 1 } },
